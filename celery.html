@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8">
+  <title>是芹菜菜菜🥬</title>
+  <style>
+    body {
+      background-color: #f0fff0;
+      background-image: url('celery-leaf.png'); /* 芹菜葉子背景圖案 */
+      background-repeat: repeat;
+      background-size: 120px 120px;
+      font-family: "Microsoft JhengHei", sans-serif;
+      text-align: center;
+      margin: 0;
+      padding: 50px;
+      border: 20px solid #a8d5a2; /* 芹菜綠邊框 */
+      border-radius: 40px;
+      box-shadow: inset 0 0 20px rgba(34, 139, 34, 0.3);
+      position: relative;
+      overflow: hidden;
+    }
+
+    h1 {
+      color: #228b22;
+      font-size: 32px;
+      margin-bottom: 30px;
+      text-shadow: 2px 2px #a8d5a2;
+      position: relative;
+      display: inline-block;
+    }
+
+    /* 小水滴動畫 */
+    .drop {
+      position: absolute;
+      top: -15px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 12px;
+      height: 12px;
+      background: #00bfff;
+      border-radius: 50%;
+      animation: drip 2s infinite;
+    }
+
+    @keyframes drip {
+      0% { top: -15px; opacity: 1; }
+      50% { top: 20px; opacity: 0.7; }
+      100% { top: 40px; opacity: 0; }
+    }
+
+    /* 飄落的芹菜葉子 */
+    .falling-leaf {
+      position: absolute;
+      border-radius: 50% 50% 0 50%;
+      opacity: 0.8;
+      animation: fallLeaf linear forwards;
+      background: linear-gradient(135deg, #228b22, #a8d5a2); /* 顏色漸變 */
+    }
+
+    @keyframes fallLeaf {
+      0% { transform: translateY(0) rotate(0deg); opacity: 0.9; }
+      50% { transform: translateY(300px) rotate(90deg); opacity: 0.6; }
+      100% { transform: translateY(600px) rotate(180deg); opacity: 0; }
+    }
+
+    .btn {
+      display: inline-block;
+      margin: 15px;
+      padding: 15px 25px;
+      background-color: #a8d5a2;
+      border: 3px solid #228b22;
+      border-radius: 20px;
+      font-size: 18px;
+      font-weight: bold;
+      color: #064420;
+      text-decoration: none;
+      box-shadow: 3px 3px 8px rgba(0,0,0,0.2);
+      transition: 0.3s;
+    }
+
+    .btn:hover {
+      background-color: #c8e6c9;
+      transform: scale(1.05);
+    }
+
+    .celery {
+      font-size: 22px;
+      margin-right: 8px;
+    }
+  </style>
+</head>
+<body>
+  <h1>是芹菜菜菜🥬
+    <div class="drop"></div>
+  </h1>
+
+  <a class="btn" href="https://www.youtube.com/playlist?list=PL3LHSN24syoNzhSqnLj6qZSlrPNxpJTMq" target="_blank">
+    <span class="celery">🥬</span> 芹菜菜菜YT
+  </a>
+
+  <a class="btn" href="https://v.douyin.com/Uxfr40iw1Pw/" target="_blank">
+    <span class="celery">🥬</span> 抖音-是芹菜菜菜🥬
+  </a>
+
+  <a class="btn" href="https://www.instagram.com/shiqincaicaicai/" target="_blank">
+    <span class="celery">🥬</span> 是芹菜菜菜IG
+  </a>
+
+  <!-- 新增的圖奇按鈕 -->
+  <a class="btn" href="https://www.twitch.tv/shiqincaicaicai" target="_blank">
+    <span class="celery">🥬</span> 是芹菜菜菜圖奇
+  </a>
+
+  <a class="btn" href="https://discord.com/channels/865334403864461373/1434212358288314438" target="_blank">
+    <span class="celery">🥬</span> 芹菜幫DC
+  </a>
+
+  <h2 style="color:#228b22; margin-top:40px;">🎬 我是你的菜</h2>
+  <video id="celeryVideo" controls 
+         style="width:25%; max-width:800px; border:5px solid #228b22; border-radius:20px; box-shadow:3px 3px 10px rgba(0,0,0,0.3);">
+    <source src="/我是你的菜.mp4" type="video/mp4">
+    您的瀏覽器不支援影片播放。
+  </video>
+
+  <!-- 播放時間顯示 -->
+  <div id="videoTimeInfo" style="font-size:14px; color:#064420; margin-top:10px;">
+    已播放：0:00　剩餘：0:00　總長度：0:00
+  </div>
+
+  <script>
+    const video = document.getElementById('celeryVideo');
+    const videoTimeInfo = document.getElementById('videoTimeInfo');
+
+    video.addEventListener('timeupdate', () => {
+      if (!isNaN(video.duration)) {
+        const current = video.currentTime;
+        const remaining = video.duration - current;
+        const total = video.duration;
+
+        const curMin = Math.floor(current / 60);
+        const curSec = Math.floor(current % 60).toString().padStart(2, '0');
+        const remMin = Math.floor(remaining / 60);
+        const remSec = Math.floor(remaining % 60).toString().padStart(2, '0');
+        const totMin = Math.floor(total / 60);
+        const totSec = Math.floor(total % 60).toString().padStart(2, '0');
+
+        videoTimeInfo.textContent = `已播放：${curMin}:${curSec}　剩餘：${remMin}:${remSec}　總長度：${totMin}:${totSec}`;
+      }
+    });
+  </script>
+
+  <!-- 持續生成飄落葉子，大小隨機 + 顏色漸變 -->
+  <script>
+    function createLeaf() {
+      const leaf = document.createElement('div');
+      leaf.className = 'falling-leaf';
+      const size = 20 + Math.random() * 40; // 隨機大小 20px ~ 60px
+      leaf.style.width = size + 'px';
+      leaf.style.height = size + 'px';
+      leaf.style.left = Math.random() * window.innerWidth + 'px';
+      leaf.style.top = '-50px'; // 從上方掉落
+      leaf.style.animationDuration = (8 + Math.random() * 6) + 's';
+      document.body.appendChild(leaf);
+
+      // 當動畫結束時移除葉子
+      leaf.addEventListener('animationend', () => {
+        leaf.remove();
+      });
+    }
+
+    // 每隔 1.5 秒生成一片葉子
+    setInterval(createLeaf, 1500);
+  </script>
+</body>
+</html>
