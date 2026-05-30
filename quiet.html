@@ -12,10 +12,11 @@
       --dark-color: #663300;
       --ketchup-red: #ff2b2b;
       --neon-cyan: #00ffff;
-      --player-bg: #2b2d31;
-      --list-bg: #232428;
+      --player-bg: rgba(43, 45, 49, 0.8); /* 改為半透明 */
+      --list-bg: rgba(35, 36, 40, 0.9);
       --bg-color: #fff8f0;
       --transition-speed: 0.4s;
+      --glass-border: rgba(255, 255, 255, 0.1);
     }
 
     [data-theme="red"] {
@@ -60,7 +61,7 @@
       bottom: -50px;
       font-size: 24px;
       user-select: none;
-      will-change: transform, opacity; /* GPU 加速 */
+      will-change: transform, opacity;
       animation: floatUp linear infinite;
     }
     @keyframes floatUp {
@@ -94,32 +95,44 @@
     .dot-green { background-color: #c2f0c2; }
     .dot-brown { background-color: #d2b48c; }
 
+    /* --- 播放器主體升級 (毛玻璃質感) --- */
     .player-container {
-      background-color: var(--player-bg);
-      border-radius: 24px;
-      padding: 25px;
+      background: var(--player-bg);
+      backdrop-filter: blur(15px); /* 毛玻璃核心 */
+      -webkit-backdrop-filter: blur(15px);
+      border-radius: 32px;
+      padding: 30px;
       width: 90%; 
       max-width: 400px; 
       margin: 20px auto;
-      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5), 0 0 15px var(--neon-cyan);
+      box-shadow: 0 20px 50px rgba(0,0,0,0.4), 0 0 20px var(--neon-cyan);
       color: white;
-      border: 2px solid #444;
+      border: 1px solid var(--glass-border);
       box-sizing: border-box;
       position: relative;
       z-index: 1;
+      transition: transform 0.3s ease;
+    }
+    /* 播放時的呼吸動畫 */
+    .player-playing {
+      animation: playerPulse 2s infinite ease-in-out;
+    }
+    @keyframes playerPulse {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.02); }
     }
 
     .now-playing-title {
-      font-size: 16px;
+      font-size: 17px;
       color: var(--main-color);
-      margin-bottom: 15px;
+      margin-bottom: 20px;
       font-weight: bold;
       height: 24px;
       white-space: nowrap;
       overflow: hidden; 
       position: relative;
-      border-bottom: 1px solid #444; 
-      padding-bottom: 5px;
+      border-bottom: 1px solid rgba(255,255,255,0.1); 
+      padding-bottom: 10px;
       transition: color var(--transition-speed);
     }
     .marquee {
@@ -132,41 +145,53 @@
       100% { transform: translateX(-100%); }
     }
 
-    .progress-container { background: #444; height: 8px; width: 100%; border-radius: 10px; margin: 20px 0; cursor: pointer; position: relative; }
-    .progress-bar { background: var(--neon-cyan); height: 100%; width: 0%; border-radius: 10px; transition: width 0.1s linear; }
-    .time-display { display: flex; justify-content: space-between; font-size: 12px; color: #aaa; margin-bottom: 20px; }
+    .progress-container { background: rgba(255,255,255,0.1); height: 6px; width: 100%; border-radius: 10px; margin: 25px 0; cursor: pointer; position: relative; }
+    .progress-bar { background: var(--neon-cyan); height: 100%; width: 0%; border-radius: 10px; box-shadow: 0 0 10px var(--neon-cyan); transition: width 0.1s linear; }
+    .time-display { display: flex; justify-content: space-between; font-size: 12px; color: #aaa; margin-bottom: 25px; font-family: monospace; }
 
-    .controls { display: flex; justify-content: center; align-items: center; gap: 20px; }
-    .ctrl-btn { background: none; border: none; color: white; font-size: 24px; cursor: pointer; transition: 0.2s; width: 50px; height: 50px; border-radius: 50%; display: flex; align-items: center; justify-content: center; }
-    .ctrl-btn:hover { color: var(--neon-cyan); transform: scale(1.1); }
-    .play-pause-btn { background: var(--neon-cyan); color: black; font-size: 30px; width: 60px; height: 60px; }
+    .controls { display: flex; justify-content: center; align-items: center; gap: 25px; }
+    .ctrl-btn { background: none; border: none; color: white; font-size: 26px; cursor: pointer; transition: 0.3s; width: 55px; height: 55px; border-radius: 50%; display: flex; align-items: center; justify-content: center; }
+    .ctrl-btn:hover { color: var(--neon-cyan); transform: scale(1.1); text-shadow: 0 0 10px var(--neon-cyan); }
+    
+    .play-pause-btn { 
+      background: var(--neon-cyan); 
+      color: black; 
+      font-size: 32px; 
+      width: 70px; 
+      height: 70px; 
+      box-shadow: 0 0 15px var(--neon-cyan);
+      transition: 0.3s;
+    }
+    .play-pause-btn:hover { 
+      transform: scale(1.1); 
+      box-shadow: 0 0 25px var(--neon-cyan);
+      background: #fff;
+    }
 
     .audio-settings {
-      display: flex;
-      justify-content: space-between;
-      gap: 10px;
-      margin-top: 25px;
-      padding: 15px;
-      background: #3e4045;
-      border-radius: 15px;
-      flex-wrap: wrap;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 15px;
+      margin-top: 30px;
+      padding: 20px;
+      background: rgba(0,0,0,0.3);
+      border-radius: 20px;
+      border: 1px solid rgba(255,255,255,0.05);
     }
     .setting-group {
       display: flex;
       flex-direction: column;
       align-items: center;
-      flex: 1;
-      min-width: 80px;
+      gap: 8px;
     }
     .setting-group label {
       font-size: 11px;
       color: #ccc;
-      margin-bottom: 5px;
     }
     .slider {
       -webkit-appearance: none;
       width: 100%;
-      height: 5px;
+      height: 4px;
       background: #555;
       border-radius: 5px;
       outline: none;
@@ -174,58 +199,57 @@
     }
     .slider::-webkit-slider-thumb {
       -webkit-appearance: none;
-      width: 12px;
-      height: 12px;
+      width: 14px;
+      height: 14px;
       background: var(--neon-cyan);
       border-radius: 50%;
       cursor: pointer;
-      box-shadow: 0 0 5px var(--neon-cyan);
+      box-shadow: 0 0 8px var(--neon-cyan);
     }
 
     .mode-toggle { 
       font-size: 11px; 
-      background: #555; 
+      background: rgba(255,255,255,0.1); 
       color: #ccc; 
-      border: 1px solid #777; 
-      padding: 4px 8px; 
-      border-radius: 10px; 
+      border: 1px solid rgba(255,255,255,0.2); 
+      padding: 6px 12px; 
+      border-radius: 12px; 
       cursor: pointer; 
       width: 100%; 
-      max-width: 100px;
-      transition: 0.2s;
+      transition: 0.3s;
     }
-    .mode-toggle:hover { background: #666; color: white; border-color: var(--neon-cyan); }
+    .mode-toggle:hover { background: rgba(255,255,255,0.2); color: white; border-color: var(--neon-cyan); }
 
     .song-list-wrapper {
-      margin-top: 20px;
+      margin-top: 25px;
       background: var(--list-bg);
-      border-radius: 15px;
-      padding: 10px;
-      border: 1px solid #444;
+      border-radius: 20px;
+      padding: 12px;
+      border: 1px solid rgba(255,255,255,0.05);
     }
     .song-list {
       list-style: none;
       padding: 0;
       margin: 0;
       text-align: left;
-      max-height: 300px;
+      max-height: 280px;
       overflow-y: auto;
     }
     .song-item {
-      padding: 8px 12px;
+      padding: 10px 15px;
       font-size: 13px;
-      color: #ccc;
+      color: #aaa;
       cursor: pointer;
-      border-radius: 6px;
-      margin-bottom: 4px;
+      border-radius: 10px;
+      margin-bottom: 5px;
       transition: 0.2s;
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
     }
-    .song-item:hover { background: #3e4045; color: white; }
+    .song-item:hover { background: rgba(255,255,255,0.05); color: white; }
     .song-item.active { 
-      background: #444; 
+      background: rgba(0, 255, 255, 0.1); 
       color: var(--neon-cyan); 
       font-weight: bold; 
       border-left: 4px solid var(--neon-cyan); 
@@ -241,18 +265,20 @@
       display: flex;
       justify-content: space-between;
       align-items: center;
-      margin-top: 10px;
+      margin-top: 12px;
       font-size: 12px;
       color: #888;
     }
     .page-btn {
-      background: #3e4045;
+      background: rgba(255,255,255,0.05);
       color: #ccc;
-      border: 1px solid #555;
-      padding: 3px 10px;
-      border-radius: 5px;
+      border: 1px solid rgba(255,255,255,0.1);
+      padding: 4px 12px;
+      border-radius: 8px;
       cursor: pointer;
+      transition: 0.3s;
     }
+    .page-btn:hover:not(:disabled) { background: rgba(255,255,255,0.15); color: white; }
     .page-btn:disabled { opacity: 0.3; cursor: not-allowed; }
 
     .footer {
@@ -273,7 +299,7 @@
   <div class="sesame"></div><div class="sesame"></div><div class="sesame"></div>
   <div class="sesame"></div><div class="sesame"></div><div class="sesame"></div>
 
-  <h1>静静在夏天🍔🎤⁰³²⁰<div class="ketchup"></div></h1>
+  <h1 id="mainTitle">静静在夏天🍔🎤⁰³²⁰<div class="ketchup"></div></h1>
 
   <div class="theme-group">
     <div class="theme-dot dot-yellow" onclick="setTheme('yellow')" title="經典黃"></div>
@@ -291,7 +317,7 @@
     <a class="btn" href="0320.html"><span class="burger-icon">🍔</span> 歌單</a>
   </div>
 
-  <div class="player-container">
+  <div class="player-container" id="playerBox">
     <div id="songTitle" class="now-playing-title">🎶 正在載入歌單...</div>
     
     <div class="progress-container" id="progressContainer">
@@ -338,7 +364,7 @@
 
   <script>
     /**
-     * 漢堡主題與背景邏輯 (獨立於播放器)
+     * 漢堡主題與背景邏輯
      */
     const Visuals = {
       setTheme(theme) {
@@ -361,7 +387,6 @@
       }
     };
 
-    // 全域主題切換函數
     window.setTheme = (t) => Visuals.setTheme(t);
 
     /**
@@ -381,7 +406,6 @@
       dom: {},
 
       init() {
-        // 緩存所有 DOM 元素
         this.dom = {
           audio: document.getElementById('audioElement'),
           playBtn: document.getElementById('playPauseBtn'),
@@ -398,7 +422,8 @@
           prevBtn: document.getElementById('prevBtn'),
           nextBtn: document.getElementById('nextBtn'),
           prevPage: document.getElementById('prevPage'),
-          nextPage: document.getElementById('nextPage')
+          nextPage: document.getElementById('nextPage'),
+          playerBox: document.getElementById('playerBox')
         };
 
         this.dom.audio.volume = 0.5;
@@ -449,7 +474,6 @@
 
         this.dom.audio.src = song.src;
         
-        // 更新標題
         const titleText = `🎶 正在播放：${song.title} &nbsp;&nbsp;&nbsp;&nbsp;`;
         this.dom.title.innerHTML = `<span class="marquee">${titleText}</span>`;
         this.startTabScroll(song.title);
@@ -458,9 +482,12 @@
           try {
             await this.dom.audio.play();
             this.dom.playBtn.textContent = "⏸";
+            this.dom.playerBox.classList.add('player-playing');
           } catch (e) {
             console.warn("Autoplay blocked");
           }
+        } else {
+          this.dom.playerBox.classList.remove('player-playing');
         }
         this.renderList();
       },
@@ -469,9 +496,11 @@
         if (this.dom.audio.paused) {
           this.dom.audio.play().catch(console.error);
           this.dom.playBtn.textContent = "⏸";
+          this.dom.playerBox.classList.add('player-playing');
         } else {
           this.dom.audio.pause();
           this.dom.playBtn.textContent = "▶";
+          this.dom.playerBox.classList.remove('player-playing');
         }
       },
 
@@ -480,16 +509,17 @@
         const total = this.state.songs.length;
 
         if (mode === "單曲循環") {
-          // 不變
+          // Index stays the same
         } else if (mode === "隨機播放") {
           this.state.currentIndex = Math.floor(Math.random() * total);
         } else if (mode === "歌單循環") {
           this.state.currentIndex = (this.state.currentIndex + 1) % total;
-        } else { // 順序播放
+        } else { 
           this.state.currentIndex++;
           if (this.state.currentIndex >= total) {
             this.dom.audio.pause();
             this.dom.playBtn.textContent = "▶";
+            this.dom.playerBox.classList.remove('player-playing');
             return;
           }
         }
@@ -567,7 +597,6 @@
       }
     };
 
-    // 啟動所有模組
     window.onload = () => {
       Visuals.initFloatingBg();
       Player.init();
