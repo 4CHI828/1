@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>我的音樂播放器</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #121212;
+            color: white;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+        }
+        .player-container {
+            background-color: #1e1e1e;
+            width: 90%;
+            max-width: 500px;
+            padding: 20px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+        }
+        h2 {
+            text-align: center;
+            color: #1DB954; /* Spotify Green */
+        }
+        .now-playing {
+            text-align: center;
+            margin-bottom: 20px;
+            font-weight: bold;
+            height: 1.2em;
+            color: #b3b3b3;
+        }
+        audio {
+            width: 100%;
+            margin-bottom: 20px;
+            filter: invert(100%) hue-rotate(180deg) brightness(1.5); /* 讓預設播放器適應深色模式 */
+        }
+        .playlist {
+            max-height: 400px;
+            overflow-y: auto;
+            border-top: 1px solid #333;
+        }
+        .song-item {
+            padding: 12px 15px;
+            cursor: pointer;
+            border-bottom: 1px solid #282828;
+            transition: background 0.2s;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .song-item:hover {
+            background-color: #282828;
+        }
+        .song-item.active {
+            background-color: #333;
+            color: #1DB954;
+            border-left: 4px solid #1DB954;
+        }
+        /* 滾動條美化 */
+        .playlist::-webkit-scrollbar {
+            width: 6px;
+        }
+        .playlist::-webkit-scrollbar-thumb {
+            background: #444;
+            border-radius: 10px;
+        }
+    </style>
+</head>
+<body>
+
+<div class="player-container">
+    <h2>🎵 音樂播放清單</h2>
+    <div class="now-playing" id="current-song">請選擇歌曲</div>
+    
+    <audio id="audio-player" controls>
+        Your browser does not support the audio element.
+    </audio>
+
+    <div class="playlist" id="playlist">
+        <!-- 歌曲列表會由 JS 動態生成 -->
+    </div>
+</div>
+
+<script>
+    // 1. 將所有網址放入陣列
+    const songUrls = [
+        "https://mp3.chi828.workers.dev/芹靜歌_日不落_對唱版0.3.mp3",
+        "https://mp3.chi828.workers.dev/靜靜在夏天 煙火裡的塵埃 - StreamRecorder.mp3",
+        "https://mp3.chi828.workers.dev/靜靜在夏天 煙火裡的塵埃.mp3",
+        "https://mp3.chi828.workers.dev/靜靜在夏天(圖奇) Opera #2.mp3",
+        "https://mp3.chi828.workers.dev/靜靜在夏天(圖奇) 武家坡.mp3",
+        "https://mp3.chi828.workers.dev/靜靜在夏天(圖奇) 悟空.mp3",
+        "https://mp3.chi828.workers.dev/靜靜在夏天(圖奇) 靜靜的.mp3",
+        "https://mp3.chi828.workers.dev/靜靜在夏天(圖奇)-天黑黑.mp3",
+        "https://mp3.chi828.workers.dev/靜靜在夏天(圖奇)-如願.mp3",
+        "https://mp3.chi828.workers.dev/靜靜在夏天(圖奇)-安和橋.mp3",
+        "https://mp3.chi828.workers.dev/靜靜在夏天(圖奇)-克卜勒.mp3",
+        "https://mp3.chi828.workers.dev/靜靜在夏天(圖奇)-我好想你.mp3",
+        "https://mp3.chi828.workers.dev/靜靜在夏天_百年孤寂.mp3",
+        "https://mp3.chi828.workers.dev/靜靜在夏天-38 號大迪曲.mp3",
+        "https://mp3.chi828.workers.dev/靜靜在夏天-A.I.N.Y..mp3",
+        "https://mp3.chi828.workers.dev/靜靜在夏天-Lydia.mp3",
+        "https://mp3.chi828.workers.dev/靜靜在夏天-Rolling in the deep.mp3",
+        "https://mp3.chi828.workers.dev/靜靜在夏天-一個人想著一個人.mp3",
+        "https://mp3.chi828.workers.dev/靜靜在夏天-公主殿下.mp3",
+        "https://mp3.chi828.workers.dev/靜靜在夏天-天下無雙.mp3",
+        "https://mp3.chi828.workers.dev/靜靜在夏天-手心的薔薇.mp3",
+        "https://mp3.chi828.workers.dev/靜靜在夏天-月彎彎.mp3",
+        "https://mp3.chi828.workers.dev/靜靜在夏天-左手指月.mp3",
+        "https://mp3.chi828.workers.dev/靜靜在夏天-皮囊.mp3",
+        "https://mp3.chi828.workers.dev/靜靜在夏天-你把我灌醉.mp3",
+        "https://mp3.chi828.workers.dev/靜靜在夏天-克卜勒.mp3",
+        "https://mp3.chi828.workers.dev/靜靜在夏天-我們的愛.mp3",
+        "https://mp3.chi828.workers.dev/靜靜在夏天-我想要佔據你.mp3",
+        "https://mp3.chi828.workers.dev/靜靜在夏天-我懷念的.mp3",
+        "https://mp3.chi828.workers.dev/靜靜在夏天-咖喱咖喱.mp3",
+        "https://mp3.chi828.workers.dev/靜靜在夏天-空心.mp3",
+        "https://mp3.chi828.workers.dev/靜靜在夏天-阿刁(新舊混合最終版).mp3",
+        "https://mp3.chi828.workers.dev/靜靜在夏天-阿刁.mp3",
+        "https://mp3.chi828.workers.dev/靜靜在夏天-星辰大海.mp3",
+        "https://mp3.chi828.workers.dev/靜靜在夏天-突然好想你.mp3",
+        "https://mp3.chi828.workers.dev/靜靜在夏天-要愛愛.mp3",
+        "https://mp3.chi828.workers.dev/靜靜在夏天-時間都去哪兒了.mp3",
+        "https://mp3.chi828.workers.dev/靜靜在夏天-唯一.mp3",
+        "https://mp3.chi828.workers.dev/靜靜在夏天-盛夏光年.mp3",
+        "https://mp3.chi828.workers.dev/靜靜在夏天-連名帶姓.mp3",
+        "https://mp3.chi828.workers.dev/靜靜在夏天-給你一點顏色.mp3",
+        "https://mp3.chi828.workers.dev/靜靜在夏天-給我一個理由忘記.mp3",
+        "https://mp3.chi828.workers.dev/靜靜在夏天-愛人錯過.mp3",
+        "https://mp3.chi828.workers.dev/靜靜在夏天-會呼吸的痛.mp3",
+        "https://mp3.chi828.workers.dev/靜靜在夏天-靜靜的.mp3",
+        "https://mp3.chi828.workers.dev/靜靜在夏天-離歌.mp3",
+        "https://mp3.chi828.workers.dev/靜靜在夏天-寵愛.mp3"
+    ];
+
+    const audioPlayer = document.getElementById('audio-player');
+    const playlistContainer = document.getElementById('playlist');
+    const currentSongText = document.getElementById('current-song');
+
+    // 2. 解析網址，提取歌曲名稱
+    function getSongName(url) {
+        const filename = url.split('/').pop(); // 取得最後一段檔名
+        return filename.replace('.mp3', ''); // 去掉 .mp3 擴展名
+    }
+
+    // 3. 動態生成播放列表
+    songUrls.forEach((url, index) => {
+        const songName = getSongName(url);
+        
+        const div = document.createElement('div');
+        div.className = 'song-item';
+        div.innerHTML = `<span>${songName}</span> <span>🎵</span>`;
+        
+        div.onclick = () => {
+            playSong(url, songName, div);
+        };
+
+        playlistContainer.appendChild(div);
+    });
+
+    // 4. 播放歌曲邏輯
+    function playSong(url, name, element) {
+        // 更新播放器來源
+        audioPlayer.src = url;
+        audioPlayer.play();
+
+        // 更新當前顯示名稱
+        currentSongText.innerText = "正在播放: " + name;
+
+        // 更新列表的高亮狀態
+        document.querySelectorAll('.song-item').forEach(item => {
+            item.classList.remove('active');
+        });
+        element.classList.add('active');
+    }
+
+    // 額外功能：當歌曲播放結束後，自動播放下一首
+    audioPlayer.onended = function() {
+        const activeItem = document.querySelector('.song-item.active');
+        if (activeItem) {
+            const nextItem = activeItem.nextElementSibling;
+            if (nextItem) {
+                nextItem.click();
+            }
+        }
+    };
+</script>
+
+</body>
+</html>
