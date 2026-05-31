@@ -59,7 +59,6 @@
     .theme-dot:hover { transform: scale(1.2); }
     .dot-yellow { background-color: #ffcc66; } .dot-red { background-color: #ff8a8a; } .dot-green { background-color: #c2f0c2; } .dot-brown { background-color: #d2b48c; }
 
-    /* --- 播放器外殼 (保留 quiet.html 的玻璃質感) --- */
     .player-container {
       background: var(--player-bg);
       backdrop-filter: blur(15px);
@@ -88,14 +87,12 @@
       padding-bottom: 10px;
     }
 
-    /* 讓標準 audio 播放器適應深色模式 */
     audio {
       width: 100%;
       margin-bottom: 20px;
       filter: invert(100%) hue-rotate(180deg) brightness(1.5);
     }
 
-    /* --- 歌單列表 --- */
     .song-list-wrapper { 
       background: var(--list-bg); 
       border-radius: 20px; 
@@ -158,7 +155,6 @@
     <a class="btn" href="0320.html"><span>🍔</span> 歌單</a>
   </div>
 
-  <!-- 播放器主體 (整合 TEST.HTML 簡潔結構) -->
   <div class="player-container">
     <div class="now-playing" id="current-song">請選擇歌曲</div>
     
@@ -178,9 +174,6 @@
   </div>
 
   <script>
-    /**
-     * 視覺效果 (保留 quiet.html)
-     */
     const Visuals = {
       setTheme(theme) {
         document.body.setAttribute('data-theme', theme === 'yellow' ? '' : theme);
@@ -203,10 +196,7 @@
     };
     window.setTheme = (t) => Visuals.setTheme(t);
 
-    /**
-     * 播放器邏輯 (整合 TEST.HTML 簡潔寫法)
-     */
-    const songUrls = [
+    const originalUrls = [
         "https://mp3.chi828.workers.dev/芹靜歌_日不落_對唱版0.3.mp3",
         "https://mp3.chi828.workers.dev/靜靜在夏天 煙火裡的塵埃 - StreamRecorder.mp3",
         "https://mp3.chi828.workers.dev/靜靜在夏天 煙火裡的塵埃.mp3",
@@ -256,6 +246,14 @@
         "https://mp3.chi828.workers.dev/靜靜在夏天-寵愛.mp3"
     ];
 
+    // --- 重新排序邏輯 ---
+    const tuqiSongs = originalUrls.filter(url => url.includes("圖奇"));
+    const riBuluSongs = originalUrls.filter(url => url.includes("日不落"));
+    const otherSongs = originalUrls.filter(url => !url.includes("圖奇") && !url.includes("日不落"));
+
+    // 組合順序：圖奇歌曲 -> 其他歌曲 -> 日不落
+    const sortedUrls = [...tuqiSongs, ...otherSongs, ...riBuluSongs];
+
     const audioPlayer = document.getElementById('audio-player');
     const playlistContainer = document.getElementById('song-list');
     const currentSongText = document.getElementById('current-song');
@@ -264,8 +262,8 @@
         return url.split('/').pop().replace('.mp3', '');
     }
 
-    // 生成列表 (TEST.HTML 邏輯)
-    songUrls.forEach((url, index) => {
+    // 使用排序後的 sortedUrls 生成列表
+    sortedUrls.forEach((url, index) => {
         const name = getSongName(url);
         const div = document.createElement('div');
         div.className = 'song-item';
@@ -285,7 +283,6 @@
         element.classList.add('active');
     }
 
-    // 自動播放下一首
     audioPlayer.onended = function() {
         const activeItem = document.querySelector('.song-item.active');
         if (activeItem && activeItem.nextElementSibling) {
