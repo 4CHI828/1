@@ -1,15 +1,6 @@
 <!DOCTYPE html>
 <html lang="zh-Hant">
 <head>
-<!-- Google tag (gtag.js) -->
-<script async src="https://www.googletagmanager.com/gtag/js?id=G-ELRZ5NKVDZ"></script>
-<script>
-  window.dataLayer = window.dataLayer || [];
-  function gtag(){dataLayer.push(arguments);}
-  gtag('js', new Date());
-
-  gtag('config', 'G-ELRZ5NKVDZ');
-</script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>静静在夏天🍔🎤⁰³²⁰的歌單</title>
@@ -35,7 +26,7 @@
             --bg-color: #0f0f0f;
             --card-bg: rgba(30, 30, 30, 0.8);
             --text-color: #e0e0e0;
-            --border-color: rgba(255, 255, 255, 0.1);
+            --border-color: rgba(255, 255, 255, 0.2);
             --input-bg: rgba(45, 45, 45, 0.9);
             --shadow: 0 20px 50px rgba(0,0,0,0.6);
             --highlight: #4b4b4b;
@@ -89,30 +80,6 @@
             border: 1px solid var(--border-color);
             margin-bottom: 30px;
             transition: var(--transition);
-        }
-
-        /* 右上角設定組 */
-        .settings-group {
-            position: absolute; top: 25px; right: 25px;
-            display: flex; gap: 10px; align-items: center;
-        }
-        
-        .theme-toggle {
-            cursor: pointer; 
-            background: var(--card-bg); 
-            border: 1px solid var(--border-color);
-            color: var(--text-color); 
-            transition: var(--transition);
-            font-size: 13px;
-            padding: 6px 15px;
-            border-radius: 20px;
-            font-weight: 600;
-        }
-        .theme-toggle:hover {
-            background: var(--primary);
-            color: white;
-            border-color: var(--primary);
-            transform: scale(1.05);
         }
 
         /* 標題與問候 */
@@ -240,14 +207,19 @@
         }
         .retry-btn:hover { background: var(--primary); color: white; }
 
-        #backToTop {
-            position: fixed; bottom: 30px; right: 30px; width: 55px; height: 55px;
+        /* 懸浮控制按鈕 (主題切換 & 回到頂端) */
+        .fab-btn {
+            position: fixed; bottom: 30px; width: 55px; height: 55px;
             border-radius: 50%; background: var(--accent-grad); color: white;
-            border: none; cursor: pointer; font-size: 22px; display: none;
-            align-items: center; justify-content: center; z-index: 99;
+            border: none; cursor: pointer; font-size: 22px; 
+            display: flex; align-items: center; justify-content: center; z-index: 99;
             box-shadow: 0 5px 15px rgba(0,0,0,0.2); transition: var(--transition);
         }
-        #backToTop:hover { transform: translateY(-5px); }
+        .fab-btn:hover { transform: translateY(-5px) scale(1.05); filter: brightness(1.1); }
+        .fab-btn:active { transform: scale(0.9); }
+
+        #themeToggle { left: 30px; } /* 主題切換在左下 */
+        #backToTop { right: 30px; display: none; } /* 回到頂端在右下 */
 
         .footer-stats {
             font-size: 14px; color: #888; display: flex; align-items: center;
@@ -285,9 +257,6 @@
 <body id="mainBody">
 
 <div class="container">
-    <div class="settings-group">
-        <button class="theme-toggle" id="themeToggle">切換主題 🌙</button>
-    </div>
     <div id="greeting">正在準備您的音樂時光...</div>
     <h1 id="mainTitle">静静在夏天🍔🎤⁰³²⁰的歌單</h1>
     
@@ -350,7 +319,9 @@
     <a href="https://www.twitch.tv/chi828" target="_blank">新竹奇奇828製作</a>
 </div>
 
-<button id="backToTop">↑</button>
+<!-- 懸浮控制按鈕 -->
+<button id="themeToggle" class="fab-btn" title="切換主題">🌙</button>
+<button id="backToTop" class="fab-btn">↑</button>
 
 <div class="modal-overlay" id="modalOverlay">
     <div class="modal-card" id="modalCard">
@@ -585,7 +556,7 @@
     const themeToggle = document.getElementById('themeToggle');
     function applyTheme(theme) {
         document.body.setAttribute('data-theme', theme);
-        themeToggle.innerText = theme === 'dark' ? '切換主題 ☀️' : '切換主題 🌙';
+        themeToggle.innerText = theme === 'dark' ? '☀️' : '🌙';
         localStorage.setItem('theme', theme);
     }
     applyTheme(State.theme);
@@ -599,7 +570,6 @@
     };
     backToTopBtn.addEventListener('click', () => window.scrollTo({ top: 0, behavior: 'smooth' }));
 
-    // 全局初始化
     window.onload = () => {
         updatePersonalCount();
         setGreeting();
@@ -608,6 +578,7 @@
         renderTable();
     };
 </script>
+<!-- 統計腳本移至 body 內部 -->
+<script src="https://SiteStates.com/show/js_text/d31e637c0789387033893124f467c2d8" type="text/javascript"></script>
 </body>
 </html>
-<script src="https://SiteStates.com/show/js_text/d31e637c0789387033893124f467c2d8" type="text/javascript"></script>
