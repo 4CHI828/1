@@ -59,7 +59,7 @@
     .theme-dot:hover { transform: scale(1.2); }
     .dot-yellow { background-color: #ffcc66; } .dot-red { background-color: #ff8a8a; } .dot-green { background-color: #c2f0c2; } .dot-brown { background-color: #d2b48c; }
 
-    /* --- 播放器主體 --- */
+    /* --- 播放器外殼 (保留 quiet.html 的玻璃質感) --- */
     .player-container {
       background: var(--player-bg);
       backdrop-filter: blur(15px);
@@ -75,63 +75,33 @@
       box-sizing: border-box;
       position: relative;
       z-index: 1;
-      transition: transform 0.3s ease;
-    }
-    .player-playing { animation: playerPulse 2s infinite ease-in-out; }
-    @keyframes playerPulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.02); } }
-
-    #visualizer {
-      width: 100%;
-      height: 60px;
-      margin-bottom: 15px;
-      border-radius: 10px;
-      background: rgba(0,0,0,0.2);
     }
 
-    .now-playing-title {
+    .now-playing {
+      text-align: center;
+      margin-bottom: 20px;
       font-size: 17px;
       color: var(--main-color);
-      margin-bottom: 20px;
       font-weight: bold;
       height: 24px;
-      white-space: nowrap;
-      overflow: hidden; 
-      position: relative;
-      border-bottom: 1px solid rgba(255,255,255,0.1); 
+      border-bottom: 1px solid rgba(255,255,255,0.1);
       padding-bottom: 10px;
-      transition: color var(--transition-speed);
-      cursor: default;
     }
-    .marquee {
-      display: inline-block;
-      padding-left: 100%; 
-      animation: marquee 12s linear infinite; 
+
+    /* 讓標準 audio 播放器適應深色模式 */
+    audio {
+      width: 100%;
+      margin-bottom: 20px;
+      filter: invert(100%) hue-rotate(180deg) brightness(1.5);
     }
-    .now-playing-title:hover .marquee {
-      animation-play-state: paused;
+
+    /* --- 歌單列表 --- */
+    .song-list-wrapper { 
+      background: var(--list-bg); 
+      border-radius: 20px; 
+      padding: 12px; 
+      border: 1px solid rgba(255,255,255,0.05); 
     }
-    @keyframes marquee { 0% { transform: translateX(0); } 100% { transform: translateX(-100%); } }
-
-    .progress-container { background: rgba(255,255,255,0.1); height: 6px; width: 100%; border-radius: 10px; margin: 25px 0; cursor: pointer; position: relative; }
-    .progress-bar { background: var(--neon-cyan); height: 100%; width: 0%; border-radius: 10px; box-shadow: 0 0 10px var(--neon-cyan); transition: width 0.1s linear; }
-    .time-display { display: flex; justify-content: space-between; font-size: 12px; color: #aaa; margin-bottom: 25px; font-family: monospace; }
-
-    .controls { display: flex; justify-content: center; align-items: center; gap: 25px; }
-    .ctrl-btn { background: none; border: none; color: white; font-size: 26px; cursor: pointer; transition: 0.3s; width: 55px; height: 55px; border-radius: 50%; display: flex; align-items: center; justify-content: center; }
-    .ctrl-btn:hover { color: var(--neon-cyan); transform: scale(1.1); text-shadow: 0 0 10px var(--neon-cyan); }
-    .play-pause-btn { background: var(--neon-cyan); color: black; font-size: 32px; width: 70px; height: 70px; box-shadow: 0 0 15px var(--neon-cyan); transition: 0.3s; }
-    .play-pause-btn:hover { transform: scale(1.1); box-shadow: 0 0 25px var(--neon-cyan); background: #fff; }
-
-    .audio-settings { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-top: 30px; padding: 20px; background: rgba(0,0,0,0.3); border-radius: 20px; border: 1px solid rgba(255,255,255,0.05); }
-    .setting-group { display: flex; flex-direction: column; align-items: center; gap: 8px; }
-    .setting-group label { font-size: 11px; color: #ccc; }
-    .slider { -webkit-appearance: none; width: 100%; height: 4px; background: #555; border-radius: 5px; outline: none; cursor: pointer; }
-    .slider::-webkit-slider-thumb { -webkit-appearance: none; width: 14px; height: 14px; background: var(--neon-cyan); border-radius: 50%; cursor: pointer; box-shadow: 0 0 8px var(--neon-cyan); }
-
-    .mode-toggle { font-size: 11px; background: rgba(255,255,255,0.1); color: #ccc; border: 1px solid rgba(255,255,255,0.2); padding: 6px 12px; border-radius: 12px; cursor: pointer; width: 100%; transition: 0.3s; }
-    .mode-toggle:hover { background: rgba(255,255,255,0.2); color: white; border-color: var(--neon-cyan); }
-
-    .song-list-wrapper { margin-top: 25px; background: var(--list-bg); border-radius: 20px; padding: 12px; border: 1px solid rgba(255,255,255,0.05); }
     .song-list {
       list-style: none;
       padding: 0;
@@ -139,17 +109,27 @@
       text-align: left;
       max-height: 280px;
       overflow-y: auto;
-      scrollbar-width: thin;
-      scrollbar-color: var(--neon-cyan) rgba(0,0,0,0.2);
     }
     .song-list::-webkit-scrollbar { width: 6px; }
     .song-list::-webkit-scrollbar-track { background: rgba(0,0,0,0.1); border-radius: 10px; }
-    .song-list::-webkit-scrollbar-thumb { background: var(--neon-cyan); border-radius: 10px; box-shadow: 0 0 5px var(--neon-cyan); }
+    .song-list::-webkit-scrollbar-thumb { background: var(--neon-cyan); border-radius: 10px; }
 
-    .song-item { padding: 10px 15px; font-size: 13px; color: #aaa; cursor: pointer; border-radius: 10px; margin-bottom: 5px; transition: 0.2s; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .song-item { 
+      padding: 10px 15px; 
+      font-size: 13px; 
+      color: #aaa; 
+      cursor: pointer; 
+      border-radius: 10px; 
+      margin-bottom: 5px; 
+      transition: 0.2s; 
+    }
     .song-item:hover { background: rgba(255,255,255,0.05); color: white; }
-    .song-item.active { background: rgba(0, 255, 255, 0.1); color: var(--neon-cyan); font-weight: bold; border-left: 4px solid var(--neon-cyan); animation: pulse 2s infinite; }
-    @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.7; } 100% { opacity: 1; } }
+    .song-item.active { 
+      background: rgba(0, 255, 255, 0.1); 
+      color: var(--neon-cyan); 
+      font-weight: bold; 
+      border-left: 4px solid var(--neon-cyan); 
+    }
 
     .footer { margin-top: 40px; font-size: 13px; color: #aaa; opacity: 0.7; transition: opacity 0.3s; }
     .footer:hover { opacity: 1; }
@@ -178,33 +158,18 @@
     <a class="btn" href="0320.html"><span>🍔</span> 歌單</a>
   </div>
 
-  <div class="player-container" id="playerBox">
-    <canvas id="visualizer"></canvas>
-    <div id="songTitle" class="now-playing-title">🎶 正在載入歌單...</div>
-    <div class="progress-container" id="progressContainer">
-      <div class="progress-bar" id="progressBar"></div>
-    </div>
-    <div class="time-display">
-      <span id="currentTime">0:00</span>
-      <span id="durationTime">0:00</span>
-    </div>
-    <div class="controls">
-      <button class="ctrl-btn" id="prevBtn">⏮</button>
-      <button class="ctrl-btn play-pause-btn" id="playPauseBtn">▶</button>
-      <button class="ctrl-btn" id="nextBtn">⏭</button>
-    </div>
-    <div class="audio-settings">
-      <div class="setting-group">
-        <label>音量 <span id="volVal">50%</span></label>
-        <input type="range" id="volSlider" class="slider" min="0" max="1" step="0.01" value="0.5">
-      </div>
-      <div class="setting-group">
-        <label>播放模式</label>
-        <button id="modeToggle" class="mode-toggle">順序播放</button>
-      </div>
-    </div>
+  <!-- 播放器主體 (整合 TEST.HTML 簡潔結構) -->
+  <div class="player-container">
+    <div class="now-playing" id="current-song">請選擇歌曲</div>
+    
+    <audio id="audio-player" controls>
+        Your browser does not support the audio element.
+    </audio>
+
     <div class="song-list-wrapper">
-      <div id="songList" class="song-list"></div>
+      <div id="song-list" class="song-list">
+        <!-- 歌曲列表由 JS 生成 -->
+      </div>
     </div>
   </div>
 
@@ -212,13 +177,36 @@
      <a href="https://www.twitch.tv/chi828" target="_blank" rel="noopener noreferrer">新竹奇奇828製作</a>
   </div>
 
-  <audio id="audioElement" crossorigin="anonymous"></audio>
-
   <script>
     /**
-     * 歌曲數據 (直接整合進來)
+     * 視覺效果 (保留 quiet.html)
      */
-    const rawSongUrls = [
+    const Visuals = {
+      setTheme(theme) {
+        document.body.setAttribute('data-theme', theme === 'yellow' ? '' : theme);
+      },
+      initFloatingBg() {
+        const bg = document.getElementById('floatingBg');
+        const items = ['🍟', '🌭','🍔', '🎤', '🎶', '✨', '🍔'];
+        setInterval(() => {
+          const item = document.createElement('div');
+          item.className = 'floating-item';
+          item.textContent = items[Math.floor(Math.random() * items.length)];
+          item.style.left = Math.random() * 100 + 'vw';
+          item.style.fontSize = (Math.random() * 20 + 15) + 'px';
+          item.style.animationDuration = (Math.random() * 9 + 6) + 's';
+          item.style.opacity = Math.random() * 0.5 + 0.3;
+          bg.appendChild(item);
+          setTimeout(() => item.remove(), 15000);
+        }, 800);
+      }
+    };
+    window.setTheme = (t) => Visuals.setTheme(t);
+
+    /**
+     * 播放器邏輯 (整合 TEST.HTML 簡潔寫法)
+     */
+    const songUrls = [
         "https://mp3.chi828.workers.dev/芹靜歌_日不落_對唱版0.3.mp3",
         "https://mp3.chi828.workers.dev/靜靜在夏天 煙火裡的塵埃 - StreamRecorder.mp3",
         "https://mp3.chi828.workers.dev/靜靜在夏天 煙火裡的塵埃.mp3",
@@ -268,287 +256,45 @@
         "https://mp3.chi828.workers.dev/靜靜在夏天-寵愛.mp3"
     ];
 
-    /**
-     * 視覺與主題
-     */
-    const Visuals = {
-      setTheme(theme) {
-        document.body.setAttribute('data-theme', theme === 'yellow' ? '' : theme);
-      },
-      initFloatingBg() {
-        const bg = document.getElementById('floatingBg');
-        const items = ['🍟', '🌭','🍔', '🎤', '🎶', '✨', '🍔'];
-        setInterval(() => {
-          const item = document.createElement('div');
-          item.className = 'floating-item';
-          item.textContent = items[Math.floor(Math.random() * items.length)];
-          item.style.left = Math.random() * 100 + 'vw';
-          item.style.fontSize = (Math.random() * 20 + 15) + 'px';
-          item.style.animationDuration = (Math.random() * 9 + 6) + 's';
-          item.style.opacity = Math.random() * 0.5 + 0.3;
-          bg.appendChild(item);
-          setTimeout(() => item.remove(), 15000);
-        }, 800);
-      }
-    };
-    window.setTheme = (t) => Visuals.setTheme(t);
+    const audioPlayer = document.getElementById('audio-player');
+    const playlistContainer = document.getElementById('song-list');
+    const currentSongText = document.getElementById('current-song');
 
-    /**
-     * 核心播放器
-     */
-    const Player = {
-      state: {
-        songs: [],
-        currentIndex: 0,
-        currentModeIndex: parseInt(localStorage.getItem('player-mode')) || 0,
-        modes: ["順序播放", "隨機播放", "單曲循環", "歌單循環"],
-        titleInterval: null,
-        volume: parseFloat(localStorage.getItem('player-vol')) || 0.5,
-        isFading: false
-      },
+    function getSongName(url) {
+        return url.split('/').pop().replace('.mp3', '');
+    }
 
-      dom: {},
-      audioCtx: null,
-      analyser: null,
-      canvasCtx: null,
-
-      init() {
-        this.dom = {
-          audio: document.getElementById('audioElement'),
-          playBtn: document.getElementById('playPauseBtn'),
-          title: document.getElementById('songTitle'),
-          progressBar: document.getElementById('progressBar'),
-          progressContainer: document.getElementById('progressContainer'),
-          currentTime: document.getElementById('currentTime'),
-          durationTime: document.getElementById('durationTime'),
-          list: document.getElementById('songList'),
-          volSlider: document.getElementById('volSlider'),
-          volVal: document.getElementById('volVal'),
-          modeBtn: document.getElementById('modeToggle'),
-          prevBtn: document.getElementById('prevBtn'),
-          nextBtn: document.getElementById('nextBtn'),
-          playerBox: document.getElementById('playerBox'),
-          canvas: document.getElementById('visualizer')
-        };
-
-        this.dom.audio.volume = this.state.volume;
-        this.dom.volSlider.value = this.state.volume;
-        this.dom.volVal.textContent = Math.round(this.state.volume * 100) + "%";
-        this.dom.modeBtn.textContent = this.state.modes[this.state.currentModeIndex];
-
-        this.initVisualizer();
-        this.bindEvents();
-        this.loadPlaylist();
-      },
-
-      initVisualizer() {
-        this.dom.canvasCtx = this.dom.canvas.getContext('2d');
-        const unlockAudio = () => {
-          if (!this.audioCtx) {
-            this.audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-            this.analyser = this.audioCtx.createAnalyser();
-            const source = this.audioCtx.createMediaElementSource(this.dom.audio);
-            source.connect(this.analyser);
-            this.analyser.connect(this.audioCtx.destination);
-            this.analyser.fftSize = 128;
-            this.drawVisualizer();
-          }
-          window.removeEventListener('click', unlockAudio);
-          window.removeEventListener('keydown', unlockAudio);
-        };
-        window.addEventListener('click', unlockAudio);
-        window.addEventListener('keydown', unlockAudio);
-      },
-
-      drawVisualizer() {
-        const ctx = this.dom.canvasCtx;
-        const width = this.dom.canvas.width;
-        const height = this.dom.canvas.height;
-        const bufferLength = this.analyser.frequencyBinCount;
-        const dataArray = new Uint8Array(bufferLength);
-
-        const render = () => {
-          requestAnimationFrame(render);
-          this.analyser.getByteFrequencyData(dataArray);
-          ctx.clearRect(0, 0, width, height);
-          const barWidth = (width / bufferLength) * 2.5;
-          let x = 0;
-          for (let i = 0; i < bufferLength; i++) {
-            const barHeight = (dataArray[i] / 255) * height;
-            ctx.fillStyle = `rgba(0, 255, 255, ${dataArray[i]/255})`;
-            ctx.fillRect(x, height - barHeight, barWidth - 1, barHeight);
-            x += barWidth;
-          }
-        };
-        render();
-      },
-
-      bindEvents() {
-        this.dom.playBtn.onclick = () => this.togglePlay();
-        this.dom.nextBtn.onclick = () => this.nextSong();
-        this.dom.prevBtn.onclick = () => this.prevSong();
-        this.dom.volSlider.oninput = (e) => this.updateVolume(e.target.value);
-        this.dom.modeBtn.onclick = () => this.cycleMode();
-        this.dom.progressContainer.onclick = (e) => {
-          const percent = e.offsetX / this.dom.progressContainer.clientWidth;
-          this.dom.audio.currentTime = percent * this.dom.audio.duration;
-        };
-        this.dom.audio.ontimeupdate = () => this.updateProgress();
-        this.dom.audio.onended = () => this.nextSong();
-        this.dom.audio.onerror = () => this.nextSong();
-        window.addEventListener('keydown', (e) => {
-          if (e.code === 'Space') { e.preventDefault(); this.togglePlay(); }
-          if (e.code === 'ArrowRight') { this.nextSong(); }
-          if (e.code === 'ArrowLeft') { this.prevSong(); }
-        });
-      },
-
-      loadPlaylist() {
-        // 將網址陣列轉換為播放器需要的 {title, src} 物件格式
-        this.state.songs = rawSongUrls.map(url => {
-          return {
-            title: url.split('/').pop().replace('.mp3', ''),
-            src: url
-          };
-        });
+    // 生成列表 (TEST.HTML 邏輯)
+    songUrls.forEach((url, index) => {
+        const name = getSongName(url);
+        const div = document.createElement('div');
+        div.className = 'song-item';
+        div.innerText = `${index + 1}. ${name}`; 
         
-        if (this.state.songs.length > 0) {
-          this.loadSong(0, false);
-          this.renderList();
-        } else {
-          this.dom.title.textContent = "❌ 歌單為空";
+        div.onclick = () => {
+            playSong(url, name, div);
+        };
+        playlistContainer.appendChild(div);
+    });
+
+    function playSong(url, name, element) {
+        audioPlayer.src = url;
+        audioPlayer.play();
+        currentSongText.innerText = "正在播放: " + name;
+        document.querySelectorAll('.song-item').forEach(item => item.classList.remove('active'));
+        element.classList.add('active');
+    }
+
+    // 自動播放下一首
+    audioPlayer.onended = function() {
+        const activeItem = document.querySelector('.song-item.active');
+        if (activeItem && activeItem.nextElementSibling) {
+            activeItem.nextElementSibling.click();
         }
-      },
-
-      async loadSong(index, shouldPlay = true) {
-        this.state.currentIndex = index;
-        const song = this.state.songs[index];
-        if (!song) return;
-
-        this.dom.audio.src = song.src;
-        this.dom.title.innerHTML = `<span class="marquee">🎶 正在播放：${song.title} &nbsp;&nbsp;&nbsp;&nbsp;</span>`;
-        this.startTabScroll(song.title);
-
-        if (shouldPlay) {
-          await this.fadeInPlay();
-        } else {
-          this.dom.playerBox.classList.remove('player-playing');
-        }
-        this.renderList();
-      },
-
-      async fadeInPlay() {
-        const targetVol = this.state.volume;
-        this.dom.audio.volume = 0;
-        try {
-          await this.dom.audio.play();
-          this.dom.playBtn.textContent = "⏸";
-          this.dom.playerBox.classList.add('player-playing');
-          const fadeInterval = setInterval(() => {
-            if (this.dom.audio.volume < targetVol) {
-              this.dom.audio.volume += 0.05;
-            } else {
-              this.dom.audio.volume = targetVol;
-              clearInterval(fadeInterval);
-            }
-          }, 50);
-        } catch (e) { console.warn("Autoplay blocked"); }
-      },
-
-      togglePlay() {
-        if (this.dom.audio.paused) {
-          this.dom.audio.play().catch(console.error);
-          this.dom.playBtn.textContent = "⏸";
-          this.dom.playerBox.classList.add('player-playing');
-        } else {
-          this.dom.audio.pause();
-          this.dom.playBtn.textContent = "▶";
-          this.dom.playerBox.classList.remove('player-playing');
-        }
-      },
-
-      nextSong() {
-        const mode = this.state.modes[this.state.currentModeIndex];
-        const total = this.state.songs.length;
-
-        if (mode === "單曲循環") {
-          // 保持 index
-        } else if (mode === "隨機播放") {
-          this.state.currentIndex = Math.floor(Math.random() * total);
-        } else if (mode === "歌單循環") {
-          this.state.currentIndex = (this.state.currentIndex + 1) % total;
-        } else { 
-          this.state.currentIndex++;
-          if (this.state.currentIndex >= total) {
-            this.dom.audio.pause();
-            this.dom.playBtn.textContent = "▶";
-            this.dom.playerBox.classList.remove('player-playing');
-            return;
-          }
-        }
-        this.loadSong(this.state.currentIndex, true);
-      },
-
-      prevSong() {
-        this.state.currentIndex = (this.state.currentIndex - 1 + this.state.songs.length) % this.state.songs.length;
-        this.loadSong(this.state.currentIndex, true);
-      },
-
-      updateVolume(val) {
-        this.state.volume = parseFloat(val);
-        this.dom.audio.volume = this.state.volume;
-        this.dom.volVal.textContent = Math.round(this.state.volume * 100) + "%";
-        localStorage.setItem('player-vol', val);
-      },
-
-      cycleMode() {
-        this.state.currentModeIndex = (this.state.currentModeIndex + 1) % this.state.modes.length;
-        this.dom.modeBtn.textContent = this.state.modes[this.state.currentModeIndex];
-        localStorage.setItem('player-mode', this.state.currentModeIndex);
-      },
-
-      updateProgress() {
-        const { currentTime, duration } = this.dom.audio;
-        const percent = (currentTime / duration) * 100 || 0;
-        this.dom.progressBar.style.width = percent + "%";
-        this.dom.currentTime.textContent = this.formatTime(currentTime);
-        this.dom.durationTime.textContent = this.formatTime(duration);
-      },
-
-      formatTime(sec) {
-        if (isNaN(sec)) return "0:00";
-        const m = Math.floor(sec / 60);
-        const s = Math.floor(sec % 60).toString().padStart(2, '0');
-        return `${m}:${s}`;
-      },
-
-      renderList() {
-        const { songs, currentIndex } = this.state;
-        this.dom.list.innerHTML = "";
-        songs.forEach((song, i) => {
-          const item = document.createElement('div');
-          item.className = `song-item ${i === currentIndex ? 'active' : ''}`;
-          // 加上序號
-          item.textContent = `${i + 1}. ${song.title}`;
-          item.onclick = () => this.loadSong(i, true);
-          this.dom.list.appendChild(item);
-        });
-      },
-
-      startTabScroll(name) {
-        if (this.state.titleInterval) clearInterval(this.state.titleInterval);
-        let text = ` 🎶 正在播放：${name} 🎶   `;
-        document.title = text;
-        this.state.titleInterval = setInterval(() => {
-          text = text.substring(1) + text.substring(0, 1);
-          document.title = text;
-        }, 300);
-      }
     };
 
     window.onload = () => {
       Visuals.initFloatingBg();
-      Player.init();
     };
   </script>
 </body>
