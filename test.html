@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>我的音樂播放器</title>
+    <title>音樂播放器</title>
     <style>
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -25,7 +25,8 @@
         }
         h2 {
             text-align: center;
-            color: #1DB954; /* Spotify Green */
+            color: #1DB954;
+            margin-bottom: 20px;
         }
         .now-playing {
             text-align: center;
@@ -37,7 +38,7 @@
         audio {
             width: 100%;
             margin-bottom: 20px;
-            filter: invert(100%) hue-rotate(180deg) brightness(1.5); /* 讓預設播放器適應深色模式 */
+            filter: invert(100%) hue-rotate(180deg) brightness(1.5);
         }
         .playlist {
             max-height: 400px;
@@ -49,9 +50,6 @@
             cursor: pointer;
             border-bottom: 1px solid #282828;
             transition: background 0.2s;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
         }
         .song-item:hover {
             background-color: #282828;
@@ -74,7 +72,7 @@
 <body>
 
 <div class="player-container">
-    <h2>🎵 音樂播放清單</h2>
+    <h2>音樂播放清單</h2>
     <div class="now-playing" id="current-song">請選擇歌曲</div>
     
     <audio id="audio-player" controls>
@@ -82,12 +80,11 @@
     </audio>
 
     <div class="playlist" id="playlist">
-        <!-- 歌曲列表會由 JS 動態生成 -->
+        <!-- 歌曲列表由 JS 生成 -->
     </div>
 </div>
 
 <script>
-    // 1. 將所有網址放入陣列
     const songUrls = [
         "https://mp3.chi828.workers.dev/芹靜歌_日不落_對唱版0.3.mp3",
         "https://mp3.chi828.workers.dev/靜靜在夏天 煙火裡的塵埃 - StreamRecorder.mp3",
@@ -142,51 +139,39 @@
     const playlistContainer = document.getElementById('playlist');
     const currentSongText = document.getElementById('current-song');
 
-    // 2. 解析網址，提取歌曲名稱
     function getSongName(url) {
-        const filename = url.split('/').pop(); // 取得最後一段檔名
-        return filename.replace('.mp3', ''); // 去掉 .mp3 擴展名
+        return url.split('/').pop().replace('.mp3', '');
     }
 
-    // 3. 動態生成播放列表
+    // 生成列表 - 加入 index 參數
     songUrls.forEach((url, index) => {
-        const songName = getSongName(url);
-        
+        const name = getSongName(url);
         const div = document.createElement('div');
         div.className = 'song-item';
-        div.innerHTML = `<span>${songName}</span> <span>🎵</span>`;
+        
+        // 在前面加上 (index + 1) 作為序號
+        div.innerText = `${index + 1}. ${name}`; 
         
         div.onclick = () => {
-            playSong(url, songName, div);
+            playSong(url, name, div);
         };
 
         playlistContainer.appendChild(div);
     });
 
-    // 4. 播放歌曲邏輯
     function playSong(url, name, element) {
-        // 更新播放器來源
         audioPlayer.src = url;
         audioPlayer.play();
-
-        // 更新當前顯示名稱
         currentSongText.innerText = "正在播放: " + name;
-
-        // 更新列表的高亮狀態
-        document.querySelectorAll('.song-item').forEach(item => {
-            item.classList.remove('active');
-        });
+        document.querySelectorAll('.song-item').forEach(item => item.classList.remove('active'));
         element.classList.add('active');
     }
 
-    // 額外功能：當歌曲播放結束後，自動播放下一首
+    // 自動播放下一首
     audioPlayer.onended = function() {
         const activeItem = document.querySelector('.song-item.active');
-        if (activeItem) {
-            const nextItem = activeItem.nextElementSibling;
-            if (nextItem) {
-                nextItem.click();
-            }
+        if (activeItem && activeItem.nextElementSibling) {
+            activeItem.nextElementSibling.click();
         }
     };
 </script>
