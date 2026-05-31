@@ -87,11 +87,47 @@
       padding-bottom: 10px;
     }
 
+    .audio-controls {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      margin-bottom: 20px;
+      background: rgba(0,0,0,0.2);
+      padding: 15px;
+      border-radius: 20px;
+    }
+    .control-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 13px;
+      gap: 10px;
+    }
+    .control-row label { width: 80px; }
+    .control-row input[type="range"] {
+      flex: 1;
+      cursor: pointer;
+      accent-color: var(--neon-cyan);
+    }
+    .value-display { width: 40px; text-align: right; font-family: monospace; }
+
     audio {
       width: 100%;
       margin-bottom: 20px;
       filter: invert(100%) hue-rotate(180deg) brightness(1.5);
     }
+
+    .loop-mode-btn {
+      background: rgba(255,255,255,0.1);
+      border: 1px solid var(--neon-cyan);
+      color: var(--neon-cyan);
+      padding: 5px 10px;
+      border-radius: 10px;
+      cursor: pointer;
+      font-size: 12px;
+      transition: 0.3s;
+    }
+    .loop-mode-btn:hover { background: var(--neon-cyan); color: #000; }
 
     .song-list-wrapper { 
       background: var(--list-bg); 
@@ -158,6 +194,23 @@
   <div class="player-container">
     <div class="now-playing" id="current-song">請選擇歌曲</div>
     
+    <div class="audio-controls">
+      <div class="control-row">
+        <label>音量</label>
+        <input type="range" id="vol-slider" min="0" max="1" step="0.01" value="0.5">
+        <span class="value-display" id="vol-val">50%</span>
+      </div>
+      <div class="control-row">
+        <label>增益(Boost)</label>
+        <input type="range" id="gain-slider" min="1" max="3" step="0.1" value="1">
+        <span class="value-display" id="gain-val">1.0x</span>
+      </div>
+      <div class="control-row">
+        <label>播放模式</label>
+        <button class="loop-mode-btn" id="loop-btn">順序播放 ⏭️</button>
+      </div>
+    </div>
+
     <audio id="audio-player" controls>
         Your browser does not support the audio element.
     </audio>
@@ -246,29 +299,64 @@
         "https://mp3.chi828.workers.dev/芹靜歌_日不落_對唱版0.3.mp3"
     ];
 
-    // --- 重新排序邏輯 ---
-    const tuqiSongs = originalUrls.filter(url => url.includes("圖奇"));
-    const riBuluSongs = originalUrls.filter(url => url.includes("日不落"));
-    const otherSongs = originalUrls.filter(url => !url.includes("圖奇") && !url.includes("日不落"));
-
-    // 組合順序：圖奇歌曲 -> 其他歌曲 -> 日不落
-    const sortedUrls = [...tuqiSongs, ...otherSongs, ...riBuluSongs];
-
     const audioPlayer = document.getElementById('audio-player');
     const playlistContainer = document.getElementById('song-list');
     const currentSongText = document.getElementById('current-song');
+    const volSlider = document.getElementById('vol-slider');
+    const volVal = document.getElementById('vol-val');
+    const gainSlider = document.getElementById('gain-slider');
+    const gainVal = document.getElementById('gain-val');
+    const loopBtn = document.getElementById('loop-btn');
+
+    // --- 播放模式邏輯 ---
+    let playMode = 0; 
+    const modeText = ["順序播放 ⏭️", "單曲循環 🔁", "列表循環 🔄"];
+
+    loopBtn.onclick = () => {
+        playMode = (playMode + 1) % 3;
+        loopBtn.innerText = modeText[playMode];
+    };
+
+    // --- Web Audio API 增益設定 ---
+    let audioCtx;
+    let gainNode;
+    let sourceNode;
+
+    function initAudioContext() {
+        if (!audioCtx) {
+            audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            gainNode = audioCtx.createGain();
+            sourceNode = audioCtx.createMediaElementSource(audioPlayer);
+            sourceNode.connect(gainNode);
+            gainNode.connect(audioCtx.destination);
+        }
+    }
+
+    // 預設音量 50%
+    audioPlayer.volume = 0.5;
+
+    volSlider.oninput = () => {
+        const v = parseFloat(volSlider.value);
+        audioPlayer.volume = v;
+        volVal.innerText = Math.round(v * 100) + "%";
+    };
+
+    gainSlider.oninput = () => {
+        const g = parseFloat(gainSlider.value);
+        gainVal.innerText = g.toFixed(1) + "x";
+        if (gainNode) gainNode.gain.value = g;
+    };
 
     function getSongName(url) {
         return url.split('/').pop().replace('.mp3', '');
     }
 
-    // 使用排序後的 sortedUrls 生成列表
-    sortedUrls.forEach((url, index) => {
+    // --- 直接使用原始列表，不進行篩選排序 ---
+    originalUrls.forEach((url, index) => {
         const name = getSongName(url);
         const div = document.createElement('div');
         div.className = 'song-item';
         div.innerText = `${index + 1}. ${name}`; 
-        
         div.onclick = () => {
             playSong(url, name, div);
         };
@@ -276,6 +364,9 @@
     });
 
     function playSong(url, name, element) {
+        initAudioContext();
+        if(audioCtx.state === 'suspended') audioCtx.resume();
+        
         audioPlayer.src = url;
         audioPlayer.play();
         currentSongText.innerText = "正在播放: " + name;
@@ -285,8 +376,14 @@
 
     audioPlayer.onended = function() {
         const activeItem = document.querySelector('.song-item.active');
-        if (activeItem && activeItem.nextElementSibling) {
-            activeItem.nextElementSibling.click();
+        if (playMode === 1) { 
+            activeItem.click();
+        } else if (playMode === 0 || playMode === 2) {
+            if (activeItem && activeItem.nextElementSibling) {
+                activeItem.nextElementSibling.click();
+            } else if (playMode === 2) {
+                document.querySelector('.song-item').click();
+            }
         }
     };
 
