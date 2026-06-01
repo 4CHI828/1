@@ -246,6 +246,7 @@
      * 播放器邏輯
      */
     let currentMode = 'sequence'; 
+    let currentIndex = -1; // 紀錄目前播放到第幾首
     let titleInterval = null;
     const originalTitle = "静静在夏天🍔🎤⁰³²⁰";
 
@@ -299,38 +300,61 @@
         sizeSpan.innerText = song.size || "";
         div.appendChild(nameSpan);
         div.appendChild(sizeSpan);
-        div.onclick = () => { playSong(song.src, song.title, div); };
+        div.onclick = () => { playSong(index); };
         playlistContainer.appendChild(div);
       });
     }
     buildList();
 
-    function playSong(url, name, element) {
-        audioPlayer.src = url;
-        audioPlayer.play();
-        currentSongText.innerText = "正在播放: " + name;
-        document.querySelectorAll('.song-item').forEach(item => item.classList.remove('active'));
-        element.classList.add('active');
-        startTitleScroll(name);
+    function playSong(index) {
+        if (index < 0 || index >= playlist.length) return;
+        
+        currentIndex = index;
+        const song = playlist[currentIndex];
+        
+        audioPlayer.src = song.src;
+        audioPlayer.play().catch(e => console.log("播放被攔截:", e));
+        
+        currentSongText.innerText = "正在播放: " + song.title;
+        
+        // 更新 UI 選項
+        document.querySelectorAll('.song-item').forEach((item, idx) => {
+          item.classList.toggle('active', idx === currentIndex);
+        });
+        
+        startTitleScroll(song.title);
     }
 
-    audioPlayer.onended = function() {
-        const activeItem = document.querySelector('.song-item.active');
-        if (!activeItem) return;
+    // 核心邏輯：決定下一首播放什麼
+    function playNext() {
         if (currentMode === 'loopOne') {
-            audioPlayer.play();
+            // 單曲循環，但如果剛好是出錯觸發的，則強制跳下一首，避免死循環
+            // 這裡簡單處理：如果是 onended 觸發則-loopOne，如果是 onerror 觸發則跳下一首
+            // 但為了統一，我們在 onended 處理 loopOne，這裡 playNext 預設為跳下一首
+            playSong((currentIndex + 1) % playlist.length);
         } else if (currentMode === 'shuffle') {
             const randomIndex = Math.floor(Math.random() * playlist.length);
-            const randomSong = playlist[randomIndex];
-            const allItems = document.querySelectorAll('.song-item');
-            playSong(randomSong.src, randomSong.title, allItems[randomIndex]);
+            playSong(randomIndex);
         } else {
-            if (activeItem.nextElementSibling) {
-                activeItem.nextElementSibling.click();
-            } else {
-                document.querySelector('.song-item').click();
-            }
+            // 順序播放
+            playSong((currentIndex + 1) % playlist.length);
         }
+    }
+
+    // 正常播放結束
+    audioPlayer.onended = function() {
+        if (currentMode === 'loopOne') {
+            audioPlayer.play();
+        } else {
+            playNext();
+        }
+    };
+
+    // 重點：當歌曲載入失敗、連結失效時觸發
+    audioPlayer.onerror = function() {
+        console.error("歌曲載入失敗，嘗試跳至下一首...");
+        currentSongText.innerText = "歌曲無法播放，跳轉中...";
+        playNext();
     };
 
     window.onload = () => { Visuals.initFloatingBg(); };
