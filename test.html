@@ -143,13 +143,11 @@
         return url.split('/').pop().replace('.mp3', '');
     }
 
-    // 生成列表 - 加入 index 參數
+    // 生成列表
     songUrls.forEach((url, index) => {
         const name = getSongName(url);
         const div = document.createElement('div');
         div.className = 'song-item';
-        
-        // 在前面加上 (index + 1) 作為序號
         div.innerText = `${index + 1}. ${name}`; 
         
         div.onclick = () => {
@@ -161,18 +159,33 @@
 
     function playSong(url, name, element) {
         audioPlayer.src = url;
-        audioPlayer.play();
+        audioPlayer.play().catch(error => {
+            console.log("播放被瀏覽器攔截或發生錯誤:", error);
+        });
         currentSongText.innerText = "正在播放: " + name;
         document.querySelectorAll('.song-item').forEach(item => item.classList.remove('active'));
         element.classList.add('active');
     }
 
-    // 自動播放下一首
-    audioPlayer.onended = function() {
+    // 封裝「播放下一首」的邏輯
+    function playNext() {
         const activeItem = document.querySelector('.song-item.active');
         if (activeItem && activeItem.nextElementSibling) {
             activeItem.nextElementSibling.click();
+        } else {
+            console.log("已經是最後一首歌了");
         }
+    }
+
+    // 情況 1：歌曲正常播放結束 -> 跳下一首
+    audioPlayer.onended = function() {
+        playNext();
+    };
+
+    // 情況 2：歌曲載入失敗/無法播放 -> 跳下一首
+    audioPlayer.onerror = function() {
+        console.error("此歌曲無法播放，自動跳過...");
+        playNext();
     };
 </script>
 
