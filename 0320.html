@@ -113,14 +113,41 @@
         }
 
         .controls-row { display: flex; flex-wrap: wrap; gap: 12px; margin-bottom: 20px; justify-content: center; }
+        
+        /* 搜尋框包裝容器 */
+        .search-wrapper {
+            position: relative;
+            flex: 2;
+            min-width: 200px;
+        }
         .search-box {
-            flex: 2; min-width: 200px; padding: 15px 22px;
+            width: 100%;
+            padding: 15px 45px 15px 22px; /* 右邊留空間給 X 按鈕 */
             border: 2px solid #ffeaa7; border-radius: 30px;
             background: var(--input-bg); color: var(--text-color); outline: none;
             transition: var(--transition); font-size: 16px;
+            box-sizing: border-box;
         }
         .search-box:focus { border-color: var(--primary); box-shadow: 0 0 0 4px var(--primary-glow); }
         
+        /* 清除文字按鈕 X */
+        .clear-btn {
+            position: absolute;
+            right: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: none;
+            border: none;
+            font-size: 18px;
+            color: #bbb;
+            cursor: pointer;
+            transition: var(--transition);
+            display: none; /* 預設隱藏，有文字才顯示 */
+            padding: 0;
+            line-height: 1;
+        }
+        .clear-btn:hover { color: var(--primary); }
+
         .sort-select {
             padding: 10px 20px; border-radius: 30px;
             border: 2px solid #ffeaa7; background: var(--input-bg);
@@ -271,7 +298,10 @@
     </div>
     
     <div class="controls-row">
-        <input type="text" id="searchInput" class="search-box" placeholder="搜尋歌手或歌曲...">
+        <div class="search-wrapper">
+            <input type="text" id="searchInput" class="search-box" placeholder="搜尋歌手或歌曲...">
+            <button id="clearSearch" class="clear-btn" title="清除文字">✕</button>
+        </div>
         <select id="sortSelect" class="sort-select">
             <option value="default">預設排序</option>
             <option value="song">歌曲 A-Z</option>
@@ -340,56 +370,42 @@
         modalRetry: "再抽一次 🎲",
         emptySearch: "🔍 找不到匹配的歌曲...試試其他關鍵字吧！",
         favTab: "❤️ 最愛",
-        allTab: "全部"
+        allTab: "全部",
+        highPitchTab: "🎤 高音歌"
     };
 
-    // 整合後且去重的完整歌曲數據清單
+    // 定義高音歌清單
+    const HIGH_PITCH_SONGS = ["煎熬", "離歌", "我的美麗", "左手指月", "離不開你", "給你一點顏色", "煙火裡的塵埃"];
+
     const musicList = [
-        // 鄧紫棋
         ["鄧紫棋", "倒數"], ["鄧紫棋", "句號"], ["鄧紫棋", "透明"], ["鄧紫棋", "泡沫"], ["鄧紫棋", "桃花諾"], ["鄧紫棋", "A.I.N.Y."], ["鄧紫棋", "海闊天空"], ["鄧紫棋", "很久以後"], ["鄧紫棋", "光年之外"], ["鄧紫棋", "後會無期"], ["鄧紫棋", "我的秘密"], ["鄧紫棋", "手心的薔薇"], ["鄧紫棋", "你把我灌醉"], ["鄧紫棋", "多遠都要在一起"], ["鄧紫棋", "來自天堂的魔鬼"], ["鄧紫棋", "紅薔薇白玫瑰"], ["鄧紫棋", "天空沒有極限"],
-        // 孫燕姿
         ["孫燕姿", "逆光"], ["孫燕姿", "雨天"], ["孫燕姿", "安寧"], ["孫燕姿", "遇見"], ["孫燕姿", "綠光"], ["孫燕姿", "克卜勒"], ["孫燕姿", "天黑黑"], ["孫燕姿", "第一天"], ["孫燕姿", "半句再見"], ["孫燕姿", "開始懂了"], ["孫燕姿", "眼淚成詩"], ["孫燕姿", "愛情證書"], ["孫燕姿", "飛瀑而下"], ["孫燕姿", "咕嘰咕嘰"], ["孫燕姿", "我懷念的"], ["孫燕姿", "Hey Jude"],
-        // 梁靜茹
         ["梁靜茹", "崇拜"], ["梁靜茹", "慢冷"], ["梁靜茹", "寧夏"], ["梁靜茹", "大人"], ["梁靜茹", "情歌"], ["梁靜茹", "燕尾蝶"], ["梁靜茹", "分手快樂"], ["梁靜茹", "可惜不是你"], ["梁靜茹", "會呼吸的痛"], ["梁靜茹", "小手拉大手"], ["梁靜茹", "給未來的自己"],
-        // A-Lin
         ["A-Lin", "失戀無罪"], ["A-Lin", "寂寞不痛"], ["A-Lin", "天若有情"], ["A-Lin", "PS我愛你"], ["A-Lin", "有一種悲傷"], ["A-Lin", "拿走了什麼"], ["A-Lin", "幸福了然後呢"], ["A-Lin", "無人知曉的我"], ["A-Lin", "給我一個理由忘記"],
-        // 張碧晨 / 毛不易
         ["張碧晨", "籠"], ["毛不易", "望"], ["張碧晨", "如故"], ["張碧晨", "年輪"], ["張碧晨", "不要忘記我愛你"], ["張碧晨", "光的方向"], ["張碧晨", "下一步"],
-        // 徐佳瑩 / 宋冬野 / 田馥甄
         ["徐佳瑩", "不捨"], ["宋冬野", "莉莉安"], ["徐佳瑩", "身騎白馬"], ["徐佳瑩", "失落沙洲"], ["徐佳瑩", "到此為止"], ["徐佳瑩", "行走的魚"], ["田馥甄", "不醉不會"], ["蘇打綠", "我好想你"],
-        // 張韶涵 / 張紫豪
         ["張韶涵", "阿刁"], ["張韶涵", "歐若拉"], ["張韶涵", "無名的人"], ["張韶涵", "淋雨一直走"], ["張韶涵", "追夢赤子心"], ["張韶涵", "隱形的翅膀"], ["張紫豪", "悄悄"],
-        // 薛之謙 / 張靚穎
         ["薛之謙", "平庸"], ["張靚穎", "畫心"], ["張靚穎", "天下無雙"], ["張靚穎", "只為你等候"],
-        // 范瑋琪 / 王菲
-        ["范瑋琪", "到不了"], ["范瑋琪", "如果的事"], ["范瑋琪", "最初的夢想"], ["范瑋琪", "一個像夏天一個像秋天"], ["王菲", "傳legend"], ["王菲", "如願"], ["王菲", "匆匆那年"], ["王菲", "百年孤寂"], ["王菲", "因為愛情"], ["王菲", "世界贈予我的"],
-        // 蔡健雅
+        ["范瑋琪", "到不了"], ["范瑋琪", "如果的事"], ["范瑋琪", "最初的夢想"], ["范瑋琪", "一個像夏天一個像秋天"], ["王菲", "傳奇"], ["王菲", "如願"], ["王菲", "匆匆那年"], ["王菲", "百年孤寂"], ["王菲", "因為愛情"], ["王菲", "世界贈予我的"],
         ["蔡健雅", "紫"], ["蔡健雅", "空白格"], ["蔡健雅", "紅色高跟鞋"], ["蔡健雅", "越來越不懂"], ["蔡健雅", "達爾文"], ["蔡健雅", "無底洞"],
-        // 周杰倫
         ["周杰倫", "龍捲風"], ["周杰倫", "楓"], ["周杰倫", "不該"], ["周杰倫", "退後"], ["周杰倫", "晴天"], ["周杰倫", "擱淺"], ["周杰倫", "花海"], ["周杰倫", "彩虹"], ["周杰倫", "安靜"], ["周杰倫", "軌跡"], ["周杰倫", "我不配"], ["周杰倫", "明明就"], ["周杰倫", "七里香"], ["周杰倫", "一點點"], ["周杰倫", "可愛女人"], ["周杰倫", "愛情廢柴"], ["周杰倫", "等你下課"], ["周杰倫", "一路向北"], ["周杰倫", "告白氣球"], ["周杰倫", "說了再見"], ["周杰倫", "說好不哭"], ["周杰倫", "紅塵客棧"], ["周杰倫", "黑色毛衣"], ["周杰倫", "最長的電影"], ["周杰倫", "聽媽媽的話"], ["周杰倫", "聽爸爸的話"], ["周杰倫", "算什麼男人"], ["周杰倫", "雨下一整晚"], ["周杰倫", "我是如此相信"], ["周杰倫", "說好的幸福呢"], ["周杰倫", "蒲公英的約定"], ["周杰倫", "不能說的秘密"], ["周杰倫", "我落淚情緒零碎"],
-        // 林俊傑
         ["林俊傑", "她說"], ["林俊傑", "江南"], ["林俊傑", "曹操"], ["林俊傑", "當你"], ["林俊傑", "學不會"], ["林俊傑", "小酒窩"], ["林俊傑", "關鍵詞"], ["林俊傑", "美人魚"], ["林俊傑", "願與愁"], ["林俊傑", "茉莉雨"], ["林俊傑", "修練愛情"], ["林俊傑", "編號89757"], ["林俊傑", "可惜沒如果"], ["林俊傑", "背對背擁抱"], ["林俊傑", "不為誰而作的歌"],
-        // 薛之謙
         ["薛之謙", "演員"], ["薛之謙", "其實"], ["薛之謙", "意外"], ["薛之謙", "租購"], ["薛之謙", "醜八怪"], ["薛之謙", "剛剛好"], ["薛之謙", "方圓幾里"], ["薛之謙", "聊表心意"], ["薛之謙", "像風一樣"], ["薛之謙", "你還要我怎樣"], ["薛之謙", "我好像在哪見過你"],
-        // 周深
         ["周深", "若夢"], ["周深", "大魚"], ["周深", "光亮"], ["周深", "冷冷"], ["周深", "有我"], ["周深", "小美滿"], ["周深", "花開忘憂"], ["周深", "雲裳羽衣曲"],
-        // 李榮浩
         ["李榮浩", "模特"], ["李榮浩", "李白"], ["李榮浩", "戀人"], ["李榮浩", "貝貝"], ["李榮浩", "喜劇之王"], ["李榮浩", "年少有為"], ["李榮浩", "爸爸媽媽"],
-        // 汪蘇瀧
         ["汪蘇瀧", "有點甜"], ["汪蘇瀧", "小星星"], ["汪蘇瀧", "一笑傾城"], ["汪蘇瀧", "忽而今夏"], ["汪蘇瀧", "不分手的戀愛"], ["汪蘇瀧", "湊熱鬧"],
-        // 郭頂
         ["郭頂", "保留"], ["郭頂", "水星記"], ["郭頂", "我們倆"], ["郭頂", "淒美地"], ["郭頂", "想著你"],
-        // 王俊凱 / TFBOYS
         ["王俊凱", "樹讀"], ["TFBOYS", "寵愛"], ["王俊凱", "小棉襖"], ["TFBOYS", "魔法城堡"], ["王俊凱", "摩天輪的思念"],
-        // 劉若英 / 陶喆 / 李宗盛
         ["劉若英", "繼續，給15歲的自己"], ["陶喆", "找自己"], ["陶喆", "普通朋友"], ["陶喆", "愛我還是他"], ["李宗盛", "山丘"], ["李宗盛", "晚婚"], ["李宗盛", "飄洋過海來看你"],
-        // 綜合其他
         ["那英", "默"], ["伍佰", "淚橋"], ["神馬樂團", "愛河"], ["劉瑞琦", "房間"], ["貳佰", "玫瑰"], ["邢銘", "月光"], ["王心凌", "愛你"], ["李榮浩", "戒煙"], ["家家", "命運"], ["於文文", "體面"], ["劉若英", "成全"], ["詹雯婷", "決愛"], ["彭羚", "囚鳥"], ["陳勢安", "天後"], ["楊宗緯", "洋蔥"], ["張惠妹", "人質"], ["蔡依林", "妥協"], ["楊丞琳", "雨愛"], ["吳青峰", "阿Q"], ["華晨宇", "野人"], ["陳忻玥", "炙愛"], ["王梓鈺", "舍得"], ["房東的貓", "何必"], ["李幸倪", "明天"], ["許嵩", "素顏"], ["BOBO", "光榮"], ["草東沒有派對", "山海"], ["鄭秀文", "值得"], ["盧廣仲", "我愛你"], ["陳奕迅", "紅玫瑰"], ["劉虎", "從前慢"], ["任然", "後繼者"], ["JS", "殺破狼"], ["舍子", "若把你"], ["林宥嘉", "想自由"], ["張傑", "她不懂"], ["王藍茵", "惡作劇"], ["BY2", "愛丫愛丫"], ["陳奕迅", "好久不見"], ["蔡依林", "玫瑰少年"], ["陳詠桐", "說散就散"], ["王力宏", "火力全開"], ["郭靜", "你在不在"], ["金玟岐", "歲月神偷"], ["劉惜君", "我很快樂"], ["張惠妹", "連名帶姓"], ["韋禮安", "如果可以"], ["喆克群", "為你寫詩"], ["F.I.R", "我們的愛"], ["羅大佑", "鹿港小鎮"], ["郁可唯", "時間煮雨"], ["比莉", "Dear John"], ["羅力威", "海枯石爛"], ["江語晨", "最後一頁"], ["盧盧快閉嘴", "字字句句"], ["逃跑計劃", "再見再見"], ["陳每文", "愛的回歸線"], ["曲婉婷", "我的歌聲裡"], ["戚薇", "如果愛忘了"], ["沙寶亮", "最初的信仰"], ["郭靜", "下一個天亮"], ["譚維維", "如果有來生"], ["林憶蓮", "至少還有你"], ["菲道爾", "阿拉斯加海灣"], ["周興哲", "永不失聯的愛"], ["EXO", "十二月的奇跡"], ["黃綺珊/希林娜依高", "是媽媽是女兒"], ["楊乃文", "推開世界的門"], ["鹿含", "致愛"], ["曹格&卓文萱", "梁山伯與茱麗葉"], ["莫文蔚", "這世界那麼多人"], ["張學友", "一千個傷心的理由"], ["以冬", "我的一個道姑朋友"], ["老王樂隊", "我還年輕我還年輕"], ["尹露晞", "我叫長安你叫故里"], ["菲道爾", "在加納共和國離婚"], ["AGA", "Wonderful U"], ["Adele", "Rolling in the Deep"], ["李佳薇", "煎熬"], ["信樂團", "離歌"], ["小霞", "我的美麗"], ["薩頂頂", "左手指月"], ["黃綺珊", "離不開你"], ["譚維維", "給你一點顏色"], ["華晨宇", "煙火裡的塵埃"], ["Fine樂團", "呼吸決定"], ["溫嵐", "夏天的風"], ["袁婭維", "阿楚姑娘"], ["宋冬野", "斑馬，斑馬"], ["光澤", "空心"], ["王心凌", "大眠"], ["時柏塵", "跳樓機"], ["黃霄雲", "星辰大海"], ["王以太", "危險派對"], ["薩頂頂", "悟空"], ["Vitas", "Opera #2"], ["宋冬野", "安和橋"], ["龍猛寺寬度", "武家坡2021"],
-        // 補遺
         ["郭靜", "心牆"], ["張惠妹", "原來你什麼都不想要"]
     ];
 
-    const rawMusicData = musicList.map((item, index) => ({ id: index, artist: item[0], song: item[1] }));
+    const rawMusicData = musicList.map((item, index) => ({ 
+        id: index, 
+        artist: (item[0] && item[0].trim() !== "") ? item[0] : "其他", 
+        song: item[1] 
+    }));
 
     const State = {
         favorites: JSON.parse(localStorage.getItem('musicFavs')) || [],
@@ -399,6 +415,7 @@
 
     const musicBody = document.getElementById('musicBody');
     const searchInput = document.getElementById('searchInput');
+    const clearSearchBtn = document.getElementById('clearSearch');
     const sortSelect = document.getElementById('sortSelect');
     const totalCountSpan = document.getElementById('totalCount');
     const categoryTabs = document.getElementById('categoryTabs');
@@ -442,8 +459,14 @@
         
         let tabsHTML = `<button class="tab ${State.currentArtist==='全部'?'active':''}" data-artist="全部">${UI_TEXT.allTab}</button>`;
         tabsHTML += `<button class="tab ${State.currentArtist==='收藏'?'active':''}" data-artist="收藏">${UI_TEXT.favTab}</button>`;
+        
+        // 新增高音歌分類
+        tabsHTML += `<button class="tab ${State.currentArtist==='高音歌'?'active':''}" data-artist="高音歌">${UI_TEXT.highPitchTab}</button>`;
+        
         topArtists.forEach(artist => {
-            tabsHTML += `<button class="tab ${State.currentArtist===artist?'active':''}" data-artist="${artist}">${artist}</button>`;
+            if(artist !== "其他") {
+                tabsHTML += `<button class="tab ${State.currentArtist===artist?'active':''}" data-artist="${artist}">${artist}</button>`;
+            }
         });
         categoryTabs.innerHTML = tabsHTML;
     }
@@ -458,10 +481,23 @@
         const term = searchInput.value.toLowerCase();
         const sort = sortSelect.value;
         
+        // 控制清除按鈕的顯示/隱藏
+        clearSearchBtn.style.display = term ? 'block' : 'none';
+
         let filtered = rawMusicData.filter(item => {
             const matchesSearch = item.artist.toLowerCase().includes(term) || item.song.toLowerCase().includes(term);
-            const matchesArtist = (State.currentArtist === "全部") || 
-                                  (State.currentArtist === "收藏" ? State.favorites.includes(item.id) : item.artist === State.currentArtist);
+            
+            let matchesArtist = false;
+            if (State.currentArtist === "全部") {
+                matchesArtist = true;
+            } else if (State.currentArtist === "收藏") {
+                matchesArtist = State.favorites.includes(item.id);
+            } else if (State.currentArtist === "高音歌") {
+                matchesArtist = HIGH_PITCH_SONGS.includes(item.song);
+            } else {
+                matchesArtist = item.artist === State.currentArtist;
+            }
+            
             return matchesSearch && matchesArtist;
         });
 
@@ -564,6 +600,12 @@
     document.getElementById('retryBtn').addEventListener('click', startRandomDraw);
     document.getElementById('closeModal').addEventListener('click', () => modalOverlay.style.display = 'none');
     
+    // 清除搜尋文字按鈕事件
+    clearSearchBtn.addEventListener('click', () => {
+        searchInput.value = '';
+        renderTable();
+    });
+
     function debounce(func, timeout = 300) {
         let timer;
         return (...args) => {
