@@ -114,7 +114,6 @@
 
         .controls-row { display: flex; flex-wrap: wrap; gap: 12px; margin-bottom: 20px; justify-content: center; }
         
-        /* 搜尋框包裝容器 */
         .search-wrapper {
             position: relative;
             flex: 2;
@@ -122,7 +121,7 @@
         }
         .search-box {
             width: 100%;
-            padding: 15px 45px 15px 22px; /* 右邊留空間給 X 按鈕 */
+            padding: 15px 45px 15px 22px;
             border: 2px solid #ffeaa7; border-radius: 30px;
             background: var(--input-bg); color: var(--text-color); outline: none;
             transition: var(--transition); font-size: 16px;
@@ -130,7 +129,6 @@
         }
         .search-box:focus { border-color: var(--primary); box-shadow: 0 0 0 4px var(--primary-glow); }
         
-        /* 清除文字按鈕 X */
         .clear-btn {
             position: absolute;
             right: 15px;
@@ -142,7 +140,7 @@
             color: #bbb;
             cursor: pointer;
             transition: var(--transition);
-            display: none; /* 預設隱藏，有文字才顯示 */
+            display: none;
             padding: 0;
             line-height: 1;
         }
@@ -371,10 +369,10 @@
         emptySearch: "🔍 找不到匹配的歌曲...試試其他關鍵字吧！",
         favTab: "❤️ 最愛",
         allTab: "全部",
-        highPitchTab: "🎤 高音歌"
+        highPitchTab: "🎤 高音歌",
+        otherTab: "📦 其他"
     };
 
-    // 定義高音歌清單
     const HIGH_PITCH_SONGS = ["煎熬", "離歌", "我的美麗", "左手指月", "離不開你", "給你一點顏色", "煙火裡的塵埃"];
 
     const musicList = [
@@ -459,9 +457,8 @@
         
         let tabsHTML = `<button class="tab ${State.currentArtist==='全部'?'active':''}" data-artist="全部">${UI_TEXT.allTab}</button>`;
         tabsHTML += `<button class="tab ${State.currentArtist==='收藏'?'active':''}" data-artist="收藏">${UI_TEXT.favTab}</button>`;
-        
-        // 新增高音歌分類
         tabsHTML += `<button class="tab ${State.currentArtist==='高音歌'?'active':''}" data-artist="高音歌">${UI_TEXT.highPitchTab}</button>`;
+        tabsHTML += `<button class="tab ${State.currentArtist==='其他'?'active':''}" data-artist="其他">${UI_TEXT.otherTab}</button>`;
         
         topArtists.forEach(artist => {
             if(artist !== "其他") {
@@ -481,7 +478,6 @@
         const term = searchInput.value.toLowerCase();
         const sort = sortSelect.value;
         
-        // 控制清除按鈕的顯示/隱藏
         clearSearchBtn.style.display = term ? 'block' : 'none';
 
         let filtered = rawMusicData.filter(item => {
@@ -600,7 +596,6 @@
     document.getElementById('retryBtn').addEventListener('click', startRandomDraw);
     document.getElementById('closeModal').addEventListener('click', () => modalOverlay.style.display = 'none');
     
-    // 清除搜尋文字按鈕事件
     clearSearchBtn.addEventListener('click', () => {
         searchInput.value = '';
         renderTable();
