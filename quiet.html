@@ -5,18 +5,18 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>静静在夏天🍔🎤⁰³²⁰</title>
   <style>
-    /* --- 主題變數系統 --- */
+    /* --- 現代化變數系統 --- */
     :root {
       --main-color: #ffcc66;
       --accent-color: #ff9966;
       --dark-color: #663300;
       --ketchup-red: #ff2b2b;
       --neon-cyan: #00ffff;
-      --player-bg: rgba(43, 45, 49, 0.8);
-      --list-bg: rgba(35, 36, 40, 0.9);
+      --player-bg: rgba(30, 32, 36, 0.85);
+      --list-bg: rgba(20, 21, 24, 0.7);
       --bg-color: #fff8f0;
-      --transition-speed: 0.4s;
-      --glass-border: rgba(255, 255, 255, 0.1);
+      --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      --glass-border: rgba(255, 255, 255, 0.15);
     }
 
     [data-theme="red"] { --main-color: #ff8a8a; --accent-color: #ff4d4d; --dark-color: #800000; --bg-color: #fff0f0; }
@@ -25,105 +25,146 @@
 
     body {
       background: var(--bg-color) url('burger-bg.png') repeat;
-      font-family: "Microsoft JhengHei", "PingFang TC", sans-serif;
+      font-family: "Segoe UI", "Microsoft JhengHei", "PingFang TC", sans-serif;
       text-align: center;
       margin: 0;
       padding: 20px; 
-      border: 15px solid var(--main-color); 
+      border: 12px solid var(--main-color); 
       border-radius: 40px;
-      box-shadow: inset 0 0 20px rgba(0,0,0,0.1);
-      position: relative;
+      box-shadow: inset 0 0 30px rgba(0,0,0,0.05);
       min-height: 95vh;
       display: flex;
       flex-direction: column;
       align-items: center;
       box-sizing: border-box;
       overflow-x: hidden;
-      transition: background var(--transition-speed), border-color var(--transition-speed);
+      transition: background 0.5s ease;
     }
 
+    /* 漂浮背景優化 */
     .floating-bg { position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: -1; overflow: hidden; }
-    .floating-item { position: absolute; bottom: -50px; font-size: 24px; user-select: none; will-change: transform, opacity; animation: floatUp linear infinite; }
-    @keyframes floatUp { 0% { transform: translateY(0) rotate(0deg); opacity: 0; } 10% { opacity: 0.7; } 90% { opacity: 0.7; } 100% { transform: translateY(-110vh) rotate(360deg); opacity: 0; } }
+    .floating-item { position: absolute; bottom: -60px; font-size: 24px; user-select: none; animation: floatUp linear infinite; }
+    @keyframes floatUp { 
+      0% { transform: translateY(0) rotate(0deg); opacity: 0; } 
+      10% { opacity: 0.6; } 
+      90% { opacity: 0.6; } 
+      100% { transform: translateY(-110vh) rotate(360deg); opacity: 0; } 
+    }
 
-    h1 { color: var(--accent-color); font-size: 24px; margin-bottom: 10px; text-shadow: 2px 2px #fff; position: relative; display: inline-block; transition: color var(--transition-speed); }
-    .ketchup { position: absolute; bottom: -10px; left: 50%; transform: translateX(-50%); width: 80px; height: 8px; background: var(--ketchup-red); border-radius: 4px; animation: drip 2s infinite; }
-    @keyframes drip { 0%, 100% { height: 8px; } 50% { height: 25px; } }
+    h1 { 
+      color: var(--accent-color); 
+      font-size: clamp(20px, 5vw, 28px); 
+      margin-bottom: 15px; 
+      text-shadow: 2px 2px 0px #fff; 
+      position: relative; 
+      display: inline-block; 
+    }
+    .ketchup { 
+      position: absolute; bottom: -12px; left: 50%; transform: translateX(-50%); 
+      width: 60px; height: 8px; background: var(--ketchup-red); 
+      border-radius: 4px; animation: drip 2s infinite ease-in-out; 
+    }
+    @keyframes drip { 0%, 100% { height: 8px; width: 60px; } 50% { height: 20px; width: 50px; } }
 
-    .btn-group { margin-bottom: 20px; display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; }
-    .btn { display: inline-block; padding: 10px 15px; background-color: var(--main-color); border: 3px solid var(--accent-color); border-radius: 20px; font-size: 14px; font-weight: bold; color: var(--dark-color); text-decoration: none; box-shadow: 3px 3px 8px rgba(0,0,0,0.2); transition: 0.3s; cursor: pointer; }
-    .btn:hover { background-color: #fff; transform: scale(1.05); }
+    /* 按鈕組優化 */
+    .btn-group { 
+      margin-bottom: 25px; 
+      display: flex; 
+      flex-wrap: wrap; 
+      justify-content: center; 
+      gap: 12px; 
+      max-width: 600px;
+    }
+    .btn { 
+      padding: 10px 18px; 
+      background: var(--main-color); 
+      border: 2px solid var(--accent-color); 
+      border-radius: 25px; 
+      font-size: 14px; 
+      font-weight: bold; 
+      color: var(--dark-color); 
+      text-decoration: none; 
+      box-shadow: 0 4px 10px rgba(0,0,0,0.1); 
+      transition: var(--transition); 
+      cursor: pointer; 
+    }
+    .btn:hover { transform: translateY(-3px); box-shadow: 0 6px 15px rgba(0,0,0,0.15); background: #fff; }
+    .btn:active { transform: scale(0.95); }
 
-    .theme-group { display: flex; gap: 8px; margin-bottom: 20px; justify-content: center; }
-    .theme-dot { width: 30px; height: 30px; border-radius: 50%; cursor: pointer; border: 3px solid #fff; box-shadow: 0 0 5px rgba(0,0,0,0.2); transition: transform 0.2s; }
-    .theme-dot:hover { transform: scale(1.2); }
-    .dot-yellow { background-color: #ffcc66; } .dot-red { background-color: #ff8a8a; } .dot-green { background-color: #c2f0c2; } .dot-brown { background-color: #d2b48c; }
+    .theme-group { display: flex; gap: 10px; margin-bottom: 25px; justify-content: center; }
+    .theme-dot { 
+      width: 32px; height: 32px; border-radius: 50%; cursor: pointer; 
+      border: 3px solid #fff; box-shadow: 0 2px 6px rgba(0,0,0,0.2); 
+      transition: var(--transition); 
+    }
+    .theme-dot:hover { transform: scale(1.2) rotate(15deg); }
+    .dot-yellow { background: #ffcc66; } .dot-red { background: #ff8a8a; } .dot-green { background: #c2f0c2; } .dot-brown { background: #d2b48c; }
 
+    /* 播放器主體優化 */
     .player-container {
       background: var(--player-bg);
-      backdrop-filter: blur(15px);
-      -webkit-backdrop-filter: blur(15px);
-      border-radius: 32px;
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border-radius: 40px;
       padding: 30px;
-      width: 90%; 
-      max-width: 400px; 
+      width: 92%; 
+      max-width: 420px; 
       margin: 20px auto;
-      box-shadow: 0 20px 50px rgba(0,0,0,0.4), 0 0 20px var(--neon-cyan);
+      box-shadow: 0 25px 50px rgba(0,0,0,0.3), 0 0 15px var(--neon-cyan);
       color: white;
       border: 1px solid var(--glass-border);
       box-sizing: border-box;
       position: relative;
-      z-index: 10;
     }
 
     .now-playing {
       text-align: center;
-      margin-bottom: 15px;
-      font-size: 17px;
+      margin-bottom: 20px;
+      font-size: 18px;
       color: var(--main-color);
       font-weight: bold;
-      height: 24px;
+      height: 26px;
       border-bottom: 1px solid rgba(255,255,255,0.1);
-      padding-bottom: 10px;
+      padding-bottom: 12px;
+      letter-spacing: 1px;
     }
 
     .mode-group {
       display: flex;
       justify-content: center;
       gap: 10px;
-      margin-bottom: 20px;
+      margin-bottom: 25px;
     }
     .mode-btn {
-      background: rgba(0, 0, 0, 0.6);
-      border: 2px solid rgba(255, 255, 255, 0.6);
-      color: #ffffff;
-      padding: 6px 12px;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.3);
+      color: #ddd;
+      padding: 8px 15px;
       border-radius: 20px;
       font-size: 12px;
       cursor: pointer;
-      transition: all 0.3s ease;
-      user-select: none;
-      outline: none;
+      transition: var(--transition);
       font-family: inherit;
     }
     .mode-btn.active {
-      background: var(--neon-cyan) !important;
-      color: #000 !important;
-      font-weight: bold !important;
-      box-shadow: 0 0 15px var(--neon-cyan);
+      background: var(--neon-cyan);
+      color: #000;
+      font-weight: bold;
+      box-shadow: 0 0 20px var(--neon-cyan);
       border-color: var(--neon-cyan);
     }
 
     audio {
       width: 100%;
-      margin-bottom: 20px;
+      margin-bottom: 25px;
       filter: invert(100%) hue-rotate(180deg) brightness(1.5);
+      height: 40px;
     }
 
     .song-list-wrapper { 
       background: var(--list-bg); 
-      border-radius: 20px; 
-      padding: 12px; 
+      border-radius: 25px; 
+      padding: 10px; 
       border: 1px solid rgba(255,255,255,0.05); 
     }
     .song-list {
@@ -131,44 +172,50 @@
       padding: 0;
       margin: 0;
       text-align: left;
-      max-height: 280px;
+      max-height: 320px;
       overflow-y: auto;
+      scrollbar-width: thin;
     }
-    .song-list::-webkit-scrollbar { width: 6px; }
-    .song-list::-webkit-scrollbar-track { background: rgba(0,0,0,0.1); border-radius: 10px; }
+    .song-list::-webkit-scrollbar { width: 5px; }
     .song-list::-webkit-scrollbar-thumb { background: var(--neon-cyan); border-radius: 10px; }
 
     .song-item { 
-      padding: 10px 15px; 
+      padding: 12px 16px; 
       font-size: 13px; 
-      color: #aaa; 
+      color: #bbb; 
       cursor: pointer; 
-      border-radius: 10px; 
-      margin-bottom: 5px; 
-      transition: 0.2s; 
+      border-radius: 15px; 
+      margin-bottom: 6px; 
+      transition: var(--transition); 
       display: flex; 
       justify-content: space-between;
       align-items: center;
+      animation: fadeIn 0.5s ease forwards;
+      opacity: 0;
     }
-    .song-item:hover { background: rgba(255,255,255,0.05); color: white; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateX(-10px); } to { opacity: 1; transform: translateX(0); } }
+
+    .song-item:hover { background: rgba(255,255,255,0.08); color: #fff; transform: scale(1.02); }
     .song-item.active { 
-      background: rgba(0, 255, 255, 0.1); 
+      background: rgba(0, 255, 255, 0.15); 
       color: var(--neon-cyan); 
       font-weight: bold; 
       border-left: 4px solid var(--neon-cyan); 
+      box-shadow: 0 0 15px rgba(0, 255, 255, 0.2);
     }
 
     .song-size {
       font-size: 11px;
-      opacity: 0.6;
+      opacity: 0.5;
       margin-left: 10px;
       font-weight: normal;
+      font-family: monospace;
     }
 
-    .footer { margin-top: 40px; font-size: 13px; color: #aaa; opacity: 0.7; transition: opacity 0.3s; }
+    .footer { margin-top: 40px; font-size: 13px; color: #aaa; opacity: 0.7; transition: var(--transition); }
     .footer:hover { opacity: 1; }
-    .footer a { color: #aaa; text-decoration: none; transition: color 0.3s; }
-    .footer a:hover { color: #888; text-decoration: underline; }
+    .footer a { color: #aaa; text-decoration: none; transition: var(--transition); }
+    .footer a:hover { color: var(--accent-color); }
   </style>
 </head>
 <body id="bodyTag">
@@ -193,7 +240,7 @@
   </div>
 
   <div class="player-container">
-    <div class="now-playing" id="current-song">請選擇歌曲</div>
+    <div class="now-playing" id="current-song">準備播放...</div>
     
     <div class="mode-group">
       <button class="mode-btn active" onclick="setPlaybackMode('sequence', this)">列表循環</button>
@@ -206,20 +253,16 @@
     </audio>
 
     <div class="song-list-wrapper">
-      <div id="song-list" class="song-list">
-        <!-- 歌曲列表由 JS 生成 -->
-      </div>
+      <div id="song-list" class="song-list"></div>
     </div>
   </div>
 
   <div class="footer">
-     <a href="https://www.twitch.tv/chi828" target="_blank" rel="noopener noreferrer">新竹奇奇828製作</a>
+     <a href="https://www.twitch.tv/chi828" target="_blank" rel="noopener noreferrer">新竹奇奇828 製作 🛠️</a>
   </div>
 
   <script>
-    /**
-     * 視覺效果
-     */
+    /** 視覺效果控制 */
     const Visuals = {
       setTheme(theme) {
         document.body.setAttribute('data-theme', theme === 'yellow' ? '' : theme);
@@ -242,9 +285,7 @@
     };
     window.setTheme = (t) => Visuals.setTheme(t);
 
-    /**
-     * 播放器邏輯
-     */
+    /** 播放器邏輯 */
     let currentMode = 'sequence'; 
     let currentIndex = -1; 
     let titleInterval = null;
@@ -318,18 +359,26 @@
       }, 300);
     }
 
-    async function updateFileSize(url, element) {
-      try {
-        const response = await fetch(url, { method: 'HEAD' });
-        const contentLength = response.headers.get('content-length');
-        if (contentLength) {
-          const sizeInMB = (parseInt(contentLength) / (1024 * 1024)).toFixed(2);
-          element.innerText = sizeInMB + " MB";
-        } else {
-          element.innerText = "未知";
+    // 優化：非同步分批獲取檔案大小，避免伺服器壓力
+    async function fetchAllFileSizes() {
+      const items = document.querySelectorAll('.song-item');
+      for (let i = 0; i < items.length; i++) {
+        const song = playlist[i];
+        const sizeSpan = items[i].querySelector('.song-size');
+        try {
+          const response = await fetch(song.src, { method: 'HEAD' });
+          const contentLength = response.headers.get('content-length');
+          if (contentLength) {
+            const sizeInMB = (parseInt(contentLength) / (1024 * 1024)).toFixed(2);
+            sizeSpan.innerText = sizeInMB + " MB";
+          } else {
+            sizeSpan.innerText = "未知";
+          }
+        } catch (e) {
+          sizeSpan.innerText = "未知";
         }
-      } catch (e) {
-        element.innerText = "未知";
+        // 每讀取 3 首歌稍微停頓 50ms，緩解伺服器壓力
+        if (i % 3 === 0) await new Promise(r => setTimeout(r, 50));
       }
     }
 
@@ -338,32 +387,22 @@
       playlist.forEach((song, index) => {
         const div = document.createElement('div');
         div.className = 'song-item';
+        div.style.animationDelay = `${index * 0.05}s`; // 階梯式淡入動畫
         
-        // --- 邏輯：根據檔案副檔名增加標記 ---
         let displayTitle = song.title;
         const urlLower = song.src.toLowerCase();
-        if (urlLower.endsWith('.flac')) {
-          displayTitle += " (flac)";
-        } else if (urlLower.endsWith('.mp3')) {
-          displayTitle += " (MP3)";
-        }
+        if (urlLower.endsWith('.flac')) displayTitle += " (flac)";
+        else if (urlLower.endsWith('.mp3')) displayTitle += " (MP3)";
         
-        const nameSpan = document.createElement('span');
-        nameSpan.innerText = `${index + 1}. ${displayTitle}`;
-        
-        const sizeSpan = document.createElement('span');
-        sizeSpan.className = 'song-size';
-        sizeSpan.innerText = "讀取中...";
-        
-        div.appendChild(nameSpan);
-        div.appendChild(sizeSpan);
+        div.innerHTML = `
+          <span>${index + 1}. ${displayTitle}</span>
+          <span class="song-size">讀取中...</span>
+        `;
         div.onclick = () => { playSong(index); };
         playlistContainer.appendChild(div);
-
-        updateFileSize(song.src, sizeSpan);
       });
+      fetchAllFileSizes(); // 列表建好後開始非同步抓取大小
     }
-    buildList();
 
     function playSong(index) {
         if (index < 0 || index >= playlist.length) return;
@@ -372,7 +411,7 @@
         const song = playlist[currentIndex];
         
         audioPlayer.src = song.src;
-        audioPlayer.play().catch(e => console.log("播放被攔截:", e));
+        audioPlayer.play().catch(e => console.log("Auto-play blocked"));
         
         currentSongText.innerText = "正在播放: " + song.title;
         
@@ -385,29 +424,28 @@
 
     function playNext() {
         if (currentMode === 'loopOne') {
-            playSong((currentIndex + 1) % playlist.length);
+            playSong(currentIndex);
         } else if (currentMode === 'shuffle') {
-            const randomIndex = Math.floor(Math.random() * playlist.length);
-            playSong(randomIndex);
+            playSong(Math.floor(Math.random() * playlist.length));
         } else {
             playSong((currentIndex + 1) % playlist.length);
         }
     }
 
-    audioPlayer.onended = function() {
-        if (currentMode === 'loopOne') {
-            audioPlayer.play();
-        } else {
-            playNext();
-        }
+    audioPlayer.onended = () => {
+        if (currentMode === 'loopOne') audioPlayer.play();
+        else playNext();
     };
 
-    audioPlayer.onerror = function() {
-        currentSongText.innerText = "歌曲無法播放，跳轉中...";
+    audioPlayer.onerror = () => {
+        currentSongText.innerText = "歌曲連結失效，跳轉中...";
         playNext();
     };
 
-    window.onload = () => { Visuals.initFloatingBg(); };
+    window.onload = () => { 
+      Visuals.initFloatingBg(); 
+      buildList();
+    };
   </script>
 </body
 >
