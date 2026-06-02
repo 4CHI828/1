@@ -10,7 +10,7 @@
            ========================================================================= */
         :root {
             --primary: #ff7675; 
-            --primary-glow: rgba(255, 118, 117, 0.4);
+            --primary-glow: rgba(255, 118, 117, 0.3);
             --bg-color: #fffaf0;
             --card-bg: rgba(255, 255, 255, 0.7);
             --text-color: #2d3436;
@@ -28,10 +28,11 @@
             --border-color: rgba(255, 255, 255, 0.1);
             --input-bg: rgba(45, 45, 45, 0.9);
             --shadow: 0 20px 50px rgba(0,0,0,0.6);
+            --primary-glow: rgba(255, 118, 117, 0.15);
         }
 
         /* =========================================================================
-           2. 全局基礎樣式 & 背景氛圍
+           2. 全局基礎樣式 & 極致視覺特效
            ========================================================================= */
         body {
             font-family: 'PingFang TC', 'Microsoft JhengHei', system-ui, sans-serif;
@@ -42,6 +43,20 @@
             transition: background 0.5s ease;
             overflow-x: hidden;
             min-height: 100vh;
+        }
+
+        /* 滑鼠追隨發光效果 */
+        #cursor-glow {
+            position: fixed;
+            width: 300px;
+            height: 300px;
+            background: radial-gradient(circle, var(--primary-glow) 0%, transparent 70%);
+            border-radius: 50%;
+            pointer-events: none;
+            z-index: 0;
+            transform: translate(-50%, -50%);
+            transition: width 0.3s, height 0.3s;
+            will-change: top, left;
         }
 
         /* 背景模糊光暈 (Blobs) */
@@ -96,7 +111,6 @@
             box-shadow: 0 8px 20px var(--primary-glow);
         }
         .main-link-btn:hover { transform: translateY(-3px) scale(1.03); }
-
         .social-links-group { display: flex; flex-wrap: wrap; gap: 12px; justify-content: center; margin-bottom: 35px; }
         .social-btn { padding: 10px 20px; font-size: 14px; }
 
@@ -109,12 +123,7 @@
             transition: var(--transition); font-size: 16px; box-sizing: border-box;
         }
         .search-box:focus { border-color: var(--primary); box-shadow: 0 0 0 4px var(--primary-glow); }
-        
-        .clear-btn {
-            position: absolute; right: 15px; top: 50%; transform: translateY(-50%);
-            background: none; border: none; font-size: 18px; color: #bbb;
-            cursor: pointer; display: none;
-        }
+        .clear-btn { position: absolute; right: 15px; top: 50%; transform: translateY(-50%); background: none; border: none; font-size: 18px; color: #bbb; cursor: pointer; display: none; }
 
         .sort-select { padding: 10px 20px; border-radius: 30px; border: 2px solid #ffeaa7; background: var(--input-bg); color: var(--text-color); cursor: pointer; }
         .random-btn { padding: 0 25px; background: var(--accent-grad); color: white; border: none; border-radius: 30px; cursor: pointer; font-weight: 600; transition: var(--transition); }
@@ -127,21 +136,26 @@
         }
         .tab.active { background: var(--primary); color: white; transform: scale(1.1); box-shadow: 0 4px 10px var(--primary-glow); }
 
-        /* 表格樣式 */
+        /* 表格與行進場動畫 */
         .table-wrapper { width: 100%; overflow-x: auto; }
         table { width: 100%; border-collapse: collapse; min-width: 500px; }
         th { background: rgba(0,0,0,0.03); text-align: center; padding: 15px; color: #999; font-size: 14px; }
-        tr { transition: var(--transition); }
+        
+        .music-row { 
+            opacity: 0; 
+            transform: translateY(15px); 
+            animation: rowSlideIn 0.4s ease forwards;
+        }
+        @keyframes rowSlideIn {
+            to { opacity: 1; transform: translateY(0); }
+        }
+
         td { padding: 12px 15px; border-bottom: 1px solid var(--border-color); text-align: center; }
         tr:hover td { background: rgba(255,118,117,0.05); }
 
-        .fav-btn { 
-            background: none; border: none; cursor: pointer; font-size: 20px; color: #ccc; 
-            transition: var(--transition); width: 30px; height: 30px; 
-        }
+        .fav-btn { background: none; border: none; cursor: pointer; font-size: 20px; color: #ccc; transition: var(--transition); width: 30px; height: 30px; }
         .fav-btn.active { color: #ff4757; transform: scale(1.3); }
-        /* 點擊心形動畫 */
-        .fav-btn:active { transform: scale(0.8); transition: 0.1s; }
+        .fav-btn:active { transform: scale(0.8); }
 
         .song-link { color: var(--text-color); text-decoration: none; font-weight: 600; transition: var(--transition); }
         .song-link:hover { color: var(--primary); transform: scale(1.05); }
@@ -163,7 +177,6 @@
         @keyframes popUp { from { transform: scale(0.5); opacity: 0; } to { transform: scale(1); opacity: 1; } }
         .random-song { font-size: 28px; font-weight: 800; color: var(--primary); margin: 20px 0; min-height: 40px; }
         .random-artist { font-size: 18px; margin-bottom: 35px; opacity: 0.8; }
-        
         .modal-actions { display: flex; flex-direction: column; gap: 12px; align-items: center; }
         .close-btn { background: var(--accent-grad); color: white; border: none; padding: 15px 40px; border-radius: 30px; cursor: pointer; font-weight: 600; width: 80%; }
         .retry-btn { background: var(--card-bg); color: var(--primary); border: 2px solid var(--primary); padding: 12px 40px; border-radius: 30px; cursor: pointer; font-weight: 600; width: 80%; }
@@ -188,7 +201,8 @@
 </head>
 <body id="mainBody">
 
-<!-- 背景氛圍元件 -->
+<!-- 極致視覺元件 -->
+<div id="cursor-glow"></div>
 <div class="blob blob-1"></div>
 <div class="blob blob-2"></div>
 <div class="blob blob-3"></div>
@@ -234,6 +248,8 @@
             </thead>
             <tbody id="musicBody"></tbody>
         </table>
+        <!-- 虛擬列表觸發器 -->
+        <div id="loadMoreSentinel" style="height: 20px; width: 100%;"></div>
     </div>
 </div>
 
@@ -314,9 +330,9 @@
         favorites: JSON.parse(localStorage.getItem('musicFavs')) || [],
         currentArtist: "全部",
         theme: localStorage.getItem('theme') || 'light',
+        displayLimit: 30, // 虛擬列表：初始顯示數量
     };
 
-    // DOM Elements
     const musicBody = document.getElementById('musicBody');
     const searchInput = document.getElementById('searchInput');
     const clearSearchBtn = document.getElementById('clearSearch');
@@ -326,12 +342,13 @@
     const modalOverlay = document.getElementById('modalOverlay');
     const backToTopBtn = document.getElementById('backToTop');
     const personalCountSpan = document.getElementById('personalCount');
+    const cursorGlow = document.getElementById('cursor-glow');
 
     /* =========================================================================
-       4. 核心邏輯 (含事件委託)
+       4. 核心邏輯與事件委託
        ========================================================================= */
 
-    // 【重要】事件委託：監聽整個 table body，而不是為每個按鈕綁定事件
+    // 事件委託：處理收藏按鈕點擊
     musicBody.addEventListener('click', (e) => {
         const favBtn = e.target.closest('.fav-btn');
         if (favBtn) {
@@ -393,6 +410,7 @@
         const sort = sortSelect.value;
         clearSearchBtn.style.display = term ? 'block' : 'none';
 
+        // 1. 過濾數據
         let filtered = rawMusicData.filter(item => {
             const matchesSearch = item.artist.toLowerCase().includes(term) || item.song.toLowerCase().includes(term);
             let matchesArtist = (State.currentArtist === "全部") ? true : 
@@ -402,19 +420,28 @@
             return matchesSearch && matchesArtist;
         });
 
+        // 2. 排序
         if (sort === 'song') filtered.sort((a, b) => a.song.localeCompare(b.song, 'zh-Hant'));
         else if (sort === 'artist') filtered.sort((a, b) => a.artist.localeCompare(b.artist, 'zh-Hant'));
 
+        totalCountSpan.innerText = filtered.length;
+
+        // 3. 虛擬列表實作：僅取前 State.displayLimit 筆
+        const slice = filtered.slice(0, State.displayLimit);
         const fragment = document.createDocumentFragment();
-        if (filtered.length === 0) {
+
+        if (slice.length === 0) {
             const tr = document.createElement('tr');
             tr.innerHTML = `<td colspan="3" style="padding: 40px; color: #999;">${UI_TEXT.emptySearch}</td>`;
             fragment.appendChild(tr);
         } else {
-            filtered.forEach((item, index) => {
+            slice.forEach((item, index) => {
                 const isFav = State.favorites.includes(item.id);
                 const searchUrl = `https://www.youtube.com/results?search_query=${encodeURIComponent(item.artist + ' ' + item.song)}`;
                 const tr = document.createElement('tr');
+                tr.className = 'music-row';
+                // 波浪式行進場動畫：根據索引增加延遲
+                tr.style.animationDelay = `${index * 0.03}s`;
                 tr.innerHTML = `
                     <td class="col-fav"><button class="fav-btn ${isFav?'active':''}" data-id="${item.id}">❤</button></td>
                     <td class="col-artist">${highlight(item.artist, term)}</td>
@@ -425,12 +452,18 @@
         }
         musicBody.innerHTML = '';
         musicBody.appendChild(fragment);
-        totalCountSpan.innerText = filtered.length;
     }
 
     /* =========================================================================
-       5. 視覺特效 (含抽獎緊張感 & 粒子優化)
+       5. 極致視覺特效
        ========================================================================= */
+
+    // 滑鼠追隨光暈
+    window.addEventListener('mousemove', (e) => {
+        cursorGlow.style.top = `${e.clientY}px`;
+        cursorGlow.style.left = `${e.clientX}px`;
+    });
+
     function initVisuals() {
         setInterval(() => {
             const symbols = ['🎵', '🎶', '🎤', '🍔', '✨', '💿', '🎸'];
@@ -442,7 +475,7 @@
             p.style.animationDuration = (5 + Math.random() * 8) + 's';
             document.body.appendChild(p);
             setTimeout(() => p.remove(), 13000);
-        }, 600); // 稍微降低頻率，提升效能
+        }, 600);
     }
 
     function fireConfetti() {
@@ -464,11 +497,8 @@
         const resSong = document.getElementById('resSong');
         const resArtist = document.getElementById('resArtist');
         const modalTitle = document.getElementById('modalTitle');
-        
         modalTitle.innerText = UI_TEXT.modalDrawing;
         modalOverlay.style.display = 'flex';
-        
-        // 非線性減速序列 [快, 快, 中, 中, 慢, 慢, 停]
         const delays = [30, 50, 100, 150, 300, 600, 1000];
         let currentStep = 0;
 
@@ -476,7 +506,6 @@
             const tempSong = rawMusicData[Math.floor(Math.random() * rawMusicData.length)];
             resSong.innerText = tempSong.song;
             resArtist.innerText = "歌手：" + tempSong.artist;
-
             if (currentStep < delays.length - 1) {
                 setTimeout(shuffle, delays[currentStep]);
                 currentStep++;
@@ -492,16 +521,24 @@
     }
 
     /* =========================================================================
-       6. 事件綁定與初始化
+       6. 無限滾動 (虛擬列表 Lite)
+       ========================================================================= */
+    const observer = new IntersectionObserver((entries) => {
+        if (entries[0].isIntersecting) {
+            State.displayLimit += 30; // 每次增加 30 首
+            renderTable();
+        }
+    }, { threshold: 1.0 });
+
+    observer.observe(document.getElementById('loadMoreSentinel'));
+
+    /* =========================================================================
+       7. 事件綁定與初始化
        ========================================================================= */
     document.getElementById('randomBtn').addEventListener('click', startRandomDraw);
     document.getElementById('retryBtn').addEventListener('click', startRandomDraw);
     document.getElementById('closeModal').addEventListener('click', () => modalOverlay.style.display = 'none');
-    
-    clearSearchBtn.addEventListener('click', () => {
-        searchInput.value = '';
-        renderTable();
-    });
+    clearSearchBtn.addEventListener('click', () => { searchInput.value = ''; renderTable(); });
 
     function debounce(func, timeout = 300) {
         let timer;
@@ -510,7 +547,10 @@
             timer = setTimeout(() => { func.apply(this, args); }, timeout);
         };
     }
-    searchInput.addEventListener('input', debounce(() => renderTable()));
+    searchInput.addEventListener('input', debounce(() => {
+        State.displayLimit = 30; // 重置顯示數量
+        renderTable();
+    }));
     sortSelect.addEventListener('change', renderTable);
     
     categoryTabs.addEventListener('click', (e) => {
@@ -518,6 +558,7 @@
             document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
             e.target.classList.add('active');
             State.currentArtist = e.target.getAttribute('data-artist');
+            State.displayLimit = 30; // 重置顯示數量
             renderTable();
         }
     });
