@@ -41,7 +41,7 @@
       transition: background 0.5s ease;
     }
 
-    /* 漂浮背景優化 */
+    /* 漂浮背景 */
     .floating-bg { position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: -1; overflow: hidden; }
     .floating-item { position: absolute; bottom: -60px; font-size: 24px; user-select: none; animation: floatUp linear infinite; }
     @keyframes floatUp { 
@@ -66,7 +66,7 @@
     }
     @keyframes drip { 0%, 100% { height: 8px; width: 60px; } 50% { height: 20px; width: 50px; } }
 
-    /* 按鈕組優化 */
+    /* 按鈕組 */
     .btn-group { 
       margin-bottom: 25px; 
       display: flex; 
@@ -100,7 +100,7 @@
     .theme-dot:hover { transform: scale(1.2) rotate(15deg); }
     .dot-yellow { background: #ffcc66; } .dot-red { background: #ff8a8a; } .dot-green { background: #c2f0c2; } .dot-brown { background: #d2b48c; }
 
-    /* 播放器主體優化 */
+    /* 播放器主體 */
     .player-container {
       background: var(--player-bg);
       backdrop-filter: blur(20px);
@@ -204,14 +204,6 @@
       box-shadow: 0 0 15px rgba(0, 255, 255, 0.2);
     }
 
-    .song-size {
-      font-size: 11px;
-      opacity: 0.5;
-      margin-left: 10px;
-      font-weight: normal;
-      font-family: monospace;
-    }
-
     .footer { margin-top: 40px; font-size: 13px; color: #aaa; opacity: 0.7; transition: var(--transition); }
     .footer:hover { opacity: 1; }
     .footer a { color: #aaa; text-decoration: none; transition: var(--transition); }
@@ -290,53 +282,55 @@
     let currentIndex = -1; 
     let titleInterval = null;
 
+    // 更新後的 MP3 連結清單
     const playlist = [
-      { "title": "煙火裡的塵埃 - StreamRecorder", "src": "http://chi.xo.je/MUSIC/煙火裡的塵埃 - StreamRecorder.flac" },
-      { "title": "芹靜歌_日不落_對唱版0.3", "src": "http://chi.xo.je/MUSIC/芹靜歌_日不落_對唱版0.3.flac" },
-      { "title": "靜靜(圖奇)-克卜勒", "src": "http://chi.xo.je/MUSIC/靜靜(圖奇)-克卜勒.flac" },
-      { "title": "靜靜(圖奇)-天黑黑", "src": "http://chi.xo.je/MUSIC/靜靜(圖奇)-天黑黑.flac" },
-      { "title": "靜靜(圖奇)-如願", "src": "http://chi.xo.je/MUSIC/靜靜(圖奇)-如願.flac" },
-      { "title": "靜靜(圖奇)-安和橋", "src": "http://chi.xo.je/MUSIC/靜靜(圖奇)-安和橋.flac" },
-      { "title": "靜靜(圖奇)-我好想你", "src": "http://chi.xo.je/MUSIC/靜靜(圖奇)-我好想你.flac" },
-      { "title": "靜靜在夏天 煙火裡的塵埃", "src": "http://chi.xo.je/MUSIC/靜靜在夏天 煙火裡的塵埃.flac" },
-      { "title": "靜靜在夏天(圖奇) Opera2", "src": "http://chi.xo.je/MUSIC/靜靜在夏天(圖奇) Opera2.mp3" },
-      { "title": "靜靜在夏天(圖奇) 悟空", "src": "http://chi.xo.je/MUSIC/靜靜在夏天(圖奇) 悟空.mp3" },
-      { "title": "靜靜在夏天(圖奇) 武家坡", "src": "http://chi.xo.je/MUSIC/靜靜在夏天(圖奇) 武家坡.mp3" },
-      { "title": "靜靜在夏天(圖奇) 靜靜的", "src": "http://chi.xo.je/MUSIC/靜靜在夏天(圖奇) 靜靜的.mp3" },
-      { "title": "靜靜在夏天-38 號大迪曲", "src": "http://chi.xo.je/MUSIC/靜靜在夏天-38 號大迪曲.flac" },
-      { "title": "靜靜在夏天-A.I.N.Y.", "src": "http://chi.xo.je/MUSIC/靜靜在夏天-A.I.N.Y..flac" },
-      { "title": "靜靜在夏天-Lydia", "src": "http://chi.xo.je/MUSIC/靜靜在夏天-Lydia.flac" },
-      { "title": "靜靜在夏天-Rolling in the deep", "src": "http://chi.xo.je/MUSIC/靜靜在夏天-Rolling in the deep.flac" },
-      { "title": "靜靜在夏天-一個人想著一個人", "src": "http://chi.xo.je/MUSIC/靜靜在夏天-一個人想著一個人.flac" },
-      { "title": "靜靜在夏天-你把我灌醉", "src": "http://chi.xo.je/MUSIC/靜靜在夏天-你把我灌醉.flac" },
-      { "title": "靜靜在夏天-克卜勒", "src": "http://chi.xo.je/MUSIC/靜靜在夏天-克卜勒.flac" },
-      { "title": "靜靜在夏天-公主殿下", "src": "http://chi.xo.je/MUSIC/靜靜在夏天-公主殿下.flac" },
-      { "title": "靜靜在夏天-咖喱咖喱", "src": "http://chi.xo.je/MUSIC/靜靜在夏天-咖喱咖喱.flac" },
-      { "title": "靜靜在夏天-天下無雙", "src": "http://chi.xo.je/MUSIC/靜靜在夏天-天下無雙.flac" },
-      { "title": "靜靜在夏天-寵愛", "src": "http://chi.xo.je/MUSIC/靜靜在夏天-寵愛.flac" },
-      { "title": "靜靜在夏天-左手指月", "src": "http://chi.xo.je/MUSIC/靜靜在夏天-左手指月.flac" },
-      { "title": "靜靜在夏天-愛人錯過", "src": "http://chi.xo.je/MUSIC/靜靜在夏天-愛人錯過.flac" },
-      { "title": "靜靜在夏天-我們的愛", "src": "http://chi.xo.je/MUSIC/靜靜在夏天-我們的愛.flac" },
-      { "title": "靜靜在夏天-我想要佔據你", "src": "http://chi.xo.je/MUSIC/靜靜在夏天-我想要佔據你.flac" },
-      { "title": "靜靜在夏天-我懷念的", "src": "http://chi.xo.je/MUSIC/靜靜在夏天-我懷念的.flac" },
-      { "title": "靜靜在夏天-手心的薔薇", "src": "http://chi.xo.je/MUSIC/靜靜在夏天-手心的薔薇.flac" },
-      { "title": "靜靜在夏天-星辰大海", "src": "http://chi.xo.je/MUSIC/靜靜在夏天-星辰大海.flac" },
-      { "title": "靜靜在夏天-時間都去哪兒了", "src": "http://chi.xo.je/MUSIC/靜靜在夏天-時間都去哪兒了.flac" },
-      { "title": "靜靜在夏天-會呼吸的痛", "src": "http://chi.xo.je/MUSIC/靜靜在夏天-會呼吸的痛.flac" },
-      { "title": "靜靜在夏天-月彎彎", "src": "http://chi.xo.je/MUSIC/靜靜在夏天-月彎彎.flac" },
-      { "title": "靜靜在夏天-皮囊", "src": "http://chi.xo.je/MUSIC/靜靜在夏天-皮囊.flac" },
-      { "title": "靜靜在夏天-盛夏光年", "src": "http://chi.xo.je/MUSIC/靜靜在夏天-盛夏光年.flac" },
-      { "title": "靜靜在夏天-空心", "src": "http://chi.xo.je/MUSIC/靜靜在夏天-空心.flac" },
-      { "title": "靜靜在夏天-突然好想你", "src": "http://chi.xo.je/MUSIC/靜靜在夏天-突然好想你.flac" },
-      { "title": "靜靜在夏天-給你一點顏色", "src": "http://chi.xo.je/MUSIC/靜靜在夏天-給你一點顏色.flac" },
-      { "title": "靜靜在夏天-給我一個理由忘記", "src": "http://chi.xo.je/MUSIC/靜靜在夏天-給我一個理由忘記.flac" },
-      { "title": "靜靜在夏天-要愛愛", "src": "http://chi.xo.je/MUSIC/靜靜在夏天-要愛愛.flac" },
-      { "title": "靜靜在夏天-連名帶姓", "src": "http://chi.xo.je/MUSIC/靜靜在夏天-連名帶姓.flac" },
-      { "title": "靜靜在夏天-阿刁(新舊混合最終版)", "src": "http://chi.xo.je/MUSIC/靜靜在夏天-阿刁(新舊混合最終版).flac" },
-      { "title": "靜靜在夏天-阿刁", "src": "http://chi.xo.je/MUSIC/靜靜在夏天-阿刁.flac" },
-      { "title": "靜靜在夏天-離歌", "src": "http://chi.xo.je/MUSIC/靜靜在夏天-離歌.flac" },
-      { "title": "靜靜在夏天-靜靜的", "src": "http://chi.xo.je/MUSIC/靜靜在夏天-靜靜的.flac" },
-      { "title": "靜靜在夏天_百年孤寂", "src": "http://chi.xo.je/MUSIC/靜靜在夏天_百年孤寂.flac" }
+      { "title": "芹靜歌_日不落_對唱版0.3", "src": "http://chi.xo.je/MP3/芹靜歌_日不落_對唱版0.3.mp3" },
+      { "title": "靜靜在夏天 煙火裡的塵埃 - StreamRecorder", "src": "http://chi.xo.je/MP3/靜靜在夏天 煙火裡的塵埃 - StreamRecorder.mp3" },
+      { "title": "靜靜在夏天 煙火裡的塵埃", "src": "http://chi.xo.je/MP3/靜靜在夏天 煙火裡的塵埃.mp3" },
+      { "title": "靜靜在夏天(圖奇) Opera2", "src": "http://chi.xo.je/MP3/靜靜在夏天(圖奇) Opera2.mp3" },
+      { "title": "靜靜在夏天(圖奇) 悟空", "src": "http://chi.xo.je/MP3/靜靜在夏天(圖奇) 悟空.mp3" },
+      { "title": "靜靜在夏天(圖奇) 武家坡", "src": "http://chi.xo.je/MP3/靜靜在夏天(圖奇) 武家坡.mp3" },
+      { "title": "靜靜在夏天(圖奇) 靜靜的", "src": "http://chi.xo.je/MP3/靜靜在夏天(圖奇) 靜靜的.mp3" },
+      { "title": "靜靜在夏天(圖奇)-克卜勒", "src": "http://chi.xo.je/MP3/靜靜在夏天(圖奇)-克卜勒.mp3" },
+      { "title": "靜靜在夏天(圖奇)-天黑黑", "src": "http://chi.xo.je/MP3/靜靜在夏天(圖奇)-天黑黑.mp3" },
+      { "title": "靜靜在夏天(圖奇)-如願", "src": "http://chi.xo.je/MP3/靜靜在夏天(圖奇)-如願.mp3" },
+      { "title": "靜靜在夏天(圖奇)-安和橋", "src": "http://chi.xo.je/MP3/靜靜在夏天(圖奇)-安和橋.mp3" },
+      { "title": "靜靜在夏天(圖奇)-我好想你", "src": "http://chi.xo.je/MP3/靜靜在夏天(圖奇)-我好想你.mp3" },
+      { "title": "靜靜在夏天-38 號大迪曲", "src": "http://chi.xo.je/MP3/靜靜在夏天-38 號大迪曲.mp3" },
+      { "title": "靜靜在夏天-A.I.N.Y.", "src": "http://chi.xo.je/MP3/靜靜在夏天-A.I.N.Y..mp3" },
+      { "title": "靜靜在夏天-Lydia", "src": "http://chi.xo.je/MP3/靜靜在夏天-Lydia.mp3" },
+      { "title": "靜靜在夏天-Rolling in the deep", "src": "http://chi.xo.je/MP3/靜靜在夏天-Rolling in the deep.mp3" },
+      { "title": "靜靜在夏天-一個人想著一個人", "src": "http://chi.xo.je/MP3/靜靜在夏天-一個人想著一個人.mp3" },
+      { "title": "靜靜在夏天-你把我灌醉", "src": "http://chi.xo.je/MP3/靜靜在夏天-你把我灌醉.mp3" },
+      { "title": "靜靜在夏天-克卜勒", "src": "http://chi.xo.je/MP3/靜靜在夏天-克卜勒.mp3" },
+      { "title": "靜靜在夏天-公主殿下", "src": "http://chi.xo.je/MP3/靜靜在夏天-公主殿下.mp3" },
+      { "title": "靜靜在夏天-咖喱咖喱", "src": "http://chi.xo.je/MP3/靜靜在夏天-咖喱咖喱.mp3" },
+      { "title": "靜靜在夏天-唯一", "src": "http://chi.xo.je/MP3/靜靜在夏天-唯一.mp3" },
+      { "title": "靜靜在夏天-天下無雙", "src": "http://chi.xo.je/MP3/靜靜在夏天-天下無雙.mp3" },
+      { "title": "靜靜在夏天-寵愛", "src": "http://chi.xo.je/MP3/靜靜在夏天-寵愛.mp3" },
+      { "title": "靜靜在夏天-左手指月", "src": "http://chi.xo.je/MP3/靜靜在夏天-左手指月.mp3" },
+      { "title": "靜靜在夏天-愛人錯過", "src": "http://chi.xo.je/MP3/靜靜在夏天-愛人錯過.mp3" },
+      { "title": "靜靜在夏天-我們的愛", "src": "http://chi.xo.je/MP3/靜靜在夏天-我們的愛.mp3" },
+      { "title": "靜靜在夏天-我想要佔據你", "src": "http://chi.xo.je/MP3/靜靜在夏天-我想要佔據你.mp3" },
+      { "title": "靜靜在夏天-我懷念的", "src": "http://chi.xo.je/MP3/靜靜在夏天-我懷念的.mp3" },
+      { "title": "靜靜在夏天-手心的薔薇", "src": "http://chi.xo.je/MP3/靜靜在夏天-手心的薔薇.mp3" },
+      { "title": "靜靜在夏天-星辰大海", "src": "http://chi.xo.je/MP3/靜靜在夏天-星辰大海.mp3" },
+      { "title": "靜靜在夏天-時間都去哪兒了", "src": "http://chi.xo.je/MP3/靜靜在夏天-時間都去哪兒了.mp3" },
+      { "title": "靜靜在夏天-會呼吸的痛", "src": "http://chi.xo.je/MP3/靜靜在夏天-會呼吸的痛.mp3" },
+      { "title": "靜靜在夏天-月彎彎", "src": "http://chi.xo.je/MP3/靜靜在夏天-月彎彎.mp3" },
+      { "title": "靜靜在夏天-皮囊", "src": "http://chi.xo.je/MP3/靜靜在夏天-皮囊.mp3" },
+      { "title": "靜靜在夏天-盛夏光年", "src": "http://chi.xo.je/MP3/靜靜在夏天-盛夏光年.mp3" },
+      { "title": "靜靜在夏天-空心", "src": "http://chi.xo.je/MP3/靜靜在夏天-空心.mp3" },
+      { "title": "靜靜在夏天-突然好想你", "src": "http://chi.xo.je/MP3/靜靜在夏天-突然好想你.mp3" },
+      { "title": "靜靜在夏天-給你一點顏色", "src": "http://chi.xo.je/MP3/靜靜在夏天-給你一點顏色.mp3" },
+      { "title": "靜靜在夏天-給我一個理由忘記", "src": "http://chi.xo.je/MP3/靜靜在夏天-給我一個理由忘記.mp3" },
+      { "title": "靜靜在夏天-要愛愛", "src": "http://chi.xo.je/MP3/靜靜在夏天-要愛愛.mp3" },
+      { "title": "靜靜在夏天-連名帶姓", "src": "http://chi.xo.je/MP3/靜靜在夏天-連名帶姓.mp3" },
+      { "title": "靜靜在夏天-阿刁(新舊混合最終版)", "src": "http://chi.xo.je/MP3/靜靜在夏天-阿刁(新舊混合最終版).mp3" },
+      { "title": "靜靜在夏天-阿刁", "src": "http://chi.xo.je/MP3/靜靜在夏天-阿刁.mp3" },
+      { "title": "靜靜在夏天-離歌", "src": "http://chi.xo.je/MP3/靜靜在夏天-離歌.mp3" },
+      { "title": "靜靜在夏天-靜靜的", "src": "http://chi.xo.je/MP3/靜靜在夏天-靜靜的.mp3" },
+      { "title": "靜靜在夏天_百年孤寂", "src": "http://chi.xo.je/MP3/靜靜在夏天_百年孤寂.mp3" }
     ];
 
     const audioPlayer = document.getElementById('audio-player');
@@ -359,49 +353,23 @@
       }, 300);
     }
 
-    // 優化：非同步分批獲取檔案大小，避免伺服器壓力
-    async function fetchAllFileSizes() {
-      const items = document.querySelectorAll('.song-item');
-      for (let i = 0; i < items.length; i++) {
-        const song = playlist[i];
-        const sizeSpan = items[i].querySelector('.song-size');
-        try {
-          const response = await fetch(song.src, { method: 'HEAD' });
-          const contentLength = response.headers.get('content-length');
-          if (contentLength) {
-            const sizeInMB = (parseInt(contentLength) / (1024 * 1024)).toFixed(2);
-            sizeSpan.innerText = sizeInMB + " MB";
-          } else {
-            sizeSpan.innerText = "未知";
-          }
-        } catch (e) {
-          sizeSpan.innerText = "未知";
-        }
-        // 每讀取 3 首歌稍微停頓 50ms，緩解伺服器壓力
-        if (i % 3 === 0) await new Promise(r => setTimeout(r, 50));
-      }
-    }
-
     function buildList() {
       playlistContainer.innerHTML = '';
       playlist.forEach((song, index) => {
         const div = document.createElement('div');
         div.className = 'song-item';
-        div.style.animationDelay = `${index * 0.05}s`; // 階梯式淡入動畫
+        div.style.animationDelay = `${index * 0.05}s`; 
         
+        // 根據副檔名增加標記
         let displayTitle = song.title;
         const urlLower = song.src.toLowerCase();
         if (urlLower.endsWith('.flac')) displayTitle += " (flac)";
         else if (urlLower.endsWith('.mp3')) displayTitle += " (MP3)";
         
-        div.innerHTML = `
-          <span>${index + 1}. ${displayTitle}</span>
-          <span class="song-size">讀取中...</span>
-        `;
+        div.innerHTML = `<span>${index + 1}. ${displayTitle}</span>`;
         div.onclick = () => { playSong(index); };
         playlistContainer.appendChild(div);
       });
-      fetchAllFileSizes(); // 列表建好後開始非同步抓取大小
     }
 
     function playSong(index) {
