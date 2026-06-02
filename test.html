@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>音樂播放器</title>
+    <title>奇奇828的音樂播放器</title>
     <style>
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -18,7 +18,7 @@
         .player-container {
             background-color: #1e1e1e;
             width: 90%;
-            max-width: 500px;
+            max-width: 550px;
             padding: 20px;
             border-radius: 15px;
             box-shadow: 0 10px 30px rgba(0,0,0,0.5);
@@ -28,13 +28,31 @@
             color: #1DB954;
             margin-bottom: 20px;
         }
-        .now-playing {
-            text-align: center;
+
+        /* --- 滾動文字區域樣式 --- */
+        .now-playing-box {
+            width: 100%;
+            overflow: hidden; 
+            white-space: nowrap; 
             margin-bottom: 20px;
-            font-weight: bold;
-            height: 1.2em;
-            color: #b3b3b3;
+            background: #282828;
+            border-radius: 8px;
+            padding: 10px 0;
+            box-sizing: border-box;
         }
+        .now-playing-text {
+            display: inline-block;
+            padding-left: 100%; 
+            font-weight: bold;
+            color: #b3b3b3;
+            animation: marquee 15s linear infinite; 
+        }
+        @keyframes marquee {
+            0% { transform: translateX(0); }
+            100% { transform: translateX(-100%); }
+        }
+        /* ----------------------- */
+
         audio {
             width: 100%;
             margin-bottom: 20px;
@@ -50,6 +68,9 @@
             cursor: pointer;
             border-bottom: 1px solid #282828;
             transition: background 0.2s;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
         }
         .song-item:hover {
             background-color: #282828;
@@ -59,7 +80,12 @@
             color: #1DB954;
             border-left: 4px solid #1DB954;
         }
-        /* 滾動條美化 */
+        .file-size {
+            font-size: 0.75em;
+            color: #777;
+            margin-left: 10px;
+            white-space: nowrap;
+        }
         .playlist::-webkit-scrollbar {
             width: 6px;
         }
@@ -72,8 +98,11 @@
 <body>
 
 <div class="player-container">
-    <h2>音樂播放清單</h2>
-    <div class="now-playing" id="current-song">請選擇歌曲</div>
+    <h2>奇奇828音樂播放清單</h2>
+    
+    <div class="now-playing-box">
+        <div class="now-playing-text" id="current-song">請選擇歌曲</div>
+    </div>
     
     <audio id="audio-player" controls>
         Your browser does not support the audio element.
@@ -86,107 +115,150 @@
 
 <script>
     const songUrls = [
-        "https://mp3.chi828.workers.dev/芹靜歌_日不落_對唱版0.3.mp3",
-        "https://mp3.chi828.workers.dev/靜靜在夏天 煙火裡的塵埃 - StreamRecorder.mp3",
-        "https://mp3.chi828.workers.dev/靜靜在夏天 煙火裡的塵埃.mp3",
-        "https://mp3.chi828.workers.dev/靜靜在夏天(圖奇) Opera #2.mp3",
-        "https://mp3.chi828.workers.dev/靜靜在夏天(圖奇) 武家坡.mp3",
-        "https://mp3.chi828.workers.dev/靜靜在夏天(圖奇) 悟空.mp3",
-        "https://mp3.chi828.workers.dev/靜靜在夏天(圖奇) 靜靜的.mp3",
-        "https://mp3.chi828.workers.dev/靜靜在夏天(圖奇)-天黑黑.mp3",
-        "https://mp3.chi828.workers.dev/靜靜在夏天(圖奇)-如願.mp3",
-        "https://mp3.chi828.workers.dev/靜靜在夏天(圖奇)-安和橋.mp3",
-        "https://mp3.chi828.workers.dev/靜靜在夏天(圖奇)-克卜勒.mp3",
-        "https://mp3.chi828.workers.dev/靜靜在夏天(圖奇)-我好想你.mp3",
-        "https://mp3.chi828.workers.dev/靜靜在夏天_百年孤寂.mp3",
-        "https://mp3.chi828.workers.dev/靜靜在夏天-38 號大迪曲.mp3",
-        "https://mp3.chi828.workers.dev/靜靜在夏天-A.I.N.Y..mp3",
-        "https://mp3.chi828.workers.dev/靜靜在夏天-Lydia.mp3",
-        "https://mp3.chi828.workers.dev/靜靜在夏天-Rolling in the deep.mp3",
-        "https://mp3.chi828.workers.dev/靜靜在夏天-一個人想著一個人.mp3",
-        "https://mp3.chi828.workers.dev/靜靜在夏天-公主殿下.mp3",
-        "https://mp3.chi828.workers.dev/靜靜在夏天-天下無雙.mp3",
-        "https://mp3.chi828.workers.dev/靜靜在夏天-手心的薔薇.mp3",
-        "https://mp3.chi828.workers.dev/靜靜在夏天-月彎彎.mp3",
-        "https://mp3.chi828.workers.dev/靜靜在夏天-左手指月.mp3",
-        "https://mp3.chi828.workers.dev/靜靜在夏天-皮囊.mp3",
-        "https://mp3.chi828.workers.dev/靜靜在夏天-你把我灌醉.mp3",
-        "https://mp3.chi828.workers.dev/靜靜在夏天-克卜勒.mp3",
-        "https://mp3.chi828.workers.dev/靜靜在夏天-我們的愛.mp3",
-        "https://mp3.chi828.workers.dev/靜靜在夏天-我想要佔據你.mp3",
-        "https://mp3.chi828.workers.dev/靜靜在夏天-我懷念的.mp3",
-        "https://mp3.chi828.workers.dev/靜靜在夏天-咖喱咖喱.mp3",
-        "https://mp3.chi828.workers.dev/靜靜在夏天-空心.mp3",
-        "https://mp3.chi828.workers.dev/靜靜在夏天-阿刁(新舊混合最終版).mp3",
-        "https://mp3.chi828.workers.dev/靜靜在夏天-阿刁.mp3",
-        "https://mp3.chi828.workers.dev/靜靜在夏天-星辰大海.mp3",
-        "https://mp3.chi828.workers.dev/靜靜在夏天-突然好想你.mp3",
-        "https://mp3.chi828.workers.dev/靜靜在夏天-要愛愛.mp3",
-        "https://mp3.chi828.workers.dev/靜靜在夏天-時間都去哪兒了.mp3",
-        "https://mp3.chi828.workers.dev/靜靜在夏天-唯一.mp3",
-        "https://mp3.chi828.workers.dev/靜靜在夏天-盛夏光年.mp3",
-        "https://mp3.chi828.workers.dev/靜靜在夏天-連名帶姓.mp3",
-        "https://mp3.chi828.workers.dev/靜靜在夏天-給你一點顏色.mp3",
-        "https://mp3.chi828.workers.dev/靜靜在夏天-給我一個理由忘記.mp3",
-        "https://mp3.chi828.workers.dev/靜靜在夏天-愛人錯過.mp3",
-        "https://mp3.chi828.workers.dev/靜靜在夏天-會呼吸的痛.mp3",
-        "https://mp3.chi828.workers.dev/靜靜在夏天-靜靜的.mp3",
-        "https://mp3.chi828.workers.dev/靜靜在夏天-離歌.mp3",
-        "https://mp3.chi828.workers.dev/靜靜在夏天-寵愛.mp3"
+        "http://chi.xo.je/MUSIC/煙火裡的塵埃 - StreamRecorder.flac",
+        "http://chi.xo.je/MUSIC/芹靜歌_日不落_對唱版0.3.flac",
+        "http://chi.xo.je/MUSIC/靜靜(圖奇)-克卜勒.flac",
+        "http://chi.xo.je/MUSIC/靜靜(圖奇)-天黑黑.flac",
+        "http://chi.xo.je/MUSIC/靜靜(圖奇)-如願.flac",
+        "http://chi.xo.je/MUSIC/靜靜(圖奇)-安和橋.flac",
+        "http://chi.xo.je/MUSIC/靜靜(圖奇)-我好想你.flac",
+        "http://chi.xo.je/MUSIC/靜靜在夏天 煙火裡的塵埃.flac",
+        "http://chi.xo.je/MUSIC/靜靜在夏天(圖奇) Opera2.mp3",
+        "http://chi.xo.je/MUSIC/靜靜在夏天(圖奇) 悟空.mp3",
+        "http://chi.xo.je/MUSIC/靜靜在夏天(圖奇) 武家坡.mp3",
+        "http://chi.xo.je/MUSIC/靜靜在夏天(圖奇) 靜靜的.mp3",
+        "http://chi.xo.je/MUSIC/靜靜在夏天-38 號大迪曲.flac",
+        "http://chi.xo.je/MUSIC/靜靜在夏天-A.I.N.Y..flac",
+        "http://chi.xo.je/MUSIC/靜靜在夏天-Lydia.flac",
+        "http://chi.xo.je/MUSIC/靜靜在夏天-Rolling in the deep.flac",
+        "http://chi.xo.je/MUSIC/靜靜在夏天-一個人想著一個人.flac",
+        "http://chi.xo.je/MUSIC/靜靜在夏天-你把我灌醉.flac",
+        "http://chi.xo.je/MUSIC/靜靜在夏天-克卜勒.flac",
+        "http://chi.xo.je/MUSIC/靜靜在夏天-公主殿下.flac",
+        "http://chi.xo.je/MUSIC/靜靜在夏天-咖喱咖喱.flac",
+        "http://chi.xo.je/MUSIC/靜靜在夏天-天下無雙.flac",
+        "http://chi.xo.je/MUSIC/靜靜在夏天-寵愛.flac",
+        "http://chi.xo.je/MUSIC/靜靜在夏天-左手指月.flac",
+        "http://chi.xo.je/MUSIC/靜靜在夏天-愛人錯過.flac",
+        "http://chi.xo.je/MUSIC/靜靜在夏天-我們的愛.flac",
+        "http://chi.xo.je/MUSIC/靜靜在夏天-我想要佔據你.flac",
+        "http://chi.xo.je/MUSIC/靜靜在夏天-我懷念的.flac",
+        "http://chi.xo.je/MUSIC/靜靜在夏天-手心的薔薇.flac",
+        "http://chi.xo.je/MUSIC/靜靜在夏天-星辰大海.flac",
+        "http://chi.xo.je/MUSIC/靜靜在夏天-時間都去哪兒了.flac",
+        "http://chi.xo.je/MUSIC/靜靜在夏天-會呼吸的痛.flac",
+        "http://chi.xo.je/MUSIC/靜靜在夏天-月彎彎.flac",
+        "http://chi.xo.je/MUSIC/靜靜在夏天-皮囊.flac",
+        "http://chi.xo.je/MUSIC/靜靜在夏天-盛夏光年.flac",
+        "http://chi.xo.je/MUSIC/靜靜在夏天-空心.flac",
+        "http://chi.xo.je/MUSIC/靜靜在夏天-突然好想你.flac",
+        "http://chi.xo.je/MUSIC/靜靜在夏天-給你一點顏色.flac",
+        "http://chi.xo.je/MUSIC/靜靜在夏天-給我一個理由忘記.flac",
+        "http://chi.xo.je/MUSIC/靜靜在夏天-要愛愛.flac",
+        "http://chi.xo.je/MUSIC/靜靜在夏天-連名帶姓.flac",
+        "http://chi.xo.je/MUSIC/靜靜在夏天-阿刁(新舊混合最終版).flac",
+        "http://chi.xo.je/MUSIC/靜靜在夏天-阿刁.flac",
+        "http://chi.xo.je/MUSIC/靜靜在夏天-離歌.flac",
+        "http://chi.xo.je/MUSIC/靜靜在夏天-靜靜的.flac",
+        "http://chi.xo.je/MUSIC/靜靜在夏天_百年孤寂.flac"
     ];
 
     const audioPlayer = document.getElementById('audio-player');
     const playlistContainer = document.getElementById('playlist');
     const currentSongText = document.getElementById('current-song');
 
+    // 用於存放標題滾動定時器的變數
+    let titleInterval = null;
+
     function getSongName(url) {
-        return url.split('/').pop().replace('.mp3', '');
+        const fileName = url.split('/').pop();
+        let name = fileName.replace(/\.(mp3|flac)$/i, '');
+        if (fileName.toLowerCase().endsWith('.flac')) name += ' (flac)';
+        else if (fileName.toLowerCase().endsWith('.mp3')) name += ' (MP3)';
+        return name;
     }
 
-    // 生成列表
+    function formatFileSize(bytes) {
+        if (isNaN(bytes) || bytes === null) return "未知";
+        if (bytes === 0) return "0 B";
+        const k = 1024;
+        const sizes = ['B', 'KB', 'MB', 'GB'];
+        const i = Math.floor(Math.log(bytes) / Math.log(k));
+        return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+    }
+
+    async function fetchSize(url, element) {
+        try {
+            const response = await fetch(url, { method: 'HEAD' });
+            const size = response.headers.get('content-length');
+            element.innerText = formatFileSize(size);
+        } catch (e) {
+            element.innerText = "未知";
+        }
+    }
+
     songUrls.forEach((url, index) => {
         const name = getSongName(url);
         const div = document.createElement('div');
         div.className = 'song-item';
-        div.innerText = `${index + 1}. ${name}`; 
+        
+        const nameSpan = document.createElement('span');
+        nameSpan.innerText = `${index + 1}. ${name}`;
+        
+        const sizeSpan = document.createElement('span');
+        sizeSpan.className = 'file-size';
+        sizeSpan.innerText = '讀取中...';
+        
+        div.appendChild(nameSpan);
+        div.appendChild(sizeSpan);
         
         div.onclick = () => {
             playSong(url, name, div);
         };
 
         playlistContainer.appendChild(div);
+        fetchSize(url, sizeSpan);
     });
+
+    // 核心：標題滾動函數
+    function startTitleScroll(songName) {
+        // 先清除之前的定時器，避免多個歌曲同時滾動
+        if (titleInterval) clearInterval(titleInterval);
+
+        // 設定初始滾動文字（加上空格讓循環更自然）
+        let fullTitle = `🎧 ${songName} --- 奇奇828的音樂播放器 --- `;
+        
+        titleInterval = setInterval(() => {
+            // 將第一個字移到最後面
+            fullTitle = fullTitle.substring(1) + fullTitle.substring(0, 1);
+            document.title = fullTitle;
+        }, 300); // 每 300 毫秒滾動一次
+    }
 
     function playSong(url, name, element) {
         audioPlayer.src = url;
         audioPlayer.play().catch(error => {
-            console.log("播放被瀏覽器攔截或發生錯誤:", error);
+            console.log("播放被攔截:", error);
         });
+        
         currentSongText.innerText = "正在播放: " + name;
+        
+        // 啟動標題滾動
+        startTitleScroll(name);
+        
         document.querySelectorAll('.song-item').forEach(item => item.classList.remove('active'));
         element.classList.add('active');
     }
 
-    // 封裝「播放下一首」的邏輯
     function playNext() {
         const activeItem = document.querySelector('.song-item.active');
         if (activeItem && activeItem.nextElementSibling) {
             activeItem.nextElementSibling.click();
-        } else {
-            console.log("已經是最後一首歌了");
         }
     }
 
-    // 情況 1：歌曲正常播放結束 -> 跳下一首
-    audioPlayer.onended = function() {
-        playNext();
-    };
-
-    // 情況 2：歌曲載入失敗/無法播放 -> 跳下一首
-    audioPlayer.onerror = function() {
-        console.error("此歌曲無法播放，自動跳過...");
-        playNext();
-    };
+    audioPlayer.onended = playNext;
+    audioPlayer.onerror = playNext;
 </script>
 
 </body>
