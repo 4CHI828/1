@@ -12,11 +12,12 @@
       --dark-color: #663300;
       --ketchup-red: #ff2b2b;
       --neon-cyan: #00ffff;
-      --player-bg: rgba(25, 27, 31, 0.85);
-      --list-bg: rgba(15, 16, 19, 0.7);
+      --player-bg: rgba(20, 22, 26, 0.8);
+      --list-bg: rgba(10, 11, 14, 0.6);
       --bg-color: #fff8f0;
       --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-      --glass-border: rgba(255, 255, 255, 0.15);
+      --glass-border: rgba(255, 255, 255, 0.12);
+      --neon-shadow: 0 0 15px var(--neon-cyan), 0 0 5px var(--neon-cyan);
     }
 
     [data-theme="red"] { --main-color: #ff8a8a; --accent-color: #ff4d4d; --dark-color: #800000; --bg-color: #fff0f0; }
@@ -72,14 +73,14 @@
 
     .theme-group { display: flex; gap: 10px; align-items: center; }
     .theme-dot { 
-      width: 24px; height: 24px; border-radius: 50%; cursor: pointer; 
+      width: 22px; height: 22px; border-radius: 50%; cursor: pointer; 
       border: 2px solid #fff; box-shadow: 0 2px 6px rgba(0,0,0,0.2); 
       transition: var(--transition); 
     }
     .theme-dot:hover { transform: scale(1.3) rotate(15deg); }
     .dot-yellow { background: #ffcc66; } .dot-red { background: #ff8a8a; } .dot-green { background: #c2f0c2; } .dot-brown { background: #d2b48c; }
 
-    /* 按鈕排成一排 (可滾動) */
+    /* 按鈕組 */
     .btn-group { 
       margin-bottom: 25px; 
       display: flex; 
@@ -114,21 +115,26 @@
     }
     .btn:hover { transform: translateY(-3px); box-shadow: 0 6px 15px rgba(0,0,0,0.15); background: #fff; }
 
-    /* 播放器主體 */
+    /* 播放器主體 - 極致玻璃質感 */
     .player-container {
       background: var(--player-bg);
-      backdrop-filter: blur(25px);
-      -webkit-backdrop-filter: blur(25px);
+      backdrop-filter: blur(30px);
+      -webkit-backdrop-filter: blur(30px);
       border-radius: 40px;
       padding: 30px;
       width: 92%; 
       max-width: 420px; 
       margin: 20px auto;
-      box-shadow: 0 25px 50px rgba(0,0,0,0.4), 0 0 15px var(--neon-cyan);
+      box-shadow: 0 30px 60px rgba(0,0,0,0.5), 0 0 20px rgba(0, 255, 255, 0.2);
       color: white;
       border: 1px solid var(--glass-border);
       box-sizing: border-box;
       position: relative;
+      animation: playerBreath 4s ease-in-out infinite;
+    }
+    @keyframes playerBreath {
+      0%, 100% { box-shadow: 0 30px 60px rgba(0,0,0,0.5), 0 0 20px rgba(0, 255, 255, 0.2); }
+      50% { box-shadow: 0 30px 60px rgba(0,0,0,0.6), 0 0 30px rgba(0, 255, 255, 0.4); }
     }
 
     .vinyl-wrapper { display: flex; justify-content: center; margin-bottom: 20px; }
@@ -147,11 +153,11 @@
 
     .mode-group { display: flex; justify-content: center; gap: 8px; margin-bottom: 20px; }
     .mode-btn { background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.2); color: #bbb; padding: 6px 12px; border-radius: 15px; font-size: 11px; cursor: pointer; transition: var(--transition); }
-    .mode-btn.active { background: var(--neon-cyan); color: #000; font-weight: bold; box-shadow: 0 0 15px var(--neon-cyan); border-color: var(--neon-cyan); }
+    .mode-btn.active { background: var(--neon-cyan); color: #000; font-weight: bold; box-shadow: var(--neon-shadow); border-color: var(--neon-cyan); }
 
     .controls { display: flex; justify-content: center; align-items: center; gap: 15px; margin-bottom: 20px; position: relative; }
     .ctrl-btn { background: rgba(255, 255, 255, 0.08); border: 1px solid var(--glass-border); color: white; width: 48px; height: 48px; border-radius: 50%; cursor: pointer; font-size: 18px; transition: var(--transition); display: flex; align-items: center; justify-content: center; }
-    .ctrl-btn:hover { background: var(--neon-cyan); color: #000; transform: scale(1.1); box-shadow: 0 0 15px var(--neon-cyan); }
+    .ctrl-btn:hover { background: var(--neon-cyan); color: #000; transform: scale(1.1); box-shadow: var(--neon-shadow); }
     .ctrl-btn#play-pause-btn { width: 60px; height: 60px; font-size: 24px; background: rgba(0, 255, 255, 0.15); border: 2px solid var(--neon-cyan); }
 
     .volume-panel {
@@ -159,7 +165,7 @@
       bottom: 75px;
       left: 50%;
       transform: translateX(-50%) translateY(10px);
-      background: rgba(30, 30, 35, 0.95);
+      background: rgba(20, 20, 25, 0.95);
       border: 1px solid var(--neon-cyan);
       padding: 12px 20px;
       border-radius: 30px;
@@ -178,7 +184,7 @@
     .volume-slider::-webkit-slider-thumb { -webkit-appearance: none; width: 14px; height: 14px; background: var(--neon-cyan); border-radius: 50%; box-shadow: 0 0 10px var(--neon-cyan); cursor: pointer; border: 2px solid #fff; }
     .vol-value { font-size: 12px; color: var(--neon-cyan); font-weight: bold; min-width: 30px; }
 
-    /* --- 進度條樣式優化 --- */
+    /* --- 極致進度條 --- */
     .progress-container { display: flex; align-items: center; gap: 10px; margin-bottom: 25px; font-size: 12px; color: #aaa; }
     .progress-bar { 
       flex-grow: 1; 
@@ -187,18 +193,34 @@
       border-radius: 4px; 
       cursor: pointer; 
       position: relative; 
-      overflow: hidden; 
-      transition: background 0.2s;
-      touch-action: none; /* 禁用瀏覽器默認觸控行為，防止拖動時頁面滾動 */
+      overflow: visible; /* 允許控制球超出邊界 */
+      touch-action: none; 
     }
-    .progress-bar:hover { background: rgba(255,255,255,0.2); }
     .progress-fill { 
       height: 100%; 
       background: var(--neon-cyan); 
       width: 0%; 
+      border-radius: 4px;
       transition: width 0.1s linear; 
       box-shadow: 0 0 10px var(--neon-cyan); 
     }
+    /* 進度條拖動球 */
+    .progress-knob {
+      position: absolute;
+      top: 50%;
+      left: 0%;
+      width: 14px;
+      height: 14px;
+      background: #fff;
+      border: 2px solid var(--neon-cyan);
+      border-radius: 50%;
+      transform: translate(-50%, -50%);
+      box-shadow: 0 0 10px var(--neon-cyan);
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity 0.2s;
+    }
+    .progress-bar:hover .progress-knob, .progress-bar.dragging .progress-knob { opacity: 1; }
 
     audio { display: none; }
 
@@ -210,7 +232,15 @@
     .song-item { padding: 10px 15px; font-size: 13px; color: #999; cursor: pointer; border-radius: 12px; margin-bottom: 4px; transition: var(--transition); display: flex; justify-content: space-between; align-items: center; animation: fadeIn 0.4s ease forwards; opacity: 0; }
     @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
     .song-item:hover { background: rgba(255,255,255,0.05); color: #fff; }
-    .song-item.active { background: rgba(0, 255, 255, 0.12); color: var(--neon-cyan); font-weight: bold; border-left: 4px solid var(--neon-cyan); box-shadow: 0 0 10px rgba(0, 255, 255, 0.1); }
+    .song-item.active { 
+      background: rgba(0, 255, 255, 0.1); 
+      color: var(--neon-cyan); 
+      font-weight: bold; 
+      border-left: 4px solid var(--neon-cyan); 
+      box-shadow: 0 0 15px rgba(0, 255, 255, 0.1);
+      animation: pulseBorder 2s infinite;
+    }
+    @keyframes pulseBorder { 0%, 100% { background: rgba(0, 255, 255, 0.1); } 50% { background: rgba(0, 255, 255, 0.2); } }
 
     .footer { margin-top: 40px; font-size: 13px; color: #aaa; opacity: 0.7; transition: var(--transition); }
     .footer a { color: #aaa; text-decoration: none; }
@@ -272,6 +302,7 @@
       <span id="curr-time">0:00</span>
       <div class="progress-bar" id="progress-bar">
         <div class="progress-fill" id="progress-fill"></div>
+        <div class="progress-knob" id="progress-knob"></div>
       </div>
       <span id="total-time">0:00</span>
     </div>
@@ -298,23 +329,6 @@
         const bg = document.getElementById('floatingBg');
         const items = ['🍟', '🌭','🍔', '🎤', '🎶', '✨', '🍔'];
         setInterval(() => {
-          const item = ownDocument.createElement('div'); // Note: Changed from document to avoid errors if wrap occurs, but here just use document
-          item.className = 'floating-item';
-          item.textContent = items[Math.floor(Math.random() * items.length)];
-          item.style.left = Math.random() * 100 + 'vw';
-          item.style.fontSize = (Math.random() * 20 + 15) + 'px';
-          item.style.animationDuration = (Math.random() * 9 + 6) + 's';
-          item.style.opacity = Math.random() * 0.5 + 0.3;
-          bg.appendChild(item);
-          setTimeout(() => item.remove(), 15000);
-        }, 800);
-      }
-    };
-    // Fixed Visuals.initFloatingBg call locally to use document
-    Visuals.initFloatingBg = function() {
-        const bg = document.getElementById('floatingBg');
-        const items = ['🍟', '🌭','🍔', '🎤', '🎶', '✨', '🍔'];
-        setInterval(() => {
           const item = document.createElement('div');
           item.className = 'floating-item';
           item.textContent = items[Math.floor(Math.random() * items.length)];
@@ -325,6 +339,7 @@
           bg.appendChild(item);
           setTimeout(() => item.remove(), 15000);
         }, 800);
+      }
     };
     window.setTheme = (t) => Visuals.setTheme(t);
 
@@ -392,6 +407,7 @@
     const vinylDisc = document.getElementById('vinyl-disc');
     const progressFill = document.getElementById('progress-fill');
     const progressBar = document.getElementById('progress-bar');
+    const progressKnob = document.getElementById('progress-knob');
     const currTimeText = document.getElementById('curr-time');
     const totalTimeText = document.getElementById('total-time');
     
@@ -400,7 +416,6 @@
     const volSlider = document.getElementById('volume-slider');
     const volValueText = document.getElementById('vol-value');
 
-    // --- 拖拉狀態變量 ---
     let isDragging = false;
 
     function setPlaybackMode(mode, element) {
@@ -433,8 +448,8 @@
         div.style.animationDelay = `${index * 0.03}s`; 
         let displayTitle = song.title;
         const urlLower = song.src.toLowerCase();
-        if (urlLower.endsWith('.flac')) displayTitle += " (flac)";
-        else if (urlLower.endsWith('.mp3')) displayTitle += " (MP3)";
+        if (urlLower.endsWith('.flac')) displayTitle += " 💿";
+        else if (urlLower.endsWith('.mp3')) displayTitle += " 🎵";
         div.innerHTML = `<span>${index + 1}. ${displayTitle}</span>`;
         div.onclick = () => playSong(index);
         playlistContainer.appendChild(div);
@@ -447,7 +462,14 @@
         const song = Player.playlist[Player.index];
         audioPlayer.src = song.src;
         audioPlayer.play().catch(e => console.log("Auto-play blocked"));
-        songTitleText.innerText = song.title;
+        
+        // 標題切換動畫
+        songTitleText.style.opacity = 0;
+        setTimeout(() => {
+          songTitleText.innerText = song.title;
+          songTitleText.style.opacity = 1;
+        }, 200);
+
         const items = document.querySelectorAll('.song-item');
         items.forEach((item, idx) => item.classList.toggle('active', idx === Player.index));
         if (items[Player.index]) items[Player.index].scrollIntoView({ behavior: 'smooth', block: 'center' });
@@ -496,47 +518,41 @@
       }
     });
 
-    // --- 修正：進度條拖拉核心邏輯 ---
     function handleProgressUpdate() {
-      if (isDragging) return; // 拖動時暫停自動更新 UI，由拖動邏輯控制
+      if (isDragging) return;
       const percent = (audioPlayer.currentTime / audioPlayer.duration) * 100 || 0;
       progressFill.style.width = percent + '%';
+      progressKnob.style.left = percent + '%';
       currTimeText.innerText = formatTime(audioPlayer.currentTime);
       if (audioPlayer.duration) totalTimeText.innerText = formatTime(audioPlayer.duration);
     }
 
     function seekToPosition(e) {
       const rect = progressBar.getBoundingClientRect();
-      // 計算鼠標/手指在進度條中的相對位置 (0 到 1 之間)
       let pos = (e.clientX - rect.left) / rect.width;
       if (pos < 0) pos = 0;
       if (pos > 1) pos = 1;
       
-      // 更新歌曲時間
       if (audioPlayer.duration) {
         audioPlayer.currentTime = pos * audioPlayer.duration;
       }
-      
-      // 實時更新視覺進度條寬度
       progressFill.style.width = (pos * 100) + '%';
+      progressKnob.style.left = (pos * 100) + '%';
     }
 
-    // 監聽指標按下 (支持鼠標與觸控)
     progressBar.onpointerdown = (e) => {
       isDragging = true;
+      progressBar.classList.add('dragging');
       seekToPosition(e);
     };
 
-    // 監聽指標移動
     window.onpointermove = (e) => {
-      if (isDragging) {
-        seekToPosition(e);
-      }
+      if (isDragging) seekToPosition(e);
     };
 
-    // 監聽指標抬起
     window.onpointerup = () => {
       isDragging = false;
+      progressBar.classList.remove('dragging');
     };
 
     audioPlayer.ontimeupdate = handleProgressUpdate;
