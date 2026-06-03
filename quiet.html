@@ -46,18 +46,42 @@
     .floating-item { position: absolute; bottom: -60px; font-size: 24px; user-select: none; animation: floatUp linear infinite; }
     @keyframes floatUp { 0% { transform: translateY(0) rotate(0deg); opacity: 0; } 10% { opacity: 0.6; } 90% { opacity: 0.6; } 100% { transform: translateY(-110vh) rotate(360deg); opacity: 0; } }
 
-    h1 { color: var(--accent-color); font-size: clamp(20px, 5vw, 28px); margin-bottom: 15px; text-shadow: 2px 2px 0px #fff; position: relative; display: inline-block; }
-    .ketchup { position: absolute; bottom: -12px; left: 50%; transform: translateX(-50%); width: 60px; height: 8px; background: var(--ketchup-red); border-radius: 4px; animation: drip 2s infinite ease-in-out; }
+    /* --- 標題與顏色切換容器 --- */
+    .header-wrapper {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 20px;
+      flex-wrap: wrap;
+      margin-bottom: 30px;
+    }
+    h1 { 
+      color: var(--accent-color); 
+      font-size: clamp(20px, 5vw, 28px); 
+      margin: 0; 
+      text-shadow: 2px 2px 0px #fff; 
+      position: relative; 
+      display: inline-block; 
+    }
+    .ketchup { 
+      position: absolute; bottom: -12px; left: 50%; transform: translateX(-50%); 
+      width: 60px; height: 8px; background: var(--ketchup-red); 
+      border-radius: 4px; animation: drip 2s infinite ease-in-out; 
+    }
     @keyframes drip { 0%, 100% { height: 8px; width: 60px; } 50% { height: 20px; width: 50px; } }
+
+    .theme-group { display: flex; gap: 10px; align-items: center; }
+    .theme-dot { 
+      width: 24px; height: 24px; border-radius: 50%; cursor: pointer; 
+      border: 2px solid #fff; box-shadow: 0 2px 6px rgba(0,0,0,0.2); 
+      transition: var(--transition); 
+    }
+    .theme-dot:hover { transform: scale(1.3) rotate(15deg); }
+    .dot-yellow { background: #ffcc66; } .dot-red { background: #ff8a8a; } .dot-green { background: #c2f0c2; } .dot-brown { background: #d2b48c; }
 
     .btn-group { margin-bottom: 25px; display: flex; flex-wrap: wrap; justify-content: center; gap: 12px; max-width: 600px; }
     .btn { padding: 10px 18px; background: var(--main-color); border: 2px solid var(--accent-color); border-radius: 25px; font-size: 14px; font-weight: bold; color: var(--dark-color); text-decoration: none; box-shadow: 0 4px 10px rgba(0,0,0,0.1); transition: var(--transition); cursor: pointer; }
     .btn:hover { transform: translateY(-3px); box-shadow: 0 6px 15px rgba(0,0,0,0.15); background: #fff; }
-
-    .theme-group { display: flex; gap: 10px; margin-bottom: 25px; justify-content: center; }
-    .theme-dot { width: 32px; height: 32px; border-radius: 50%; cursor: pointer; border: 3px solid #fff; box-shadow: 0 2px 6px rgba(0,0,0,0.2); transition: var(--transition); }
-    .theme-dot:hover { transform: scale(1.2) rotate(15deg); }
-    .dot-yellow { background: #ffcc66; } .dot-red { background: #ff8a8a; } .dot-green { background: #c2f0c2; } .dot-brown { background: #d2b48c; }
 
     /* 播放器主體 */
     .player-container {
@@ -82,7 +106,7 @@
     .vinyl.playing { animation: spin 4s linear infinite; }
     @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
 
-    .now-playing { text-align: center; margin-bottom: 20px; font-size: 18px; color: var(--main-color); font-weight: bold; height: 26px; border-bottom: 1px solid rgba(255,255,25 own,0.1); padding-bottom: 12px; display: flex; align-items: center; justify-content: center; gap: 10px; }
+    .now-playing { text-align: center; margin-bottom: 20px; font-size: 18px; color: var(--main-color); font-weight: bold; height: 26px; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 12px; display: flex; align-items: center; justify-content: center; gap: 10px; }
     .eq-bars { display: flex; gap: 3px; height: 15px; align-items: flex-end; }
     .eq-bar { width: 3px; background: var(--neon-cyan); height: 4px; animation: eq-animate 0.8s ease-in-out infinite; }
     .eq-bar:nth-child(2) { animation-delay: 0.2s; }
@@ -99,10 +123,9 @@
     .ctrl-btn:hover { background: var(--neon-cyan); color: #000; transform: scale(1.1); box-shadow: 0 0 15px var(--neon-cyan); }
     .ctrl-btn#play-pause-btn { width: 60px; height: 60px; font-size: 24px; background: rgba(0, 255, 255, 0.15); border: 2px solid var(--neon-cyan); }
 
-    /* --- 修正後的水平音量控制面板 --- */
     .volume-panel {
       position: absolute;
-      bottom: 75px; /* 位於控制按鈕上方 */
+      bottom: 75px;
       left: 50%;
       transform: translateX(-50%) translateY(10px);
       background: rgba(30, 30, 35, 0.95);
@@ -120,26 +143,8 @@
       box-shadow: 0 10px 25px rgba(0,0,0,0.5), 0 0 10px var(--neon-cyan);
     }
     .volume-panel.show { opacity: 1; visibility: visible; transform: translateX(-50%) translateY(0); }
-    
-    .volume-slider {
-      -webkit-appearance: none;
-      width: 100px;
-      height: 5px;
-      background: rgba(255,255,255,0.2);
-      border-radius: 5px;
-      outline: none;
-      cursor: pointer;
-    }
-    .volume-slider::-webkit-slider-thumb {
-      -webkit-appearance: none;
-      width: 14px;
-      height: 14px;
-      background: var(--neon-cyan);
-      border-radius: 50%;
-      box-shadow: 0 0 10px var(--neon-cyan);
-      cursor: pointer;
-      border: 2px solid #fff;
-    }
+    .volume-slider { -webkit-appearance: none; width: 100px; height: 5px; background: rgba(255,255,255,0.2); border-radius: 5px; outline: none; cursor: pointer; }
+    .volume-slider::-webkit-slider-thumb { -webkit-appearance: none; width: 14px; height: 14px; background: var(--neon-cyan); border-radius: 50%; box-shadow: 0 0 10px var(--neon-cyan); cursor: pointer; border: 2px solid #fff; }
     .vol-value { font-size: 12px; color: var(--neon-cyan); font-weight: bold; min-width: 30px; }
 
     .progress-container { display: flex; align-items: center; gap: 10px; margin-bottom: 25px; font-size: 12px; color: #aaa; }
@@ -166,13 +171,15 @@
 <body id="bodyTag">
   <div class="floating-bg" id="floatingBg"></div>
 
-  <h1 id="mainTitle">静静在夏天🍔🎤⁰³²⁰<div class="ketchup"></div></h1>
-
-  <div class="theme-group">
-    <div class="theme-dot dot-yellow" onclick="setTheme('yellow')" title="經典黃"></div>
-    <div class="theme-dot dot-red" onclick="setTheme('red')" title="番茄紅"></div>
-    <div class="theme-dot dot-green" onclick="setTheme('green')" title="萵苣綠"></div>
-    <div class="theme-dot dot-brown" onclick="setTheme('brown')" title="巧克力褐"></div>
+  <!-- 修改：將標題與顏色切換點包在一起 -->
+  <div class="header-wrapper">
+    <h1 id="mainTitle">静静在夏天🍔🎤⁰³²⁰<div class="ketchup"></div></h1>
+    <div class="theme-group">
+      <div class="theme-dot dot-yellow" onclick="setTheme('yellow')" title="經典黃"></div>
+      <div class="theme-dot dot-red" onclick="setTheme('red')" title="番茄紅"></div>
+      <div class="theme-dot dot-green" onclick="setTheme('green')" title="萵苣綠"></div>
+      <div class="theme-dot dot-brown" onclick="setTheme('brown')" title="巧克力褐"></div>
+    </div>
   </div>
 
   <div class="btn-group">
@@ -203,14 +210,10 @@
     </div>
     
     <div class="controls">
-      <!-- 音量按鈕 -->
       <button class="ctrl-btn" id="vol-btn" onclick="toggleVolumePanel()" title="音量調整">🔊</button>
-      
       <button class="ctrl-btn" onclick="playPrevious()" title="上一首 (←)">⏮️</button>
       <button class="ctrl-btn" id="play-pause-btn" onclick="togglePlay()" title="播放/暫停 (Space)">▶️</button>
       <button class="ctrl-btn" onclick="playNext()" title="下一首 (→)">⏭️</button>
-      
-      <!-- 修正後的水平音量面板 -->
       <div class="volume-panel" id="volume-panel">
         <span class="vol-value" id="vol-value">100%</span>
         <input type="range" class="volume-slider" id="volume-slider" min="0" max="1" step="0.01" value="1">
@@ -402,7 +405,6 @@
         playSong(prevIndex);
     }
 
-    // --- 修正後的音量控制邏輯 ---
     function toggleVolumePanel() {
       volPanel.classList.toggle('show');
     }
@@ -412,8 +414,6 @@
       else if (val < 0.3) volBtn.innerText = "🔈";
       else if (val < 0.7) volBtn.innerText = "🔉";
       else volBtn.innerText = "🔊";
-      
-      // 更新百分比文字
       volValueText.innerText = Math.round(val * 100) + "%";
     }
 
@@ -423,7 +423,6 @@
       updateVolumeIcon(val);
     };
 
-    // 點擊面板外部關閉
     document.addEventListener('click', (e) => {
       if (!volPanel.contains(e.target) && e.target !== volBtn) {
         volPanel.classList.remove('show');
@@ -472,10 +471,8 @@
       Visuals.initFloatingBg(); 
       buildList();
       playerMain.classList.add('paused'); 
-      
       const savedTheme = localStorage.getItem('preferred-theme');
       if (savedTheme) setTheme(savedTheme);
-
       const savedIndex = localStorage.getItem('last-song-index');
       if (savedIndex !== null) {
         Player.index = parseInt(savedIndex);
