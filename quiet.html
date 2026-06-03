@@ -42,12 +42,10 @@
       transition: background 0.5s ease;
     }
 
-    /* 漂浮背景 */
     .floating-bg { position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: -1; overflow: hidden; }
     .floating-item { position: absolute; bottom: -60px; font-size: 24px; user-select: none; animation: floatUp linear infinite; }
     @keyframes floatUp { 0% { transform: translateY(0) rotate(0deg); opacity: 0; } 10% { opacity: 0.6; } 90% { opacity: 0.6; } 100% { transform: translateY(-110vh) rotate(360deg); opacity: 0; } }
 
-    /* 標題與顏色切換 */
     .header-wrapper {
       display: flex;
       align-items: center;
@@ -80,7 +78,6 @@
     .theme-dot:hover { transform: scale(1.3) rotate(15deg); }
     .dot-yellow { background: #ffcc66; } .dot-red { background: #ff8a8a; } .dot-green { background: #c2f0c2; } .dot-brown { background: #d2b48c; }
 
-    /* 按鈕組 */
     .btn-group { 
       margin-bottom: 25px; 
       display: flex; 
@@ -115,7 +112,6 @@
     }
     .btn:hover { transform: translateY(-3px); box-shadow: 0 6px 15px rgba(0,0,0,0.15); background: #fff; }
 
-    /* 播放器主體 */
     .player-container {
       background: var(--player-bg);
       backdrop-filter: blur(30px);
@@ -227,19 +223,33 @@
     .song-list::-webkit-scrollbar { width: 4px; }
     .song-list::-webkit-scrollbar-thumb { background: var(--neon-cyan); border-radius: 10px; }
 
-    .song-item { padding: 10px 15px; font-size: 13px; color: #999; cursor: pointer; border-radius: 12px; margin-bottom: 4px; transition: var(--transition); display: flex; justify-content: space-between; align-items: center; animation: fadeIn 0.4s ease forwards; opacity: 0; }
+    .song-item { 
+      padding: 10px 15px; 
+      font-size: 13px; 
+      color: #999; 
+      cursor: pointer; 
+      border-radius: 12px; 
+      margin-bottom: 4px; 
+      transition: var(--transition); 
+      display: flex; 
+      justify-content: space-between; 
+      align-items: center; 
+      opacity: 0; /* 初始透明 */
+      animation: fadeIn 0.4s ease forwards; 
+    }
     @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
     .song-item:hover { background: rgba(255,255,255,0.05); color: #fff; }
     
-    /* --- 強化播放中歌曲視覺 --- */
+    /* --- 修正：確保播放中的歌曲絕對可見 --- */
     .song-item.active { 
-      background: rgba(0, 255, 255, 0.3); 
-      color: #fff; 
+      opacity: 1 !important; /* 強制可見，防止被動畫覆蓋 */
+      background: rgba(0, 255, 255, 0.3) !important; 
+      color: #fff !important; 
       font-weight: bold; 
       border-left: 5px solid var(--neon-cyan); 
       box-shadow: 0 0 15px rgba(0, 255, 255, 0.2);
       text-shadow: 0 0 8px var(--neon-cyan);
-      animation: pulseBorder 2s infinite;
+      animation: pulseBorder 2s infinite; /* 呼吸燈動畫 */
     }
     @keyframes pulseBorder { 0%, 100% { background: rgba(0, 255, 255, 0.3); } 50% { background: rgba(0, 255, 255, 0.4); } }
 
@@ -448,7 +458,6 @@
         div.className = 'song-item';
         div.style.animationDelay = `${index * 0.03}s`; 
         
-        // --- 還原為原來的文字標記 (MP3) / (flac) ---
         let displayTitle = song.title;
         const urlLower = song.src.toLowerCase();
         if (urlLower.endsWith('.flac')) displayTitle += " (flac)";
@@ -466,7 +475,7 @@
         const nameSpan = item.querySelector('.song-name-span');
         if (idx === Player.index) {
           item.classList.add('active');
-          // 增加 ▶️ 播放標記
+          // 播放中加上 ▶️ 符號
           const originalText = Player.playlist[idx].title;
           const urlLower = Player.playlist[idx].src.toLowerCase();
           const format = urlLower.endsWith('.flac') ? ' (flac)' : (urlLower.endsWith('.mp3') ? ' (MP3)' : '');
