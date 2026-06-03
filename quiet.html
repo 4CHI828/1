@@ -115,7 +115,7 @@
     }
     .btn:hover { transform: translateY(-3px); box-shadow: 0 6px 15px rgba(0,0,0,0.15); background: #fff; }
 
-    /* 播放器主體 - 極致玻璃質感 */
+    /* 播放器主體 */
     .player-container {
       background: var(--player-bg);
       backdrop-filter: blur(30px);
@@ -184,7 +184,6 @@
     .volume-slider::-webkit-slider-thumb { -webkit-appearance: none; width: 14px; height: 14px; background: var(--neon-cyan); border-radius: 50%; box-shadow: 0 0 10px var(--neon-cyan); cursor: pointer; border: 2px solid #fff; }
     .vol-value { font-size: 12px; color: var(--neon-cyan); font-weight: bold; min-width: 30px; }
 
-    /* --- 極致進度條 --- */
     .progress-container { display: flex; align-items: center; gap: 10px; margin-bottom: 25px; font-size: 12px; color: #aaa; }
     .progress-bar { 
       flex-grow: 1; 
@@ -193,7 +192,7 @@
       border-radius: 4px; 
       cursor: pointer; 
       position: relative; 
-      overflow: visible; /* 允許控制球超出邊界 */
+      overflow: visible; 
       touch-action: none; 
     }
     .progress-fill { 
@@ -204,7 +203,6 @@
       transition: width 0.1s linear; 
       box-shadow: 0 0 10px var(--neon-cyan); 
     }
-    /* 進度條拖動球 */
     .progress-knob {
       position: absolute;
       top: 50%;
@@ -232,15 +230,18 @@
     .song-item { padding: 10px 15px; font-size: 13px; color: #999; cursor: pointer; border-radius: 12px; margin-bottom: 4px; transition: var(--transition); display: flex; justify-content: space-between; align-items: center; animation: fadeIn 0.4s ease forwards; opacity: 0; }
     @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
     .song-item:hover { background: rgba(255,255,255,0.05); color: #fff; }
+    
+    /* --- 強化播放中歌曲視覺 --- */
     .song-item.active { 
-      background: rgba(0, 255, 255, 0.1); 
-      color: var(--neon-cyan); 
+      background: rgba(0, 255, 255, 0.3); 
+      color: #fff; 
       font-weight: bold; 
-      border-left: 4px solid var(--neon-cyan); 
-      box-shadow: 0 0 15px rgba(0, 255, 255, 0.1);
+      border-left: 5px solid var(--neon-cyan); 
+      box-shadow: 0 0 15px rgba(0, 255, 255, 0.2);
+      text-shadow: 0 0 8px var(--neon-cyan);
       animation: pulseBorder 2s infinite;
     }
-    @keyframes pulseBorder { 0%, 100% { background: rgba(0, 255, 255, 0.1); } 50% { background: rgba(0, 255, 255, 0.2); } }
+    @keyframes pulseBorder { 0%, 100% { background: rgba(0, 255, 255, 0.3); } 50% { background: rgba(0, 255, 255, 0.4); } }
 
     .footer { margin-top: 40px; font-size: 13px; color: #aaa; opacity: 0.7; transition: var(--transition); }
     .footer a { color: #aaa; text-decoration: none; }
@@ -446,13 +447,37 @@
         const div = document.createElement('div');
         div.className = 'song-item';
         div.style.animationDelay = `${index * 0.03}s`; 
+        
+        // --- 還原為原來的文字標記 (MP3) / (flac) ---
         let displayTitle = song.title;
         const urlLower = song.src.toLowerCase();
-        if (urlLower.endsWith('.flac')) displayTitle += " 💿";
-        else if (urlLower.endsWith('.mp3')) displayTitle += " 🎵";
-        div.innerHTML = `<span>${index + 1}. ${displayTitle}</span>`;
+        if (urlLower.endsWith('.flac')) displayTitle += " (flac)";
+        else if (urlLower.endsWith('.mp3')) displayTitle += " (MP3)";
+        
+        div.innerHTML = `<span class="song-name-span">${index + 1}. ${displayTitle}</span>`;
         div.onclick = () => playSong(index);
         playlistContainer.appendChild(div);
+      });
+    }
+
+    function updateActiveSongUI() {
+      const items = document.querySelectorAll('.song-item');
+      items.forEach((item, idx) => {
+        const nameSpan = item.querySelector('.song-name-span');
+        if (idx === Player.index) {
+          item.classList.add('active');
+          // 增加 ▶️ 播放標記
+          const originalText = Player.playlist[idx].title;
+          const urlLower = Player.playlist[idx].src.toLowerCase();
+          const format = urlLower.endsWith('.flac') ? ' (flac)' : (urlLower.endsWith('.mp3') ? ' (MP3)' : '');
+          nameSpan.innerText = `▶️ ${idx + 1}. ${originalText}${format}`;
+        } else {
+          item.classList.remove('active');
+          const originalText = Player.playlist[idx].title;
+          const urlLower = Player.playlist[idx].src.toLowerCase();
+          const format = urlLower.endsWith('.flac') ? ' (flac)' : (urlLower.endsWith('.mp3') ? ' (MP3)' : '');
+          nameSpan.innerText = `${idx + 1}. ${originalText}${format}`;
+        }
       });
     }
 
@@ -463,16 +488,19 @@
         audioPlayer.src = song.src;
         audioPlayer.play().catch(e => console.log("Auto-play blocked"));
         
-        // 標題切換動畫
         songTitleText.style.opacity = 0;
         setTimeout(() => {
           songTitleText.innerText = song.title;
           songTitleText.style.opacity = 1;
         }, 200);
 
+        updateActiveSongUI();
+        
         const items = document.querySelectorAll('.song-item');
-        items.forEach((item, idx) => item.classList.toggle('active', idx === Player.index));
-        if (items[Player.index]) items[Player.index].scrollIntoView({ behavior: 'smooth', block: 'center' });
+        if (items[Player.index]) {
+          items[Player.index].scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+        
         startTitleScroll(song.title);
         localStorage.setItem('last-song-index', index);
     }
@@ -592,8 +620,7 @@
       if (savedIndex !== null) {
         Player.index = parseInt(savedIndex);
         songTitleText.innerText = Player.playlist[Player.index]?.title || "準備播放...";
-        const items = document.querySelectorAll('.song-item');
-        if (items[Player.index]) items[Player.index].classList.add('active');
+        updateActiveSongUI();
       }
     };
   </script>
