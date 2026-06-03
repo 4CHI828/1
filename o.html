@@ -1,0 +1,709 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>七个橙-🍊的抖音直播間</title>
+  
+  <style>
+    /* --- CSS 樣式 --- */
+    * {
+      box-sizing: border-box;
+    }
+
+    :root {
+      color-scheme: light;
+      --bg: #f3f5ff;
+      --surface: #ffffff;
+      --surface-soft: #eef2ff;
+      --text: #1f2937;
+      --text-muted: #475569;
+      --primary: #7c3aed;
+      --primary-strong: #4338ca;
+      --accent: #fb7185;
+      --shadow: rgba(15, 23, 42, 0.12);
+    }
+
+    body {
+      margin: 0;
+      font-family: "Noto Sans TC", "Segoe UI", sans-serif;
+      background: radial-gradient(circle at top left, rgba(124, 58, 237, 0.12), transparent 30%),
+        radial-gradient(circle at bottom right, rgba(59, 130, 246, 0.14), transparent 20%),
+        var(--bg);
+      color: var(--text);
+      line-height: 1.6;
+    }
+
+    body.dark {
+      color-scheme: dark;
+      --bg: #0f172a;
+      --surface: #111827;
+      --surface-soft: #1f2937;
+      --text: #f8fafc;
+      --text-muted: #cbd5e1;
+      --primary: #8b5cf6;
+      --primary-strong: #6366f1;
+      --accent: #f472b6;
+      --shadow: rgba(0, 0, 0, 0.45);
+    }
+
+    body.dark .site-header {
+      background: linear-gradient(135deg, rgba(124, 58, 237, 0.95), rgba(59, 130, 246, 0.95));
+    }
+
+    body.dark .playlist-card,
+    body.dark .intro-card,
+    body.dark .site-footer {
+      background: #111827;
+    }
+
+    .container {
+      width: min(1120px, calc(100% - 32px));
+      margin: 0 auto;
+    }
+
+    .site-header {
+      padding: 80px 0;
+      background: linear-gradient(135deg, #7c3aed 0%, #2563eb 100%);
+      color: #fff;
+    }
+
+    .header-content {
+      display: grid;
+      gap: 24px;
+    }
+
+    .eyebrow {
+      margin: 0 0 16px;
+      font-size: 0.95rem;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: rgba(255, 255, 255, 0.85);
+    }
+
+    .site-header h1 {
+      margin: 0;
+      font-size: clamp(2.5rem, 4vw, 4.2rem);
+      line-height: 1.05;
+    }
+
+    .site-header p {
+      max-width: 720px;
+      margin: 24px 0;
+      font-size: 1.05rem;
+      color: rgba(255, 255, 255, 0.9);
+    }
+
+    .banner {
+      background: var(--surface);
+      color: var(--text);
+      padding: 15px;
+      text-align: center;
+      font-weight: bold;
+      font-size: 20px;
+      border-radius: 8px;
+      margin-bottom: 20px;
+    }
+
+    .banner-links {
+      margin-top: 14px;
+      display: inline-flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 10px;
+    }
+
+    .banner-button {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 10px 16px;
+      border-radius: 999px;
+      background: rgba(255, 204, 0, 0.15);
+      color: #ffcc00;
+      border: 1px solid rgba(255, 204, 0, 0.35);
+      text-decoration: none;
+      font-size: 0.95rem;
+      transition: transform 0.2s ease, background-color 0.2s ease;
+    }
+
+    .banner-button:hover {
+      transform: translateY(-1px);
+      background: rgba(255, 204, 0, 0.25);
+    }
+
+    .hero-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 14px;
+    }
+
+    .primary-button,
+    .secondary-button {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 14px 24px;
+      border: none;
+      border-radius: 999px;
+      cursor: pointer;
+      font-size: 1rem;
+      transition: transform 0.2s ease, filter 0.2s ease, box-shadow 0.2s ease;
+      text-decoration: none;
+    }
+
+    .primary-button {
+      background: var(--accent);
+      color: #fff;
+      box-shadow: 0 16px 32px rgba(251, 113, 133, 0.18);
+    }
+
+    .secondary-button {
+      background: rgba(255, 255, 255, 0.18);
+      color: #fff;
+      backdrop-filter: blur(10px);
+    }
+
+    .primary-button:hover,
+    .secondary-button:hover {
+      transform: translateY(-2px);
+    }
+
+    .intro-card {
+      margin-top: -36px;
+      padding: 32px;
+      border-radius: 28px;
+      background: var(--surface);
+      box-shadow: 0 28px 70px var(--shadow);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      display: grid;
+      gap: 20px;
+    }
+
+    .quick-nav {
+      margin: 22px 0 0;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    .nav-pill {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 10px 16px;
+      border-radius: 999px;
+      background: var(--surface);
+      color: var(--text);
+      border: 1px solid rgba(124, 58, 237, 0.18);
+      text-decoration: none;
+      font-size: 0.95rem;
+      transition: transform 0.15s ease, box-shadow 0.15s ease, background 0.15s ease;
+    }
+
+    .nav-pill:hover {
+      transform: translateY(-1px);
+      background: rgba(124, 58, 237, 0.08);
+    }
+
+    .intro-card h2 {
+      margin: 0 0 12px;
+      font-size: clamp(1.8rem, 2.2vw, 2.4rem);
+    }
+
+    .intro-card p {
+      margin: 0;
+      color: var(--text-muted);
+    }
+
+    .search-box {
+      display: grid;
+      gap: 12px;
+    }
+
+    #searchInput {
+      width: 100%;
+      padding: 16px 20px;
+      border-radius: 18px;
+      border: 1px solid rgba(15, 23, 42, 0.08);
+      background: var(--surface-soft);
+      color: var(--text);
+      font-size: 1rem;
+    }
+
+    #searchInput:focus {
+      outline: none;
+      border-color: var(--primary);
+      box-shadow: 0 0 0 4px rgba(124, 58, 237, 0.12);
+    }
+
+    #searchCount {
+      color: var(--text-muted);
+      font-size: 0.95rem;
+    }
+
+    .playlist-grid {
+      margin-top: 32px;
+      display: grid;
+      gap: 24px;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    }
+
+    .playlist-card {
+      background: var(--surface);
+      border-radius: 28px;
+      padding: 28px;
+      box-shadow: 0 20px 50px var(--shadow);
+      border: 1px solid rgba(255, 255, 255, 0.24);
+    }
+
+    .card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 14px;
+      margin-bottom: 20px;
+    }
+
+    .playlist-card h3 {
+      margin: 0;
+      font-size: 1.2rem;
+    }
+
+    .card-header span {
+      color: var(--primary-strong);
+      font-weight: 700;
+    }
+
+    .playlist-card ul {
+      list-style: none;
+      margin: 0;
+      padding: 0;
+      display: grid;
+      gap: 12px;
+    }
+
+    .playlist-card li {
+      padding: 14px 18px;
+      border-radius: 18px;
+      background: rgba(124, 58, 237, 0.06);
+      color: var(--text);
+    }
+
+    .playlist-card li:nth-child(odd) {
+      background: rgba(99, 102, 241, 0.08);
+    }
+
+    .no-result {
+      margin-top: 26px;
+      font-size: 1rem;
+      color: var(--text-muted);
+      display: none;
+      text-align: center;
+    }
+
+    .site-footer {
+      padding: 24px 0 40px;
+      text-align: center;
+      color: var(--text-muted);
+    }
+
+    .back-to-top {
+      position: fixed;
+      right: 24px;
+      bottom: 24px;
+      width: 52px;
+      height: 52px;
+      border: none;
+      border-radius: 50%;
+      background: var(--primary);
+      color: #fff;
+      font-size: 1.4rem;
+      cursor: pointer;
+      box-shadow: 0 18px 32px rgba(124, 58, 237, 0.24);
+      display: grid;
+      place-items: center;
+      opacity: 0;
+      visibility: hidden;
+      transform: translateY(20px);
+      transition: all 0.25s ease;
+      z-index: 20;
+    }
+
+    .back-to-top.visible {
+      opacity: 1;
+      visibility: visible;
+      transform: translateY(0);
+    }
+
+    .back-to-top:hover {
+      filter: brightness(1.05);
+    }
+
+    @media (max-width: 640px) {
+      .header-content,
+      .hero-actions {
+        grid-template-columns: 1fr;
+      }
+
+      .hero-actions {
+        justify-items: start;
+      }
+
+      .site-header {
+        padding: 56px 0;
+      }
+
+      .intro-card {
+        padding: 24px;
+      }
+
+      .playlist-card {
+        padding: 22px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header class="site-header">
+    <div class="container header-content">
+      <div class="hero-actions">
+        <a class="primary-button" href="#playlist">開始聆聽</a>
+        <button id="toggleTheme" class="secondary-button">切換主題</button>
+        <button id="randomSong" class="secondary-button">隨機選歌</button>
+        
+        <a class="banner-button" href="https://live.douyin.com/455085735351" target="_blank" rel="noopener">🍊七个橙-抖音</a>
+        <a class="banner-button" href="https://www.youtube.com/playlist?list=PL3LHSN24syoNl2RFhp8w3XVa8IWUSEjpp" target="_blank" rel="noopener">🍊YT</a>
+        <a class="banner-button" href="https://discord.com/channels/865334403864461373/1488922310403555431" target="_blank" rel="noopener">🍊DC</a>
+        <a class="banner-button" href="https://www.twitch.tv/se7enorange" target="_blank" rel="noopener">🍊圖奇</a>
+        <a class="banner-button" href="https://www.instagram.com/x_xcheng?igsh=NHc1NTM4NWhzaGdo" target="_blank" rel="noopener">🍊IG</a>
+      </div>
+    </div>
+  </header>
+
+  <main class="container">
+    <section class="intro-card">
+      <div>
+        <h2>快速搜尋你的最愛歌曲</h2>
+        <p>輸入歌手、歌名或分類，立即篩選出歌單內的內容。</p>
+      </div>
+      <div class="search-box">
+        <input id="searchInput" type="search" placeholder="搜尋 歌手、歌曲 或 分類" aria-label="搜尋歌單" />
+        <span id="searchCount">共 0 首歌曲</span>
+      </div>
+    </section>
+
+    <section class="quick-nav">
+      <a class="nav-pill" href="#jay-chou">周杰倫</a>
+      <a class="nav-pill" href="#chen-chi-chen">陳綺貞</a>
+      <a class="nav-pill" href="#fish-liang">梁靜茹</a>
+      <a class="nav-pill" href="#indie">質感文青</a>
+      <a class="nav-pill" href="#bands">樂團組合</a>
+      <a class="nav-pill" href="#cantonese">粵語精選</a>
+      <a class="nav-pill" href="#taiwanese">閩南語精選</a>
+    </section>
+
+    <section id="playlist" class="playlist-grid">
+      <article id="jay-chou" class="playlist-card">
+        <div class="card-header">
+          <h3>🎤 周杰倫</h3>
+          <span>17 首</span>
+        </div>
+        <ul>
+          <li>1. 晴天</li>
+          <li>2. 稻香</li>
+          <li>3. 安靜</li>
+          <li>4. 簡單愛</li>
+          <li>5. 黑色毛衣</li>
+          <li>6. 七里香</li>
+          <li>7. 青花瓷</li>
+          <li>8. 告白氣球</li>
+          <li>9. 紅塵客棧</li>
+          <li>10. 最長的電影</li>
+          <li>11. 說好的幸福呢</li>
+          <li>12. 給我一首歌的時間</li>
+          <li>13. 煙花易冷</li>
+          <li>14. 雨下一整晚</li>
+          <li>15. 蒲公英的約定</li>
+          <li>16. 畫沙</li>
+          <li>17. 可愛女人</li>
+        </ul>
+      </article>
+
+      <article id="chen-chi-chen" class="playlist-card">
+        <div class="card-header">
+          <h3>🎶 陳綺貞</h3>
+          <span>9 首</span>
+        </div>
+        <ul>
+          <li>18. 旅行的意義</li>
+          <li>19. 太聰明</li>
+          <li>20. 我喜歡上你時的內心活動</li>
+          <li>21. after17</li>
+          <li>22. 慢歌1</li>
+          <li>23. 魚</li>
+          <li>24. 華麗的冒險</li>
+          <li>25. 告訴我</li>
+          <li>26. 小步舞曲</li>
+        </ul>
+      </article>
+
+      <article id="fish-liang" class="playlist-card">
+        <div class="card-header">
+          <h3>💕 梁靜茹</h3>
+          <span>13 首</span>
+        </div>
+        <ul>
+          <li>27. 暖暖</li>
+          <li>28. 勇氣</li>
+          <li>29. 給未來的自己</li>
+          <li>30. 會呼吸的痛</li>
+          <li>31. 慢冷</li>
+          <li>32. 愛久見人心</li>
+          <li>33. 小手拉大手</li>
+          <li>34. 分手快樂</li>
+          <li>35. 沒有如果</li>
+          <li>36. 可惜不是你</li>
+          <li>37. 純真</li>
+          <li>38. 寧夏</li>
+          <li>39. 聽不到</li>
+        </ul>
+      </article>
+
+      <article id="indie" class="playlist-card">
+        <div class="card-header">
+          <h3>📖 質感文青</h3>
+          <span>43 首</span>
+        </div>
+        <ul>
+          <li>40. 陳綺貞 - 旅行的意義</li>
+          <li>41. 陳綺貞 - 太聰明</li>
+          <li>42. 陳綺貞 - 我喜歡上你時的內心活動</li>
+          <li>43. 蘇打綠 - 小情歌</li>
+          <li>44. 蘇打綠 - 他夏了夏天</li>
+          <li>45. 蘇打綠 - 無與倫比的美麗</li>
+          <li>46. 蘇打綠 - 喜歡寂寞</li>
+          <li>47. 魏如萱 - 你啊你啊</li>
+          <li>48. 魏如萱 - 我在紐約打電話給你</li>
+          <li>49. 盧廣仲 - 魚仔</li>
+          <li>50. 盧廣仲 - 慢靈魂</li>
+          <li>51. 盧廣仲 - 幾分之幾</li>
+          <li>52. 阿肆 - 世界上的另一個我</li>
+          <li>53. 阿肆 - 致姍姍來遲的你</li>
+          <li>54. 阿肆 - 我在人民廣場吃炸雞</li>
+          <li>55. 孫燕姿 - 天黑黑</li>
+          <li>56. 孫燕姿 - 遇見</li>
+          <li>57. 孫燕姿 - 我懷念的</li>
+          <li>58. 孫燕姿 - 我不難過</li>
+          <li>59. 孫燕姿 - 開始懂了</li>
+          <li>60. 陳粒 - 小半</li>
+          <li>61. 陳粒 - 走馬</li>
+          <li>62. 陳粒 - 虛擬</li>
+          <li>63. 陳粒 - 奇妙能力歌</li>
+          <li>64. 陳粒 - 歷歷萬鄉</li>
+          <li>65. 單依純 - 想你時風起</li>
+          <li>66. 單依純 - R&B All Night</li>
+          <li>67. 徐佳瑩 - 身騎白馬</li>
+          <li>68. 徐佳瑩 - 失落的沙洲</li>
+          <li>69. 蔡健雅 - 達爾文</li>
+          <li>70. 蔡健雅 - 紅色高跟鞋</li>
+          <li>71. 蔡健雅 - Letting Go</li>
+          <li>72. 田馥甄 - 小幸運</li>
+          <li>73. 田馥甄 - 你就不要想起我</li>
+          <li>74. 莫文蔚 - 忽然之間</li>
+          <li>75. 莫文蔚 - 慢慢喜歡你</li>
+          <li>76. 莫文蔚 - 這世界那麼多人</li>
+          <li>77. 王菲 - 紅豆</li>
+          <li>78. 王菲 - 匆匆那年</li>
+          <li>79. 王菲 - 旋木</li>
+          <li>80. 林宥嘉 - 想自由</li>
+          <li>81. 林宥嘉 - 兜圈</li>
+          <li>82. 林宥嘉 - 浪費</li>
+        </ul>
+      </article>
+
+      <article id="bands" class="playlist-card">
+        <div class="card-header">
+          <h3>🎸 樂團組合</h3>
+          <span>30 首</span>
+        </div>
+        <ul>
+          <li>83. 五月天 - 溫柔</li>
+          <li>84. 五月天 - 擁抱</li>
+          <li>85. 五月天 - 知足</li>
+          <li>86. 五月天 - 突然好想你</li>
+          <li>87. 五月天 - 我不願讓你一個人</li>
+          <li>88. 五月天 - 志明與春嬌</li>
+          <li>89. 五月天 - 憨人</li>
+          <li>90. 五月天 - 孫悟空</li>
+          <li>91. 蘇打綠 - 小情歌</li>
+          <li>92. 蘇打綠 - 我好想你</li>
+          <li>93. 蘇打綠 - 無眠(國語/台語)</li>
+          <li>94. 蘇打綠 - 你被寫在我的歌裡</li>
+          <li>95. 蘇打綠 - 無與倫比的美麗</li>
+          <li>96. 蘇打綠 - 他夏了夏天</li>
+          <li>97. 蘇打綠 - 喜歡寂寞</li>
+          <li>98. 告五人 - 愛在夏天</li>
+          <li>99. 告五人 - 好不容易</li>
+          <li>100. 告五人 - 唯一</li>
+          <li>101. 告五人 - 愛人錯過</li>
+          <li>102. 告五人 - 給你一瓶魔法藥水</li>
+          <li>103. 告五人 - 我想要佔據你</li>
+          <li>104. S.H.E - 觸電</li>
+          <li>105. S.H.E - Super Star</li>
+          <li>106. S.H.E - 戀人未滿</li>
+          <li>107. S.H.E - 熱帶雨林</li>
+          <li>108. S.H.E - 中國話</li>
+          <li>109. S.H.E - 不想長大</li>
+          <li>110. BY2 - 我知道</li>
+          <li>111. BY2 - 愛丫愛丫</li>
+          <li>112. BY2 - 愛的雙重魔力</li>
+        </ul>
+      </article>
+
+      <article id="cantonese" class="playlist-card">
+        <div class="card-header">
+          <h3>🎵 粵語精選</h3>
+          <span>7 首</span>
+        </div>
+        <ul>
+          <li>113. 謝安琪 - 喜帖街</li>
+          <li>114. 陳僖儀 - 蜚蜚</li>
+          <li>115. AGA - 孤雛</li>
+          <li>116. 陳奕迅 - 富士山下</li>
+          <li>117. 楊千嬅 - 少女的祈禱 / 再見二丁目 / 可惜我是水瓶座</li>
+          <li>118. 李幸倪 - 一格格</li>
+          <li>119. 容祖兒 - 心淡</li>
+          <li>120. 李克勤 - 月半小夜曲</li>
+        </ul>
+      </article>
+
+      <article id="taiwanese" class="playlist-card">
+        <div class="card-header">
+          <h3>🐟 閩南語精選</h3>
+          <span>15 首</span>
+        </div>
+        <ul>
+          <li>121. 盧廣仲 - 魚仔</li>
+          <li>122. 魏如萱 - 你啊你啊</li>
+          <li>123. 蘇打綠 - 無眠</li>
+          <li>124. 張秀卿 - 車站</li>
+          <li>125. 袁小迪/龍千玉 - 男人情女人心</li>
+          <li>126. 茄子蛋 - 浪子回頭</li>
+          <li>127. 珂拉琪 - 萬千花蕊慈母悲哀</li>
+          <li>128. 茄子蛋 - 浪流連</li>
+          <li>129. 黃乙玲 - 同花順</li>
+          <li>130. 椅子樂團 - Aphrodite</li>
+          <li>131. 椅子樂團 - 生份的你</li>
+          <li>132. 椅子樂團 - 兩人雨天</li>
+          <li>133. 宇宙人 - 好野</li>
+          <li>134. S.H.E - 我愛雨夜花</li>
+          <li>135. 王力宏/任家萱 - 你是我心內的一首歌</li>
+        </ul>
+      </article>
+    </section>
+
+    <p id="noResult" class="no-result">找不到符合搜尋條件的歌曲。</p>
+  </main>
+
+  <footer class="site-footer">
+    <div class="container">
+      <p>© 2026 七个橙-🍊的音樂歌單 • 由 GitHub Copilot 協助建立</p>
+    </div>
+  </footer>
+
+  <button id="backToTop" class="back-to-top" aria-label="返回頂部">↑</button>
+
+  <script>
+    /* --- JavaScript 邏輯 --- */
+    const searchInput = document.getElementById("searchInput");
+    const playlistCards = document.querySelectorAll(".playlist-card");
+    const songItems = document.querySelectorAll(".playlist-card li");
+    const searchCount = document.getElementById("searchCount");
+    const noResult = document.getElementById("noResult");
+    const toggleTheme = document.getElementById("toggleTheme");
+    const backToTop = document.getElementById("backToTop");
+    const randomSongBtn = document.getElementById("randomSong");
+
+    function updateSearch() {
+      const query = searchInput.value.trim().toLowerCase();
+      let visibleCount = 0;
+
+      songItems.forEach((item) => {
+        const text = item.textContent.toLowerCase();
+        const visible = query === "" || text.includes(query);
+        item.style.display = visible ? "grid" : "none";
+        if (visible) visibleCount += 1;
+      });
+
+      playlistCards.forEach((card) => {
+        const totalSongs = card.querySelectorAll("li").length;
+        const hiddenSongs = card.querySelectorAll("li[style*='display: none']").length;
+        const visibleSongs = totalSongs - hiddenSongs;
+        card.style.display = visibleSongs > 0 ? "grid" : "none";
+      });
+
+      searchCount.textContent = `共 ${visibleCount} 首歌曲`;
+      noResult.style.display = visibleCount === 0 ? "block" : "none";
+    }
+
+    function toggleDarkMode() {
+      document.body.classList.toggle("dark");
+    }
+
+    function selectRandomSong() {
+      const visibleSongs = Array.from(songItems).filter(item => item.style.display !== "none");
+      
+      if (visibleSongs.length === 0) {
+        alert("沒有符合搜尋條件的歌曲");
+        return;
+      }
+      
+      const randomSong = visibleSongs[Math.floor(Math.random() * visibleSongs.length)];
+      randomSong.scrollIntoView({ behavior: "smooth", block: "center" });
+      
+      // 強烈高亮該歌曲 5秒
+      randomSong.style.backgroundColor = "rgba(255, 200, 0, 0.4)";
+      randomSong.style.boxShadow = "0 0 10px rgba(255, 200, 0, 0.6)";
+      randomSong.style.border = "2px solid rgba(255, 200, 0, 0.8)";
+      randomSong.style.borderRadius = "4px";
+      randomSong.style.padding = "4px";
+      
+      setTimeout(() => {
+        randomSong.style.backgroundColor = "";
+        randomSong.style.boxShadow = "";
+        randomSong.style.border = "";
+        randomSong.style.borderRadius = "";
+        randomSong.style.padding = "";
+      }, 5000);
+    }
+
+    if (searchInput) {
+      searchInput.addEventListener("input", updateSearch);
+      updateSearch();
+    }
+
+    if (toggleTheme) {
+      toggleTheme.addEventListener("click", toggleDarkMode);
+    }
+
+    if (randomSongBtn) {
+      randomSongBtn.addEventListener("click", selectRandomSong);
+    }
+
+    if (backToTop) {
+      window.addEventListener("scroll", () => {
+        if (window.scrollY > 320) {
+          backToTop.classList.add("visible");
+        } else {
+          backToTop.classList.remove("visible");
+        }
+      });
+
+      backToTop.addEventListener("click", () => {
+        window.scrollTo({ top: 0, behavior: "smooth" });
+      });
+    }
+  </script>
+</body>
+</html>
