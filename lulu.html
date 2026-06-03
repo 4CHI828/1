@@ -24,27 +24,21 @@
             color: #b18e8e;
         }
 
-        /* 巨大綿羊的漂浮與互動 */
-        .center-sheep {
-            display: inline-block;
-            font-size: 6rem; 
+        /* 頂部圖片的漂浮動畫 */
+        .main-profile-img {
+            display: block;
             animation: float 4s ease-in-out infinite;
             filter: drop-shadow(0 20px 30px rgba(255, 182, 193, 0.5));
             cursor: pointer;
-            user-select: none;
             transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
         }
-        .center-sheep:active {
-            transform: scale(0.8) rotate(-10deg);
-        }
-
-        @media (min-width: 768px) {
-            .center-sheep { font-size: 10rem; }
+        .main-profile-img:active {
+            transform: scale(0.95) rotate(-2deg);
         }
 
         @keyframes float {
             0%, 100% { transform: translateY(0) rotate(0deg); }
-            50% { transform: translateY(-20px) rotate(5deg); }
+            50% { transform: translateY(-20px) rotate(2deg); }
         }
 
         /* 柔和的雲朵背景光斑 */
@@ -91,12 +85,8 @@
 
         /* 圖片相框樣式 */
         .image-frame {
-            transition: all 0.5s ease;
             border: 10px solid white;
             box-shadow: 0 15px 35px rgba(255, 182, 193, 0.4);
-        }
-        .image-frame:hover {
-            transform: rotate(-2deg) scale(1.02);
         }
 
         /* 小綿羊粒子 */
@@ -124,11 +114,13 @@
     <!-- 主內容容器 -->
     <div class="z-10 flex flex-col items-center gap-8 w-full max-w-2xl">
         
-        <!-- 1. 頂部：標誌性綿羊與名稱 -->
-        <div class="flex flex-col items-center gap-4">
-            <div class="center-sheep" id="mainSheep">🐑</div>
+        <!-- 1. 頂部：照片與名稱 -->
+        <div class="flex flex-col items-center gap-6">
+            <!-- 原本底部的圖片移到這裡，並加上漂浮動畫 -->
+            <div id="mainProfile" class="main-profile-img image-frame rounded-3xl overflow-hidden max-w-xs md:max-w-sm">
+                <img src="Copilot_20260516_195020.png" alt="如如Sherry" class="w-full h-auto block">
+            </div>
             <h1 class="text-3xl md:text-5xl font-bold text-pink-400 drop-shadow-sm">如如Sherry</h1>
-            <p class="text-pink-300 font-medium tracking-widest">Soft & Fluffy Cloud ☁️</p>
         </div>
 
         <!-- 2. 中間：連結區域 (玻璃面板) -->
@@ -155,10 +147,6 @@
             </div>
         </div>
 
-        <!-- 3. 下方：圓潤美照 -->
-        <div class="image-frame rounded-3xl overflow-hidden max-w-xs md:max-w-sm mt-4">
-            <img src="Copilot_20260516_195020.png" alt="如如Sherry" class="w-full h-auto block">
-        </div>
     </div>
 
     <!-- 底部裝飾 -->
@@ -190,9 +178,9 @@
         // 每隔 2 秒生成一隻小綿羊
         setInterval(createMiniSheep, 2000);
 
-        // 點擊巨大綿羊的簡單互動
-        const mainSheep = document.getElementById('mainSheep');
-        mainSheep.addEventListener('click', () => {
+        // 點擊圖片的互動 (原本點擊綿羊的邏輯移到圖片上)
+        const mainProfile = document.getElementById('mainProfile');
+        mainProfile.addEventListener('click', () => {
             for(let i=0; i<5; i++) {
                 setTimeout(createMiniSheep, i * 100);
             }
