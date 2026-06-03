@@ -82,7 +82,7 @@
     .vinyl.playing { animation: spin 4s linear infinite; }
     @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
 
-    .now-playing { text-align: center; margin-bottom: 20px; font-size: 18px; color: var(--main-color); font-weight: bold; height: 26px; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 12px; display: flex; align-items: center; justify-content: center; gap: 10px; }
+    .now-playing { text-align: center; margin-bottom: 20px; font-size: 18px; color: var(--main-color); font-weight: bold; height: 26px; border-bottom: 1px solid rgba(255,255,25 own,0.1); padding-bottom: 12px; display: flex; align-items: center; justify-content: center; gap: 10px; }
     .eq-bars { display: flex; gap: 3px; height: 15px; align-items: flex-end; }
     .eq-bar { width: 3px; background: var(--neon-cyan); height: 4px; animation: eq-animate 0.8s ease-in-out infinite; }
     .eq-bar:nth-child(2) { animation-delay: 0.2s; }
@@ -99,48 +99,48 @@
     .ctrl-btn:hover { background: var(--neon-cyan); color: #000; transform: scale(1.1); box-shadow: 0 0 15px var(--neon-cyan); }
     .ctrl-btn#play-pause-btn { width: 60px; height: 60px; font-size: 24px; background: rgba(0, 255, 255, 0.15); border: 2px solid var(--neon-cyan); }
 
-    /* 音量控制面板 */
+    /* --- 修正後的水平音量控制面板 --- */
     .volume-panel {
       position: absolute;
-      bottom: 70px;
+      bottom: 75px; /* 位於控制按鈕上方 */
       left: 50%;
-      transform: translateX(-50%) translateY(20px);
-      background: rgba(30, 30, 35, 0.9);
-      border: 1px solid var(--glass-border);
-      padding: 15px 10px;
-      border-radius: 20px;
+      transform: translateX(-50%) translateY(10px);
+      background: rgba(30, 30, 35, 0.95);
+      border: 1px solid var(--neon-cyan);
+      padding: 12px 20px;
+      border-radius: 30px;
       display: flex;
-      flex-direction: column;
       align-items: center;
-      gap: 10px;
+      gap: 12px;
       opacity: 0;
       visibility: hidden;
       transition: var(--transition);
-      backdrop-filter: blur(10px);
-      z-index: 10;
+      backdrop-filter: blur(15px);
+      z-index: 100;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.5), 0 0 10px var(--neon-cyan);
     }
     .volume-panel.show { opacity: 1; visibility: visible; transform: translateX(-50%) translateY(0); }
     
-    /* 自定義垂直音量條 */
     .volume-slider {
       -webkit-appearance: none;
-      width: 4px;
-      height: 100px;
-      background: rgba(255,255,255,0.1);
+      width: 100px;
+      height: 5px;
+      background: rgba(255,255,255,0.2);
+      border-radius: 5px;
       outline: none;
-      border-radius: 2px;
       cursor: pointer;
     }
     .volume-slider::-webkit-slider-thumb {
       -webkit-appearance: none;
-      width: 16px;
-      height: 16px;
+      width: 14px;
+      height: 14px;
       background: var(--neon-cyan);
       border-radius: 50%;
       box-shadow: 0 0 10px var(--neon-cyan);
       cursor: pointer;
-      border: 2px solid #000;
+      border: 2px solid #fff;
     }
+    .vol-value { font-size: 12px; color: var(--neon-cyan); font-weight: bold; min-width: 30px; }
 
     .progress-container { display: flex; align-items: center; gap: 10px; margin-bottom: 25px; font-size: 12px; color: #aaa; }
     .progress-bar { flex-grow: 1; height: 6px; background: rgba(255,255,255,0.1); border-radius: 3px; cursor: pointer; position: relative; overflow: hidden; }
@@ -203,17 +203,17 @@
     </div>
     
     <div class="controls">
-      <!-- 新增：音量按鈕 -->
+      <!-- 音量按鈕 -->
       <button class="ctrl-btn" id="vol-btn" onclick="toggleVolumePanel()" title="音量調整">🔊</button>
       
       <button class="ctrl-btn" onclick="playPrevious()" title="上一首 (←)">⏮️</button>
       <button class="ctrl-btn" id="play-pause-btn" onclick="togglePlay()" title="播放/暫停 (Space)">▶️</button>
       <button class="ctrl-btn" onclick="playNext()" title="下一首 (→)">⏭️</button>
       
-      <!-- 新增：音量彈出面板 -->
+      <!-- 修正後的水平音量面板 -->
       <div class="volume-panel" id="volume-panel">
+        <span class="vol-value" id="vol-value">100%</span>
         <input type="range" class="volume-slider" id="volume-slider" min="0" max="1" step="0.01" value="1">
-        <span style="font-size: 10px; color: #aaa;">音量</span>
       </div>
     </div>
 
@@ -331,6 +331,7 @@
     const volBtn = document.getElementById('vol-btn');
     const volPanel = document.getElementById('volume-panel');
     const volSlider = document.getElementById('volume-slider');
+    const volValueText = document.getElementById('vol-value');
 
     function setPlaybackMode(mode, element) {
       Player.mode = mode;
@@ -401,7 +402,7 @@
         playSong(prevIndex);
     }
 
-    // --- 音量控制邏輯 ---
+    // --- 修正後的音量控制邏輯 ---
     function toggleVolumePanel() {
       volPanel.classList.toggle('show');
     }
@@ -411,15 +412,18 @@
       else if (val < 0.3) volBtn.innerText = "🔈";
       else if (val < 0.7) volBtn.innerText = "🔉";
       else volBtn.innerText = "🔊";
+      
+      // 更新百分比文字
+      volValueText.innerText = Math.round(val * 100) + "%";
     }
 
     volSlider.oninput = () => {
-      const val = volSlider.value;
+      const val = parseFloat(volSlider.value);
       audioPlayer.volume = val;
       updateVolumeIcon(val);
     };
 
-    // 點擊面板以外區域關閉音量條
+    // 點擊面板外部關閉
     document.addEventListener('click', (e) => {
       if (!volPanel.contains(e.target) && e.target !== volBtn) {
         volPanel.classList.remove('show');
