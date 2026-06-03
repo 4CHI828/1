@@ -46,7 +46,7 @@
     .floating-item { position: absolute; bottom: -60px; font-size: 24px; user-select: none; animation: floatUp linear infinite; }
     @keyframes floatUp { 0% { transform: translateY(0) rotate(0deg); opacity: 0; } 10% { opacity: 0.6; } 90% { opacity: 0.6; } 100% { transform: translateY(-110vh) rotate(360deg); opacity: 0; } }
 
-    /* --- 標題與顏色切換容器 --- */
+    /* 標題與顏色切換 */
     .header-wrapper {
       display: flex;
       align-items: center;
@@ -79,8 +79,39 @@
     .theme-dot:hover { transform: scale(1.3) rotate(15deg); }
     .dot-yellow { background: #ffcc66; } .dot-red { background: #ff8a8a; } .dot-green { background: #c2f0c2; } .dot-brown { background: #d2b48c; }
 
-    .btn-group { margin-bottom: 25px; display: flex; flex-wrap: wrap; justify-content: center; gap: 12px; max-width: 600px; }
-    .btn { padding: 10px 18px; background: var(--main-color); border: 2px solid var(--accent-color); border-radius: 25px; font-size: 14px; font-weight: bold; color: var(--dark-color); text-decoration: none; box-shadow: 0 4px 10px rgba(0,0,0,0.1); transition: var(--transition); cursor: pointer; }
+    /* 按鈕排成一排 (可滾動) */
+    .btn-group { 
+      margin-bottom: 25px; 
+      display: flex; 
+      flex-wrap: nowrap; 
+      justify-content: center; 
+      gap: 12px; 
+      width: 100%;
+      max-width: 700px; 
+      overflow-x: auto; 
+      padding: 5px 10px 15px 10px; 
+      scrollbar-width: thin; 
+      -webkit-overflow-scrolling: touch; 
+    }
+    .btn-group::-webkit-scrollbar { height: 6px; }
+    .btn-group::-webkit-scrollbar-track { background: rgba(0,0,0,0.05); border-radius: 10px; }
+    .btn-group::-webkit-scrollbar-thumb { background: var(--main-color); border-radius: 10px; }
+
+    .btn { 
+      padding: 10px 18px; 
+      background: var(--main-color); 
+      border: 2px solid var(--accent-color); 
+      border-radius: 25px; 
+      font-size: 14px; 
+      font-weight: bold; 
+      color: var(--dark-color); 
+      text-decoration: none; 
+      box-shadow: 0 4px 10px rgba(0,0,0,0.1); 
+      transition: var(--transition); 
+      cursor: pointer; 
+      flex-shrink: 0; 
+      white-space: nowrap; 
+    }
     .btn:hover { transform: translateY(-3px); box-shadow: 0 6px 15px rgba(0,0,0,0.15); background: #fff; }
 
     /* 播放器主體 */
@@ -147,9 +178,27 @@
     .volume-slider::-webkit-slider-thumb { -webkit-appearance: none; width: 14px; height: 14px; background: var(--neon-cyan); border-radius: 50%; box-shadow: 0 0 10px var(--neon-cyan); cursor: pointer; border: 2px solid #fff; }
     .vol-value { font-size: 12px; color: var(--neon-cyan); font-weight: bold; min-width: 30px; }
 
+    /* --- 進度條樣式優化 --- */
     .progress-container { display: flex; align-items: center; gap: 10px; margin-bottom: 25px; font-size: 12px; color: #aaa; }
-    .progress-bar { flex-grow: 1; height: 6px; background: rgba(255,255,255,0.1); border-radius: 3px; cursor: pointer; position: relative; overflow: hidden; }
-    .progress-fill { height: 100%; background: var(--neon-cyan); width: 0%; transition: width 0.1s linear; box-shadow: 0 0 10px var(--neon-cyan); }
+    .progress-bar { 
+      flex-grow: 1; 
+      height: 8px; 
+      background: rgba(255,255,255,0.1); 
+      border-radius: 4px; 
+      cursor: pointer; 
+      position: relative; 
+      overflow: hidden; 
+      transition: background 0.2s;
+      touch-action: none; /* 禁用瀏覽器默認觸控行為，防止拖動時頁面滾動 */
+    }
+    .progress-bar:hover { background: rgba(255,255,255,0.2); }
+    .progress-fill { 
+      height: 100%; 
+      background: var(--neon-cyan); 
+      width: 0%; 
+      transition: width 0.1s linear; 
+      box-shadow: 0 0 10px var(--neon-cyan); 
+    }
 
     audio { display: none; }
 
@@ -171,7 +220,6 @@
 <body id="bodyTag">
   <div class="floating-bg" id="floatingBg"></div>
 
-  <!-- 修改：將標題與顏色切換點包在一起 -->
   <div class="header-wrapper">
     <h1 id="mainTitle">静静在夏天🍔🎤⁰³²⁰<div class="ketchup"></div></h1>
     <div class="theme-group">
@@ -250,7 +298,7 @@
         const bg = document.getElementById('floatingBg');
         const items = ['🍟', '🌭','🍔', '🎤', '🎶', '✨', '🍔'];
         setInterval(() => {
-          const item = document.createElement('div');
+          const item = ownDocument.createElement('div'); // Note: Changed from document to avoid errors if wrap occurs, but here just use document
           item.className = 'floating-item';
           item.textContent = items[Math.floor(Math.random() * items.length)];
           item.style.left = Math.random() * 100 + 'vw';
@@ -261,6 +309,22 @@
           setTimeout(() => item.remove(), 15000);
         }, 800);
       }
+    };
+    // Fixed Visuals.initFloatingBg call locally to use document
+    Visuals.initFloatingBg = function() {
+        const bg = document.getElementById('floatingBg');
+        const items = ['🍟', '🌭','🍔', '🎤', '🎶', '✨', '🍔'];
+        setInterval(() => {
+          const item = document.createElement('div');
+          item.className = 'floating-item';
+          item.textContent = items[Math.floor(Math.random() * items.length)];
+          item.style.left = Math.random() * 100 + 'vw';
+          item.style.fontSize = (Math.random() * 20 + 15) + 'px';
+          item.style.animationDuration = (Math.random() * 9 + 6) + 's';
+          item.style.opacity = Math.random() * 0.5 + 0.3;
+          bg.appendChild(item);
+          setTimeout(() => item.remove(), 15000);
+        }, 800);
     };
     window.setTheme = (t) => Visuals.setTheme(t);
 
@@ -335,6 +399,9 @@
     const volPanel = document.getElementById('volume-panel');
     const volSlider = document.getElementById('volume-slider');
     const volValueText = document.getElementById('vol-value');
+
+    // --- 拖拉狀態變量 ---
+    let isDragging = false;
 
     function setPlaybackMode(mode, element) {
       Player.mode = mode;
@@ -429,18 +496,50 @@
       }
     });
 
-    audioPlayer.ontimeupdate = () => {
+    // --- 修正：進度條拖拉核心邏輯 ---
+    function handleProgressUpdate() {
+      if (isDragging) return; // 拖動時暫停自動更新 UI，由拖動邏輯控制
       const percent = (audioPlayer.currentTime / audioPlayer.duration) * 100 || 0;
       progressFill.style.width = percent + '%';
       currTimeText.innerText = formatTime(audioPlayer.currentTime);
       if (audioPlayer.duration) totalTimeText.innerText = formatTime(audioPlayer.duration);
+    }
+
+    function seekToPosition(e) {
+      const rect = progressBar.getBoundingClientRect();
+      // 計算鼠標/手指在進度條中的相對位置 (0 到 1 之間)
+      let pos = (e.clientX - rect.left) / rect.width;
+      if (pos < 0) pos = 0;
+      if (pos > 1) pos = 1;
+      
+      // 更新歌曲時間
+      if (audioPlayer.duration) {
+        audioPlayer.currentTime = pos * audioPlayer.duration;
+      }
+      
+      // 實時更新視覺進度條寬度
+      progressFill.style.width = (pos * 100) + '%';
+    }
+
+    // 監聽指標按下 (支持鼠標與觸控)
+    progressBar.onpointerdown = (e) => {
+      isDragging = true;
+      seekToPosition(e);
     };
 
-    progressBar.onclick = (e) => {
-      const rect = progressBar.getBoundingClientRect();
-      const pos = (e.clientX - rect.left) / rect.width;
-      audioPlayer.currentTime = pos * audioPlayer.duration;
+    // 監聽指標移動
+    window.onpointermove = (e) => {
+      if (isDragging) {
+        seekToPosition(e);
+      }
     };
+
+    // 監聽指標抬起
+    window.onpointerup = () => {
+      isDragging = false;
+    };
+
+    audioPlayer.ontimeupdate = handleProgressUpdate;
 
     audioPlayer.onplay = () => {
         playPauseBtn.innerText = "⏸️";
