@@ -1,261 +1,637 @@
 <!DOCTYPE html>
-<html lang="zh-TW">
+<html lang="zh-Hant">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>静静在夏天🍔🎤⁰³²⁰</title>
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-        
-        body {
-            font-family: 'Microsoft JhengHei', Arial, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            padding: 20px;
-        }
-        
-        .container {
-            background: rgba(255, 255, 255, 0.95);
-            border-radius: 20px;
-            padding: 30px;
-            max-width: 500px;
-            width: 100%;
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
-        }
-        
-        h1 {
-            text-align: center;
-            color: #333;
-            margin-bottom: 20px;
-            font-size: 24px;
-        }
-        
-        .links {
-            display: flex;
-            flex-direction: column;
-            gap: 12px;
-            margin-bottom: 30px;
-        }
-        
-        .link-item {
-            display: flex;
-            align-items: center;
-            text-decoration: none;
-            color: #333;
-            padding: 12px 15px;
-            background: #f8f9fa;
-            border-radius: 10px;
-            transition: all 0.3s ease;
-            border: 2px solid transparent;
-        }
-        
-        .link-item:hover {
-            background: #e9ecef;
-            border-color: #667eea;
-            transform: translateX(5px);
-        }
-        
-        .emoji {
-            font-size: 24px;
-            margin-right: 10px;
-        }
-        
-        .text {
-            font-size: 16px;
-            font-weight: 500;
-        }
-        
-        .player-section {
-            background: #f8f9fa;
-            border-radius: 15px;
-            padding: 20px;
-            margin-top: 20px;
-        }
-        
-        .player-status {
-            text-align: center;
-            color: #666;
-            margin-bottom: 15px;
-            font-size: 14px;
-        }
-        
-        .player-controls {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            gap: 15px;
-            margin: 20px 0;
-        }
-        
-        .control-btn {
-            background: #667eea;
-            color: white;
-            border: none;
-            border-radius: 50%;
-            width: 50px;
-            height: 50px;
-            font-size: 20px;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-        
-        .control-btn:hover {
-            background: #5568d3;
-            transform: scale(1.1);
-        }
-        
-        .progress-bar {
-            width: 100%;
-            height: 6px;
-            background: #ddd;
-            border-radius: 3px;
-            margin: 15px 0;
-            position: relative;
-        }
-        
-        .progress-fill {
-            height: 100%;
-            background: #667eea;
-            border-radius: 3px;
-            width: 0%;
-            transition: width 0.3s ease;
-        }
-        
-        .time-display {
-            display: flex;
-            justify-content: space-between;
-            font-size: 12px;
-            color: #666;
-        }
-        
-        .volume-control {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            margin-top: 15px;
-        }
-        
-        .volume-slider {
-            flex: 1;
-            height: 6px;
-            -webkit-appearance: none;
-            appearance: none;
-            background: #ddd;
-            border-radius: 3px;
-            outline: none;
-        }
-        
-        .volume-slider::-webkit-slider-thumb {
-            -webkit-appearance: none;
-            appearance: none;
-            width: 16px;
-            height: 16px;
-            background: #667eea;
-            border-radius: 50%;
-            cursor: pointer;
-        }
-        
-        .footer {
-            text-align: center;
-            margin-top: 20px;
-            padding-top: 15px;
-            border-top: 1px solid #eee;
-        }
-        
-        .footer a {
-            color: #667eea;
-            text-decoration: none;
-            font-size: 14px;
-        }
-        
-        .footer a:hover {
-            text-decoration: underline;
-        }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>静静在夏天🍔🎤⁰³²⁰</title>
+  <style>
+    /* --- 現代化變數系統 --- */
+    :root {
+      --main-color: #ffcc66;
+      --accent-color: #ff9966;
+      --dark-color: #663300;
+      --ketchup-red: #ff2b2b;
+      --neon-cyan: #00ffff;
+      --player-bg: rgba(20, 22, 26, 0.8);
+      --list-bg: rgba(10, 11, 14, 0.6);
+      --bg-color: #fff8f0;
+      --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      --glass-border: rgba(255, 255, 255, 0.12);
+      --neon-shadow: 0 0 15px var(--neon-cyan), 0 0 5px var(--neon-cyan);
+    }
+
+    [data-theme="red"] { --main-color: #ff8a8a; --accent-color: #ff4d4d; --dark-color: #800000; --bg-color: #fff0f0; }
+    [data-theme="green"] { --main-color: #c2f0c2; --accent-color: #7ecb7e; --dark-color: #2d5a27; --bg-color: #f0fff0; }
+    [data-theme="brown"] { --main-color: #d2b48c; --accent-color: #8b4513; --dark-color: #3e2723; --bg-color: #fdf5e6; }
+
+    body {
+      background: var(--bg-color) url('burger-bg.png') repeat;
+      font-family: "Segoe UI", "Microsoft JhengHei", "PingFang TC", sans-serif;
+      text-align: center;
+      margin: 0;
+      padding: 20px; 
+      border: 12px solid var(--main-color); 
+      border-radius: 40px;
+      box-shadow: inset 0 0 30px rgba(0,0,0,0.05);
+      min-height: 95vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      box-sizing: border-box;
+      overflow-x: hidden;
+      transition: background 0.5s ease;
+    }
+
+    .floating-bg { position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: -1; overflow: hidden; }
+    .floating-item { position: absolute; bottom: -60px; font-size: 24px; user-select: none; animation: floatUp linear infinite; }
+    @keyframes floatUp { 0% { transform: translateY(0) rotate(0deg); opacity: 0; } 10% { opacity: 0.6; } 90% { opacity: 0.6; } 100% { transform: translateY(-110vh) rotate(360deg); opacity: 0; } }
+
+    .header-wrapper {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 20px;
+      flex-wrap: wrap;
+      margin-bottom: 30px;
+    }
+    h1 { 
+      color: var(--accent-color); 
+      font-size: clamp(20px, 5vw, 28px); 
+      margin: 0; 
+      text-shadow: 2px 2px 0px #fff; 
+      position: relative; 
+      display: inline-block; 
+    }
+    .ketchup { 
+      position: absolute; bottom: -12px; left: 50%; transform: translateX(-50%); 
+      width: 60px; height: 8px; background: var(--ketchup-red); 
+      border-radius: 4px; animation: drip 2s infinite ease-in-out; 
+    }
+    @keyframes drip { 0%, 100% { height: 8px; width: 60px; } 50% { height: 20px; width: 50px; } }
+
+    .theme-group { display: flex; gap: 10px; align-items: center; }
+    .theme-dot { 
+      width: 22px; height: 22px; border-radius: 50%; cursor: pointer; 
+      border: 2px solid #fff; box-shadow: 0 2px 6px rgba(0,0,0,0.2); 
+      transition: var(--transition); 
+    }
+    .theme-dot:hover { transform: scale(1.3) rotate(15deg); }
+    .dot-yellow { background: #ffcc66; } .dot-red { background: #ff8a8a; } .dot-green { background: #c2f0c2; } .dot-brown { background: #d2b48c; }
+
+    .btn-group { 
+      margin-bottom: 25px; 
+      display: flex; 
+      flex-wrap: nowrap; 
+      justify-content: center; 
+      gap: 12px; 
+      width: 100%;
+      max-width: 700px; 
+      overflow-x: auto; 
+      padding: 5px 10px 15px 10px; 
+      scrollbar-width: thin; 
+      -webkit-overflow-scrolling: touch; 
+    }
+    .btn-group::-webkit-scrollbar { height: 6px; }
+    .btn-group::-webkit-scrollbar-track { background: rgba(0,0,0,0.05); border-radius: 10px; }
+    .btn-group::-webkit-scrollbar-thumb { background: var(--main-color); border-radius: 10px; }
+
+    .btn { 
+      padding: 10px 18px; 
+      background: var(--main-color); 
+      border: 2px solid var(--accent-color); 
+      border-radius: 25px; 
+      font-size: 14px; 
+      font-weight: bold; 
+      color: var(--dark-color); 
+      text-decoration: none; 
+      box-shadow: 0 4px 10px rgba(0,0,0,0.1); 
+      transition: var(--transition); 
+      cursor: pointer; 
+      flex-shrink: 0; 
+      white-space: nowrap; 
+    }
+    .btn:hover { transform: translateY(-3px); box-shadow: 0 6px 15px rgba(0,0,0,0.15); background: #fff; }
+
+    .player-container {
+      background: var(--player-bg);
+      backdrop-filter: blur(30px);
+      -webkit-backdrop-filter: blur(30px);
+      border-radius: 40px;
+      padding: 30px;
+      width: 92%; 
+      max-width: 420px; 
+      margin: 20px auto;
+      box-shadow: 0 30px 60px rgba(0,0,0,0.5), 0 0 20px rgba(0, 255, 255, 0.2);
+      color: white;
+      border: 1px solid var(--glass-border);
+      box-sizing: border-box;
+      position: relative;
+      animation: playerBreath 4s ease-in-out infinite;
+    }
+    @keyframes playerBreath {
+      0%, 100% { box-shadow: 0 30px 60px rgba(0,0,0,0.5), 0 0 20px rgba(0, 255, 255, 0.2); }
+      50% { box-shadow: 0 30px 60px rgba(0,0,0,0.6), 0 0 30px rgba(0, 255, 255, 0.4); }
+    }
+
+    .vinyl-wrapper { display: flex; justify-content: center; margin-bottom: 20px; }
+    .vinyl { width: 80px; height: 80px; background: radial-gradient(circle, #333 20%, #000 100%); border-radius: 50%; border: 4px solid #222; position: relative; display: flex; align-items: center; justify-content: center; box-shadow: 0 0 20px rgba(0,0,0,0.5); transition: transform 0.5s ease; }
+    .vinyl::after { content: '🍔'; font-size: 24px; }
+    .vinyl.playing { animation: spin 4s linear infinite; }
+    @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+
+    .now-playing { text-align: center; margin-bottom: 20px; font-size: 18px; color: var(--main-color); font-weight: bold; height: 26px; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 12px; display: flex; align-items: center; justify-content: center; gap: 10px; }
+    .eq-bars { display: flex; gap: 3px; height: 15px; align-items: flex-end; }
+    .eq-bar { width: 3px; background: var(--neon-cyan); height: 4px; animation: eq-animate 0.8s ease-in-out infinite; }
+    .eq-bar:nth-child(2) { animation-delay: 0.2s; }
+    .eq-bar:nth-child(3) { animation-delay: 0.4s; }
+    @keyframes eq-animate { 0%, 100% { height: 4px; } 50% { height: 15px; } }
+    .paused .eq-bars { display: none; }
+
+    .mode-group { display: flex; justify-content: center; gap: 8px; margin-bottom: 20px; }
+    .mode-btn { background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.2); color: #bbb; padding: 6px 12px; border-radius: 15px; font-size: 11px; cursor: pointer; transition: var(--transition); }
+    .mode-btn.active { background: var(--neon-cyan); color: #000; font-weight: bold; box-shadow: var(--neon-shadow); border-color: var(--neon-cyan); }
+
+    .controls { display: flex; justify-content: center; align-items: center; gap: 15px; margin-bottom: 20px; position: relative; }
+    .ctrl-btn { background: rgba(255, 255, 255, 0.08); border: 1px solid var(--glass-border); color: white; width: 48px; height: 48px; border-radius: 50%; cursor: pointer; font-size: 18px; transition: var(--transition); display: flex; align-items: center; justify-content: center; }
+    .ctrl-btn:hover { background: var(--neon-cyan); color: #000; transform: scale(1.1); box-shadow: var(--neon-shadow); }
+    .ctrl-btn#play-pause-btn { width: 60px; height: 60px; font-size: 24px; background: rgba(0, 255, 255, 0.15); border: 2px solid var(--neon-cyan); }
+
+    .volume-panel {
+      position: absolute;
+      bottom: 75px;
+      left: 50%;
+      transform: translateX(-50%) translateY(10px);
+      background: rgba(20, 20, 25, 0.95);
+      border: 1px solid var(--neon-cyan);
+      padding: 12px 20px;
+      border-radius: 30px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      opacity: 0;
+      visibility: hidden;
+      transition: var(--transition);
+      backdrop-filter: blur(15px);
+      z-index: 100;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.5), 0 0 10px var(--neon-cyan);
+    }
+    .volume-panel.show { opacity: 1; visibility: visible; transform: translateX(-50%) translateY(0); }
+    .volume-slider { -webkit-appearance: none; width: 100px; height: 5px; background: rgba(255,255,255,0.2); border-radius: 5px; outline: none; cursor: pointer; }
+    .volume-slider::-webkit-slider-thumb { -webkit-appearance: none; width: 14px; height: 14px; background: var(--neon-cyan); border-radius: 50%; box-shadow: 0 0 10px var(--neon-cyan); cursor: pointer; border: 2px solid #fff; }
+    .vol-value { font-size: 12px; color: var(--neon-cyan); font-weight: bold; min-width: 30px; }
+
+    .progress-container { display: flex; align-items: center; gap: 10px; margin-bottom: 25px; font-size: 12px; color: #aaa; }
+    .progress-bar { 
+      flex-grow: 1; 
+      height: 8px; 
+      background: rgba(255,255,255,0.1); 
+      border-radius: 4px; 
+      cursor: pointer; 
+      position: relative; 
+      overflow: visible; 
+      touch-action: none; 
+    }
+    .progress-fill { 
+      height: 100%; 
+      background: var(--neon-cyan); 
+      width: 0%; 
+      border-radius: 4px;
+      transition: width 0.1s linear; 
+      box-shadow: 0 0 10px var(--neon-cyan); 
+    }
+    .progress-knob {
+      position: absolute;
+      top: 50%;
+      left: 0%;
+      width: 14px;
+      height: 14px;
+      background: #fff;
+      border: 2px solid var(--neon-cyan);
+      border-radius: 50%;
+      transform: translate(-50%, -50%);
+      box-shadow: 0 0 10px var(--neon-cyan);
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity 0.2s;
+    }
+    .progress-bar:hover .progress-knob, .progress-bar.dragging .progress-knob { opacity: 1; }
+
+    audio { display: none; }
+
+    .song-list-wrapper { background: var(--list-bg); border-radius: 25px; padding: 10px; border: 1px solid rgba(255,255,255,0.05); }
+    .song-list { list-style: none; padding: 0; margin: 0; text-align: left; max-height: 300px; overflow-y: auto; scroll-behavior: smooth; }
+    .song-list::-webkit-scrollbar { width: 4px; }
+    .song-list::-webkit-scrollbar-thumb { background: var(--neon-cyan); border-radius: 10px; }
+
+    .song-item { 
+      padding: 10px 15px; 
+      font-size: 13px; 
+      color: #999; 
+      cursor: pointer; 
+      border-radius: 12px; 
+      margin-bottom: 4px; 
+      transition: var(--transition); 
+      display: flex; 
+      justify-content: space-between; 
+      align-items: center; 
+      opacity: 0; /* 初始透明 */
+      animation: fadeIn 0.4s ease forwards; 
+    }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+    .song-item:hover { background: rgba(255,255,255,0.05); color: #fff; }
+    
+    /* --- 修正：確保播放中的歌曲絕對可見 --- */
+    .song-item.active { 
+      opacity: 1 !important; /* 強制可見，防止被動畫覆蓋 */
+      background: rgba(0, 255, 255, 0.3) !important; 
+      color: #fff !important; 
+      font-weight: bold; 
+      border-left: 5px solid var(--neon-cyan); 
+      box-shadow: 0 0 15px rgba(0, 255, 255, 0.2);
+      text-shadow: 0 0 8px var(--neon-cyan);
+      animation: pulseBorder 2s infinite; /* 呼吸燈動畫 */
+    }
+    @keyframes pulseBorder { 0%, 100% { background: rgba(0, 255, 255, 0.3); } 50% { background: rgba(0, 255, 255, 0.4); } }
+
+    .footer { margin-top: 40px; font-size: 13px; color: #aaa; opacity: 0.7; transition: var(--transition); }
+    .footer a { color: #aaa; text-decoration: none; }
+    .footer a:hover { color: var(--accent-color); }
+  </style>
 </head>
-<body>
-    <div class="container">
-        <h1>静静在夏天🍔🎤⁰³²⁰</h1>
-        
-        <div class="links">
-            <a href="https://discord.com/channels/865334403864461373/1467603376144646319" class="link-item">
-                <span class="emoji">🍔</span>
-                <span class="text">DC</span>
-            </a>
-            
-            <a href="https://v.douyin.com/_Zfxey53n7I/" class="link-item">
-                <span class="emoji">🍔</span>
-                <span class="text">抖音</span>
-            </a>
-            
-            <a href="https://www.youtube.com/playlist?list=PL3LHSN24syoOcIqA8nRwfYgAOoR5U27_U" class="link-item">
-                <span class="emoji">🍔</span>
-                <span class="text">YT</span>
-            </a>
-            
-            <a href="https://www.twitch.tv/jingjingzaixiatian" class="link-item">
-                <span class="emoji">🍔</span>
-                <span class="text">圖奇</span>
-            </a>
-            
-            <a href="https://www.instagram.com/jingjing24739233910/" class="link-item">
-                <span class="emoji">🍔</span>
-                <span class="text">IG</span>
-            </a>
-            
-            <a href="0320.html" class="link-item">
-                <span class="emoji">🍔</span>
-                <span class="text">歌單</span>
-            </a>
-            
-            <a href="http://chi.xo.je/player.html" class="link-item">
-                <span class="emoji">🍔</span>
-                <span class="text">影片</span>
-            </a>
-        </div>
-        
-        <div class="player-section">
-            <div class="player-status">準備播放...</div>
-            
-            <div class="player-controls">
-                <button class="control-btn" title="列表循環">🔁</button>
-                <button class="control-btn" title="單曲循環">🔂</button>
-                <button class="control-btn" title="隨機播放">🔀</button>
-                <button class="control-btn" title="音量">🔊</button>
-                <button class="control-btn" title="上一首">⏮️</button>
-                <button class="control-btn" title="播放/暫停">▶️</button>
-                <button class="control-btn" title="下一首">⏭️</button>
-            </div>
-            
-            <div class="progress-bar">
-                <div class="progress-fill"></div>
-            </div>
-            
-            <div class="time-display">
-                <span>0:00</span>
-                <span>0:00</span>
-            </div>
-            
-            <div class="volume-control">
-                <span>🔊</span>
-                <input type="range" class="volume-slider" min="0" max="100" value="100">
-                <span>100%</span>
-            </div>
-        </div>
-        
-        <div class="footer">
-            <a href="https://www.twitch.tv/chi828">新竹奇奇828 製作 🛠️</a>
-        </div>
+<body id="bodyTag">
+  <div class="floating-bg" id="floatingBg"></div>
+
+  <div class="header-wrapper">
+    <h1 id="mainTitle">静静在夏天🍔🎤⁰³²⁰<div class="ketchup"></div></h1>
+    <div class="theme-group">
+      <div class="theme-dot dot-yellow" onclick="setTheme('yellow')" title="經典黃"></div>
+      <div class="theme-dot dot-red" onclick="setTheme('red')" title="番茄紅"></div>
+      <div class="theme-dot dot-green" onclick="setTheme('green')" title="萵苣綠"></div>
+      <div class="theme-dot dot-brown" onclick="setTheme('brown')" title="巧克力褐"></div>
     </div>
+  </div>
+
+  <div class="btn-group">
+    <a class="btn" href="https://discord.com/channels/865334403864461373/1467603376144646319" target="_blank" rel="noopener noreferrer"><span>🍔</span> DC靜靜幫</a>
+    <a class="btn" href="https://v.douyin.com/_Zfxey53n7I/" target="_blank" rel="noopener noreferrer"><span>🍔</span> 抖音</a>
+    <a class="btn" href="https://www.youtube.com/playlist?list=PL3LHSN24syoOcIqA8nRwfYgAOoR5U27_U" target="_blank" rel="noopener noreferrer"><span>🍔</span> YT</a>
+    <a class="btn" href="https://www.twitch.tv/jingjingzaixiatian" target="_blank" rel="noopener noreferrer"><span>🍔</span> 圖奇</a>
+    <a class="btn" href="https://www.instagram.com/jingjing24739233910/" target="_blank" rel="noopener noreferrer"><span>🍔</span> IG</a>
+    <a class="btn" href="0320.html"><span>🍔</span> 歌單</a>
+  </div>
+
+  <div class="player-container" id="player-main">
+    <div class="vinyl-wrapper">
+      <div class="vinyl" id="vinyl-disc"></div>
+    </div>
+
+    <div class="now-playing" id="current-song">
+      <div class="eq-bars">
+        <div class="eq-bar"></div><div class="eq-bar"></div><div class="eq-bar"></div>
+      </div>
+      <span id="song-title-text">準備播放...</span>
+    </div>
+    
+    <div class="mode-group">
+      <button class="mode-btn active" onclick="setPlaybackMode('sequence', this)">列表循環</button>
+      <button class="mode-btn" onclick="setPlaybackMode('loopOne', this)">單曲循環</button>
+      <button class="mode-btn" onclick="setPlaybackMode('shuffle', this)">隨機播放</button>
+    </div>
+    
+    <div class="controls">
+      <button class="ctrl-btn" id="vol-btn" onclick="toggleVolumePanel()" title="音量調整">🔊</button>
+      <button class="ctrl-btn" onclick="playPrevious()" title="上一首 (←)">⏮️</button>
+      <button class="ctrl-btn" id="play-pause-btn" onclick="togglePlay()" title="播放/暫停 (Space)">▶️</button>
+      <button class="ctrl-btn" onclick="playNext()" title="下一首 (→)">⏭️</button>
+      <div class="volume-panel" id="volume-panel">
+        <span class="vol-value" id="vol-value">100%</span>
+        <input type="range" class="volume-slider" id="volume-slider" min="0" max="1" step="0.01" value="1">
+      </div>
+    </div>
+
+    <div class="progress-container">
+      <span id="curr-time">0:00</span>
+      <div class="progress-bar" id="progress-bar">
+        <div class="progress-fill" id="progress-fill"></div>
+        <div class="progress-knob" id="progress-knob"></div>
+      </div>
+      <span id="total-time">0:00</span>
+    </div>
+
+    <audio id="audio-player"></audio>
+
+    <div class="song-list-wrapper">
+      <div id="song-list" class="song-list"></div>
+    </div>
+  </div>
+
+  <div class="footer">
+     <a href="https://www.twitch.tv/chi828" target="_blank" rel="noopener noreferrer">新竹奇奇828 製作 🛠️</a>
+  </div>
+
+  <script>
+    /** 視覺效果控制 */
+    const Visuals = {
+      setTheme(theme) {
+        document.body.setAttribute('data-theme', theme === 'yellow' ? '' : theme);
+        localStorage.setItem('preferred-theme', theme);
+      },
+      initFloatingBg() {
+        const bg = document.getElementById('floatingBg');
+        const items = ['🍟', '🌭','🍔', '🎤', '🎶', '✨', '🍔'];
+        setInterval(() => {
+          const item = document.createElement('div');
+          item.className = 'floating-item';
+          item.textContent = items[Math.floor(Math.random() * items.length)];
+          item.style.left = Math.random() * 100 + 'vw';
+          item.style.fontSize = (Math.random() * 20 + 15) + 'px';
+          item.style.animationDuration = (Math.random() * 9 + 6) + 's';
+          item.style.opacity = Math.random() * 0.5 + 0.3;
+          bg.appendChild(item);
+          setTimeout(() => item.remove(), 15000);
+        }, 800);
+      }
+    };
+    window.setTheme = (t) => Visuals.setTheme(t);
+
+    /** 播放器狀態管理 */
+    const Player = {
+      mode: 'sequence',
+      index: -1,
+      titleInterval: null,
+      playlist: [
+        { "title": "芹靜歌_日不落_對唱版0.3", "src": "http://chi.xo.je/MP3/芹靜歌_日不落_對唱版0.3.mp3" },
+        { "title": "靜靜在夏天 煙火裡的塵埃 - StreamRecorder", "src": "http://chi.xo.je/MP3/靜靜在夏天 煙火裡的塵埃 - StreamRecorder.mp3" },
+        { "title": "靜靜在夏天 煙火裡的塵埃", "src": "http://chi.xo.je/MP3/靜靜在夏天 煙火裡的塵埃.mp3" },
+        { "title": "靜靜在夏天(圖奇) Opera2", "src": "http://chi.xo.je/MP3/靜靜在夏天(圖奇) Opera2.mp3" },
+        { "title": "靜靜在夏天(圖奇) 悟空", "src": "http://chi.xo.je/MP3/靜靜在夏天(圖奇) 悟空.mp3" },
+        { "title": "靜靜在夏天(圖奇) 武家坡", "src": "http://chi.xo.je/MP3/靜靜在夏天(圖奇) 武家坡.mp3" },
+        { "title": "靜靜在夏天(圖奇) 靜靜的", "src": "http://chi.xo.je/MP3/靜靜在夏天(圖奇) 靜靜的.mp3" },
+        { "title": "靜靜在夏天(圖奇)-克卜勒", "src": "http://chi.xo.je/MP3/靜靜在夏天(圖奇)-克卜勒.mp3" },
+        { "title": "靜靜在夏天(圖奇)-天黑黑", "src": "http://chi.xo.je/MP3/靜靜在夏天(圖奇)-天黑黑.mp3" },
+        { "title": "靜靜在夏天(圖奇)-如願", "src": "http://chi.xo.je/MP3/靜靜在夏天(圖奇)-如願.mp3" },
+        { "title": "靜靜在夏天(圖奇)-安和橋", "src": "http://chi.xo.je/MP3/靜靜在夏天(圖奇)-安和橋.mp3" },
+        { "title": "靜靜在夏天(圖奇)-我好想你", "src": "http://chi.xo.je/MP3/靜靜在夏天(圖奇)-我好想你.mp3" },
+        { "title": "靜靜在夏天-38 號大迪曲", "src": "http://chi.xo.je/MP3/靜靜在夏天-38 號大迪曲.mp3" },
+        { "title": "靜靜在夏天-A.I.N.Y.", "src": "http://chi.xo.je/MP3/靜靜在夏天-A.I.N.Y..mp3" },
+        { "title": "靜靜在夏天-Lydia", "src": "http://chi.xo.je/MP3/靜靜在夏天-Lydia.mp3" },
+        { "title": "靜靜在夏天-Rolling in the deep", "src": "http://chi.xo.je/MP3/靜靜在夏天-Rolling in the deep.mp3" },
+        { "title": "靜靜在夏天-一個人想著一個人", "src": "http://chi.xo.je/MP3/靜靜在夏天-一個人想著一個人.mp3" },
+        { "title": "靜靜在夏天-你把我灌醉", "src": "http://chi.xo.je/MP3/靜靜在夏天-你把我灌醉.mp3" },
+        { "title": "靜靜在夏天-克卜勒", "src": "http://chi.xo.je/MP3/靜靜在夏天-克卜勒.mp3" },
+        { "title": "靜靜在夏天-公主殿下", "src": "http://chi.xo.je/MP3/靜靜在夏天-公主殿下.mp3" },
+        { "title": "靜靜在夏天-咖喱咖喱", "src": "http://chi.xo.je/MP3/靜靜在夏天-咖喱咖喱.mp3" },
+        { "title": "靜靜在夏天-唯一", "src": "http://chi.xo.je/MP3/靜靜在夏天-唯一.mp3" },
+        { "title": "靜靜在夏天-天下無雙", "src": "http://chi.xo.je/MP3/靜靜在夏天-天下無雙.mp3" },
+        { "title": "靜靜在夏天-寵愛", "src": "http://chi.xo.je/MP3/靜靜在夏天-寵愛.mp3" },
+        { "title": "靜靜在夏天-左手指月", "src": "http://chi.xo.je/MP3/靜靜在夏天-左手指月.mp3" },
+        { "title": "靜靜在夏天-愛人錯過", "src": "http://chi.xo.je/MP3/靜靜在夏天-愛人錯過.mp3" },
+        { "title": "靜靜在夏天-我們的愛", "src": "http://chi.xo.je/MP3/靜靜在夏天-我們的愛.mp3" },
+        { "title": "靜靜在夏天-我想要佔據你", "src": "http://chi.xo.je/MP3/靜靜在夏天-我想要佔據你.mp3" },
+        { "title": "靜靜在夏天-我懷念的", "src": "http://chi.xo.je/MP3/靜靜在夏天-我懷念的.mp3" },
+        { "title": "靜靜在夏天-手心的薔薇", "src": "http://chi.xo.je/MP3/靜靜在夏天-手心的薔薇.mp3" },
+        { "title": "靜靜在夏天-星辰大海", "src": "http://chi.xo.je/MP3/靜靜在夏天-星辰大海.mp3" },
+        { "title": "靜靜在夏天-時間都去哪兒了", "src": "http://chi.xo.je/MP3/靜靜在夏天-時間都去哪兒了.mp3" },
+        { "title": "靜靜在夏天-會呼吸的痛", "src": "http://chi.xo.je/MP3/靜靜在夏天-會呼吸的痛.mp3" },
+        { "title": "靜靜在夏天-月彎彎", "src": "http://chi.xo.je/MP3/靜靜在夏天-月彎彎.mp3" },
+        { "title": "靜靜在夏天-皮囊", "src": "http://chi.xo.je/MP3/靜靜在夏天-皮囊.mp3" },
+        { "title": "靜靜在夏天-盛夏光年", "src": "http://chi.xo.je/MP3/靜靜在夏天-盛夏光年.mp3" },
+        { "title": "靜靜在夏天-空心", "src": "http://chi.xo.je/MP3/靜靜在夏天-空心.mp3" },
+        { "title": "靜靜在夏天-突然好想你", "src": "http://chi.xo.je/MP3/靜靜在夏天-突然好想你.mp3" },
+        { "title": "靜靜在夏天-給你一點顏色", "src": "http://chi.xo.je/MP3/靜靜在夏天-給你一點顏色.mp3" },
+        { "title": "靜靜在夏天-給我一個理由忘記", "src": "http://chi.xo.je/MP3/靜靜在夏天-給我一個理由忘記.mp3" },
+        { "title": "靜靜在夏天-要愛愛", "src": "http://chi.xo.je/MP3/靜靜在夏天-要愛愛.mp3" },
+        { "title": "靜靜在夏天-連名帶姓", "src": "http://chi.xo.je/MP3/靜靜在夏天-連名帶姓.mp3" },
+        { "title": "靜靜在夏天-阿刁(新舊混合最終版)", "src": "http://chi.xo.je/MP3/靜靜在夏天-阿刁(新舊混合最終版).mp3" },
+        { "title": "靜靜在夏天-阿刁", "src": "http://chi.xo.je/MP3/靜靜在夏天-阿刁.mp3" },
+        { "title": "靜靜在夏天-離歌", "src": "http://chi.xo.je/MP3/靜靜在夏天-離歌.mp3" },
+        { "title": "靜靜在夏天-靜靜的", "src": "http://chi.xo.je/MP3/靜靜在夏天-靜靜的.mp3" },
+        { "title": "靜靜在夏天_百年孤寂", "src": "http://chi.xo.je/MP3/靜靜在夏天_百年孤寂.mp3" }
+      ]
+    };
+
+    const audioPlayer = document.getElementById('audio-player');
+    const playlistContainer = document.getElementById('song-list');
+    const songTitleText = document.getElementById('song-title-text');
+    const playPauseBtn = document.getElementById('play-pause-btn');
+    const playerMain = document.getElementById('player-main');
+    const vinylDisc = document.getElementById('vinyl-disc');
+    const progressFill = document.getElementById('progress-fill');
+    const progressBar = document.getElementById('progress-bar');
+    const progressKnob = document.getElementById('progress-knob');
+    const currTimeText = document.getElementById('curr-time');
+    const totalTimeText = document.getElementById('total-time');
+    
+    const volBtn = document.getElementById('vol-btn');
+    const volPanel = document.getElementById('volume-panel');
+    const volSlider = document.getElementById('volume-slider');
+    const volValueText = document.getElementById('vol-value');
+
+    let isDragging = false;
+
+    function setPlaybackMode(mode, element) {
+      Player.mode = mode;
+      document.querySelectorAll('.mode-btn').forEach(btn => btn.classList.remove('active'));
+      element.classList.add('active');
+    }
+
+    function startTitleScroll(songName) {
+      if (Player.titleInterval) clearInterval(Player.titleInterval);
+      let titleText = ` 🎵 正在播放：${songName} 🍔🎤 `;
+      document.title = titleText;
+      Player.titleInterval = setInterval(() => {
+        titleText = titleText.substring(1) + titleText[0];
+        document.title = titleText;
+      }, 300);
+    }
+
+    function formatTime(seconds) {
+      const min = Math.floor(seconds / 60);
+      const sec = Math.floor(seconds % 60);
+      return `${min}:${sec < 10 ? '0' : ''}${sec}`;
+    }
+
+    function buildList() {
+      playlistContainer.innerHTML = '';
+      Player.playlist.forEach((song, index) => {
+        const div = document.createElement('div');
+        div.className = 'song-item';
+        div.style.animationDelay = `${index * 0.03}s`; 
+        
+        let displayTitle = song.title;
+        const urlLower = song.src.toLowerCase();
+        if (urlLower.endsWith('.flac')) displayTitle += " (flac)";
+        else if (urlLower.endsWith('.mp3')) displayTitle += " (MP3)";
+        
+        div.innerHTML = `<span class="song-name-span">${index + 1}. ${displayTitle}</span>`;
+        div.onclick = () => playSong(index);
+        playlistContainer.appendChild(div);
+      });
+    }
+
+    function updateActiveSongUI() {
+      const items = document.querySelectorAll('.song-item');
+      items.forEach((item, idx) => {
+        const nameSpan = item.querySelector('.song-name-span');
+        if (idx === Player.index) {
+          item.classList.add('active');
+          // 播放中加上 ▶️ 符號
+          const originalText = Player.playlist[idx].title;
+          const urlLower = Player.playlist[idx].src.toLowerCase();
+          const format = urlLower.endsWith('.flac') ? ' (flac)' : (urlLower.endsWith('.mp3') ? ' (MP3)' : '');
+          nameSpan.innerText = `▶️ ${idx + 1}. ${originalText}${format}`;
+        } else {
+          item.classList.remove('active');
+          const originalText = Player.playlist[idx].title;
+          const urlLower = Player.playlist[idx].src.toLowerCase();
+          const format = urlLower.endsWith('.flac') ? ' (flac)' : (urlLower.endsWith('.mp3') ? ' (MP3)' : '');
+          nameSpan.innerText = `${idx + 1}. ${originalText}${format}`;
+        }
+      });
+    }
+
+    function playSong(index) {
+        if (index < 0 || index >= Player.playlist.length) return;
+        Player.index = index;
+        const song = Player.playlist[Player.index];
+        audioPlayer.src = song.src;
+        audioPlayer.play().catch(e => console.log("Auto-play blocked"));
+        
+        songTitleText.style.opacity = 0;
+        setTimeout(() => {
+          songTitleText.innerText = song.title;
+          songTitleText.style.opacity = 1;
+        }, 200);
+
+        updateActiveSongUI();
+        
+        const items = document.querySelectorAll('.song-item');
+        if (items[Player.index]) {
+          items[Player.index].scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+        
+        startTitleScroll(song.title);
+        localStorage.setItem('last-song-index', index);
+    }
+
+    function togglePlay() {
+        if (Player.index === -1) { playSong(0); return; }
+        if (audioPlayer.paused) audioPlayer.play(); else audioPlayer.pause();
+    }
+
+    function playNext() {
+        if (Player.mode === 'loopOne') playSong(Player.index);
+        else if (Player.mode === 'shuffle') playSong(Math.floor(Math.random() * Player.playlist.length));
+        else playSong((Player.index + 1) % Player.playlist.length);
+    }
+
+    function playPrevious() {
+        let prevIndex = Player.index - 1;
+        if (prevIndex < 0) prevIndex = Player.playlist.length - 1;
+        playSong(prevIndex);
+    }
+
+    function toggleVolumePanel() {
+      volPanel.classList.toggle('show');
+    }
+
+    function updateVolumeIcon(val) {
+      if (val == 0) volBtn.innerText = "🔇";
+      else if (val < 0.3) volBtn.innerText = "🔈";
+      else if (val < 0.7) volBtn.innerText = "🔉";
+      else volBtn.innerText = "🔊";
+      volValueText.innerText = Math.round(val * 100) + "%";
+    }
+
+    volSlider.oninput = () => {
+      const val = parseFloat(volSlider.value);
+      audioPlayer.volume = val;
+      updateVolumeIcon(val);
+    };
+
+    document.addEventListener('click', (e) => {
+      if (!volPanel.contains(e.target) && e.target !== volBtn) {
+        volPanel.classList.remove('show');
+      }
+    });
+
+    function handleProgressUpdate() {
+      if (isDragging) return;
+      const percent = (audioPlayer.currentTime / audioPlayer.duration) * 100 || 0;
+      progressFill.style.width = percent + '%';
+      progressKnob.style.left = percent + '%';
+      currTimeText.innerText = formatTime(audioPlayer.currentTime);
+      if (audioPlayer.duration) totalTimeText.innerText = formatTime(audioPlayer.duration);
+    }
+
+    function seekToPosition(e) {
+      const rect = progressBar.getBoundingClientRect();
+      let pos = (e.clientX - rect.left) / rect.width;
+      if (pos < 0) pos = 0;
+      if (pos > 1) pos = 1;
+      
+      if (audioPlayer.duration) {
+        audioPlayer.currentTime = pos * audioPlayer.duration;
+      }
+      progressFill.style.width = (pos * 100) + '%';
+      progressKnob.style.left = (pos * 100) + '%';
+    }
+
+    progressBar.onpointerdown = (e) => {
+      isDragging = true;
+      progressBar.classList.add('dragging');
+      seekToPosition(e);
+    };
+
+    window.onpointermove = (e) => {
+      if (isDragging) seekToPosition(e);
+    };
+
+    window.onpointerup = () => {
+      isDragging = false;
+      progressBar.classList.remove('dragging');
+    };
+
+    audioPlayer.ontimeupdate = handleProgressUpdate;
+
+    audioPlayer.onplay = () => {
+        playPauseBtn.innerText = "⏸️";
+        playerMain.classList.remove('paused');
+        vinylDisc.classList.add('playing');
+    };
+    audioPlayer.onpause = () => {
+        playPauseBtn.innerText = "▶️";
+        playerMain.classList.add('paused');
+        vinylDisc.classList.remove('playing');
+    };
+    audioPlayer.onended = () => {
+        if (Player.mode === 'loopOne') audioPlayer.play();
+        else playNext();
+    };
+    audioPlayer.onerror = () => {
+        songTitleText.innerText = "歌曲失效，跳轉中...";
+        playNext();
+    };
+
+    window.onkeydown = (e) => {
+      if (e.code === 'Space') { e.preventDefault(); togglePlay(); }
+      if (e.code === 'ArrowLeft') playPrevious();
+      if (e.code === 'ArrowRight') playNext();
+    };
+
+    window.onload = () => { 
+      Visuals.initFloatingBg(); 
+      buildList();
+      playerMain.classList.add('paused'); 
+      const savedTheme = localStorage.getItem('preferred-theme');
+      if (savedTheme) setTheme(savedTheme);
+      const savedIndex = localStorage.getItem('last-song-index');
+      if (savedIndex !== null) {
+        Player.index = parseInt(savedIndex);
+        songTitleText.innerText = Player.playlist[Player.index]?.title || "準備播放...";
+        updateActiveSongUI();
+      }
+    };
+  </script>
 </body>
 </html>
