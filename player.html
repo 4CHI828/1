@@ -3,8 +3,19 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>網頁影片播放器</title>
+    <title>静静在夏天🍔🎤⁰³²⁰的影片</title>
     <style>
+        :root {
+            --primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            --primary-color: #667eea;
+            --bg-color: #f3f4f7;
+            --text-main: #333;
+            --text-muted: #666;
+            --shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+            --radius: 16px;
+            --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
         * {
             margin: 0;
             padding: 0;
@@ -12,39 +23,48 @@
         }
 
         body {
-            font-family: 'Microsoft JhengHei', 'PingFang TC', sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            font-family: 'PingFang TC', 'Microsoft JhengHei', sans-serif;
+            background: var(--primary-gradient);
             min-height: 100vh;
             display: flex;
             justify-content: center;
             align-items: center;
             padding: 20px;
+            color: var(--text-main);
         }
 
         .container {
             background: white;
-            border-radius: 20px;
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
             max-width: 900px;
             width: 100%;
             overflow: hidden;
+            animation: fadeIn 0.6s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
         }
 
         .header {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: var(--primary-gradient);
             color: white;
-            padding: 30px;
+            padding: 40px 30px;
             text-align: center;
         }
 
         .header h1 {
-            font-size: 2em;
+            font-size: 2.2em;
             margin-bottom: 10px;
+            letter-spacing: 1px;
         }
 
         .header p {
             opacity: 0.9;
-            font-size: 0.95em;
+            font-size: 1em;
+            font-weight: 300;
         }
 
         .content {
@@ -57,140 +77,155 @@
 
         .input-group {
             display: flex;
-            gap: 10px;
-            margin-bottom: 15px;
+            gap: 12px;
         }
 
         input[type="text"] {
             flex: 1;
-            padding: 12px 15px;
-            border: 2px solid #e0e0e0;
-            border-radius: 10px;
+            padding: 14px 20px;
+            border: 2px solid #eee;
+            border-radius: 12px;
             font-size: 1em;
-            transition: all 0.3s;
+            transition: var(--transition);
+            outline: none;
         }
 
         input[type="text"]:focus {
-            outline: none;
-            border-color: #667eea;
-            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.15);
         }
 
         button {
             padding: 12px 25px;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: var(--primary-gradient);
             color: white;
             border: none;
-            border-radius: 10px;
+            border-radius: 12px;
             font-size: 1em;
+            font-weight: 500;
             cursor: pointer;
-            transition: transform 0.2s, box-shadow 0.2s;
+            transition: var(--transition);
             white-space: nowrap;
         }
 
         button:hover {
             transform: translateY(-2px);
             box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+            filter: brightness(1.1);
         }
 
         button:active {
             transform: translateY(0);
         }
 
-        .video-container {
+        .video-wrapper {
             position: relative;
             width: 100%;
-            padding-bottom: 56.25%;
             background: #000;
-            border-radius: 10px;
+            border-radius: 12px;
             overflow: hidden;
+            aspect-ratio: 16 / 9;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.1);
             margin-bottom: 30px;
         }
 
         video {
-            position: absolute;
-            top: 0;
-            left: 0;
             width: 100%;
             height: 100%;
+            display: none;
             object-fit: contain;
-        }
-
-        .examples {
-            background: #f8f9fa;
-            padding: 20px;
-            border-radius: 10px;
-        }
-
-        .examples h3 {
-            color: #333;
-            margin-bottom: 15px;
-            font-size: 1.2em;
-        }
-
-        .example-list {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-            gap: 10px;
-        }
-
-        .example-item {
-            padding: 12px 15px;
-            background: white;
-            border: 2px solid #e0e0e0;
-            border-radius: 8px;
-            cursor: pointer;
-            transition: all 0.3s;
-            font-size: 0.9em;
-            color: #555;
-        }
-
-        .example-item:hover {
-            border-color: #667eea;
-            background: #f0f2ff;
-            transform: translateX(5px);
         }
 
         .placeholder {
             position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
+            inset: 0;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
             color: white;
             text-align: center;
-            font-size: 1.2em;
+            background: #1a1a1a;
+            z-index: 1;
+            transition: opacity 0.4s;
         }
 
         .placeholder-icon {
             font-size: 4em;
             margin-bottom: 15px;
-            opacity: 0.5;
+            opacity: 0.6;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); opacity: 0.6; }
+            50% { transform: scale(1.1); opacity: 0.9; }
+        }
+
+        .examples {
+            background: #fcfcfd;
+            padding: 20px;
+            border-radius: 12px;
+            border: 1px solid #eee;
+        }
+
+        .examples h3 {
+            color: var(--text-main);
+            margin-bottom: 15px;
+            font-size: 1.1em;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .example-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+            gap: 12px;
+        }
+
+        .example-item {
+            padding: 14px 18px;
+            background: white;
+            border: 1px solid #e0e0e0;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: var(--transition);
+            font-size: 0.95em;
+            color: var(--text-muted);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .example-item:hover {
+            border-color: var(--primary-color);
+            background: #f0f4ff;
+            color: var(--primary-color);
+            transform: translateX(5px);
+        }
+
+        .example-item.active {
+            border-color: var(--primary-color);
+            background: var(--primary-color);
+            color: white;
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
         }
 
         @media (max-width: 768px) {
-            .header h1 {
-                font-size: 1.5em;
-            }
-
-            .input-group {
-                flex-direction: column;
-            }
-
-            button {
-                width: 100%;
-            }
-
-            .example-list {
-                grid-template-columns: 1fr;
-            }
+            .header h1 { font-size: 1.6em; }
+            .input-group { flex-direction: column; }
+            .content { padding: 20px; }
+            .example-list { grid-template-columns: 1fr; }
         }
     </style>
 </head>
 <body>
+
     <div class="container">
         <div class="header">
-            <h1>🎬 網頁影片播放器</h1>
-            <p>輸入影片網址或選擇範例連結開始播放</p>
+            <h1>静静在夏天🍔🎤⁰³²⁰的影片</h1>
+            <p>歡迎來到我的影片收藏空間，隨心播放，享受時光</p>
         </div>
 
         <div class="content">
@@ -199,39 +234,40 @@
                     <input 
                         type="text" 
                         id="videoUrl" 
-                        placeholder="請輸入影片網址 (例如: https://example.com/video.mp4)"
+                        placeholder="貼上影片網址後載入..."
+                        autocomplete="off"
                     >
-                    <button onclick="loadVideo()">載入影片</button>
+                    <button id="loadBtn">載入影片</button>
                 </div>
             </div>
 
-            <div class="video-container">
-                <video id="videoPlayer" controls>
+            <div class="video-wrapper">
+                <video id="videoPlayer" controls preload="auto">
                     您的瀏覽器不支援影片播放。
                 </video>
                 <div class="placeholder" id="placeholder">
                     <div class="placeholder-icon">🎥</div>
-                    <div>請輸入影片網址或選擇下方範例</div>
+                    <div id="placeholderText">請選擇下方範例或輸入網址</div>
                 </div>
             </div>
 
             <div class="examples">
-                <h3>🎵 範例連結（點擊即可播放）</h3>
-                <div class="example-list">
-                    <div class="example-item" onclick="playExample('http://chi.xo.je/MP4/F.I.R.%E9%A3%9B%E5%85%92%E6%A8%82%E5%9C%98%E3%80%81%E5%BD%AD%E4%BD%B3%E6%85%A7%20-%20%E5%BF%83%E4%B9%8B%E7%81%AB.mp4')">
-                        F.I.R.飛兒樂團、彭佳慧 - 心之火
+                <h3>🎵 精選影片清單</h3>
+                <div class="example-list" id="exampleList">
+                    <div class="example-item" data-url="http://chi.xo.je/MP4/F.I.R.%E9%A3%9B%E5%85%92%E6%A8%82%E5%9C%98%E3%80%81%E5%BD%AD%E4%BD%B3%E6%85%A7%20-%20%E5%BF%83%E4%B9%8B%E7%81%AB.mp4">
+                        <span>🎶</span> F.I.R. 飛兒樂團 - 心之火
                     </div>
-                    <div class="example-item" onclick="playExample('http://chi.xo.je/MP4/%E7%94%B0%E9%A6%A5%E7%94%84%20-%20%E4%BD%A0%E5%B0%B1%E4%B8%8D%E8%A6%81%E6%83%B3%E8%B5%B7%E6%88%91.mp4')">
-                        田馥甄 - 你就不要想起我
+                    <div class="example-item" data-url="http://chi.xo.je/MP4/%E7%94%B0%E9%A6%A5%E7%94%84%20-%20%E4%BD%A0%E5%B0%B1%E4%B8%8D%E8%A6%81%E6%83%B3%E8%B5%B7%E6%88%91.mp4">
+                        <span>🎶</span> 田馥甄 - 你就不要想起我
                     </div>
-                    <div class="example-item" onclick="playExample('http://chi.xo.je/MP4/%E8%96%9B%E4%B9%8B%E8%AC%99%20-%20%E5%A4%A9%E5%A4%96%E4%BE%86%E7%89%A9.mp4')">
-                        薛之謙 - 天外來物
+                    <div class="example-item" data-url="http://chi.xo.je/MP4/%E8%96%9B%E4%B9%8B%E8%AC%99%20-%20%E5%A4%A9%E5%A4%96%E4%BE%86%E7%89%A9.mp4">
+                        <span>🎶</span> 薛之謙 - 天外來物
                     </div>
-                    <div class="example-item" onclick="playExample('http://chi.xo.je/MP4/%E8%A2%81%E5%A9%AD%E7%B6%ADTIA%20RAY%20-%20%E8%AA%AA%E6%95%A3%E5%B0%B1%E6%95%A3.mp4')">
-                        袁婭維 TIA RAY - 說散就散
+                    <div class="example-item" data-url="http://chi.xo.je/MP4/%E8%A2%81%E5%A9%AD%E7%B6%ADTIA%20RAY%20-%20%E8%AA%AA%E6%95%A3%E5%B0%B1%E6%95%A3.mp4">
+                        <span>🎶</span> 袁婭維 TIA RAY - 說散就散
                     </div>
-                    <div class="example-item" onclick="playExample('http://chi.xo.je/MP4/%E8%AD%9A%E7%B6%AD%E7%B6%AD%20-%20%E7%B5%A6%E4%BD%A0%E4%B8%80%E9%BB%9E%E9%A1%8F%E8%89%B2.mp4')">
-                        譚維維 - 給你一點顏色
+                    <div class="example-item" data-url="http://chi.xo.je/MP4/%E8%AD%9A%E7%B6%AD%E7%B6%AD%20-%20%E7%B5%A6%E4%BD%A0%E4%B8%80%E9%BB%9E%E9%A1%8F%E8%89%B2.mp4">
+                        <span>🎶</span> 譚維維 - 給你一點顏色
                     </div>
                 </div>
             </div>
@@ -241,50 +277,100 @@
     <script>
         const videoPlayer = document.getElementById('videoPlayer');
         const videoUrlInput = document.getElementById('videoUrl');
+        const loadBtn = document.getElementById('loadBtn');
         const placeholder = document.getElementById('placeholder');
+        const placeholderText = document.getElementById('placeholderText');
+        const exampleItems = document.querySelectorAll('.example-item');
 
-        // 載入自訂網址
-        function loadVideo() {
+        const DEFAULT_VOLUME = 0.2;
+
+        // 核心優化：將預讀邏輯封裝成 Promise
+        function waitForCanPlay() {
+            return new Promise((resolve, reject) => {
+                const onCanPlay = () => {
+                    videoPlayer.removeEventListener('error', onError);
+                    resolve();
+                };
+                const onError = () => {
+                    videoPlayer.removeEventListener('canplay', onCanPlay);
+                    reject(new Error('影片載入失敗'));
+                };
+
+                // 監聽 canplay 事件：表示瀏覽器已經載入足夠數據可以開始播放
+                videoPlayer.addEventListener('canplay', onCanPlay, { once: true });
+                videoPlayer.addEventListener('error', onError, { once: true });
+            });
+        }
+
+        async function playVideo(url) {
+            if (!url) return;
+
+            // 1. 進入載入狀態 (顯示佔位符)
+            placeholder.style.opacity = '1';
+            placeholder.style.display = 'flex';
+            placeholderText.innerText = '正在預讀檔案，請稍候...';
+            videoPlayer.style.display = 'none';
+            
+            videoPlayer.volume = DEFAULT_VOLUME;
+            
+            // 2. 設定來源並開始載入
+            videoPlayer.src = url;
+            videoPlayer.load();
+
+            try {
+                // 3. 等待「預讀完成」 (canplay 事件)
+                await waitForCanPlay();
+                
+                // 4. 預讀完成後，嘗試播放
+                await videoPlayer.play();
+                
+                // 5. 播放成功後才切換畫面，確保流暢
+                videoPlayer.style.display = 'block';
+                placeholder.style.opacity = '0';
+                setTimeout(() => { placeholder.style.display = 'none'; }, 400);
+            } catch (error) {
+                console.error('播放失敗:', error);
+                placeholderText.innerText = '播放失敗：請檢查連結是否正確或伺服器回應。';
+                placeholder.style.opacity = '1';
+                placeholder.style.display = 'flex';
+            }
+        }
+
+        loadBtn.addEventListener('click', () => {
             const url = videoUrlInput.value.trim();
             if (url) {
+                clearActiveExample();
                 playVideo(url);
             } else {
                 alert('請輸入影片網址！');
             }
-        }
+        });
 
-        // 播放範例影片
-        function playExample(url) {
-            videoUrlInput.value = url;
-            playVideo(url);
-        }
-
-        // 播放影片
-        function playVideo(url) {
-            videoPlayer.src = url;
-            videoPlayer.style.display = 'block';
-            placeholder.style.display = 'none';
-            videoPlayer.play().catch(error => {
-                console.error('播放失敗:', error);
-                alert('無法播放此影片，請確認網址是否正確或格式是否支援。');
+        exampleItems.forEach(item => {
+            item.addEventListener('click', () => {
+                const url = item.getAttribute('data-url');
+                videoUrlInput.value = url;
+                clearActiveExample();
+                item.classList.add('active');
+                playVideo(url);
             });
+        });
+
+        function clearActiveExample() {
+            exampleItems.forEach(i => i.classList.remove('active'));
         }
 
-        // 按 Enter 鍵載入
-        videoUrlInput.addEventListener('keypress', function(e) {
-            if (e.key === 'Enter') {
-                loadVideo();
+        videoUrlInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') loadBtn.click();
+        });
+
+        // 額外錯誤監控
+        videoPlayer.addEventListener('error', () => {
+            if (placeholder.style.display === 'none') {
+                placeholderText.innerText = '影片播放中斷，請重新整理。';
+                placeholder.style.display = 'flex';
+                placeholder.style.opacity = '1';
             }
-        });
-
-        // 影片載入完成後隱藏佔位符
-        videoPlayer.addEventListener('loadeddata', function() {
-            placeholder.style.display = 'none';
-        });
-
-        // 影片錯誤處理
-        videoPlayer.addEventListener('error', function() {
-            alert('影片載入失敗，請檢查網址是否正確。');
         });
     </script>
 </body>
