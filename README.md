@@ -4,3 +4,4 @@
 如如: https://reurl.cc/GaOrnp <Br>
 橙橙: https://reurl.cc/O6nqYR <Br>
 <Br>
+新竹奇奇🍔⁸²⁸ https://www.twitch.tv/chi828
