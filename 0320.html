@@ -189,6 +189,7 @@
             box-shadow: 0 5px 15px rgba(0,0,0,0.2); transition: var(--transition);
         }
         #themeToggle { left: 30px; }
+        #langToggle { left: 30px; bottom: 95px; } /* 放在主題切換按鈕上方 */
         #backToTop { right: 30px; display: none; }
 
         .footer-stats { font-size: 14px; color: #888; display: flex; flex-direction: column; align-items: center; gap: 10px; opacity: 0.8; margin-bottom: 10px; }
@@ -212,12 +213,12 @@
     <h1 id="mainTitle">静静在夏天🍔🎤⁰³²⁰的歌單</h1>
     
     <div style="display: flex; flex-direction: column; align-items: center;">
-        <a href="https://v.douyin.com/mw-osadXTvk/" target="_blank" class="main-link-btn douyin-link" style="padding: 14px 32px; margin-bottom: 20px; font-size: 18px;">🍔 靜靜的抖音</a>
+        <a href="https://v.douyin.com/mw-osadXTvk/" target="_blank" class="main-link-btn douyin-link" style="padding: 14px 32px; margin-bottom: 20px; font-size: 18px;" id="link-douyin">🍔 靜靜的抖音</a>
         <div class="social-links-group">
-            <a href="https://www.twitch.tv/jingjingzaixiatian" target="_blank" class="main-link-btn social-btn">🍔 静静的圖奇</a>
-            <a href="https://discord.com/channels/865334403864461373/1467603376144646319" target="_blank" class="main-link-btn social-btn">🍔 DC靜靜幫</a>
-            <a href="https://www.youtube.com/playlist?list=PL3LHSN24syoOcIqA8nRwfYgAOoR5U27_U" target="_blank" class="main-link-btn social-btn">🍔 静静的YT</a>
-            <a href="https://www.instagram.com/jingjing24739233910/" target="_blank" class="main-link-btn social-btn">🍔 静静的IG</a>
+            <a href="https://www.twitch.tv/jingjingzaixiatian" target="_blank" class="main-link-btn social-btn" id="link-twitch">🍔 静静的圖奇</a>
+            <a href="https://discord.com/channels/865334403864461373/1467603376144646319" target="_blank" class="main-link-btn social-btn" id="link-dc">🍔 DC靜靜幫</a>
+            <a href="https://www.youtube.com/playlist?list=PL3LHSN24syoOcIqA8nRwfYgAOoR5U27_U" target="_blank" class="main-link-btn social-btn" id="link-yt">🍔 静静的YT</a>
+            <a href="https://www.instagram.com/jingjing24739233910/" target="_blank" class="main-link-btn social-btn" id="link-ig">🍔 静静的IG</a>
         </div>
     </div>
     
@@ -227,23 +228,23 @@
             <button id="clearSearch" class="clear-btn">✕</button>
         </div>
         <select id="sortSelect" class="sort-select">
-            <option value="default">預設排序</option>
-            <option value="song">歌曲 A-Z</option>
-            <option value="artist">歌手 A-Z</option>
+            <option value="default" id="opt-default">預設排序</option>
+            <option value="song" id="opt-song">歌曲 A-Z</option>
+            <option value="artist" id="opt-artist">歌手 A-Z</option>
         </select>
         <button id="randomBtn" class="random-btn">🎲 隨機選歌</button>
     </div>
     
     <div class="category-tabs" id="categoryTabs"></div>
-    <div class="stats" style="margin-bottom: 10px; font-size: 14px; opacity: 0.7;">目前顯示: <span id="totalCount">0</span> 首</div>
+    <div class="stats" style="margin-bottom: 10px; font-size: 14px; opacity: 0.7;"><span id="stat-text">目前顯示</span>: <span id="totalCount">0</span> <span id="stat-unit">首</span></div>
 
     <div class="table-wrapper">
         <table id="musicTable">
             <thead>
-                <tr>
+                <tr id="table-head">
                     <th class="col-fav"></th>
-                    <th class="col-artist">歌手</th>
-                    <th class="col-song">歌曲名稱 (點擊試聽)</th>
+                    <th class="col-artist" id="th-artist">歌手</th>
+                    <th class="col-song" id="th-song">歌曲名稱 (點擊試聽)</th>
                 </tr>
             </thead>
             <tbody id="musicBody"></tbody>
@@ -261,10 +262,11 @@
 </div>
 
 <div class="footer-credits">
-    <a href="https://www.twitch.tv/chi828" target="_blank">新竹奇奇828製作</a>
+    <a href="https://www.twitch.tv/chi828" target="_blank" id="credit-text">新竹奇奇828製作</a>
 </div>
 
 <button id="themeToggle" class="fab-btn" title="切換主題">🌙</button>
+<button id="langToggle" class="fab-btn" title="切換繁簡">文</button>
 <button id="backToTop" class="fab-btn">↑</button>
 
 <div class="modal-overlay" id="modalOverlay">
@@ -283,14 +285,47 @@
     /* =========================================================================
        3. 數據與常數
        ========================================================================= */
-    const UI_TEXT = {
-        greetingMorning: "早安，美好的音樂時光 ☀️",
-        greetingAfternoon: "午安，用旋律陪伴你的午後 ☕",
-        greetingEvening: "晚安，在寧靜的夜晚聆聽 🌙",
-        modalDrawing: "✨ 正在抽獎... ✨",
-        modalWon: "🎉 抽中啦！ 🎉",
-        emptySearch: "💿 找不到匹配的歌曲...試試其他關鍵字吧！",
-        favTab: "❤️ 最愛", allTab: "全部", highPitchTab: "🎤 高音歌", otherTab: "📦 其他"
+    const LANG_DICT = {
+        'zh-Hant': {
+            greetingMorning: "早安，美好的音樂時光 ☀️",
+            greetingAfternoon: "午安，用旋律陪伴你的午後 ☕",
+            greetingEvening: "晚安，在寧靜的夜晚聆聽 🌙",
+            modalDrawing: "✨ 正在抽獎... ✨",
+            modalWon: "🎉 抽中啦！ 🎉",
+            emptySearch: "💿 找不到匹配的歌曲...試試其他關鍵字吧！",
+            favTab: "❤️ 最愛", allTab: "全部", highPitchTab: "🎤 高音歌", otherTab: "📦 其他",
+            searchPlaceholder: "搜尋歌手或歌曲...",
+            sortDefault: "預設排序", sortSong: "歌曲 A-Z", sortArtist: "歌手 A-Z",
+            randomBtn: "🎲 隨機選歌",
+            statText: "目前顯示", statUnit: "首",
+            thArtist: "歌手", thSong: "歌曲名稱 (點擊試聽)",
+            footerVisit: "💖 你的造訪次數",
+            credits: "新竹奇奇828製作",
+            modalClose: "太棒了！", modalRetry: "再抽一次 🎲",
+            langBtn: "簡",
+            mainTitle: "静静在夏天🍔🎤⁰³²⁰的歌單",
+            linkDouyin: "🍔 靜靜的抖音", linkTwitch: "🍔 静静的圖奇", linkDC: "🍔 DC靜靜幫", linkYT: "🍔 静静的YT", linkIG: "🍔 静静的IG"
+        },
+        'zh-Hans': {
+            greetingMorning: "早安，美好的音乐时光 ☀️",
+            greetingAfternoon: "午安，用旋律陪伴你的下午 ☕",
+            greetingEvening: "晚安，在宁静的夜晚聆听 🌙",
+            modalDrawing: "✨ 正在抽奖... ✨",
+            modalWon: "🎉 抽中啦！ 🎉",
+            emptySearch: "💿 找不到匹配的歌曲...试试其他关键字吧！",
+            favTab: "❤️ 最爱", allTab: "全部", highPitchTab: "🎤 高音歌", otherTab: "📦 其他",
+            searchPlaceholder: "搜索歌手或歌曲...",
+            sortDefault: "默认排序", sortSong: "歌曲 A-Z", sortArtist: "歌手 A-Z",
+            randomBtn: "🎲 随机选歌",
+            statText: "目前显示", statUnit: "首",
+            thArtist: "歌手", thSong: "歌曲名称 (点击试听)",
+            footerVisit: "💖 你的造访次数",
+            credits: "新竹奇奇828制作",
+            modalClose: "太棒了！", modalRetry: "再抽一次 🎲",
+            langBtn: "繁",
+            mainTitle: "静静在夏天🍔🎤⁰³²⁰的歌单",
+            linkDouyin: "🍔 静静的抖音", linkTwitch: "🍔 静静的图奇", linkDC: "🍔 DC静静帮", linkYT: "🍔 静静的YT", linkIG: "🍔 静静的IG"
+        }
     };
 
     const HIGH_PITCH_SONGS = ["煎熬", "離歌", "我的美麗", "左手指月", "離不開你", "給你一點顏色", "煙火裡的塵埃"];
@@ -330,6 +365,7 @@
         favorites: JSON.parse(localStorage.getItem('musicFavs')) || [],
         currentArtist: "全部",
         theme: localStorage.getItem('theme') || 'light',
+        lang: localStorage.getItem('preferred-lang') || 'zh-Hant',
         displayLimit: 30, // 虛擬列表：初始顯示數量
     };
 
@@ -348,6 +384,53 @@
        4. 核心邏輯與事件委託
        ========================================================================= */
 
+    // 繁簡轉換函數
+    function convertText(text) {
+        if (!text) return "";
+        if (State.lang === 'zh-Hans') {
+            return text.replace(/靜/g, '静').replace(/單/g, '单').replace(/環/g, '环').replace(/團/g, '团').replace(/龍/g, '龙').replace(/適/g, '适').replace(/麗/g, '丽').replace(/願/g, '愿').replace(/樂/g, '乐').replace(/個/g, '个').replace(/體/g, '体');
+        } else {
+            return text.replace(/静/g, '靜').replace(/单/g, '單').replace(/环/g, '環').replace(/团/g, '團').replace(/龙/g, '龍').replace(/适/g, '適').replace(/丽/g, '麗').replace(/愿/g, '願').replace(/乐/g, '樂').replace(/个/g, '個').replace(/体/g, '體');
+        }
+    }
+
+    function applyLanguage() {
+        const d = LANG_DICT[State.lang];
+        document.documentElement.lang = State.lang;
+        
+        // 更新 UI 文字
+        document.getElementById('mainTitle').innerText = d.mainTitle;
+        document.getElementById('link-douyin').innerText = d.linkDouyin;
+        document.getElementById('link-twitch').innerText = d.linkTwitch;
+        document.getElementById('link-dc').innerText = d.linkDC;
+        document.getElementById('link-yt').innerText = d.linkYT;
+        document.getElementById('link-ig').innerText = d.linkIG;
+        document.getElementById('searchInput').placeholder = d.searchPlaceholder;
+        document.getElementById('opt-default').innerText = d.sortDefault;
+        document.getElementById('opt-song').innerText = d.sortSong;
+        document.getElementById('opt-artist').innerText = d.sortArtist;
+        document.getElementById('randomBtn').innerText = d.randomBtn;
+        document.getElementById('stat-text').innerText = d.statText;
+        document.getElementById('stat-unit').innerText = d.statUnit;
+        document.getElementById('th-artist').innerText = d.thArtist;
+        document.getElementById('th-song').innerText = d.thSong;
+        document.getElementById('footerText').innerHTML = `${d.footerVisit}: <span class="visitor-count" id="personalCount">${localStorage.getItem('myPlaylistVisits') || 0}</span> 次`;
+        document.getElementById('credit-text').innerText = d.credits;
+        document.getElementById('closeModal').innerText = d.modalClose;
+        document.getElementById('retryBtn').innerText = d.modalRetry;
+        document.getElementById('langToggle').innerText = d.langBtn;
+
+        // 重新生成 Tab 並渲染表格
+        generateTabs();
+        renderTable();
+    }
+
+    function switchLanguage() {
+        State.lang = (State.lang === 'zh-Hant') ? 'zh-Hans' : 'zh-Hant';
+        localStorage.setItem('preferred-lang', State.lang);
+        applyLanguage();
+    }
+
     // 事件委託：處理收藏按鈕點擊
     musicBody.addEventListener('click', (e) => {
         const favBtn = e.target.closest('.fav-btn');
@@ -359,15 +442,17 @@
 
     function setGreeting() {
         const hour = new Date().getHours();
+        const d = LANG_DICT[State.lang];
         const greetingEl = document.getElementById('greeting');
-        greetingEl.innerText = (hour < 12) ? UI_TEXT.greetingMorning : (hour < 18) ? UI_TEXT.greetingAfternoon : UI_TEXT.greetingEvening;
+        greetingEl.innerText = (hour < 12) ? d.greetingMorning : (hour < 18) ? d.greetingAfternoon : d.greetingEvening;
     }
 
     function updatePersonalCount() {
         let personalVisits = localStorage.getItem('myPlaylistVisits') || 0;
         personalVisits = parseInt(personalVisits) + 1;
         localStorage.setItem('myPlaylistVisits', personalVisits);
-        personalCountSpan.innerText = personalVisits;
+        const span = document.getElementById('personalCount');
+        if(span) span.innerText = personalVisits;
     }
 
     function toggleFavorite(id) {
@@ -381,19 +466,20 @@
     }
 
     function generateTabs() {
+        const d = LANG_DICT[State.lang];
         const counts = {};
         rawMusicData.forEach(item => { counts[item.artist] = (counts[item.artist] || 0) + 1; });
         const sortedArtists = Object.keys(counts).sort((a, b) => counts[b] - counts[a]);
         const topArtists = sortedArtists.slice(0, 15);
         
-        let tabsHTML = `<button class="tab ${State.currentArtist==='全部'?'active':''}" data-artist="全部">${UI_TEXT.allTab}</button>`;
-        tabsHTML += `<button class="tab ${State.currentArtist==='收藏'?'active':''}" data-artist="收藏">${UI_TEXT.favTab}</button>`;
-        tabsHTML += `<button class="tab ${State.currentArtist==='高音歌'?'active':''}" data-artist="高音歌">${UI_TEXT.highPitchTab}</button>`;
-        tabsHTML += `<button class="tab ${State.currentArtist==='其他'?'active':''}" data-artist="其他">${UI_TEXT.otherTab}</button>`;
+        let tabsHTML = `<button class="tab ${State.currentArtist==='全部'?'active':''}" data-artist="全部">${d.allTab}</button>`;
+        tabsHTML += `<button class="tab ${State.currentArtist==='收藏'?'active':''}" data-artist="收藏">${d.favTab}</button>`;
+        tabsHTML += `<button class="tab ${State.currentArtist==='高音歌'?'active':''}" data-artist="高音歌">${d.highPitchTab}</button>`;
+        tabsHTML += `<button class="tab ${State.currentArtist==='其他'?'active':''}" data-artist="其他">${d.otherTab}</button>`;
         
         topArtists.forEach(artist => {
             if(artist !== "其他") {
-                tabsHTML += `<button class="tab ${State.currentArtist===artist?'active':''}" data-artist="${artist}">${artist}</button>`;
+                tabsHTML += `<button class="tab ${State.currentArtist===artist?'active':''}" data-artist="${artist}">${convertText(artist)}</button>`;
             }
         });
         categoryTabs.innerHTML = tabsHTML;
@@ -406,6 +492,7 @@
     }
 
     function renderTable() {
+        const d = LANG_DICT[State.lang];
         const term = searchInput.value.toLowerCase();
         const sort = sortSelect.value;
         clearSearchBtn.style.display = term ? 'block' : 'none';
@@ -421,18 +508,18 @@
         });
 
         // 2. 排序
-        if (sort === 'song') filtered.sort((a, b) => a.song.localeCompare(b.song, 'zh-Hant'));
-        else if (sort === 'artist') filtered.sort((a, b) => a.artist.localeCompare(b.artist, 'zh-Hant'));
+        if (sort === 'song') filtered.sort((a, b) => a.song.localeCompare(b.song, State.lang));
+        else if (sort === 'artist') filtered.sort((a, b) => a.artist.localeCompare(b.artist, State.lang));
 
         totalCountSpan.innerText = filtered.length;
 
-        // 3. 虛擬列表實作：僅取前 State.displayLimit 筆
+        // 3. 虛擬列表實作
         const slice = filtered.slice(0, State.displayLimit);
         const fragment = document.createDocumentFragment();
 
         if (slice.length === 0) {
             const tr = document.createElement('tr');
-            tr.innerHTML = `<td colspan="3" style="padding: 40px; color: #999;">${UI_TEXT.emptySearch}</td>`;
+            tr.innerHTML = `<td colspan="3" style="padding: 40px; color: #999;">${d.emptySearch}</td>`;
             fragment.appendChild(tr);
         } else {
             slice.forEach((item, index) => {
@@ -440,12 +527,15 @@
                 const searchUrl = `https://www.youtube.com/results?search_query=${encodeURIComponent(item.artist + ' ' + item.song)}`;
                 const tr = document.createElement('tr');
                 tr.className = 'music-row';
-                // 波浪式行進場動畫：根據索引增加延遲
                 tr.style.animationDelay = `${index * 0.03}s`;
+                
+                const convArtist = convertText(item.artist);
+                const convSong = convertText(item.song);
+
                 tr.innerHTML = `
                     <td class="col-fav"><button class="fav-btn ${isFav?'active':''}" data-id="${item.id}">❤</button></td>
-                    <td class="col-artist">${highlight(item.artist, term)}</td>
-                    <td class="col-song"><a href="${searchUrl}" target="_blank" class="song-link">🎵 ${highlight(item.song, term)}</a></td>
+                    <td class="col-artist">${highlight(convArtist, term)}</td>
+                    <td class="col-song"><a href="${searchUrl}" target="_blank" class="song-link">🎵 ${highlight(convSong, term)}</a></td>
                 `;
                 fragment.appendChild(tr);
             });
@@ -458,7 +548,6 @@
        5. 極致視覺特效
        ========================================================================= */
 
-    // 滑鼠追隨光暈
     window.addEventListener('mousemove', (e) => {
         cursorGlow.style.top = `${e.clientY}px`;
         cursorGlow.style.left = `${e.clientX}px`;
@@ -494,26 +583,27 @@
     }
 
     function startRandomDraw() {
+        const d = LANG_DICT[State.lang];
         const resSong = document.getElementById('resSong');
         const resArtist = document.getElementById('resArtist');
         const modalTitle = document.getElementById('modalTitle');
-        modalTitle.innerText = UI_TEXT.modalDrawing;
+        modalTitle.innerText = d.modalDrawing;
         modalOverlay.style.display = 'flex';
         const delays = [30, 50, 100, 150, 300, 600, 1000];
         let currentStep = 0;
 
         function shuffle() {
             const tempSong = rawMusicData[Math.floor(Math.random() * rawMusicData.length)];
-            resSong.innerText = tempSong.song;
-            resArtist.innerText = "歌手：" + tempSong.artist;
+            resSong.innerText = convertText(tempSong.song);
+            resArtist.innerText = "歌手：" + convertText(tempSong.artist);
             if (currentStep < delays.length - 1) {
                 setTimeout(shuffle, delays[currentStep]);
                 currentStep++;
             } else {
                 const finalSong = rawMusicData[Math.floor(Math.random() * rawMusicData.length)];
-                resSong.innerText = "✨ " + finalSong.song + " ✨";
-                resArtist.innerText = "歌手：" + finalSong.artist;
-                modalTitle.innerText = UI_TEXT.modalWon;
+                resSong.innerText = "✨ " + convertText(finalSong.song) + " ✨";
+                resArtist.innerText = "歌手：" + convertText(finalSong.artist);
+                modalTitle.innerText = d.modalWon;
                 fireConfetti();
             }
         }
@@ -525,7 +615,7 @@
        ========================================================================= */
     const observer = new IntersectionObserver((entries) => {
         if (entries[0].isIntersecting) {
-            State.displayLimit += 30; // 每次增加 30 首
+            State.displayLimit += 30; 
             renderTable();
         }
     }, { threshold: 1.0 });
@@ -539,6 +629,7 @@
     document.getElementById('retryBtn').addEventListener('click', startRandomDraw);
     document.getElementById('closeModal').addEventListener('click', () => modalOverlay.style.display = 'none');
     clearSearchBtn.addEventListener('click', () => { searchInput.value = ''; renderTable(); });
+    document.getElementById('langToggle').addEventListener('click', switchLanguage);
 
     function debounce(func, timeout = 300) {
         let timer;
@@ -548,7 +639,7 @@
         };
     }
     searchInput.addEventListener('input', debounce(() => {
-        State.displayLimit = 30; // 重置顯示數量
+        State.displayLimit = 30; 
         renderTable();
     }));
     sortSelect.addEventListener('change', renderTable);
@@ -558,7 +649,7 @@
             document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
             e.target.classList.add('active');
             State.currentArtist = e.target.getAttribute('data-artist');
-            State.displayLimit = 30; // 重置顯示數量
+            State.displayLimit = 30; 
             renderTable();
         }
     });
@@ -582,8 +673,8 @@
 
     window.onload = () => {
         updatePersonalCount();
+        applyLanguage();
         setGreeting();
-        generateTabs();
         initVisuals();
         renderTable();
     };
