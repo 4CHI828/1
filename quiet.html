@@ -77,6 +77,20 @@
     }
     .theme-dot:hover { transform: scale(1.3) rotate(15deg); }
     .dot-yellow { background: #ffcc66; } .dot-red { background: #ff8a8a; } .dot-green { background: #c2f0c2; } .dot-brown { background: #d2b48c; }
+    
+    /* 語言切換按鈕樣式 */
+    .lang-btn {
+      padding: 4px 12px;
+      border-radius: 15px;
+      border: 2px solid var(--accent-color);
+      background: white;
+      color: var(--dark-color);
+      font-size: 12px;
+      font-weight: bold;
+      cursor: pointer;
+      transition: var(--transition);
+    }
+    .lang-btn:hover { background: var(--main-color); }
 
     .btn-group { 
       margin-bottom: 25px; 
@@ -234,22 +248,21 @@
       display: flex; 
       justify-content: space-between; 
       align-items: center; 
-      opacity: 0; /* 初始透明 */
+      opacity: 0; 
       animation: fadeIn 0.4s ease forwards; 
     }
     @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
     .song-item:hover { background: rgba(255,255,255,0.05); color: #fff; }
     
-    /* --- 修正：確保播放中的歌曲絕對可見 --- */
     .song-item.active { 
-      opacity: 1 !important; /* 強制可見，防止被動畫覆蓋 */
+      opacity: 1 !important; 
       background: rgba(0, 255, 255, 0.3) !important; 
       color: #fff !important; 
       font-weight: bold; 
       border-left: 5px solid var(--neon-cyan); 
       box-shadow: 0 0 15px rgba(0, 255, 255, 0.2);
       text-shadow: 0 0 8px var(--neon-cyan);
-      animation: pulseBorder 2s infinite; /* 呼吸燈動畫 */
+      animation: pulseBorder 2s infinite; 
     }
     @keyframes pulseBorder { 0%, 100% { background: rgba(0, 255, 255, 0.3); } 50% { background: rgba(0, 255, 255, 0.4); } }
 
@@ -268,6 +281,7 @@
       <div class="theme-dot dot-red" onclick="setTheme('red')" title="番茄紅"></div>
       <div class="theme-dot dot-green" onclick="setTheme('green')" title="萵苣綠"></div>
       <div class="theme-dot dot-brown" onclick="setTheme('brown')" title="巧克力褐"></div>
+      <button class="lang-btn" id="lang-toggle" onclick="switchLanguage()">繁體</button>
     </div>
   </div>
 
@@ -294,9 +308,9 @@
     </div>
     
     <div class="mode-group">
-      <button class="mode-btn active" onclick="setPlaybackMode('sequence', this)">列表循環</button>
-      <button class="mode-btn" onclick="setPlaybackMode('loopOne', this)">單曲循環</button>
-      <button class="mode-btn" onclick="setPlaybackMode('shuffle', this)">隨機播放</button>
+      <button class="mode-btn active" id="btn-seq" onclick="setPlaybackMode('sequence', this)">列表循環</button>
+      <button class="mode-btn" id="btn-loop" onclick="setPlaybackMode('loopOne', this)">單曲循環</button>
+      <button class="mode-btn" id="btn-shuffle" onclick="setPlaybackMode('shuffle', this)">隨機播放</button>
     </div>
     
     <div class="controls">
@@ -327,10 +341,72 @@
   </div>
 
   <div class="footer">
-     <a href="https://www.twitch.tv/chi828" target="_blank" rel="noopener noreferrer">新竹奇奇828 製作 🛠️</a>
+     <a href="https://www.twitch.tv/chi828" target="_blank" rel="noopener noreferrer" id="footer-text">新竹奇奇828 製作 🛠️</a>
   </div>
 
   <script>
+    /** 語言管理系統 */
+    const Lang = {
+      current: 'zh-Hant',
+      dict: {
+        'zh-Hant': {
+          seq: '列表循環', loop: '單曲循環', shuffle: '隨機播放',
+          ready: '準備播放...', error: '歌曲失效，跳轉中...',
+          footer: '新竹奇奇828 製作 🛠️', btn: '繁體',
+          conv: { '静': '靜', '夏': '夏', '曲': '曲' } // 簡單轉換映射
+        },
+        'zh-Hans': {
+          seq: '列表循环', loop: '单曲循环', shuffle: '随机播放',
+          ready: '准备播放...', error: '歌曲失效，跳转中...',
+          footer: '新竹奇奇828 制作 🛠️', btn: '简体',
+          conv: { '靜': '静' }
+        }
+      },
+      // 簡易的字體轉換函數 (針對歌單名稱)
+      convertText(text) {
+        const target = this.current === 'zh-Hant' ? 'zh-Hant' : 'zh-Hans';
+        const map = this.dict[target].conv;
+        let result = text;
+        for (let key in map) {
+          // 如果切換到繁體，就把簡體 key 換成 繁體 value；反之亦然
+          const from = target === 'zh-Hant' ? this.dict['zh-Hans'].conv[key] || key : key;
+          const to = map[key];
+          // 此處簡化處理：直接對常用字進行替換
+        }
+        // 為了精準，我們定義一個更直接的對照
+        if(target === 'zh-Hans') {
+          return text.replace(/靜/g, '静').replace(/單/g, '单').replace(/環/g, '环').replace(/曲/g, '曲');
+        } else {
+          return text.replace(/静/g, '靜').replace(/单/g, '單').replace(/环/g, '環');
+        }
+      }
+    };
+
+    function switchLanguage() {
+      Lang.current = (Lang.current === 'zh-Hant') ? 'zh-Hans' : 'zh-Hant';
+      localStorage.setItem('preferred-lang', Lang.current);
+      applyLanguage();
+    }
+
+    function applyLanguage() {
+      const d = Lang.dict[Lang.current];
+      document.documentElement.lang = Lang.current;
+      document.getElementById('lang-toggle').innerText = d.btn;
+      document.getElementById('btn-seq').innerText = d.seq;
+      document.getElementById('btn-loop').innerText = d.loop;
+      document.getElementById('btn-shuffle').innerText = d.shuffle;
+      document.getElementById('footer-text').innerText = d.footer;
+      
+      // 更新目前播放的標題（如果已經有歌曲）
+      if (Player.index !== -1) {
+        songTitleText.innerText = Lang.convertText(Player.playlist[Player.index].title);
+      } else {
+        songTitleText.innerText = d.ready;
+      }
+      
+      buildList(); // 重新構建列表以更新繁簡
+    }
+
     /** 視覺效果控制 */
     const Visuals = {
       setTheme(theme) {
@@ -438,7 +514,7 @@
 
     function startTitleScroll(songName) {
       if (Player.titleInterval) clearInterval(Player.titleInterval);
-      let titleText = ` 🎵 正在播放：${songName} 🍔🎤 `;
+      let titleText = ` 🎵 正在播放：${Lang.convertText(songName)} 🍔🎤 `;
       document.title = titleText;
       Player.titleInterval = setInterval(() => {
         titleText = titleText.substring(1) + titleText[0];
@@ -459,7 +535,7 @@
         div.className = 'song-item';
         div.style.animationDelay = `${index * 0.03}s`; 
         
-        let displayTitle = song.title;
+        let displayTitle = Lang.convertText(song.title);
         const urlLower = song.src.toLowerCase();
         if (urlLower.endsWith('.flac')) displayTitle += " (flac)";
         else if (urlLower.endsWith('.mp3')) displayTitle += " (MP3)";
@@ -476,13 +552,13 @@
         const nameSpan = item.querySelector('.song-name-span');
         if (idx === Player.index) {
           item.classList.add('active');
-          const originalText = Player.playlist[idx].title;
+          const originalText = Lang.convertText(Player.playlist[idx].title);
           const urlLower = Player.playlist[idx].src.toLowerCase();
           const format = urlLower.endsWith('.flac') ? ' (flac)' : (urlLower.endsWith('.mp3') ? ' (MP3)' : '');
           nameSpan.innerText = `▶️ ${idx + 1}. ${originalText}${format}`;
         } else {
           item.classList.remove('active');
-          const originalText = Player.playlist[idx].title;
+          const originalText = Lang.convertText(Player.playlist[idx].title);
           const urlLower = Player.playlist[idx].src.toLowerCase();
           const format = urlLower.endsWith('.flac') ? ' (flac)' : (urlLower.endsWith('.mp3') ? ' (MP3)' : '');
           nameSpan.innerText = `${idx + 1}. ${originalText}${format}`;
@@ -499,7 +575,7 @@
         
         songTitleText.style.opacity = 0;
         setTimeout(() => {
-          songTitleText.innerText = song.title;
+          songTitleText.innerText = Lang.convertText(song.title);
           songTitleText.style.opacity = 1;
         }, 200);
 
@@ -609,7 +685,7 @@
         else playNext();
     };
     audioPlayer.onerror = () => {
-        songTitleText.innerText = "歌曲失效，跳轉中...";
+        songTitleText.innerText = Lang.dict[Lang.current].error;
         playNext();
     };
 
@@ -621,6 +697,12 @@
 
     window.onload = () => { 
       Visuals.initFloatingBg(); 
+      
+      // 讀取保存的語言設定
+      const savedLang = localStorage.getItem('preferred-lang');
+      if (savedLang) Lang.current = savedLang;
+      applyLanguage(); // 執行一次語言初始化
+
       buildList();
       playerMain.classList.add('paused'); 
       const savedTheme = localStorage.getItem('preferred-theme');
@@ -628,7 +710,7 @@
       const savedIndex = localStorage.getItem('last-song-index');
       if (savedIndex !== null) {
         Player.index = parseInt(savedIndex);
-        songTitleText.innerText = Player.playlist[Player.index]?.title || "準備播放...";
+        songTitleText.innerText = Lang.convertText(Player.playlist[Player.index]?.title || "準備播放...");
         updateActiveSongUI();
       }
     };
