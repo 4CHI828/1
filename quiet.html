@@ -318,8 +318,9 @@
       <button class="ctrl-btn" id="play-pause-btn" onclick="togglePlay()" title="播放/暫停 (Space)">▶️</button>
       <button class="ctrl-btn" onclick="playNext()" title="下一首 (→)">⏭️</button>
       <div class="volume-panel" id="volume-panel">
-        <span class="vol-value" id="vol-value">100%</span>
-        <input type="range" class="volume-slider" id="volume-slider" min="0" max="1" step="0.01" value="1">
+        <span class="vol-value" id="vol-value">20%</span>
+        <!-- 預設值設為 0.2 -->
+        <input type="range" class="volume-slider" id="volume-slider" min="0" max="1" step="0.01" value="0.2">
       </div>
     </div>
 
@@ -359,7 +360,6 @@
           footer: '新竹奇奇828 制作 🛠️', btn: '简体'
         }
       },
-      // 精簡的字體對照表
       convMap: {
         '靜': '静', '單': '单', '環': '环', '曲': '曲', '製作': '制作'
       },
@@ -371,7 +371,6 @@
           }
           return result;
         }
-        // 繁體化 (簡易版)
         return text.replace(/静/g, '靜').replace(/单/g, '單').replace(/环/g, '環');
       }
     };
@@ -615,6 +614,7 @@
       const val = parseFloat(volSlider.value);
       audioPlayer.volume = val;
       updateVolumeIcon(val);
+      localStorage.setItem('preferred-volume', val); // 記憶音量
     };
 
     document.addEventListener('click', (e) => {
@@ -690,10 +690,22 @@
     window.onload = () => { 
       Visuals.initFloatingBg(); 
       
+      // 1. 語言初始化
       const savedLang = localStorage.getItem('preferred-lang');
       if (savedLang) Lang.current = savedLang;
       applyLanguage();
 
+      // 2. 音量初始化 (解決播放按鍵沒聲音問題)
+      const savedVol = localStorage.getItem('preferred-volume');
+      if (savedVol !== null) {
+        volSlider.value = savedVol;
+        audioPlayer.volume = parseFloat(savedVol);
+      } else {
+        audioPlayer.volume = parseFloat(volSlider.value);
+      }
+      updateVolumeIcon(audioPlayer.volume);
+
+      // 3. 其他初始化
       buildList();
       playerMain.classList.add('paused'); 
       const savedTheme = localStorage.getItem('preferred-theme');
