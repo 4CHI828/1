@@ -101,7 +101,6 @@
       display: flex; align-items: center; justify-content: center; 
       box-shadow: 0 0 20px rgba(0,0,0,0.5); transition: transform 0.5s ease; 
     }
-    /* [黑膠封面優化] */
     .vinyl-art { 
       width: 42px; height: 42px; border-radius: 50%; 
       background-size: cover; background-position: center; 
@@ -254,23 +253,27 @@
 
   <script>
     /** 預設設定 */
-    const DEFAULT_COVER = "https://img.freepik.com/premium-vector/creatively-designed-icon-burger-3d-style_142112-25251.jpg"; // 高質感漢堡圖標
+    const DEFAULT_COVER = "https://img.freepik.com/premium-vector/creatively-designed-icon-burger-3d-style_142112-25251.jpg";
 
-    /** 語言管理 */
+    /** 語言管理：優化後的轉換邏輯 */
     const Lang = {
       current: 'zh-Hant',
       dict: {
         'zh-Hant': { seq: '列表循環', loop: '單曲循環', shuffle: '隨機播放', ready: '準備播放...', error: '歌曲失效，跳轉中...', footer: '新竹奇奇828 製作 🛠️', btn: '繁體' },
         'zh-Hans': { seq: '列表循环', loop: '单曲循环', shuffle: '随机播放', ready: '准备播放...', error: '歌曲失效，跳转中...', footer: '新竹奇奇828 制作 🛠️', btn: '简体' }
       },
-      convMap: { '靜': '静', '單': '单', '環': '环', '曲': '曲', '製作': '制作' },
-      convertText(text) {
+      convMap: { 
+        '靜': '静', '單': '单', '環': '环', '曲': '曲', '製作': '制作', '繁': '繁', '體': '体' 
+      },
+      convert(text) {
+        if (!text) return '';
         if (this.current === 'zh-Hans') {
           let result = text;
           for (let key in this.convMap) { result = result.replace(new RegExp(key, 'g'), this.convMap[key]); }
           return result;
         }
-        return text.replace(/静/g, '靜').replace(/单/g, '單').replace(/环/g, '環');
+        // 簡轉繁 (簡單對應)
+        return text.replace(/静/g, '靜').replace(/单/g, '單').replace(/环/g, '環').replace(/制/g, '製').replace(/作/g, '作');
       }
     };
 
@@ -288,9 +291,16 @@
       document.getElementById('btn-loop').innerText = d.loop;
       document.getElementById('btn-shuffle').innerText = d.shuffle;
       document.getElementById('footer-text').innerText = d.footer;
-      if (Player.index !== -1) { updateMarquee(Lang.convertText(Player.playlist[Player.index].title)); } 
-      else { songTitleText.innerText = d.ready; }
-      buildList();
+      
+      // 更新播放中的標題
+      if (Player.index !== -1) { 
+        updateMarquee(Lang.convert(Player.playlist[Player.index].title)); 
+      } else { 
+        songTitleText.innerText = d.ready; 
+      }
+      
+      // 效能優化：不重建列表，僅更新文字
+      refreshListText();
     }
 
     /** 視覺與主題 */
@@ -317,18 +327,31 @@
     };
     window.setTheme = (t) => Visuals.setTheme(t);
 
-    /** Web Audio API 實作 */
-    let audioCtx, analyser, source, dataArray;
+    /** Web Audio API 實作：含漸入漸出邏輯 */
+    let audioCtx, analyser, source, gainNode, dataArray;
     function initAudioAnalysis() {
       if (audioCtx) return;
       audioCtx = new (window.AudioContext || window.webkitAudioContext)();
       analyser = audioCtx.createAnalyser();
+      gainNode = audioCtx.createGain(); // 用於漸入漸出
+      
       source = audioCtx.createMediaElementSource(audioPlayer);
-      source.connect(analyser);
+      
+      // 路線：Source -> GainNode (音量) -> Analyser (視覺) -> Destination (喇叭)
+      source.connect(gainNode);
+      gainNode.connect(analyser);
       analyser.connect(audioCtx.destination);
+      
       analyser.fftSize = 64;
       dataArray = new Uint8Array(analyser.frequencyBinCount);
       renderFrame();
+    }
+
+    // 平滑調整音量函數 (Fade)
+    function fadeAudio(targetVolume, duration = 0.5) {
+      if (!gainNode) return;
+      const now = audioCtx.currentTime;
+      gainNode.gain.linearRampToValueAtTime(targetVolume, now + duration);
     }
 
     function renderFrame() {
@@ -437,7 +460,7 @@
 
     function startTitleScroll(songName) {
       if (Player.titleInterval) clearInterval(Player.titleInterval);
-      let titleText = ` 🎵 正在播放：${Lang.convertText(songName)} 🍔🎤 `;
+      let titleText = ` 🎵 正在播放：${Lang.convert(songName)} 🍔🎤 `;
       document.title = titleText;
       Player.titleInterval = setInterval(() => {
         titleText = titleText.substring(1) + titleText[0];
@@ -451,55 +474,71 @@
       return `${min}:${sec < 10 ? '0' : ''}${sec}`;
     }
 
+    /** 效能優化：僅建立一次 DOM */
     function buildList() {
       playlistContainer.innerHTML = '';
       Player.playlist.forEach((song, index) => {
         const div = document.createElement('div');
         div.className = 'song-item';
         div.style.animationDelay = `${index * 0.03}s`; 
-        let displayTitle = Lang.convertText(song.title);
-        const urlLower = song.src.toLowerCase();
-        if (urlLower.endsWith('.flac')) displayTitle += " (flac)";
-        else if (urlLower.endsWith('.mp3')) displayTitle += " (MP3)";
-        div.innerHTML = `<span class="song-name-span">${index + 1}. ${displayTitle}</span>`;
+        
+        // 儲存原始標題於 data 屬性中
+        div.setAttribute('data-original-title', song.title);
+        div.setAttribute('data-index', index);
+        
+        const span = document.createElement('span');
+        span.className = 'song-name-span';
+        div.appendChild(span);
+        
         div.onclick = () => playSong(index);
         playlistContainer.appendChild(div);
       });
+      refreshListText();
     }
 
-    function updateActiveSongUI() {
+    /** 效能優化：切換語言時僅更新文字 */
+    function refreshListText() {
       const items = document.querySelectorAll('.song-item');
       items.forEach((item, idx) => {
-        const nameSpan = item.querySelector('.song-name-span');
+        const span = item.querySelector('.song-name-span');
+        const originalTitle = item.getAttribute('data-original-title');
+        const song = Player.playlist[idx];
+        const format = song.src.toLowerCase().endsWith('.flac') ? ' (flac)' : ' (MP3)';
+        const convertedTitle = Lang.convert(originalTitle);
+        
         if (idx === Player.index) {
           item.classList.add('active');
-          const originalText = Lang.convertText(Player.playlist[idx].title);
-          const format = Player.playlist[idx].src.toLowerCase().endsWith('.flac') ? ' (flac)' : ' (MP3)';
-          nameSpan.innerText = `▶️ ${idx + 1}. ${originalText}${format}`;
+          span.innerText = `▶️ ${idx + 1}. ${convertedTitle}${format}`;
         } else {
           item.classList.remove('active');
-          const originalText = Lang.convertText(Player.playlist[idx].title);
-          const format = Player.playlist[idx].src.toLowerCase().endsWith('.flac') ? ' (flac)' : ' (MP3)';
-          nameSpan.innerText = `${idx + 1}. ${originalText}${format}`;
+          span.innerText = `${idx + 1}. ${convertedTitle}${format}`;
         }
       });
     }
 
-    function playSong(index) {
+    async function playSong(index) {
         if (index < 0 || index >= Player.playlist.length) return;
+        
+        // 執行漸出 (Fade Out)
+        if (Player.index !== -1 && audioPlayer.currentTime > 0) {
+            await fadeAudio(0, 0.4); 
+        }
+
         Player.index = index;
         const song = Player.playlist[Player.index];
         
         audioPlayer.src = song.src;
         audioPlayer.load();
-        audioPlayer.play().catch(e => console.log("Autoplay blocked"));
         
-        updateMarquee(Lang.convertText(song.title));
+        // 漸入播放 (Fade In)
+        audioPlayer.play().then(() => {
+            fadeAudio(1, 0.6); // 恢復到 WebAudio 內部滿格，最終音量由 audioPlayer.volume 控制
+        }).catch(e => console.log("Autoplay blocked"));
         
-        // [黑膠封面更新] 使用預設漢堡圖標
+        updateMarquee(Lang.convert(song.title));
         vinylArt.style.backgroundImage = `url('${song.cover || DEFAULT_COVER}')`;
-
-        updateActiveSongUI();
+        
+        refreshListText();
         const items = document.querySelectorAll('.song-item');
         if (items[Player.index]) items[Player.index].scrollIntoView({ behavior: 'smooth', block: 'center' });
         
@@ -511,7 +550,13 @@
         if (Player.index === -1) { playSong(0); return; }
         initAudioAnalysis();
         if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
-        if (audioPlayer.paused) audioPlayer.play(); else audioPlayer.pause();
+        if (audioPlayer.paused) {
+            audioPlayer.play();
+            fadeAudio(1, 0.3);
+        } else {
+            fadeAudio(0, 0.3);
+            setTimeout(() => { if(audioPlayer.paused) return; audioPlayer.pause(); }, 300);
+        }
     }
 
     function playNext() {
@@ -584,7 +629,7 @@
         vinylDisc.classList.remove('playing');
     };
     audioPlayer.onended = () => {
-        if (Player.mode === 'loopOne') audioPlayer.play();
+        if (Player.mode === 'loopOne') playSong(Player.index);
         else playNext();
     };
     audioPlayer.onerror = () => {
@@ -620,11 +665,9 @@
       const savedIndex = localStorage.getItem('last-song-index');
       if (savedIndex !== null) {
         Player.index = parseInt(savedIndex);
-        updateMarquee(Lang.convertText(Player.playlist[Player.index]?.title || "準備播放..."));
-        updateActiveSongUI();
+        updateMarquee(Lang.convert(Player.playlist[Player.index]?.title || "準備播放..."));
+        refreshListText();
       }
-      
-      // 初始載入時就設定漢堡封面
       vinylArt.style.backgroundImage = `url('${DEFAULT_COVER}')`;
     };
   </script>
