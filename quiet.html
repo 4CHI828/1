@@ -38,7 +38,6 @@
       transition: background 0.5s ease;
     }
 
-    /* [1C] 響應式主容器 */
     .main-wrapper {
       width: 100%;
       max-width: 100vw;
@@ -95,7 +94,6 @@
       50% { box-shadow: 0 30px 60px rgba(0,0,0,0.6), 0 0 30px rgba(0, 255, 255, 0.4); }
     }
 
-    /* [2-Art] 動態黑膠封面 */
     .vinyl-wrapper { display: flex; justify-content: center; margin-bottom: 20px; }
     .vinyl { 
       width: 100px; height: 100px; background: radial-gradient(circle, #333 20%, #000 100%); 
@@ -103,27 +101,24 @@
       display: flex; align-items: center; justify-content: center; 
       box-shadow: 0 0 20px rgba(0,0,0,0.5); transition: transform 0.5s ease; 
     }
+    /* [黑膠封面優化] */
     .vinyl-art { 
-      width: 40px; height: 40px; border-radius: 50%; background-size: cover; 
-      background-position: center; border: 2px solid #fff; box-shadow: 0 0 5px rgba(0,0,0,0.5);
+      width: 42px; height: 42px; border-radius: 50%; 
+      background-size: cover; background-position: center; 
+      border: 2px solid #fff; box-shadow: 0 0 8px rgba(0,0,0,0.6);
+      background-color: #fff;
     }
     .vinyl.playing { animation: spin 4s linear infinite; }
     @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
 
-    /* [1A] 跑馬燈標題 */
     .now-playing { 
       text-align: center; margin-bottom: 20px; font-size: 18px; color: var(--main-color); 
       font-weight: bold; height: 26px; border-bottom: 1px solid rgba(255,255,255,0.1); 
       padding-bottom: 12px; display: flex; align-items: center; justify-content: center; gap: 10px; 
       overflow: hidden; 
     }
-    .marquee-container { 
-      display: inline-block; white-space: nowrap; overflow: hidden; 
-      vertical-align: middle; max-width: 280px; 
-    }
-    .marquee-text { 
-      display: inline-block; padding-left: 0; transition: transform 0.1s linear; 
-    }
+    .marquee-container { display: inline-block; white-space: nowrap; overflow: hidden; vertical-align: middle; max-width: 280px; }
+    .marquee-text { display: inline-block; padding-left: 0; transition: transform 0.1s linear; }
     .animate-marquee { animation: marquee 10s linear infinite; }
     @keyframes marquee { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } }
 
@@ -138,12 +133,7 @@
     .controls { display: flex; justify-content: center; align-items: center; gap: 15px; margin-bottom: 20px; position: relative; }
     .ctrl-btn { background: rgba(255, 255, 255, 0.08); border: 1px solid var(--glass-border); color: white; width: 48px; height: 48px; border-radius: 50%; cursor: pointer; font-size: 18px; transition: var(--transition); display: flex; align-items: center; justify-content: center; }
     .ctrl-btn:hover { background: var(--neon-cyan); color: #000; transform: scale(1.1); box-shadow: var(--neon-shadow); }
-    
-    /* [1D] 播放按鈕呼吸燈 */
-    .ctrl-btn#play-pause-btn { 
-      width: 60px; height: 60px; font-size: 24px; background: rgba(0, 255, 255, 0.15); 
-      border: 2px solid var(--neon-cyan); 
-    }
+    .ctrl-btn#play-pause-btn { width: 60px; height: 60px; font-size: 24px; background: rgba(0, 255, 255, 0.15); border: 2px solid var(--neon-cyan); }
     .playing-btn { animation: btnBreath 2s infinite ease-in-out; }
     @keyframes btnBreath { 0%, 100% { box-shadow: 0 0 10px var(--neon-cyan); } 50% { box-shadow: 0 0 25px var(--neon-cyan), 0 0 5px #fff; } }
 
@@ -186,7 +176,6 @@
 <body>
   <div class="floating-bg" id="floatingBg"></div>
 
-  <!-- [1C] 新增 main-wrapper 包裹所有內容 -->
   <div class="main-wrapper">
     <div class="header-wrapper">
       <h1 id="mainTitle">静静在夏天🍔🎤⁰³²⁰<div class="ketchup"></div></h1>
@@ -212,7 +201,6 @@
     <div class="player-container" id="player-main">
       <div class="vinyl-wrapper">
         <div class="vinyl" id="vinyl-disc">
-          <!-- [2-Art] 黑膠封面圖片 -->
           <div class="vinyl-art" id="vinyl-art"></div>
         </div>
       </div>
@@ -221,7 +209,6 @@
         <div class="eq-bars">
           <div class="eq-bar"></div><div class="eq-bar"></div><div class="eq-bar"></div>
         </div>
-        <!-- [1A] 跑馬燈容器 -->
         <div class="marquee-container">
           <span id="song-title-text" class="marquee-text">準備播放...</span>
         </div>
@@ -253,7 +240,6 @@
         <span id="total-time">0:00</span>
       </div>
 
-      <!-- 加入 crossorigin 允許 Web Audio API 讀取數據 -->
       <audio id="audio-player" crossorigin="anonymous"></audio>
 
       <div class="song-list-wrapper">
@@ -267,6 +253,9 @@
   </div>
 
   <script>
+    /** 預設設定 */
+    const DEFAULT_COVER = "https://img.freepik.com/premium-vector/creatively-designed-icon-burger-3d-style_142112-25251.jpg"; // 高質感漢堡圖標
+
     /** 語言管理 */
     const Lang = {
       current: 'zh-Hant',
@@ -328,7 +317,7 @@
     };
     window.setTheme = (t) => Visuals.setTheme(t);
 
-    /** [2-EQ] Web Audio API 實作 */
+    /** Web Audio API 實作 */
     let audioCtx, analyser, source, dataArray;
     function initAudioAnalysis() {
       if (audioCtx) return;
@@ -360,53 +349,53 @@
       index: -1,
       titleInterval: null,
       playlist: [
-        { "title": "芹靜歌_日不落_對唱版0.3", "src": "http://chi.xo.je/MP3/芹靜歌_日不落_對唱版0.3.mp3", "cover": "https://cdn-icons-png.flaticon.com/512/2786/2786377.png" },
-        { "title": "靜靜在夏天 煙火裡的塵埃 - StreamRecorder", "src": "http://chi.xo.je/MP3/靜靜在夏天 煙火裡的塵埃 - StreamRecorder.mp3", "cover": "https://cdn-icons-png.flaticon.com/512/2786/2786377.png" },
-        { "title": "靜靜在夏天 煙火裡的塵埃", "src": "http://chi.xo.je/MP3/靜靜在夏天 煙火裡的塵埃.mp3", "cover": "https://cdn-icons-png.flaticon.com/512/2786/2786377.png" },
-        { "title": "靜靜在夏天(圖奇) Opera2", "src": "http://chi.xo.je/MP3/靜靜在夏天(圖奇) Opera2.mp3", "cover": "https://cdn-icons-png.flaticon.com/512/2786/2786377.png" },
-        { "title": "靜靜在夏天(圖奇) 悟空", "src": "http://chi.xo.je/MP3/靜靜在夏天(圖奇) 悟空.mp3", "cover": "https://cdn-icons-png.flaticon.com/512/2786/2786377.png" },
-        { "title": "靜靜在夏天(圖奇) 武家坡", "src": "http://chi.xo.je/MP3/靜靜在夏天(圖奇) 武家坡.mp3", "cover": "https://cdn-icons-png.flaticon.com/512/2786/2786377.png" },
-        { "title": "靜靜在夏天(圖奇) 靜靜的", "src": "http://chi.xo.je/MP3/靜靜在夏天(圖奇) 靜靜的.mp3", "cover": "https://cdn-icons-png.flaticon.com/512/2786/2786377.png" },
-        { "title": "靜靜在夏天(圖奇)-克卜勒", "src": "http://chi.xo.je/MP3/靜靜在夏天(圖奇)-克卜勒.mp3", "cover": "https://cdn-icons-png.flaticon.com/512/2786/2786377.png" },
-        { "title": "靜靜在夏天(圖奇)-天黑黑", "src": "http://chi.xo.je/MP3/靜靜在夏天(圖奇)-天黑黑.mp3", "cover": "https://cdn-icons-png.flaticon.com/512/2786/2786377.png" },
-        { "title": "靜靜在夏天(圖奇)-如願", "src": "http://chi.xo.je/MP3/靜靜在夏天(圖奇)-如願.mp3", "cover": "https://cdn-icons-png.flaticon.com/512/2786/2786377.png" },
-        { "title": "靜靜在夏天(圖奇)-安和橋", "src": "http://chi.xo.je/MP3/靜靜在夏天(圖奇)-安和橋.mp3", "cover": "https://cdn-icons-png.flaticon.com/512/2786/2786377.png" },
-        { "title": "靜靜在夏天(圖奇)-我好想你", "src": "http://chi.xo.je/MP3/靜靜在夏天(圖奇)-我好想你.mp3", "cover": "https://cdn-icons-png.flaticon.com/512/2786/2786377.png" },
-        { "title": "靜靜在夏天-38 號大迪曲", "src": "http://chi.xo.je/MP3/靜靜在夏天-38 號大迪曲.mp3", "cover": "https://cdn-icons-png.flaticon.com/512/2786/2786377.png" },
-        { "title": "靜靜在夏天-A.I.N.Y.", "src": "http://chi.xo.je/MP3/靜靜在夏天-A.I.N.Y..mp3", "cover": "https://cdn-icons-png.flaticon.com/512/2786/2786377.png" },
-        { "title": "靜靜在夏天-Lydia", "src": "http://chi.xo.je/MP3/靜靜在夏天-Lydia.mp3", "cover": "https://cdn-icons-png.flaticon.com/512/2786/2786377.png" },
-        { "title": "靜靜在夏天-Rolling in the deep", "src": "http://chi.xo.je/MP3/靜靜在夏天-Rolling in the deep.mp3", "cover": "https://cdn-icons-png.flaticon.com/512/2786/2786377.png" },
-        { "title": "靜靜在夏天-一個人想著一個人", "src": "http://chi.xo.je/MP3/靜靜在夏天-一個人想著一個人.mp3", "cover": "https://cdn-icons-png.flaticon.com/512/2786/2786377.png" },
-        { "title": "靜靜在夏天-你把我灌醉", "src": "http://chi.xo.je/MP3/靜靜在夏天-你把我灌醉.mp3", "cover": "https://cdn-icons-png.flaticon.com/512/2786/2786377.png" },
-        { "title": "靜靜在夏天-克卜勒", "src": "http://chi.xo.je/MP3/靜靜在夏天-克卜勒.mp3", "cover": "https://cdn-icons-png.flaticon.com/512/2786/2786377.png" },
-        { "title": "靜靜在夏天-公主殿下", "src": "http://chi.xo.je/MP3/靜靜在夏天-公主殿下.mp3", "cover": "https://cdn-icons-png.flaticon.com/512/2786/2786377.png" },
-        { "title": "靜靜在夏天-咖喱咖喱", "src": "http://chi.xo.je/MP3/靜靜在夏天-咖喱咖喱.mp3", "cover": "https://cdn-icons-png.flaticon.com/512/2786/2786377.png" },
-        { "title": "靜靜在夏天-唯一", "src": "http://chi.xo.je/MP3/靜靜在夏天-唯一.mp3", "cover": "https://cdn-icons-png.flaticon.com/512/2786/2786377.png" },
-        { "title": "靜靜在夏天-天下無雙", "src": "http://chi.xo.je/MP3/靜靜在夏天-天下無雙.mp3", "cover": "https://cdn-icons-png.flaticon.com/512/2786/2786377.png" },
-        { "title": "靜靜在夏天-寵愛", "src": "http://chi.xo.je/MP3/靜靜在夏天-寵愛.mp3", "cover": "https://cdn-icons-png.flaticon.com/512/2786/2786377.png" },
-        { "title": "靜靜在夏天-左手指月", "src": "http://chi.xo.je/MP3/靜靜在夏天-左手指月.mp3", "cover": "https://cdn-icons-png.flaticon.com/512/2786/2786377.png" },
-        { "title": "靜靜在夏天-愛人錯過", "src": "http://chi.xo.je/MP3/靜靜在夏天-愛人錯過.mp3", "cover": "https://cdn-icons-png.flaticon.com/512/2786/2786377.png" },
-        { "title": "靜靜在夏天-我們的愛", "src": "http://chi.xo.je/MP3/靜靜在夏天-我們的愛.mp3", "cover": "https://cdn-icons-png.flaticon.com/512/2786/2786377.png" },
-        { "title": "靜靜在夏天-我想要佔據你", "src": "http://chi.xo.je/MP3/靜靜在夏天-我想要佔據你.mp3", "cover": "https://cdn-icons-png.flaticon.com/512/2786/2786377.png" },
-        { "title": "靜靜在夏天-我懷念的", "src": "http://chi.xo.je/MP3/靜靜在夏天-我懷念的.mp3", "cover": "https://cdn-icons-png.flaticon.com/512/2786/2786377.png" },
-        { "title": "靜靜在夏天-手心的薔薇", "src": "http://chi.xo.je/MP3/靜靜在夏天-手心的薔薇.mp3", "cover": "https://cdn-icons-png.flaticon.com/512/2786/2786377.png" },
-        { "title": "靜靜在夏天-星辰大海", "src": "http://chi.xo.je/MP3/靜靜在夏天-星辰大海.mp3", "cover": "https://cdn-icons-png.flaticon.com/512/2786/2786377.png" },
-        { "title": "靜靜在夏天-時間都去哪兒了", "src": "http://chi.xo.je/MP3/靜靜在夏天-時間都去哪兒了.mp3", "cover": "https://cdn-icons-png.flaticon.com/512/2786/2786377.png" },
-        { "title": "靜靜在夏天-會呼吸的痛", "src": "http://chi.xo.je/MP3/靜靜在夏天-會呼吸的痛.mp3", "cover": "https://cdn-icons-png.flaticon.com/512/2786/2786377.png" },
-        { "title": "靜靜在夏天-月彎彎", "src": "http://chi.xo.je/MP3/靜靜在夏天-月彎彎.mp3", "cover": "https://cdn-icons-png.flaticon.com/512/2786/2786377.png" },
-        { "title": "靜靜在夏天-皮囊", "src": "http://chi.xo.je/MP3/靜靜在夏天-皮囊.mp3", "cover": "https://cdn-icons-png.flaticon.com/512/2786/2786377.png" },
-        { "title": "靜靜在夏天-盛夏光年", "src": "http://chi.xo.je/MP3/靜靜在夏天-盛夏光年.mp3", "cover": "https://cdn-icons-png.flaticon.com/512/2786/2786377.png" },
-        { "title": "靜靜在夏天-空心", "src": "http://chi.xo.je/MP3/靜靜在夏天-空心.mp3", "cover": "https://cdn-icons-png.flaticon.com/512/2786/2786377.png" },
-        { "title": "靜靜在夏天-突然好想你", "src": "http://chi.xo.je/MP3/靜靜在夏天-突然好想你.mp3", "cover": "https://cdn-icons-png.flaticon.com/512/2786/2786377.png" },
-        { "title": "靜靜在夏天-給你一點顏色", "src": "http://chi.xo.je/MP3/靜靜在夏天-給你一點顏色.mp3", "cover": "https://cdn-icons-png.flaticon.com/512/2786/2786377.png" },
-        { "title": "靜靜在夏天-給我一個理由忘記", "src": "http://chi.xo.je/MP3/靜靜在夏天-給我一個理由忘記.mp3", "cover": "https://cdn-icons-png.flaticon.com/512/2786/2786377.png" },
-        { "title": "靜靜在夏天-要愛愛", "src": "http://chi.xo.je/MP3/靜靜在夏天-要愛愛.mp3", "cover": "https://cdn-icons-png.flaticon.com/512/2786/2786377.png" },
-        { "title": "靜靜在夏天-連名帶姓", "src": "http://chi.xo.je/MP3/靜靜在夏天-連名帶姓.mp3", "cover": "https://cdn-icons-png.flaticon.com/512/2786/2786377.png" },
-        { "title": "靜靜在夏天-阿刁(新舊混合最終版)", "src": "http://chi.xo.je/MP3/靜靜在夏天-阿刁(新舊混合最終版).mp3", "cover": "https://cdn-icons-png.flaticon.com/512/2786/2786377.png" },
-        { "title": "靜靜在夏天-阿刁", "src": "http://chi.xo.je/MP3/靜靜在夏天-阿刁.mp3", "cover": "https://cdn-icons-png.flaticon.com/512/2786/2786377.png" },
-        { "title": "靜靜在夏天-離歌", "src": "http://chi.xo.je/MP3/靜靜在夏天-離歌.mp3", "cover": "https://cdn-icons-png.flaticon.com/512/2786/2786377.png" },
-        { "title": "靜靜在夏天-靜靜的", "src": "http://chi.xo.je/MP3/靜靜在夏天-靜靜的.mp3", "cover": "https://cdn-icons-png.flaticon.com/512/2786/2786377.png" },
-        { "title": "靜靜在夏天_百年孤寂", "src": "http://chi.xo.je/MP3/靜靜在夏天_百年孤寂.mp3", "cover": "https://cdn-icons-png.flaticon.com/512/2786/2786377.png" }
+        { "title": "芹靜歌_日不落_對唱版0.3", "src": "http://chi.xo.je/MP3/芹靜歌_日不落_對唱版0.3.mp3" },
+        { "title": "靜靜在夏天 煙火裡的塵埃 - StreamRecorder", "src": "http://chi.xo.je/MP3/靜靜在夏天 煙火裡的塵埃 - StreamRecorder.mp3" },
+        { "title": "靜靜在夏天 煙火裡的塵埃", "src": "http://chi.xo.je/MP3/靜靜在夏天 煙火裡的塵埃.mp3" },
+        { "title": "靜靜在夏天(圖奇) Opera2", "src": "http://chi.xo.je/MP3/靜靜在夏天(圖奇) Opera2.mp3" },
+        { "title": "靜靜在夏天(圖奇) 悟空", "src": "http://chi.xo.je/MP3/靜靜在夏天(圖奇) 悟空.mp3" },
+        { "title": "靜靜在夏天(圖奇) 武家坡", "src": "http://chi.xo.je/MP3/靜靜在夏天(圖奇) 武家坡.mp3" },
+        { "title": "靜靜在夏天(圖奇) 靜靜的", "src": "http://chi.xo.je/MP3/靜靜在夏天(圖奇) 靜靜的.mp3" },
+        { "title": "靜靜在夏天(圖奇)-克卜勒", "src": "http://chi.xo.je/MP3/靜靜在夏天(圖奇)-克卜勒.mp3" },
+        { "title": "靜靜在夏天(圖奇)-天黑黑", "src": "http://chi.xo.je/MP3/靜靜在夏天(圖奇)-天黑黑.mp3" },
+        { "title": "靜靜在夏天(圖奇)-如願", "src": "http://chi.xo.je/MP3/靜靜在夏天(圖奇)-如願.mp3" },
+        { "title": "靜靜在夏天(圖奇)-安和橋", "src": "http://chi.xo.je/MP3/靜靜在夏天(圖奇)-安和橋.mp3" },
+        { "title": "靜靜在夏天(圖奇)-我好想你", "src": "http://chi.xo.je/MP3/靜靜在夏天(圖奇)-我好想你.mp3" },
+        { "title": "靜靜在夏天-38 號大迪曲", "src": "http://chi.xo.je/MP3/靜靜在夏天-38 號大迪曲.mp3" },
+        { "title": "靜靜在夏天-A.I.N.Y.", "src": "http://chi.xo.je/MP3/靜靜在夏天-A.I.N.Y..mp3" },
+        { "title": "靜靜在夏天-Lydia", "src": "http://chi.xo.je/MP3/靜靜在夏天-Lydia.mp3" },
+        { "title": "靜靜在夏天-Rolling in the deep", "src": "http://chi.xo.je/MP3/靜靜在夏天-Rolling in the deep.mp3" },
+        { "title": "靜靜在夏天-一個人想著一個人", "src": "http://chi.xo.je/MP3/靜靜在夏天-一個人想著一個人.mp3" },
+        { "title": "靜靜在夏天-你把我灌醉", "src": "http://chi.xo.je/MP3/靜靜在夏天-你把我灌醉.mp3" },
+        { "title": "靜靜在夏天-克卜勒", "src": "http://chi.xo.je/MP3/靜靜在夏天-克卜勒.mp3" },
+        { "title": "靜靜在夏天-公主殿下", "src": "http://chi.xo.je/MP3/靜靜在夏天-公主殿下.mp3" },
+        { "title": "靜靜在夏天-咖喱咖喱", "src": "http://chi.xo.je/MP3/靜靜在夏天-咖喱咖喱.mp3" },
+        { "title": "靜靜在夏天-唯一", "src": "http://chi.xo.je/MP3/靜靜在夏天-唯一.mp3" },
+        { "title": "靜靜在夏天-天下無雙", "src": "http://chi.xo.je/MP3/靜靜在夏天-天下無雙.mp3" },
+        { "title": "靜靜在夏天-寵愛", "src": "http://chi.xo.je/MP3/靜靜在夏天-寵愛.mp3" },
+        { "title": "靜靜在夏天-左手指月", "src": "http://chi.xo.je/MP3/靜靜在夏天-左手指月.mp3" },
+        { "title": "靜靜在夏天-愛人錯過", "src": "http://chi.xo.je/MP3/靜靜在夏天-愛人錯過.mp3" },
+        { "title": "靜靜在夏天-我們的愛", "src": "http://chi.xo.je/MP3/靜靜在夏天-我們的愛.mp3" },
+        { "title": "靜靜在夏天-我想要佔據你", "src": "http://chi.xo.je/MP3/靜靜在夏天-我想要佔據你.mp3" },
+        { "title": "靜靜在夏天-我懷念的", "src": "http://chi.xo.je/MP3/靜靜在夏天-我懷念的.mp3" },
+        { "title": "靜靜在夏天-手心的薔薇", "src": "http://chi.xo.je/MP3/靜靜在夏天-手心的薔薇.mp3" },
+        { "title": "靜靜在夏天-星辰大海", "src": "http://chi.xo.je/MP3/靜靜在夏天-星辰大海.mp3" },
+        { "title": "靜靜在夏天-時間都去哪兒了", "src": "http://chi.xo.je/MP3/靜靜在夏天-時間都去哪兒了.mp3" },
+        { "title": "靜靜在夏天-會呼吸的痛", "src": "http://chi.xo.je/MP3/靜靜在夏天-會呼吸的痛.mp3" },
+        { "title": "靜靜在夏天-月彎彎", "src": "http://chi.xo.je/MP3/靜靜在夏天-月彎彎.mp3" },
+        { "title": "靜靜在夏天-皮囊", "src": "http://chi.xo.je/MP3/靜靜在夏天-皮囊.mp3" },
+        { "title": "靜靜在夏天-盛夏光年", "src": "http://chi.xo.je/MP3/靜靜在夏天-盛夏光年.mp3" },
+        { "title": "靜靜在夏天-空心", "src": "http://chi.xo.je/MP3/靜靜在夏天-空心.mp3" },
+        { "title": "靜靜在夏天-突然好想你", "src": "http://chi.xo.je/MP3/靜靜在夏天-突然好想你.mp3" },
+        { "title": "靜靜在夏天-給你一點顏色", "src": "http://chi.xo.je/MP3/靜靜在夏天-給你一點顏色.mp3" },
+        { "title": "靜靜在夏天-給我一個理由忘記", "src": "http://chi.xo.je/MP3/靜靜在夏天-給我一個理由忘記.mp3" },
+        { "title": "靜靜在夏天-要愛愛", "src": "http://chi.xo.je/MP3/靜靜在夏天-要愛愛.mp3" },
+        { "title": "靜靜在夏天-連名帶姓", "src": "http://chi.xo.je/MP3/靜靜在夏天-連名帶姓.mp3" },
+        { "title": "靜靜在夏天-阿刁(新舊混合最終版)", "src": "http://chi.xo.je/MP3/靜靜在夏天-阿刁(新舊混合最終版).mp3" },
+        { "title": "靜靜在夏天-阿刁", "src": "http://chi.xo.je/MP3/靜靜在夏天-阿刁.mp3" },
+        { "title": "靜靜在夏天-離歌", "src": "http://chi.xo.je/MP3/靜靜在夏天-離歌.mp3" },
+        { "title": "靜靜在夏天-靜靜的", "src": "http://chi.xo.je/MP3/靜靜在夏天-靜靜的.mp3" },
+        { "title": "靜靜在夏天_百年孤寂", "src": "http://chi.xo.je/MP3/靜靜在夏天_百年孤寂.mp3" }
       ]
     };
 
@@ -429,12 +418,9 @@
 
     let isDragging = false;
 
-    // [1A] 跑馬燈邏輯
     function updateMarquee(text) {
       songTitleText.innerText = text;
       songTitleText.classList.remove('animate-marquee');
-      
-      // 稍微延遲等待 DOM 更新後檢查寬度
       setTimeout(() => {
         const containerWidth = document.querySelector('.marquee-container').offsetWidth;
         if (songTitleText.offsetWidth > containerWidth) {
@@ -504,16 +490,14 @@
         Player.index = index;
         const song = Player.playlist[Player.index];
         
-        // [2-Preload] 平滑切換 src
         audioPlayer.src = song.src;
-        audioPlayer.load(); // 強制加載緩存
+        audioPlayer.load();
         audioPlayer.play().catch(e => console.log("Autoplay blocked"));
         
-        // [1A] 更新跑馬燈
         updateMarquee(Lang.convertText(song.title));
         
-        // [2-Art] 更新封面
-        vinylArt.style.backgroundImage = `url('${song.cover}')`;
+        // [黑膠封面更新] 使用預設漢堡圖標
+        vinylArt.style.backgroundImage = `url('${song.cover || DEFAULT_COVER}')`;
 
         updateActiveSongUI();
         const items = document.querySelectorAll('.song-item');
@@ -525,11 +509,8 @@
 
     function togglePlay() {
         if (Player.index === -1) { playSong(0); return; }
-        
-        // 啟動 Web Audio 分析
         initAudioAnalysis();
         if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
-
         if (audioPlayer.paused) audioPlayer.play(); else audioPlayer.pause();
     }
 
@@ -592,13 +573,13 @@
 
     audioPlayer.onplay = () => {
         playPauseBtn.innerText = "⏸️";
-        playPauseBtn.classList.add('playing-btn'); // [1D] 呼吸燈開
+        playPauseBtn.classList.add('playing-btn');
         playerMain.classList.remove('paused');
         vinylDisc.classList.add('playing');
     };
     audioPlayer.onpause = () => {
         playPauseBtn.innerText = "▶️";
-        playPauseBtn.classList.remove('playing-btn'); // [1D] 呼吸燈關
+        playPauseBtn.classList.remove('playing-btn');
         playerMain.classList.add('paused');
         vinylDisc.classList.remove('playing');
     };
@@ -642,6 +623,9 @@
         updateMarquee(Lang.convertText(Player.playlist[Player.index]?.title || "準備播放..."));
         updateActiveSongUI();
       }
+      
+      // 初始載入時就設定漢堡封面
+      vinylArt.style.backgroundImage = `url('${DEFAULT_COVER}')`;
     };
   </script>
 </body>
