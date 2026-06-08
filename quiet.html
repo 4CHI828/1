@@ -78,7 +78,6 @@
     .theme-dot:hover { transform: scale(1.3) rotate(15deg); }
     .dot-yellow { background: #ffcc66; } .dot-red { background: #ff8a8a; } .dot-green { background: #c2f0c2; } .dot-brown { background: #d2b48c; }
     
-    /* 語言切換按鈕樣式 */
     .lang-btn {
       padding: 4px 12px;
       border-radius: 15px;
@@ -352,33 +351,28 @@
         'zh-Hant': {
           seq: '列表循環', loop: '單曲循環', shuffle: '隨機播放',
           ready: '準備播放...', error: '歌曲失效，跳轉中...',
-          footer: '新竹奇奇828 製作 🛠️', btn: '繁體',
-          conv: { '静': '靜', '夏': '夏', '曲': '曲' } // 簡單轉換映射
+          footer: '新竹奇奇828 製作 🛠️', btn: '繁體'
         },
         'zh-Hans': {
           seq: '列表循环', loop: '单曲循环', shuffle: '随机播放',
           ready: '准备播放...', error: '歌曲失效，跳转中...',
-          footer: '新竹奇奇828 制作 🛠️', btn: '简体',
-          conv: { '靜': '静' }
+          footer: '新竹奇奇828 制作 🛠️', btn: '简体'
         }
       },
-      // 簡易的字體轉換函數 (針對歌單名稱)
+      // 精簡的字體對照表
+      convMap: {
+        '靜': '静', '單': '单', '環': '环', '曲': '曲', '製作': '制作'
+      },
       convertText(text) {
-        const target = this.current === 'zh-Hant' ? 'zh-Hant' : 'zh-Hans';
-        const map = this.dict[target].conv;
-        let result = text;
-        for (let key in map) {
-          // 如果切換到繁體，就把簡體 key 換成 繁體 value；反之亦然
-          const from = target === 'zh-Hant' ? this.dict['zh-Hans'].conv[key] || key : key;
-          const to = map[key];
-          // 此處簡化處理：直接對常用字進行替換
+        if (this.current === 'zh-Hans') {
+          let result = text;
+          for (let key in this.convMap) {
+            result = result.replace(new RegExp(key, 'g'), this.convMap[key]);
+          }
+          return result;
         }
-        // 為了精準，我們定義一個更直接的對照
-        if(target === 'zh-Hans') {
-          return text.replace(/靜/g, '静').replace(/單/g, '单').replace(/環/g, '环').replace(/曲/g, '曲');
-        } else {
-          return text.replace(/静/g, '靜').replace(/单/g, '單').replace(/环/g, '環');
-        }
+        // 繁體化 (簡易版)
+        return text.replace(/静/g, '靜').replace(/单/g, '單').replace(/环/g, '環');
       }
     };
 
@@ -397,14 +391,12 @@
       document.getElementById('btn-shuffle').innerText = d.shuffle;
       document.getElementById('footer-text').innerText = d.footer;
       
-      // 更新目前播放的標題（如果已經有歌曲）
       if (Player.index !== -1) {
         songTitleText.innerText = Lang.convertText(Player.playlist[Player.index].title);
       } else {
         songTitleText.innerText = d.ready;
       }
-      
-      buildList(); // 重新構建列表以更新繁簡
+      buildList();
     }
 
     /** 視覺效果控制 */
@@ -698,10 +690,9 @@
     window.onload = () => { 
       Visuals.initFloatingBg(); 
       
-      // 讀取保存的語言設定
       const savedLang = localStorage.getItem('preferred-lang');
       if (savedLang) Lang.current = savedLang;
-      applyLanguage(); // 執行一次語言初始化
+      applyLanguage();
 
       buildList();
       playerMain.classList.add('paused'); 
