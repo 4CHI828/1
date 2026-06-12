@@ -2,7 +2,7 @@
 <html lang="zh-Hant">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>静静在夏天🍔🎤⁰³²⁰的歌單</title>
     <style>
         /* =========================================================================
@@ -32,38 +32,30 @@
         }
 
         /* =========================================================================
-           2. 全局基礎樣式 & 極致視覺特效
+           2. 全局基礎樣式
            ========================================================================= */
         body {
             font-family: 'PingFang TC', 'Microsoft JhengHei', system-ui, sans-serif;
             background-color: var(--bg-color);
             color: var(--text-color);
-            margin: 0; padding: 20px;
+            margin: 0; padding: 15px;
             display: flex; flex-direction: column; align-items: center;
             transition: background 0.5s ease;
             overflow-x: hidden;
             min-height: 100vh;
+            box-sizing: border-box;
         }
 
-        /* 滑鼠追隨發光效果 */
         #cursor-glow {
-            position: fixed;
-            width: 300px;
-            height: 300px;
+            position: fixed; width: 300px; height: 300px;
             background: radial-gradient(circle, var(--primary-glow) 0%, transparent 70%);
-            border-radius: 50%;
-            pointer-events: none;
-            z-index: 0;
-            transform: translate(-50%, -50%);
-            transition: width 0.3s, height 0.3s;
-            will-change: top, left;
+            border-radius: 50%; pointer-events: none; z-index: 0;
+            transform: translate(-50%, -50%); will-change: top, left;
         }
 
-        /* 背景模糊光暈 (Blobs) */
         .blob {
             position: fixed; width: 300px; height: 300px;
-            background: var(--primary-glow);
-            filter: blur(80px); border-radius: 50%;
+            background: var(--primary-glow); filter: blur(80px); border-radius: 50%;
             z-index: -2; animation: moveBlob 20s infinite alternate;
         }
         .blob-1 { top: -10%; left: -10%; background: rgba(255, 118, 117, 0.3); }
@@ -99,6 +91,7 @@
             border: 1px solid var(--border-color);
             margin-bottom: 30px;
             transition: var(--transition);
+            box-sizing: border-box;
         }
 
         h1 { color: var(--primary); font-size: 28px; margin-bottom: 20px; font-weight: 800; }
@@ -128,38 +121,44 @@
         .sort-select { padding: 10px 20px; border-radius: 30px; border: 2px solid #ffeaa7; background: var(--input-bg); color: var(--text-color); cursor: pointer; }
         .random-btn { padding: 0 25px; background: var(--accent-grad); color: white; border: none; border-radius: 30px; cursor: pointer; font-weight: 600; transition: var(--transition); }
 
-        .category-tabs { display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; margin-bottom: 25px; }
+        /* Tab 優化：改為橫向捲動 */
+        .category-tabs { 
+            display: flex; 
+            flex-wrap: nowrap; 
+            gap: 10px; 
+            justify-content: flex-start; 
+            margin-bottom: 25px; 
+            overflow-x: auto; 
+            padding-bottom: 10px;
+            -webkit-overflow-scrolling: touch;
+        }
+        .category-tabs::-webkit-scrollbar { height: 4px; }
+        .category-tabs::-webkit-scrollbar-thumb { background: var(--primary); border-radius: 10px; }
+
         .tab {
             padding: 8px 16px; background: var(--bg-color); border-radius: 20px;
             cursor: pointer; font-size: 13px; border: 1px solid var(--border-color); 
             color: var(--text-color); transition: var(--transition);
+            white-space: nowrap;
         }
-        .tab.active { background: var(--primary); color: white; transform: scale(1.1); box-shadow: 0 4px 10px var(--primary-glow); }
+        .tab.active { background: var(--primary); color: white; transform: scale(1.05); box-shadow: 0 4px 10px var(--primary-glow); }
 
-        /* 表格與行進場動畫 */
+        /* 表格基礎樣式 */
         .table-wrapper { width: 100%; overflow-x: auto; }
-        table { width: 100%; border-collapse: collapse; min-width: 500px; }
+        table { width: 100%; border-collapse: collapse; }
         th { background: rgba(0,0,0,0.03); text-align: center; padding: 15px; color: #999; font-size: 14px; }
         
-        .music-row { 
-            opacity: 0; 
-            transform: translateY(15px); 
-            animation: rowSlideIn 0.4s ease forwards;
-        }
-        @keyframes rowSlideIn {
-            to { opacity: 1; transform: translateY(0); }
-        }
+        .music-row { opacity: 0; transform: translateY(15px); animation: rowSlideIn 0.4s ease forwards; }
+        @keyframes rowSlideIn { to { opacity: 1; transform: translateY(0); } }
 
         td { padding: 12px 15px; border-bottom: 1px solid var(--border-color); text-align: center; }
         tr:hover td { background: rgba(255,118,117,0.05); }
 
         .fav-btn { background: none; border: none; cursor: pointer; font-size: 20px; color: #ccc; transition: var(--transition); width: 30px; height: 30px; }
         .fav-btn.active { color: #ff4757; transform: scale(1.3); }
-        .fav-btn:active { transform: scale(0.8); }
 
         .song-link { color: var(--text-color); text-decoration: none; font-weight: 600; transition: var(--transition); }
         .song-link:hover { color: var(--primary); transform: scale(1.05); }
-
         mark { background-color: rgba(255, 118, 117, 0.3); color: inherit; border-radius: 3px; }
 
         /* 彈窗 */
@@ -169,13 +168,13 @@
             z-index: 1000; backdrop-filter: blur(15px); transition: var(--transition);
         }
         .modal-card {
-            background: var(--card-bg); padding: 50px; border-radius: 40px;
+            background: var(--card-bg); padding: 40px 20px; border-radius: 40px;
             text-align: center; animation: popUp 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
             max-width: 350px; width: 85%; box-shadow: 0 30px 60px rgba(0,0,0,0.4);
             border: 1px solid rgba(255,255,255,0.2);
         }
         @keyframes popUp { from { transform: scale(0.5); opacity: 0; } to { transform: scale(1); opacity: 1; } }
-        .random-song { font-size: 28px; font-weight: 800; color: var(--primary); margin: 20px 0; min-height: 40px; }
+        .random-song { font-size: 24px; font-weight: 800; color: var(--primary); margin: 20px 0; min-height: 40px; }
         .random-artist { font-size: 18px; margin-bottom: 35px; opacity: 0.8; }
         .modal-actions { display: flex; flex-direction: column; gap: 12px; align-items: center; }
         .close-btn { background: var(--accent-grad); color: white; border: none; padding: 15px 40px; border-radius: 30px; cursor: pointer; font-weight: 600; width: 80%; }
@@ -189,7 +188,7 @@
             box-shadow: 0 5px 15px rgba(0,0,0,0.2); transition: var(--transition);
         }
         #themeToggle { left: 30px; }
-        #langToggle { left: 30px; bottom: 95px; } /* 放在主題切換按鈕上方 */
+        #langToggle { left: 30px; bottom: 95px; }
         #backToTop { right: 30px; display: none; }
 
         .footer-stats { font-size: 14px; color: #888; display: flex; flex-direction: column; align-items: center; gap: 10px; opacity: 0.8; margin-bottom: 10px; }
@@ -197,12 +196,52 @@
         .footer-credits { font-size: 12px; color: #bbb; text-align: center; margin-bottom: 30px; opacity: 0.6; }
         .footer-credits a { color: inherit; text-decoration: none; }
 
+        /* =========================================================================
+           4. 📱 響應式優化 (Mobile Optimization)
+           ========================================================================= */
+        @media (max-width: 600px) {
+            body { padding: 10px; }
+            .container { padding: 20px 15px; border-radius: 30px; }
+            h1 { font-size: 22px; }
+            
+            /* 表格轉卡片 */
+            table, thead, tbody, th, td, tr { display: block; }
+            thead { display: none; } /* 隱藏表頭 */
+            
+            .music-row { 
+                margin-bottom: 15px; 
+                background: var(--card-bg); 
+                border: 1px solid var(--border-color); 
+                border-radius: 20px; 
+                padding: 10px; 
+                box-shadow: 0 4px 10px rgba(0,0,0,0.03);
+            }
+            .music-row td { 
+                border: none; 
+                padding: 8px; 
+                text-align: left; 
+                display: flex; 
+                align-items: center; 
+            }
+            .col-fav { justify-content: center; width: 40px; margin-right: -40px; position: absolute; right: 10px; top: 10px; }
+            .col-artist { font-size: 13px; opacity: 0.7; color: var(--text-color); }
+            .col-song { font-size: 16px; font-weight: 600; }
+            
+            .controls-row { gap: 8px; }
+            .search-wrapper { flex: 1 1 100%; } /* 搜尋框在手機端佔滿一行 */
+            .random-btn { width: 100%; margin-top: 5px; }
+            
+            .fab-btn { width: 45px; height: 45px; font-size: 18px; }
+            #themeToggle { left: 15px; }
+            #langToggle { left: 15px; bottom: 80px; }
+            #backToTop { right: 15px; }
+        }
+
         @keyframes fadeInDown { from { opacity: 0; transform: translateY(-15px); } to { opacity: 1; transform: translateY(0); } }
     </style>
 </head>
 <body id="mainBody">
 
-<!-- 極致視覺元件 -->
 <div id="cursor-glow"></div>
 <div class="blob blob-1"></div>
 <div class="blob blob-2"></div>
@@ -249,7 +288,6 @@
             </thead>
             <tbody id="musicBody"></tbody>
         </table>
-        <!-- 虛擬列表觸發器 -->
         <div id="loadMoreSentinel" style="height: 20px; width: 100%;"></div>
     </div>
 </div>
@@ -282,9 +320,7 @@
 </div>
 
 <script>
-    /* =========================================================================
-       3. 數據與常數
-       ========================================================================= */
+    /* JS 部分保持不變，但建議根據手機效能微調粒子生成 */
     const LANG_DICT = {
         'zh-Hant': {
             greetingMorning: "早安，美好的音樂時光 ☀️",
@@ -366,7 +402,7 @@
         currentArtist: "全部",
         theme: localStorage.getItem('theme') || 'light',
         lang: localStorage.getItem('preferred-lang') || 'zh-Hant',
-        displayLimit: 30, // 虛擬列表：初始顯示數量
+        displayLimit: 30,
     };
 
     const musicBody = document.getElementById('musicBody');
@@ -380,11 +416,6 @@
     const personalCountSpan = document.getElementById('personalCount');
     const cursorGlow = document.getElementById('cursor-glow');
 
-    /* =========================================================================
-       4. 核心邏輯與事件委託
-       ========================================================================= */
-
-    // 繁簡轉換函數
     function convertText(text) {
         if (!text) return "";
         if (State.lang === 'zh-Hans') {
@@ -397,8 +428,6 @@
     function applyLanguage() {
         const d = LANG_DICT[State.lang];
         document.documentElement.lang = State.lang;
-        
-        // 更新 UI 文字
         document.getElementById('mainTitle').innerText = d.mainTitle;
         document.getElementById('link-douyin').innerText = d.linkDouyin;
         document.getElementById('link-twitch').innerText = d.linkTwitch;
@@ -419,8 +448,6 @@
         document.getElementById('closeModal').innerText = d.modalClose;
         document.getElementById('retryBtn').innerText = d.modalRetry;
         document.getElementById('langToggle').innerText = d.langBtn;
-
-        // 重新生成 Tab 並渲染表格
         generateTabs();
         renderTable();
     }
@@ -431,7 +458,6 @@
         applyLanguage();
     }
 
-    // 事件委託：處理收藏按鈕點擊
     musicBody.addEventListener('click', (e) => {
         const favBtn = e.target.closest('.fav-btn');
         if (favBtn) {
@@ -497,7 +523,6 @@
         const sort = sortSelect.value;
         clearSearchBtn.style.display = term ? 'block' : 'none';
 
-        // 1. 過濾數據
         let filtered = rawMusicData.filter(item => {
             const matchesSearch = item.artist.toLowerCase().includes(term) || item.song.toLowerCase().includes(term);
             let matchesArtist = (State.currentArtist === "全部") ? true : 
@@ -507,13 +532,11 @@
             return matchesSearch && matchesArtist;
         });
 
-        // 2. 排序
         if (sort === 'song') filtered.sort((a, b) => a.song.localeCompare(b.song, State.lang));
         else if (sort === 'artist') filtered.sort((a, b) => a.artist.localeCompare(b.artist, State.lang));
 
         totalCountSpan.innerText = filtered.length;
 
-        // 3. 虛擬列表實作
         const slice = filtered.slice(0, State.displayLimit);
         const fragment = document.createDocumentFragment();
 
@@ -544,16 +567,14 @@
         musicBody.appendChild(fragment);
     }
 
-    /* =========================================================================
-       5. 極致視覺特效
-       ========================================================================= */
-
     window.addEventListener('mousemove', (e) => {
         cursorGlow.style.top = `${e.clientY}px`;
         cursorGlow.style.left = `${e.clientX}px`;
     });
 
     function initVisuals() {
+        // 手機端減少粒子生成頻率
+        const interval = window.innerWidth < 600 ? 1200 : 600;
         setInterval(() => {
             const symbols = ['🎵', '🎶', '🎤', '🍔', '✨', '💿', '🎸'];
             const p = document.createElement('div');
@@ -564,7 +585,7 @@
             p.style.animationDuration = (5 + Math.random() * 8) + 's';
             document.body.appendChild(p);
             setTimeout(() => p.remove(), 13000);
-        }, 600);
+        }, interval);
     }
 
     function fireConfetti() {
@@ -610,9 +631,6 @@
         shuffle();
     }
 
-    /* =========================================================================
-       6. 無限滾動 (虛擬列表 Lite)
-       ========================================================================= */
     const observer = new IntersectionObserver((entries) => {
         if (entries[0].isIntersecting) {
             State.displayLimit += 30; 
@@ -622,9 +640,6 @@
 
     observer.observe(document.getElementById('loadMoreSentinel'));
 
-    /* =========================================================================
-       7. 事件綁定與初始化
-       ========================================================================= */
     document.getElementById('randomBtn').addEventListener('click', startRandomDraw);
     document.getElementById('retryBtn').addEventListener('click', startRandomDraw);
     document.getElementById('closeModal').addEventListener('click', () => modalOverlay.style.display = 'none');
