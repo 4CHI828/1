@@ -43,10 +43,16 @@
         .action-btns { display: flex; gap: 5px; }
         .btn-sm { padding: 4px 8px; font-size: 12px; border-radius: 4px; border: none; cursor: pointer; color: white; }
         .btn-edit { background-color: var(--primary); }
-        .btn-del { background-color: var(--danger); }
+        .btn-del { background-color: var(--danger); } /* 🗑️ 紅色刪除按鈕樣式 */
 
         .footer { text-align: center; margin-top: 30px; color: #666; font-size: 14px; }
         .loading { text-align: center; padding: 20px; display: none; }
+
+        /* 🎵 試聽連結顏色 (藍色，支援深色模式) */
+        .listen-link { color: #007bff; font-weight: bold; text-decoration: none; font-size: 14px; transition: color 0.3s; }
+        .listen-link:hover { color: #0056b3; text-decoration: underline; }
+        body.dark-mode .listen-link { color: #4dabf7; }
+        body.dark-mode .listen-link:hover { color: #74c0fc; }
 
         /* 浮動按鈕組 */
         .fab-group { position: fixed; bottom: 30px; right: 30px; display: flex; flex-direction: column; gap: 15px; z-index: 1000; align-items: flex-end; }
@@ -74,12 +80,6 @@
         @keyframes popIn { from { transform: scale(0.8); opacity: 0; } to { transform: scale(1); opacity: 1; } }
         .modal-content .btn-listen { background-color: #ff0000; color: white; text-decoration: none; padding: 12px 24px; border-radius: 6px; display: inline-block; margin-top: 10px; font-weight: bold; }
 
-        /* 📱 手機版左滑刪除樣式 */
-        .swipe-row { position: relative; overflow: hidden; touch-action: pan-y; }
-        .swipe-content { display: flex; transition: transform 0.2s ease-out; background: var(--card-bg); }
-        .swipe-actions { position: absolute; right: 0; top: 0; bottom: 0; width: 80px; background: var(--danger); display: flex; align-items: center; justify-content: center; color: white; font-weight: bold; cursor: pointer; z-index: 1; }
-        .swiped .swipe-content { transform: translateX(-80px); }
-        
         @media (max-width: 600px) {
             .filter-bar { flex-direction: column; }
             .add-form-container { width: 90vw; right: 5vw; bottom: 100px; }
@@ -116,7 +116,7 @@
                 <th>歌手</th>
                 <th>歌曲名稱</th>
                 <th>試聽</th>
-                <th style="width: 100px;">操作</th>
+                <th style="width: 90px;">操作</th>
             </tr>
         </thead>
         <tbody id="playlistBody"></tbody>
@@ -251,7 +251,6 @@
         function applyFilters() {
             const searchTerm = document.getElementById('searchInput').value.toLowerCase().trim();
             const selectedArtist = document.getElementById('artistFilter').value;
-            const sortByClicks = document.getElementById('artistFilter').value === '__sort_clicks__'; // 預留擴充
 
             filteredSongs = allSongs.filter(item => {
                 const matchSearch = !searchTerm || item.artist.toLowerCase().includes(searchTerm) || item.song.toLowerCase().includes(searchTerm);
@@ -259,11 +258,10 @@
                 return matchSearch && matchArtist;
             });
 
-            // 如果未來要加熱門排序，可在這裡 sort
             renderPlaylist(filteredSongs);
         }
 
-        // 5. 渲染表格 (含左滑刪除支援)
+        // 5. 渲染表格 (已加回紅色 🗑️ 刪除按鈕，並將試聽改為藍色)
         function renderPlaylist(songs) {
             const tbody = document.getElementById('playlistBody');
             tbody.innerHTML = '';
@@ -276,43 +274,22 @@
 
             songs.forEach(item => {
                 const tr = document.createElement('tr');
-                tr.className = 'swipe-row';
-                
                 let displayLink = item.link || `https://www.youtube.com/results?search_query=${encodeURIComponent((item.artist||'')+' '+(item.song||''))}`;
                 const safeArtist = String(item.artist || '').replace(/'/g, "\\'");
                 const safeSong = String(item.song || '').replace(/'/g, "\\'");
+                const safeLink = String(item.link || '').replace(/'/g, "\\'");
 
                 tr.innerHTML = `
-                    <td class="swipe-actions" onclick="confirmDelete(${item.id}, '${safeArtist}', '${safeSong}')">刪除</td>
-                    <td class="swipe-content">
-                        <div style="display:flex; align-items:center; width:100%; padding:12px; gap:10px;">
-                            <span style="flex:1;">${item.artist}</span>
-                            <span style="flex:1; font-weight:bold;">${item.song}</span>
-                            <a href="${displayLink}" target="_blank" style="color:#ff0000; font-weight:bold; text-decoration:none; font-size:14px;" onclick="recordClick(${item.id})">🎵 試聽</a>
-                            <div class="action-btns">
-                                <button class="btn-sm btn-edit" onclick="editSong(${item.id}, '${safeArtist}', '${safeSong}', '${item.link.replace(/'/g, "\\'")}')">✏️</button>
-                                <button class="btn-sm btn-del" onclick="confirmDelete(${item.id}, '${safeArtist}', '${safeSong}')">🗑️</button>
-                            </div>
+                    <td>${item.artist}</td>
+                    <td style="font-weight:bold;">${item.song}</td>
+                    <td><a href="${displayLink}" target="_blank" class="listen-link" onclick="recordClick(${item.id})">🎵 試聽</a></td>
+                    <td>
+                        <div class="action-btns">
+                            <button class="btn-sm btn-edit" onclick="editSong(${item.id}, '${safeArtist}', '${safeSong}', '${safeLink}')" title="編輯">✏️</button>
+                            <button class="btn-sm btn-del" onclick="confirmDelete(${item.id}, '${safeArtist}', '${safeSong}')" title="刪除">🗑️</button>
                         </div>
                     </td>
                 `;
-                
-                // 📱 手機版左滑刪除邏輯
-                let startX = 0;
-                const content = tr.querySelector('.swipe-content');
-                tr.addEventListener('touchstart', e => { startX = e.touches[0].clientX; }, {passive: true});
-                tr.addEventListener('touchend', e => {
-                    const endX = e.changedTouches[0].clientX;
-                    if (startX - endX > 50) tr.classList.add('swiped'); // 向左滑超過 50px
-                    else if (endX - startX > 50) tr.classList.remove('swiped'); // 向右滑復原
-                }, {passive: true});
-                // 點擊其他地方關閉滑動
-                tr.addEventListener('click', e => {
-                    if (!e.target.closest('.swipe-actions') && !e.target.closest('.action-btns')) {
-                        document.querySelectorAll('.swiped').forEach(el => el.classList.remove('swiped'));
-                    }
-                });
-
                 tbody.appendChild(tr);
             });
         }
@@ -357,7 +334,6 @@
             
             const lines = input.split('\n').filter(line => line.trim() !== '');
             const songsToAdd = lines.map(line => {
-                // 支援逗號或空白分隔
                 const parts = line.includes(',') ? line.split(',') : line.split(/\s+/);
                 return { artist: parts[0].trim(), song: parts.slice(1).join(' ').trim(), link: '' };
             }).filter(s => s.artist && s.song);
@@ -392,11 +368,8 @@
             }).catch(e => alert('❌ 網路錯誤: ' + e));
         }
 
-        // 11. 刪除歌曲 (含密碼)
+        // 11. 刪除歌曲 (含密碼驗證)
         function confirmDelete(id, artist, song) {
-            // 清除左滑狀態
-            document.querySelectorAll('.swiped').forEach(el => el.classList.remove('swiped'));
-            
             const password = prompt(`⚠️ 刪除「${artist} - ${song}」需要管理員密碼：`);
             if (password !== ADMIN_PASSWORD) {
                 if (password !== null) alert("❌ 密碼錯誤，已取消！");
@@ -410,8 +383,6 @@
                 else { alert('❌ 失敗: ' + result.message); }
             }).catch(e => alert('❌ 網路錯誤: ' + e));
         }
-        // 為了相容原本的 deleteSong 呼叫
-        function deleteSong(id, artist, song) { confirmDelete(id, artist, song); }
 
         // 12. 📥 一鍵匯出 CSV
         function exportCSV() {
