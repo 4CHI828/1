@@ -47,25 +47,35 @@
         .tag-badge { display: inline-block; background-color: #e9ecef; color: #495057; font-size: 11px; padding: 2px 6px; border-radius: 10px; margin-right: 4px; margin-top: 4px; }
         body.dark-mode .tag-badge { background-color: #495057; color: #e9ecef; }
 
-        .request-section { background: var(--card-bg); padding: 20px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); margin-top: 30px; }
+        .request-section { background: var(--card-bg); padding: 20px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); margin-top: 30px; transition: box-shadow 0.3s, transform 0.3s; }
         .request-form { display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap; }
         .request-form input, .request-form textarea { flex: 1; padding: 10px; border: 1px solid var(--border); border-radius: 4px; background: var(--bg-color); color: var(--text-color); min-width: 150px; }
         .request-form textarea { width: 100%; flex: none; }
         .request-list { max-height: 300px; overflow-y: auto; }
-        .request-item { padding: 10px; border-bottom: 1px solid var(--border); font-size: 14px; }
+        .request-item { padding: 12px; border-bottom: 1px solid var(--border); font-size: 14px; position: relative; transition: background 0.2s; }
+        .request-item:hover { background-color: rgba(0,0,0,0.02); }
+        body.dark-mode .request-item:hover { background-color: rgba(255,255,255,0.05); }
         .request-item:last-child { border-bottom: none; }
         .req-header { display: flex; justify-content: space-between; color: #888; font-size: 12px; margin-bottom: 5px; }
         .req-nick { font-weight: bold; color: var(--primary); }
+        .req-del-btn { position: absolute; top: 10px; right: 10px; padding: 4px 8px; font-size: 12px; opacity: 0.6; transition: opacity 0.2s; }
+        .req-del-btn:hover { opacity: 1; }
 
         .footer { text-align: center; margin-top: 30px; color: #666; font-size: 14px; }
         .loading { text-align: center; padding: 20px; display: none; }
         .shortcut-hint { text-align: center; font-size: 12px; color: #888; margin-top: 10px; }
 
         .fab-group { position: fixed; bottom: 30px; right: 30px; display: flex; flex-direction: column; gap: 15px; z-index: 1000; align-items: flex-end; }
-        .fab-btn { background-color: var(--success); color: white; border: none; padding: 14px 24px; border-radius: 30px; font-size: 16px; font-weight: bold; box-shadow: 0 4px 15px rgba(40, 167, 69, 0.4); cursor: pointer; transition: 0.3s; display: flex; align-items: center; gap: 8px; }
+        .fab-btn { color: white; border: none; padding: 14px 24px; border-radius: 30px; font-size: 16px; font-weight: bold; box-shadow: 0 4px 15px rgba(0,0,0,0.2); cursor: pointer; transition: 0.3s; display: flex; align-items: center; gap: 8px; }
         .fab-btn:hover { transform: translateY(-2px); }
-        .fab-btn.active { background-color: var(--danger); }
-        .scroll-top-btn { background-color: var(--primary); color: white; border: none; width: 50px; height: 50px; border-radius: 50%; font-size: 20px; box-shadow: 0 4px 15px rgba(0, 123, 255, 0.4); cursor: pointer; display: none; align-items: center; justify-content: center; }
+        .fab-btn.active { background-color: var(--danger) !important; box-shadow: 0 4px 15px rgba(220, 53, 69, 0.4); }
+        .fab-btn.msg-btn { background-color: var(--primary); box-shadow: 0 4px 15px rgba(0, 123, 255, 0.4); }
+        .fab-btn.msg-btn:hover { background-color: #0056b3; }
+        .fab-btn.add-btn { background-color: var(--success); box-shadow: 0 4px 15px rgba(40, 167, 69, 0.4); }
+        .fab-btn.add-btn:hover { background-color: #218838; }
+        
+        .scroll-top-btn { background-color: #6c757d; color: white; border: none; width: 50px; height: 50px; border-radius: 50%; font-size: 20px; box-shadow: 0 4px 15px rgba(108, 117, 125, 0.4); cursor: pointer; display: none; align-items: center; justify-content: center; }
+        .scroll-top-btn:hover { background-color: #5a6268; transform: translateY(-2px); }
 
         .add-form-container { position: fixed; bottom: 110px; right: 30px; width: 380px; max-width: 90vw; background: var(--card-bg); padding: 25px; border-radius: 12px; box-shadow: 0 8px 25px rgba(0,0,0,0.2); z-index: 999; display: none; animation: slideUp 0.3s ease-out; border: 1px solid var(--border); }
         @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
@@ -133,8 +143,11 @@
     </table>
 
     <!-- 📝 點歌與留言區 -->
-    <div class="request-section">
-        <h3 style="margin-top:0;">📝 點歌與留言板</h3>
+    <div class="request-section" id="requestSection">
+        <h3 style="margin-top:0; display:flex; justify-content:space-between; align-items:center;">
+            📝 點歌與留言板 
+            <span style="font-size:12px; font-weight:normal; color:#888;">(管理員可刪除)</span>
+        </h3>
         <div class="request-form">
             <input type="text" id="reqNick" placeholder="您的暱稱 (選填)" style="max-width: 150px;">
             <textarea id="reqMessage" rows="2" placeholder="想點什麼歌？或給静静的留言..."></textarea>
@@ -142,7 +155,7 @@
         </div>
         <div id="requestList" class="request-list">
             <p style="text-align:center; color:#888;">載入留言中...</p>
-        </div this>
+        </div>
     </div>
 
     <div class="footer">
@@ -150,9 +163,11 @@
         <p>由 <a href="https://www.twitch.tv/chi828" target="_blank">新竹奇奇828</a> 協助升級製作</p>
     </div>
 
+    <!-- 🌟 右下角浮動按鈕組 (新增留言按鈕) -->
     <div class="fab-group">
         <button id="scrollTopBtn" class="scroll-top-btn" onclick="window.scrollTo({top:0, behavior:'smooth'})">⬆️</button>
-        <button id="fabBtn" class="fab-btn" onclick="toggleAddForm()">新增歌曲</button>
+        <button id="msgBtn" class="fab-btn msg-btn" onclick="scrollToRequestSection()">💬 留言</button>
+        <button id="fabBtn" class="fab-btn add-btn" onclick="toggleAddForm()">新增歌曲</button>
     </div>
 
     <div id="addFormContainer" class="add-form-container">
@@ -211,6 +226,33 @@
             }
         }
 
+        // 🌟 新增：平滑滾動到留言板並高亮聚焦
+        function scrollToRequestSection() {
+            const section = document.getElementById('requestSection');
+            if (section) {
+                // 如果新增表單是打開的，先關閉它
+                const container = document.getElementById('addFormContainer');
+                if (container.style.display === 'block') {
+                    toggleAddForm();
+                }
+
+                section.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                
+                // 短暫高亮效果
+                section.style.boxShadow = '0 0 0 4px rgba(0, 123, 255, 0.4)';
+                section.style.transform = 'scale(1.02)';
+                setTimeout(() => {
+                    section.style.boxShadow = '0 2px 5px rgba(0,0,0,0.1)';
+                    section.style.transform = 'scale(1)';
+                }, 1000);
+                
+                // 聚焦輸入框
+                setTimeout(() => {
+                    document.getElementById('reqMessage').focus();
+                }, 500);
+            }
+        }
+
         function loadPlaylist() {
             document.getElementById('loadingMsg').style.display = 'block';
             document.getElementById('playlistBody').innerHTML = '';
@@ -233,24 +275,30 @@
 
         function renderRequests(requests) {
             const list = document.getElementById('requestList');
-            if (requests.length === 0) {
-                list.innerHTML = '<p style="text-align:center; color:#888;">目前還沒有留言，快來當第一個點歌的人吧！</p>';
+            const displayRequests = requests.slice(0, 15); 
+            
+            if (displayRequests.length === 0) {
+                list.innerHTML = '<p style="text-align:center; color:#888; padding: 20px;">目前還沒有留言，快來當第一個點歌的人吧！</p>';
                 return;
             }
-            list.innerHTML = requests.map(req => `
+            
+            list.innerHTML = displayRequests.map(req => {
+                const safeNick = String(req.nickname || '').replace(/'/g, "\\'");
+                const safeMsg = String(req.message || '').replace(/'/g, "\\'");
+                return `
                 <div class="request-item">
                     <div class="req-header">
                         <span class="req-nick">${req.nickname}</span>
                         <span>${req.time}</span>
                     </div>
-                    <div>${req.message}</div>
+                    <div style="padding-right: 35px; word-break: break-word;">${req.message}</div>
+                    <button class="btn-sm btn-del req-del-btn" onclick="confirmDeleteRequest(${req.id}, '${safeNick}', '${safeMsg}')" title="刪除留言">🗑️</button>
                 </div>
-            `).join('');
+            `}).join('');
         }
 
         function updateArtistFilter() {
             const select = document.getElementById('artistFilter');
-            // 保留前兩個選項 (所有歌手, 熱門排行)
             const currentOptions = Array.from(select.options).slice(0, 2);
             select.innerHTML = '';
             currentOptions.forEach(opt => select.add(opt));
@@ -277,7 +325,6 @@
                 return matchSearch && matchArtist;
             });
 
-            // 🔥 熱門排行排序邏輯
             if (selectedArtist === '__sort_clicks__') {
                 filteredSongs.sort((a, b) => (b.clicks || 0) - (a.clicks || 0));
             }
@@ -383,6 +430,31 @@
             }).catch(e => alert('❌ 網路錯誤: ' + e));
         }
 
+        function confirmDeleteRequest(id, nickname, message) {
+            const password = prompt(`⚠️ 刪除留言需要管理員密碼：\n(留言者: ${nickname})`);
+            if (password !== ADMIN_PASSWORD) {
+                if (password !== null) alert("❌ 密碼錯誤，已取消！");
+                return;
+            }
+            if (!confirm(`確定要刪除這則留言嗎？\n內容: "${message}"\n\n此操作無法復原！`)) return;
+
+            fetch(API_URL, { 
+                method: 'POST', 
+                headers: {'Content-Type': 'text/plain'}, 
+                body: JSON.stringify({ action: 'delete_request', id: id }) 
+            })
+            .then(res => res.json())
+            .then(result => {
+                if (result.status === 'success') { 
+                    alert('✅ 留言刪除成功！'); 
+                    loadPlaylist(); 
+                } else { 
+                    alert('❌ 失敗: ' + result.message); 
+                }
+            })
+            .catch(e => alert('❌ 網路錯誤: ' + e));
+        }
+
         function submitRequest() {
             const nick = document.getElementById('reqNick').value.trim() || '匿名訪客';
             const msg = document.getElementById('reqMessage').value.trim();
@@ -396,8 +468,9 @@
                 btn.disabled = false; btn.innerText = '送出';
                 if (result.status === 'success') {
                     document.getElementById('reqMessage').value = '';
+                    document.getElementById('reqNick').value = '';
                     alert('✅ ' + result.message);
-                    loadPlaylist(); // 重新載入以更新留言列表
+                    loadPlaylist(); 
                 } else { alert('❌ 失敗: ' + result.message); }
             }).catch(e => { btn.disabled = false; btn.innerText = '送出'; alert('❌ 網路錯誤: ' + e); });
         }
@@ -419,9 +492,7 @@
             document.body.removeChild(a);
         }
 
-        // ⌨️ 鍵盤快捷鍵支援
         document.addEventListener('keydown', (e) => {
-            // 1. Ctrl/Cmd + K 或 / 聚焦搜尋框
             if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') {
                 e.preventDefault();
                 document.getElementById('searchInput').focus();
@@ -430,13 +501,11 @@
                 e.preventDefault();
                 document.getElementById('searchInput').focus();
             }
-            // 2. Esc 關閉彈窗或表單
             if (e.key === 'Escape') {
                 document.getElementById('randomModal').style.display = 'none';
                 const container = document.getElementById('addFormContainer');
                 if (container.style.display === 'block') toggleAddForm();
             }
-            // 3. N 鍵打開新增表單 (需確保不在輸入框中)
             if (e.key.toLowerCase() === 'n' && document.activeElement.tagName !== 'INPUT' && document.activeElement.tagName !== 'TEXTAREA') {
                 e.preventDefault();
                 if (document.getElementById('addFormContainer').style.display !== 'block') {
