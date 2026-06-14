@@ -2,160 +2,94 @@
 <html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>静静在夏天🍔🎤⁰³²⁰的線上歌單</title>
     
-    <!-- ========================================== -->
-    <!-- ⚙️ 設定區：請在此處修改您的系統設定 -->
-    <!-- ========================================== -->
+    <!-- ⚙️ 設定區 -->
     <script>
-        // 1. ⚠️ 請務必將下方的 'YOUR_GAS_WEB_APP_URL' 替換為您從 Google Apps Script 複製的「最新」網頁應用程式網址
-        // 範例：const API_URL = 'https://script.google.com/macros/s/AKfycbx.../exec';
         const API_URL = 'https://script.google.com/macros/s/AKfycbw7NZWJ9J_C298PdmuivaKWEUARpiZ2BuaOTwwSb_xNjM9LyjQZhDtrcSD88eoWfj_F/exec'; 
-        
-        // 2. 🔑 管理員刪除密碼 (預設為 admin789)
         const ADMIN_PASSWORD = "admin789"; 
     </script>
-    <!-- ========================================== -->
 
     <style>
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f4f4f9; color: #333; max-width: 900px; margin: 0 auto; padding: 20px; padding-bottom: 120px; scroll-behavior: smooth; }
+        :root {
+            --bg-color: #f4f4f9; --text-color: #333; --card-bg: #fff;
+            --primary: #007bff; --danger: #dc3545; --success: #28a745; --warning: #ffc107;
+            --border: #ddd;
+        }
+        /* 🌙 深色模式變數 */
+        body.dark-mode {
+            --bg-color: #1a1a1a; --text-color: #e0e0e0; --card-bg: #2d2d2d;
+            --primary: #4dabf7; --border: #444;
+        }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: var(--bg-color); color: var(--text-color); max-width: 900px; margin: 0 auto; padding: 20px; padding-bottom: 120px; scroll-behavior: smooth; transition: background 0.3s, color 0.3s; }
         h1 { text-align: center; color: #ff6b6b; margin-bottom: 10px; }
         .social-links { text-align: center; margin-bottom: 25px; }
-        .social-links a { margin: 0 8px; text-decoration: none; color: #007bff; font-weight: bold; font-size: 14px; }
-        .social-links a:hover { text-decoration: underline; }
+        .social-links a { margin: 0 8px; text-decoration: none; color: var(--primary); font-weight: bold; font-size: 14px; }
         
-        /* 控制面板樣式 */
-        .control-panel { background: #fff; padding: 20px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); margin-bottom: 20px; }
+        .control-panel { background: var(--card-bg); padding: 20px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); margin-bottom: 20px; }
         .filter-bar { display: flex; gap: 10px; margin-bottom: 15px; flex-wrap: wrap; }
-        .filter-bar input, .filter-bar select { flex: 1; padding: 10px; border: 1px solid #ddd; border-radius: 4px; font-size: 14px; min-width: 150px; }
-        .btn-random { background-color: #ffc107; color: #333; font-weight: bold; border: none; padding: 10px 20px; border-radius: 4px; cursor: pointer; transition: 0.3s; white-space: nowrap; }
+        .filter-bar input, .filter-bar select { flex: 1; padding: 10px; border: 1px solid var(--border); border-radius: 4px; font-size: 14px; min-width: 120px; background: var(--card-bg); color: var(--text-color); }
+        .btn { border: none; padding: 10px 15px; border-radius: 4px; cursor: pointer; font-weight: bold; transition: 0.3s; white-space: nowrap; font-size: 14px; }
+        .btn-random { background-color: var(--warning); color: #333; }
         .btn-random:hover { background-color: #e0a800; }
-        
-        /* 表格樣式 */
-        table { width: 100%; border-collapse: collapse; background: #fff; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
-        th, td { padding: 12px; text-align: left; border-bottom: 1px solid #ddd; }
-        th { background-color: #007bff; color: white; }
-        .delete-btn { background-color: #dc3545; color: white; border: none; padding: 6px 12px; border-radius: 4px; font-size: 14px; cursor: pointer; }
-        .delete-btn:hover { background-color: #c82333; }
-        
+        .btn-export { background-color: var(--success); color: white; }
+        .btn-export:hover { background-color: #218838; }
+        .btn-theme { background-color: var(--card-bg); border: 1px solid var(--border); color: var(--text-color); font-size: 18px; padding: 8px 12px; }
+
+        table { width: 100%; border-collapse: collapse; background: var(--card-bg); border-radius: 8px; overflow: hidden; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        th, td { padding: 12px; text-align: left; border-bottom: 1px solid var(--border); }
+        th { background-color: var(--primary); color: white; }
+        .action-btns { display: flex; gap: 5px; }
+        .btn-sm { padding: 4px 8px; font-size: 12px; border-radius: 4px; border: none; cursor: pointer; color: white; }
+        .btn-edit { background-color: var(--primary); }
+        .btn-del { background-color: var(--danger); }
+
         .footer { text-align: center; margin-top: 30px; color: #666; font-size: 14px; }
-        .loading { text-align: center; color: #666; font-style: italic; display: none; padding: 20px; }
-        
-        /* 🌟 浮動按鈕組樣式 (右下角) */
-        .fab-group {
-            position: fixed;
-            bottom: 30px;
-            right: 30px;
-            display: flex;
-            flex-direction: column;
-            gap: 15px;
-            z-index: 1000;
-            align-items: flex-end;
-        }
+        .loading { text-align: center; padding: 20px; display: none; }
 
-        .fab-btn {
-            background-color: #28a745;
-            color: white;
-            border: none;
-            padding: 14px 24px;
-            border-radius: 30px; /* 膠囊形狀 */
-            font-size: 16px;
-            font-weight: bold;
-            box-shadow: 0 4px 15px rgba(40, 167, 69, 0.4);
-            cursor: pointer;
-            transition: all 0.3s ease;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-        .fab-btn:hover { background-color: #218838; transform: translateY(-2px); }
-        .fab-btn.active { background-color: #dc3545; box-shadow: 0 4px 15px rgba(220, 53, 69, 0.4); }
+        /* 浮動按鈕組 */
+        .fab-group { position: fixed; bottom: 30px; right: 30px; display: flex; flex-direction: column; gap: 15px; z-index: 1000; align-items: flex-end; }
+        .fab-btn { background-color: var(--success); color: white; border: none; padding: 14px 24px; border-radius: 30px; font-size: 16px; font-weight: bold; box-shadow: 0 4px 15px rgba(40, 167, 69, 0.4); cursor: pointer; transition: 0.3s; display: flex; align-items: center; gap: 8px; }
+        .fab-btn:hover { transform: translateY(-2px); }
+        .fab-btn.active { background-color: var(--danger); }
+        .scroll-top-btn { background-color: var(--primary); color: white; border: none; width: 50px; height: 50px; border-radius: 50%; font-size: 20px; box-shadow: 0 4px 15px rgba(0, 123, 255, 0.4); cursor: pointer; display: none; align-items: center; justify-content: center; }
 
-        .scroll-top-btn {
-            background-color: #007bff;
-            color: white;
-            border: none;
-            padding: 12px;
-            border-radius: 50%;
-            width: 50px;
-            height: 50px;
-            font-size: 20px;
-            box-shadow: 0 4px 15px rgba(0, 123, 255, 0.4);
-            cursor: pointer;
-            transition: all 0.3s ease;
-            display: none; /* 預設隱藏，滾動後顯示 */
-            align-items: center;
-            justify-content: center;
-        }
-        .scroll-top-btn:hover { background-color: #0056b3; transform: translateY(-2px); }
-
-        /* 🌟 展開的表單容器樣式 */
-        .add-form-container {
-            position: fixed;
-            bottom: 110px;
-            right: 30px;
-            width: 360px;
-            max-width: 90vw;
-            background: #fff;
-            padding: 25px;
-            border-radius: 12px;
-            box-shadow: 0 8px 25px rgba(0,0,0,0.2);
-            z-index: 999;
-            display: none; 
-            animation: slideUp 0.3s ease-out;
-            border: 1px solid #eee;
-        }
-
-        @keyframes slideUp {
-            from { opacity: 0; transform: translateY(20px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-
-        .form-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 20px;
-            border-bottom: 2px solid #f4f4f9;
-            padding-bottom: 10px;
-        }
-        .form-header h3 { margin: 0; font-size: 18px; color: #333; }
-        .close-form-btn {
-            background: none; border: none; font-size: 24px; cursor: pointer; color: #999;
-            padding: 0; line-height: 1; transition: 0.2s;
-        }
-        .close-form-btn:hover { color: #dc3545; }
-
+        /* 表單容器 */
+        .add-form-container { position: fixed; bottom: 110px; right: 30px; width: 380px; max-width: 90vw; background: var(--card-bg); padding: 25px; border-radius: 12px; box-shadow: 0 8px 25px rgba(0,0,0,0.2); z-index: 999; display: none; animation: slideUp 0.3s ease-out; border: 1px solid var(--border); }
+        @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        .form-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; border-bottom: 2px solid var(--bg-color); padding-bottom: 10px; }
+        .form-tabs { display: flex; gap: 10px; margin-bottom: 15px; }
+        .form-tab { flex: 1; padding: 8px; text-align: center; background: var(--bg-color); border-radius: 4px; cursor: pointer; font-size: 14px; font-weight: bold; color: var(--text-color); }
+        .form-tab.active { background: var(--primary); color: white; }
         .form-group { margin-bottom: 15px; }
-        .form-group label { display: block; margin-bottom: 6px; font-weight: bold; font-size: 14px; color: #555; }
-        .form-group input { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px; box-sizing: border-box; font-size: 15px; transition: border-color 0.3s; }
-        .form-group input:focus { border-color: #007bff; outline: none; }
-        
-        button.btn-add { 
-            background-color: #28a745; color: white; border: none; padding: 12px 15px; 
-            border-radius: 6px; cursor: pointer; font-size: 16px; font-weight: bold; 
-            transition: 0.3s; width: 100%; margin-top: 10px; 
-        }
-        button.btn-add:hover { background-color: #218838; }
-        button:disabled { background-color: #ccc; cursor: not-allowed; }
-        
-        /* 隨機選歌彈窗樣式 */
+        .form-group label { display: block; margin-bottom: 6px; font-weight: bold; font-size: 14px; }
+        .form-group input, .form-group textarea { width: 100%; padding: 10px; border: 1px solid var(--border); border-radius: 6px; box-sizing: border-box; font-size: 15px; background: var(--bg-color); color: var(--text-color); }
+        .btn-add { background-color: var(--success); color: white; border: none; padding: 12px; border-radius: 6px; cursor: pointer; font-size: 16px; font-weight: bold; width: 100%; }
+        .btn-add:disabled { background-color: #ccc; }
+
+        /* 彈窗 */
         .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 2000; justify-content: center; align-items: center; backdrop-filter: blur(3px); }
-        .modal-content { background: white; padding: 30px; border-radius: 12px; text-align: center; max-width: 400px; width: 90%; box-shadow: 0 10px 25px rgba(0,0,0,0.3); animation: popIn 0.3s ease; }
+        .modal-content { background: var(--card-bg); padding: 30px; border-radius: 12px; text-align: center; max-width: 400px; width: 90%; box-shadow: 0 10px 25px rgba(0,0,0,0.3); animation: popIn 0.3s ease; color: var(--text-color); }
         @keyframes popIn { from { transform: scale(0.8); opacity: 0; } to { transform: scale(1); opacity: 1; } }
-        .modal-content h2 { color: #ff6b6b; margin-top: 0; font-size: 24px; }
-        .modal-content .song-info { font-size: 20px; margin: 25px 0; font-weight: bold; color: #333; line-height: 1.5; }
-        .modal-content .btn-listen { background-color: #ff0000; color: white; text-decoration: none; padding: 12px 24px; border-radius: 6px; display: inline-block; margin-top: 10px; font-weight: bold; font-size: 16px; transition: 0.3s; }
-        .modal-content .btn-listen:hover { background-color: #cc0000; }
-        .modal-content .btn-close { background-color: #6c757d; color: white; border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer; margin-top: 15px; margin-left: 10px; font-size: 15px; transition: 0.3s; }
-        .modal-content .btn-close:hover { background-color: #5a6268; }
+        .modal-content .btn-listen { background-color: #ff0000; color: white; text-decoration: none; padding: 12px 24px; border-radius: 6px; display: inline-block; margin-top: 10px; font-weight: bold; }
+
+        /* 📱 手機版左滑刪除樣式 */
+        .swipe-row { position: relative; overflow: hidden; touch-action: pan-y; }
+        .swipe-content { display: flex; transition: transform 0.2s ease-out; background: var(--card-bg); }
+        .swipe-actions { position: absolute; right: 0; top: 0; bottom: 0; width: 80px; background: var(--danger); display: flex; align-items: center; justify-content: center; color: white; font-weight: bold; cursor: pointer; z-index: 1; }
+        .swiped .swipe-content { transform: translateX(-80px); }
+        
+        @media (max-width: 600px) {
+            .filter-bar { flex-direction: column; }
+            .add-form-container { width: 90vw; right: 5vw; bottom: 100px; }
+            .fab-group { bottom: 20px; right: 20px; }
+        }
     </style>
 </head>
 <body>
 
     <h1>静静在夏天🍔🎤⁰³²⁰的線上歌單</h1>
-
     <div class="social-links">
         <a href="https://v.douyin.com/mw-osadXTvk/" target="_blank">🍔 抖音</a>
         <a href="https://www.twitch.tv/jingjingzaixiatian" target="_blank">🍔 圖奇</a>
@@ -164,14 +98,13 @@
         <a href="https://www.instagram.com/jingjing24739233910/" target="_blank">🍔 IG</a>
     </div>
 
-    <!-- 🔍 搜尋與分類控制面板 -->
     <div class="control-panel">
         <div class="filter-bar">
-            <input type="text" id="searchInput" placeholder="🔍 搜尋歌手或歌曲名稱..." oninput="applyFilters()">
-            <select id="artistFilter" onchange="applyFilters()">
-                <option value="all">🎤 所有歌手</option>
-            </select>
-            <button class="btn-random" onclick="pickRandomSong()">🎲 隨機選歌</button>
+            <input type="text" id="searchInput" placeholder="🔍 搜尋歌手或歌曲..." oninput="applyFilters()">
+            <select id="artistFilter" onchange="applyFilters()"><option value="all">🎤 所有歌手</option></select>
+            <button class="btn btn-random" onclick="pickRandomSong()">🎲 隨機選歌</button>
+            <button class="btn btn-export" onclick="exportCSV()">📥 匯出 CSV</button>
+            <button class="btn btn-theme" onclick="toggleDarkMode()" id="themeBtn" title="切換深色模式">🌙</button>
         </div>
     </div>
 
@@ -182,52 +115,61 @@
             <tr>
                 <th>歌手</th>
                 <th>歌曲名稱</th>
-                <th>試聽連結</th>
-                <th style="width: 80px;">操作</th>
+                <th>試聽</th>
+                <th style="width: 100px;">操作</th>
             </tr>
         </thead>
-        <tbody id="playlistBody">
-            <!-- 歌曲將自動顯示在這裡 -->
-        </tbody>
+        <tbody id="playlistBody"></tbody>
     </table>
 
     <div class="footer">
-        <p>💖 你的造訪次數: <span id="visitCount">0</span> 次</p>
+        <p>💖 造訪次數: <span id="visitCount">0</span> 次</p>
         <p>由 <a href="https://www.twitch.tv/chi828" target="_blank">新竹奇奇828</a> 協助升級製作</p>
     </div>
 
-    <!-- 🌟 右下角浮動按鈕組 -->
+    <!-- 浮動按鈕 -->
     <div class="fab-group">
-        <button id="scrollTopBtn" class="scroll-top-btn" onclick="scrollToTop()" title="回到頂部">⬆️</button>
+        <button id="scrollTopBtn" class="scroll-top-btn" onclick="window.scrollTo({top:0, behavior:'smooth'})">⬆️</button>
         <button id="fabBtn" class="fab-btn" onclick="toggleAddForm()">新增歌曲</button>
     </div>
 
-    <!-- 🌟 展開的新增歌曲表單 -->
+    <!-- 新增/批量表單 -->
     <div id="addFormContainer" class="add-form-container">
         <div class="form-header">
-            <h3>📝 新增歌曲</h3>
-            <button class="close-form-btn" onclick="toggleAddForm()" title="關閉">✕</button>
+            <h3 style="margin:0; font-size:18px;">📝 新增歌曲</h3>
+            <button onclick="toggleAddForm()" style="background:none; border:none; font-size:24px; cursor:pointer; color:var(--text-color);">✕</button>
         </div>
-        <div class="form-group">
-            <label for="artist">歌手：</label>
-            <input type="text" id="artist" placeholder="例如：周杰倫" required>
+        <div class="form-tabs">
+            <div class="form-tab active" onclick="switchTab('single')" id="tabSingle">單首新增</div>
+            <div class="form-tab" onclick="switchTab('batch')" id="tabBatch">📋 批量新增</div>
         </div>
-        <div class="form-group">
-            <label for="song">歌曲名稱：</label>
-            <input type="text" id="song" placeholder="例如：晴天" required>
+        
+        <!-- 單首新增 -->
+        <div id="singleForm">
+            <div class="form-group"><label>歌手：</label><input type="text" id="artist" placeholder="例如：周杰倫"></div>
+            <div class="form-group"><label>歌曲名稱：</label><input type="text" id="song" placeholder="例如：晴天"></div>
+            <button id="addBtn" class="btn-add" onclick="addSong()">✨ 確認新增至雲端</button>
         </div>
-        <button id="addBtn" class="btn-add" onclick="addSong()">✨ 確認新增至雲端</button>
+
+        <!-- 批量新增 -->
+        <div id="batchForm" style="display:none;">
+            <div class="form-group">
+                <label>貼上清單 (每行一首，格式：歌手,歌曲 或 歌手 歌曲)：</label>
+                <textarea id="batchInput" rows="6" placeholder="周杰倫,晴天&#10;林俊傑 修煉愛情&#10;陳奕迅,十年"></textarea>
+            </div>
+            <button id="batchBtn" class="btn-add" onclick="batchAddSongs()">🚀 批量上傳至雲端</button>
+        </div>
     </div>
 
-    <!-- 🎲 隨機選歌彈窗 -->
-    <div id="randomModal" class="modal-overlay" onclick="closeModal(event)">
+    <!-- 隨機選歌彈窗 -->
+    <div id="randomModal" class="modal-overlay" onclick="if(event.target===this)this.style.display='none'">
         <div class="modal-content">
-            <h2>✨ 命運的選擇 ✨</h2>
-            <div class="song-info" id="randomSongInfo">載入中...</div>
+            <h2 style="color:#ff6b6b; margin-top:0;">✨ 命運的選擇 ✨</h2>
+            <div id="randomSongInfo" style="font-size:20px; margin:25px 0; font-weight:bold;"></div>
             <a id="randomSongLink" href="#" target="_blank" class="btn-listen">🎵 立即試聽</a>
-            <div>
-                <button class="btn-random" onclick="pickRandomSong()" style="margin-top: 15px; margin-right: 10px;">🎲 再抽一次</button>
-                <button class="btn-close" onclick="document.getElementById('randomModal').style.display='none'">關閉</button>
+            <div style="margin-top:15px;">
+                <button class="btn btn-random" onclick="pickRandomSong()" style="margin-right:10px;">🎲 再抽一次</button>
+                <button class="btn" style="background:#6c757d; color:white;" onclick="document.getElementById('randomModal').style.display='none'">關閉</button>
             </div>
         </div>
     </div>
@@ -235,32 +177,34 @@
     <script>
         let allSongs = []; 
         let filteredSongs = []; 
+        let isDarkMode = localStorage.getItem('darkMode') === 'true';
+        if (isDarkMode) document.body.classList.add('dark-mode');
+        document.getElementById('themeBtn').textContent = isDarkMode ? '☀️' : '🌙';
 
-        // 1. 處理造訪次數
-        let visits = localStorage.getItem('visitCount') || 0;
-        visits = parseInt(visits) + 1;
+        // 1. 造訪次數
+        let visits = parseInt(localStorage.getItem('visitCount') || 0) + 1;
         localStorage.setItem('visitCount', visits);
         document.getElementById('visitCount').innerText = visits;
 
-        // 🌟 2. 監聽滾動，控制「回到頂部」按鈕顯示
-        window.addEventListener('scroll', function() {
-            const scrollBtn = document.getElementById('scrollTopBtn');
-            if (window.scrollY > 300) {
-                scrollBtn.style.display = 'flex';
-            } else {
-                scrollBtn.style.display = 'none';
-            }
-        });
-
-        function scrollToTop() {
-            window.scrollTo({ top: 0, behavior: 'smooth' });
+        // 2. 深色模式
+        function toggleDarkMode() {
+            isDarkMode = !isDarkMode;
+            document.body.classList.toggle('dark-mode', isDarkMode);
+            localStorage.setItem('darkMode', isDarkMode);
+            document.getElementById('themeBtn').textContent = isDarkMode ? '☀️' : '🌙';
         }
 
-        // 🌟 3. 切換浮動表單顯示/隱藏 (右下角按鈕觸發)
+        // 3. 切換表單標籤
+        function switchTab(tab) {
+            document.getElementById('tabSingle').classList.toggle('active', tab === 'single');
+            document.getElementById('tabBatch').classList.toggle('active', tab === 'batch');
+            document.getElementById('singleForm').style.display = tab === 'single' ? 'block' : 'none';
+            document.getElementById('batchForm').style.display = tab === 'batch' ? 'block' : 'none';
+        }
+
         function toggleAddForm() {
             const container = document.getElementById('addFormContainer');
             const fabBtn = document.getElementById('fabBtn');
-            
             if (container.style.display === 'none' || container.style.display === '') {
                 container.style.display = 'block';
                 fabBtn.innerHTML = '關閉';
@@ -273,192 +217,225 @@
             }
         }
 
-        // 4. 載入雲端歌單
+        // 4. 載入歌單
         function loadPlaylist() {
             document.getElementById('loadingMsg').style.display = 'block';
             document.getElementById('playlistBody').innerHTML = '';
-            
             fetch(API_URL)
-                .then(response => {
-                    if (!response.ok) throw new Error(`HTTP 錯誤！狀態碼: ${response.status}`);
-                    return response.json();
-                })
+                .then(res => res.ok ? res.json() : Promise.reject(`HTTP ${res.status}`))
                 .then(result => {
                     document.getElementById('loadingMsg').style.display = 'none';
                     if (result.status === 'success') {
                         allSongs = result.data;
                         updateArtistFilter(); 
                         applyFilters(); 
-                    } else {
-                        alert('❌ 載入失敗: ' + result.message);
-                    }
+                    } else { alert('❌ 載入失敗: ' + result.message); }
                 })
                 .catch(error => {
                     document.getElementById('loadingMsg').style.display = 'none';
-                    alert('❌ 載入失敗！\n\n真實錯誤訊息: ' + error.message);
+                    alert('❌ 載入失敗！\n\n真實錯誤訊息: ' + error);
                 });
         }
 
-        // 5. 更新歌手分類下拉選單
         function updateArtistFilter() {
             const select = document.getElementById('artistFilter');
             const uniqueArtists = [...new Set(allSongs.map(item => item.artist).filter(name => name))];
             select.innerHTML = '<option value="all">🎤 所有歌手</option>';
             uniqueArtists.sort().forEach(artist => {
-                const option = document.createElement('option');
-                option.value = artist;
-                option.textContent = artist;
-                select.appendChild(option);
+                const opt = document.createElement('option');
+                opt.value = artist; opt.textContent = artist;
+                select.appendChild(opt);
             });
         }
 
-        // 6. 應用搜尋與分類過濾
         function applyFilters() {
             const searchTerm = document.getElementById('searchInput').value.toLowerCase().trim();
             const selectedArtist = document.getElementById('artistFilter').value;
+            const sortByClicks = document.getElementById('artistFilter').value === '__sort_clicks__'; // 預留擴充
 
             filteredSongs = allSongs.filter(item => {
-                const matchSearch = !searchTerm || 
-                                    item.artist.toLowerCase().includes(searchTerm) || 
-                                    item.song.toLowerCase().includes(searchTerm);
+                const matchSearch = !searchTerm || item.artist.toLowerCase().includes(searchTerm) || item.song.toLowerCase().includes(searchTerm);
                 const matchArtist = selectedArtist === 'all' || item.artist === selectedArtist;
                 return matchSearch && matchArtist;
             });
 
+            // 如果未來要加熱門排序，可在這裡 sort
             renderPlaylist(filteredSongs);
         }
 
-        // 7. 渲染表格
+        // 5. 渲染表格 (含左滑刪除支援)
         function renderPlaylist(songs) {
             const tbody = document.getElementById('playlistBody');
             tbody.innerHTML = '';
             document.getElementById('songCount').innerText = songs.length;
 
             if (!songs || songs.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="4" style="text-align:center; padding: 20px;">🎵 找不到符合條件的歌曲，試著新增或改變搜尋條件吧！</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="4" style="text-align:center; padding:20px;">🎵 找不到符合條件的歌曲</td></tr>';
                 return;
             }
 
             songs.forEach(item => {
-                const row = document.createElement('tr');
-                let displayLink = item.link;
-                if (!displayLink || displayLink.trim() === '') {
-                    const searchQuery = encodeURIComponent((item.artist || '') + ' ' + (item.song || ''));
-                    displayLink = `https://www.youtube.com/results?search_query=${searchQuery}`;
-                }
-
-                const linkHtml = `<a href="${displayLink}" target="_blank" style="color:#ff0000; font-weight:bold; text-decoration:none;">🎵 點擊試聽</a>`;
+                const tr = document.createElement('tr');
+                tr.className = 'swipe-row';
+                
+                let displayLink = item.link || `https://www.youtube.com/results?search_query=${encodeURIComponent((item.artist||'')+' '+(item.song||''))}`;
                 const safeArtist = String(item.artist || '').replace(/'/g, "\\'");
                 const safeSong = String(item.song || '').replace(/'/g, "\\'");
 
-                row.innerHTML = `
-                    <td>${item.artist}</td>
-                    <td>${item.song}</td>
-                    <td>${linkHtml}</td>
-                    <td><button class="delete-btn" onclick="deleteSong(${item.id}, '${safeArtist}', '${safeSong}')">刪除</button></td>
+                tr.innerHTML = `
+                    <td class="swipe-actions" onclick="confirmDelete(${item.id}, '${safeArtist}', '${safeSong}')">刪除</td>
+                    <td class="swipe-content">
+                        <div style="display:flex; align-items:center; width:100%; padding:12px; gap:10px;">
+                            <span style="flex:1;">${item.artist}</span>
+                            <span style="flex:1; font-weight:bold;">${item.song}</span>
+                            <a href="${displayLink}" target="_blank" style="color:#ff0000; font-weight:bold; text-decoration:none; font-size:14px;" onclick="recordClick(${item.id})">🎵 試聽</a>
+                            <div class="action-btns">
+                                <button class="btn-sm btn-edit" onclick="editSong(${item.id}, '${safeArtist}', '${safeSong}', '${item.link.replace(/'/g, "\\'")}')">✏️</button>
+                                <button class="btn-sm btn-del" onclick="confirmDelete(${item.id}, '${safeArtist}', '${safeSong}')">🗑️</button>
+                            </div>
+                        </div>
+                    </td>
                 `;
-                tbody.appendChild(row);
+                
+                // 📱 手機版左滑刪除邏輯
+                let startX = 0;
+                const content = tr.querySelector('.swipe-content');
+                tr.addEventListener('touchstart', e => { startX = e.touches[0].clientX; }, {passive: true});
+                tr.addEventListener('touchend', e => {
+                    const endX = e.changedTouches[0].clientX;
+                    if (startX - endX > 50) tr.classList.add('swiped'); // 向左滑超過 50px
+                    else if (endX - startX > 50) tr.classList.remove('swiped'); // 向右滑復原
+                }, {passive: true});
+                // 點擊其他地方關閉滑動
+                tr.addEventListener('click', e => {
+                    if (!e.target.closest('.swipe-actions') && !e.target.closest('.action-btns')) {
+                        document.querySelectorAll('.swiped').forEach(el => el.classList.remove('swiped'));
+                    }
+                });
+
+                tbody.appendChild(tr);
             });
         }
 
-        // 8. 🎲 隨機選歌功能
-        function pickRandomSong() {
-            if (filteredSongs.length === 0) {
-                alert('目前沒有歌曲可以隨機選擇喔！');
-                return;
-            }
-            
-            const randomIndex = Math.floor(Math.random() * filteredSongs.length);
-            const randomSong = filteredSongs[randomIndex];
-            
-            let displayLink = randomSong.link;
-            if (!displayLink || displayLink.trim() === '') {
-                const searchQuery = encodeURIComponent((randomSong.artist || '') + ' ' + (randomSong.song || ''));
-                displayLink = `https://www.youtube.com/results?search_query=${searchQuery}`;
-            }
+        // 6. 記錄點擊次數 (非同步，不阻塞 UI)
+        function recordClick(id) {
+            fetch(API_URL, { method: 'POST', headers: {'Content-Type': 'text/plain'}, body: JSON.stringify({ action: 'click', id: id }) }).catch(()=>{});
+        }
 
+        // 7. 隨機選歌
+        function pickRandomSong() {
+            if (filteredSongs.length === 0) return alert('目前沒有歌曲可以隨機選擇！');
+            const randomSong = filteredSongs[Math.floor(Math.random() * filteredSongs.length)];
+            let link = randomSong.link || `https://www.youtube.com/results?search_query=${encodeURIComponent((randomSong.artist||'')+' '+(randomSong.song||''))}`;
             document.getElementById('randomSongInfo').innerHTML = `🎤 ${randomSong.artist}<br>🎵 ${randomSong.song}`;
-            document.getElementById('randomSongLink').href = displayLink;
+            document.getElementById('randomSongLink').href = link;
             document.getElementById('randomModal').style.display = 'flex';
         }
 
-        function closeModal(event) {
-            if (event.target.id === 'randomModal') {
-                document.getElementById('randomModal').style.display = 'none';
-            }
-        }
-
-        // 9. 新增歌曲至雲端
+        // 8. 單首新增
         function addSong() {
             const artist = document.getElementById('artist').value.trim();
             const song = document.getElementById('song').value.trim();
-            const link = ''; // 直接留空，後端會自動生成 YouTube 搜尋連結
+            if (!artist || !song) return alert('請填寫歌手和歌曲名稱！');
+            
             const btn = document.getElementById('addBtn');
-
-            if (!artist || !song) {
-                alert('請至少填寫「歌手」和「歌曲名稱」！');
-                return;
-            }
-
-            btn.disabled = true;
-            btn.innerText = '新增中...';
-
-            fetch(API_URL, {
-                method: 'POST',
-                headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-                body: JSON.stringify({ action: 'add', artist: artist, song: song, link: link })
-            })
-            .then(response => response.json())
-            .then(result => {
-                btn.disabled = false;
-                btn.innerText = '✨ 確認新增至雲端';
+            btn.disabled = true; btn.innerText = '新增中...';
+            fetch(API_URL, { method: 'POST', headers: {'Content-Type': 'text/plain'}, body: JSON.stringify({ action: 'add', artist, song, link: '' }) })
+            .then(res => res.json()).then(result => {
+                btn.disabled = false; btn.innerText = '✨ 確認新增至雲端';
                 if (result.status === 'success') {
-                    document.getElementById('artist').value = '';
-                    document.getElementById('song').value = '';
-                    alert('✅ 歌曲已成功同步至雲端！');
-                    toggleAddForm(); // 新增成功後自動關閉表單
-                    loadPlaylist(); // 重新載入以更新分類和列表
-                } else {
-                    alert('❌ 新增失敗: ' + result.message);
-                }
-            })
-            .catch(error => {
-                btn.disabled = false;
-                btn.innerText = '✨ 確認新增至雲端';
-                alert('❌ 新增失敗！\n\n真實錯誤訊息: ' + error.message);
-            });
+                    document.getElementById('artist').value = ''; document.getElementById('song').value = '';
+                    alert('✅ 新增成功！'); toggleAddForm(); loadPlaylist();
+                } else { alert('❌ 失敗: ' + result.message); }
+            }).catch(e => { btn.disabled = false; btn.innerText = '✨ 確認新增至雲端'; alert('❌ 網路錯誤: ' + e); });
         }
 
-        // 10. 刪除雲端歌曲 (🔑 密碼驗證)
-        function deleteSong(id, artist, song) {
-            const password = prompt("⚠️ 刪除歌曲需要管理員密碼！\n請輸入密碼：");
-            if (password !== ADMIN_PASSWORD) { 
-                if (password !== null) alert("❌ 密碼錯誤，已取消刪除！");
-                return;
-            }
+        // 9. 批量新增
+        function batchAddSongs() {
+            const input = document.getElementById('batchInput').value.trim();
+            if (!input) return alert('請貼上歌曲清單！');
+            
+            const lines = input.split('\n').filter(line => line.trim() !== '');
+            const songsToAdd = lines.map(line => {
+                // 支援逗號或空白分隔
+                const parts = line.includes(',') ? line.split(',') : line.split(/\s+/);
+                return { artist: parts[0].trim(), song: parts.slice(1).join(' ').trim(), link: '' };
+            }).filter(s => s.artist && s.song);
 
-            if(!confirm(`確定要從雲端刪除「${artist} - ${song}」嗎？\n此操作無法復原！`)) return;
+            if (songsToAdd.length === 0) return alert('無法解析格式，請確保每行包含「歌手」和「歌曲名稱」');
 
-            fetch(API_URL, {
-                method: 'POST',
-                headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-                body: JSON.stringify({ action: 'delete', id: id })
-            })
-            .then(response => response.json())
-            .then(result => {
+            const btn = document.getElementById('batchBtn');
+            btn.disabled = true; btn.innerText = '上傳中...';
+            fetch(API_URL, { method: 'POST', headers: {'Content-Type': 'text/plain'}, body: JSON.stringify({ action: 'batch_add', songs: songsToAdd }) })
+            .then(res => res.json()).then(result => {
+                btn.disabled = false; btn.innerText = '🚀 批量上傳至雲端';
                 if (result.status === 'success') {
-                    alert('✅ 刪除成功！');
-                    loadPlaylist();
-                } else {
-                    alert('❌ 刪除失敗: ' + result.message);
-                }
-            })
-            .catch(error => {
-                alert('❌ 刪除失敗！\n\n真實錯誤訊息: ' + error.message);
-            });
+                    document.getElementById('batchInput').value = '';
+                    alert(`✅ ${result.message}`); toggleAddForm(); loadPlaylist();
+                } else { alert('❌ 失敗: ' + result.message); }
+            }).catch(e => { btn.disabled = false; btn.innerText = '🚀 批量上傳至雲端'; alert('❌ 網路錯誤: ' + e); });
         }
 
-        // 頁面載入時執行
+        // 10. 編輯歌曲
+        function editSong(id, currentArtist, currentSong, currentLink) {
+            const newArtist = prompt("修改歌手名稱：", currentArtist);
+            if (newArtist === null) return;
+            const newSong = prompt("修改歌曲名稱：", currentSong);
+            if (newSong === null) return;
+            
+            if (!newArtist.trim() || !newSong.trim()) return alert('歌手和歌曲名稱不能為空！');
+
+            fetch(API_URL, { method: 'POST', headers: {'Content-Type': 'text/plain'}, body: JSON.stringify({ action: 'edit', id, artist: newArtist.trim(), song: newSong.trim(), link: currentLink }) })
+            .then(res => res.json()).then(result => {
+                if (result.status === 'success') { alert('✅ 編輯成功！'); loadPlaylist(); }
+                else { alert('❌ 失敗: ' + result.message); }
+            }).catch(e => alert('❌ 網路錯誤: ' + e));
+        }
+
+        // 11. 刪除歌曲 (含密碼)
+        function confirmDelete(id, artist, song) {
+            // 清除左滑狀態
+            document.querySelectorAll('.swiped').forEach(el => el.classList.remove('swiped'));
+            
+            const password = prompt(`⚠️ 刪除「${artist} - ${song}」需要管理員密碼：`);
+            if (password !== ADMIN_PASSWORD) {
+                if (password !== null) alert("❌ 密碼錯誤，已取消！");
+                return;
+            }
+            if (!confirm("確定要刪除嗎？此操作無法復原！")) return;
+
+            fetch(API_URL, { method: 'POST', headers: {'Content-Type': 'text/plain'}, body: JSON.stringify({ action: 'delete', id }) })
+            .then(res => res.json()).then(result => {
+                if (result.status === 'success') { alert('✅ 刪除成功！'); loadPlaylist(); }
+                else { alert('❌ 失敗: ' + result.message); }
+            }).catch(e => alert('❌ 網路錯誤: ' + e));
+        }
+        // 為了相容原本的 deleteSong 呼叫
+        function deleteSong(id, artist, song) { confirmDelete(id, artist, song); }
+
+        // 12. 📥 一鍵匯出 CSV
+        function exportCSV() {
+            if (filteredSongs.length === 0) return alert('沒有資料可匯出！');
+            let csvContent = "\uFEFF歌手,歌曲名稱,YouTube連結,點擊次數\n"; // 加入 BOM 防止 Excel 亂碼
+            filteredSongs.forEach(item => {
+                const link = item.link || `https://www.youtube.com/results?search_query=${encodeURIComponent((item.artist||'')+' '+(item.song||''))}`;
+                csvContent += `"${item.artist}","${item.song}","${link}",${item.clicks}\n`;
+            });
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `静静在夏天的歌單_${new Date().toISOString().slice(0,10)}.csv`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+        }
+
+        // 監聽滾動顯示回到頂部
+        window.addEventListener('scroll', () => {
+            document.getElementById('scrollTopBtn').style.display = window.scrollY > 300 ? 'flex' : 'none';
+        });
+
         window.onload = loadPlaylist;
     </script>
 </body>
