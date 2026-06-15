@@ -163,7 +163,7 @@
         <p>由 <a href="https://www.twitch.tv/chi828" target="_blank">新竹奇奇828</a> 協助升級製作</p>
     </div>
 
-    <!-- 🌟 右下角浮動按鈕組 (新增留言按鈕) -->
+    <!-- 🌟 右下角浮動按鈕組 -->
     <div class="fab-group">
         <button id="scrollTopBtn" class="scroll-top-btn" onclick="window.scrollTo({top:0, behavior:'smooth'})">⬆️</button>
         <button id="msgBtn" class="fab-btn msg-btn" onclick="scrollToRequestSection()">💬 留言</button>
@@ -226,27 +226,20 @@
             }
         }
 
-        // 🌟 新增：平滑滾動到留言板並高亮聚焦
         function scrollToRequestSection() {
             const section = document.getElementById('requestSection');
             if (section) {
-                // 如果新增表單是打開的，先關閉它
                 const container = document.getElementById('addFormContainer');
                 if (container.style.display === 'block') {
                     toggleAddForm();
                 }
-
                 section.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                
-                // 短暫高亮效果
                 section.style.boxShadow = '0 0 0 4px rgba(0, 123, 255, 0.4)';
                 section.style.transform = 'scale(1.02)';
                 setTimeout(() => {
                     section.style.boxShadow = '0 2px 5px rgba(0,0,0,0.1)';
                     section.style.transform = 'scale(1)';
                 }, 1000);
-                
-                // 聚焦輸入框
                 setTimeout(() => {
                     document.getElementById('reqMessage').focus();
                 }, 500);
@@ -381,6 +374,12 @@
         }
 
         function addSong() {
+            const password = prompt("⚠️ 新增歌曲需要管理員密碼：\n請輸入密碼：");
+            if (password !== ADMIN_PASSWORD) {
+                if (password !== null) alert("❌ 密碼錯誤，已取消新增！");
+                return;
+            }
+
             const artist = document.getElementById('artist').value.trim();
             const song = document.getElementById('song').value.trim();
             const tags = document.getElementById('tags').value.trim();
@@ -455,6 +454,36 @@
             .catch(e => alert('❌ 網路錯誤: ' + e));
         }
 
+        function batchAddSongs() {
+            const password = prompt("⚠️ 批量新增歌曲需要管理員密碼：\n請輸入密碼：");
+            if (password !== ADMIN_PASSWORD) {
+                if (password !== null) alert("❌ 密碼錯誤，已取消新增！");
+                return;
+            }
+
+            const input = document.getElementById('batchInput').value.trim();
+            if (!input) return alert('請貼上歌曲清單！');
+            
+            const lines = input.split('\n').filter(line => line.trim() !== '');
+            const songsToAdd = lines.map(line => {
+                const parts = line.includes(',') ? line.split(',') : line.split(/\s+/);
+                return { artist: parts[0].trim(), song: parts.slice(1).join(' ').trim(), link: '' };
+            }).filter(s => s.artist && s.song);
+
+            if (songsToAdd.length === 0) return alert('無法解析格式，請確保每行包含「歌手」和「歌曲名稱」');
+
+            const btn = document.getElementById('batchBtn');
+            btn.disabled = true; btn.innerText = '上傳中...';
+            fetch(API_URL, { method: 'POST', headers: {'Content-Type': 'text/plain'}, body: JSON.stringify({ action: 'batch_add', songs: songsToAdd }) })
+            .then(res => res.json()).then(result => {
+                btn.disabled = false; btn.innerText = '🚀 批量上傳至雲端';
+                if (result.status === 'success') {
+                    document.getElementById('batchInput').value = '';
+                    alert(`✅ ${result.message}`); toggleAddForm(); loadPlaylist();
+                } else { alert('❌ 失敗: ' + result.message); }
+            }).catch(e => { btn.disabled = false; btn.innerText = '🚀 批量上傳至雲端'; alert('❌ 網路錯誤: ' + e); });
+        }
+
         function submitRequest() {
             const nick = document.getElementById('reqNick').value.trim() || '匿名訪客';
             const msg = document.getElementById('reqMessage').value.trim();
@@ -475,7 +504,14 @@
             }).catch(e => { btn.disabled = false; btn.innerText = '送出'; alert('❌ 網路錯誤: ' + e); });
         }
 
+        // 🔑 新增：匯出 CSV 密碼保護
         function exportCSV() {
+            const password = prompt("⚠️ 匯出 CSV 需要管理員密碼：\n請輸入密碼：");
+            if (password !== ADMIN_PASSWORD) {
+                if (password !== null) alert("❌ 密碼錯誤，已取消匯出！");
+                return;
+            }
+
             if (filteredSongs.length === 0) return alert('沒有資料可匯出！');
             let csvContent = "\uFEFF歌手,歌曲名稱,YouTube連結,點擊次數,標籤\n";
             filteredSongs.forEach(item => {
