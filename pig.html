@@ -1,0 +1,413 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>桥巴～的歌單</title>
+    <style>
+        :root {
+            --primary-color: #ff4d6d;
+            --bg-color: #fdf0f3;
+            --card-bg: #ffffff;
+            --text-color: #444;
+            --accent-color: #ffb3c1;
+            --douyin-color: #fe2c55;
+            --random-color: #ff85a1;
+        }
+
+        body {
+            font-family: 'PingFang SC', 'Microsoft YaHei', sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        header {
+            background: linear-gradient(135deg, #ff758f, #ff4d6d);
+            color: white;
+            width: 100%;
+            text-align: center;
+            padding: 2.5rem 0;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            margin-bottom: 2rem;
+        }
+
+        header h1 {
+            margin: 0;
+            font-size: 2rem;
+            letter-spacing: 2px;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+
+        .header-info {
+            margin-top: 10px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .total-badge {
+            background: rgba(255, 255, 255, 0.2);
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            border: 1px solid rgba(255, 255, 255, 0.4);
+            backdrop-filter: blur(5px);
+        }
+
+        .douyin-link {
+            background-color: white;
+            color: var(--douyin-color);
+            text-decoration: none;
+            padding: 8px 20px;
+            border-radius: 25px;
+            font-weight: bold;
+            font-size: 0.9rem;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .douyin-link:hover {
+            transform: scale(1.05);
+            background-color: #fff0f3;
+            box-shadow: 0 6px 15px rgba(0,0,0,0.15);
+        }
+
+        .container {
+            display: grid;
+            grid-template-columns: 1fr 350px;
+            gap: 2rem;
+            max-width: 1200px;
+            width: 95%;
+            padding-bottom: 5rem;
+        }
+
+        .song-categories {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .category-card {
+            background: var(--card-bg);
+            border-radius: 15px;
+            padding: 1.5rem;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.05);
+            transition: transform 0.3s ease;
+        }
+
+        .category-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .category-title {
+            font-size: 1.2rem;
+            font-weight: bold;
+            color: var(--primary-color);
+            margin-bottom: 1rem;
+            border-left: 4px solid var(--primary-color);
+            padding-left: 10px;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .song-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .song-item {
+            background: var(--bg-color);
+            border: 1px solid var(--accent-color);
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            user-select: none;
+        }
+
+        .song-item:hover {
+            background: var(--primary-color);
+            color: white;
+            border-color: var(--primary-color);
+        }
+
+        .song-item.selected {
+            background: var(--primary-color);
+            color: white;
+            animation: pop 0.3s ease;
+        }
+
+        @keyframes pop {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.2); }
+            100% { transform: scale(1); }
+        }
+
+        .request-panel {
+            background: var(--card-bg);
+            border-radius: 15px;
+            padding: 1.5rem;
+            height: fit-content;
+            position: sticky;
+            top: 20px;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+            border: 2px solid var(--accent-color);
+        }
+
+        .request-panel h2 {
+            font-size: 1.3rem;
+            margin-top: 0;
+            color: var(--text-color);
+            text-align: center;
+            border-bottom: 2px dashed var(--accent-color);
+            padding-bottom: 10px;
+        }
+
+        #selected-songs {
+            list-style: none;
+            padding: 0;
+            margin: 1rem 0;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        #selected-songs li {
+            padding: 8px 12px;
+            border-bottom: 1px solid #eee;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            animation: fadeIn 0.3s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateX(10px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+
+        .remove-btn {
+            color: #ff4d6d;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 1.2rem;
+        }
+
+        .btn-group {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+        }
+
+        .clear-btn, .random-btn {
+            padding: 10px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: opacity 0.2s;
+        }
+
+        .clear-btn {
+            background: #ddd;
+            color: #666;
+        }
+
+        .random-btn {
+            background: var(--primary-color);
+            color: white;
+            font-size: 1rem;
+        }
+
+        .clear-btn:hover, .random-btn:hover {
+            opacity: 0.8;
+        }
+
+        @media (max-width: 900px) {
+            .container { grid-template-columns: 1fr; }
+            .request-panel {
+                position: fixed;
+                bottom: 0;
+                left: 0;
+                width: 100%;
+                box-sizing: border-box;
+                border-radius: 20px 20px 0 0;
+                z-index: 100;
+                max-height: 40vh;
+            }
+            body { padding-bottom: 40vh; }
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1>🎵 桥巴～的歌單</h1>
+        <div class="header-info">
+            <a href="https://v.douyin.com/OJHvhGS2YKc/" target="_blank" class="douyin-link">
+                <span>🎬 前往抖音主页</span>
+            </a>
+            <div class="total-badge" id="total-songs-display">总计 0 首歌曲</div>
+        </div>
+    </header>
+
+    <div class="container">
+        <div class="song-categories" id="song-grid"></div>
+        <div class="request-panel">
+            <h2>🎤 待唱清单</h2>
+            <ul id="selected-songs">
+                <li style="color: #aaa; text-align: center; justify-content: center;">点击左侧歌曲添加...</li>
+            </ul>
+            <div class="btn-group">
+                <button class="random-btn" onclick="pickRandomSong()">🎲 隨機選歌</button>
+                <button class="clear-btn" onclick="clearAll()">清空清单</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const musicData = [
+            {
+                category: "综合/随笔",
+                songs: ["恶作剧", "爱丫爱丫", "我知道你在", "下雨天", "最后一天", "夏天的风", "达尔文 letting go", "忘词时间", "一直很安静", "此生不换", "命运", "虚构", "跑马", "奇妙能力歌", "天外来物", "爱情讯息", "烟火里的尘埃", "特别的你", "下一个", "天雨雨", "不要怕", "记得我爱你", "那些你不知道的事", "情错", "带我走", "夕阳", "夏夜后的烟火", "慢慢", "慢慢喜欢你", "想你的 365", "这条小鱼在", "去有风的地方", "走过人间", "秋风", "追梦赤子心", "爱错", "喜欢你", "指纹", "我是一只霓虹心", "跳楼机", "五月天", "你不是真正的快乐", "强强", "无与伦比的美丽", "小情歌", "爱你"]
+            },
+            {
+                category: "孙燕姿",
+                songs: ["我怀疑", "开始懂了", "遇见", "绿光", "我不能过了", "第一天", "天黑黑", "青花", "泪桥", "趁早"]
+            },
+            {
+                category: "周杰伦",
+                songs: ["晴天", "稻香", "七里香", "花海", "龙卷风", "给我一首歌的时间", "明明就", "枫", "一路向北", "告白气球", "爱的飞行日记", "最长的电影", "不能说的秘密"]
+            },
+            {
+                category: "民谣",
+                songs: ["王若若", "安和桥", "我记得", "程发", "理想", "我要你"]
+            },
+            {
+                category: "林俊杰",
+                songs: ["always online", "江南", "可惜没有如果", "愿与怒", "美人鱼", "修炼爱情", "背对背拥抱", "当你", "不潮不用花钱", "那些你很冒险的梦", "曹操", "她说", "交换余生", "飞云之下"]
+            },
+            {
+                category: "戏腔",
+                songs: ["赤伶", "须尽欢", "身骑白马", "登上观", "奉天戏", "鸳鸯戏", "探窗"]
+            },
+            {
+                category: "悲情/emo",
+                songs: ["舍得", "趁早", "晚晚", "帝国", "王与乞丐", "我走后", "水星记", "一多", "瞬间", "如此", "可以冬眠", "体面", "嘉宾", "一个人", "自由", "记得", "背对背拥抱", "给我一个理由", "忘记", "冷漠", "关键词", "在夜里跳舞"]
+            },
+            {
+                category: "新歌/推荐",
+                songs: ["仅见", "居然", "推开世界的门", "梦一虚", "走马", "奇妙能力歌", "从前说", "千千万万", "旅行的意义", "我会等", "暮色回响", "霓虹", "微风起", "人质", "你要的爱", "第57次取消发送", "阳光下的星星", "欧若拉", "最好的我", "漂洋过海来看看", "我们的爱", "空白格", "坠落", "寂寞沙洲冷", "若把你"]
+            },
+            {
+                category: "520 特辑",
+                songs: ["空白格", "不怕不怕", "如果的梦", "梦的光点", "输了你", "赢了世界又如何"]
+            }
+        ];
+
+        const songGrid = document.getElementById('song-grid');
+        const selectedList = document.getElementById('selected-songs');
+        const totalDisplay = document.getElementById('total-songs-display');
+        let requests = [];
+
+        function init() {
+            const totalSongs = musicData.reduce((sum, item) => sum + item.songs.length, 0);
+            totalDisplay.innerText = `总计 ${totalSongs} 首歌曲`;
+
+            musicData.forEach(item => {
+                const card = document.createElement('div');
+                card.className = 'category-card';
+                card.innerHTML = `
+                    <div class="category-title">
+                        ${item.category}
+                        <span style="font-size: 0.7rem; opacity: 0.6;">${item.songs.length} 首</span>
+                    </div>
+                    <div class="song-list">
+                        ${item.songs.map(song => `<div class="song-item" onclick="toggleSong(this, '${song}')">${song}</div>`).join('')}
+                    </div>
+                `;
+                songGrid.appendChild(card);
+            });
+        }
+
+        function toggleSong(element, songName) {
+            if (requests.includes(songName)) {
+                requests = requests.filter(s => s !== songName);
+                element.classList.remove('selected');
+            } else {
+                requests.push(songName);
+                element.classList.add('selected');
+            }
+            updateRequestList();
+        }
+
+        // --- 核心新功能：随机选歌 ---
+        function pickRandomSong() {
+            // 将所有类别的歌曲展平为一个一维数组
+            const allSongs = musicData.flatMap(item => item.songs);
+            
+            // 过滤掉已经在清单里的歌曲，避免重复选择
+            const availableSongs = allSongs.filter(song => !requests.includes(song));
+
+            if (availableSongs.length === 0) {
+                alert("所有歌曲都已经在清单中了！");
+                return;
+            }
+
+            // 随机选取一首
+            const randomIndex = Math.floor(Math.random() * availableSongs.length);
+            const randomSong = availableSongs[randomIndex];
+
+            // 找到该歌曲对应的 DOM 元素并触发点击效果
+            const songElements = document.querySelectorAll('.song-item');
+            songElements.forEach(el => {
+                if (el.innerText === randomSong) {
+                    toggleSong(el, randomSong);
+                    // 平滑滚动到该歌曲位置（可选）
+                    el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }
+            });
+        }
+
+        function updateRequestList() {
+            if (requests.length === 0) {
+                selectedList.innerHTML = `<li style="color: #aaa; text-align: center; justify-content: center;">点击左侧歌曲添加...</li>`;
+                return;
+            }
+            selectedList.innerHTML = requests.map((song, index) => `
+                <li>
+                    <span>${song}</span>
+                    <span class="remove-btn" onclick="removeSong(${index})">&times;</span>
+                </li>
+            `).join('');
+        }
+
+        function removeSong(index) {
+            const songName = requests[index];
+            requests.splice(index, 1);
+            document.querySelectorAll('.song-item').forEach(el => {
+                if (el.innerText === songName) el.classList.remove('selected');
+            });
+            updateRequestList();
+        }
+
+        function clearAll() {
+            requests = [];
+            document.querySelectorAll('.song-item').forEach(el => el.classList.remove('selected'));
+            updateRequestList();
+        }
+
+        init();
+    </script>
+</body>
+</html>
