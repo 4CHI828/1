@@ -245,6 +245,7 @@
       <div class="song-list-wrapper">
         <div id="song-list" class="song-list"></div>
       </div>
+
     </div>
 
     <div class="footer">
@@ -256,7 +257,7 @@
     /** 預設設定 */
     const DEFAULT_COVER = "https://img.freepik.com/premium-vector/creatively-designed-icon-burger-3d-style_142112-25251.jpg";
 
-    /** 語言管理：優化後的轉換邏輯 */
+    /** 語言管理 */
     const Lang = {
       current: 'zh-Hant',
       dict: {
@@ -273,7 +274,6 @@
           for (let key in this.convMap) { result = result.replace(new RegExp(key, 'g'), this.convMap[key]); }
           return result;
         }
-        // 簡轉繁 (簡單對應)
         return text.replace(/静/g, '靜').replace(/单/g, '單').replace(/环/g, '環').replace(/制/g, '製').replace(/作/g, '作');
       }
     };
@@ -293,14 +293,11 @@
       document.getElementById('btn-shuffle').innerText = d.shuffle;
       document.getElementById('footer-text').innerText = d.footer;
       
-      // 更新播放中的標題
       if (Player.index !== -1) { 
         updateMarquee(Lang.convert(Player.playlist[Player.index].title)); 
       } else { 
         songTitleText.innerText = d.ready; 
       }
-      
-      // 效能優化：不重建列表，僅更新文字
       refreshListText();
     }
 
@@ -328,27 +325,22 @@
     };
     window.setTheme = (t) => Visuals.setTheme(t);
 
-    /** Web Audio API 實作：含漸入漸出邏輯 */
+    /** Web Audio API */
     let audioCtx, analyser, source, gainNode, dataArray;
     function initAudioAnalysis() {
       if (audioCtx) return;
       audioCtx = new (window.AudioContext || window.webkitAudioContext)();
       analyser = audioCtx.createAnalyser();
-      gainNode = audioCtx.createGain(); // 用於漸入漸出
-      
+      gainNode = audioCtx.createGain();
       source = audioCtx.createMediaElementSource(audioPlayer);
-      
-      // 路線：Source -> GainNode (音量) -> Analyser (視覺) -> Destination (喇叭)
       source.connect(gainNode);
       gainNode.connect(analyser);
       analyser.connect(audioCtx.destination);
-      
       analyser.fftSize = 64;
       dataArray = new Uint8Array(analyser.frequencyBinCount);
       renderFrame();
     }
 
-    // 平滑調整音量函數 (Fade)
     function fadeAudio(targetVolume, duration = 0.5) {
       if (!gainNode) return;
       const now = audioCtx.currentTime;
@@ -373,11 +365,13 @@
       index: -1,
       titleInterval: null,
       playlist: [
+        { "title": "靜靜在夏天  陳粒 - 任朝暮_人聲", "src": "https://chi.xo.je/MP3/%E9%99%B3%E7%B2%92%20-%20%E4%BB%BB%E6%9C%9D%E6%9A%AE_%E4%BA%BA%E8%81%B2.flac" },
+        { "title": "靜靜在夏天 鄧麗君 - 我只在乎你_人聲", "src": "https://chi.xo.je/MP3/%E9%84%A7%E9%BA%97%E5%90%9B%20-%20%E6%88%91%E5%8F%AA%E5%9C%A8%E4%B9%8E%E4%BD%A0_%E4%BA%BA%E8%81%B2.flac" },
         { "title": "靜靜在夏天 G.E.M.鄧紫棋 - Amazing Grace_人聲", "src": "https://chi.xo.je/MUSIC/G.E.M.%E9%84%A7%E7%B4%AB%E6%A3%8B%20-%20Amazing%20Grace_%E4%BA%BA%E8%81%B2.flac" },
         { "title": "靜靜在夏天 阿刁_人聲", "src": "https://chi.xo.je/MUSIC/%E5%BC%B5%E9%9F%B6%E6%B6%B5%20-%20%E9%98%BF%E5%88%81_%E4%BA%BA%E8%81%B2.flac" },        
-{ "title": "靜靜在夏天-大魚", "src": "https://chi.xo.je/MP3/靜靜在夏天-大魚.flac" },
-{ "title": "靜靜在夏天-情歌", "src": "https://chi.xo.je/MP3/%E9%9D%9C%E9%9D%9C%E5%9C%A8%E5%A4%8F%E5%A4%A9-%E6%83%85%E6%AD%8C.flac" },
-{ "title": "靜靜在夏天-我要我們在一起", "src": "https://chi.xo.je/MP3/%E9%9D%9C%E9%9D%9C%E5%9C%A8%E5%A4%8F%E5%A4%A9-%E6%88%91%E8%A6%81%E6%88%91%E5%80%91%E5%9C%A8%E4%B8%80%E8%B5%B7.flac" },
+        { "title": "靜靜在夏天-大魚", "src": "https://chi.xo.je/MP3/靜靜在夏天-大魚.flac" },
+        { "title": "靜靜在夏天-情歌", "src": "https://chi.xo.je/MP3/%E9%9D%9C%E9%9D%9C%E5%9C%A8%E5%A4%8F%E5%A4%A9-%E6%83%85%E6%AD%8C.flac" },
+        { "title": "靜靜在夏天-我要我們在一起", "src": "https://chi.xo.je/MP3/%E9%9D%9C%E9%9D%9C%E5%9C%A8%E5%A4%8F%E5%A4%A9-%E6%88%91%E8%A6%81%E6%88%91%E5%80%91%E5%9C%A8%E4%B8%80%E8%B5%B7.flac" },
         { "title": "靜靜在夏天 煙火裡的塵埃 - StreamRecorder", "src": "http://chi.xo.je/MP3/靜靜在夏天 煙火裡的塵埃 - StreamRecorder.mp3" },
         { "title": "靜靜在夏天 煙火裡的塵埃", "src": "http://chi.xo.je/MP3/靜靜在夏天 煙火裡的塵埃.mp3" },
         { "title": "靜靜在夏天(圖奇) Opera2", "src": "http://chi.xo.je/MP3/靜靜在夏天(圖奇) Opera2.mp3" },
@@ -479,29 +473,23 @@
       return `${min}:${sec < 10 ? '0' : ''}${sec}`;
     }
 
-    /** 效能優化：僅建立一次 DOM */
     function buildList() {
       playlistContainer.innerHTML = '';
       Player.playlist.forEach((song, index) => {
         const div = document.createElement('div');
         div.className = 'song-item';
         div.style.animationDelay = `${index * 0.03}s`; 
-        
-        // 儲存原始標題於 data 屬性中
         div.setAttribute('data-original-title', song.title);
         div.setAttribute('data-index', index);
-        
         const span = document.createElement('span');
         span.className = 'song-name-span';
         div.appendChild(span);
-        
         div.onclick = () => playSong(index);
         playlistContainer.appendChild(div);
       });
       refreshListText();
     }
 
-    /** 效能優化：切換語言時僅更新文字 */
     function refreshListText() {
       const items = document.querySelectorAll('.song-item');
       items.forEach((item, idx) => {
@@ -510,7 +498,6 @@
         const song = Player.playlist[idx];
         const format = song.src.toLowerCase().endsWith('.flac') ? ' (flac)' : ' (MP3)';
         const convertedTitle = Lang.convert(originalTitle);
-        
         if (idx === Player.index) {
           item.classList.add('active');
           span.innerText = `▶️ ${idx + 1}. ${convertedTitle}${format}`;
@@ -523,30 +510,21 @@
 
     async function playSong(index) {
         if (index < 0 || index >= Player.playlist.length) return;
-        
-        // 執行漸出 (Fade Out)
         if (Player.index !== -1 && audioPlayer.currentTime > 0) {
             await fadeAudio(0, 0.4); 
         }
-
         Player.index = index;
         const song = Player.playlist[Player.index];
-        
         audioPlayer.src = song.src;
         audioPlayer.load();
-        
-        // 漸入播放 (Fade In)
         audioPlayer.play().then(() => {
-            fadeAudio(1, 0.6); // 恢復到 WebAudio 內部滿格，最終音量由 audioPlayer.volume 控制
+            fadeAudio(1, 0.6);
         }).catch(e => console.log("Autoplay blocked"));
-        
         updateMarquee(Lang.convert(song.title));
         vinylArt.style.backgroundImage = `url('${song.cover || DEFAULT_COVER}')`;
-        
         refreshListText();
         const items = document.querySelectorAll('.song-item');
         if (items[Player.index]) items[Player.index].scrollIntoView({ behavior: 'smooth', block: 'center' });
-        
         startTitleScroll(song.title);
         localStorage.setItem('last-song-index', index);
     }
@@ -653,7 +631,6 @@
       const savedLang = localStorage.getItem('preferred-lang');
       if (savedLang) Lang.current = savedLang;
       applyLanguage();
-
       const savedVol = localStorage.getItem('preferred-volume');
       if (savedVol !== null) {
         volSlider.value = savedVol;
@@ -662,7 +639,6 @@
         audioPlayer.volume = parseFloat(volSlider.value);
       }
       updateVolumeIcon(audioPlayer.volume);
-
       buildList();
       playerMain.classList.add('paused'); 
       const savedTheme = localStorage.getItem('preferred-theme');
