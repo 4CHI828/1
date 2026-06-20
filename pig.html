@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="zh-CN">
+<html lang="zh-Hant">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -16,7 +16,7 @@
         }
 
         body {
-            font-family: 'PingFang SC', 'Microsoft YaHei', sans-serif;
+            font-family: 'PingFang TC', 'Microsoft JhengHei', 'Microsoft YaHei', sans-serif;
             background-color: var(--bg-color);
             color: var(--text-color);
             margin: 0;
@@ -81,6 +81,34 @@
             box-shadow: 0 6px 15px rgba(0,0,0,0.15);
         }
 
+        /* 搜尋欄樣式 */
+        .search-wrapper {
+            width: 95%;
+            max-width: 600px;
+            margin-bottom: 2rem;
+            position: sticky;
+            top: 20px;
+            z-index: 99;
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 12px 20px;
+            font-size: 1rem;
+            border: 2px solid var(--accent-color);
+            border-radius: 30px;
+            outline: none;
+            box-sizing: border-box;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+            font-family: inherit;
+        }
+
+        .search-input:focus {
+            border-color: var(--primary-color);
+            box-shadow: 0 4px 15px rgba(255, 77, 109, 0.2);
+        }
+
         .container {
             display: grid;
             grid-template-columns: 1fr 350px;
@@ -101,7 +129,7 @@
             border-radius: 15px;
             padding: 1.5rem;
             box-shadow: 0 8px 20px rgba(0,0,0,0.05);
-            transition: transform 0.3s ease;
+            transition: transform 0.3s ease, opacity 0.3s ease;
         }
 
         .category-card:hover {
@@ -160,7 +188,7 @@
             padding: 1.5rem;
             height: fit-content;
             position: sticky;
-            top: 20px;
+            top: 80px;
             box-shadow: 0 8px 20px rgba(0,0,0,0.1);
             border: 2px solid var(--accent-color);
         }
@@ -233,6 +261,52 @@
             opacity: 0.8;
         }
 
+        footer {
+            margin: 2rem 0 3rem 0;
+            text-align: center;
+            width: 100%;
+        }
+
+        footer a {
+            text-decoration: none;
+            color: var(--text-color);
+            font-size: 0.9rem;
+            opacity: 0.6;
+            transition: all 0.3s ease;
+            padding: 5px 15px;
+            border-radius: 15px;
+        }
+
+        footer a:hover {
+            opacity: 1;
+            color: var(--primary-color);
+            background: white;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+        }
+
+        #back-to-top {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            width: 50px;
+            height: 50px;
+            background: var(--primary-color);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 1.5rem;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+            display: none;
+            z-index: 1000;
+            transition: all 0.3s ease;
+        }
+
+        #back-to-top:hover {
+            transform: scale(1.1);
+            background: #ff1f4b;
+        }
+
         @media (max-width: 900px) {
             .container { grid-template-columns: 1fr; }
             .request-panel {
@@ -246,83 +320,99 @@
                 max-height: 40vh;
             }
             body { padding-bottom: 40vh; }
+            #back-to-top {
+                bottom: 320px;
+            }
         }
     </style>
 </head>
 <body>
 
     <header>
-        <h1>🎵 桥巴～的歌單</h1>
+        <h1>🎵 橋巴～的歌單</h1>
         <div class="header-info">
             <a href="https://v.douyin.com/OJHvhGS2YKc/" target="_blank" class="douyin-link">
-                <span>🎬 前往抖音主页</span>
+                <span>🎬 前往抖音主頁</span>
             </a>
-            <div class="total-badge" id="total-songs-display">总计 0 首歌曲</div>
+            <div class="total-badge" id="total-songs-display">總計 0 首歌曲</div>
         </div>
     </header>
+
+    <div class="search-wrapper">
+        <input type="text" id="search-input" class="search-input" placeholder="🔍 搜尋歌曲名稱..." oninput="filterSongs()">
+    </div>
 
     <div class="container">
         <div class="song-categories" id="song-grid"></div>
         <div class="request-panel">
-            <h2>🎤 待唱清单</h2>
+            <h2>🎤 待唱清單</h2>
             <ul id="selected-songs">
-                <li style="color: #aaa; text-align: center; justify-content: center;">点击左侧歌曲添加...</li>
+                <li style="color: #aaa; text-align: center; justify-content: center;">點擊左側歌曲添加...</li>
             </ul>
             <div class="btn-group">
                 <button class="random-btn" onclick="pickRandomSong()">🎲 隨機選歌</button>
-                <button class="clear-btn" onclick="clearAll()">清空清单</button>
+                <button class="clear-btn" onclick="clearAll()">清空清單</button>
             </div>
         </div>
     </div>
 
+    <button id="back-to-top" onclick="scrollToTop()">↑</button>
+
+    <footer>
+        <a href="https://www.douyin.com/user/MS4wLjABAAAAamj38l-UDbYbUGcPhEdJI-rM8-Y_tAMFLy7kZAWMpJw" target="_blank">
+            新竹奇奇828 製作 🛠️
+        </a>
+    </footer>
+
     <script>
         const musicData = [
             {
-                category: "综合/随笔",
-                songs: ["恶作剧", "爱丫爱丫", "我知道你在", "下雨天", "最后一天", "夏天的风", "达尔文 letting go", "忘词时间", "一直很安静", "此生不换", "命运", "虚构", "跑马", "奇妙能力歌", "天外来物", "爱情讯息", "烟火里的尘埃", "特别的你", "下一个", "天雨雨", "不要怕", "记得我爱你", "那些你不知道的事", "情错", "带我走", "夕阳", "夏夜后的烟火", "慢慢", "慢慢喜欢你", "想你的 365", "这条小鱼在", "去有风的地方", "走过人间", "秋风", "追梦赤子心", "爱错", "喜欢你", "指纹", "我是一只霓虹心", "跳楼机", "五月天", "你不是真正的快乐", "强强", "无与伦比的美丽", "小情歌", "爱你"]
+                category: "綜合/隨筆",
+                songs: ["惡作劇", "愛丫愛丫", "我知道你在", "下雨天", "最後一天", "夏天的風", "達爾文 letting go", "忘詞時間", "一直很安靜", "此生不換", "命運", "虛構", "跑馬", "奇妙能力歌", "天外來物", "愛情訊息", "煙火裡的塵埃", "特別的你", "下一個", "天雨雨", "不要怕", "記得我愛你", "那些你不知道的事", "情錯", "帶我走", "夕陽", "夏夜後的煙火", "慢慢", "慢慢喜歡你", "想你的 365", "這條小魚在", "去有風的地方", "走過人間", "秋風", "追夢赤子心", "愛錯", "喜歡你", "指紋", "我是一隻霓虹心", "跳樓機", "五月天", "你不是真正的快樂", "強強", "無與倫比的美麗", "小情歌", "愛你"]
             },
             {
-                category: "孙燕姿",
-                songs: ["我怀疑", "开始懂了", "遇见", "绿光", "我不能过了", "第一天", "天黑黑", "青花", "泪桥", "趁早"]
+                category: "孫燕姿",
+                songs: ["我懷疑", "開始懂了", "遇見", "綠光", "我不能過了", "第一天", "天黑黑", "青花", "淚橋", "趁早"]
             },
             {
-                category: "周杰伦",
-                songs: ["晴天", "稻香", "七里香", "花海", "龙卷风", "给我一首歌的时间", "明明就", "枫", "一路向北", "告白气球", "爱的飞行日记", "最长的电影", "不能说的秘密"]
+                category: "周杰倫",
+                songs: ["晴天", "稻香", "七里香", "花海", "龍捲風", "給我一首歌的時間", "明明就", "楓", "一路向北", "告白氣球", "愛的飛行日記", "最長的電影", "不能說的秘密"]
             },
             {
-                category: "民谣",
-                songs: ["王若若", "安和桥", "我记得", "程发", "理想", "我要你"]
+                category: "民謠",
+                songs: ["王若若", "安和橋", "我記得", "程發", "理想", "我要你"]
             },
             {
-                category: "林俊杰",
-                songs: ["always online", "江南", "可惜没有如果", "愿与怒", "美人鱼", "修炼爱情", "背对背拥抱", "当你", "不潮不用花钱", "那些你很冒险的梦", "曹操", "她说", "交换余生", "飞云之下"]
+                category: "林俊傑",
+                songs: ["always online", "江南", "可惜沒有如果", "願與怒", "美人魚", "修煉愛情", "背對背擁抱", "當你", "不潮不用花錢", "那些你很冒險的夢", "曹操", "她說", "交換餘生", "飛雲之下"]
             },
             {
-                category: "戏腔",
-                songs: ["赤伶", "须尽欢", "身骑白马", "登上观", "奉天戏", "鸳鸯戏", "探窗"]
+                category: "戲腔",
+                songs: ["赤伶", "須盡歡", "身騎白馬", "登上觀", "奉天戲", "鴛鴦戲", "探窗"]
             },
             {
                 category: "悲情/emo",
-                songs: ["舍得", "趁早", "晚晚", "帝国", "王与乞丐", "我走后", "水星记", "一多", "瞬间", "如此", "可以冬眠", "体面", "嘉宾", "一个人", "自由", "记得", "背对背拥抱", "给我一个理由", "忘记", "冷漠", "关键词", "在夜里跳舞"]
+                songs: ["舍得", "趁早", "晚晚", "帝國", "王與乞丐", "我走後", "水星記", "一多", "瞬間", "如此", "可以冬眠", "體面", "嘉賓", "一個人", "自由", "記得", "背對背擁抱", "給我一個理由", "忘記", "冷漠", "關鍵詞", "在夜裡跳舞"]
             },
             {
-                category: "新歌/推荐",
-                songs: ["仅见", "居然", "推开世界的门", "梦一虚", "走马", "奇妙能力歌", "从前说", "千千万万", "旅行的意义", "我会等", "暮色回响", "霓虹", "微风起", "人质", "你要的爱", "第57次取消发送", "阳光下的星星", "欧若拉", "最好的我", "漂洋过海来看看", "我们的爱", "空白格", "坠落", "寂寞沙洲冷", "若把你"]
+                category: "新歌/推薦",
+                songs: ["僅見", "居然", "推開世界的門", "夢一虛", "走馬", "奇妙能力歌", "從前說", "千千萬萬", "旅行的意義", "我會等", "暮色回響", "霓虹", "微風起", "人質", "你要的愛", "第57次取消發送", "陽光下的星星", "歐若拉", "最好的我", "漂洋過海來看看", "我們的愛", "空白格", "墜落", "寂寞沙洲冷", "若把你"]
             },
             {
-                category: "520 特辑",
-                songs: ["空白格", "不怕不怕", "如果的梦", "梦的光点", "输了你", "赢了世界又如何"]
+                category: "520 特輯",
+                songs: ["空白格", "不怕不怕", "如果的夢", "夢的光點", "輸了你", "贏了世界又如何"]
             }
         ];
 
         const songGrid = document.getElementById('song-grid');
         const selectedList = document.getElementById('selected-songs');
         const totalDisplay = document.getElementById('total-songs-display');
+        const bttButton = document.getElementById('back-to-top');
         let requests = [];
 
         function init() {
             const totalSongs = musicData.reduce((sum, item) => sum + item.songs.length, 0);
-            totalDisplay.innerText = `总计 ${totalSongs} 首歌曲`;
+            totalDisplay.innerText = `總計 ${totalSongs} 首歌曲`;
 
             musicData.forEach(item => {
                 const card = document.createElement('div');
@@ -340,6 +430,27 @@
             });
         }
 
+        function filterSongs() {
+            const searchTerm = document.getElementById('search-input').value.toLowerCase();
+            const cards = document.querySelectorAll('.category-card');
+
+            cards.forEach(card => {
+                const items = card.querySelectorAll('.song-item');
+                let hasMatch = false;
+
+                items.forEach(item => {
+                    if (item.innerText.toLowerCase().includes(searchTerm)) {
+                        item.style.display = 'block';
+                        hasMatch = true;
+                    } else {
+                        item.style.display = 'none';
+                    }
+                });
+
+                card.style.display = hasMatch ? 'block' : 'none';
+            });
+        }
+
         function toggleSong(element, songName) {
             if (requests.includes(songName)) {
                 requests = requests.filter(s => s !== songName);
@@ -351,29 +462,22 @@
             updateRequestList();
         }
 
-        // --- 核心新功能：随机选歌 ---
         function pickRandomSong() {
-            // 将所有类别的歌曲展平为一个一维数组
             const allSongs = musicData.flatMap(item => item.songs);
-            
-            // 过滤掉已经在清单里的歌曲，避免重复选择
             const availableSongs = allSongs.filter(song => !requests.includes(song));
 
             if (availableSongs.length === 0) {
-                alert("所有歌曲都已经在清单中了！");
+                alert("所有歌曲都已經在清單中了！");
                 return;
             }
 
-            // 随机选取一首
             const randomIndex = Math.floor(Math.random() * availableSongs.length);
             const randomSong = availableSongs[randomIndex];
 
-            // 找到该歌曲对应的 DOM 元素并触发点击效果
             const songElements = document.querySelectorAll('.song-item');
             songElements.forEach(el => {
                 if (el.innerText === randomSong) {
                     toggleSong(el, randomSong);
-                    // 平滑滚动到该歌曲位置（可选）
                     el.scrollIntoView({ behavior: 'smooth', block: 'center' });
                 }
             });
@@ -381,7 +485,7 @@
 
         function updateRequestList() {
             if (requests.length === 0) {
-                selectedList.innerHTML = `<li style="color: #aaa; text-align: center; justify-content: center;">点击左侧歌曲添加...</li>`;
+                selectedList.innerHTML = `<li style="color: #aaa; text-align: center; justify-content: center;">點擊左側歌曲添加...</li>`;
                 return;
             }
             selectedList.innerHTML = requests.map((song, index) => `
@@ -405,6 +509,21 @@
             requests = [];
             document.querySelectorAll('.song-item').forEach(el => el.classList.remove('selected'));
             updateRequestList();
+        }
+
+        window.onscroll = function() {
+            if (document.body.scrollTop > 300 || document.documentElement.scrollTop > 300) {
+                bttButton.style.display = "block";
+            } else {
+                bttButton.style.display = "none";
+            }
+        };
+
+        function scrollToTop() {
+            window.scrollTo({
+                top: 0,
+                behavior: 'smooth'
+            });
         }
 
         init();
