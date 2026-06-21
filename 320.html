@@ -31,32 +31,26 @@
         .admin-badge.active { display: inline-block; }
         
         /* 🎤 待唱清單面板樣式 */
-        .queue-panel {
-            background: linear-gradient(135deg, #fff3cd 0%, #ffe69c 100%);
-            border: 2px dashed var(--warning);
-            color: #856404;
-            padding: 20px;
-            border-radius: 12px;
-            margin-bottom: 20px;
-            box-shadow: 0 4px 10px rgba(255, 193, 7, 0.2);
-            transition: all 0.3s;
-        }
-        body.dark-mode .queue-panel {
-            background: linear-gradient(135deg, #332b00 0%, #4d3f00 100%);
-            border-color: #b38f00;
-            color: #ffc107;
-        }
+        .queue-panel { background: linear-gradient(135deg, #fff3cd 0%, #ffe69c 100%); border: 2px dashed var(--warning); color: #856404; padding: 20px; border-radius: 12px; margin-bottom: 20px; box-shadow: 0 4px 10px rgba(255, 193, 7, 0.2); transition: all 0.3s; }
+        body.dark-mode .queue-panel { background: linear-gradient(135deg, #332b00 0%, #4d3f00 100%); border-color: #b38f00; color: #ffc107; }
         .queue-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; flex-wrap: wrap; gap: 10px; }
         .queue-title { font-size: 20px; font-weight: bold; display: flex; align-items: center; gap: 8px; }
         .queue-actions { display: flex; gap: 10px; }
         .btn-queue { padding: 8px 15px; border-radius: 6px; border: none; cursor: pointer; font-weight: bold; font-size: 14px; transition: 0.2s; }
         .btn-queue:hover { transform: translateY(-2px); opacity: 0.9; }
-        .btn-queue.random { background: var(--primary); color: white; }
         .btn-queue.clear { background: var(--danger); color: white; }
         .queue-list { display: flex; flex-wrap: wrap; gap: 10px; max-height: 120px; overflow-y: auto; padding-right: 5px; }
         .queue-item { background: rgba(255,255,255,0.7); padding: 6px 12px; border-radius: 20px; font-size: 14px; display: flex; align-items: center; gap: 5px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
         body.dark-mode .queue-item { background: rgba(0,0,0,0.3); color: #e0e0e0; }
         .queue-empty { text-align: center; color: #888; font-style: italic; padding: 10px; width: 100%; }
+        
+        /* ✕ 待唱清單移除按鈕 */
+        .queue-del-btn { background: none; border: none; color: #888; font-size: 14px; font-weight: bold; cursor: pointer; margin-left: 8px; padding: 2px 6px; border-radius: 50%; transition: all 0.2s; line-height: 1; }
+        .queue-del-btn:hover { color: white; background-color: var(--danger); }
+
+        /* 🖱️ 可點擊的歌曲名稱樣式 */
+        .clickable-title { cursor: pointer; transition: color 0.2s; }
+        .clickable-title:hover { color: var(--warning); text-decoration: underline; }
 
         table { width: 100%; border-collapse: collapse; background: var(--card-bg); border-radius: 8px; overflow: hidden; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
         th, td { padding: 12px; text-align: left; border-bottom: 1px solid var(--border); }
@@ -210,17 +204,16 @@
         </div>
     </div>
 
-    <!-- 🎤 待唱清單專屬面板 -->
+    <!-- 🎤 待唱清單專屬面板 (已移除隨機抽唱) -->
     <div class="queue-panel" id="queuePanel">
         <div class="queue-header">
             <div class="queue-title">🎤 待唱清單 (<span id="queueCount">0</span> 首)</div>
             <div class="queue-actions">
-                <button class="btn-queue random" onclick="randomFromQueue()">🎲 隨機抽唱</button>
                 <button class="btn-queue clear" onclick="clearQueue()">🗑️ 清空清單</button>
             </div>
         </div>
         <div id="queueList" class="queue-list">
-            <div class="queue-empty">目前沒有待唱歌曲</div>
+            <div class="queue-empty">目前沒有待唱歌曲，點擊下方歌單的「歌曲名稱」即可加入！</div>
         </div>
     </div>
 
@@ -297,7 +290,7 @@
         <div class="modal-content">
             <h2 style="color:var(--primary); margin-top:0;">📖 系統功能說明</h2>
             <ul class="help-list">
-                <li>🎤 <b>待唱清單</b>：將歌曲標記為「⏳排隊中」即可加入待唱清單。可一鍵「隨機抽唱」或「清空清單」。</li>
+                <li>🎤 <b>待唱清單</b>：直接點擊下方歌單的「歌曲名稱」即可加入待唱清單。清單中的 ✕ 可移出歌曲。</li>
                 <li>🚦 <b>直覺狀態切換</b>：點擊操作欄的按鈕組，點哪個亮哪個，整列也會跟著變色！</li>
                 <li>🔍 <b>即時搜尋與分類</b>：支援搜尋歌手、歌名、標籤，也可按狀態過濾。</li>
                 <li>🔐 <b>管理員記住我</b>：輸入密碼後可記住 24 小時。</li>
@@ -385,7 +378,7 @@
                 if (result.status === 'success') { 
                     allSongs = result.songs; 
                     renderRequests(result.requests || []); 
-                    renderQueuePanel(); // 🌟 渲染待唱清單
+                    renderQueuePanel(); 
                     updateArtistFilter(); 
                     applyFilters(); 
                 } else { showToast('❌ 載入失敗: ' + result.message, 'error'); }
@@ -396,38 +389,26 @@
             });
         }
 
-        // 🎤 渲染待唱清單面板
+        // 🎤 渲染待唱清單面板 (含 ✕ 移除按鈕)
         function renderQueuePanel() {
             const queueSongs = allSongs.filter(s => s.status === 'queued');
             document.getElementById('queueCount').innerText = queueSongs.length;
             const listEl = document.getElementById('queueList');
             
             if (queueSongs.length === 0) {
-                listEl.innerHTML = '<div class="queue-empty">目前沒有待唱歌曲，快去標記或新增吧！</div>';
+                listEl.innerHTML = '<div class="queue-empty">目前沒有待唱歌曲，點擊下方歌單的「歌曲名稱」即可加入！</div>';
                 return;
             }
             
-            listEl.innerHTML = queueSongs.map(s => `<div class="queue-item">⏳ ${s.artist} - ${s.song}</div>`).join('');
+            listEl.innerHTML = queueSongs.map(s => `
+                <div class="queue-item">
+                    ⏳ ${s.artist} - ${s.song} 
+                    <button class="queue-del-btn" onclick="removeFromQueue(${s.id})" title="移出待唱清單">✕</button>
+                </div>
+            `).join('');
         }
 
-        // 🎲 從待唱清單隨機抽唱 (直接將狀態改為 singing)
-        function randomFromQueue() {
-            const queueSongs = allSongs.filter(s => s.status === 'queued');
-            if (queueSongs.length === 0) return showToast('目前沒有待唱歌曲可以抽！', 'error');
-            
-            requireAdmin(() => {
-                const randomSong = queueSongs[Math.floor(Math.random() * queueSongs.length)];
-                fetch(API_URL, { method: 'POST', headers: {'Content-Type': 'text/plain'}, body: JSON.stringify({ action: 'update_status', id: randomSong.id, status: 'singing' }) })
-                .then(res => res.json()).then(result => { 
-                    if (result.status === 'success') { 
-                        showToast(`🎤 抽中了！正在演唱: ${randomSong.artist} - ${randomSong.song}`, 'success', 5000); 
-                        loadPlaylist(); 
-                    } else { showToast('❌ 失敗: ' + result.message, 'error'); } 
-                }).catch(e => showToast('❌ 網路錯誤: ' + e, 'error'));
-            });
-        }
-
-        // 🗑️ 清空待唱清單 (將所有 queued 狀態重置)
+        // 🗑️ 清空待唱清單
         function clearQueue() {
             requireAdmin(() => {
                 const queueSongs = allSongs.filter(s => s.status === 'queued');
@@ -438,6 +419,37 @@
                 .then(res => res.json()).then(result => { 
                     if (result.status === 'success') { 
                         showToast('🗑️ 待唱清單已清空', 'success'); 
+                        loadPlaylist(); 
+                    } else { showToast('❌ 失敗: ' + result.message, 'error'); } 
+                }).catch(e => showToast('❌ 網路錯誤: ' + e, 'error'));
+            });
+        }
+
+        // 🖱️ 點擊歌名加入待唱清單
+        function addToQueue(id, songName) {
+            requireAdmin(() => {
+                const song = allSongs.find(s => s.id === id);
+                if (song && song.status === 'queued') {
+                    showToast('這首歌已經在待唱清單裡囉！', 'info');
+                    return;
+                }
+                fetch(API_URL, { method: 'POST', headers: {'Content-Type': 'text/plain'}, body: JSON.stringify({ action: 'update_status', id: id, status: 'queued' }) })
+                .then(res => res.json()).then(result => { 
+                    if (result.status === 'success') { 
+                        showToast(`🎤 已加入待唱清單: ${songName}`, 'success'); 
+                        loadPlaylist(); 
+                    } else { showToast('❌ 失敗: ' + result.message, 'error'); } 
+                }).catch(e => showToast('❌ 網路錯誤: ' + e, 'error'));
+            });
+        }
+
+        // ✕ 從待唱清單移除
+        function removeFromQueue(id) {
+            requireAdmin(() => {
+                fetch(API_URL, { method: 'POST', headers: {'Content-Type': 'text/plain'}, body: JSON.stringify({ action: 'update_status', id: id, status: '' }) })
+                .then(res => res.json()).then(result => { 
+                    if (result.status === 'success') { 
+                        showToast('✅ 已移出待唱清單', 'info'); 
                         loadPlaylist(); 
                     } else { showToast('❌ 失敗: ' + result.message, 'error'); } 
                 }).catch(e => showToast('❌ 網路錯誤: ' + e, 'error'));
@@ -563,7 +575,11 @@
                 tr.className = rowClass;
                 tr.innerHTML = `
                     <td data-label="歌手">${item.artist}<br>${tagsHtml}</td>
-                    <td data-label="歌曲名稱"><span class="song-title">${item.song}</span></td>
+                    <td data-label="歌曲名稱">
+                        <span class="song-title clickable-title" onclick="addToQueue(${item.id}, '${safeSong}')" title="點擊加入待唱清單">
+                            ${item.song}
+                        </span>
+                    </td>
                     <td data-label="試聽"><a href="${displayLink}" target="_blank" class="listen-link" onclick="recordClick(${item.id})">🎵 試聽</a> <span style="font-size:12px; color:#888;">(${item.clicks || 0})</span></td>
                     <td data-label="狀態與操作">
                         <div class="status-group">
