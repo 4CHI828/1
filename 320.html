@@ -24,13 +24,15 @@
         .btn { border: none; padding: 10px 15px; border-radius: 4px; cursor: pointer; font-weight: bold; transition: 0.3s; white-space: nowrap; font-size: 14px; display: inline-flex; align-items: center; gap: 5px; }
         .btn-random { background-color: var(--warning); color: #333; }
         .btn-export { background-color: var(--success); color: white; }
-        .btn-theme, .btn-refresh, .btn-help, .btn-logout { background-color: var(--card-bg); border: 1px solid var(--border); color: var(--text-color); font-size: 16px; padding: 8px 12px; }
+        .btn-theme, .btn-refresh, .btn-help { background-color: var(--card-bg); border: 1px solid var(--border); color: var(--text-color); font-size: 16px; padding: 8px 12px; }
         .btn-refresh:hover { transform: rotate(180deg); transition: transform 0.5s; }
-        .btn-logout { background-color: var(--danger); color: white; border: none; font-size: 12px; padding: 4px 10px; display: none; }
+        .btn-login { background-color: var(--primary); color: white; border: none; font-size: 14px; padding: 8px 15px; }
+        .btn-login:hover { background-color: #0056b3; }
+        .btn-logout { background-color: var(--danger); color: white; border: none; font-size: 14px; padding: 8px 15px; display: none; }
+        .btn-logout:hover { background-color: #c82333; }
         .admin-badge { display: none; background: var(--warning); color: #333; padding: 4px 10px; border-radius: 12px; font-size: 12px; font-weight: bold; margin-left: 10px; }
         .admin-badge.active { display: inline-block; }
         
-        /* 🎤 待唱清單面板 */
         .queue-panel { background: linear-gradient(135deg, #fff3cd 0%, #ffe69c 100%); border: 2px dashed var(--warning); color: #856404; padding: 20px; border-radius: 12px; margin-bottom: 20px; box-shadow: 0 4px 10px rgba(255, 193, 7, 0.2); }
         body.dark-mode .queue-panel { background: linear-gradient(135deg, #332b00 0%, #4d3f00 100%); border-color: #b38f00; color: #ffc107; }
         .queue-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; flex-wrap: wrap; gap: 10px; }
@@ -40,19 +42,22 @@
         .btn-queue:hover { transform: translateY(-2px); opacity: 0.9; }
         .queue-list { display: flex; flex-direction: column; gap: 10px; max-height: 200px; overflow-y: auto; padding-right: 5px; }
         .queue-empty { text-align: center; color: #888; font-style: italic; padding: 10px; width: 100%; }
-        
-        /* 待唱清單項目樣式 (含狀態視覺回饋) */
-        .queue-item { 
-            background: rgba(255,255,255,0.8); padding: 10px 15px; border-radius: 8px; 
-            font-size: 15px; display: flex; align-items: center; gap: 10px; 
-            box-shadow: 0 2px 4px rgba(0,0,0,0.05); transition: all 0.3s;
-            border: 1px solid transparent;
-        }
+        .queue-item { background: rgba(255,255,255,0.8); padding: 10px 15px; border-radius: 8px; font-size: 15px; display: flex; align-items: center; gap: 10px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); transition: all 0.3s; border: 1px solid transparent; }
         body.dark-mode .queue-item { background: rgba(0,0,0,0.3); color: #e0e0e0; }
         .queue-item.singing { background: rgba(220, 53, 69, 0.1); border-color: var(--danger); animation: pulse-queue 1.5s infinite; }
         .queue-item.done { opacity: 0.5; text-decoration: line-through; background: rgba(40, 167, 69, 0.1); border-color: var(--success); }
         @keyframes pulse-queue { 0%, 100% { border-color: var(--danger); } 50% { border-color: transparent; } }
         
+        /* 🔢 序號樣式 */
+        .queue-index {
+            font-weight: bold;
+            color: #856404;
+            min-width: 28px;
+            font-size: 16px;
+            text-align: center;
+        }
+        body.dark-mode .queue-index { color: #ffc107; }
+
         .queue-status-btn { background: none; border: none; font-size: 18px; cursor: pointer; transition: transform 0.2s; padding: 0; }
         .queue-status-btn:hover { transform: scale(1.3); }
         .queue-text { flex: 1; font-weight: bold; }
@@ -180,11 +185,11 @@
             <button class="btn btn-refresh" onclick="location.reload()" title="重新整理">🔄</button>
             <button class="btn btn-theme" onclick="toggleDarkMode()" id="themeBtn" title="切換深色模式">🌙</button>
             <button class="btn btn-help" onclick="showHelpModal()" title="功能說明">❓</button>
-            <button class="btn btn-logout" id="logoutBtn" onclick="logoutAdmin()" title="登出管理員">登出</button>
+            <button class="btn btn-login" id="loginBtn" onclick="loginAdmin()" title="登入管理員">🔐 登入</button>
+            <button class="btn btn-logout" id="logoutBtn" onclick="logoutAdmin()" title="登出管理員">🚪 登出</button>
         </div>
     </div>
 
-    <!-- 🎤 待唱清單面板 (按加入時間排序) -->
     <div class="queue-panel" id="queuePanel">
         <div class="queue-header">
             <div class="queue-title">
@@ -206,7 +211,6 @@
         <div class="skeleton-row"><div class="skeleton"></div><div class="skeleton"></div><div class="skeleton"></div><div class="skeleton"></div></div>
     </div>
     
-    <!-- 🌟 表格已移除狀態按鈕組，更乾淨 -->
     <table id="playlistTable" style="display:none;">
         <thead><tr><th>歌手</th><th>歌曲名稱</th><th>試聽</th><th style="width: 80px;">操作</th></tr></thead>
         <tbody id="playlistBody"></tbody>
@@ -265,11 +269,10 @@
         <div class="modal-content">
             <h2 style="color:var(--primary); margin-top:0;">📖 系統功能說明</h2>
             <ul class="help-list">
-                <li>🎤 <b>待唱清單</b>：點擊下方歌單的「歌曲名稱」加入。清單會依照加入順序排列。</li>
+                <li>🎲 <b>隨機選歌</b>：抽中的歌曲會自動加入待唱清單！</li>
+                <li>🎤 <b>待唱清單</b>：點擊下方歌單的「歌曲名稱」加入。清單會依照加入順序排列並顯示序號。</li>
                 <li>🔄 <b>狀態切換</b>：在待唱清單中，點擊歌曲前面的 Emoji 可切換狀態 (⏳排隊 ➔ 🎤演唱 ➔ ✅已唱 ➔ 移出)。</li>
-                <li>🗑️ <b>移出清單</b>：點擊待唱清單右側的 ✕ 可直接移出歌曲。</li>
-                <li>🔐 <b>管理員記住我</b>：輸入密碼後可記住 24 小時。</li>
-                <li>💬 <b>互動留言板</b>：支援無限次回覆串樓！</li>
+                <li>🔐 <b>管理員登入</b>：點擊右上角「🔐 登入」輸入密碼，24小時內操作免重複輸入。</li>
             </ul>
             <button class="btn" style="background:var(--primary); color:white; padding: 10px 30px;" onclick="document.getElementById('helpModal').style.display='none'">我知道了</button>
         </div>
@@ -301,17 +304,24 @@
             if (Date.now() > tokenData.expiry) { localStorage.removeItem(ADMIN_TOKEN_KEY); return false; }
             return true;
         }
-        function setAdminToken() { localStorage.setItem(ADMIN_TOKEN_KEY, JSON.stringify({ expiry: Date.now() + ADMIN_TOKEN_DURATION })); updateAdminUI(); }
+        function setAdminToken() { localStorage.setItem(ADMIN_TOKEN_KEY, JSON.stringify({ expiry: Date.now() + ADMIN_TOKEN_DURATION })); }
+        function loginAdmin() {
+            if (isAdmin()) { showToast('您已經是管理員了！', 'info'); return; }
+            const password = prompt("⚠️ 請輸入管理員密碼：\n(登入後 24 小時內免重複輸入)");
+            if (password === ADMIN_PASSWORD) { setAdminToken(); showToast('✅ 登入成功！已進入管理員模式', 'success'); updateAdminUI(); } 
+            else if (password !== null) { showToast('❌ 密碼錯誤，登入失敗', 'error'); }
+        }
         function logoutAdmin() { localStorage.removeItem(ADMIN_TOKEN_KEY); updateAdminUI(); showToast('👋 已登出管理員模式', 'info'); }
         function updateAdminUI() {
             const isAdminMode = isAdmin();
             document.getElementById('adminBadge').classList.toggle('active', isAdminMode);
-            document.getElementById('logoutBtn').style.display = isAdminMode ? 'inline-block' : 'none';
+            document.getElementById('loginBtn').style.display = isAdminMode ? 'none' : 'inline-flex';
+            document.getElementById('logoutBtn').style.display = isAdminMode ? 'inline-flex' : 'none';
         }
         function requireAdmin(callback) {
             if (isAdmin()) { callback(); return; }
-            const password = prompt("⚠️ 此操作需要管理員密碼：\n(將記住 24 小時)");
-            if (password === ADMIN_PASSWORD) { setAdminToken(); showToast('✅ 管理員模式已啟用', 'success'); callback(); } 
+            const password = prompt("⚠️ 此操作需要管理員權限，請輸入密碼：");
+            if (password === ADMIN_PASSWORD) { setAdminToken(); showToast('✅ 登入成功！', 'success'); updateAdminUI(); callback(); } 
             else if (password !== null) { showToast('❌ 密碼錯誤', 'error'); }
         }
         updateAdminUI();
@@ -337,46 +347,27 @@
             }).catch(error => { document.getElementById('skeletonLoader').classList.remove('active'); document.getElementById('playlistTable').style.display = 'table'; showToast('❌ 載入失敗: ' + error, 'error'); });
         }
 
-        // 🎤 渲染待唱清單 (按 queueTime 升序排列)
+        // 🔢 渲染待唱清單 (含序號)
         function renderQueuePanel() {
             const queueSongs = allSongs.filter(s => s.status && s.status !== '');
-            queueSongs.sort((a, b) => (a.queueTime || 0) - (b.queueTime || 0)); // 🌟 依加入時間排序
-            
+            queueSongs.sort((a, b) => (a.queueTime || 0) - (b.queueTime || 0)); 
             document.getElementById('queueCount').innerText = queueSongs.length;
             const listEl = document.getElementById('queueList');
-            
-            if (queueSongs.length === 0) {
-                listEl.innerHTML = '<div class="queue-empty">目前沒有待唱歌曲，點擊下方歌單的「歌曲名稱」即可加入！</div>';
-                return;
-            }
-            
-            listEl.innerHTML = queueSongs.map(s => {
+            if (queueSongs.length === 0) { listEl.innerHTML = '<div class="queue-empty">目前沒有待唱歌曲，點擊下方歌單的「歌曲名稱」即可加入！</div>'; return; }
+            listEl.innerHTML = queueSongs.map((s, index) => {
                 const statusEmoji = {'queued': '⏳', 'singing': '🎤', 'done': '✅'}[s.status];
-                return `
-                    <div class="queue-item ${s.status}">
-                        <button class="queue-status-btn" onclick="cycleQueueStatus(${s.id}, '${s.status}')" title="點擊切換狀態 (排隊->演唱->已唱->移出)">${statusEmoji}</button>
-                        <span class="queue-text">${s.artist} - ${s.song}</span>
-                        <button class="queue-del-btn" onclick="removeFromQueue(${s.id})" title="直接移出清單">✕</button>
-                    </div>
-                `;
+                return `<div class="queue-item ${s.status}"><span class="queue-index">${index + 1}.</span><button class="queue-status-btn" onclick="cycleQueueStatus(${s.id}, '${s.status}')" title="點擊切換狀態">${statusEmoji}</button><span class="queue-text">${s.artist} - ${s.song}</span><button class="queue-del-btn" onclick="removeFromQueue(${s.id})" title="直接移出清單">✕</button></div>`;
             }).join('');
         }
 
-        // 🔄 循環切換狀態
         function cycleQueueStatus(id, currentStatus) {
             requireAdmin(() => {
                 let nextStatus = '';
                 if (currentStatus === 'queued') nextStatus = 'singing';
                 else if (currentStatus === 'singing') nextStatus = 'done';
                 else if (currentStatus === 'done') nextStatus = '';
-                
                 fetch(API_URL, { method: 'POST', headers: {'Content-Type': 'text/plain'}, body: JSON.stringify({ action: 'update_status', id: id, status: nextStatus }) })
-                .then(res => res.json()).then(result => { 
-                    if (result.status === 'success') { 
-                        const text = {'queued': '⏳ 排隊中', 'singing': '🎤 演唱中', 'done': '✅ 已唱過', '': '已移出清單'}[nextStatus];
-                        showToast(`✅ ${text}`); loadPlaylist(); 
-                    } else { showToast('❌ 失敗: ' + result.message, 'error'); } 
-                }).catch(e => showToast('❌ 網路錯誤: ' + e, 'error'));
+                .then(res => res.json()).then(result => { if (result.status === 'success') { const text = {'queued': '⏳ 排隊中', 'singing': '🎤 演唱中', 'done': '✅ 已唱過', '': '已移出清單'}[nextStatus]; showToast(`✅ ${text}`); loadPlaylist(); } else { showToast('❌ 失敗: ' + result.message, 'error'); } }).catch(e => showToast('❌ 網路錯誤: ' + e, 'error'));
             });
         }
 
@@ -482,7 +473,6 @@
                 const safeSong = String(item.song || '').replace(/'/g, "\\'"); 
                 const safeTags = String(item.tags || '').replace(/'/g, "\\'");
                 const tagsHtml = item.tags ? item.tags.split(',').map(t => `<span class="tag-badge">${t.trim()}</span>`).join('') : '';
-                
                 tr.innerHTML = `
                     <td data-label="歌手">${item.artist}<br>${tagsHtml}</td>
                     <td data-label="歌曲名稱"><span class="clickable-title" onclick="addToQueue(${item.id}, '${safeSong}')" title="點擊加入待唱清單">${item.song}</span></td>
@@ -499,13 +489,30 @@
         }
 
         function recordClick(id) { fetch(API_URL, { method: 'POST', headers: {'Content-Type': 'text/plain'}, body: JSON.stringify({ action: 'click', id: id }) }).catch(()=>{}); }
+        
+        // 🎲 隨機選歌 (抽中後自動加入待唱清單)
         function pickRandomSong() {
             if (filteredSongs.length === 0) return showToast('目前沒有歌曲可以隨機選擇！', 'error');
             const randomSong = filteredSongs[Math.floor(Math.random() * filteredSongs.length)];
             let link = randomSong.link || `https://www.youtube.com/results?search_query=${encodeURIComponent((randomSong.artist||'')+' '+(randomSong.song||''))}`;
             document.getElementById('randomSongInfo').innerHTML = `🎤 ${randomSong.artist}<br>🎵 ${randomSong.song}`;
-            document.getElementById('randomSongLink').href = link; document.getElementById('randomModal').style.display = 'flex';
+            document.getElementById('randomSongLink').href = link; 
+            document.getElementById('randomModal').style.display = 'flex';
+            
+            // 🌟 自動加入待唱清單
+            if (randomSong.status !== 'queued') {
+                fetch(API_URL, { method: 'POST', headers: {'Content-Type': 'text/plain'}, body: JSON.stringify({ action: 'update_status', id: randomSong.id, status: 'queued' }) })
+                .then(res => res.json()).then(result => { 
+                    if (result.status === 'success') { 
+                        showToast(`🎲 抽中！已自動加入待唱清單`, 'success'); 
+                        loadPlaylist(); 
+                    } 
+                }).catch(e => console.error(e));
+            } else {
+                showToast(`🎲 這首歌已經在待唱清單裡囉！`, 'info');
+            }
         }
+
         function addSong() {
             requireAdmin(() => {
                 const artist = document.getElementById('artist').value.trim(); const song = document.getElementById('song').value.trim(); const tags = document.getElementById('tags').value.trim();
