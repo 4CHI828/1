@@ -8,6 +8,8 @@
         const API_URL = 'https://script.google.com/macros/s/AKfycbw7NZWJ9J_C298PdmuivaKWEUARpiZ2BuaOTwwSb_xNjM9LyjQZhDtrcSD88eoWfj_F/exec'; 
         const ADMIN_PASSWORD = "admin789"; 
         const ADMIN_NAME = "静静"; 
+        const ADMIN_TOKEN_KEY = 'adminToken';
+        const ADMIN_TOKEN_DURATION = 24 * 60 * 60 * 1000; // 24 小時
     </script>
     <style>
         :root { --bg-color: #f4f4f9; --text-color: #333; --card-bg: #fff; --primary: #007bff; --danger: #dc3545; --success: #28a745; --warning: #ffc107; --border: #ddd; --reply-bg: #e8f4fd; }
@@ -22,17 +24,30 @@
         .btn { border: none; padding: 10px 15px; border-radius: 4px; cursor: pointer; font-weight: bold; transition: 0.3s; white-space: nowrap; font-size: 14px; display: inline-flex; align-items: center; gap: 5px; }
         .btn-random { background-color: var(--warning); color: #333; }
         .btn-export { background-color: var(--success); color: white; }
-        .btn-theme, .btn-refresh, .btn-help { background-color: var(--card-bg); border: 1px solid var(--border); color: var(--text-color); font-size: 16px; padding: 8px 12px; }
+        .btn-theme, .btn-refresh, .btn-help, .btn-logout { background-color: var(--card-bg); border: 1px solid var(--border); color: var(--text-color); font-size: 16px; padding: 8px 12px; }
         .btn-refresh:hover { transform: rotate(180deg); transition: transform 0.5s; }
+        .btn-logout { background-color: var(--danger); color: white; border: none; font-size: 12px; padding: 4px 10px; display: none; }
+        .admin-badge { display: none; background: var(--warning); color: #333; padding: 4px 10px; border-radius: 12px; font-size: 12px; font-weight: bold; margin-left: 10px; }
+        .admin-badge.active { display: inline-block; }
+        
+        /* 表格樣式 (電腦版) */
         table { width: 100%; border-collapse: collapse; background: var(--card-bg); border-radius: 8px; overflow: hidden; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
         th, td { padding: 12px; text-align: left; border-bottom: 1px solid var(--border); }
         th { background-color: var(--primary); color: white; }
-        .action-btns { display: flex; gap: 5px; }
+        .action-btns { display: flex; gap: 5px; flex-wrap: wrap; }
         .btn-sm { padding: 4px 8px; font-size: 12px; border-radius: 4px; border: none; cursor: pointer; color: white; }
         .btn-edit { background-color: var(--primary); }
         .btn-del { background-color: var(--danger); }
+        .btn-share { background-color: #17a2b8; }
+        .btn-status { background-color: #6c757d; font-size: 11px; padding: 4px 8px; }
+        .btn-status.queued { background-color: var(--warning); color: #333; }
+        .btn-status.singing { background-color: var(--danger); animation: pulse 1.5s infinite; }
+        .btn-status.done { background-color: var(--success); }
+        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.6; } }
+        
         .tag-badge { display: inline-block; background-color: #e9ecef; color: #495057; font-size: 11px; padding: 2px 6px; border-radius: 10px; margin-right: 4px; margin-top: 4px; }
         body.dark-mode .tag-badge { background-color: #495057; color: #e9ecef; }
+        
         .request-section { background: var(--card-bg); padding: 20px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); margin-top: 30px; }
         .request-form { display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap; }
         .request-form input, .request-form textarea { flex: 1; padding: 10px; border: 1px solid var(--border); border-radius: 4px; background: var(--bg-color); color: var(--text-color); min-width: 150px; }
@@ -64,8 +79,30 @@
         .reply-btn-group { display: flex; gap: 10px; justify-content: flex-end; }
         .btn-reply-general { background: #6c757d; color: white; padding: 6px 12px; font-size: 13px; border-radius: 4px; border: none; cursor: pointer; }
         .btn-reply-official { background: var(--warning); color: #333; padding: 6px 12px; font-size: 13px; border-radius: 4px; border: none; cursor: pointer; font-weight: bold; }
+        
         .footer { text-align: center; margin-top: 30px; color: #666; font-size: 14px; }
-        .loading { text-align: center; padding: 20px; display: none; }
+        
+        /* 💀 骨架螢幕 */
+        .skeleton { background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%); background-size: 200% 100%; animation: shimmer 1.5s infinite; border-radius: 4px; }
+        body.dark-mode .skeleton { background: linear-gradient(90deg, #2d2d2d 25%, #3d3d3d 50%, #2d2d2d 75%); background-size: 200% 100%; }
+        @keyframes shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
+        .skeleton-row { display: flex; gap: 15px; padding: 15px; border-bottom: 1px solid var(--border); }
+        .skeleton-row div:nth-child(1) { width: 25%; height: 18px; }
+        .skeleton-row div:nth-child(2) { width: 35%; height: 18px; }
+        .skeleton-row div:nth-child(3) { width: 15%; height: 18px; }
+        .skeleton-row div:nth-child(4) { width: 20%; height: 18px; }
+        .loading { display: none; }
+        .loading.active { display: block; }
+        
+        /* 🎉 Toast 通知 */
+        .toast-container { position: fixed; top: 20px; right: 20px; z-index: 9999; display: flex; flex-direction: column; gap: 10px; }
+        .toast { padding: 12px 20px; border-radius: 6px; color: white; font-size: 14px; font-weight: bold; box-shadow: 0 4px 12px rgba(0,0,0,0.15); animation: slideIn 0.3s ease; min-width: 200px; }
+        .toast.success { background-color: var(--success); }
+        .toast.error { background-color: var(--danger); }
+        .toast.info { background-color: var(--primary); }
+        @keyframes slideIn { from { transform: translateX(400px); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+        @keyframes slideOut { from { transform: translateX(0); opacity: 1; } to { transform: translateX(400px); opacity: 0; } }
+        
         .fab-group { position: fixed; bottom: 30px; right: 30px; display: flex; flex-direction: column; gap: 15px; z-index: 1000; align-items: flex-end; }
         .fab-btn { color: white; border: none; padding: 14px 24px; border-radius: 30px; font-size: 16px; font-weight: bold; box-shadow: 0 4px 15px rgba(0,0,0,0.2); cursor: pointer; transition: 0.3s; display: flex; align-items: center; gap: 8px; }
         .fab-btn:hover { transform: translateY(-2px); }
@@ -93,16 +130,29 @@
         .listen-link { color: #007bff; font-weight: bold; text-decoration: none; font-size: 14px; transition: color 0.3s; }
         .listen-link:hover { color: #0056b3; text-decoration: underline; }
         body.dark-mode .listen-link { color: #4dabf7; }
+        
+        /* 📱 手機版卡片式排版 */
         @media (max-width: 600px) {
             .filter-bar { flex-direction: column; }
             .add-form-container { width: 90vw; right: 5vw; bottom: 100px; }
             .fab-group { bottom: 20px; right: 20px; }
             .reply-del-btn { opacity: 1; }
+            
+            /* 表格轉卡片 */
+            table, thead, tbody, th, td, tr { display: block; }
+            thead tr { display: none; }
+            tr { background: var(--card-bg); margin-bottom: 15px; border-radius: 10px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); padding: 15px; border: none; }
+            td { padding: 6px 0; border: none; text-align: left !important; position: relative; }
+            td::before { content: attr(data-label); font-weight: bold; color: var(--primary); display: block; font-size: 12px; margin-bottom: 3px; }
+            td:nth-child(1) { font-size: 16px; font-weight: bold; }
+            td:nth-child(2) { font-size: 15px; color: var(--text-color); }
+            .action-btns { margin-top: 10px; justify-content: flex-start; }
+            .skeleton-row div:nth-child(1), .skeleton-row div:nth-child(2), .skeleton-row div:nth-child(3), .skeleton-row div:nth-child(4) { width: 100%; }
         }
     </style>
 </head>
 <body>
-    <h1>静静在夏天🍔🎤⁰³²⁰的線上歌單</h1>
+    <h1>静静在夏天🍔🎤⁰³²⁰的線上歌單 <span class="admin-badge" id="adminBadge">👑 管理員模式</span></h1>
     <div class="social-links">
         <a href="https://v.douyin.com/mw-osadXTvk/" target="_blank">🍔 抖音</a>
         <a href="https://www.twitch.tv/jingjingzaixiatian" target="_blank">🍔 圖奇</a>
@@ -116,24 +166,37 @@
             <select id="artistFilter" onchange="applyFilters()">
                 <option value="all">🎤 所有歌手</option>
                 <option value="__sort_clicks__">🔥 熱門排行</option>
+                <option value="__status_queued__">⏳ 排隊中</option>
+                <option value="__status_singing__">🎤 演唱中</option>
+                <option value="__status_done__">✅ 已唱過</option>
             </select>
             <button class="btn btn-random" onclick="pickRandomSong()">🎲 隨機</button>
             <button class="btn btn-export" onclick="exportCSV()">📥 匯出</button>
             <button class="btn btn-refresh" onclick="location.reload()" title="重新整理">🔄</button>
             <button class="btn btn-theme" onclick="toggleDarkMode()" id="themeBtn" title="切換深色模式">🌙</button>
             <button class="btn btn-help" onclick="showHelpModal()" title="功能說明">❓</button>
+            <button class="btn btn-logout" id="logoutBtn" onclick="logoutAdmin()" title="登出管理員">登出</button>
         </div>
     </div>
     <h3>🎵 目前歌單 (<span id="songCount">0</span> 首)</h3>
-    <p id="loadingMsg" class="loading">⏳ 正在從雲端載入歌單...</p>
-    <table id="playlistTable">
-        <thead><tr><th>歌手</th><th>歌曲名稱</th><th>試聽</th><th style="width: 90px;">操作</th></tr></thead>
+    
+    <!-- 💀 骨架螢幕 -->
+    <div id="skeletonLoader" class="loading active">
+        <div class="skeleton-row"><div class="skeleton"></div><div class="skeleton"></div><div class="skeleton"></div><div class="skeleton"></div></div>
+        <div class="skeleton-row"><div class="skeleton"></div><div class="skeleton"></div><div class="skeleton"></div><div class="skeleton"></div></div>
+        <div class="skeleton-row"><div class="skeleton"></div><div class="skeleton"></div><div class="skeleton"></div><div class="skeleton"></div></div>
+        <div class="skeleton-row"><div class="skeleton"></div><div class="skeleton"></div><div class="skeleton"></div><div class="skeleton"></div></div>
+    </div>
+    
+    <table id="playlistTable" style="display:none;">
+        <thead><tr><th>歌手</th><th>歌曲名稱</th><th>試聽</th><th style="width: 200px;">操作</th></tr></thead>
         <tbody id="playlistBody"></tbody>
     </table>
+    
     <div class="request-section" id="requestSection">
         <h3 style="margin-top:0; display:flex; justify-content:space-between; align-items:center;">
             📝 點歌與留言板 
-            <span style="font-size:12px; font-weight:normal; color:#888;">(支援無限串樓與精準刪除)</span>
+            <span style="font-size:12px; font-weight:normal; color:#888;">(支援無限串樓)</span>
         </h3>
         <div class="request-form">
             <input type="text" id="reqNick" placeholder="您的暱稱 (選填)" style="max-width: 150px;">
@@ -189,14 +252,19 @@
         <div class="modal-content">
             <h2 style="color:var(--primary); margin-top:0;">📖 系統功能說明</h2>
             <ul class="help-list">
-                <li>🔍 <b>即時搜尋與分類</b>：支援搜尋歌手、歌名或標籤，也可查看「🔥熱門排行」。</li>
+                <li>🔍 <b>即時搜尋與分類</b>：支援搜尋歌手、歌名、標籤，也可按狀態過濾（排隊中/演唱中/已唱過）。</li>
                 <li>🎲 <b>隨機選歌</b>：不知道聽什麼？讓系統幫你抽一首。</li>
-                <li>💬 <b>互動留言板</b>：支援無限次回覆串樓！管理員可刪除「單則主留言」或「單則回覆」。</li>
-                <li>🔐 <b>全面安全保護</b>：新增、編輯、刪除、匯出皆需管理員密碼。</li>
+                <li>🚦 <b>點歌狀態標記</b>：管理員可標記歌曲為 ⏳排隊中 / 🎤演唱中 / ✅已唱過。</li>
+                <li>📋 <b>一鍵分享</b>：點擊 📋 按鈕，自動複製歌曲資訊到剪貼簿。</li>
+                <li>🔐 <b>管理員記住我</b>：輸入密碼後可記住 24 小時，無需重複輸入。</li>
+                <li>💬 <b>互動留言板</b>：支援無限次回覆串樓！</li>
             </ul>
             <button class="btn" style="background:var(--primary); color:white; padding: 10px 30px;" onclick="document.getElementById('helpModal').style.display='none'">我知道了</button>
         </div>
     </div>
+    
+    <!-- 🎉 Toast 通知容器 -->
+    <div id="toastContainer" class="toast-container"></div>
 
     <script>
         let allSongs = []; let filteredSongs = []; 
@@ -206,6 +274,58 @@
         let visits = parseInt(localStorage.getItem('visitCount') || 0) + 1;
         localStorage.setItem('visitCount', visits);
         document.getElementById('visitCount').innerText = visits;
+
+        // 🎉 Toast 通知系統
+        function showToast(message, type = 'success', duration = 3000) {
+            const container = document.getElementById('toastContainer');
+            const toast = document.createElement('div');
+            toast.className = `toast ${type}`;
+            toast.textContent = message;
+            container.appendChild(toast);
+            setTimeout(() => {
+                toast.style.animation = 'slideOut 0.3s ease';
+                setTimeout(() => toast.remove(), 300);
+            }, duration);
+        }
+
+        // 🔐 管理員記住我系統
+        function isAdmin() {
+            const token = localStorage.getItem(ADMIN_TOKEN_KEY);
+            if (!token) return false;
+            const tokenData = JSON.parse(token);
+            if (Date.now() > tokenData.expiry) {
+                localStorage.removeItem(ADMIN_TOKEN_KEY);
+                return false;
+            }
+            return true;
+        }
+        function setAdminToken() {
+            const tokenData = { expiry: Date.now() + ADMIN_TOKEN_DURATION };
+            localStorage.setItem(ADMIN_TOKEN_KEY, JSON.stringify(tokenData));
+            updateAdminUI();
+        }
+        function logoutAdmin() {
+            localStorage.removeItem(ADMIN_TOKEN_KEY);
+            updateAdminUI();
+            showToast('👋 已登出管理員模式', 'info');
+        }
+        function updateAdminUI() {
+            const isAdminMode = isAdmin();
+            document.getElementById('adminBadge').classList.toggle('active', isAdminMode);
+            document.getElementById('logoutBtn').style.display = isAdminMode ? 'inline-block' : 'none';
+        }
+        function requireAdmin(callback) {
+            if (isAdmin()) { callback(); return; }
+            const password = prompt("⚠️ 此操作需要管理員密碼：\n(勾選「確定」後將記住 24 小時)");
+            if (password === ADMIN_PASSWORD) {
+                setAdminToken();
+                showToast('✅ 管理員模式已啟用 (24小時)', 'success');
+                callback();
+            } else if (password !== null) {
+                showToast('❌ 密碼錯誤', 'error');
+            }
+        }
+        updateAdminUI();
 
         function toggleDarkMode() { isDarkMode = !isDarkMode; document.body.classList.toggle('dark-mode', isDarkMode); localStorage.setItem('darkMode', isDarkMode); document.getElementById('themeBtn').textContent = isDarkMode ? '☀️' : '🌙'; }
         function showHelpModal() { document.getElementById('helpModal').style.display = 'flex'; }
@@ -218,25 +338,29 @@
         function scrollToRequestSection() { const section = document.getElementById('requestSection'); if (section) { const container = document.getElementById('addFormContainer'); if (container.style.display === 'block') toggleAddForm(); section.scrollIntoView({ behavior: 'smooth', block: 'center' }); setTimeout(() => document.getElementById('reqMessage').focus(), 500); } }
 
         function loadPlaylist() {
-            document.getElementById('loadingMsg').style.display = 'block'; document.getElementById('playlistBody').innerHTML = '';
+            document.getElementById('skeletonLoader').classList.add('active');
+            document.getElementById('playlistTable').style.display = 'none';
+            document.getElementById('playlistBody').innerHTML = '';
             fetch(API_URL).then(res => res.ok ? res.json() : Promise.reject(`HTTP ${res.status}`)).then(result => {
-                document.getElementById('loadingMsg').style.display = 'none';
+                document.getElementById('skeletonLoader').classList.remove('active');
+                document.getElementById('playlistTable').style.display = 'table';
                 if (result.status === 'success') { allSongs = result.songs; renderRequests(result.requests || []); updateArtistFilter(); applyFilters(); } 
-                else { alert('❌ 載入失敗: ' + result.message); }
-            }).catch(error => { document.getElementById('loadingMsg').style.display = 'none'; alert('❌ 載入失敗！\n\n真實錯誤訊息: ' + error); });
+                else { showToast('❌ 載入失敗: ' + result.message, 'error'); }
+            }).catch(error => { 
+                document.getElementById('skeletonLoader').classList.remove('active');
+                document.getElementById('playlistTable').style.display = 'table';
+                showToast('❌ 載入失敗: ' + error, 'error'); 
+            });
         }
 
         function renderRequests(requests) {
             const list = document.getElementById('requestList');
             const displayRequests = requests.slice(0, 15); 
             if (displayRequests.length === 0) { list.innerHTML = '<p style="text-align:center; color:#888; padding: 20px;">目前還沒有留言，快來當第一個點歌的人吧！</p>'; return; }
-            
             list.innerHTML = displayRequests.map(req => {
                 const safeNick = String(req.nickname || '').replace(/'/g, "\\'");
                 const safeMsg = String(req.message || '').replace(/'/g, "\\'");
-                // 🌟 確保 ID 是安全的字串
                 const safeReqId = String(req.id).replace(/'/g, "\\'"); 
-                
                 let repliesHtml = '';
                 if (req.replies && req.replies.length > 0) {
                     repliesHtml = '<div class="replies-container">' + req.replies.map(rep => {
@@ -259,119 +383,229 @@
         function submitGeneralReply(id) {
             const nick = document.getElementById(`reply-nick-${id}`).value.trim();
             const replyText = document.getElementById(`reply-text-${id}`).value.trim();
-            if (!nick) return alert('一般回覆請填寫您的暱稱！');
-            if (!replyText) return alert('請輸入回覆內容！');
+            if (!nick) return showToast('一般回覆請填寫您的暱稱！', 'error');
+            if (!replyText) return showToast('請輸入回覆內容！', 'error');
             localStorage.setItem('lastReplyNick', nick);
             fetch(API_URL, { method: 'POST', headers: {'Content-Type': 'text/plain'}, body: JSON.stringify({ action: 'reply_request', id: id, replier: nick, replyContent: replyText, isOfficial: false }) })
-            .then(res => res.json()).then(result => { if (result.status === 'success') { document.getElementById(`reply-text-${id}`).value = ''; alert('✅ ' + result.message); loadPlaylist(); } else { alert('❌ 失敗: ' + result.message); } }).catch(e => alert('❌ 網路錯誤: ' + e));
+            .then(res => res.json()).then(result => { if (result.status === 'success') { document.getElementById(`reply-text-${id}`).value = ''; showToast('✅ ' + result.message); loadPlaylist(); } else { showToast('❌ 失敗: ' + result.message, 'error'); } }).catch(e => showToast('❌ 網路錯誤: ' + e, 'error'));
         }
         function submitOfficialReply(id) {
-            const password = prompt("⚠️ 官方回覆需要管理員密碼：");
-            if (password !== ADMIN_PASSWORD) { if (password !== null) alert("❌ 密碼錯誤！"); return; }
-            const replyText = document.getElementById(`reply-text-${id}`).value.trim();
-            if (!replyText) return alert('請輸入回覆內容！');
-            fetch(API_URL, { method: 'POST', headers: {'Content-Type': 'text/plain'}, body: JSON.stringify({ action: 'reply_request', id: id, replier: ADMIN_NAME, replyContent: replyText, isOfficial: true }) })
-            .then(res => res.json()).then(result => { if (result.status === 'success') { document.getElementById(`reply-text-${id}`).value = ''; alert('✅ ' + result.message); loadPlaylist(); } else { alert('❌ 失敗: ' + result.message); } }).catch(e => alert('❌ 網路錯誤: ' + e));
+            requireAdmin(() => {
+                const replyText = document.getElementById(`reply-text-${id}`).value.trim();
+                if (!replyText) return showToast('請輸入回覆內容！', 'error');
+                fetch(API_URL, { method: 'POST', headers: {'Content-Type': 'text/plain'}, body: JSON.stringify({ action: 'reply_request', id: id, replier: ADMIN_NAME, replyContent: replyText, isOfficial: true }) })
+                .then(res => res.json()).then(result => { if (result.status === 'success') { document.getElementById(`reply-text-${id}`).value = ''; showToast('✅ ' + result.message); loadPlaylist(); } else { showToast('❌ 失敗: ' + result.message, 'error'); } }).catch(e => showToast('❌ 網路錯誤: ' + e, 'error'));
+            });
         }
         function confirmDeleteReply(replyId) {
-            const password = prompt("⚠️ 刪除單則回覆需要管理員密碼：");
-            if (password !== ADMIN_PASSWORD) { if (password !== null) alert("❌ 密碼錯誤！"); return; }
-            if (!confirm("確定要單獨刪除這則回覆嗎？")) return;
-            fetch(API_URL, { method: 'POST', headers: {'Content-Type': 'text/plain'}, body: JSON.stringify({ action: 'delete_reply', replyId: replyId }) })
-            .then(res => res.json()).then(result => { if (result.status === 'success') { alert('✅ ' + result.message); loadPlaylist(); } else { alert('❌ 失敗: ' + result.message); } }).catch(e => alert('❌ 網路錯誤: ' + e));
+            requireAdmin(() => {
+                if (!confirm("確定要單獨刪除這則回覆嗎？")) return;
+                fetch(API_URL, { method: 'POST', headers: {'Content-Type': 'text/plain'}, body: JSON.stringify({ action: 'delete_reply', replyId: replyId }) })
+                .then(res => res.json()).then(result => { if (result.status === 'success') { showToast('✅ ' + result.message); loadPlaylist(); } else { showToast('❌ 失敗: ' + result.message, 'error'); } }).catch(e => showToast('❌ 網路錯誤: ' + e, 'error'));
+            });
         }
 
         function updateArtistFilter() {
             const select = document.getElementById('artistFilter');
-            const currentOptions = Array.from(select.options).slice(0, 2);
-            select.innerHTML = ''; currentOptions.forEach(opt => select.add(opt));
+            // 保留狀態過濾選項
+            const statusOptions = [
+                { value: 'all', text: '🎤 所有歌手' },
+                { value: '__sort_clicks__', text: '🔥 熱門排行' },
+                { value: '__status_queued__', text: '⏳ 排隊中' },
+                { value: '__status_singing__', text: '🎤 演唱中' },
+                { value: '__status_done__', text: '✅ 已唱過' }
+            ];
+            select.innerHTML = '';
+            statusOptions.forEach(opt => {
+                const o = document.createElement('option');
+                o.value = opt.value; o.textContent = opt.text;
+                select.appendChild(o);
+            });
             const uniqueArtists = [...new Set(allSongs.map(item => item.artist).filter(name => name))];
             uniqueArtists.sort().forEach(artist => { const opt = document.createElement('option'); opt.value = artist; opt.textContent = artist; select.appendChild(opt); });
         }
         function applyFilters() {
             const searchTerm = document.getElementById('searchInput').value.toLowerCase().trim();
-            const selectedArtist = document.getElementById('artistFilter').value;
+            const selectedValue = document.getElementById('artistFilter').value;
             filteredSongs = allSongs.filter(item => {
                 const tags = (item.tags || '').toLowerCase();
                 const matchSearch = !searchTerm || item.artist.toLowerCase().includes(searchTerm) || item.song.toLowerCase().includes(searchTerm) || tags.includes(searchTerm);
-                const matchArtist = selectedArtist === 'all' || selectedArtist === '__sort_clicks__' || item.artist === selectedArtist;
-                return matchSearch && matchArtist;
+                let matchFilter = true;
+                if (selectedValue === 'all') matchFilter = true;
+                else if (selectedValue === '__sort_clicks__') matchFilter = true;
+                else if (selectedValue === '__status_queued__') matchFilter = item.status === 'queued';
+                else if (selectedValue === '__status_singing__') matchFilter = item.status === 'singing';
+                else if (selectedValue === '__status_done__') matchFilter = item.status === 'done';
+                else matchFilter = item.artist === selectedValue;
+                return matchSearch && matchFilter;
             });
-            if (selectedArtist === '__sort_clicks__') { filteredSongs.sort((a, b) => (b.clicks || 0) - (a.clicks || 0)); }
+            if (selectedValue === '__sort_clicks__') { filteredSongs.sort((a, b) => (b.clicks || 0) - (a.clicks || 0)); }
             renderPlaylist(filteredSongs);
         }
+        
+        // 🚦 狀態循環切換
+        function cycleStatus(id, currentStatus) {
+            requireAdmin(() => {
+                const statusFlow = ['', 'queued', 'singing', 'done', ''];
+                const currentIndex = statusFlow.indexOf(currentStatus || '');
+                const nextStatus = statusFlow[(currentIndex + 1) % statusFlow.length];
+                fetch(API_URL, { method: 'POST', headers: {'Content-Type': 'text/plain'}, body: JSON.stringify({ action: 'update_status', id: id, status: nextStatus }) })
+                .then(res => res.json()).then(result => { 
+                    if (result.status === 'success') { 
+                        const statusText = {'': '無狀態', 'queued': '⏳ 排隊中', 'singing': '🎤 演唱中', 'done': '✅ 已唱過'};
+                        showToast('✅ 狀態已更新為: ' + statusText[nextStatus]); 
+                        loadPlaylist(); 
+                    } else { showToast('❌ 失敗: ' + result.message, 'error'); } 
+                }).catch(e => showToast('❌ 網路錯誤: ' + e, 'error'));
+            });
+        }
+        
+        // 📋 一鍵分享
+        function shareSong(artist, song, link) {
+            const shareText = `🎵 ${artist} - ${song}\n🔗 ${link}`;
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(shareText).then(() => {
+                    showToast('📋 已複製到剪貼簿！可以貼到 DC/Line 分享了', 'success');
+                }).catch(() => {
+                    fallbackCopy(shareText);
+                });
+            } else {
+                fallbackCopy(shareText);
+            }
+        }
+        function fallbackCopy(text) {
+            const textarea = document.createElement('textarea');
+            textarea.value = text; textarea.style.position = 'fixed'; textarea.style.opacity = '0';
+            document.body.appendChild(textarea); textarea.select();
+            try { document.execCommand('copy'); showToast('📋 已複製到剪貼簿！', 'success'); } 
+            catch (err) { showToast('❌ 複製失敗，請手動複製', 'error'); }
+            document.body.removeChild(textarea);
+        }
+        
         function renderPlaylist(songs) {
             const tbody = document.getElementById('playlistBody'); tbody.innerHTML = ''; document.getElementById('songCount').innerText = songs.length;
             if (!songs || songs.length === 0) { tbody.innerHTML = '<tr><td colspan="4" style="text-align:center; padding:20px;">🎵 找不到符合條件的歌曲</td></tr>'; return; }
             songs.forEach(item => {
                 const tr = document.createElement('tr');
                 let displayLink = item.link || `https://www.youtube.com/results?search_query=${encodeURIComponent((item.artist||'')+' '+(item.song||''))}`;
-                const safeArtist = String(item.artist || '').replace(/'/g, "\\'"); const safeSong = String(item.song || '').replace(/'/g, "\\'"); const safeLink = String(item.link || '').replace(/'/g, "\\'"); const safeTags = String(item.tags || '').replace(/'/g, "\\'");
+                const safeArtist = String(item.artist || '').replace(/'/g, "\\'"); 
+                const safeSong = String(item.song || '').replace(/'/g, "\\'"); 
+                const safeLink = String(displayLink).replace(/'/g, "\\'");
+                const safeTags = String(item.tags || '').replace(/'/g, "\\'");
                 const tagsHtml = item.tags ? item.tags.split(',').map(t => `<span class="tag-badge">${t.trim()}</span>`).join('') : '';
-                tr.innerHTML = `<td>${item.artist}<br>${tagsHtml}</td><td style="font-weight:bold;">${item.song}</td><td><a href="${displayLink}" target="_blank" class="listen-link" onclick="recordClick(${item.id})">🎵 試聽</a> <span style="font-size:12px; color:#888;">(${item.clicks || 0})</span></td><td><div class="action-btns"><button class="btn-sm btn-edit" onclick="editSong(${item.id}, '${safeArtist}', '${safeSong}', '${safeLink}', '${safeTags}')" title="編輯">✏️</button><button class="btn-sm btn-del" onclick="confirmDelete(${item.id}, '${safeArtist}', '${safeSong}')" title="刪除">🗑️</button></div></td>`;
+                
+                // 🚦 狀態按鈕
+                const statusClass = item.status || '';
+                const statusText = {'': '⚪ 狀態', 'queued': '⏳ 排隊', 'singing': '🎤 演唱', 'done': '✅ 已唱'}[item.status || ''];
+                const statusBtn = `<button class="btn-sm btn-status ${statusClass}" onclick="cycleStatus(${item.id}, '${item.status || ''}')" title="點擊切換狀態">${statusText}</button>`;
+                
+                tr.innerHTML = `
+                    <td data-label="歌手">${item.artist}<br>${tagsHtml}</td>
+                    <td data-label="歌曲名稱" style="font-weight:bold;">${item.song}</td>
+                    <td data-label="試聽"><a href="${displayLink}" target="_blank" class="listen-link" onclick="recordClick(${item.id})">🎵 試聽</a> <span style="font-size:12px; color:#888;">(${item.clicks || 0})</span></td>
+                    <td data-label="操作">
+                        <div class="action-btns">
+                            ${statusBtn}
+                            <button class="btn-sm btn-share" onclick="shareSong('${safeArtist}', '${safeSong}', '${safeLink}')" title="一鍵分享">📋</button>
+                            <button class="btn-sm btn-edit" onclick="editSong(${item.id}, '${safeArtist}', '${safeSong}', '${safeLink}', '${safeTags}')" title="編輯">✏️</button>
+                            <button class="btn-sm btn-del" onclick="confirmDelete(${item.id}, '${safeArtist}', '${safeSong}')" title="刪除">🗑️</button>
+                        </div>
+                    </td>
+                `;
                 tbody.appendChild(tr);
             });
         }
+
         function recordClick(id) { fetch(API_URL, { method: 'POST', headers: {'Content-Type': 'text/plain'}, body: JSON.stringify({ action: 'click', id: id }) }).catch(()=>{}); }
         function pickRandomSong() {
-            if (filteredSongs.length === 0) return alert('目前沒有歌曲可以隨機選擇！');
+            if (filteredSongs.length === 0) return showToast('目前沒有歌曲可以隨機選擇！', 'error');
             const randomSong = filteredSongs[Math.floor(Math.random() * filteredSongs.length)];
             let link = randomSong.link || `https://www.youtube.com/results?search_query=${encodeURIComponent((randomSong.artist||'')+' '+(randomSong.song||''))}`;
             document.getElementById('randomSongInfo').innerHTML = `🎤 ${randomSong.artist}<br>🎵 ${randomSong.song}`;
             document.getElementById('randomSongLink').href = link; document.getElementById('randomModal').style.display = 'flex';
         }
         function addSong() {
-            const password = prompt("⚠️ 新增歌曲需要管理員密碼："); if (password !== ADMIN_PASSWORD) { if (password !== null) alert("❌ 密碼錯誤！"); return; }
-            const artist = document.getElementById('artist').value.trim(); const song = document.getElementById('song').value.trim(); const tags = document.getElementById('tags').value.trim();
-            if (!artist || !song) return alert('請填寫歌手和歌曲名稱！');
-            const btn = document.getElementById('addBtn'); btn.disabled = true; btn.innerText = '新增中...';
-            fetch(API_URL, { method: 'POST', headers: {'Content-Type': 'text/plain'}, body: JSON.stringify({ action: 'add', artist, song, link: '', tags }) })
-            .then(res => res.json()).then(result => { btn.disabled = false; btn.innerText = '✨ 確認新增至雲端'; if (result.status === 'success') { document.getElementById('artist').value = ''; document.getElementById('song').value = ''; document.getElementById('tags').value = ''; alert('✅ 新增成功！'); toggleAddForm(); loadPlaylist(); } else { alert('❌ 失敗: ' + result.message); } }).catch(e => { btn.disabled = false; btn.innerText = '✨ 確認新增至雲端'; alert('❌ 網路錯誤: ' + e); });
+            requireAdmin(() => {
+                const artist = document.getElementById('artist').value.trim(); const song = document.getElementById('song').value.trim(); const tags = document.getElementById('tags').value.trim();
+                if (!artist || !song) return showToast('請填寫歌手和歌曲名稱！', 'error');
+                const btn = document.getElementById('addBtn'); btn.disabled = true; btn.innerText = '新增中...';
+                fetch(API_URL, { method: 'POST', headers: {'Content-Type': 'text/plain'}, body: JSON.stringify({ action: 'add', artist, song, link: '', tags }) })
+                .then(res => res.json()).then(result => { 
+                    btn.disabled = false; btn.innerText = '✨ 確認新增至雲端'; 
+                    if (result.status === 'success') { 
+                        document.getElementById('artist').value = ''; document.getElementById('song').value = ''; document.getElementById('tags').value = ''; 
+                        showToast('✅ 新增成功！'); toggleAddForm(); loadPlaylist(); 
+                    } else { showToast('❌ 失敗: ' + result.message, 'error'); } 
+                }).catch(e => { btn.disabled = false; btn.innerText = '✨ 確認新增至雲端'; showToast('❌ 網路錯誤: ' + e, 'error'); });
+            });
         }
         function batchAddSongs() {
-            const password = prompt("⚠️ 批量新增歌曲需要管理員密碼："); if (password !== ADMIN_PASSWORD) { if (password !== null) alert("❌ 密碼錯誤！"); return; }
-            const input = document.getElementById('batchInput').value.trim(); if (!input) return alert('請貼上歌曲清單！');
-            const lines = input.split('\n').filter(line => line.trim() !== '');
-            const songsToAdd = lines.map(line => { const parts = line.includes(',') ? line.split(',') : line.split(/\s+/); return { artist: parts[0].trim(), song: parts.slice(1).join(' ').trim(), link: '' }; }).filter(s => s.artist && s.song);
-            if (songsToAdd.length === 0) return alert('無法解析格式！');
-            const btn = document.getElementById('batchBtn'); btn.disabled = true; btn.innerText = '上傳中...';
-            fetch(API_URL, { method: 'POST', headers: {'Content-Type': 'text/plain'}, body: JSON.stringify({ action: 'batch_add', songs: songsToAdd }) })
-            .then(res => res.json()).then(result => { btn.disabled = false; btn.innerText = '🚀 批量上傳至雲端'; if (result.status === 'success') { document.getElementById('batchInput').value = ''; alert(`✅ ${result.message}`); toggleAddForm(); loadPlaylist(); } else { alert('❌ 失敗: ' + result.message); } }).catch(e => { btn.disabled = false; btn.innerText = '🚀 批量上傳至雲端'; alert('❌ 網路錯誤: ' + e); });
+            requireAdmin(() => {
+                const input = document.getElementById('batchInput').value.trim(); if (!input) return showToast('請貼上歌曲清單！', 'error');
+                const lines = input.split('\n').filter(line => line.trim() !== '');
+                const songsToAdd = lines.map(line => { const parts = line.includes(',') ? line.split(',') : line.split(/\s+/); return { artist: parts[0].trim(), song: parts.slice(1).join(' ').trim(), link: '' }; }).filter(s => s.artist && s.song);
+                if (songsToAdd.length === 0) return showToast('無法解析格式！', 'error');
+                const btn = document.getElementById('batchBtn'); btn.disabled = true; btn.innerText = '上傳中...';
+                fetch(API_URL, { method: 'POST', headers: {'Content-Type': 'text/plain'}, body: JSON.stringify({ action: 'batch_add', songs: songsToAdd }) })
+                .then(res => res.json()).then(result => { 
+                    btn.disabled = false; btn.innerText = '🚀 批量上傳至雲端'; 
+                    if (result.status === 'success') { 
+                        document.getElementById('batchInput').value = ''; 
+                        showToast(`✅ ${result.message}`); toggleAddForm(); loadPlaylist(); 
+                    } else { showToast('❌ 失敗: ' + result.message, 'error'); } 
+                }).catch(e => { btn.disabled = false; btn.innerText = '🚀 批量上傳至雲端'; showToast('❌ 網路錯誤: ' + e, 'error'); });
+            });
         }
         function editSong(id, currentArtist, currentSong, currentLink, currentTags) {
-            const newArtist = prompt("修改歌手名稱：", currentArtist); if (newArtist === null) return;
-            const newSong = prompt("修改歌曲名稱：", currentSong); if (newSong === null) return;
-            const newTags = prompt("修改標籤：", currentTags); if (newTags === null) return;
-            if (!newArtist.trim() || !newSong.trim()) return alert('不能為空！');
-            fetch(API_URL, { method: 'POST', headers: {'Content-Type': 'text/plain'}, body: JSON.stringify({ action: 'edit', id, artist: newArtist.trim(), song: newSong.trim(), link: currentLink, tags: newTags.trim() }) })
-            .then(res => res.json()).then(result => { if (result.status === 'success') { alert('✅ 編輯成功！'); loadPlaylist(); } else { alert('❌ 失敗: ' + result.message); } }).catch(e => alert('❌ 網路錯誤: ' + e));
+            requireAdmin(() => {
+                const newArtist = prompt("修改歌手名稱：", currentArtist); if (newArtist === null) return;
+                const newSong = prompt("修改歌曲名稱：", currentSong); if (newSong === null) return;
+                const newTags = prompt("修改標籤：", currentTags); if (newTags === null) return;
+                if (!newArtist.trim() || !newSong.trim()) return showToast('不能為空！', 'error');
+                fetch(API_URL, { method: 'POST', headers: {'Content-Type': 'text/plain'}, body: JSON.stringify({ action: 'edit', id, artist: newArtist.trim(), song: newSong.trim(), link: currentLink, tags: newTags.trim() }) })
+                .then(res => res.json()).then(result => { if (result.status === 'success') { showToast('✅ 編輯成功！'); loadPlaylist(); } else { showToast('❌ 失敗: ' + result.message, 'error'); } }).catch(e => showToast('❌ 網路錯誤: ' + e, 'error'));
+            });
         }
         function confirmDelete(id, artist, song) {
-            const password = prompt(`⚠️ 刪除「${artist} - ${song}」需要密碼：`); if (password !== ADMIN_PASSWORD) { if (password !== null) alert("❌ 密碼錯誤！"); return; }
-            if (!confirm("確定要刪除嗎？")) return;
-            fetch(API_URL, { method: 'POST', headers: {'Content-Type': 'text/plain'}, body: JSON.stringify({ action: 'delete', id }) })
-            .then(res => res.json()).then(result => { if (result.status === 'success') { alert('✅ 刪除成功！'); loadPlaylist(); } else { alert('❌ 失敗: ' + result.message); } }).catch(e => alert('❌ 網路錯誤: ' + e));
+            requireAdmin(() => {
+                if (!confirm(`確定要刪除「${artist} - ${song}」嗎？`)) return;
+                fetch(API_URL, { method: 'POST', headers: {'Content-Type': 'text/plain'}, body: JSON.stringify({ action: 'delete', id }) })
+                .then(res => res.json()).then(result => { if (result.status === 'success') { showToast('✅ 刪除成功！'); loadPlaylist(); } else { showToast('❌ 失敗: ' + result.message, 'error'); } }).catch(e => showToast('❌ 網路錯誤: ' + e, 'error'));
+            });
         }
         function confirmDeleteRequest(id, nickname, message) {
-            const password = prompt(`⚠️ 刪除整串留言(含所有回覆)需要密碼：`); if (password !== ADMIN_PASSWORD) { if (password !== null) alert("❌ 密碼錯誤！"); return; }
-            if (!confirm(`確定要刪除這則「主留言」嗎？\n(底下的所有回覆也會一併刪除)`)) return;
-            fetch(API_URL, { method: 'POST', headers: {'Content-Type': 'text/plain'}, body: JSON.stringify({ action: 'delete_request', id: id }) })
-            .then(res => res.json()).then(result => { if (result.status === 'success') { alert('✅ ' + result.message); loadPlaylist(); } else { alert('❌ 失敗: ' + result.message); } }).catch(e => alert('❌ 網路錯誤: ' + e));
+            requireAdmin(() => {
+                if (!confirm(`確定要刪除這則「主留言」嗎？\n(底下的所有回覆也會一併刪除)`)) return;
+                fetch(API_URL, { method: 'POST', headers: {'Content-Type': 'text/plain'}, body: JSON.stringify({ action: 'delete_request', id: id }) })
+                .then(res => res.json()).then(result => { if (result.status === 'success') { showToast('✅ ' + result.message); loadPlaylist(); } else { showToast('❌ 失敗: ' + result.message, 'error'); } }).catch(e => showToast('❌ 網路錯誤: ' + e, 'error'));
+            });
         }
         function submitRequest() {
             const nick = document.getElementById('reqNick').value.trim() || '匿名訪客'; const msg = document.getElementById('reqMessage').value.trim();
-            if (!msg) return alert('請輸入內容！');
+            if (!msg) return showToast('請輸入內容！', 'error');
             const btn = event.target; btn.disabled = true; btn.innerText = '送出中...';
             fetch(API_URL, { method: 'POST', headers: {'Content-Type': 'text/plain'}, body: JSON.stringify({ action: 'add_request', nickname: nick, message: msg }) })
-            .then(res => res.json()).then(result => { btn.disabled = false; btn.innerText = '送出'; if (result.status === 'success') { document.getElementById('reqMessage').value = ''; document.getElementById('reqNick').value = ''; alert('✅ ' + result.message); loadPlaylist(); } else { alert('❌ 失敗: ' + result.message); } }).catch(e => { btn.disabled = false; btn.innerText = '送出'; alert('❌ 網路錯誤: ' + e); });
+            .then(res => res.json()).then(result => { 
+                btn.disabled = false; btn.innerText = '送出'; 
+                if (result.status === 'success') { 
+                    document.getElementById('reqMessage').value = ''; document.getElementById('reqNick').value = ''; 
+                    showToast('✅ ' + result.message); loadPlaylist(); 
+                } else { showToast('❌ 失敗: ' + result.message, 'error'); } 
+            }).catch(e => { btn.disabled = false; btn.innerText = '送出'; showToast('❌ 網路錯誤: ' + e, 'error'); });
         }
         function exportCSV() {
-            const password = prompt("⚠️ 匯出 CSV 需要密碼："); if (password !== ADMIN_PASSWORD) { if (password !== null) alert("❌ 密碼錯誤！"); return; }
-            if (filteredSongs.length === 0) return alert('沒有資料可匯出！');
-            let csvContent = "\uFEFF歌手,歌曲名稱,YouTube連結,點擊次數,標籤\n";
-            filteredSongs.forEach(item => { const link = item.link || `https://www.youtube.com/results?search_query=${encodeURIComponent((item.artist||'')+' '+(item.song||''))}`; csvContent += `"${item.artist}","${item.song}","${link}",${item.clicks || 0},"${item.tags || ''}"\n`; });
-            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' }); const url = URL.createObjectURL(blob); const a = document.createElement('a');
-            a.href = url; a.download = `静静在夏天的歌單_${new Date().toISOString().slice(0,10)}.csv`; document.body.appendChild(a); a.click(); document.body.removeChild(a);
+            requireAdmin(() => {
+                if (filteredSongs.length === 0) return showToast('沒有資料可匯出！', 'error');
+                let csvContent = "\uFEFF歌手,歌曲名稱,YouTube連結,點擊次數,標籤,狀態\n";
+                filteredSongs.forEach(item => { 
+                    const link = item.link || `https://www.youtube.com/results?search_query=${encodeURIComponent((item.artist||'')+' '+(item.song||''))}`;
+                    const statusText = {'': '', 'queued': '排隊中', 'singing': '演唱中', 'done': '已唱過'}[item.status || ''];
+                    csvContent += `"${item.artist}","${item.song}","${link}",${item.clicks || 0},"${item.tags || ''}","${statusText}"\n`; 
+                });
+                const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' }); const url = URL.createObjectURL(blob); const a = document.createElement('a');
+                a.href = url; a.download = `静静在夏天的歌單_${new Date().toISOString().slice(0,10)}.csv`; document.body.appendChild(a); a.click(); document.body.removeChild(a);
+                showToast('📥 CSV 已匯出！', 'success');
+            });
         }
         document.addEventListener('keydown', (e) => { if (e.key === 'Escape') { document.getElementById('randomModal').style.display = 'none'; document.getElementById('helpModal').style.display = 'none'; const container = document.getElementById('addFormContainer'); if (container.style.display === 'block') toggleAddForm(); } });
         window.addEventListener('scroll', () => { document.getElementById('scrollTopBtn').style.display = window.scrollY > 300 ? 'flex' : 'none'; });
