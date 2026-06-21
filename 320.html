@@ -30,25 +30,47 @@
         .admin-badge { display: none; background: var(--warning); color: #333; padding: 4px 10px; border-radius: 12px; font-size: 12px; font-weight: bold; margin-left: 10px; }
         .admin-badge.active { display: inline-block; }
         
+        /* 🎤 待唱清單面板樣式 */
+        .queue-panel {
+            background: linear-gradient(135deg, #fff3cd 0%, #ffe69c 100%);
+            border: 2px dashed var(--warning);
+            color: #856404;
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 10px rgba(255, 193, 7, 0.2);
+            transition: all 0.3s;
+        }
+        body.dark-mode .queue-panel {
+            background: linear-gradient(135deg, #332b00 0%, #4d3f00 100%);
+            border-color: #b38f00;
+            color: #ffc107;
+        }
+        .queue-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; flex-wrap: wrap; gap: 10px; }
+        .queue-title { font-size: 20px; font-weight: bold; display: flex; align-items: center; gap: 8px; }
+        .queue-actions { display: flex; gap: 10px; }
+        .btn-queue { padding: 8px 15px; border-radius: 6px; border: none; cursor: pointer; font-weight: bold; font-size: 14px; transition: 0.2s; }
+        .btn-queue:hover { transform: translateY(-2px); opacity: 0.9; }
+        .btn-queue.random { background: var(--primary); color: white; }
+        .btn-queue.clear { background: var(--danger); color: white; }
+        .queue-list { display: flex; flex-wrap: wrap; gap: 10px; max-height: 120px; overflow-y: auto; padding-right: 5px; }
+        .queue-item { background: rgba(255,255,255,0.7); padding: 6px 12px; border-radius: 20px; font-size: 14px; display: flex; align-items: center; gap: 5px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
+        body.dark-mode .queue-item { background: rgba(0,0,0,0.3); color: #e0e0e0; }
+        .queue-empty { text-align: center; color: #888; font-style: italic; padding: 10px; width: 100%; }
+
         table { width: 100%; border-collapse: collapse; background: var(--card-bg); border-radius: 8px; overflow: hidden; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
         th, td { padding: 12px; text-align: left; border-bottom: 1px solid var(--border); }
         th { background-color: var(--primary); color: white; }
-        
-        /* 🚦 直覺狀態按鈕組 (Segmented Control) */
         .status-group { display: inline-flex; border: 1px solid var(--border); border-radius: 6px; overflow: hidden; background: var(--bg-color); }
         .status-btn { background: transparent; border: none; padding: 6px 10px; font-size: 16px; cursor: pointer; transition: all 0.2s; border-right: 1px solid var(--border); opacity: 0.5; }
         .status-btn:last-child { border-right: none; }
         .status-btn:hover { opacity: 0.8; background: rgba(0,0,0,0.05); }
         body.dark-mode .status-btn:hover { background: rgba(255,255,255,0.1); }
-        
-        /* 按鈕高亮樣式 */
         .status-btn.active { opacity: 1; transform: scale(1.1); font-weight: bold; }
-        .status-btn.active.queued { background: var(--warning); color: #333; box-shadow: inset 0 0 5px rgba(0,0,0,0.1); }
+        .status-btn.active.queued { background: var(--warning); color: #333; }
         .status-btn.active.singing { background: var(--danger); color: white; animation: pulse-btn 1.5s infinite; }
         .status-btn.active.done { background: var(--success); color: white; }
         @keyframes pulse-btn { 0%, 100% { transform: scale(1.1); } 50% { transform: scale(1.2); } }
-
-        /* 🎨 整列視覺變色 */
         tr { transition: all 0.3s; border-left: 4px solid transparent; }
         tr.row-queued { border-left-color: var(--warning); background: rgba(255, 193, 7, 0.05); }
         tr.row-singing { border-left-color: var(--danger); background: rgba(220, 53, 69, 0.05); animation: pulse-row 1.5s infinite; }
@@ -62,10 +84,8 @@
         .btn-sm { padding: 4px 8px; font-size: 12px; border-radius: 4px; border: none; cursor: pointer; color: white; }
         .btn-edit { background-color: var(--primary); }
         .btn-del { background-color: var(--danger); }
-        
         .tag-badge { display: inline-block; background-color: #e9ecef; color: #495057; font-size: 11px; padding: 2px 6px; border-radius: 10px; margin-right: 4px; margin-top: 4px; }
         body.dark-mode .tag-badge { background-color: #495057; color: #e9ecef; }
-        
         .request-section { background: var(--card-bg); padding: 20px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); margin-top: 30px; }
         .request-form { display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap; }
         .request-form input, .request-form textarea { flex: 1; padding: 10px; border: 1px solid var(--border); border-radius: 4px; background: var(--bg-color); color: var(--text-color); min-width: 150px; }
@@ -97,9 +117,7 @@
         .reply-btn-group { display: flex; gap: 10px; justify-content: flex-end; }
         .btn-reply-general { background: #6c757d; color: white; padding: 6px 12px; font-size: 13px; border-radius: 4px; border: none; cursor: pointer; }
         .btn-reply-official { background: var(--warning); color: #333; padding: 6px 12px; font-size: 13px; border-radius: 4px; border: none; cursor: pointer; font-weight: bold; }
-        
         .footer { text-align: center; margin-top: 30px; color: #666; font-size: 14px; }
-        
         .skeleton { background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%); background-size: 200% 100%; animation: shimmer 1.5s infinite; border-radius: 4px; }
         body.dark-mode .skeleton { background: linear-gradient(90deg, #2d2d2d 25%, #3d3d3d 50%, #2d2d2d 75%); background-size: 200% 100%; }
         @keyframes shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
@@ -110,7 +128,6 @@
         .skeleton-row div:nth-child(4) { width: 20%; height: 18px; }
         .loading { display: none; }
         .loading.active { display: block; }
-        
         .toast-container { position: fixed; top: 20px; right: 20px; z-index: 9999; display: flex; flex-direction: column; gap: 10px; }
         .toast { padding: 12px 20px; border-radius: 6px; color: white; font-size: 14px; font-weight: bold; box-shadow: 0 4px 12px rgba(0,0,0,0.15); animation: slideIn 0.3s ease; min-width: 200px; }
         .toast.success { background-color: var(--success); }
@@ -118,7 +135,6 @@
         .toast.info { background-color: var(--primary); }
         @keyframes slideIn { from { transform: translateX(400px); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
         @keyframes slideOut { from { transform: translateX(0); opacity: 1; } to { transform: translateX(400px); opacity: 0; } }
-        
         .fab-group { position: fixed; bottom: 30px; right: 30px; display: flex; flex-direction: column; gap: 15px; z-index: 1000; align-items: flex-end; }
         .fab-btn { color: white; border: none; padding: 14px 24px; border-radius: 30px; font-size: 16px; font-weight: bold; box-shadow: 0 4px 15px rgba(0,0,0,0.2); cursor: pointer; transition: 0.3s; display: flex; align-items: center; gap: 8px; }
         .fab-btn:hover { transform: translateY(-2px); }
@@ -146,8 +162,6 @@
         .listen-link { color: #007bff; font-weight: bold; text-decoration: none; font-size: 14px; transition: color 0.3s; }
         .listen-link:hover { color: #0056b3; text-decoration: underline; }
         body.dark-mode .listen-link { color: #4dabf7; }
-        
-        /* 📱 手機版卡片排版 */
         @media (max-width: 600px) {
             .filter-bar { flex-direction: column; }
             .add-form-container { width: 90vw; right: 5vw; bottom: 100px; }
@@ -163,6 +177,8 @@
             .status-group { width: 100%; justify-content: space-around; margin-bottom: 10px; }
             .status-btn { flex: 1; padding: 8px 0; font-size: 18px; }
             .skeleton-row div:nth-child(1), .skeleton-row div:nth-child(2), .skeleton-row div:nth-child(3), .skeleton-row div:nth-child(4) { width: 100%; }
+            .queue-actions { width: 100%; justify-content: space-between; }
+            .btn-queue { flex: 1; text-align: center; }
         }
     </style>
 </head>
@@ -193,6 +209,21 @@
             <button class="btn btn-logout" id="logoutBtn" onclick="logoutAdmin()" title="登出管理員">登出</button>
         </div>
     </div>
+
+    <!-- 🎤 待唱清單專屬面板 -->
+    <div class="queue-panel" id="queuePanel">
+        <div class="queue-header">
+            <div class="queue-title">🎤 待唱清單 (<span id="queueCount">0</span> 首)</div>
+            <div class="queue-actions">
+                <button class="btn-queue random" onclick="randomFromQueue()">🎲 隨機抽唱</button>
+                <button class="btn-queue clear" onclick="clearQueue()">🗑️ 清空清單</button>
+            </div>
+        </div>
+        <div id="queueList" class="queue-list">
+            <div class="queue-empty">目前沒有待唱歌曲</div>
+        </div>
+    </div>
+
     <h3>🎵 目前歌單 (<span id="songCount">0</span> 首)</h3>
     
     <div id="skeletonLoader" class="loading active">
@@ -266,9 +297,9 @@
         <div class="modal-content">
             <h2 style="color:var(--primary); margin-top:0;">📖 系統功能說明</h2>
             <ul class="help-list">
-                <li>🔍 <b>即時搜尋與分類</b>：支援搜尋歌手、歌名、標籤，也可按狀態過濾。</li>
-                <li>🎲 <b>隨機選歌</b>：不知道聽什麼？讓系統幫你抽一首。</li>
+                <li>🎤 <b>待唱清單</b>：將歌曲標記為「⏳排隊中」即可加入待唱清單。可一鍵「隨機抽唱」或「清空清單」。</li>
                 <li>🚦 <b>直覺狀態切換</b>：點擊操作欄的按鈕組，點哪個亮哪個，整列也會跟著變色！</li>
+                <li>🔍 <b>即時搜尋與分類</b>：支援搜尋歌手、歌名、標籤，也可按狀態過濾。</li>
                 <li>🔐 <b>管理員記住我</b>：輸入密碼後可記住 24 小時。</li>
                 <li>💬 <b>互動留言板</b>：支援無限次回覆串樓！</li>
             </ul>
@@ -351,12 +382,65 @@
             fetch(API_URL).then(res => res.ok ? res.json() : Promise.reject(`HTTP ${res.status}`)).then(result => {
                 document.getElementById('skeletonLoader').classList.remove('active');
                 document.getElementById('playlistTable').style.display = 'table';
-                if (result.status === 'success') { allSongs = result.songs; renderRequests(result.requests || []); updateArtistFilter(); applyFilters(); } 
-                else { showToast('❌ 載入失敗: ' + result.message, 'error'); }
+                if (result.status === 'success') { 
+                    allSongs = result.songs; 
+                    renderRequests(result.requests || []); 
+                    renderQueuePanel(); // 🌟 渲染待唱清單
+                    updateArtistFilter(); 
+                    applyFilters(); 
+                } else { showToast('❌ 載入失敗: ' + result.message, 'error'); }
             }).catch(error => { 
                 document.getElementById('skeletonLoader').classList.remove('active');
                 document.getElementById('playlistTable').style.display = 'table';
                 showToast('❌ 載入失敗: ' + error, 'error'); 
+            });
+        }
+
+        // 🎤 渲染待唱清單面板
+        function renderQueuePanel() {
+            const queueSongs = allSongs.filter(s => s.status === 'queued');
+            document.getElementById('queueCount').innerText = queueSongs.length;
+            const listEl = document.getElementById('queueList');
+            
+            if (queueSongs.length === 0) {
+                listEl.innerHTML = '<div class="queue-empty">目前沒有待唱歌曲，快去標記或新增吧！</div>';
+                return;
+            }
+            
+            listEl.innerHTML = queueSongs.map(s => `<div class="queue-item">⏳ ${s.artist} - ${s.song}</div>`).join('');
+        }
+
+        // 🎲 從待唱清單隨機抽唱 (直接將狀態改為 singing)
+        function randomFromQueue() {
+            const queueSongs = allSongs.filter(s => s.status === 'queued');
+            if (queueSongs.length === 0) return showToast('目前沒有待唱歌曲可以抽！', 'error');
+            
+            requireAdmin(() => {
+                const randomSong = queueSongs[Math.floor(Math.random() * queueSongs.length)];
+                fetch(API_URL, { method: 'POST', headers: {'Content-Type': 'text/plain'}, body: JSON.stringify({ action: 'update_status', id: randomSong.id, status: 'singing' }) })
+                .then(res => res.json()).then(result => { 
+                    if (result.status === 'success') { 
+                        showToast(`🎤 抽中了！正在演唱: ${randomSong.artist} - ${randomSong.song}`, 'success', 5000); 
+                        loadPlaylist(); 
+                    } else { showToast('❌ 失敗: ' + result.message, 'error'); } 
+                }).catch(e => showToast('❌ 網路錯誤: ' + e, 'error'));
+            });
+        }
+
+        // 🗑️ 清空待唱清單 (將所有 queued 狀態重置)
+        function clearQueue() {
+            requireAdmin(() => {
+                const queueSongs = allSongs.filter(s => s.status === 'queued');
+                if (queueSongs.length === 0) return showToast('清單已經是空的囉！', 'info');
+                if (!confirm(`確定要清空 ${queueSongs.length} 首待唱歌曲嗎？\n(狀態將重置為無狀態)`)) return;
+                
+                fetch(API_URL, { method: 'POST', headers: {'Content-Type': 'text/plain'}, body: JSON.stringify({ action: 'clear_queue' }) })
+                .then(res => res.json()).then(result => { 
+                    if (result.status === 'success') { 
+                        showToast('🗑️ 待唱清單已清空', 'success'); 
+                        loadPlaylist(); 
+                    } else { showToast('❌ 失敗: ' + result.message, 'error'); } 
+                }).catch(e => showToast('❌ 網路錯誤: ' + e, 'error'));
             });
         }
 
@@ -449,7 +533,6 @@
             renderPlaylist(filteredSongs);
         }
         
-        // 🚦 直覺狀態切換：直接設定指定狀態
         function updateStatus(id, newStatus) {
             requireAdmin(() => {
                 fetch(API_URL, { method: 'POST', headers: {'Content-Type': 'text/plain'}, body: JSON.stringify({ action: 'update_status', id: id, status: newStatus }) })
