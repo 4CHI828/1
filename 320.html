@@ -30,51 +30,42 @@
         .admin-badge { display: none; background: var(--warning); color: #333; padding: 4px 10px; border-radius: 12px; font-size: 12px; font-weight: bold; margin-left: 10px; }
         .admin-badge.active { display: inline-block; }
         
-        /* 🎤 待唱清單面板樣式 */
-        .queue-panel { background: linear-gradient(135deg, #fff3cd 0%, #ffe69c 100%); border: 2px dashed var(--warning); color: #856404; padding: 20px; border-radius: 12px; margin-bottom: 20px; box-shadow: 0 4px 10px rgba(255, 193, 7, 0.2); transition: all 0.3s; }
+        /* 🎤 待唱清單面板 */
+        .queue-panel { background: linear-gradient(135deg, #fff3cd 0%, #ffe69c 100%); border: 2px dashed var(--warning); color: #856404; padding: 20px; border-radius: 12px; margin-bottom: 20px; box-shadow: 0 4px 10px rgba(255, 193, 7, 0.2); }
         body.dark-mode .queue-panel { background: linear-gradient(135deg, #332b00 0%, #4d3f00 100%); border-color: #b38f00; color: #ffc107; }
         .queue-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; flex-wrap: wrap; gap: 10px; }
         .queue-title { font-size: 20px; font-weight: bold; display: flex; align-items: center; gap: 8px; }
-        .queue-actions { display: flex; gap: 10px; }
-        .btn-queue { padding: 8px 15px; border-radius: 6px; border: none; cursor: pointer; font-weight: bold; font-size: 14px; transition: 0.2s; }
+        .queue-sort-hint { font-size: 12px; font-weight: normal; color: #888; margin-left: 10px; }
+        .btn-queue { padding: 8px 15px; border-radius: 6px; border: none; cursor: pointer; font-weight: bold; font-size: 14px; transition: 0.2s; background: var(--danger); color: white; }
         .btn-queue:hover { transform: translateY(-2px); opacity: 0.9; }
-        .btn-queue.clear { background: var(--danger); color: white; }
-        .queue-list { display: flex; flex-wrap: wrap; gap: 10px; max-height: 120px; overflow-y: auto; padding-right: 5px; }
-        .queue-item { background: rgba(255,255,255,0.7); padding: 6px 12px; border-radius: 20px; font-size: 14px; display: flex; align-items: center; gap: 5px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
-        body.dark-mode .queue-item { background: rgba(0,0,0,0.3); color: #e0e0e0; }
+        .queue-list { display: flex; flex-direction: column; gap: 10px; max-height: 200px; overflow-y: auto; padding-right: 5px; }
         .queue-empty { text-align: center; color: #888; font-style: italic; padding: 10px; width: 100%; }
         
-        /* ✕ 待唱清單移除按鈕 */
-        .queue-del-btn { background: none; border: none; color: #888; font-size: 14px; font-weight: bold; cursor: pointer; margin-left: 8px; padding: 2px 6px; border-radius: 50%; transition: all 0.2s; line-height: 1; }
+        /* 待唱清單項目樣式 (含狀態視覺回饋) */
+        .queue-item { 
+            background: rgba(255,255,255,0.8); padding: 10px 15px; border-radius: 8px; 
+            font-size: 15px; display: flex; align-items: center; gap: 10px; 
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05); transition: all 0.3s;
+            border: 1px solid transparent;
+        }
+        body.dark-mode .queue-item { background: rgba(0,0,0,0.3); color: #e0e0e0; }
+        .queue-item.singing { background: rgba(220, 53, 69, 0.1); border-color: var(--danger); animation: pulse-queue 1.5s infinite; }
+        .queue-item.done { opacity: 0.5; text-decoration: line-through; background: rgba(40, 167, 69, 0.1); border-color: var(--success); }
+        @keyframes pulse-queue { 0%, 100% { border-color: var(--danger); } 50% { border-color: transparent; } }
+        
+        .queue-status-btn { background: none; border: none; font-size: 18px; cursor: pointer; transition: transform 0.2s; padding: 0; }
+        .queue-status-btn:hover { transform: scale(1.3); }
+        .queue-text { flex: 1; font-weight: bold; }
+        .queue-del-btn { background: none; border: none; color: #888; font-size: 16px; font-weight: bold; cursor: pointer; padding: 4px 8px; border-radius: 50%; transition: all 0.2s; }
         .queue-del-btn:hover { color: white; background-color: var(--danger); }
 
-        /* 🖱️ 可點擊的歌曲名稱樣式 */
-        .clickable-title { cursor: pointer; transition: color 0.2s; }
+        .clickable-title { cursor: pointer; transition: color 0.2s; font-weight: bold; }
         .clickable-title:hover { color: var(--warning); text-decoration: underline; }
 
         table { width: 100%; border-collapse: collapse; background: var(--card-bg); border-radius: 8px; overflow: hidden; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
         th, td { padding: 12px; text-align: left; border-bottom: 1px solid var(--border); }
         th { background-color: var(--primary); color: white; }
-        .status-group { display: inline-flex; border: 1px solid var(--border); border-radius: 6px; overflow: hidden; background: var(--bg-color); }
-        .status-btn { background: transparent; border: none; padding: 6px 10px; font-size: 16px; cursor: pointer; transition: all 0.2s; border-right: 1px solid var(--border); opacity: 0.5; }
-        .status-btn:last-child { border-right: none; }
-        .status-btn:hover { opacity: 0.8; background: rgba(0,0,0,0.05); }
-        body.dark-mode .status-btn:hover { background: rgba(255,255,255,0.1); }
-        .status-btn.active { opacity: 1; transform: scale(1.1); font-weight: bold; }
-        .status-btn.active.queued { background: var(--warning); color: #333; }
-        .status-btn.active.singing { background: var(--danger); color: white; animation: pulse-btn 1.5s infinite; }
-        .status-btn.active.done { background: var(--success); color: white; }
-        @keyframes pulse-btn { 0%, 100% { transform: scale(1.1); } 50% { transform: scale(1.2); } }
-        tr { transition: all 0.3s; border-left: 4px solid transparent; }
-        tr.row-queued { border-left-color: var(--warning); background: rgba(255, 193, 7, 0.05); }
-        tr.row-singing { border-left-color: var(--danger); background: rgba(220, 53, 69, 0.05); animation: pulse-row 1.5s infinite; }
-        @keyframes pulse-row { 0%, 100% { border-left-color: var(--danger); } 50% { border-left-color: transparent; } }
-        tr.row-singing .song-title { color: var(--danger); font-weight: bold; animation: pulse-text 1.5s infinite; }
-        @keyframes pulse-text { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.05); } }
-        tr.row-done { opacity: 0.4; }
-        tr.row-done .song-title { text-decoration: line-through; }
-
-        .action-btns { display: flex; gap: 5px; flex-wrap: wrap; align-items: center; }
+        .action-btns { display: flex; gap: 5px; flex-wrap: wrap; }
         .btn-sm { padding: 4px 8px; font-size: 12px; border-radius: 4px; border: none; cursor: pointer; color: white; }
         .btn-edit { background-color: var(--primary); }
         .btn-del { background-color: var(--danger); }
@@ -116,10 +107,7 @@
         body.dark-mode .skeleton { background: linear-gradient(90deg, #2d2d2d 25%, #3d3d3d 50%, #2d2d2d 75%); background-size: 200% 100%; }
         @keyframes shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
         .skeleton-row { display: flex; gap: 15px; padding: 15px; border-bottom: 1px solid var(--border); }
-        .skeleton-row div:nth-child(1) { width: 25%; height: 18px; }
-        .skeleton-row div:nth-child(2) { width: 35%; height: 18px; }
-        .skeleton-row div:nth-child(3) { width: 15%; height: 18px; }
-        .skeleton-row div:nth-child(4) { width: 20%; height: 18px; }
+        .skeleton-row div { width: 25%; height: 18px; }
         .loading { display: none; }
         .loading.active { display: block; }
         .toast-container { position: fixed; top: 20px; right: 20px; z-index: 9999; display: flex; flex-direction: column; gap: 10px; }
@@ -163,16 +151,11 @@
             .reply-del-btn { opacity: 1; }
             table, thead, tbody, th, td, tr { display: block; }
             thead tr { display: none; }
-            tr { background: var(--card-bg); margin-bottom: 15px; border-radius: 10px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); padding: 15px; border: none; border-left: 4px solid transparent !important; }
-            td { padding: 6px 0; border: none; text-align: left !important; position: relative; }
+            tr { background: var(--card-bg); margin-bottom: 15px; border-radius: 10px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); padding: 15px; border: none; }
+            td { padding: 6px 0; border: none; text-align: left !important; }
             td::before { content: attr(data-label); font-weight: bold; color: var(--primary); display: block; font-size: 12px; margin-bottom: 3px; }
-            td:nth-child(1) { font-size: 16px; font-weight: bold; }
-            .action-btns { margin-top: 10px; justify-content: flex-start; flex-wrap: wrap; }
-            .status-group { width: 100%; justify-content: space-around; margin-bottom: 10px; }
-            .status-btn { flex: 1; padding: 8px 0; font-size: 18px; }
-            .skeleton-row div:nth-child(1), .skeleton-row div:nth-child(2), .skeleton-row div:nth-child(3), .skeleton-row div:nth-child(4) { width: 100%; }
-            .queue-actions { width: 100%; justify-content: space-between; }
-            .btn-queue { flex: 1; text-align: center; }
+            .action-btns { margin-top: 10px; }
+            .skeleton-row div { width: 100%; }
         }
     </style>
 </head>
@@ -191,9 +174,6 @@
             <select id="artistFilter" onchange="applyFilters()">
                 <option value="all">🎤 所有歌手</option>
                 <option value="__sort_clicks__">🔥 熱門排行</option>
-                <option value="__status_queued__">⏳ 排隊中</option>
-                <option value="__status_singing__">🎤 演唱中</option>
-                <option value="__status_done__">✅ 已唱過</option>
             </select>
             <button class="btn btn-random" onclick="pickRandomSong()">🎲 隨機</button>
             <button class="btn btn-export" onclick="exportCSV()">📥 匯出</button>
@@ -204,13 +184,14 @@
         </div>
     </div>
 
-    <!-- 🎤 待唱清單專屬面板 (已移除隨機抽唱) -->
+    <!-- 🎤 待唱清單面板 (按加入時間排序) -->
     <div class="queue-panel" id="queuePanel">
         <div class="queue-header">
-            <div class="queue-title">🎤 待唱清單 (<span id="queueCount">0</span> 首)</div>
-            <div class="queue-actions">
-                <button class="btn-queue clear" onclick="clearQueue()">🗑️ 清空清單</button>
+            <div class="queue-title">
+                🎤 待唱清單 (<span id="queueCount">0</span> 首)
+                <span class="queue-sort-hint">💡 依加入順序排列 | 點擊 Emoji 切換狀態</span>
             </div>
+            <button class="btn-queue" onclick="clearQueue()">🗑️ 清空清單</button>
         </div>
         <div id="queueList" class="queue-list">
             <div class="queue-empty">目前沒有待唱歌曲，點擊下方歌單的「歌曲名稱」即可加入！</div>
@@ -223,19 +204,16 @@
         <div class="skeleton-row"><div class="skeleton"></div><div class="skeleton"></div><div class="skeleton"></div><div class="skeleton"></div></div>
         <div class="skeleton-row"><div class="skeleton"></div><div class="skeleton"></div><div class="skeleton"></div><div class="skeleton"></div></div>
         <div class="skeleton-row"><div class="skeleton"></div><div class="skeleton"></div><div class="skeleton"></div><div class="skeleton"></div></div>
-        <div class="skeleton-row"><div class="skeleton"></div><div class="skeleton"></div><div class="skeleton"></div><div class="skeleton"></div></div>
     </div>
     
+    <!-- 🌟 表格已移除狀態按鈕組，更乾淨 -->
     <table id="playlistTable" style="display:none;">
-        <thead><tr><th>歌手</th><th>歌曲名稱</th><th>試聽</th><th style="width: 220px;">狀態與操作</th></tr></thead>
+        <thead><tr><th>歌手</th><th>歌曲名稱</th><th>試聽</th><th style="width: 80px;">操作</th></tr></thead>
         <tbody id="playlistBody"></tbody>
     </table>
     
     <div class="request-section" id="requestSection">
-        <h3 style="margin-top:0; display:flex; justify-content:space-between; align-items:center;">
-            📝 點歌與留言板 
-            <span style="font-size:12px; font-weight:normal; color:#888;">(支援無限串樓)</span>
-        </h3>
+        <h3 style="margin-top:0;">📝 點歌與留言板 <span style="font-size:12px; font-weight:normal; color:#888;">(支援無限串樓)</span></h3>
         <div class="request-form">
             <input type="text" id="reqNick" placeholder="您的暱稱 (選填)" style="max-width: 150px;">
             <textarea id="reqMessage" rows="2" placeholder="想點什麼歌？或給静静的留言..."></textarea>
@@ -268,10 +246,7 @@
             <button id="addBtn" class="btn-add" onclick="addSong()">✨ 確認新增至雲端</button>
         </div>
         <div id="batchForm" style="display:none;">
-            <div class="form-group">
-                <label>貼上清單 (每行一首，格式：歌手,歌曲)：</label>
-                <textarea id="batchInput" rows="6" placeholder="周杰倫,晴天&#10;林俊傑 修煉愛情"></textarea>
-            </div>
+            <div class="form-group"><label>貼上清單 (每行一首，格式：歌手,歌曲)：</label><textarea id="batchInput" rows="6" placeholder="周杰倫,晴天&#10;林俊傑 修煉愛情"></textarea></div>
             <button id="batchBtn" class="btn-add" onclick="batchAddSongs()">🚀 批量上傳至雲端</button>
         </div>
     </div>
@@ -290,16 +265,15 @@
         <div class="modal-content">
             <h2 style="color:var(--primary); margin-top:0;">📖 系統功能說明</h2>
             <ul class="help-list">
-                <li>🎤 <b>待唱清單</b>：直接點擊下方歌單的「歌曲名稱」即可加入待唱清單。清單中的 ✕ 可移出歌曲。</li>
-                <li>🚦 <b>直覺狀態切換</b>：點擊操作欄的按鈕組，點哪個亮哪個，整列也會跟著變色！</li>
-                <li>🔍 <b>即時搜尋與分類</b>：支援搜尋歌手、歌名、標籤，也可按狀態過濾。</li>
+                <li>🎤 <b>待唱清單</b>：點擊下方歌單的「歌曲名稱」加入。清單會依照加入順序排列。</li>
+                <li>🔄 <b>狀態切換</b>：在待唱清單中，點擊歌曲前面的 Emoji 可切換狀態 (⏳排隊 ➔ 🎤演唱 ➔ ✅已唱 ➔ 移出)。</li>
+                <li>🗑️ <b>移出清單</b>：點擊待唱清單右側的 ✕ 可直接移出歌曲。</li>
                 <li>🔐 <b>管理員記住我</b>：輸入密碼後可記住 24 小時。</li>
                 <li>💬 <b>互動留言板</b>：支援無限次回覆串樓！</li>
             </ul>
             <button class="btn" style="background:var(--primary); color:white; padding: 10px 30px;" onclick="document.getElementById('helpModal').style.display='none'">我知道了</button>
         </div>
     </div>
-    
     <div id="toastContainer" class="toast-container"></div>
 
     <script>
@@ -317,10 +291,7 @@
             toast.className = `toast ${type}`;
             toast.textContent = message;
             container.appendChild(toast);
-            setTimeout(() => {
-                toast.style.animation = 'slideOut 0.3s ease';
-                setTimeout(() => toast.remove(), 300);
-            }, duration);
+            setTimeout(() => { toast.style.animation = 'slideOut 0.3s ease'; setTimeout(() => toast.remove(), 300); }, duration);
         }
 
         function isAdmin() {
@@ -330,16 +301,8 @@
             if (Date.now() > tokenData.expiry) { localStorage.removeItem(ADMIN_TOKEN_KEY); return false; }
             return true;
         }
-        function setAdminToken() {
-            const tokenData = { expiry: Date.now() + ADMIN_TOKEN_DURATION };
-            localStorage.setItem(ADMIN_TOKEN_KEY, JSON.stringify(tokenData));
-            updateAdminUI();
-        }
-        function logoutAdmin() {
-            localStorage.removeItem(ADMIN_TOKEN_KEY);
-            updateAdminUI();
-            showToast('👋 已登出管理員模式', 'info');
-        }
+        function setAdminToken() { localStorage.setItem(ADMIN_TOKEN_KEY, JSON.stringify({ expiry: Date.now() + ADMIN_TOKEN_DURATION })); updateAdminUI(); }
+        function logoutAdmin() { localStorage.removeItem(ADMIN_TOKEN_KEY); updateAdminUI(); showToast('👋 已登出管理員模式', 'info'); }
         function updateAdminUI() {
             const isAdminMode = isAdmin();
             document.getElementById('adminBadge').classList.toggle('active', isAdminMode);
@@ -348,13 +311,8 @@
         function requireAdmin(callback) {
             if (isAdmin()) { callback(); return; }
             const password = prompt("⚠️ 此操作需要管理員密碼：\n(將記住 24 小時)");
-            if (password === ADMIN_PASSWORD) {
-                setAdminToken();
-                showToast('✅ 管理員模式已啟用 (24小時)', 'success');
-                callback();
-            } else if (password !== null) {
-                showToast('❌ 密碼錯誤', 'error');
-            }
+            if (password === ADMIN_PASSWORD) { setAdminToken(); showToast('✅ 管理員模式已啟用', 'success'); callback(); } 
+            else if (password !== null) { showToast('❌ 密碼錯誤', 'error'); }
         }
         updateAdminUI();
 
@@ -371,27 +329,19 @@
         function loadPlaylist() {
             document.getElementById('skeletonLoader').classList.add('active');
             document.getElementById('playlistTable').style.display = 'none';
-            document.getElementById('playlistBody').innerHTML = '';
             fetch(API_URL).then(res => res.ok ? res.json() : Promise.reject(`HTTP ${res.status}`)).then(result => {
                 document.getElementById('skeletonLoader').classList.remove('active');
                 document.getElementById('playlistTable').style.display = 'table';
-                if (result.status === 'success') { 
-                    allSongs = result.songs; 
-                    renderRequests(result.requests || []); 
-                    renderQueuePanel(); 
-                    updateArtistFilter(); 
-                    applyFilters(); 
-                } else { showToast('❌ 載入失敗: ' + result.message, 'error'); }
-            }).catch(error => { 
-                document.getElementById('skeletonLoader').classList.remove('active');
-                document.getElementById('playlistTable').style.display = 'table';
-                showToast('❌ 載入失敗: ' + error, 'error'); 
-            });
+                if (result.status === 'success') { allSongs = result.songs; renderRequests(result.requests || []); renderQueuePanel(); updateArtistFilter(); applyFilters(); } 
+                else { showToast('❌ 載入失敗: ' + result.message, 'error'); }
+            }).catch(error => { document.getElementById('skeletonLoader').classList.remove('active'); document.getElementById('playlistTable').style.display = 'table'; showToast('❌ 載入失敗: ' + error, 'error'); });
         }
 
-        // 🎤 渲染待唱清單面板 (含 ✕ 移除按鈕)
+        // 🎤 渲染待唱清單 (按 queueTime 升序排列)
         function renderQueuePanel() {
-            const queueSongs = allSongs.filter(s => s.status === 'queued');
+            const queueSongs = allSongs.filter(s => s.status && s.status !== '');
+            queueSongs.sort((a, b) => (a.queueTime || 0) - (b.queueTime || 0)); // 🌟 依加入時間排序
+            
             document.getElementById('queueCount').innerText = queueSongs.length;
             const listEl = document.getElementById('queueList');
             
@@ -400,59 +350,59 @@
                 return;
             }
             
-            listEl.innerHTML = queueSongs.map(s => `
-                <div class="queue-item">
-                    ⏳ ${s.artist} - ${s.song} 
-                    <button class="queue-del-btn" onclick="removeFromQueue(${s.id})" title="移出待唱清單">✕</button>
-                </div>
-            `).join('');
+            listEl.innerHTML = queueSongs.map(s => {
+                const statusEmoji = {'queued': '⏳', 'singing': '🎤', 'done': '✅'}[s.status];
+                return `
+                    <div class="queue-item ${s.status}">
+                        <button class="queue-status-btn" onclick="cycleQueueStatus(${s.id}, '${s.status}')" title="點擊切換狀態 (排隊->演唱->已唱->移出)">${statusEmoji}</button>
+                        <span class="queue-text">${s.artist} - ${s.song}</span>
+                        <button class="queue-del-btn" onclick="removeFromQueue(${s.id})" title="直接移出清單">✕</button>
+                    </div>
+                `;
+            }).join('');
         }
 
-        // 🗑️ 清空待唱清單
+        // 🔄 循環切換狀態
+        function cycleQueueStatus(id, currentStatus) {
+            requireAdmin(() => {
+                let nextStatus = '';
+                if (currentStatus === 'queued') nextStatus = 'singing';
+                else if (currentStatus === 'singing') nextStatus = 'done';
+                else if (currentStatus === 'done') nextStatus = '';
+                
+                fetch(API_URL, { method: 'POST', headers: {'Content-Type': 'text/plain'}, body: JSON.stringify({ action: 'update_status', id: id, status: nextStatus }) })
+                .then(res => res.json()).then(result => { 
+                    if (result.status === 'success') { 
+                        const text = {'queued': '⏳ 排隊中', 'singing': '🎤 演唱中', 'done': '✅ 已唱過', '': '已移出清單'}[nextStatus];
+                        showToast(`✅ ${text}`); loadPlaylist(); 
+                    } else { showToast('❌ 失敗: ' + result.message, 'error'); } 
+                }).catch(e => showToast('❌ 網路錯誤: ' + e, 'error'));
+            });
+        }
+
         function clearQueue() {
             requireAdmin(() => {
                 const queueSongs = allSongs.filter(s => s.status === 'queued');
                 if (queueSongs.length === 0) return showToast('清單已經是空的囉！', 'info');
-                if (!confirm(`確定要清空 ${queueSongs.length} 首待唱歌曲嗎？\n(狀態將重置為無狀態)`)) return;
-                
+                if (!confirm(`確定要清空 ${queueSongs.length} 首待唱歌曲嗎？`)) return;
                 fetch(API_URL, { method: 'POST', headers: {'Content-Type': 'text/plain'}, body: JSON.stringify({ action: 'clear_queue' }) })
-                .then(res => res.json()).then(result => { 
-                    if (result.status === 'success') { 
-                        showToast('🗑️ 待唱清單已清空', 'success'); 
-                        loadPlaylist(); 
-                    } else { showToast('❌ 失敗: ' + result.message, 'error'); } 
-                }).catch(e => showToast('❌ 網路錯誤: ' + e, 'error'));
+                .then(res => res.json()).then(result => { if (result.status === 'success') { showToast('🗑️ 待唱清單已清空'); loadPlaylist(); } else { showToast('❌ 失敗: ' + result.message, 'error'); } }).catch(e => showToast('❌ 網路錯誤: ' + e, 'error'));
             });
         }
 
-        // 🖱️ 點擊歌名加入待唱清單
         function addToQueue(id, songName) {
             requireAdmin(() => {
                 const song = allSongs.find(s => s.id === id);
-                if (song && song.status === 'queued') {
-                    showToast('這首歌已經在待唱清單裡囉！', 'info');
-                    return;
-                }
+                if (song && song.status === 'queued') return showToast('這首歌已經在待唱清單裡囉！', 'info');
                 fetch(API_URL, { method: 'POST', headers: {'Content-Type': 'text/plain'}, body: JSON.stringify({ action: 'update_status', id: id, status: 'queued' }) })
-                .then(res => res.json()).then(result => { 
-                    if (result.status === 'success') { 
-                        showToast(`🎤 已加入待唱清單: ${songName}`, 'success'); 
-                        loadPlaylist(); 
-                    } else { showToast('❌ 失敗: ' + result.message, 'error'); } 
-                }).catch(e => showToast('❌ 網路錯誤: ' + e, 'error'));
+                .then(res => res.json()).then(result => { if (result.status === 'success') { showToast(`🎤 已加入待唱清單: ${songName}`); loadPlaylist(); } else { showToast('❌ 失敗: ' + result.message, 'error'); } }).catch(e => showToast('❌ 網路錯誤: ' + e, 'error'));
             });
         }
 
-        // ✕ 從待唱清單移除
         function removeFromQueue(id) {
             requireAdmin(() => {
                 fetch(API_URL, { method: 'POST', headers: {'Content-Type': 'text/plain'}, body: JSON.stringify({ action: 'update_status', id: id, status: '' }) })
-                .then(res => res.json()).then(result => { 
-                    if (result.status === 'success') { 
-                        showToast('✅ 已移出待唱清單', 'info'); 
-                        loadPlaylist(); 
-                    } else { showToast('❌ 失敗: ' + result.message, 'error'); } 
-                }).catch(e => showToast('❌ 網路錯誤: ' + e, 'error'));
+                .then(res => res.json()).then(result => { if (result.status === 'success') { showToast('✅ 已移出待唱清單', 'info'); loadPlaylist(); } else { showToast('❌ 失敗: ' + result.message, 'error'); } }).catch(e => showToast('❌ 網路錯誤: ' + e, 'error'));
             });
         }
 
@@ -470,11 +420,11 @@
                         const boxClass = rep.isOfficial ? 'official' : 'general';
                         const prefix = rep.isOfficial ? '👑 ' : '💬 ';
                         const safeRepId = String(rep.replyId).replace(/'/g, "\\'");
-                        const delBtnHtml = `<button class="reply-del-btn" onclick="confirmDeleteReply('${safeRepId}')" title="刪除這則回覆">🗑️</button>`;
+                        const delBtnHtml = `<button class="reply-del-btn" onclick="confirmDeleteReply('${safeRepId}')">🗑️</button>`;
                         return `<div class="reply-box ${boxClass}"><div class="reply-header ${boxClass}"><span>${prefix}${rep.replier}</span><span style="display:flex; align-items:center; gap:8px;"><span style="font-weight:normal; color:#888; font-size:11px;">${rep.time}</span>${delBtnHtml}</span></div><div>${rep.content}</div></div>`;
                     }).join('') + '</div>';
                 }
-                return `<div class="request-item" id="req-${safeReqId}"><div class="req-header"><span class="req-nick">${req.nickname}</span><span>${req.time}</span></div><div style="word-break: break-word;">${req.message}</div>${repliesHtml}<div class="req-actions"><button class="req-action-btn" onclick="toggleReplyInput('${safeReqId}')">💬 回覆</button><button class="req-action-btn" style="color:var(--danger);" onclick="confirmDeleteRequest('${safeReqId}', '${safeNick}', '${safeMsg}')">🗑️ 刪除整串</button></div><div id="reply-input-${safeReqId}" class="reply-input-area" style="display:none;"><input type="text" id="reply-nick-${safeReqId}" placeholder="您的暱稱 (一般回覆必填)" value="${localStorage.getItem('lastReplyNick') || ''}"><textarea id="reply-text-${safeReqId}" placeholder="輸入回覆內容..."></textarea><div class="reply-btn-group"><button class="btn-reply-general" onclick="submitGeneralReply('${safeReqId}')">💬 一般回覆</button><button class="btn-reply-official" onclick="submitOfficialReply('${safeReqId}')">👑 官方回覆</button></div></div></div>`;
+                return `<div class="request-item"><div class="req-header"><span class="req-nick">${req.nickname}</span><span>${req.time}</span></div><div style="word-break: break-word;">${req.message}</div>${repliesHtml}<div class="req-actions"><button class="req-action-btn" onclick="toggleReplyInput('${safeReqId}')">💬 回覆</button><button class="req-action-btn" style="color:var(--danger);" onclick="confirmDeleteRequest('${safeReqId}', '${safeNick}', '${safeMsg}')">🗑️ 刪除整串</button></div><div id="reply-input-${safeReqId}" class="reply-input-area" style="display:none;"><input type="text" id="reply-nick-${safeReqId}" placeholder="您的暱稱" value="${localStorage.getItem('lastReplyNick') || ''}"><textarea id="reply-text-${safeReqId}" placeholder="輸入回覆內容..."></textarea><div class="reply-btn-group"><button class="btn-reply-general" onclick="submitGeneralReply('${safeReqId}')">💬 一般回覆</button><button class="btn-reply-official" onclick="submitOfficialReply('${safeReqId}')">👑 官方回覆</button></div></div></div>`;
             }).join('');
         }
 
@@ -486,8 +436,8 @@
         function submitGeneralReply(id) {
             const nick = document.getElementById(`reply-nick-${id}`).value.trim();
             const replyText = document.getElementById(`reply-text-${id}`).value.trim();
-            if (!nick) return showToast('一般回覆請填寫您的暱稱！', 'error');
-            if (!replyText) return showToast('請輸入回覆內容！', 'error');
+            if (!nick) return showToast('請填寫暱稱！', 'error');
+            if (!replyText) return showToast('請輸入內容！', 'error');
             localStorage.setItem('lastReplyNick', nick);
             fetch(API_URL, { method: 'POST', headers: {'Content-Type': 'text/plain'}, body: JSON.stringify({ action: 'reply_request', id: id, replier: nick, replyContent: replyText, isOfficial: false }) })
             .then(res => res.json()).then(result => { if (result.status === 'success') { document.getElementById(`reply-text-${id}`).value = ''; showToast('✅ ' + result.message); loadPlaylist(); } else { showToast('❌ 失敗: ' + result.message, 'error'); } }).catch(e => showToast('❌ 網路錯誤: ' + e, 'error'));
@@ -495,34 +445,18 @@
         function submitOfficialReply(id) {
             requireAdmin(() => {
                 const replyText = document.getElementById(`reply-text-${id}`).value.trim();
-                if (!replyText) return showToast('請輸入回覆內容！', 'error');
+                if (!replyText) return showToast('請輸入內容！', 'error');
                 fetch(API_URL, { method: 'POST', headers: {'Content-Type': 'text/plain'}, body: JSON.stringify({ action: 'reply_request', id: id, replier: ADMIN_NAME, replyContent: replyText, isOfficial: true }) })
                 .then(res => res.json()).then(result => { if (result.status === 'success') { document.getElementById(`reply-text-${id}`).value = ''; showToast('✅ ' + result.message); loadPlaylist(); } else { showToast('❌ 失敗: ' + result.message, 'error'); } }).catch(e => showToast('❌ 網路錯誤: ' + e, 'error'));
             });
         }
         function confirmDeleteReply(replyId) {
-            requireAdmin(() => {
-                if (!confirm("確定要單獨刪除這則回覆嗎？")) return;
-                fetch(API_URL, { method: 'POST', headers: {'Content-Type': 'text/plain'}, body: JSON.stringify({ action: 'delete_reply', replyId: replyId }) })
-                .then(res => res.json()).then(result => { if (result.status === 'success') { showToast('✅ ' + result.message); loadPlaylist(); } else { showToast('❌ 失敗: ' + result.message, 'error'); } }).catch(e => showToast('❌ 網路錯誤: ' + e, 'error'));
-            });
+            requireAdmin(() => { if (!confirm("確定要刪除這則回覆嗎？")) return; fetch(API_URL, { method: 'POST', headers: {'Content-Type': 'text/plain'}, body: JSON.stringify({ action: 'delete_reply', replyId: replyId }) }).then(res => res.json()).then(result => { if (result.status === 'success') { showToast('✅ ' + result.message); loadPlaylist(); } else { showToast('❌ 失敗: ' + result.message, 'error'); } }).catch(e => showToast('❌ 網路錯誤: ' + e, 'error')); });
         }
 
         function updateArtistFilter() {
             const select = document.getElementById('artistFilter');
-            const statusOptions = [
-                { value: 'all', text: '🎤 所有歌手' },
-                { value: '__sort_clicks__', text: '🔥 熱門排行' },
-                { value: '__status_queued__', text: '⏳ 排隊中' },
-                { value: '__status_singing__', text: '🎤 演唱中' },
-                { value: '__status_done__', text: '✅ 已唱過' }
-            ];
-            select.innerHTML = '';
-            statusOptions.forEach(opt => {
-                const o = document.createElement('option');
-                o.value = opt.value; o.textContent = opt.text;
-                select.appendChild(o);
-            });
+            select.innerHTML = '<option value="all">🎤 所有歌手</option><option value="__sort_clicks__">🔥 熱門排行</option>';
             const uniqueArtists = [...new Set(allSongs.map(item => item.artist).filter(name => name))];
             uniqueArtists.sort().forEach(artist => { const opt = document.createElement('option'); opt.value = artist; opt.textContent = artist; select.appendChild(opt); });
         }
@@ -532,30 +466,10 @@
             filteredSongs = allSongs.filter(item => {
                 const tags = (item.tags || '').toLowerCase();
                 const matchSearch = !searchTerm || item.artist.toLowerCase().includes(searchTerm) || item.song.toLowerCase().includes(searchTerm) || tags.includes(searchTerm);
-                let matchFilter = true;
-                if (selectedValue === 'all') matchFilter = true;
-                else if (selectedValue === '__sort_clicks__') matchFilter = true;
-                else if (selectedValue === '__status_queued__') matchFilter = item.status === 'queued';
-                else if (selectedValue === '__status_singing__') matchFilter = item.status === 'singing';
-                else if (selectedValue === '__status_done__') matchFilter = item.status === 'done';
-                else matchFilter = item.artist === selectedValue;
-                return matchSearch && matchFilter;
+                return matchSearch && (selectedValue === 'all' || selectedValue === '__sort_clicks__' || item.artist === selectedValue);
             });
-            if (selectedValue === '__sort_clicks__') { filteredSongs.sort((a, b) => (b.clicks || 0) - (a.clicks || 0)); }
+            if (selectedValue === '__sort_clicks__') filteredSongs.sort((a, b) => (b.clicks || 0) - (a.clicks || 0));
             renderPlaylist(filteredSongs);
-        }
-        
-        function updateStatus(id, newStatus) {
-            requireAdmin(() => {
-                fetch(API_URL, { method: 'POST', headers: {'Content-Type': 'text/plain'}, body: JSON.stringify({ action: 'update_status', id: id, status: newStatus }) })
-                .then(res => res.json()).then(result => { 
-                    if (result.status === 'success') { 
-                        const statusText = {'': '⚪ 無狀態', 'queued': '⏳ 排隊中', 'singing': '🎤 演唱中', 'done': '✅ 已唱過'};
-                        showToast('✅ 狀態已更新為: ' + statusText[newStatus]); 
-                        loadPlaylist(); 
-                    } else { showToast('❌ 失敗: ' + result.message, 'error'); } 
-                }).catch(e => showToast('❌ 網路錯誤: ' + e, 'error'));
-            });
         }
         
         function renderPlaylist(songs) {
@@ -569,26 +483,12 @@
                 const safeTags = String(item.tags || '').replace(/'/g, "\\'");
                 const tagsHtml = item.tags ? item.tags.split(',').map(t => `<span class="tag-badge">${t.trim()}</span>`).join('') : '';
                 
-                const currentStatus = item.status || '';
-                const rowClass = currentStatus ? `row-${currentStatus}` : '';
-                
-                tr.className = rowClass;
                 tr.innerHTML = `
                     <td data-label="歌手">${item.artist}<br>${tagsHtml}</td>
-                    <td data-label="歌曲名稱">
-                        <span class="song-title clickable-title" onclick="addToQueue(${item.id}, '${safeSong}')" title="點擊加入待唱清單">
-                            ${item.song}
-                        </span>
-                    </td>
+                    <td data-label="歌曲名稱"><span class="clickable-title" onclick="addToQueue(${item.id}, '${safeSong}')" title="點擊加入待唱清單">${item.song}</span></td>
                     <td data-label="試聽"><a href="${displayLink}" target="_blank" class="listen-link" onclick="recordClick(${item.id})">🎵 試聽</a> <span style="font-size:12px; color:#888;">(${item.clicks || 0})</span></td>
-                    <td data-label="狀態與操作">
-                        <div class="status-group">
-                            <button class="status-btn ${currentStatus === '' ? 'active' : ''}" onclick="updateStatus(${item.id}, '')" title="無狀態">⚪</button>
-                            <button class="status-btn queued ${currentStatus === 'queued' ? 'active' : ''}" onclick="updateStatus(${item.id}, 'queued')" title="排隊中">⏳</button>
-                            <button class="status-btn singing ${currentStatus === 'singing' ? 'active' : ''}" onclick="updateStatus(${item.id}, 'singing')" title="演唱中">🎤</button>
-                            <button class="status-btn done ${currentStatus === 'done' ? 'active' : ''}" onclick="updateStatus(${item.id}, 'done')" title="已唱過">✅</button>
-                        </div>
-                        <div class="action-btns" style="margin-top: 8px;">
+                    <td data-label="操作">
+                        <div class="action-btns">
                             <button class="btn-sm btn-edit" onclick="editSong(${item.id}, '${safeArtist}', '${safeSong}', '${displayLink.replace(/'/g, "\\'")}', '${safeTags}')" title="編輯">✏️</button>
                             <button class="btn-sm btn-del" onclick="confirmDelete(${item.id}, '${safeArtist}', '${safeSong}')" title="刪除">🗑️</button>
                         </div>
@@ -612,13 +512,7 @@
                 if (!artist || !song) return showToast('請填寫歌手和歌曲名稱！', 'error');
                 const btn = document.getElementById('addBtn'); btn.disabled = true; btn.innerText = '新增中...';
                 fetch(API_URL, { method: 'POST', headers: {'Content-Type': 'text/plain'}, body: JSON.stringify({ action: 'add', artist, song, link: '', tags }) })
-                .then(res => res.json()).then(result => { 
-                    btn.disabled = false; btn.innerText = '✨ 確認新增至雲端'; 
-                    if (result.status === 'success') { 
-                        document.getElementById('artist').value = ''; document.getElementById('song').value = ''; document.getElementById('tags').value = ''; 
-                        showToast('✅ 新增成功！'); toggleAddForm(); loadPlaylist(); 
-                    } else { showToast('❌ 失敗: ' + result.message, 'error'); } 
-                }).catch(e => { btn.disabled = false; btn.innerText = '✨ 確認新增至雲端'; showToast('❌ 網路錯誤: ' + e, 'error'); });
+                .then(res => res.json()).then(result => { btn.disabled = false; btn.innerText = '✨ 確認新增至雲端'; if (result.status === 'success') { document.getElementById('artist').value = ''; document.getElementById('song').value = ''; document.getElementById('tags').value = ''; showToast('✅ 新增成功！'); toggleAddForm(); loadPlaylist(); } else { showToast('❌ 失敗: ' + result.message, 'error'); } }).catch(e => { btn.disabled = false; btn.innerText = '✨ 確認新增至雲端'; showToast('❌ 網路錯誤: ' + e, 'error'); });
             });
         }
         function batchAddSongs() {
@@ -629,13 +523,7 @@
                 if (songsToAdd.length === 0) return showToast('無法解析格式！', 'error');
                 const btn = document.getElementById('batchBtn'); btn.disabled = true; btn.innerText = '上傳中...';
                 fetch(API_URL, { method: 'POST', headers: {'Content-Type': 'text/plain'}, body: JSON.stringify({ action: 'batch_add', songs: songsToAdd }) })
-                .then(res => res.json()).then(result => { 
-                    btn.disabled = false; btn.innerText = '🚀 批量上傳至雲端'; 
-                    if (result.status === 'success') { 
-                        document.getElementById('batchInput').value = ''; 
-                        showToast(`✅ ${result.message}`); toggleAddForm(); loadPlaylist(); 
-                    } else { showToast('❌ 失敗: ' + result.message, 'error'); } 
-                }).catch(e => { btn.disabled = false; btn.innerText = '🚀 批量上傳至雲端'; showToast('❌ 網路錯誤: ' + e, 'error'); });
+                .then(res => res.json()).then(result => { btn.disabled = false; btn.innerText = '🚀 批量上傳至雲端'; if (result.status === 'success') { document.getElementById('batchInput').value = ''; showToast(`✅ ${result.message}`); toggleAddForm(); loadPlaylist(); } else { showToast('❌ 失敗: ' + result.message, 'error'); } }).catch(e => { btn.disabled = false; btn.innerText = '🚀 批量上傳至雲端'; showToast('❌ 網路錯誤: ' + e, 'error'); });
             });
         }
         function editSong(id, currentArtist, currentSong, currentLink, currentTags) {
@@ -649,41 +537,23 @@
             });
         }
         function confirmDelete(id, artist, song) {
-            requireAdmin(() => {
-                if (!confirm(`確定要刪除「${artist} - ${song}」嗎？`)) return;
-                fetch(API_URL, { method: 'POST', headers: {'Content-Type': 'text/plain'}, body: JSON.stringify({ action: 'delete', id }) })
-                .then(res => res.json()).then(result => { if (result.status === 'success') { showToast('✅ 刪除成功！'); loadPlaylist(); } else { showToast('❌ 失敗: ' + result.message, 'error'); } }).catch(e => showToast('❌ 網路錯誤: ' + e, 'error'));
-            });
+            requireAdmin(() => { if (!confirm(`確定要刪除「${artist} - ${song}」嗎？`)) return; fetch(API_URL, { method: 'POST', headers: {'Content-Type': 'text/plain'}, body: JSON.stringify({ action: 'delete', id }) }).then(res => res.json()).then(result => { if (result.status === 'success') { showToast('✅ 刪除成功！'); loadPlaylist(); } else { showToast('❌ 失敗: ' + result.message, 'error'); } }).catch(e => showToast('❌ 網路錯誤: ' + e, 'error')); });
         }
         function confirmDeleteRequest(id, nickname, message) {
-            requireAdmin(() => {
-                if (!confirm(`確定要刪除這則「主留言」嗎？\n(底下的所有回覆也會一併刪除)`)) return;
-                fetch(API_URL, { method: 'POST', headers: {'Content-Type': 'text/plain'}, body: JSON.stringify({ action: 'delete_request', id: id }) })
-                .then(res => res.json()).then(result => { if (result.status === 'success') { showToast('✅ ' + result.message); loadPlaylist(); } else { showToast('❌ 失敗: ' + result.message, 'error'); } }).catch(e => showToast('❌ 網路錯誤: ' + e, 'error'));
-            });
+            requireAdmin(() => { if (!confirm(`確定要刪除這則「主留言」嗎？`)) return; fetch(API_URL, { method: 'POST', headers: {'Content-Type': 'text/plain'}, body: JSON.stringify({ action: 'delete_request', id: id }) }).then(res => res.json()).then(result => { if (result.status === 'success') { showToast('✅ ' + result.message); loadPlaylist(); } else { showToast('❌ 失敗: ' + result.message, 'error'); } }).catch(e => showToast('❌ 網路錯誤: ' + e, 'error')); });
         }
         function submitRequest() {
             const nick = document.getElementById('reqNick').value.trim() || '匿名訪客'; const msg = document.getElementById('reqMessage').value.trim();
             if (!msg) return showToast('請輸入內容！', 'error');
             const btn = event.target; btn.disabled = true; btn.innerText = '送出中...';
             fetch(API_URL, { method: 'POST', headers: {'Content-Type': 'text/plain'}, body: JSON.stringify({ action: 'add_request', nickname: nick, message: msg }) })
-            .then(res => res.json()).then(result => { 
-                btn.disabled = false; btn.innerText = '送出'; 
-                if (result.status === 'success') { 
-                    document.getElementById('reqMessage').value = ''; document.getElementById('reqNick').value = ''; 
-                    showToast('✅ ' + result.message); loadPlaylist(); 
-                } else { showToast('❌ 失敗: ' + result.message, 'error'); } 
-            }).catch(e => { btn.disabled = false; btn.innerText = '送出'; showToast('❌ 網路錯誤: ' + e, 'error'); });
+            .then(res => res.json()).then(result => { btn.disabled = false; btn.innerText = '送出'; if (result.status === 'success') { document.getElementById('reqMessage').value = ''; document.getElementById('reqNick').value = ''; showToast('✅ ' + result.message); loadPlaylist(); } else { showToast('❌ 失敗: ' + result.message, 'error'); } }).catch(e => { btn.disabled = false; btn.innerText = '送出'; showToast('❌ 網路錯誤: ' + e, 'error'); });
         }
         function exportCSV() {
             requireAdmin(() => {
                 if (filteredSongs.length === 0) return showToast('沒有資料可匯出！', 'error');
                 let csvContent = "\uFEFF歌手,歌曲名稱,YouTube連結,點擊次數,標籤,狀態\n";
-                filteredSongs.forEach(item => { 
-                    const link = item.link || `https://www.youtube.com/results?search_query=${encodeURIComponent((item.artist||'')+' '+(item.song||''))}`;
-                    const statusText = {'': '', 'queued': '排隊中', 'singing': '演唱中', 'done': '已唱過'}[item.status || ''];
-                    csvContent += `"${item.artist}","${item.song}","${link}",${item.clicks || 0},"${item.tags || ''}","${statusText}"\n`; 
-                });
+                filteredSongs.forEach(item => { const link = item.link || `https://www.youtube.com/results?search_query=${encodeURIComponent((item.artist||'')+' '+(item.song||''))}`; csvContent += `"${item.artist}","${item.song}","${link}",${item.clicks || 0},"${item.tags || ''}","${item.status || ''}"\n`; });
                 const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' }); const url = URL.createObjectURL(blob); const a = document.createElement('a');
                 a.href = url; a.download = `静静在夏天的歌單_${new Date().toISOString().slice(0,10)}.csv`; document.body.appendChild(a); a.click(); document.body.removeChild(a);
                 showToast('📥 CSV 已匯出！', 'success');
