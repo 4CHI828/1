@@ -51,7 +51,7 @@
         .request-form { display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap; }
         .request-form input, .request-form textarea { flex: 1; padding: 10px; border: 1px solid var(--border); border-radius: 4px; background: var(--bg-color); color: var(--text-color); min-width: 150px; }
         .request-form textarea { width: 100%; flex: none; }
-        .request-list { max-height: 400px; overflow-y: auto; }
+        .request-list { max-height: 500px; overflow-y: auto; }
         .request-item { padding: 15px; border-bottom: 1px solid var(--border); font-size: 14px; position: relative; transition: background 0.2s; }
         .request-item:hover { background-color: rgba(0,0,0,0.02); }
         body.dark-mode .request-item:hover { background-color: rgba(255,255,255,0.05); }
@@ -62,16 +62,23 @@
         .req-action-btn { background: none; border: none; color: #888; font-size: 12px; cursor: pointer; padding: 0; text-decoration: underline; }
         .req-action-btn:hover { color: var(--primary); }
         
-        /* 🌟 回覆區塊樣式 (區分官方與一般) */
-        .reply-box { padding: 10px 15px; border-radius: 6px; margin-top: 10px; border-left: 4px solid var(--primary); font-size: 13px; }
+        .replies-container { margin-top: 10px; display: flex; flex-direction: column; gap: 8px; }
+        .reply-box { padding: 10px 15px; border-radius: 6px; border-left: 4px solid var(--primary); font-size: 13px; position: relative; }
         .reply-box.official { background-color: var(--reply-bg); border-left-color: var(--warning); }
         .reply-box.general { background-color: var(--bg-color); border: 1px solid var(--border); border-left-color: var(--primary); }
         
-        .reply-header { font-weight: bold; margin-bottom: 4px; display: flex; justify-content: space-between; }
-        .reply-header.official { color: #d39e00; } /* 金色 */
+        .reply-header { font-weight: bold; margin-bottom: 4px; display: flex; justify-content: space-between; align-items: center; }
+        .reply-header.official { color: #d39e00; } 
         .reply-header.general { color: var(--primary); }
 
-        /* 回覆輸入區 */
+        /* 🌟 單則回覆的刪除按鈕樣式 */
+        .reply-del-btn {
+            background: none; border: none; color: #ccc; font-size: 12px; cursor: pointer; 
+            padding: 2px 5px; border-radius: 4px; transition: 0.2s; opacity: 0;
+        }
+        .reply-box:hover .reply-del-btn { opacity: 1; }
+        .reply-del-btn:hover { color: var(--danger); background: rgba(220, 53, 69, 0.1); }
+
         .reply-input-area { margin-top: 10px; display: flex; flex-direction: column; gap: 8px; background: rgba(0,0,0,0.02); padding: 10px; border-radius: 6px; }
         body.dark-mode .reply-input-area { background: rgba(255,255,255,0.05); }
         .reply-input-area input, .reply-input-area textarea { padding: 8px; border: 1px solid var(--border); border-radius: 4px; background: var(--bg-color); color: var(--text-color); font-size: 13px; width: 100%; box-sizing: border-box; }
@@ -118,6 +125,7 @@
             .filter-bar { flex-direction: column; }
             .add-form-container { width: 90vw; right: 5vw; bottom: 100px; }
             .fab-group { bottom: 20px; right: 20px; }
+            .reply-del-btn { opacity: 1; } /* 手機版直接顯示刪除按鈕 */
         }
     </style>
 </head>
@@ -161,11 +169,10 @@
         <tbody id="playlistBody"></tbody>
     </table>
 
-    <!-- 📝 點歌與留言區 -->
     <div class="request-section" id="requestSection">
         <h3 style="margin-top:0; display:flex; justify-content:space-between; align-items:center;">
             📝 點歌與留言板 
-            <span style="font-size:12px; font-weight:normal; color:#888;">(每則留言限回覆一次)</span>
+            <span style="font-size:12px; font-weight:normal; color:#888;">(管理員可刪除單則留言/回覆)</span>
         </h3>
         <div class="request-form">
             <input type="text" id="reqNick" placeholder="您的暱稱 (選填)" style="max-width: 150px;">
@@ -230,7 +237,7 @@
             <ul class="help-list">
                 <li>🔍 <b>即時搜尋與分類</b>：支援搜尋歌手、歌名或標籤，也可查看「🔥熱門排行」。</li>
                 <li>🎲 <b>隨機選歌</b>：不知道聽什麼？讓系統幫你抽一首。</li>
-                <li>💬 <b>互動留言板</b>：訪客可留言、一般回覆；管理員可進行「👑官方回覆」。</li>
+                <li>💬 <b>互動留言板</b>：支援無限次回覆串樓！管理員可刪除「單則主留言」或「單則回覆」。</li>
                 <li>🔐 <b>全面安全保護</b>：新增、編輯、刪除、匯出皆需管理員密碼。</li>
             </ul>
             <button class="btn" style="background:var(--primary); color:white; padding: 10px 30px;" onclick="document.getElementById('helpModal').style.display='none'">我知道了</button>
@@ -306,7 +313,7 @@
                 });
         }
 
-        // 🌟 渲染留言與回覆 (區分官方/一般)
+        // 🌟 渲染留言與多筆回覆 (含單則刪除按鈕)
         function renderRequests(requests) {
             const list = document.getElementById('requestList');
             const displayRequests = requests.slice(0, 15); 
@@ -320,22 +327,30 @@
                 const safeNick = String(req.nickname || '').replace(/'/g, "\\'");
                 const safeMsg = String(req.message || '').replace(/'/g, "\\'");
                 
-                let replyHtml = '';
-                if (req.replyContent) {
-                    const isOfficial = req.replier === ADMIN_NAME;
-                    const boxClass = isOfficial ? 'official' : 'general';
-                    const headerClass = isOfficial ? 'official' : 'general';
-                    const prefix = isOfficial ? '👑 ' : '💬 ';
-                    
-                    replyHtml = `
-                        <div class="reply-box ${boxClass}">
-                            <div class="reply-header ${headerClass}">
-                                <span>${prefix}${req.replier} 回覆</span>
-                                <span style="font-weight:normal; color:#888; font-size:11px;">${req.replyTime}</span>
+                let repliesHtml = '';
+                if (req.replies && req.replies.length > 0) {
+                    repliesHtml = '<div class="replies-container">' + req.replies.map(rep => {
+                        const boxClass = rep.isOfficial ? 'official' : 'general';
+                        const prefix = rep.isOfficial ? '👑 ' : '💬 ';
+                        
+                        // 🌟 只有具備真實 replyId (數字) 的回覆才能單獨刪除
+                        const delBtnHtml = typeof rep.replyId === 'number' 
+                            ? `<button class="reply-del-btn" onclick="confirmDeleteReply(${rep.replyId})" title="刪除這則回覆">🗑️</button>` 
+                            : '';
+
+                        return `
+                            <div class="reply-box ${boxClass}">
+                                <div class="reply-header ${boxClass}">
+                                    <span>${prefix}${rep.replier}</span>
+                                    <span style="display:flex; align-items:center; gap:8px;">
+                                        <span style="font-weight:normal; color:#888; font-size:11px;">${rep.time}</span>
+                                        ${delBtnHtml}
+                                    </span>
+                                </div>
+                                <div>${rep.content}</div>
                             </div>
-                            <div>${req.replyContent}</div>
-                        </div>
-                    `;
+                        `;
+                    }).join('') + '</div>';
                 }
 
                 return `
@@ -346,14 +361,13 @@
                     </div>
                     <div style="word-break: break-word;">${req.message}</div>
                     
-                    ${replyHtml}
+                    ${repliesHtml}
                     
                     <div class="req-actions">
                         <button class="req-action-btn" onclick="toggleReplyInput(${req.id})">💬 回覆</button>
-                        <button class="req-action-btn" style="color:var(--danger);" onclick="confirmDeleteRequest(${req.id}, '${safeNick}', '${safeMsg}')">🗑️ 刪除</button>
+                        <button class="req-action-btn" style="color:var(--danger);" onclick="confirmDeleteRequest(${req.id}, '${safeNick}', '${safeMsg}')">🗑️ 刪除整串</button>
                     </div>
                     
-                    <!-- 回覆輸入區 (含暱稱與雙按鈕) -->
                     <div id="reply-input-${req.id}" class="reply-input-area" style="display:none;">
                         <input type="text" id="reply-nick-${req.id}" placeholder="您的暱稱 (一般回覆必填)" value="${localStorage.getItem('lastReplyNick') || ''}">
                         <textarea id="reply-text-${req.id}" placeholder="輸入回覆內容..."></textarea>
@@ -377,63 +391,42 @@
             }
         }
 
-        // 💬 一般回覆 (免密碼)
         function submitGeneralReply(id) {
             const nick = document.getElementById(`reply-nick-${id}`).value.trim();
             const replyText = document.getElementById(`reply-text-${id}`).value.trim();
-            
             if (!nick) return alert('一般回覆請填寫您的暱稱！');
             if (!replyText) return alert('請輸入回覆內容！');
-
-            localStorage.setItem('lastReplyNick', nick); // 記住暱稱
-
-            fetch(API_URL, { 
-                method: 'POST', 
-                headers: {'Content-Type': 'text/plain'}, 
-                body: JSON.stringify({ 
-                    action: 'reply_request', 
-                    id: id, 
-                    replier: nick, 
-                    replyContent: replyText,
-                    isOfficial: false 
-                }) 
-            })
-            .then(res => res.json())
-            .then(result => {
-                if (result.status === 'success') { alert('✅ ' + result.message); loadPlaylist(); } 
+            localStorage.setItem('lastReplyNick', nick);
+            fetch(API_URL, { method: 'POST', headers: {'Content-Type': 'text/plain'}, body: JSON.stringify({ action: 'reply_request', id: id, replier: nick, replyContent: replyText, isOfficial: false }) })
+            .then(res => res.json()).then(result => {
+                if (result.status === 'success') { document.getElementById(`reply-text-${id}`).value = ''; alert('✅ ' + result.message); loadPlaylist(); } 
                 else { alert('❌ 失敗: ' + result.message); }
-            })
-            .catch(e => alert('❌ 網路錯誤: ' + e));
+            }).catch(e => alert('❌ 網路錯誤: ' + e));
         }
 
-        // 👑 官方回覆 (需密碼)
         function submitOfficialReply(id) {
             const password = prompt("⚠️ 官方回覆需要管理員密碼：");
-            if (password !== ADMIN_PASSWORD) {
-                if (password !== null) alert("❌ 密碼錯誤！");
-                return;
-            }
-
+            if (password !== ADMIN_PASSWORD) { if (password !== null) alert("❌ 密碼錯誤！"); return; }
             const replyText = document.getElementById(`reply-text-${id}`).value.trim();
             if (!replyText) return alert('請輸入回覆內容！');
+            fetch(API_URL, { method: 'POST', headers: {'Content-Type': 'text/plain'}, body: JSON.stringify({ action: 'reply_request', id: id, replier: ADMIN_NAME, replyContent: replyText, isOfficial: true }) })
+            .then(res => res.json()).then(result => {
+                if (result.status === 'success') { document.getElementById(`reply-text-${id}`).value = ''; alert('✅ ' + result.message); loadPlaylist(); } 
+                else { alert('❌ 失敗: ' + result.message); }
+            }).catch(e => alert('❌ 網路錯誤: ' + e));
+        }
 
-            fetch(API_URL, { 
-                method: 'POST', 
-                headers: {'Content-Type': 'text/plain'}, 
-                body: JSON.stringify({ 
-                    action: 'reply_request', 
-                    id: id, 
-                    replier: ADMIN_NAME, 
-                    replyContent: replyText,
-                    isOfficial: true 
-                }) 
-            })
-            .then(res => res.json())
-            .then(result => {
+        // 🌟 新增：精準刪除單則回覆
+        function confirmDeleteReply(replyId) {
+            const password = prompt("⚠️ 刪除單則回覆需要管理員密碼：");
+            if (password !== ADMIN_PASSWORD) { if (password !== null) alert("❌ 密碼錯誤！"); return; }
+            if (!confirm("確定要單獨刪除這則回覆嗎？(主留言與其他回覆不會受影響)")) return;
+            
+            fetch(API_URL, { method: 'POST', headers: {'Content-Type': 'text/plain'}, body: JSON.stringify({ action: 'delete_reply', replyId: replyId }) })
+            .then(res => res.json()).then(result => {
                 if (result.status === 'success') { alert('✅ ' + result.message); loadPlaylist(); } 
                 else { alert('❌ 失敗: ' + result.message); }
-            })
-            .catch(e => alert('❌ 網路錯誤: ' + e));
+            }).catch(e => alert('❌ 網路錯誤: ' + e));
         }
 
         function updateArtistFilter() {
@@ -572,12 +565,12 @@
             }).catch(e => alert('❌ 網路錯誤: ' + e));
         }
         function confirmDeleteRequest(id, nickname, message) {
-            const password = prompt(`⚠️ 刪除留言需要密碼：`);
+            const password = prompt(`⚠️ 刪除整串留言(含所有回覆)需要密碼：`);
             if (password !== ADMIN_PASSWORD) { if (password !== null) alert("❌ 密碼錯誤！"); return; }
-            if (!confirm(`確定要刪除這則留言嗎？`)) return;
+            if (!confirm(`確定要刪除這則「主留言」嗎？\n(底下的所有回覆也會一併刪除)`)) return;
             fetch(API_URL, { method: 'POST', headers: {'Content-Type': 'text/plain'}, body: JSON.stringify({ action: 'delete_request', id: id }) })
             .then(res => res.json()).then(result => {
-                if (result.status === 'success') { alert('✅ 刪除成功！'); loadPlaylist(); } else { alert('❌ 失敗: ' + result.message); }
+                if (result.status === 'success') { alert('✅ ' + result.message); loadPlaylist(); } else { alert('❌ 失敗: ' + result.message); }
             }).catch(e => alert('❌ 網路錯誤: ' + e));
         }
         function submitRequest() {
