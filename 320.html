@@ -7,9 +7,9 @@
     
     <!-- ⚙️ 設定區 -->
     <script>
-        const API_URL = 'https://script.google.com/macros/s/AKfycbw7NZWJ9J_C298PdmuivaKWEUARpiZ2BuaOTwwSb_xNjM9LyjQZhDtrcSD88eoWfj_F/exec'; 
+        const API_URL = 'YOUR_GAS_WEB_APP_URL'; 
         const ADMIN_PASSWORD = "admin789"; 
-        const ADMIN_NAME = "静静"; // 管理員顯示名稱
+        const ADMIN_NAME = "静静"; 
     </script>
 
     <style>
@@ -63,7 +63,6 @@
         .req-action-btn { background: none; border: none; color: #888; font-size: 12px; cursor: pointer; padding: 0; text-decoration: underline; }
         .req-action-btn:hover { color: var(--primary); }
         
-        /* 回覆區塊樣式 */
         .reply-box { background-color: var(--reply-bg); padding: 10px 15px; border-radius: 6px; margin-top: 10px; border-left: 4px solid var(--primary); font-size: 13px; }
         .reply-header { font-weight: bold; color: var(--primary); margin-bottom: 4px; display: flex; justify-content: space-between; }
         .reply-input-area { margin-top: 10px; display: flex; gap: 10px; }
@@ -71,7 +70,6 @@
 
         .footer { text-align: center; margin-top: 30px; color: #666; font-size: 14px; }
         .loading { text-align: center; padding: 20px; display: none; }
-        .shortcut-hint { text-align: center; font-size: 12px; color: #888; margin-top: 10px; }
 
         .fab-group { position: fixed; bottom: 30px; right: 30px; display: flex; flex-direction: column; gap: 15px; z-index: 1000; align-items: flex-end; }
         .fab-btn { color: white; border: none; padding: 14px 24px; border-radius: 30px; font-size: 16px; font-weight: bold; box-shadow: 0 4px 15px rgba(0,0,0,0.2); cursor: pointer; transition: 0.3s; display: flex; align-items: center; gap: 8px; }
@@ -118,7 +116,7 @@
         <a href="https://v.douyin.com/mw-osadXTvk/" target="_blank">🍔 抖音</a>
         <a href="https://www.twitch.tv/jingjingzaixiatian" target="_blank">🍔 圖奇</a>
         <a href="https://discord.com/channels/865334403864461373/1467603376144646319" target="_blank">🍔 DC靜靜幫</a>
-        <a href="https://www.youtube.com/playlist?list=PL3LHSN24syoOcIqA8nRwfYgAOoR5U27_U" target="_blank">🍔 YT歌單</a>
+        <a href="https://www.youtube.com/playlist?list=PL3LHSN24syoOcIqA8nRwfYgAOoR5U27_U" target="_blank">🍔 Youtube</a>
         <a href="https://www.instagram.com/jingjing24739233910/" target="_blank">🍔 IG</a>
     </div>
 
@@ -135,7 +133,6 @@
             <button class="btn btn-theme" onclick="toggleDarkMode()" id="themeBtn" title="切換深色模式">🌙</button>
             <button class="btn btn-help" onclick="showHelpModal()" title="功能說明">❓</button>
         </div>
-        <div class="shortcut-hint">💡 快捷鍵: <b>/</b> 搜尋 | <b>N</b> 新增 | <b>Esc</b> 關閉視窗</div>
     </div>
 
     <h3>🎵 目前歌單 (<span id="songCount">0</span> 首)</h3>
@@ -228,7 +225,6 @@
                 <li>🌙 <b>深色模式</b>：一鍵切換護眼深色主題，設定會自動記住。</li>
                 <li>💬 <b>點歌留言板</b>：訪客可留言點歌，管理員可密碼保護刪除或<b>回覆</b>。</li>
                 <li>🔐 <b>全面安全保護</b>：新增、編輯、刪除、匯出皆需管理員密碼。</li>
-                <li>⌨️ <b>快捷鍵</b>：<b>/</b> 搜尋 | <b>N</b> 新增 | <b>Esc</b> 關閉。</li>
             </ul>
             <button class="btn" style="background:var(--primary); color:white; padding: 10px 30px;" onclick="document.getElementById('helpModal').style.display='none'">我知道了</button>
         </div>
@@ -312,7 +308,6 @@
                 });
         }
 
-        // 🌟 渲染留言與回覆
         function renderRequests(requests) {
             const list = document.getElementById('requestList');
             const displayRequests = requests.slice(0, 15); 
@@ -326,7 +321,6 @@
                 const safeNick = String(req.nickname || '').replace(/'/g, "\\'");
                 const safeMsg = String(req.message || '').replace(/'/g, "\\'");
                 
-                // 回覆區塊 HTML
                 let replyHtml = '';
                 if (req.replyContent) {
                     replyHtml = `
@@ -355,7 +349,6 @@
                         <button class="req-action-btn" style="color:var(--danger);" onclick="confirmDeleteRequest(${req.id}, '${safeNick}', '${safeMsg}')">🗑️ 刪除</button>
                     </div>
                     
-                    <!-- 隱藏的回覆輸入區 -->
                     <div id="reply-input-${req.id}" class="reply-input-area" style="display:none;">
                         <textarea id="reply-text-${req.id}" placeholder="輸入回覆內容..."></textarea>
                         <button class="btn btn-add" style="width:auto; padding:8px 15px; font-size:14px;" onclick="submitReply(${req.id})">送出</button>
@@ -364,11 +357,9 @@
             `}).join('');
         }
 
-        // 展開/收合回覆輸入框
         function toggleReplyInput(id) {
             const inputArea = document.getElementById(`reply-input-${id}`);
             if (inputArea.style.display === 'none') {
-                // 先關閉其他打開的
                 document.querySelectorAll('.reply-input-area').forEach(el => el.style.display = 'none');
                 inputArea.style.display = 'flex';
                 document.getElementById(`reply-text-${id}`).focus();
@@ -377,7 +368,6 @@
             }
         }
 
-        // 送出回覆
         function submitReply(id) {
             const password = prompt("⚠️ 回覆留言需要管理員密碼：");
             if (password !== ADMIN_PASSWORD) {
@@ -593,17 +583,611 @@
         }
 
         document.addEventListener('keydown', (e) => {
-            if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') { e.preventDefault(); document.getElementById('searchInput').focus(); }
-            if (e.key === '/' && document.activeElement.tagName !== 'INPUT' && document.activeElement.tagName !== 'TEXTAREA') { e.preventDefault(); document.getElementById('searchInput').focus(); }
             if (e.key === 'Escape') {
                 document.getElementById('randomModal').style.display = 'none';
                 document.getElementById('helpModal').style.display = 'none';
                 const container = document.getElementById('addFormContainer');
                 if (container.style.display === 'block') toggleAddForm();
             }
-            if (e.key.toLowerCase() === 'n' && document.activeElement.tagName !== 'INPUT' && document.activeElement.tagName !== 'TEXTAREA') {
-                e.preventDefault();
-                if (document.getElementById('addFormContainer').style.display !== 'block') toggleAddForm();
+        });
+
+        window.addEventListener('scroll', () => {
+            document.getElementById('scrollTopBtn').style.display = window.scrollY > 300 ? 'flex' : 'none';
+        });
+
+        window.onload = loadPlaylist;
+    </script>
+</body>
+</html><!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>静静在夏天🍔🎤⁰³²⁰的線上歌單</title>
+    
+    <!-- ⚙️ 設定區 -->
+    <script>
+        const API_URL = 'YOUR_GAS_WEB_APP_URL'; 
+        const ADMIN_PASSWORD = "admin789"; 
+        const ADMIN_NAME = "静静"; 
+    </script>
+
+    <style>
+        :root {
+            --bg-color: #f4f4f9; --text-color: #333; --card-bg: #fff;
+            --primary: #007bff; --danger: #dc3545; --success: #28a745; --warning: #ffc107;
+            --border: #ddd; --reply-bg: #e8f4fd;
+        }
+        body.dark-mode {
+            --bg-color: #1a1a1a; --text-color: #e0e0e0; --card-bg: #2d2d2d;
+            --primary: #4dabf7; --border: #444; --reply-bg: #2c3e50;
+        }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: var(--bg-color); color: var(--text-color); max-width: 900px; margin: 0 auto; padding: 20px; padding-bottom: 120px; scroll-behavior: smooth; transition: background 0.3s, color 0.3s; }
+        h1 { text-align: center; color: #ff6b6b; margin-bottom: 10px; }
+        .social-links { text-align: center; margin-bottom: 25px; }
+        .social-links a { margin: 0 8px; text-decoration: none; color: var(--primary); font-weight: bold; font-size: 14px; }
+        
+        .control-panel { background: var(--card-bg); padding: 20px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); margin-bottom: 20px; }
+        .filter-bar { display: flex; gap: 10px; margin-bottom: 15px; flex-wrap: wrap; }
+        .filter-bar input, .filter-bar select { flex: 1; padding: 10px; border: 1px solid var(--border); border-radius: 4px; font-size: 14px; min-width: 120px; background: var(--card-bg); color: var(--text-color); }
+        .btn { border: none; padding: 10px 15px; border-radius: 4px; cursor: pointer; font-weight: bold; transition: 0.3s; white-space: nowrap; font-size: 14px; display: inline-flex; align-items: center; gap: 5px; }
+        .btn-random { background-color: var(--warning); color: #333; }
+        .btn-export { background-color: var(--success); color: white; }
+        .btn-theme, .btn-refresh, .btn-help { background-color: var(--card-bg); border: 1px solid var(--border); color: var(--text-color); font-size: 16px; padding: 8px 12px; }
+        .btn-refresh:hover { transform: rotate(180deg); transition: transform 0.5s; }
+        .btn-help:hover { background-color: var(--primary); color: white; border-color: var(--primary); }
+
+        table { width: 100%; border-collapse: collapse; background: var(--card-bg); border-radius: 8px; overflow: hidden; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        th, td { padding: 12px; text-align: left; border-bottom: 1px solid var(--border); }
+        th { background-color: var(--primary); color: white; }
+        .action-btns { display: flex; gap: 5px; }
+        .btn-sm { padding: 4px 8px; font-size: 12px; border-radius: 4px; border: none; cursor: pointer; color: white; }
+        .btn-edit { background-color: var(--primary); }
+        .btn-del { background-color: var(--danger); }
+
+        .tag-badge { display: inline-block; background-color: #e9ecef; color: #495057; font-size: 11px; padding: 2px 6px; border-radius: 10px; margin-right: 4px; margin-top: 4px; }
+        body.dark-mode .tag-badge { background-color: #495057; color: #e9ecef; }
+
+        .request-section { background: var(--card-bg); padding: 20px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); margin-top: 30px; transition: box-shadow 0.3s, transform 0.3s; }
+        .request-form { display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap; }
+        .request-form input, .request-form textarea { flex: 1; padding: 10px; border: 1px solid var(--border); border-radius: 4px; background: var(--bg-color); color: var(--text-color); min-width: 150px; }
+        .request-form textarea { width: 100%; flex: none; }
+        .request-list { max-height: 400px; overflow-y: auto; }
+        .request-item { padding: 15px; border-bottom: 1px solid var(--border); font-size: 14px; position: relative; transition: background 0.2s; }
+        .request-item:hover { background-color: rgba(0,0,0,0.02); }
+        body.dark-mode .request-item:hover { background-color: rgba(255,255,255,0.05); }
+        .request-item:last-child { border-bottom: none; }
+        .req-header { display: flex; justify-content: space-between; color: #888; font-size: 12px; margin-bottom: 8px; }
+        .req-nick { font-weight: bold; color: var(--primary); }
+        .req-actions { display: flex; gap: 8px; margin-top: 10px; }
+        .req-action-btn { background: none; border: none; color: #888; font-size: 12px; cursor: pointer; padding: 0; text-decoration: underline; }
+        .req-action-btn:hover { color: var(--primary); }
+        
+        .reply-box { background-color: var(--reply-bg); padding: 10px 15px; border-radius: 6px; margin-top: 10px; border-left: 4px solid var(--primary); font-size: 13px; }
+        .reply-header { font-weight: bold; color: var(--primary); margin-bottom: 4px; display: flex; justify-content: space-between; }
+        .reply-input-area { margin-top: 10px; display: flex; gap: 10px; }
+        .reply-input-area textarea { flex: 1; padding: 8px; border: 1px solid var(--border); border-radius: 4px; background: var(--bg-color); color: var(--text-color); font-size: 13px; resize: none; height: 40px; }
+
+        .footer { text-align: center; margin-top: 30px; color: #666; font-size: 14px; }
+        .loading { text-align: center; padding: 20px; display: none; }
+
+        .fab-group { position: fixed; bottom: 30px; right: 30px; display: flex; flex-direction: column; gap: 15px; z-index: 1000; align-items: flex-end; }
+        .fab-btn { color: white; border: none; padding: 14px 24px; border-radius: 30px; font-size: 16px; font-weight: bold; box-shadow: 0 4px 15px rgba(0,0,0,0.2); cursor: pointer; transition: 0.3s; display: flex; align-items: center; gap: 8px; }
+        .fab-btn:hover { transform: translateY(-2px); }
+        .fab-btn.active { background-color: var(--danger) !important; }
+        .fab-btn.msg-btn { background-color: var(--primary); }
+        .fab-btn.add-btn { background-color: var(--success); }
+        .scroll-top-btn { background-color: #6c757d; color: white; border: none; width: 50px; height: 50px; border-radius: 50%; font-size: 20px; cursor: pointer; display: none; align-items: center; justify-content: center; }
+
+        .add-form-container { position: fixed; bottom: 110px; right: 30px; width: 380px; max-width: 90vw; background: var(--card-bg); padding: 25px; border-radius: 12px; box-shadow: 0 8px 25px rgba(0,0,0,0.2); z-index: 999; display: none; animation: slideUp 0.3s ease-out; border: 1px solid var(--border); }
+        @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        .form-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; border-bottom: 2px solid var(--bg-color); padding-bottom: 10px; }
+        .form-tabs { display: flex; gap: 10px; margin-bottom: 15px; }
+        .form-tab { flex: 1; padding: 8px; text-align: center; background: var(--bg-color); border-radius: 4px; cursor: pointer; font-size: 14px; font-weight: bold; color: var(--text-color); }
+        .form-tab.active { background: var(--primary); color: white; }
+        .form-group { margin-bottom: 15px; }
+        .form-group label { display: block; margin-bottom: 6px; font-weight: bold; font-size: 14px; }
+        .form-group input, .form-group textarea { width: 100%; padding: 10px; border: 1px solid var(--border); border-radius: 6px; box-sizing: border-box; font-size: 15px; background: var(--bg-color); color: var(--text-color); }
+        .btn-add { background-color: var(--success); color: white; border: none; padding: 12px; border-radius: 6px; cursor: pointer; font-size: 16px; font-weight: bold; width: 100%; }
+        .btn-add:disabled { background-color: #ccc; }
+
+        .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 2000; justify-content: center; align-items: center; backdrop-filter: blur(3px); }
+        .modal-content { background: var(--card-bg); padding: 30px; border-radius: 12px; text-align: center; max-width: 500px; width: 90%; box-shadow: 0 10px 25px rgba(0,0,0,0.3); animation: popIn 0.3s ease; color: var(--text-color); max-height: 80vh; overflow-y: auto; }
+        @keyframes popIn { from { transform: scale(0.8); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+        .modal-content .btn-listen { background-color: #ff0000; color: white; text-decoration: none; padding: 12px 24px; border-radius: 6px; display: inline-block; margin-top: 10px; font-weight: bold; }
+        .help-list { text-align: left; margin: 20px 0; line-height: 1.8; font-size: 15px; }
+        .help-list li { margin-bottom: 10px; }
+
+        .listen-link { color: #007bff; font-weight: bold; text-decoration: none; font-size: 14px; transition: color 0.3s; }
+        .listen-link:hover { color: #0056b3; text-decoration: underline; }
+        body.dark-mode .listen-link { color: #4dabf7; }
+
+        @media (max-width: 600px) {
+            .filter-bar { flex-direction: column; }
+            .add-form-container { width: 90vw; right: 5vw; bottom: 100px; }
+            .fab-group { bottom: 20px; right: 20px; }
+        }
+    </style>
+</head>
+<body>
+
+    <h1>静静在夏天🍔🎤⁰³²⁰的線上歌單</h1>
+    <div class="social-links">
+        <a href="https://v.douyin.com/mw-osadXTvk/" target="_blank">🍔 抖音</a>
+        <a href="https://www.twitch.tv/jingjingzaixiatian" target="_blank">🍔 圖奇</a>
+        <a href="https://discord.com/channels/865334403864461373/1467603376144646319" target="_blank">🍔 DC靜靜幫</a>
+        <a href="https://www.youtube.com/playlist?list=PL3LHSN24syoOcIqA8nRwfYgAOoR5U27_U" target="_blank">🍔 Youtube</a>
+        <a href="https://www.instagram.com/jingjing24739233910/" target="_blank">🍔 IG</a>
+    </div>
+
+    <div class="control-panel">
+        <div class="filter-bar">
+            <input type="text" id="searchInput" placeholder="🔍 搜尋歌手、歌曲或標籤..." oninput="applyFilters()">
+            <select id="artistFilter" onchange="applyFilters()">
+                <option value="all">🎤 所有歌手</option>
+                <option value="__sort_clicks__">🔥 熱門排行</option>
+            </select>
+            <button class="btn btn-random" onclick="pickRandomSong()">🎲 隨機</button>
+            <button class="btn btn-export" onclick="exportCSV()">📥 匯出</button>
+            <button class="btn btn-refresh" onclick="loadPlaylist()" title="重新整理">🔄</button>
+            <button class="btn btn-theme" onclick="toggleDarkMode()" id="themeBtn" title="切換深色模式">🌙</button>
+            <button class="btn btn-help" onclick="showHelpModal()" title="功能說明">❓</button>
+        </div>
+    </div>
+
+    <h3>🎵 目前歌單 (<span id="songCount">0</span> 首)</h3>
+    <p id="loadingMsg" class="loading">⏳ 正在從雲端載入歌單...</p>
+    <table id="playlistTable">
+        <thead>
+            <tr>
+                <th>歌手</th>
+                <th>歌曲名稱</th>
+                <th>試聽</th>
+                <th style="width: 90px;">操作</th>
+            </tr>
+        </thead>
+        <tbody id="playlistBody"></tbody>
+    </table>
+
+    <!-- 📝 點歌與留言區 -->
+    <div class="request-section" id="requestSection">
+        <h3 style="margin-top:0; display:flex; justify-content:space-between; align-items:center;">
+            📝 點歌與留言板 
+            <span style="font-size:12px; font-weight:normal; color:#888;">(管理員可刪除/回覆)</span>
+        </h3>
+        <div class="request-form">
+            <input type="text" id="reqNick" placeholder="您的暱稱 (選填)" style="max-width: 150px;">
+            <textarea id="reqMessage" rows="2" placeholder="想點什麼歌？或給静静的留言..."></textarea>
+            <button class="btn btn-add" onclick="submitRequest()" style="width: auto; padding: 10px 20px; margin-top: 0;">送出</button>
+        </div>
+        <div id="requestList" class="request-list">
+            <p style="text-align:center; color:#888;">載入留言中...</p>
+        </div>
+    </div>
+
+    <div class="footer">
+        <p>💖 造訪次數: <span id="visitCount">0</span> 次</p>
+        <p>由 <a href="https://www.twitch.tv/chi828" target="_blank">新竹奇奇828</a> 協助升級製作</p>
+    </div>
+
+    <div class="fab-group">
+        <button id="scrollTopBtn" class="scroll-top-btn" onclick="window.scrollTo({top:0, behavior:'smooth'})">⬆️</button>
+        <button id="msgBtn" class="fab-btn msg-btn" onclick="scrollToRequestSection()">💬 留言</button>
+        <button id="fabBtn" class="fab-btn add-btn" onclick="toggleAddForm()">新增歌曲</button>
+    </div>
+
+    <div id="addFormContainer" class="add-form-container">
+        <div class="form-header">
+            <h3 style="margin:0; font-size:18px;">📝 新增歌曲</h3>
+            <button onclick="toggleAddForm()" style="background:none; border:none; font-size:24px; cursor:pointer; color:var(--text-color);">✕</button>
+        </div>
+        <div class="form-tabs">
+            <div class="form-tab active" onclick="switchTab('single')" id="tabSingle">單首新增</div>
+            <div class="form-tab" onclick="switchTab('batch')" id="tabBatch">📋 批量新增</div>
+        </div>
+        <div id="singleForm">
+            <div class="form-group"><label>歌手：</label><input type="text" id="artist" placeholder="例如：周杰倫"></div>
+            <div class="form-group"><label>歌曲名稱：</label><input type="text" id="song" placeholder="例如：晴天"></div>
+            <div class="form-group"><label>標籤 (選填)：</label><input type="text" id="tags" placeholder="例如: #抒情, #KTV必點"></div>
+            <button id="addBtn" class="btn-add" onclick="addSong()">✨ 確認新增至雲端</button>
+        </div>
+        <div id="batchForm" style="display:none;">
+            <div class="form-group">
+                <label>貼上清單 (每行一首，格式：歌手,歌曲)：</label>
+                <textarea id="batchInput" rows="6" placeholder="周杰倫,晴天&#10;林俊傑 修煉愛情"></textarea>
+            </div>
+            <button id="batchBtn" class="btn-add" onclick="batchAddSongs()">🚀 批量上傳至雲端</button>
+        </div>
+    </div>
+
+    <div id="randomModal" class="modal-overlay" onclick="if(event.target===this)this.style.display='none'">
+        <div class="modal-content">
+            <h2 style="color:#ff6b6b; margin-top:0;">✨ 命運的選擇 ✨</h2>
+            <div id="randomSongInfo" style="font-size:20px; margin:25px 0; font-weight:bold;"></div>
+            <a id="randomSongLink" href="#" target="_blank" class="btn-listen">🎵 立即試聽</a>
+            <div style="margin-top:15px;">
+                <button class="btn btn-random" onclick="pickRandomSong()" style="margin-right:10px;">🎲 再抽一次</button>
+                <button class="btn" style="background:#6c757d; color:white;" onclick="document.getElementById('randomModal').style.display='none'">關閉</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ❓ 功能說明彈窗 -->
+    <div id="helpModal" class="modal-overlay" onclick="if(event.target===this)this.style.display='none'">
+        <div class="modal-content">
+            <h2 style="color:var(--primary); margin-top:0;">📖 系統功能說明</h2>
+            <ul class="help-list">
+                <li>🔍 <b>即時搜尋與分類</b>：支援搜尋歌手、歌名或標籤，也可依歌手分類或查看「🔥熱門排行」。</li>
+                <li>🎲 <b>隨機選歌</b>：不知道聽什麼？讓系統幫你抽一首，支援「再抽一次」。</li>
+                <li>🏷️ <b>標籤管理</b>：可為歌曲加上標籤（如 #抒情），方便快速過濾。</li>
+                <li>📋 <b>批量新增</b>：管理員可一次性貼上多行文字，快速匯入大量歌曲。</li>
+                <li>📥 <b>一鍵匯出</b>：將目前歌單（含點擊次數）匯出為 CSV 檔案備份。</li>
+                <li>🌙 <b>深色模式</b>：一鍵切換護眼深色主題，設定會自動記住。</li>
+                <li>💬 <b>點歌留言板</b>：訪客可留言點歌，管理員可密碼保護刪除或<b>回覆</b>。</li>
+                <li>🔐 <b>全面安全保護</b>：新增、編輯、刪除、匯出皆需管理員密碼。</li>
+            </ul>
+            <button class="btn" style="background:var(--primary); color:white; padding: 10px 30px;" onclick="document.getElementById('helpModal').style.display='none'">我知道了</button>
+        </div>
+    </div>
+
+    <script>
+        let allSongs = []; 
+        let filteredSongs = []; 
+        let isDarkMode = localStorage.getItem('darkMode') === 'true';
+        if (isDarkMode) document.body.classList.add('dark-mode');
+        document.getElementById('themeBtn').textContent = isDarkMode ? '☀️' : '🌙';
+
+        let visits = parseInt(localStorage.getItem('visitCount') || 0) + 1;
+        localStorage.setItem('visitCount', visits);
+        document.getElementById('visitCount').innerText = visits;
+
+        function toggleDarkMode() {
+            isDarkMode = !isDarkMode;
+            document.body.classList.toggle('dark-mode', isDarkMode);
+            localStorage.setItem('darkMode', isDarkMode);
+            document.getElementById('themeBtn').textContent = isDarkMode ? '☀️' : '🌙';
+        }
+
+        function showHelpModal() {
+            document.getElementById('helpModal').style.display = 'flex';
+        }
+
+        function toggleAddForm() {
+            const container = document.getElementById('addFormContainer');
+            const fabBtn = document.getElementById('fabBtn');
+            if (container.style.display === 'none' || container.style.display === '') {
+                container.style.display = 'block';
+                fabBtn.innerHTML = '關閉';
+                fabBtn.classList.add('active');
+                setTimeout(() => document.getElementById('artist').focus(), 100);
+            } else {
+                container.style.display = 'none';
+                fabBtn.innerHTML = '新增歌曲';
+                fabBtn.classList.remove('active');
+            }
+        }
+
+        function switchTab(tab) {
+            document.getElementById('tabSingle').classList.toggle('active', tab === 'single');
+            document.getElementById('tabBatch').classList.toggle('active', tab === 'batch');
+            document.getElementById('singleForm').style.display = tab === 'single' ? 'block' : 'none';
+            document.getElementById('batchForm').style.display = tab === 'batch' ? 'block' : 'none';
+        }
+
+        function scrollToRequestSection() {
+            const section = document.getElementById('requestSection');
+            if (section) {
+                const container = document.getElementById('addFormContainer');
+                if (container.style.display === 'block') toggleAddForm();
+                section.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                section.style.boxShadow = '0 0 0 4px rgba(0, 123, 255, 0.4)';
+                setTimeout(() => {
+                    section.style.boxShadow = '0 2px 5px rgba(0,0,0,0.1)';
+                    document.getElementById('reqMessage').focus();
+                }, 1000);
+            }
+        }
+
+        function loadPlaylist() {
+            document.getElementById('loadingMsg').style.display = 'block';
+            document.getElementById('playlistBody').innerHTML = '';
+            fetch(API_URL)
+                .then(res => res.ok ? res.json() : Promise.reject(`HTTP ${res.status}`))
+                .then(result => {
+                    document.getElementById('loadingMsg').style.display = 'none';
+                    if (result.status === 'success') {
+                        allSongs = result.songs;
+                        renderRequests(result.requests || []);
+                        updateArtistFilter(); 
+                        applyFilters(); 
+                    } else { alert('❌ 載入失敗: ' + result.message); }
+                })
+                .catch(error => {
+                    document.getElementById('loadingMsg').style.display = 'none';
+                    alert('❌ 載入失敗！\n\n真實錯誤訊息: ' + error);
+                });
+        }
+
+        function renderRequests(requests) {
+            const list = document.getElementById('requestList');
+            const displayRequests = requests.slice(0, 15); 
+            
+            if (displayRequests.length === 0) {
+                list.innerHTML = '<p style="text-align:center; color:#888; padding: 20px;">目前還沒有留言，快來當第一個點歌的人吧！</p>';
+                return;
+            }
+            
+            list.innerHTML = displayRequests.map(req => {
+                const safeNick = String(req.nickname || '').replace(/'/g, "\\'");
+                const safeMsg = String(req.message || '').replace(/'/g, "\\'");
+                
+                let replyHtml = '';
+                if (req.replyContent) {
+                    replyHtml = `
+                        <div class="reply-box">
+                            <div class="reply-header">
+                                <span>👑 ${req.replier} 回覆</span>
+                                <span style="font-weight:normal; color:#888; font-size:11px;">${req.replyTime}</span>
+                            </div>
+                            <div>${req.replyContent}</div>
+                        </div>
+                    `;
+                }
+
+                return `
+                <div class="request-item" id="req-${req.id}">
+                    <div class="req-header">
+                        <span class="req-nick">${req.nickname}</span>
+                        <span>${req.time}</span>
+                    </div>
+                    <div style="word-break: break-word;">${req.message}</div>
+                    
+                    ${replyHtml}
+                    
+                    <div class="req-actions">
+                        <button class="req-action-btn" onclick="toggleReplyInput(${req.id})">💬 回覆</button>
+                        <button class="req-action-btn" style="color:var(--danger);" onclick="confirmDeleteRequest(${req.id}, '${safeNick}', '${safeMsg}')">🗑️ 刪除</button>
+                    </div>
+                    
+                    <div id="reply-input-${req.id}" class="reply-input-area" style="display:none;">
+                        <textarea id="reply-text-${req.id}" placeholder="輸入回覆內容..."></textarea>
+                        <button class="btn btn-add" style="width:auto; padding:8px 15px; font-size:14px;" onclick="submitReply(${req.id})">送出</button>
+                    </div>
+                </div>
+            `}).join('');
+        }
+
+        function toggleReplyInput(id) {
+            const inputArea = document.getElementById(`reply-input-${id}`);
+            if (inputArea.style.display === 'none') {
+                document.querySelectorAll('.reply-input-area').forEach(el => el.style.display = 'none');
+                inputArea.style.display = 'flex';
+                document.getElementById(`reply-text-${id}`).focus();
+            } else {
+                inputArea.style.display = 'none';
+            }
+        }
+
+        function submitReply(id) {
+            const password = prompt("⚠️ 回覆留言需要管理員密碼：");
+            if (password !== ADMIN_PASSWORD) {
+                if (password !== null) alert("❌ 密碼錯誤！");
+                return;
+            }
+
+            const replyText = document.getElementById(`reply-text-${id}`).value.trim();
+            if (!replyText) return alert('請輸入回覆內容！');
+
+            fetch(API_URL, { 
+                method: 'POST', 
+                headers: {'Content-Type': 'text/plain'}, 
+                body: JSON.stringify({ 
+                    action: 'reply_request', 
+                    id: id, 
+                    replier: ADMIN_NAME, 
+                    replyContent: replyText 
+                }) 
+            })
+            .then(res => res.json())
+            .then(result => {
+                if (result.status === 'success') { 
+                    alert('✅ ' + result.message); 
+                    loadPlaylist(); 
+                } else { alert('❌ 失敗: ' + result.message); }
+            })
+            .catch(e => alert('❌ 網路錯誤: ' + e));
+        }
+
+        function updateArtistFilter() {
+            const select = document.getElementById('artistFilter');
+            const currentOptions = Array.from(select.options).slice(0, 2);
+            select.innerHTML = '';
+            currentOptions.forEach(opt => select.add(opt));
+            const uniqueArtists = [...new Set(allSongs.map(item => item.artist).filter(name => name))];
+            uniqueArtists.sort().forEach(artist => {
+                const opt = document.createElement('option');
+                opt.value = artist; opt.textContent = artist;
+                select.appendChild(opt);
+            });
+        }
+
+        function applyFilters() {
+            const searchTerm = document.getElementById('searchInput').value.toLowerCase().trim();
+            const selectedArtist = document.getElementById('artistFilter').value;
+
+            filteredSongs = allSongs.filter(item => {
+                const tags = (item.tags || '').toLowerCase();
+                const matchSearch = !searchTerm || item.artist.toLowerCase().includes(searchTerm) || item.song.toLowerCase().includes(searchTerm) || tags.includes(searchTerm);
+                const matchArtist = selectedArtist === 'all' || item.artist === selectedArtist;
+                return matchSearch && matchArtist;
+            });
+
+            if (selectedArtist === '__sort_clicks__') {
+                filteredSongs.sort((a, b) => (b.clicks || 0) - (a.clicks || 0));
+            }
+            renderPlaylist(filteredSongs);
+        }
+
+        function renderPlaylist(songs) {
+            const tbody = document.getElementById('playlistBody');
+            tbody.innerHTML = '';
+            document.getElementById('songCount').innerText = songs.length;
+
+            if (!songs || songs.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="4" style="text-align:center; padding:20px;">🎵 找不到符合條件的歌曲</td></tr>';
+                return;
+            }
+
+            songs.forEach(item => {
+                const tr = document.createElement('tr');
+                let displayLink = item.link || `https://www.youtube.com/results?search_query=${encodeURIComponent((item.artist||'')+' '+(item.song||''))}`;
+                const safeArtist = String(item.artist || '').replace(/'/g, "\\'");
+                const safeSong = String(item.song || '').replace(/'/g, "\\'");
+                const safeLink = String(item.link || '').replace(/'/g, "\\'");
+                const safeTags = String(item.tags || '').replace(/'/g, "\\'");
+                const tagsHtml = item.tags ? item.tags.split(',').map(t => `<span class="tag-badge">${t.trim()}</span>`).join('') : '';
+
+                tr.innerHTML = `
+                    <td>${item.artist}<br>${tagsHtml}</td>
+                    <td style="font-weight:bold;">${item.song}</td>
+                    <td><a href="${displayLink}" target="_blank" class="listen-link" onclick="recordClick(${item.id})">🎵 試聽</a> <span style="font-size:12px; color:#888;">(${item.clicks || 0})</span></td>
+                    <td>
+                        <div class="action-btns">
+                            <button class="btn-sm btn-edit" onclick="editSong(${item.id}, '${safeArtist}', '${safeSong}', '${safeLink}', '${safeTags}')" title="編輯">✏️</button>
+                            <button class="btn-sm btn-del" onclick="confirmDelete(${item.id}, '${safeArtist}', '${safeSong}')" title="刪除">🗑️</button>
+                        </div>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        function recordClick(id) {
+            fetch(API_URL, { method: 'POST', headers: {'Content-Type': 'text/plain'}, body: JSON.stringify({ action: 'click', id: id }) }).catch(()=>{});
+        }
+
+        function pickRandomSong() {
+            if (filteredSongs.length === 0) return alert('目前沒有歌曲可以隨機選擇！');
+            const randomSong = filteredSongs[Math.floor(Math.random() * filteredSongs.length)];
+            let link = randomSong.link || `https://www.youtube.com/results?search_query=${encodeURIComponent((randomSong.artist||'')+' '+(randomSong.song||''))}`;
+            document.getElementById('randomSongInfo').innerHTML = `🎤 ${randomSong.artist}<br>🎵 ${randomSong.song}`;
+            document.getElementById('randomSongLink').href = link;
+            document.getElementById('randomModal').style.display = 'flex';
+        }
+
+        function addSong() {
+            const password = prompt("⚠️ 新增歌曲需要管理員密碼：");
+            if (password !== ADMIN_PASSWORD) { if (password !== null) alert("❌ 密碼錯誤！"); return; }
+            const artist = document.getElementById('artist').value.trim();
+            const song = document.getElementById('song').value.trim();
+            const tags = document.getElementById('tags').value.trim();
+            if (!artist || !song) return alert('請填寫歌手和歌曲名稱！');
+            
+            const btn = document.getElementById('addBtn');
+            btn.disabled = true; btn.innerText = '新增中...';
+            fetch(API_URL, { method: 'POST', headers: {'Content-Type': 'text/plain'}, body: JSON.stringify({ action: 'add', artist, song, link: '', tags }) })
+            .then(res => res.json()).then(result => {
+                btn.disabled = false; btn.innerText = '✨ 確認新增至雲端';
+                if (result.status === 'success') {
+                    document.getElementById('artist').value = ''; document.getElementById('song').value = ''; document.getElementById('tags').value = '';
+                    alert('✅ 新增成功！'); toggleAddForm(); loadPlaylist();
+                } else { alert('❌ 失敗: ' + result.message); }
+            }).catch(e => { btn.disabled = false; btn.innerText = '✨ 確認新增至雲端'; alert('❌ 網路錯誤: ' + e); });
+        }
+
+        function batchAddSongs() {
+            const password = prompt("⚠️ 批量新增歌曲需要管理員密碼：");
+            if (password !== ADMIN_PASSWORD) { if (password !== null) alert("❌ 密碼錯誤！"); return; }
+            const input = document.getElementById('batchInput').value.trim();
+            if (!input) return alert('請貼上歌曲清單！');
+            const lines = input.split('\n').filter(line => line.trim() !== '');
+            const songsToAdd = lines.map(line => {
+                const parts = line.includes(',') ? line.split(',') : line.split(/\s+/);
+                return { artist: parts[0].trim(), song: parts.slice(1).join(' ').trim(), link: '' };
+            }).filter(s => s.artist && s.song);
+            if (songsToAdd.length === 0) return alert('無法解析格式！');
+
+            const btn = document.getElementById('batchBtn');
+            btn.disabled = true; btn.innerText = '上傳中...';
+            fetch(API_URL, { method: 'POST', headers: {'Content-Type': 'text/plain'}, body: JSON.stringify({ action: 'batch_add', songs: songsToAdd }) })
+            .then(res => res.json()).then(result => {
+                btn.disabled = false; btn.innerText = '🚀 批量上傳至雲端';
+                if (result.status === 'success') {
+                    document.getElementById('batchInput').value = '';
+                    alert(`✅ ${result.message}`); toggleAddForm(); loadPlaylist();
+                } else { alert('❌ 失敗: ' + result.message); }
+            }).catch(e => { btn.disabled = false; btn.innerText = '🚀 批量上傳至雲端'; alert('❌ 網路錯誤: ' + e); });
+        }
+
+        function editSong(id, currentArtist, currentSong, currentLink, currentTags) {
+            const newArtist = prompt("修改歌手名稱：", currentArtist); if (newArtist === null) return;
+            const newSong = prompt("修改歌曲名稱：", currentSong); if (newSong === null) return;
+            const newTags = prompt("修改標籤：", currentTags); if (newTags === null) return;
+            if (!newArtist.trim() || !newSong.trim()) return alert('不能為空！');
+            fetch(API_URL, { method: 'POST', headers: {'Content-Type': 'text/plain'}, body: JSON.stringify({ action: 'edit', id, artist: newArtist.trim(), song: newSong.trim(), link: currentLink, tags: newTags.trim() }) })
+            .then(res => res.json()).then(result => {
+                if (result.status === 'success') { alert('✅ 編輯成功！'); loadPlaylist(); } else { alert('❌ 失敗: ' + result.message); }
+            }).catch(e => alert('❌ 網路錯誤: ' + e));
+        }
+
+        function confirmDelete(id, artist, song) {
+            const password = prompt(`⚠️ 刪除「${artist} - ${song}」需要密碼：`);
+            if (password !== ADMIN_PASSWORD) { if (password !== null) alert("❌ 密碼錯誤！"); return; }
+            if (!confirm("確定要刪除嗎？")) return;
+            fetch(API_URL, { method: 'POST', headers: {'Content-Type': 'text/plain'}, body: JSON.stringify({ action: 'delete', id }) })
+            .then(res => res.json()).then(result => {
+                if (result.status === 'success') { alert('✅ 刪除成功！'); loadPlaylist(); } else { alert('❌ 失敗: ' + result.message); }
+            }).catch(e => alert('❌ 網路錯誤: ' + e));
+        }
+
+        function confirmDeleteRequest(id, nickname, message) {
+            const password = prompt(`⚠️ 刪除留言需要密碼：`);
+            if (password !== ADMIN_PASSWORD) { if (password !== null) alert("❌ 密碼錯誤！"); return; }
+            if (!confirm(`確定要刪除這則留言嗎？`)) return;
+            fetch(API_URL, { method: 'POST', headers: {'Content-Type': 'text/plain'}, body: JSON.stringify({ action: 'delete_request', id: id }) })
+            .then(res => res.json()).then(result => {
+                if (result.status === 'success') { alert('✅ 刪除成功！'); loadPlaylist(); } else { alert('❌ 失敗: ' + result.message); }
+            }).catch(e => alert('❌ 網路錯誤: ' + e));
+        }
+
+        function submitRequest() {
+            const nick = document.getElementById('reqNick').value.trim() || '匿名訪客';
+            const msg = document.getElementById('reqMessage').value.trim();
+            if (!msg) return alert('請輸入內容！');
+            const btn = event.target;
+            btn.disabled = true; btn.innerText = '送出中...';
+            fetch(API_URL, { method: 'POST', headers: {'Content-Type': 'text/plain'}, body: JSON.stringify({ action: 'add_request', nickname: nick, message: msg }) })
+            .then(res => res.json()).then(result => {
+                btn.disabled = false; btn.innerText = '送出';
+                if (result.status === 'success') {
+                    document.getElementById('reqMessage').value = ''; document.getElementById('reqNick').value = '';
+                    alert('✅ ' + result.message); loadPlaylist(); 
+                } else { alert('❌ 失敗: ' + result.message); }
+            }).catch(e => { btn.disabled = false; btn.innerText = '送出'; alert('❌ 網路錯誤: ' + e); });
+        }
+
+        function exportCSV() {
+            const password = prompt("⚠️ 匯出 CSV 需要密碼：");
+            if (password !== ADMIN_PASSWORD) { if (password !== null) alert("❌ 密碼錯誤！"); return; }
+            if (filteredSongs.length === 0) return alert('沒有資料可匯出！');
+            let csvContent = "\uFEFF歌手,歌曲名稱,YouTube連結,點擊次數,標籤\n";
+            filteredSongs.forEach(item => {
+                const link = item.link || `https://www.youtube.com/results?search_query=${encodeURIComponent((item.artist||'')+' '+(item.song||''))}`;
+                csvContent += `"${item.artist}","${item.song}","${link}",${item.clicks || 0},"${item.tags || ''}"\n`;
+            });
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url; a.download = `静静在夏天的歌單_${new Date().toISOString().slice(0,10)}.csv`;
+            document.body.appendChild(a); a.click(); document.body.removeChild(a);
+        }
+
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                document.getElementById('randomModal').style.display = 'none';
+                document.getElementById('helpModal').style.display = 'none';
+                const container = document.getElementById('addFormContainer');
+                if (container.style.display === 'block') toggleAddForm();
             }
         });
 
