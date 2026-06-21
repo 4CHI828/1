@@ -33,26 +33,35 @@
         table { width: 100%; border-collapse: collapse; background: var(--card-bg); border-radius: 8px; overflow: hidden; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
         th, td { padding: 12px; text-align: left; border-bottom: 1px solid var(--border); }
         th { background-color: var(--primary); color: white; }
-        .action-btns { display: flex; gap: 5px; flex-wrap: wrap; }
+        
+        /* 🚦 直覺狀態按鈕組 (Segmented Control) */
+        .status-group { display: inline-flex; border: 1px solid var(--border); border-radius: 6px; overflow: hidden; background: var(--bg-color); }
+        .status-btn { background: transparent; border: none; padding: 6px 10px; font-size: 16px; cursor: pointer; transition: all 0.2s; border-right: 1px solid var(--border); opacity: 0.5; }
+        .status-btn:last-child { border-right: none; }
+        .status-btn:hover { opacity: 0.8; background: rgba(0,0,0,0.05); }
+        body.dark-mode .status-btn:hover { background: rgba(255,255,255,0.1); }
+        
+        /* 按鈕高亮樣式 */
+        .status-btn.active { opacity: 1; transform: scale(1.1); font-weight: bold; }
+        .status-btn.active.queued { background: var(--warning); color: #333; box-shadow: inset 0 0 5px rgba(0,0,0,0.1); }
+        .status-btn.active.singing { background: var(--danger); color: white; animation: pulse-btn 1.5s infinite; }
+        .status-btn.active.done { background: var(--success); color: white; }
+        @keyframes pulse-btn { 0%, 100% { transform: scale(1.1); } 50% { transform: scale(1.2); } }
+
+        /* 🎨 整列視覺變色 */
+        tr { transition: all 0.3s; border-left: 4px solid transparent; }
+        tr.row-queued { border-left-color: var(--warning); background: rgba(255, 193, 7, 0.05); }
+        tr.row-singing { border-left-color: var(--danger); background: rgba(220, 53, 69, 0.05); animation: pulse-row 1.5s infinite; }
+        @keyframes pulse-row { 0%, 100% { border-left-color: var(--danger); } 50% { border-left-color: transparent; } }
+        tr.row-singing .song-title { color: var(--danger); font-weight: bold; animation: pulse-text 1.5s infinite; }
+        @keyframes pulse-text { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.05); } }
+        tr.row-done { opacity: 0.4; }
+        tr.row-done .song-title { text-decoration: line-through; }
+
+        .action-btns { display: flex; gap: 5px; flex-wrap: wrap; align-items: center; }
         .btn-sm { padding: 4px 8px; font-size: 12px; border-radius: 4px; border: none; cursor: pointer; color: white; }
         .btn-edit { background-color: var(--primary); }
         .btn-del { background-color: var(--danger); }
-        
-        /* 🚦 簡易狀態切換樣式 */
-        .song-name-cell { display: flex; align-items: center; gap: 8px; }
-        .status-emoji { 
-            cursor: pointer; font-size: 18px; 
-            transition: transform 0.2s; user-select: none;
-            padding: 2px 4px; border-radius: 4px;
-        }
-        .status-emoji:hover { transform: scale(1.3); background: rgba(0,0,0,0.05); }
-        body.dark-mode .status-emoji:hover { background: rgba(255,255,255,0.1); }
-        .status-emoji.queued { filter: none; }
-        .status-emoji.singing { animation: pulse 1.5s infinite; }
-        .status-emoji.done { opacity: 0.7; }
-        @keyframes pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.2); } }
-        .song-title { font-weight: bold; flex: 1; }
-        .status-hint { font-size: 11px; color: #888; margin-left: 4px; }
         
         .tag-badge { display: inline-block; background-color: #e9ecef; color: #495057; font-size: 11px; padding: 2px 6px; border-radius: 10px; margin-right: 4px; margin-top: 4px; }
         body.dark-mode .tag-badge { background-color: #495057; color: #e9ecef; }
@@ -138,6 +147,7 @@
         .listen-link:hover { color: #0056b3; text-decoration: underline; }
         body.dark-mode .listen-link { color: #4dabf7; }
         
+        /* 📱 手機版卡片排版 */
         @media (max-width: 600px) {
             .filter-bar { flex-direction: column; }
             .add-form-container { width: 90vw; right: 5vw; bottom: 100px; }
@@ -145,11 +155,13 @@
             .reply-del-btn { opacity: 1; }
             table, thead, tbody, th, td, tr { display: block; }
             thead tr { display: none; }
-            tr { background: var(--card-bg); margin-bottom: 15px; border-radius: 10px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); padding: 15px; border: none; }
+            tr { background: var(--card-bg); margin-bottom: 15px; border-radius: 10px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); padding: 15px; border: none; border-left: 4px solid transparent !important; }
             td { padding: 6px 0; border: none; text-align: left !important; position: relative; }
             td::before { content: attr(data-label); font-weight: bold; color: var(--primary); display: block; font-size: 12px; margin-bottom: 3px; }
             td:nth-child(1) { font-size: 16px; font-weight: bold; }
-            .action-btns { margin-top: 10px; justify-content: flex-start; }
+            .action-btns { margin-top: 10px; justify-content: flex-start; flex-wrap: wrap; }
+            .status-group { width: 100%; justify-content: space-around; margin-bottom: 10px; }
+            .status-btn { flex: 1; padding: 8px 0; font-size: 18px; }
             .skeleton-row div:nth-child(1), .skeleton-row div:nth-child(2), .skeleton-row div:nth-child(3), .skeleton-row div:nth-child(4) { width: 100%; }
         }
     </style>
@@ -181,7 +193,7 @@
             <button class="btn btn-logout" id="logoutBtn" onclick="logoutAdmin()" title="登出管理員">登出</button>
         </div>
     </div>
-    <h3>🎵 目前歌單 (<span id="songCount">0</span> 首) <span style="font-size:12px; color:#888; font-weight:normal;">💡 點擊歌名前的 emoji 可切換狀態</span></h3>
+    <h3>🎵 目前歌單 (<span id="songCount">0</span> 首)</h3>
     
     <div id="skeletonLoader" class="loading active">
         <div class="skeleton-row"><div class="skeleton"></div><div class="skeleton"></div><div class="skeleton"></div><div class="skeleton"></div></div>
@@ -191,7 +203,7 @@
     </div>
     
     <table id="playlistTable" style="display:none;">
-        <thead><tr><th>歌手</th><th>歌曲名稱</th><th>試聽</th><th style="width: 100px;">操作</th></tr></thead>
+        <thead><tr><th>歌手</th><th>歌曲名稱</th><th>試聽</th><th style="width: 220px;">狀態與操作</th></tr></thead>
         <tbody id="playlistBody"></tbody>
     </table>
     
@@ -256,7 +268,7 @@
             <ul class="help-list">
                 <li>🔍 <b>即時搜尋與分類</b>：支援搜尋歌手、歌名、標籤，也可按狀態過濾。</li>
                 <li>🎲 <b>隨機選歌</b>：不知道聽什麼？讓系統幫你抽一首。</li>
-                <li>🚦 <b>點歌狀態標記</b>：直接點擊歌曲名稱前的 emoji 即可切換狀態（⚪→⏳→🎤→✅）。</li>
+                <li>🚦 <b>直覺狀態切換</b>：點擊操作欄的按鈕組，點哪個亮哪個，整列也會跟著變色！</li>
                 <li>🔐 <b>管理員記住我</b>：輸入密碼後可記住 24 小時。</li>
                 <li>💬 <b>互動留言板</b>：支援無限次回覆串樓！</li>
             </ul>
@@ -437,17 +449,14 @@
             renderPlaylist(filteredSongs);
         }
         
-        // 🚦 簡易狀態切換：點擊 emoji 循環切換
-        function cycleStatus(id, currentStatus) {
+        // 🚦 直覺狀態切換：直接設定指定狀態
+        function updateStatus(id, newStatus) {
             requireAdmin(() => {
-                const statusFlow = ['', 'queued', 'singing', 'done', ''];
-                const currentIndex = statusFlow.indexOf(currentStatus || '');
-                const nextStatus = statusFlow[(currentIndex + 1) % statusFlow.length];
-                fetch(API_URL, { method: 'POST', headers: {'Content-Type': 'text/plain'}, body: JSON.stringify({ action: 'update_status', id: id, status: nextStatus }) })
+                fetch(API_URL, { method: 'POST', headers: {'Content-Type': 'text/plain'}, body: JSON.stringify({ action: 'update_status', id: id, status: newStatus }) })
                 .then(res => res.json()).then(result => { 
                     if (result.status === 'success') { 
                         const statusText = {'': '⚪ 無狀態', 'queued': '⏳ 排隊中', 'singing': '🎤 演唱中', 'done': '✅ 已唱過'};
-                        showToast('✅ 狀態已更新為: ' + statusText[nextStatus]); 
+                        showToast('✅ 狀態已更新為: ' + statusText[newStatus]); 
                         loadPlaylist(); 
                     } else { showToast('❌ 失敗: ' + result.message, 'error'); } 
                 }).catch(e => showToast('❌ 網路錯誤: ' + e, 'error'));
@@ -465,22 +474,22 @@
                 const safeTags = String(item.tags || '').replace(/'/g, "\\'");
                 const tagsHtml = item.tags ? item.tags.split(',').map(t => `<span class="tag-badge">${t.trim()}</span>`).join('') : '';
                 
-                // 🚦 簡易狀態 emoji（點擊切換）
-                const statusEmoji = {'': '⚪', 'queued': '⏳', 'singing': '🎤', 'done': '✅'}[item.status || ''];
-                const statusClass = item.status || '';
-                const statusTitle = {'': '無狀態 (點擊切換)', 'queued': '排隊中 (點擊切換)', 'singing': '演唱中 (點擊切換)', 'done': '已唱過 (點擊切換)'}[item.status || ''];
+                const currentStatus = item.status || '';
+                const rowClass = currentStatus ? `row-${currentStatus}` : '';
                 
+                tr.className = rowClass;
                 tr.innerHTML = `
                     <td data-label="歌手">${item.artist}<br>${tagsHtml}</td>
-                    <td data-label="歌曲名稱">
-                        <div class="song-name-cell">
-                            <span class="status-emoji ${statusClass}" onclick="cycleStatus(${item.id}, '${item.status || ''}')" title="${statusTitle}">${statusEmoji}</span>
-                            <span class="song-title">${item.song}</span>
-                        </div>
-                    </td>
+                    <td data-label="歌曲名稱"><span class="song-title">${item.song}</span></td>
                     <td data-label="試聽"><a href="${displayLink}" target="_blank" class="listen-link" onclick="recordClick(${item.id})">🎵 試聽</a> <span style="font-size:12px; color:#888;">(${item.clicks || 0})</span></td>
-                    <td data-label="操作">
-                        <div class="action-btns">
+                    <td data-label="狀態與操作">
+                        <div class="status-group">
+                            <button class="status-btn ${currentStatus === '' ? 'active' : ''}" onclick="updateStatus(${item.id}, '')" title="無狀態">⚪</button>
+                            <button class="status-btn queued ${currentStatus === 'queued' ? 'active' : ''}" onclick="updateStatus(${item.id}, 'queued')" title="排隊中">⏳</button>
+                            <button class="status-btn singing ${currentStatus === 'singing' ? 'active' : ''}" onclick="updateStatus(${item.id}, 'singing')" title="演唱中">🎤</button>
+                            <button class="status-btn done ${currentStatus === 'done' ? 'active' : ''}" onclick="updateStatus(${item.id}, 'done')" title="已唱過">✅</button>
+                        </div>
+                        <div class="action-btns" style="margin-top: 8px;">
                             <button class="btn-sm btn-edit" onclick="editSong(${item.id}, '${safeArtist}', '${safeSong}', '${displayLink.replace(/'/g, "\\'")}', '${safeTags}')" title="編輯">✏️</button>
                             <button class="btn-sm btn-del" onclick="confirmDelete(${item.id}, '${safeArtist}', '${safeSong}')" title="刪除">🗑️</button>
                         </div>
