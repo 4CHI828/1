@@ -411,6 +411,7 @@
             });
         }
 
+        // 🛠️ 已修復熱門排行的過濾邏輯
         function applyFilters() {
             const searchTerm = document.getElementById('searchInput').value.toLowerCase().trim();
             const selectedArtist = document.getElementById('artistFilter').value;
@@ -418,10 +419,12 @@
             filteredSongs = allSongs.filter(item => {
                 const tags = (item.tags || '').toLowerCase();
                 const matchSearch = !searchTerm || item.artist.toLowerCase().includes(searchTerm) || item.song.toLowerCase().includes(searchTerm) || tags.includes(searchTerm);
-                const matchArtist = selectedArtist === 'all' || item.artist === selectedArtist;
+                // ✅ 修復：當選擇熱門排行時，跳過歌手名稱比對
+                const matchArtist = selectedArtist === 'all' || selectedArtist === '__sort_clicks__' || item.artist === selectedArtist;
                 return matchSearch && matchArtist;
             });
 
+            // ✅ 熱門排行排序邏輯
             if (selectedArtist === '__sort_clicks__') {
                 filteredSongs.sort((a, b) => (b.clicks || 0) - (a.clicks || 0));
             }
