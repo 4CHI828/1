@@ -80,6 +80,12 @@
         .add-form-container { position: fixed; bottom: 110px; right: 30px; width: 380px; max-width: 90vw; background: var(--card-bg); padding: 25px; border-radius: 12px; box-shadow: 0 8px 25px rgba(0,0,0,0.2); z-index: 999; display: none; animation: slideUp 0.3s ease-out; border: 1px solid var(--border); }
         @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
         .form-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; border-bottom: 2px solid var(--bg-color); padding-bottom: 10px; }
+        
+        /* 📋 批量新增標籤樣式 */
+        .form-tabs { display: flex; gap: 10px; margin-bottom: 15px; }
+        .form-tab { flex: 1; padding: 8px; text-align: center; background: var(--bg-color); border-radius: 4px; cursor: pointer; font-size: 14px; font-weight: bold; color: var(--text-color); transition: 0.2s; }
+        .form-tab.active { background: var(--primary); color: white; }
+
         .form-group { margin-bottom: 15px; }
         .form-group label { display: block; margin-bottom: 6px; font-weight: bold; font-size: 14px; }
         .form-group input, .form-group textarea { width: 100%; padding: 10px; border: 1px solid var(--border); border-radius: 6px; box-sizing: border-box; font-size: 15px; background: var(--bg-color); color: var(--text-color); }
@@ -170,15 +176,35 @@
         <button id="fabBtn" class="fab-btn add-btn" onclick="toggleAddForm()">新增歌曲</button>
     </div>
 
+    <!-- 🌟 新增歌曲表單 (已恢復批量新增標籤) -->
     <div id="addFormContainer" class="add-form-container">
         <div class="form-header">
             <h3 style="margin:0; font-size:18px;">📝 新增歌曲</h3>
             <button onclick="toggleAddForm()" style="background:none; border:none; font-size:24px; cursor:pointer; color:var(--text-color);">✕</button>
         </div>
-        <div class="form-group"><label>歌手：</label><input type="text" id="artist" placeholder="例如：周杰倫"></div>
-        <div class="form-group"><label>歌曲名稱：</label><input type="text" id="song" placeholder="例如：晴天"></div>
-        <div class="form-group"><label>標籤 (選填)：</label><input type="text" id="tags" placeholder="例如: #抒情, #KTV必點 (逗號分隔)"></div>
-        <button id="addBtn" class="btn-add" onclick="addSong()">✨ 確認新增至雲端</button>
+        
+        <!-- 切換標籤 -->
+        <div class="form-tabs">
+            <div class="form-tab active" onclick="switchTab('single')" id="tabSingle">單首新增</div>
+            <div class="form-tab" onclick="switchTab('batch')" id="tabBatch">📋 批量新增</div>
+        </div>
+        
+        <!-- 單首新增表單 -->
+        <div id="singleForm">
+            <div class="form-group"><label>歌手：</label><input type="text" id="artist" placeholder="例如：周杰倫"></div>
+            <div class="form-group"><label>歌曲名稱：</label><input type="text" id="song" placeholder="例如：晴天"></div>
+            <div class="form-group"><label>標籤 (選填)：</label><input type="text" id="tags" placeholder="例如: #抒情, #KTV必點 (逗號分隔)"></div>
+            <button id="addBtn" class="btn-add" onclick="addSong()">✨ 確認新增至雲端</button>
+        </div>
+
+        <!-- 批量新增表單 -->
+        <div id="batchForm" style="display:none;">
+            <div class="form-group">
+                <label>貼上清單 (每行一首，格式：歌手,歌曲 或 歌手 歌曲)：</label>
+                <textarea id="batchInput" rows="6" placeholder="周杰倫,晴天&#10;林俊傑 修煉愛情&#10;陳奕迅,十年"></textarea>
+            </div>
+            <button id="batchBtn" class="btn-add" onclick="batchAddSongs()">🚀 批量上傳至雲端</button>
+        </div>
     </div>
 
     <div id="randomModal" class="modal-overlay" onclick="if(event.target===this)this.style.display='none'">
@@ -226,13 +252,19 @@
             }
         }
 
+        // 📋 切換單首/批量表單
+        function switchTab(tab) {
+            document.getElementById('tabSingle').classList.toggle('active', tab === 'single');
+            document.getElementById('tabBatch').classList.toggle('active', tab === 'batch');
+            document.getElementById('singleForm').style.display = tab === 'single' ? 'block' : 'none';
+            document.getElementById('batchForm').style.display = tab === 'batch' ? 'block' : 'none';
+        }
+
         function scrollToRequestSection() {
             const section = document.getElementById('requestSection');
             if (section) {
                 const container = document.getElementById('addFormContainer');
-                if (container.style.display === 'block') {
-                    toggleAddForm();
-                }
+                if (container.style.display === 'block') toggleAddForm();
                 section.scrollIntoView({ behavior: 'smooth', block: 'center' });
                 section.style.boxShadow = '0 0 0 4px rgba(0, 123, 255, 0.4)';
                 section.style.transform = 'scale(1.02)';
@@ -397,6 +429,37 @@
             }).catch(e => { btn.disabled = false; btn.innerText = '✨ 確認新增至雲端'; alert('❌ 網路錯誤: ' + e); });
         }
 
+        // 📋 批量新增 (含密碼保護)
+        function batchAddSongs() {
+            const password = prompt("⚠️ 批量新增歌曲需要管理員密碼：\n請輸入密碼：");
+            if (password !== ADMIN_PASSWORD) {
+                if (password !== null) alert("❌ 密碼錯誤，已取消新增！");
+                return;
+            }
+
+            const input = document.getElementById('batchInput').value.trim();
+            if (!input) return alert('請貼上歌曲清單！');
+            
+            const lines = input.split('\n').filter(line => line.trim() !== '');
+            const songsToAdd = lines.map(line => {
+                const parts = line.includes(',') ? line.split(',') : line.split(/\s+/);
+                return { artist: parts[0].trim(), song: parts.slice(1).join(' ').trim(), link: '' };
+            }).filter(s => s.artist && s.song);
+
+            if (songsToAdd.length === 0) return alert('無法解析格式，請確保每行包含「歌手」和「歌曲名稱」');
+
+            const btn = document.getElementById('batchBtn');
+            btn.disabled = true; btn.innerText = '上傳中...';
+            fetch(API_URL, { method: 'POST', headers: {'Content-Type': 'text/plain'}, body: JSON.stringify({ action: 'batch_add', songs: songsToAdd }) })
+            .then(res => res.json()).then(result => {
+                btn.disabled = false; btn.innerText = '🚀 批量上傳至雲端';
+                if (result.status === 'success') {
+                    document.getElementById('batchInput').value = '';
+                    alert(`✅ ${result.message}`); toggleAddForm(); loadPlaylist();
+                } else { alert('❌ 失敗: ' + result.message); }
+            }).catch(e => { btn.disabled = false; btn.innerText = '🚀 批量上傳至雲端'; alert('❌ 網路錯誤: ' + e); });
+        }
+
         function editSong(id, currentArtist, currentSong, currentLink, currentTags) {
             const newArtist = prompt("修改歌手名稱：", currentArtist);
             if (newArtist === null) return;
@@ -454,36 +517,6 @@
             .catch(e => alert('❌ 網路錯誤: ' + e));
         }
 
-        function batchAddSongs() {
-            const password = prompt("⚠️ 批量新增歌曲需要管理員密碼：\n請輸入密碼：");
-            if (password !== ADMIN_PASSWORD) {
-                if (password !== null) alert("❌ 密碼錯誤，已取消新增！");
-                return;
-            }
-
-            const input = document.getElementById('batchInput').value.trim();
-            if (!input) return alert('請貼上歌曲清單！');
-            
-            const lines = input.split('\n').filter(line => line.trim() !== '');
-            const songsToAdd = lines.map(line => {
-                const parts = line.includes(',') ? line.split(',') : line.split(/\s+/);
-                return { artist: parts[0].trim(), song: parts.slice(1).join(' ').trim(), link: '' };
-            }).filter(s => s.artist && s.song);
-
-            if (songsToAdd.length === 0) return alert('無法解析格式，請確保每行包含「歌手」和「歌曲名稱」');
-
-            const btn = document.getElementById('batchBtn');
-            btn.disabled = true; btn.innerText = '上傳中...';
-            fetch(API_URL, { method: 'POST', headers: {'Content-Type': 'text/plain'}, body: JSON.stringify({ action: 'batch_add', songs: songsToAdd }) })
-            .then(res => res.json()).then(result => {
-                btn.disabled = false; btn.innerText = '🚀 批量上傳至雲端';
-                if (result.status === 'success') {
-                    document.getElementById('batchInput').value = '';
-                    alert(`✅ ${result.message}`); toggleAddForm(); loadPlaylist();
-                } else { alert('❌ 失敗: ' + result.message); }
-            }).catch(e => { btn.disabled = false; btn.innerText = '🚀 批量上傳至雲端'; alert('❌ 網路錯誤: ' + e); });
-        }
-
         function submitRequest() {
             const nick = document.getElementById('reqNick').value.trim() || '匿名訪客';
             const msg = document.getElementById('reqMessage').value.trim();
@@ -504,7 +537,6 @@
             }).catch(e => { btn.disabled = false; btn.innerText = '送出'; alert('❌ 網路錯誤: ' + e); });
         }
 
-        // 🔑 新增：匯出 CSV 密碼保護
         function exportCSV() {
             const password = prompt("⚠️ 匯出 CSV 需要管理員密碼：\n請輸入密碼：");
             if (password !== ADMIN_PASSWORD) {
