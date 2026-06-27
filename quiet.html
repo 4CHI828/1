@@ -74,7 +74,6 @@
     .refresh-btn { cursor: pointer; font-size: 18px; background: none; border: none; color: var(--dark-color); transition: var(--transition); padding: 0 5px; }
     .refresh-btn:hover { transform: rotate(180deg); color: var(--accent-color); }
 
-    /* 按鈕分行優化 */
     .btn-group { margin-bottom: 25px; display: flex; flex-direction: column; gap: 12px; width: 100%; align-items: center; }
     .btn-row { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; width: 100%; }
 
@@ -83,7 +82,7 @@
 
     .player-container {
       background: var(--player-bg); backdrop-filter: blur(30px); -webkit-backdrop-filter: blur(30px);
-      border-radius: 40px; padding: 30px; width: 100%; max-width: 400px; margin: 0 auto;
+      border-radius: 40px; padding: 30px 30px 30px 30px; width: 100%; max-width: 400px; margin: 0 auto;
       box-shadow: 0 30px 60px rgba(0,0,0,0.5), 0 0 20px rgba(0, 255, 255, 0.2);
       color: white; border: 1px solid var(--glass-border); box-sizing: border-box; position: relative;
       animation: playerBreath 4s ease-in-out infinite;
@@ -93,26 +92,10 @@
       50% { box-shadow: 0 30px 60px rgba(0,0,0,0.6), 0 0 30px rgba(0, 255, 255, 0.4); }
     }
 
-    .vinyl-wrapper { display: flex; justify-content: center; margin-bottom: 20px; }
-    .vinyl { 
-      width: 100px; height: 100px; background: radial-gradient(circle, #333 20%, #000 100%); 
-      border-radius: 50%; border: 4px solid #222; position: relative; 
-      display: flex; align-items: center; justify-content: center; 
-      box-shadow: 0 0 20px rgba(0,0,0,0.5); transition: transform 0.5s ease; 
-    }
-    .vinyl-art { 
-      width: 40px; height: 40px; border-radius: 50%; 
-      background-size: cover; background-position: center; 
-      border: 2px solid #fff; box-shadow: 0 0 8px rgba(0,0,0,0.6);
-      background-color: #fff;
-    }
-    .vinyl.playing { animation: spin 4s linear infinite; }
-    @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
-
     .now-playing { 
-      text-align: center; margin-bottom: 20px; font-size: 17px; color: var(--main-color); 
+      text-align: center; margin-bottom: 25px; font-size: 18px; color: var(--main-color); 
       font-weight: bold; height: 26px; border-bottom: 1px solid rgba(255,255,255,0.1); 
-      padding-bottom: 12px; display: flex; align-items: center; justify-content: center; gap: 10px; 
+      padding-bottom: 15px; display: flex; align-items: center; justify-content: center; gap: 10px; 
       overflow: hidden; 
     }
     .marquee-container { display: inline-block; white-space: nowrap; overflow: hidden; vertical-align: middle; max-width: 260px; }
@@ -162,7 +145,7 @@
 
     .song-item { padding: 10px 15px; font-size: 13px; color: #999; cursor: pointer; border-radius: 12px; margin-bottom: 4px; transition: var(--transition); display: flex; justify-content: space-between; align-items: center; opacity: 0; animation: fadeIn 0.4s ease forwards; }
     @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
-    .song-item:hover { background: rgba(255,255,255,0.05); color: #fff; }
+    .song-item:hover { background: rgba(255,255,0.05); color: #fff; }
     .song-item.active { opacity: 1 !important; background: rgba(0, 255, 255, 0.3) !important; color: #fff !important; font-weight: bold; border-left: 5px solid var(--neon-cyan); box-shadow: 0 0 15px rgba(0, 255, 255, 0.2); text-shadow: 0 0 8px var(--neon-cyan); animation: pulseBorder 2s infinite; }
     @keyframes pulseBorder { 0%, 100% { background: rgba(0, 255, 255, 0.3); } 50% { background: rgba(0, 255, 255, 0.4); } }
 
@@ -203,12 +186,6 @@
     </div>
 
     <div class="player-container" id="player-main">
-      <div class="vinyl-wrapper">
-        <div class="vinyl" id="vinyl-disc">
-          <div class="vinyl-art" id="vinyl-art"></div>
-        </div>
-      </div>
-
       <div class="now-playing" id="current-song">
         <div class="eq-bars">
           <div class="eq-bar"></div><div class="eq-bar"></div><div class="eq-bar"></div>
@@ -257,9 +234,6 @@
   </div>
 
   <script>
-    /** 預設設定 */
-    const DEFAULT_COVER = "https://img.freepik.com/premium-vector/creatively-designed-icon-burger-3d-style_142112-25251.jpg";
-
     /** 視覺與主題 */
     const Visuals = {
       setTheme(theme) {
@@ -385,8 +359,6 @@
     const songTitleText = document.getElementById('song-title-text');
     const playPauseBtn = document.getElementById('play-pause-btn');
     const playerMain = document.getElementById('player-main');
-    const vinylDisc = document.getElementById('vinyl-disc');
-    const vinylArt = document.getElementById('vinyl-art');
     const progressFill = document.getElementById('progress-fill');
     const progressBar = document.getElementById('progress-bar');
     const progressKnob = document.getElementById('progress-knob');
@@ -479,7 +451,6 @@
             fadeAudio(1, 0.6);
         }).catch(e => console.log("Autoplay blocked"));
         updateMarquee(song.title);
-        vinylArt.style.backgroundImage = `url('${song.cover || DEFAULT_COVER}')`;
         refreshListText();
         const items = document.querySelectorAll('.song-item');
         if (items[Player.index]) items[Player.index].scrollIntoView({ behavior: 'smooth', block: 'center' });
@@ -561,13 +532,11 @@
         playPauseBtn.innerText = "⏸️";
         playPauseBtn.classList.add('playing-btn');
         playerMain.classList.remove('paused');
-        vinylDisc.classList.add('playing');
     };
     audioPlayer.onpause = () => {
         playPauseBtn.innerText = "▶️";
         playPauseBtn.classList.remove('playing-btn');
         playerMain.classList.add('paused');
-        vinylDisc.classList.remove('playing');
     };
     audioPlayer.onended = () => {
         if (Player.mode === 'loopOne') playSong(Player.index);
@@ -604,7 +573,6 @@
         updateMarquee(Player.playlist[Player.index]?.title || "準備播放...");
         refreshListText();
       }
-      vinylArt.style.backgroundImage = `url('${DEFAULT_COVER}')`;
     };
   </script>
 </body>
