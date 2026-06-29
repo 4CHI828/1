@@ -30,7 +30,6 @@
             letter-spacing: 2px; margin-bottom: 0;
         }
 
-        /* 抖音按钮样式 */
         .douyin-link {
             display: inline-flex; align-items: center; gap: 6px;
             padding: 8px 18px;
@@ -42,7 +41,6 @@
         .douyin-link:hover { transform: translateY(-3px) scale(1.05); box-shadow: 0 8px 20px rgba(254, 44, 85, 0.5); }
         .douyin-icon { font-size: 1.1rem; }
 
-        /* 新增：Discord 按钮样式 (经典紫蓝色) */
         .discord-link {
             display: inline-flex; align-items: center; gap: 6px;
             padding: 8px 18px;
@@ -53,15 +51,29 @@
         }
         .discord-link:hover { transform: translateY(-3px) scale(1.05); box-shadow: 0 8px 20px rgba(88, 101, 242, 0.6); }
 
+        /* ================= 更新：统计信息样式（与按钮对齐） ================= */
         .stats {
-            display: inline-block; background: rgba(255, 255, 255, 0.1);
-            padding: 8px 20px; border-radius: 20px; font-size: 0.9rem;
-            color: #ddd; backdrop-filter: blur(5px);
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(255, 255, 255, 0.08);
+            padding: 15px 25px; /* 与按钮高度一致 */
+            border-radius: 30px; /* 与按钮圆角一致 */
+            font-size: 1rem;
+            font-weight: bold;
+            color: #ddd;
+            white-space: nowrap;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(5px);
         }
-        .stats span { color: #ff7e5f; font-weight: bold; font-size: 1.1rem; }
+        .stats span { 
+            color: #ff7e5f; 
+            font-size: 1.1rem; 
+            margin: 0 4px;
+        }
 
         .controls {
-            max-width: 900px; margin: 30px auto;
+            max-width: 1000px; margin: 30px auto;
             display: flex; gap: 15px; align-items: center; flex-wrap: wrap;
             justify-content: center;
         }
@@ -291,7 +303,7 @@
             .header-title-wrapper { gap: 10px; }
             .douyin-link, .discord-link { font-size: 0.8rem; padding: 6px 14px; }
             .controls { flex-direction: column; }
-            .action-btn { width: 100%; }
+            .action-btn, .stats { width: 100%; text-align: center; justify-content: center; } /* 手机端统计也占满宽度 */
             .songs-grid { grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 10px; }
             .song-card { padding: 10px 12px; }
             .song-name { font-size: 0.85rem; }
@@ -314,18 +326,21 @@
             <a href="https://v.douyin.com/OJHvhGS2YKc/" target="_blank" rel="noopener noreferrer" class="douyin-link">
                 <span class="douyin-icon">🎵</span> 前往桥巴的抖音
             </a>
-            <!-- 新增：Discord 杀猪帮链接 -->
             <a href="https://discord.com/channels/865334403864461373/1516901347499184168" target="_blank" rel="noopener noreferrer" class="discord-link">
                 🐷 殺豬幫DC
             </a>
         </div>
-        <div class="stats">共收录 <span id="totalCount">0</span> 首心动旋律</div>
+        <!-- 顶部的统计已移除 -->
     </header>
 
     <div class="controls">
         <div class="search-box">
             <input type="text" id="searchInput" placeholder="🔍 搜索歌曲名称...">
         </div>
+        
+        <!-- 移动到这里，紧挨在待唱清单前面 -->
+        <div class="stats">共收录 <span id="totalCount">0</span> 首心动旋律</div>
+        
         <button class="action-btn list-btn" id="openListBtn">🎤 待唱清单 <span class="badge" id="listCountBadge">0</span></button>
         <button class="action-btn random-btn" id="randomBtn">🎲 随机抽一首</button>
         <button class="action-btn reset-btn" id="resetBtn">🔄 重新整理</button>
