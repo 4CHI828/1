@@ -1,532 +1,560 @@
 <!DOCTYPE html>
-<html lang="zh-Hant">
+<html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>桥巴～的歌單</title>
+    <title>乔巴的歌单 🎧</title>
     <style>
-        :root {
-            --primary-color: #ff4d6d;
-            --bg-color: #fdf0f3;
-            --card-bg: #ffffff;
-            --text-color: #444;
-            --accent-color: #ffb3c1;
-            --douyin-color: #fe2c55;
-            --random-color: #ff85a1;
-        }
-
+        * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
-            font-family: 'PingFang TC', 'Microsoft JhengHei', 'Microsoft YaHei', sans-serif;
-            background-color: var(--bg-color);
-            color: var(--text-color);
-            margin: 0;
-            padding: 0;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "PingFang SC", "Microsoft YaHei", sans-serif;
+            background: linear-gradient(135deg, #0f0c29 0%, #302b63 50%, #24243e 100%);
+            color: #e0e0e0;
+            min-height: 100vh;
+            padding: 20px;
+            line-height: 1.6;
         }
 
-        header {
-            background: linear-gradient(135deg, #ff758f, #ff4d6d);
-            color: white;
-            width: 100%;
-            text-align: center;
-            padding: 2.5rem 0;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-            margin-bottom: 2rem;
-        }
+        .container { max-width: 1200px; margin: 0 auto; }
 
+        header { text-align: center; padding: 40px 0 20px; }
+        
+        .header-title-wrapper {
+            display: flex; align-items: center; justify-content: center;
+            gap: 15px; flex-wrap: wrap; margin-bottom: 15px;
+        }
         header h1 {
-            margin: 0;
-            font-size: 2rem;
-            letter-spacing: 2px;
-            text-shadow: 0 2px 4px rgba(0,0,0,0.2);
-        }
-
-        .header-info {
-            margin-top: 10px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 12px;
-        }
-
-        .total-badge {
-            background: rgba(255, 255, 255, 0.2);
-            padding: 4px 12px;
-            border-radius: 20px;
-            font-size: 0.9rem;
-            border: 1px solid rgba(255, 255, 255, 0.4);
-            backdrop-filter: blur(5px);
+            font-size: 2.5rem;
+            background: linear-gradient(90deg, #ff7e5f, #feb47b, #86a8e7);
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+            letter-spacing: 2px; margin-bottom: 0;
         }
 
         .douyin-link {
-            background-color: white;
-            color: var(--douyin-color);
-            text-decoration: none;
-            padding: 8px 20px;
-            border-radius: 25px;
-            font-weight: bold;
-            font-size: 0.9rem;
-            transition: all 0.3s ease;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
-            display: flex;
-            align-items: center;
-            gap: 5px;
+            display: inline-flex; align-items: center; gap: 6px;
+            padding: 8px 18px;
+            background: linear-gradient(135deg, #25F4EE 0%, #FE2C55 100%);
+            color: #fff; text-decoration: none; border-radius: 20px;
+            font-size: 0.9rem; font-weight: bold; transition: all 0.3s;
+            box-shadow: 0 4px 12px rgba(254, 44, 85, 0.3); white-space: nowrap;
         }
+        .douyin-link:hover { transform: translateY(-3px) scale(1.05); box-shadow: 0 8px 20px rgba(254, 44, 85, 0.5); }
+        .douyin-icon { font-size: 1.1rem; }
 
-        .douyin-link:hover {
-            transform: scale(1.05);
-            background-color: #fff0f3;
-            box-shadow: 0 6px 15px rgba(0,0,0,0.15);
+        .stats {
+            display: inline-block; background: rgba(255, 255, 255, 0.1);
+            padding: 8px 20px; border-radius: 20px; font-size: 0.9rem;
+            color: #ddd; backdrop-filter: blur(5px);
         }
+        .stats span { color: #ff7e5f; font-weight: bold; font-size: 1.1rem; }
 
-        /* 搜尋欄樣式 */
-        .search-wrapper {
-            width: 95%;
-            max-width: 600px;
-            margin-bottom: 2rem;
-            position: sticky;
-            top: 20px;
-            z-index: 99;
+        .controls {
+            max-width: 800px; margin: 30px auto;
+            display: flex; gap: 15px; align-items: center; flex-wrap: wrap;
         }
-
-        .search-input {
-            width: 100%;
-            padding: 12px 20px;
-            font-size: 1rem;
-            border: 2px solid var(--accent-color);
-            border-radius: 30px;
-            outline: none;
-            box-sizing: border-box;
-            transition: all 0.3s ease;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.05);
-            font-family: inherit;
+        .search-box { flex: 1; min-width: 200px; position: relative; }
+        .search-box input {
+            width: 100%; padding: 15px 20px; border-radius: 30px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            background: rgba(255, 255, 255, 0.05); color: #fff;
+            font-size: 1rem; outline: none; transition: all 0.3s;
         }
-
-        .search-input:focus {
-            border-color: var(--primary-color);
-            box-shadow: 0 4px 15px rgba(255, 77, 109, 0.2);
+        .search-box input:focus {
+            border-color: #ff7e5f; background: rgba(255, 255, 255, 0.1);
+            box-shadow: 0 0 15px rgba(255, 126, 95, 0.3);
         }
+        .search-box input::placeholder { color: #888; }
 
-        .container {
-            display: grid;
-            grid-template-columns: 1fr 350px;
-            gap: 2rem;
-            max-width: 1200px;
-            width: 95%;
-            padding-bottom: 5rem;
+        .action-btn {
+            padding: 15px 25px; border-radius: 30px; border: none;
+            color: #fff; font-size: 1rem; font-weight: bold;
+            cursor: pointer; transition: all 0.3s; white-space: nowrap;
         }
-
-        .song-categories {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-            gap: 1.5rem;
-        }
-
-        .category-card {
-            background: var(--card-bg);
-            border-radius: 15px;
-            padding: 1.5rem;
-            box-shadow: 0 8px 20px rgba(0,0,0,0.05);
-            transition: transform 0.3s ease, opacity 0.3s ease;
-        }
-
-        .category-card:hover {
-            transform: translateY(-5px);
-        }
-
-        .category-title {
-            font-size: 1.2rem;
-            font-weight: bold;
-            color: var(--primary-color);
-            margin-bottom: 1rem;
-            border-left: 4px solid var(--primary-color);
-            padding-left: 10px;
-            display: flex;
-            justify-content: space-between;
-        }
-
-        .song-list {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 8px;
-        }
-
-        .song-item {
-            background: var(--bg-color);
-            border: 1px solid var(--accent-color);
-            padding: 5px 12px;
-            border-radius: 20px;
-            font-size: 0.85rem;
-            cursor: pointer;
-            transition: all 0.2s;
-            user-select: none;
-        }
-
-        .song-item:hover {
-            background: var(--primary-color);
-            color: white;
-            border-color: var(--primary-color);
-        }
-
-        .song-item.selected {
-            background: var(--primary-color);
-            color: white;
-            animation: pop 0.3s ease;
-        }
-
-        @keyframes pop {
-            0% { transform: scale(1); }
-            50% { transform: scale(1.2); }
-            100% { transform: scale(1); }
-        }
-
-        .request-panel {
-            background: var(--card-bg);
-            border-radius: 15px;
-            padding: 1.5rem;
-            height: fit-content;
-            position: sticky;
-            top: 80px;
-            box-shadow: 0 8px 20px rgba(0,0,0,0.1);
-            border: 2px solid var(--accent-color);
-        }
-
-        .request-panel h2 {
-            font-size: 1.3rem;
-            margin-top: 0;
-            color: var(--text-color);
-            text-align: center;
-            border-bottom: 2px dashed var(--accent-color);
-            padding-bottom: 10px;
-        }
-
-        #selected-songs {
-            list-style: none;
-            padding: 0;
-            margin: 1rem 0;
-            max-height: 400px;
-            overflow-y: auto;
-        }
-
-        #selected-songs li {
-            padding: 8px 12px;
-            border-bottom: 1px solid #eee;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            animation: fadeIn 0.3s ease;
-        }
-
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateX(10px); }
-            to { opacity: 1; transform: translateX(0); }
-        }
-
-        .remove-btn {
-            color: #ff4d6d;
-            cursor: pointer;
-            font-weight: bold;
-            font-size: 1.2rem;
-        }
-
-        .btn-group {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 10px;
-        }
-
-        .clear-btn, .random-btn {
-            padding: 10px;
-            border: none;
-            border-radius: 8px;
-            cursor: pointer;
-            font-weight: bold;
-            transition: opacity 0.2s;
-        }
-
-        .clear-btn {
-            background: #ddd;
-            color: #666;
-        }
-
         .random-btn {
-            background: var(--primary-color);
-            color: white;
-            font-size: 1rem;
+            background: linear-gradient(135deg, #86a8e7, #7b9cf0);
+            box-shadow: 0 5px 15px rgba(134, 168, 231, 0.4);
+        }
+        .random-btn:hover { transform: translateY(-3px) scale(1.05); box-shadow: 0 8px 20px rgba(134, 168, 231, 0.6); }
+        
+        .list-btn {
+            background: linear-gradient(135deg, #11998e, #38ef7d);
+            box-shadow: 0 5px 15px rgba(56, 239, 125, 0.3);
+        }
+        .list-btn:hover { transform: translateY(-3px) scale(1.05); box-shadow: 0 8px 20px rgba(56, 239, 125, 0.5); }
+        .list-btn .badge {
+            background: #fff; color: #11998e; padding: 2px 8px;
+            border-radius: 10px; font-size: 0.8rem; margin-left: 5px;
         }
 
-        .clear-btn:hover, .random-btn:hover {
-            opacity: 0.8;
+        .tabs { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; margin-bottom: 30px; }
+        .tab-btn {
+            padding: 8px 20px; border-radius: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            background: rgba(255, 255, 255, 0.05); color: #ccc;
+            cursor: pointer; transition: all 0.3s; font-size: 0.95rem;
+        }
+        .tab-btn:hover { background: rgba(255, 255, 255, 0.15); color: #fff; transform: translateY(-2px); }
+        .tab-btn.active {
+            background: linear-gradient(135deg, #ff7e5f, #feb47b); color: #fff;
+            border-color: transparent; box-shadow: 0 5px 15px rgba(255, 126, 95, 0.4); font-weight: bold;
         }
 
-        footer {
-            margin: 2rem 0 3rem 0;
+        .category-section { margin-bottom: 40px; animation: fadeIn 0.5s ease; }
+        .category-title {
+            font-size: 1.5rem; margin-bottom: 20px; padding-left: 15px;
+            border-left: 4px solid #ff7e5f; color: #fff;
+            display: flex; align-items: center; gap: 10px;
+        }
+        .category-title .count { font-size: 0.9rem; color: #888; font-weight: normal; }
+
+        .songs-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+            gap: 15px;
+        }
+
+        .song-card {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 12px; padding: 12px 15px;
+            display: flex; align-items: center; justify-content: space-between;
+            transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+            cursor: pointer; position: relative; overflow: hidden;
+        }
+        .song-card:hover {
+            transform: translateY(-3px);
+            border-color: rgba(255, 126, 95, 0.5);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+            background: rgba(255, 255, 255, 0.08);
+        }
+        
+        .song-name {
+            font-size: 0.95rem; color: #eee; flex: 1;
+            white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+            margin-right: 10px;
+        }
+
+        .add-to-list-btn {
+            width: 28px; height: 28px; border-radius: 50%;
+            background: rgba(56, 239, 125, 0.15); border: 1px solid rgba(56, 239, 125, 0.3);
+            color: #38ef7d; font-size: 1.2rem; font-weight: bold;
+            display: flex; align-items: center; justify-content: center;
+            flex-shrink: 0; transition: all 0.2s; line-height: 1;
+        }
+        .song-card:hover .add-to-list-btn { background: rgba(56, 239, 125, 0.3); }
+        .add-to-list-btn:hover { transform: scale(1.1); background: #38ef7d; color: #0f0c29; }
+        .add-to-list-btn.added {
+            background: #38ef7d; color: #0f0c29; border-color: #38ef7d;
+        }
+
+        .empty-state { text-align: center; padding: 60px 20px; color: #666; font-size: 1.2rem; }
+
+        .modal {
+            display: none; position: fixed; z-index: 100;
+            left: 0; top: 0; width: 100%; height: 100%;
+            background-color: rgba(0, 0, 0, 0.7); backdrop-filter: blur(5px);
+            justify-content: center; align-items: center; animation: fadeIn 0.3s;
+        }
+        .modal-content {
+            background: linear-gradient(135deg, #1f1c2c 0%, #302b63 100%);
+            padding: 30px; border-radius: 20px; text-align: center;
+            width: 90%; max-width: 500px; position: relative;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+            border: 1px solid rgba(255,255,255,0.1);
+            animation: zoomIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            max-height: 80vh; display: flex; flex-direction: column;
+        }
+        .close-btn {
+            position: absolute; top: 15px; right: 20px;
+            color: #aaa; font-size: 28px; font-weight: bold; cursor: pointer;
+        }
+        .close-btn:hover { color: #fff; }
+
+        .random-song-name {
+            font-size: 2rem; font-weight: bold; color: #ff7e5f;
+            margin: 20px 0 10px; min-height: 50px;
+            text-shadow: 0 0 10px rgba(255, 126, 95, 0.5);
+        }
+        .random-song-category { font-size: 1rem; color: #ccc; margin-bottom: 30px; transition: all 0.3s; }
+        .play-again-btn {
+            padding: 12px 30px; border-radius: 30px; border: none;
+            background: linear-gradient(135deg, #ff7e5f, #feb47b);
+            color: #fff; font-size: 1rem; font-weight: bold; cursor: pointer;
+        }
+
+        .list-modal-content { text-align: left; }
+        .list-modal-content h2 { text-align: center; color: #38ef7d; margin-bottom: 20px; }
+        .list-items {
+            flex: 1; overflow-y: auto; margin-bottom: 20px;
+            padding-right: 10px;
+        }
+        .list-items::-webkit-scrollbar { width: 6px; }
+        .list-items::-webkit-scrollbar-thumb { background: #555; border-radius: 3px; }
+        
+        .list-item {
+            display: flex; justify-content: space-between; align-items: center;
+            background: rgba(255,255,255,0.05); padding: 12px 15px;
+            border-radius: 10px; margin-bottom: 10px;
+            border: 1px solid rgba(255,255,255,0.05);
+        }
+        .list-item-info { flex: 1; overflow: hidden; }
+        .list-item-name { color: #fff; font-weight: bold; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .list-item-cat { color: #888; font-size: 0.8rem; margin-top: 2px; }
+        .remove-btn {
+            background: rgba(255, 75, 75, 0.15); border: 1px solid rgba(255, 75, 75, 0.3);
+            color: #ff4b4b; width: 28px; height: 28px; border-radius: 50%;
+            cursor: pointer; font-size: 1rem; display: flex; align-items: center; justify-content: center;
+            transition: all 0.2s; flex-shrink: 0; margin-left: 10px;
+        }
+        .remove-btn:hover { background: #ff4b4b; color: #fff; }
+        
+        .list-actions { display: flex; gap: 10px; justify-content: center; }
+        .clear-list-btn {
+            padding: 10px 25px; border-radius: 20px; border: 1px solid #ff4b4b;
+            background: transparent; color: #ff4b4b; cursor: pointer; transition: all 0.3s;
+        }
+        .clear-list-btn:hover { background: #ff4b4b; color: #fff; }
+        .empty-list { text-align: center; color: #666; padding: 40px 0; }
+
+        /* ================= 底部页脚样式 ================= */
+        .site-footer {
             text-align: center;
-            width: 100%;
-        }
-
-        footer a {
-            text-decoration: none;
-            color: var(--text-color);
+            margin-top: 60px;
+            padding: 30px 0 20px;
+            border-top: 1px solid rgba(255, 255, 255, 0.08);
+            color: #888;
             font-size: 0.9rem;
-            opacity: 0.6;
-            transition: all 0.3s ease;
-            padding: 5px 15px;
-            border-radius: 15px;
+        }
+        .footer-content {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 10px;
+            flex-wrap: wrap; /* 手机端自动换行 */
+        }
+        .footer-link {
+            color: #86a8e7; /* 蓝紫色 */
+            text-decoration: none;
+            transition: all 0.3s;
+            font-weight: bold;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+        }
+        .footer-link:hover {
+            color: #ff7e5f; /* 悬停变成橙红色 */
+            text-decoration: underline;
         }
 
-        footer a:hover {
-            opacity: 1;
-            color: var(--primary-color);
-            background: white;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
-        }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes zoomIn { from { transform: scale(0.7); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+        @keyframes shake { 0%, 100% { transform: translateX(0); } 20%, 60% { transform: translateX(-5px); } 40%, 80% { transform: translateX(5px); } }
+        .shake { animation: shake 0.5s; }
 
-        #back-to-top {
-            position: fixed;
-            bottom: 30px;
-            right: 30px;
-            width: 50px;
-            height: 50px;
-            background: var(--primary-color);
-            color: white;
-            border: none;
-            border-radius: 50%;
-            cursor: pointer;
-            font-size: 1.5rem;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
-            display: none;
-            z-index: 1000;
-            transition: all 0.3s ease;
-        }
-
-        #back-to-top:hover {
-            transform: scale(1.1);
-            background: #ff1f4b;
-        }
-
-        @media (max-width: 900px) {
-            .container { grid-template-columns: 1fr; }
-            .request-panel {
-                position: fixed;
-                bottom: 0;
-                left: 0;
-                width: 100%;
-                box-sizing: border-box;
-                border-radius: 20px 20px 0 0;
-                z-index: 100;
-                max-height: 40vh;
-            }
-            body { padding-bottom: 40vh; }
-            #back-to-top {
-                bottom: 320px;
-            }
+        @media (max-width: 600px) {
+            header h1 { font-size: 1.8rem; }
+            .header-title-wrapper { gap: 10px; }
+            .douyin-link { font-size: 0.8rem; padding: 6px 14px; }
+            .controls { flex-direction: column; }
+            .action-btn { width: 100%; }
+            .songs-grid { grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 10px; }
+            .song-card { padding: 10px 12px; }
+            .song-name { font-size: 0.85rem; }
+            .random-song-name { font-size: 1.5rem; }
+            .site-footer { font-size: 0.8rem; margin-top: 40px; }
         }
     </style>
 </head>
 <body>
 
+<div class="container">
     <header>
-        <h1>🎵 桥巴～的歌單</h1>
-        <div class="header-info">
-            <a href="https://v.douyin.com/OJHvhGS2YKc/" target="_blank" class="douyin-link">
-                <span>🎬 前往抖音主頁</span>
+        <div class="header-title-wrapper">
+            <h1>🎧 乔巴的歌单</h1>
+            <a href="https://v.douyin.com/OJHvhGS2YKc/" target="_blank" rel="noopener noreferrer" class="douyin-link">
+                <span class="douyin-icon">🎵</span> 前往乔巴的抖音
             </a>
-            <div class="total-badge" id="total-songs-display">總計 0 首歌曲</div>
         </div>
+        <div class="stats">共收录 <span id="totalCount">0</span> 首心动旋律</div>
     </header>
 
-    <div class="search-wrapper">
-        <input type="text" id="search-input" class="search-input" placeholder="🔍 搜尋歌曲名稱..." oninput="filterSongs()">
+    <div class="controls">
+        <div class="search-box">
+            <input type="text" id="searchInput" placeholder="🔍 搜索歌曲名称...">
+        </div>
+        <button class="action-btn list-btn" id="openListBtn">🎤 待唱清单 <span class="badge" id="listCountBadge">0</span></button>
+        <button class="action-btn random-btn" id="randomBtn">🎲 随机抽一首</button>
     </div>
 
-    <div class="container">
-        <div class="song-categories" id="song-grid"></div>
-        <div class="request-panel">
-            <h2>🎤 待唱清單</h2>
-            <ul id="selected-songs">
-                <li style="color: #aaa; text-align: center; justify-content: center;">點擊左側歌曲添加...</li>
-            </ul>
-            <div class="btn-group">
-                <button class="random-btn" onclick="pickRandomSong()">🎲 隨機選歌</button>
-                <button class="clear-btn" onclick="clearAll()">清空清單</button>
-            </div>
+    <nav class="tabs" id="tabs"></nav>
+    <main class="content" id="content"></main>
+
+    <!-- 新增的底部页脚 -->
+    <footer class="site-footer">
+        <div class="footer-content">
+            <span>新竹奇奇制作</span>
+            <a href="https://www.douyin.com/user/MS4wLjABAAAAamj38l-UDbYbUGcPhEdJI-rM8-Y_tAMFLy7kZAWMpJw" target="_blank" rel="noopener noreferrer" class="footer-link">
+                🎵 访问抖音主页
+            </a>
+        </div>
+    </footer>
+</div>
+
+<!-- 随机抽歌弹窗 -->
+<div id="randomModal" class="modal">
+    <div class="modal-content">
+        <span class="close-btn" data-close="randomModal">&times;</span>
+        <h2>🎉 命运之轮转动！</h2>
+        <div class="random-song-name" id="randomSongName">准备中...</div>
+        <div class="random-song-category" id="randomSongCategory"></div>
+        <button class="play-again-btn" id="playAgainBtn">🎲 再抽一次</button>
+    </div>
+</div>
+
+<!-- 待唱清单弹窗 -->
+<div id="listModal" class="modal">
+    <div class="modal-content list-modal-content">
+        <span class="close-btn" data-close="listModal">&times;</span>
+        <h2>🎤 我的待唱清单</h2>
+        <div class="list-items" id="listItems"></div>
+        <div class="list-actions">
+            <button class="clear-list-btn" id="clearListBtn">🗑️ 清空清单</button>
         </div>
     </div>
+</div>
 
-    <button id="back-to-top" onclick="scrollToTop()">↑</button>
+<script>
+    const playlistData = {
+        "华语经典": ["恶作剧", "爱丫爱丫", "我知道", "有你在", "那么骄傲", "爱的双重魅力", "你在不在", "亲爱的那不是爱情", "下雨天", "最后一页", "夏天的风", "达尔文", "Letting Go", "忘记时间", "是否", "一直很安静", "此生不换", "天若有情", "命运", "虚拟", "走马", "奇妙能力歌", "演员", "天外来物", "爱情讯息", "烟火里的尘埃", "特别的人", "下一个天亮", "雨爱", "若是月亮还没来", "大山", "不要怕", "爱我还是她", "那些你不知道的事", "爱错", "匿名的好友", "带我走", "太阳", "夏夜最后的烟火", "慢慢", "慢慢喜欢你", "这世间那么多人", "我们的爱", "想你的365天", "这条小鱼在乎", "去有风的地方", "路过人间", "秋风", "追梦赤子心", "爱人错过", "喜欢你", "指纹", "我是一只鱼", "霓虹甜心", "跳楼机", "杀死那个石家庄人", "百年孤寂"],
+        "五月天": ["知足", "温柔", "你不是真正的快乐", "倔强", "无与伦比的美丽", "小情歌"],
+        "邓紫棋": ["多远都要在一起", "唯一", "泡沫", "喜欢你", "句号", "倒数", "光年之外", "红蔷薇白玫瑰", "Where Did U Go", "再见", "后会无期", "我的秘密", "桃花诺", "Ainy", "天空没有极限", "受难曲", "画", "你把我灌醉", "来自天堂的魔鬼", "你不是真正的快乐", "差不多姑娘", "突然之间", "很久以后", "冰河时代", "情人", "存在", "老人与海", "另一个童话", "岩石里的花", "寂寞星球的玫瑰", "偶尔"],
+        "孙燕姿": ["我怀恋的", "开始懂了", "遇见", "绿光", "我不难过", "第一天", "天黑黑", "青花", "泪桥"],
+        "周杰伦": ["晴天", "搁浅", "稻香", "七里香", "花海", "龙卷风", "给我一首歌的时间", "明明就", "枫", "一路向北", "告白气球", "爱的飞行日记", "最长的电影", "不能说的秘密"],
+        "民谣": ["王昭君", "安和桥", "我记得", "程艾影", "理想", "我要你"],
+        "林俊杰": ["Always Online", "江南", "可惜没有如果", "愿与愁", "美人鱼", "修炼爱情", "背对背拥抱", "当你", "不潮不用花钱", "那些你很冒险的梦", "曹操", "她说", "交换余生", "飞云之下"],
+        "戏腔": ["赤伶", "须尽欢", "身骑白马", "壁上观", "牵丝戏", "鸳鸯戏", "光亮", "探故知"],
+        "emo": ["在加纳", "晚婚", "谁", "国王与乞丐", "我走后", "水星记", "唯一", "多远都要在一起", "瞬", "我知道", "如果可以", "冬眠", "体面", "嘉宾", "一个人想着一个人", "想自由", "记得", "背对背拥抱", "给我一个理由忘记", "慢冷", "关键词", "坠落", "幸福了然后呢", "在夜里跳舞", "我只能离开"],
+        "新歌": ["仗着", "房间", "推开世界的门", "虚拟", "这条小鱼在乎", "在夜里跳舞", "路过人间", "喜欢你", "王昭君", "给我一首歌的时间", "梦一场", "走马", "冻结", "慢冷", "奇妙能力歌", "从前说", "千千万万", "旅行的意义", "我会等", "暮色回响", "兜圈", "微风起"]
+    };
 
-    <footer>
-        <a href="https://www.douyin.com/user/MS4wLjABAAAAamj38l-UDbYbUGcPhEdJI-rM8-Y_tAMFLy7kZAWMpJw" target="_blank">
-            新竹奇奇828 製作 🛠️
-        </a>
-    </footer>
+    let currentCategory = "全部";
+    let searchQuery = "";
+    let allSongsFlat = [];
+    let singList = JSON.parse(localStorage.getItem('qiaoba_sing_list')) || [];
 
-    <script>
-        const musicData = [
-            {
-                category: "綜合/隨筆",
-                songs: ["惡作劇", "愛丫愛丫", "我知道你在", "下雨天", "最後一天", "夏天的風", "達爾文 letting go", "忘詞時間", "一直很安靜", "此生不換", "命運", "虛構", "跑馬", "奇妙能力歌", "天外來物", "愛情訊息", "煙火裡的塵埃", "特別的你", "下一個", "天雨雨", "不要怕", "記得我愛你", "那些你不知道的事", "情錯", "帶我走", "夕陽", "夏夜後的煙火", "慢慢", "慢慢喜歡你", "想你的 365", "這條小魚在", "去有風的地方", "走過人間", "秋風", "追夢赤子心", "愛錯", "喜歡你", "指紋", "我是一隻霓虹心", "跳樓機", "五月天", "你不是真正的快樂", "強強", "無與倫比的美麗", "小情歌", "愛你"]
-            },
-            {
-                category: "孫燕姿",
-                songs: ["我懷疑", "開始懂了", "遇見", "綠光", "我不能過了", "第一天", "天黑黑", "青花", "淚橋", "趁早"]
-            },
-            {
-                category: "周杰倫",
-                songs: ["晴天", "稻香", "七里香", "花海", "龍捲風", "給我一首歌的時間", "明明就", "楓", "一路向北", "告白氣球", "愛的飛行日記", "最長的電影", "不能說的秘密"]
-            },
-            {
-                category: "民謠",
-                songs: ["王若若", "安和橋", "我記得", "程發", "理想", "我要你"]
-            },
-            {
-                category: "林俊傑",
-                songs: ["always online", "江南", "可惜沒有如果", "願與怒", "美人魚", "修煉愛情", "背對背擁抱", "當你", "不潮不用花錢", "那些你很冒險的夢", "曹操", "她說", "交換餘生", "飛雲之下"]
-            },
-            {
-                category: "戲腔",
-                songs: ["赤伶", "須盡歡", "身騎白馬", "登上觀", "奉天戲", "鴛鴦戲", "探窗"]
-            },
-            {
-                category: "悲情/emo",
-                songs: ["舍得", "趁早", "晚晚", "帝國", "王與乞丐", "我走後", "水星記", "一多", "瞬間", "如此", "可以冬眠", "體面", "嘉賓", "一個人", "自由", "記得", "背對背擁抱", "給我一個理由", "忘記", "冷漠", "關鍵詞", "在夜裡跳舞"]
-            },
-            {
-                category: "新歌/推薦",
-                songs: ["僅見", "居然", "推開世界的門", "夢一虛", "走馬", "奇妙能力歌", "從前說", "千千萬萬", "旅行的意義", "我會等", "暮色回響", "霓虹", "微風起", "人質", "你要的愛", "第57次取消發送", "陽光下的星星", "歐若拉", "最好的我", "漂洋過海來看看", "我們的愛", "空白格", "墜落", "寂寞沙洲冷", "若把你"]
-            },
-            {
-                category: "520 特輯",
-                songs: ["空白格", "不怕不怕", "如果的夢", "夢的光點", "輸了你", "贏了世界又如何"]
+    for (const [category, songs] of Object.entries(playlistData)) {
+        songs.forEach(song => allSongsFlat.push({ name: song, category: category }));
+    }
+
+    function init() {
+        renderTabs();
+        renderContent();
+        updateTotalCount();
+        updateListCount();
+        setupRandomizer();
+        setupSingList();
+        
+        document.getElementById('searchInput').addEventListener('input', (e) => {
+            searchQuery = e.target.value.trim().toLowerCase();
+            renderContent();
+        });
+    }
+
+    function setupSingList() {
+        const openListBtn = document.getElementById('openListBtn');
+        const listModal = document.getElementById('listModal');
+        const clearListBtn = document.getElementById('clearListBtn');
+
+        openListBtn.addEventListener('click', () => {
+            renderSingListModal();
+            listModal.style.display = 'flex';
+        });
+
+        clearListBtn.addEventListener('click', () => {
+            if(confirm('确定要清空所有待唱歌曲吗？')) {
+                singList = [];
+                saveSingList();
+                renderSingListModal();
+                renderContent();
             }
-        ];
+        });
+    }
 
-        const songGrid = document.getElementById('song-grid');
-        const selectedList = document.getElementById('selected-songs');
-        const totalDisplay = document.getElementById('total-songs-display');
-        const bttButton = document.getElementById('back-to-top');
-        let requests = [];
+    function toggleSingList(songName, category) {
+        const index = singList.findIndex(item => item.name === songName);
+        if (index > -1) {
+            singList.splice(index, 1);
+        } else {
+            singList.push({ name: songName, category: category });
+        }
+        saveSingList();
+        updateListCount();
+        renderContent();
+    }
 
-        function init() {
-            const totalSongs = musicData.reduce((sum, item) => sum + item.songs.length, 0);
-            totalDisplay.innerText = `總計 ${totalSongs} 首歌曲`;
+    function addToList(songName, category) {
+        const isAlreadyInList = singList.some(item => item.name === songName);
+        if (!isAlreadyInList) {
+            singList.push({ name: songName, category: category });
+            saveSingList();
+            updateListCount();
+            renderContent();
+            return true;
+        }
+        return false;
+    }
 
-            musicData.forEach(item => {
-                const card = document.createElement('div');
-                card.className = 'category-card';
-                card.innerHTML = `
-                    <div class="category-title">
-                        ${item.category}
-                        <span style="font-size: 0.7rem; opacity: 0.6;">${item.songs.length} 首</span>
-                    </div>
-                    <div class="song-list">
-                        ${item.songs.map(song => `<div class="song-item" onclick="toggleSong(this, '${song}')">${song}</div>`).join('')}
-                    </div>
-                `;
-                songGrid.appendChild(card);
-            });
+    function removeFromSingList(songName) {
+        singList = singList.filter(item => item.name !== songName);
+        saveSingList();
+        updateListCount();
+        renderSingListModal();
+        renderContent();
+    }
+
+    function saveSingList() {
+        localStorage.setItem('qiaoba_sing_list', JSON.stringify(singList));
+    }
+
+    function updateListCount() {
+        document.getElementById('listCountBadge').textContent = singList.length;
+    }
+
+    function renderSingListModal() {
+        const listItems = document.getElementById('listItems');
+        if (singList.length === 0) {
+            listItems.innerHTML = '<div class="empty-list">🎵 清单空空如也，快去挑选想唱的歌吧！</div>';
+            return;
         }
 
-        function filterSongs() {
-            const searchTerm = document.getElementById('search-input').value.toLowerCase();
-            const cards = document.querySelectorAll('.category-card');
+        listItems.innerHTML = singList.map((item, index) => `
+            <div class="list-item">
+                <div class="list-item-info">
+                    <div class="list-item-name">${index + 1}. ${item.name}</div>
+                    <div class="list-item-cat">来自：${item.category}</div>
+                </div>
+                <button class="remove-btn" onclick="removeFromSingList('${item.name}')" title="移除">×</button>
+            </div>
+        `).join('');
+    }
 
-            cards.forEach(card => {
-                const items = card.querySelectorAll('.song-item');
-                let hasMatch = false;
+    function setupRandomizer() {
+        const randomBtn = document.getElementById('randomBtn');
+        const randomModal = document.getElementById('randomModal');
+        const playAgainBtn = document.getElementById('playAgainBtn');
+        const randomSongName = document.getElementById('randomSongName');
+        const randomSongCategory = document.getElementById('randomSongCategory');
 
-                items.forEach(item => {
-                    if (item.innerText.toLowerCase().includes(searchTerm)) {
-                        item.style.display = 'block';
-                        hasMatch = true;
+        function openModal() {
+            randomModal.style.display = 'flex';
+            randomSongName.classList.remove('shake');
+            randomSongCategory.textContent = '命运选择中...';
+            
+            let count = 0;
+            const maxCount = 15; 
+            const interval = setInterval(() => {
+                const rIndex = Math.floor(Math.random() * allSongsFlat.length);
+                randomSongName.textContent = allSongsFlat[rIndex].name;
+                count++;
+                
+                if (count >= maxCount) {
+                    clearInterval(interval);
+                    const fIndex = Math.floor(Math.random() * allSongsFlat.length);
+                    const finalSong = allSongsFlat[fIndex];
+                    
+                    randomSongName.textContent = finalSong.name;
+                    randomSongName.classList.add('shake');
+                    
+                    const addedSuccessfully = addToList(finalSong.name, finalSong.category);
+                    
+                    if (addedSuccessfully) {
+                        randomSongCategory.innerHTML = `来自分类：${finalSong.category} <br><span style="color: #38ef7d; font-weight: bold; font-size: 0.9rem;">🎉 已自动加入待唱清单！</span>`;
                     } else {
-                        item.style.display = 'none';
+                        randomSongCategory.innerHTML = `来自分类：${finalSong.category} <br><span style="color: #888; font-size: 0.9rem;">(这首歌已经在待唱清单里啦)</span>`;
                     }
-                });
-
-                card.style.display = hasMatch ? 'block' : 'none';
-            });
-        }
-
-        function toggleSong(element, songName) {
-            if (requests.includes(songName)) {
-                requests = requests.filter(s => s !== songName);
-                element.classList.remove('selected');
-            } else {
-                requests.push(songName);
-                element.classList.add('selected');
-            }
-            updateRequestList();
-        }
-
-        function pickRandomSong() {
-            const allSongs = musicData.flatMap(item => item.songs);
-            const availableSongs = allSongs.filter(song => !requests.includes(song));
-
-            if (availableSongs.length === 0) {
-                alert("所有歌曲都已經在清單中了！");
-                return;
-            }
-
-            const randomIndex = Math.floor(Math.random() * availableSongs.length);
-            const randomSong = availableSongs[randomIndex];
-
-            const songElements = document.querySelectorAll('.song-item');
-            songElements.forEach(el => {
-                if (el.innerText === randomSong) {
-                    toggleSong(el, randomSong);
-                    el.scrollIntoView({ behavior: 'smooth', block: 'center' });
                 }
-            });
+            }, 80);
         }
 
-        function updateRequestList() {
-            if (requests.length === 0) {
-                selectedList.innerHTML = `<li style="color: #aaa; text-align: center; justify-content: center;">點擊左側歌曲添加...</li>`;
-                return;
+        randomBtn.addEventListener('click', openModal);
+        playAgainBtn.addEventListener('click', openModal);
+    }
+
+    function renderTabs() {
+        const tabsContainer = document.getElementById('tabs');
+        const categories = ["全部", ...Object.keys(playlistData)];
+        tabsContainer.innerHTML = categories.map(cat => `
+            <button class="tab-btn ${cat === currentCategory ? 'active' : ''}" data-category="${cat}">${cat}</button>
+        `).join('');
+
+        tabsContainer.querySelectorAll('.tab-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                currentCategory = btn.dataset.category;
+                document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                renderContent();
+            });
+        });
+    }
+
+    function renderContent() {
+        const contentContainer = document.getElementById('content');
+        let html = '';
+        let hasResults = false;
+        const categoriesToRender = currentCategory === "全部" ? Object.keys(playlistData) : [currentCategory];
+
+        categoriesToRender.forEach(category => {
+            const songs = playlistData[category];
+            const filteredSongs = songs.filter(song => song.toLowerCase().includes(searchQuery));
+
+            if (filteredSongs.length > 0) {
+                hasResults = true;
+                html += `
+                    <section class="category-section">
+                        <h2 class="category-title">${category} <span class="count">(${filteredSongs.length}首)</span></h2>
+                        <div class="songs-grid">
+                            ${filteredSongs.map(song => {
+                                const isInList = singList.some(item => item.name === song);
+                                return `
+                                <div class="song-card" title="${song}">
+                                    <div class="song-name">${highlightText(song, searchQuery)}</div>
+                                    <div class="add-to-list-btn ${isInList ? 'added' : ''}" 
+                                         onclick="toggleSingList('${song}', '${category}')" 
+                                         title="${isInList ? '移出待唱' : '加入待唱'}">
+                                        ${isInList ? '✓' : '+'}
+                                    </div>
+                                </div>
+                            `}).join('')}
+                        </div>
+                    </section>
+                `;
             }
-            selectedList.innerHTML = requests.map((song, index) => `
-                <li>
-                    <span>${song}</span>
-                    <span class="remove-btn" onclick="removeSong(${index})">&times;</span>
-                </li>
-            `).join('');
+        });
+
+        if (!hasResults) html = `<div class="empty-state">🎵 没有找到相关的歌曲，换个关键词试试吧~</div>`;
+        contentContainer.innerHTML = html;
+    }
+
+    function highlightText(text, query) {
+        if (!query) return text;
+        const regex = new RegExp(`(${query})`, 'gi');
+        return text.replace(regex, '<span style="color: #ff7e5f; font-weight: bold;">$1</span>');
+    }
+
+    function updateTotalCount() {
+        const allSongs = new Set();
+        Object.values(playlistData).forEach(songs => songs.forEach(song => allSongs.add(song)));
+        document.getElementById('totalCount').textContent = allSongs.size;
+    }
+
+    document.addEventListener('click', (e) => {
+        if (e.target.classList.contains('close-btn') || e.target.classList.contains('modal')) {
+            const modalId = e.target.dataset.close || e.target.id;
+            if(modalId) document.getElementById(modalId).style.display = 'none';
         }
+    });
 
-        function removeSong(index) {
-            const songName = requests[index];
-            requests.splice(index, 1);
-            document.querySelectorAll('.song-item').forEach(el => {
-                if (el.innerText === songName) el.classList.remove('selected');
-            });
-            updateRequestList();
-        }
-
-        function clearAll() {
-            requests = [];
-            document.querySelectorAll('.song-item').forEach(el => el.classList.remove('selected'));
-            updateRequestList();
-        }
-
-        window.onscroll = function() {
-            if (document.body.scrollTop > 300 || document.documentElement.scrollTop > 300) {
-                bttButton.style.display = "block";
-            } else {
-                bttButton.style.display = "none";
-            }
-        };
-
-        function scrollToTop() {
-            window.scrollTo({
-                top: 0,
-                behavior: 'smooth'
-            });
-        }
-
-        init();
-    </script>
+    init();
+</script>
 </body>
 </html>
