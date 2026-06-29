@@ -51,14 +51,13 @@
         }
         .discord-link:hover { transform: translateY(-3px) scale(1.05); box-shadow: 0 8px 20px rgba(88, 101, 242, 0.6); }
 
-        /* ================= 更新：统计信息样式（与按钮对齐） ================= */
         .stats {
             display: inline-flex;
             align-items: center;
             justify-content: center;
             background: rgba(255, 255, 255, 0.08);
-            padding: 15px 25px; /* 与按钮高度一致 */
-            border-radius: 30px; /* 与按钮圆角一致 */
+            padding: 15px 25px;
+            border-radius: 30px;
             font-size: 1rem;
             font-weight: bold;
             color: #ddd;
@@ -247,6 +246,80 @@
         .clear-list-btn:hover { background: #ff4b4b; color: #fff; }
         .empty-list { text-align: center; color: #666; padding: 40px 0; }
 
+        /* ================= 功能说明弹窗样式 ================= */
+        .help-modal-content {
+            text-align: left;
+            max-width: 600px;
+        }
+        .help-modal-content h2 {
+            text-align: center;
+            color: #ff7e5f;
+            margin-bottom: 20px;
+            font-size: 1.5rem;
+        }
+        .help-modal-content .help-subtitle {
+            text-align: center;
+            color: #aaa;
+            font-size: 0.9rem;
+            margin-bottom: 25px;
+            font-style: italic;
+        }
+        .help-body {
+            flex: 1;
+            overflow-y: auto;
+            padding-right: 10px;
+        }
+        .help-body::-webkit-scrollbar { width: 6px; }
+        .help-body::-webkit-scrollbar-thumb { background: #555; border-radius: 3px; }
+        
+        .help-section {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 12px;
+            padding: 15px 18px;
+            margin-bottom: 15px;
+        }
+        .help-section-title {
+            color: #ff7e5f;
+            font-size: 1.05rem;
+            font-weight: bold;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .help-section ul {
+            list-style: none;
+            padding-left: 0;
+        }
+        .help-section li {
+            color: #ccc;
+            font-size: 0.9rem;
+            margin-bottom: 6px;
+            padding-left: 18px;
+            position: relative;
+            line-height: 1.5;
+        }
+        .help-section li::before {
+            content: "▸";
+            position: absolute;
+            left: 0;
+            color: #86a8e7;
+        }
+        .help-section li strong {
+            color: #fff;
+        }
+        .help-tip {
+            background: rgba(134, 168, 231, 0.1);
+            border-left: 3px solid #86a8e7;
+            padding: 10px 15px;
+            border-radius: 6px;
+            margin-top: 10px;
+            font-size: 0.85rem;
+            color: #bbb;
+        }
+        .help-tip strong { color: #86a8e7; }
+
         .site-footer {
             text-align: center;
             margin-top: 60px;
@@ -261,27 +334,47 @@
             color: #86a8e7; text-shadow: 0 0 8px rgba(134, 168, 231, 0.5);
         }
 
-        .back-to-top {
+        /* ================= 悬浮按钮组 ================= */
+        .float-btn-group {
             position: fixed;
             bottom: 30px;
             right: 30px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            z-index: 99;
+        }
+        .float-btn {
             width: 50px;
             height: 50px;
-            background: linear-gradient(135deg, #ff7e5f, #feb47b);
             color: #fff;
             border: none;
             border-radius: 50%;
             font-size: 1.5rem;
             cursor: pointer;
-            box-shadow: 0 5px 15px rgba(255, 126, 95, 0.4);
             display: flex;
             align-items: center;
             justify-content: center;
+            transition: all 0.3s ease;
+        }
+        
+        /* 帮助按钮 */
+        .help-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            box-shadow: 0 5px 15px rgba(118, 75, 162, 0.4);
+        }
+        .help-btn:hover {
+            transform: translateY(-3px) scale(1.1);
+            box-shadow: 0 8px 20px rgba(118, 75, 162, 0.6);
+        }
+        
+        /* 回到顶部按钮 */
+        .back-to-top {
+            background: linear-gradient(135deg, #ff7e5f, #feb47b);
+            box-shadow: 0 5px 15px rgba(255, 126, 95, 0.4);
             opacity: 0;
             visibility: hidden;
             transform: translateY(20px);
-            transition: all 0.3s ease;
-            z-index: 99;
         }
         .back-to-top.visible {
             opacity: 1;
@@ -303,17 +396,20 @@
             .header-title-wrapper { gap: 10px; }
             .douyin-link, .discord-link { font-size: 0.8rem; padding: 6px 14px; }
             .controls { flex-direction: column; }
-            .action-btn, .stats { width: 100%; text-align: center; justify-content: center; } /* 手机端统计也占满宽度 */
+            .action-btn, .stats { width: 100%; text-align: center; justify-content: center; }
             .songs-grid { grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 10px; }
             .song-card { padding: 10px 12px; }
             .song-name { font-size: 0.85rem; }
             .random-song-name { font-size: 1.5rem; }
             .site-footer { margin-top: 40px; }
-            .back-to-top {
-                width: 45px; height: 45px;
-                bottom: 20px; right: 20px;
-                font-size: 1.2rem;
+            .float-btn-group {
+                bottom: 20px; right: 20px; gap: 10px;
             }
+            .float-btn {
+                width: 45px; height: 45px; font-size: 1.2rem;
+            }
+            .modal-content { padding: 25px 20px; }
+            .help-modal-content h2 { font-size: 1.3rem; }
         }
     </style>
 </head>
@@ -330,17 +426,13 @@
                 🐷 殺豬幫DC
             </a>
         </div>
-        <!-- 顶部的统计已移除 -->
     </header>
 
     <div class="controls">
         <div class="search-box">
             <input type="text" id="searchInput" placeholder="🔍 搜索歌曲名称...">
         </div>
-        
-        <!-- 移动到这里，紧挨在待唱清单前面 -->
         <div class="stats">共收录 <span id="totalCount">0</span> 首心动旋律</div>
-        
         <button class="action-btn list-btn" id="openListBtn">🎤 待唱清单 <span class="badge" id="listCountBadge">0</span></button>
         <button class="action-btn random-btn" id="randomBtn">🎲 随机抽一首</button>
         <button class="action-btn reset-btn" id="resetBtn">🔄 重新整理</button>
@@ -356,8 +448,13 @@
     </footer>
 </div>
 
-<button class="back-to-top" id="backToTopBtn" title="回到顶部">⬆️</button>
+<!-- 悬浮按钮组 -->
+<div class="float-btn-group">
+    <button class="float-btn help-btn" id="helpBtn" title="功能说明">❓</button>
+    <button class="float-btn back-to-top" id="backToTopBtn" title="回到顶部">⬆️</button>
+</div>
 
+<!-- 随机抽歌弹窗 -->
 <div id="randomModal" class="modal">
     <div class="modal-content">
         <span class="close-btn" data-close="randomModal">&times;</span>
@@ -368,6 +465,7 @@
     </div>
 </div>
 
+<!-- 待唱清单弹窗 -->
 <div id="listModal" class="modal">
     <div class="modal-content list-modal-content">
         <span class="close-btn" data-close="listModal">&times;</span>
@@ -379,262 +477,21 @@
     </div>
 </div>
 
-<script>
-    const playlistData = {
-        "华语经典": ["恶作剧", "爱丫爱丫", "我知道", "有你在", "那么骄傲", "爱的双重魅力", "你在不在", "亲爱的那不是爱情", "下雨天", "最后一页", "夏天的风", "达尔文", "Letting Go", "忘记时间", "是否", "一直很安静", "此生不换", "天若有情", "命运", "虚拟", "走马", "奇妙能力歌", "演员", "天外来物", "爱情讯息", "烟火里的尘埃", "特别的人", "下一个天亮", "雨爱", "若是月亮还没来", "大山", "不要怕", "爱我还是她", "那些你不知道的事", "爱错", "匿名的好友", "带我走", "太阳", "夏夜最后的烟火", "慢慢", "慢慢喜欢你", "这世间那么多人", "我们的爱", "想你的365天", "这条小鱼在乎", "去有风的地方", "路过人间", "秋风", "追梦赤子心", "爱人错过", "喜欢你", "指纹", "我是一只鱼", "霓虹甜心", "跳楼机", "杀死那个石家庄人", "百年孤寂"],
-        "五月天": ["知足", "温柔", "你不是真正的快乐", "倔强", "无与伦比的美丽", "小情歌"],
-        "邓紫棋": ["多远都要在一起", "唯一", "泡沫", "喜欢你", "句号", "倒数", "光年之外", "红蔷薇白玫瑰", "Where Did U Go", "再见", "后会无期", "我的秘密", "桃花诺", "Ainy", "天空没有极限", "受难曲", "画", "你把我灌醉", "来自天堂的魔鬼", "你不是真正的快乐", "差不多姑娘", "突然之间", "很久以后", "冰河时代", "情人", "存在", "老人与海", "另一个童话", "岩石里的花", "寂寞星球的玫瑰", "偶尔"],
-        "孙燕姿": ["我怀恋的", "开始懂了", "遇见", "绿光", "我不难过", "第一天", "天黑黑", "青花", "泪桥"],
-        "周杰伦": ["晴天", "搁浅", "稻香", "七里香", "花海", "龙卷风", "给我一首歌的时间", "明明就", "枫", "一路向北", "告白气球", "爱的飞行日记", "最长的电影", "不能说的秘密"],
-        "民谣": ["王昭君", "安和桥", "我记得", "程艾影", "理想", "我要你"],
-        "林俊杰": ["Always Online", "江南", "可惜没有如果", "愿与愁", "美人鱼", "修炼爱情", "背对背拥抱", "当你", "不潮不用花钱", "那些你很冒险的梦", "曹操", "她说", "交换余生", "飞云之下"],
-        "戏腔": ["赤伶", "须尽欢", "身骑白马", "壁上观", "牵丝戏", "鸳鸯戏", "光亮", "探故知"],
-        "emo": ["在加纳", "晚婚", "谁", "国王与乞丐", "我走后", "水星记", "唯一", "多远都要在一起", "瞬", "我知道", "如果可以", "冬眠", "体面", "嘉宾", "一个人想着一个人", "想自由", "记得", "背对背拥抱", "给我一个理由忘记", "慢冷", "关键词", "坠落", "幸福了然后呢", "在夜里跳舞", "我只能离开"],
-        "新歌": ["仗着", "房间", "推开世界的门", "虚拟", "这条小鱼在乎", "在夜里跳舞", "路过人间", "喜欢你", "王昭君", "给我一首歌的时间", "梦一场", "走马", "冻结", "慢冷", "奇妙能力歌", "从前说", "千千万万", "旅行的意义", "我会等", "暮色回响", "兜圈", "微风起"]
-    };
-
-    let currentCategory = "全部";
-    let searchQuery = "";
-    let allSongsFlat = [];
-    let singList = JSON.parse(localStorage.getItem('qiaoba_sing_list')) || [];
-
-    for (const [category, songs] of Object.entries(playlistData)) {
-        songs.forEach(song => allSongsFlat.push({ name: song, category: category }));
-    }
-
-    function init() {
-        renderTabs();
-        renderContent();
-        updateTotalCount();
-        updateListCount();
-        setupRandomizer();
-        setupSingList();
-        setupResetBtn();
-        setupBackToTop();
-        
-        document.getElementById('searchInput').addEventListener('input', (e) => {
-            searchQuery = e.target.value.trim().toLowerCase();
-            renderContent();
-        });
-    }
-
-    function setupResetBtn() {
-        document.getElementById('resetBtn').addEventListener('click', () => {
-            location.reload();
-        });
-    }
-
-    function setupBackToTop() {
-        const backToTopBtn = document.getElementById('backToTopBtn');
-        
-        window.addEventListener('scroll', () => {
-            if (window.scrollY > 300) {
-                backToTopBtn.classList.add('visible');
-            } else {
-                backToTopBtn.classList.remove('visible');
-            }
-        });
-
-        backToTopBtn.addEventListener('click', () => {
-            window.scrollTo({ top: 0, behavior: 'smooth' });
-        });
-    }
-
-    function setupSingList() {
-        const openListBtn = document.getElementById('openListBtn');
-        const listModal = document.getElementById('listModal');
-        const clearListBtn = document.getElementById('clearListBtn');
-
-        openListBtn.addEventListener('click', () => {
-            renderSingListModal();
-            listModal.style.display = 'flex';
-        });
-
-        clearListBtn.addEventListener('click', () => {
-            if(confirm('确定要清空所有待唱歌曲吗？')) {
-                singList = [];
-                saveSingList();
-                renderSingListModal();
-                renderContent();
-            }
-        });
-    }
-
-    function toggleSingList(songName, category) {
-        const index = singList.findIndex(item => item.name === songName);
-        if (index > -1) {
-            singList.splice(index, 1);
-        } else {
-            singList.push({ name: songName, category: category });
-        }
-        saveSingList();
-        updateListCount();
-        renderContent();
-    }
-
-    function addToList(songName, category) {
-        const isAlreadyInList = singList.some(item => item.name === songName);
-        if (!isAlreadyInList) {
-            singList.push({ name: songName, category: category });
-            saveSingList();
-            updateListCount();
-            renderContent();
-            return true;
-        }
-        return false;
-    }
-
-    function removeFromSingList(songName) {
-        singList = singList.filter(item => item.name !== songName);
-        saveSingList();
-        updateListCount();
-        renderSingListModal();
-        renderContent();
-    }
-
-    function saveSingList() {
-        localStorage.setItem('qiaoba_sing_list', JSON.stringify(singList));
-    }
-
-    function updateListCount() {
-        document.getElementById('listCountBadge').textContent = singList.length;
-    }
-
-    function renderSingListModal() {
-        const listItems = document.getElementById('listItems');
-        if (singList.length === 0) {
-            listItems.innerHTML = '<div class="empty-list">🎵 清单空空如也，快去挑选想唱的歌吧！</div>';
-            return;
-        }
-
-        listItems.innerHTML = singList.map((item, index) => `
-            <div class="list-item">
-                <div class="list-item-info">
-                    <div class="list-item-name">${index + 1}. ${item.name}</div>
-                    <div class="list-item-cat">来自：${item.category}</div>
-                </div>
-                <button class="remove-btn" onclick="removeFromSingList('${item.name}')" title="移除">×</button>
-            </div>
-        `).join('');
-    }
-
-    function setupRandomizer() {
-        const randomBtn = document.getElementById('randomBtn');
-        const randomModal = document.getElementById('randomModal');
-        const playAgainBtn = document.getElementById('playAgainBtn');
-        const randomSongName = document.getElementById('randomSongName');
-        const randomSongCategory = document.getElementById('randomSongCategory');
-
-        function openModal() {
-            randomModal.style.display = 'flex';
-            randomSongName.classList.remove('shake');
-            randomSongCategory.textContent = '命运选择中...';
+<!-- 功能说明弹窗 -->
+<div id="helpModal" class="modal">
+    <div class="modal-content help-modal-content">
+        <span class="close-btn" data-close="helpModal">&times;</span>
+        <h2>📖 功能说明书</h2>
+        <p class="help-subtitle">欢迎来到桥巴的专属KTV点歌台 🎧</p>
+        <div class="help-body">
             
-            let count = 0;
-            const maxCount = 15; 
-            const interval = setInterval(() => {
-                const rIndex = Math.floor(Math.random() * allSongsFlat.length);
-                randomSongName.textContent = allSongsFlat[rIndex].name;
-                count++;
-                
-                if (count >= maxCount) {
-                    clearInterval(interval);
-                    const fIndex = Math.floor(Math.random() * allSongsFlat.length);
-                    const finalSong = allSongsFlat[fIndex];
-                    
-                    randomSongName.textContent = finalSong.name;
-                    randomSongName.classList.add('shake');
-                    
-                    const addedSuccessfully = addToList(finalSong.name, finalSong.category);
-                    
-                    if (addedSuccessfully) {
-                        randomSongCategory.innerHTML = `来自分类：${finalSong.category} <br><span style="color: #38ef7d; font-weight: bold; font-size: 0.9rem;">🎉 已自动加入待唱清单！</span>`;
-                    } else {
-                        randomSongCategory.innerHTML = `来自分类：${finalSong.category} <br><span style="color: #888; font-size: 0.9rem;">(这首歌已经在待唱清单里啦)</span>`;
-                    }
-                }
-            }, 80);
-        }
+            <div class="help-section">
+                <div class="help-section-title">🎵 曲库与搜索</div>
+                <ul>
+                    <li><strong>176首精选</strong>：涵盖华语经典、周杰伦、林俊杰、邓紫棋、孙燕姿、五月天、民谣、戏腔、emo神曲及最新热歌。</li>
+                    <li><strong>分类切换</strong>：点击顶部分类标签，一键切换曲风。</li>
+                    <li><strong>实时搜索</strong>：输入歌名，关键字会<strong style="color:#ff7e5f;">橙色高亮</strong>显示。</li>
+                </ul>
+            </div>
 
-        randomBtn.addEventListener('click', openModal);
-        playAgainBtn.addEventListener('click', openModal);
-    }
-
-    function renderTabs() {
-        const tabsContainer = document.getElementById('tabs');
-        const categories = ["全部", ...Object.keys(playlistData)];
-        tabsContainer.innerHTML = categories.map(cat => `
-            <button class="tab-btn ${cat === currentCategory ? 'active' : ''}" data-category="${cat}">${cat}</button>
-        `).join('');
-
-        tabsContainer.querySelectorAll('.tab-btn').forEach(btn => {
-            btn.addEventListener('click', () => {
-                currentCategory = btn.dataset.category;
-                document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-                btn.classList.add('active');
-                renderContent();
-            });
-        });
-    }
-
-    function renderContent() {
-        const contentContainer = document.getElementById('content');
-        let html = '';
-        let hasResults = false;
-        const categoriesToRender = currentCategory === "全部" ? Object.keys(playlistData) : [currentCategory];
-
-        categoriesToRender.forEach(category => {
-            const songs = playlistData[category];
-            const filteredSongs = songs.filter(song => song.toLowerCase().includes(searchQuery));
-
-            if (filteredSongs.length > 0) {
-                hasResults = true;
-                html += `
-                    <section class="category-section">
-                        <h2 class="category-title">${category} <span class="count">(${filteredSongs.length}首)</span></h2>
-                        <div class="songs-grid">
-                            ${filteredSongs.map(song => {
-                                const isInList = singList.some(item => item.name === song);
-                                return `
-                                <div class="song-card" title="${song}">
-                                    <div class="song-name">${highlightText(song, searchQuery)}</div>
-                                    <div class="add-to-list-btn ${isInList ? 'added' : ''}" 
-                                         onclick="toggleSingList('${song}', '${category}')" 
-                                         title="${isInList ? '移出待唱' : '加入待唱'}">
-                                        ${isInList ? '✓' : '+'}
-                                    </div>
-                                </div>
-                            `}).join('')}
-                        </div>
-                    </section>
-                `;
-            }
-        });
-
-        if (!hasResults) html = `<div class="empty-state">🎵 没有找到相关的歌曲，换个关键词试试吧~</div>`;
-        contentContainer.innerHTML = html;
-    }
-
-    function highlightText(text, query) {
-        if (!query) return text;
-        const regex = new RegExp(`(${query})`, 'gi');
-        return text.replace(regex, '<span style="color: #ff7e5f; font-weight: bold;">$1</span>');
-    }
-
-    function updateTotalCount() {
-        const allSongs = new Set();
-        Object.values(playlistData).forEach(songs => songs.forEach(song => allSongs.add(song)));
-        document.getElementById('totalCount').textContent = allSongs.size;
-    }
-
-    document.addEventListener('click', (e) => {
-        if (e.target.classList.contains('close-btn') || e.target.classList.contains('modal')) {
-            const modalId = e.target.dataset.close || e.target.id;
-            if(modalId) document.getElementById(modalId).style.display = 'none';
-        }
-    });
-
-    init();
-</script>
-</body>
-</html>
+            <div class="help-sect
