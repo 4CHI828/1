@@ -30,6 +30,7 @@
             letter-spacing: 2px; margin-bottom: 0;
         }
 
+        /* 抖音按钮样式 */
         .douyin-link {
             display: inline-flex; align-items: center; gap: 6px;
             padding: 8px 18px;
@@ -40,6 +41,17 @@
         }
         .douyin-link:hover { transform: translateY(-3px) scale(1.05); box-shadow: 0 8px 20px rgba(254, 44, 85, 0.5); }
         .douyin-icon { font-size: 1.1rem; }
+
+        /* 新增：Discord 按钮样式 (经典紫蓝色) */
+        .discord-link {
+            display: inline-flex; align-items: center; gap: 6px;
+            padding: 8px 18px;
+            background: linear-gradient(135deg, #5865F2 0%, #7289da 100%);
+            color: #fff; text-decoration: none; border-radius: 20px;
+            font-size: 0.9rem; font-weight: bold; transition: all 0.3s;
+            box-shadow: 0 4px 12px rgba(88, 101, 242, 0.4); white-space: nowrap;
+        }
+        .discord-link:hover { transform: translateY(-3px) scale(1.05); box-shadow: 0 8px 20px rgba(88, 101, 242, 0.6); }
 
         .stats {
             display: inline-block; background: rgba(255, 255, 255, 0.1);
@@ -277,7 +289,7 @@
         @media (max-width: 600px) {
             header h1 { font-size: 1.8rem; }
             .header-title-wrapper { gap: 10px; }
-            .douyin-link { font-size: 0.8rem; padding: 6px 14px; }
+            .douyin-link, .discord-link { font-size: 0.8rem; padding: 6px 14px; }
             .controls { flex-direction: column; }
             .action-btn { width: 100%; }
             .songs-grid { grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 10px; }
@@ -301,6 +313,10 @@
             <h1>🎧 桥巴的歌单</h1>
             <a href="https://v.douyin.com/OJHvhGS2YKc/" target="_blank" rel="noopener noreferrer" class="douyin-link">
                 <span class="douyin-icon">🎵</span> 前往桥巴的抖音
+            </a>
+            <!-- 新增：Discord 杀猪帮链接 -->
+            <a href="https://discord.com/channels/865334403864461373/1516901347499184168" target="_blank" rel="noopener noreferrer" class="discord-link">
+                🐷 殺豬幫DC
             </a>
         </div>
         <div class="stats">共收录 <span id="totalCount">0</span> 首心动旋律</div>
@@ -365,7 +381,6 @@
     let currentCategory = "全部";
     let searchQuery = "";
     let allSongsFlat = [];
-    // 保持原有的 key 不变，防止用户更新代码后丢失待唱清单数据
     let singList = JSON.parse(localStorage.getItem('qiaoba_sing_list')) || [];
 
     for (const [category, songs] of Object.entries(playlistData)) {
