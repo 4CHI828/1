@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>乔巴的歌单 🎧</title>
+    <title>桥巴的歌单 🎧</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
@@ -77,7 +77,6 @@
         }
         .random-btn:hover { transform: translateY(-3px) scale(1.05); box-shadow: 0 8px 20px rgba(134, 168, 231, 0.6); }
         
-        /* 新增：重新整理按钮样式 */
         .reset-btn {
             background: linear-gradient(135deg, #f6d365 0%, #fda085 100%);
             box-shadow: 0 5px 15px rgba(253, 160, 133, 0.4);
@@ -224,7 +223,6 @@
         .clear-list-btn:hover { background: #ff4b4b; color: #fff; }
         .empty-list { text-align: center; color: #666; padding: 40px 0; }
 
-        /* ================= 底部页脚样式 ================= */
         .site-footer {
             text-align: center;
             margin-top: 60px;
@@ -239,7 +237,6 @@
             color: #86a8e7; text-shadow: 0 0 8px rgba(134, 168, 231, 0.5);
         }
 
-        /* ================= 回到顶部按钮样式 ================= */
         .back-to-top {
             position: fixed;
             bottom: 30px;
@@ -301,9 +298,9 @@
 <div class="container">
     <header>
         <div class="header-title-wrapper">
-            <h1>🎧 乔巴的歌单</h1>
+            <h1>🎧 桥巴的歌单</h1>
             <a href="https://v.douyin.com/OJHvhGS2YKc/" target="_blank" rel="noopener noreferrer" class="douyin-link">
-                <span class="douyin-icon">🎵</span> 前往乔巴的抖音
+                <span class="douyin-icon">🎵</span> 前往桥巴的抖音
             </a>
         </div>
         <div class="stats">共收录 <span id="totalCount">0</span> 首心动旋律</div>
@@ -315,7 +312,6 @@
         </div>
         <button class="action-btn list-btn" id="openListBtn">🎤 待唱清单 <span class="badge" id="listCountBadge">0</span></button>
         <button class="action-btn random-btn" id="randomBtn">🎲 随机抽一首</button>
-        <!-- 新增：重新整理按钮 -->
         <button class="action-btn reset-btn" id="resetBtn">🔄 重新整理</button>
     </div>
 
@@ -329,10 +325,8 @@
     </footer>
 </div>
 
-<!-- 新增：回到顶部悬浮按钮 -->
 <button class="back-to-top" id="backToTopBtn" title="回到顶部">⬆️</button>
 
-<!-- 随机抽歌弹窗 -->
 <div id="randomModal" class="modal">
     <div class="modal-content">
         <span class="close-btn" data-close="randomModal">&times;</span>
@@ -343,7 +337,6 @@
     </div>
 </div>
 
-<!-- 待唱清单弹窗 -->
 <div id="listModal" class="modal">
     <div class="modal-content list-modal-content">
         <span class="close-btn" data-close="listModal">&times;</span>
@@ -372,6 +365,7 @@
     let currentCategory = "全部";
     let searchQuery = "";
     let allSongsFlat = [];
+    // 保持原有的 key 不变，防止用户更新代码后丢失待唱清单数据
     let singList = JSON.parse(localStorage.getItem('qiaoba_sing_list')) || [];
 
     for (const [category, songs] of Object.entries(playlistData)) {
@@ -394,19 +388,15 @@
         });
     }
 
-    // ================= 新增：重新整理逻辑 =================
     function setupResetBtn() {
         document.getElementById('resetBtn').addEventListener('click', () => {
-            // 刷新页面，恢复初始状态（待唱清单因保存在本地，不会被清空）
             location.reload();
         });
     }
 
-    // ================= 新增：回到顶部逻辑 =================
     function setupBackToTop() {
         const backToTopBtn = document.getElementById('backToTopBtn');
         
-        // 监听滚动事件
         window.addEventListener('scroll', () => {
             if (window.scrollY > 300) {
                 backToTopBtn.classList.add('visible');
@@ -415,13 +405,11 @@
             }
         });
 
-        // 点击平滑滚动到顶部
         backToTopBtn.addEventListener('click', () => {
             window.scrollTo({ top: 0, behavior: 'smooth' });
         });
     }
 
-    // ================= 待唱清单逻辑 =================
     function setupSingList() {
         const openListBtn = document.getElementById('openListBtn');
         const listModal = document.getElementById('listModal');
@@ -500,7 +488,6 @@
         `).join('');
     }
 
-    // ================= 随机抽歌逻辑 =================
     function setupRandomizer() {
         const randomBtn = document.getElementById('randomBtn');
         const randomModal = document.getElementById('randomModal');
@@ -543,7 +530,6 @@
         playAgainBtn.addEventListener('click', openModal);
     }
 
-    // ================= 基础渲染逻辑 =================
     function renderTabs() {
         const tabsContainer = document.getElementById('tabs');
         const categories = ["全部", ...Object.keys(playlistData)];
