@@ -40,7 +40,19 @@
 
         .control-panel { background: var(--card-bg); padding: 20px; border-radius: var(--radius); box-shadow: var(--shadow); margin-bottom: 25px; border: 1px solid var(--border); }
         .filter-bar { display: flex; gap: 10px; margin-bottom: 15px; flex-wrap: wrap; }
-        .filter-bar input, .filter-bar select { flex: 1; padding: 12px; border: 1px solid var(--border); border-radius: 12px; font-size: 14px; min-width: 140px; background: var(--bg-color); color: var(--text-color); }
+        
+        /* 🔍 搜尋框容器與清除按鈕 */
+        .search-wrapper { position: relative; flex: 1; min-width: 200px; }
+        .filter-bar input, .filter-bar select { 
+            width: 100%; padding: 12px; border: 1px solid var(--border); border-radius: 12px; 
+            font-size: 14px; background: var(--bg-color); color: var(--text-color); box-sizing: border-box;
+        }
+        .clear-search-btn { 
+            position: absolute; right: 12px; top: 50%; transform: translateY(-50%); 
+            color: #ff9f43; cursor: pointer; font-weight: bold; font-size: 18px; 
+            display: none; transition: 0.2s; z-index: 10;
+        }
+        .clear-search-btn:hover { color: #ee5253; transform: translateY(-50%) scale(1.2); }
 
         .btn { border: none; padding: 10px 16px; border-radius: 12px; cursor: pointer; font-weight: 600; transition: all 0.2s; white-space: nowrap; font-size: 14px; display: inline-flex; align-items: center; gap: 6px; }
         .btn:active { transform: scale(0.95); }
@@ -60,7 +72,16 @@
         .btn-queue { padding: 8px 16px; border-radius: 10px; border: none; cursor: pointer; font-weight: 600; background: var(--danger); color: white; }
 
         .queue-list { display: flex; flex-direction: column; gap: 10px; max-height: 300px; overflow-y: auto; }
-        .queue-item { background: rgba(255,255,255,0.6); padding: 12px 16px; border-radius: 12px; font-size: 15px; display: flex; align-items: center; gap: 12px; transition: 0.3s; border: 1px solid transparent; backdrop-filter: blur(5px); }
+        
+        /* 🖐️ 拖曳項目樣式 */
+        .queue-item { 
+            background: rgba(255,255,255,0.6); padding: 12px 16px; border-radius: 12px; font-size: 15px; 
+            display: flex; align-items: center; gap: 12px; transition: 0.3s; border: 1px solid transparent; 
+            backdrop-filter: blur(5px); cursor: grab; user-select: none;
+        }
+        .queue-item:active { cursor: grabbing; }
+        .queue-item.dragging { opacity: 0.5; background: var(--border); border: 2px dashed var(--primary); }
+        
         body.dark-mode .queue-item { background: rgba(0,0,0,0.2); color: #e0e0e0; }
         .queue-item.singing { background: rgba(255,107,107,0.15); border-color: var(--primary); animation: pulse-queue 2s infinite; }
         .queue-item.done { opacity: 0.6; text-decoration: line-through; background: rgba(85, 239, 196, 0.1); border-color: var(--success); }
@@ -147,7 +168,6 @@
         @keyframes slideIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
         @keyframes slideOut { from { transform: translateX(0); opacity: 1; } to { transform: translateX(100%); opacity: 0; } }
 
-        /* --- 修正後的骨架屏 CSS --- */
         .loading { display: none; } 
         .loading.active { display: block; } 
         .skeleton { background: linear-gradient(90deg, var(--border) 25%, var(--bg-color) 50%, var(--border) 75%); background-size: 200% 100%; animation: shimmer 1.5s infinite; border-radius: 8px; }
@@ -180,7 +200,10 @@
 
     <div class="control-panel">
         <div class="filter-bar">
-            <input type="text" id="searchInput" placeholder="🔍 搜尋歌手、歌曲或標籤..." oninput="applyFilters()">
+            <div class="search-wrapper">
+                <input type="text" id="searchInput" placeholder="🔍 搜尋歌手、歌曲或標籤..." oninput="handleSearchInput()">
+                <span id="clearSearch" class="clear-search-btn" onclick="clearSearch()">✕</span>
+            </div>
             <select id="artistFilter" onchange="applyFilters()">
                 <option value="all">🎤 所有歌手</option>
                 <option value="__sort_clicks__">🔥 熱門排行</option>
@@ -197,7 +220,7 @@
 
     <div class="queue-panel" id="queuePanel">
         <div class="queue-header">
-            <div class="queue-title">🎤 待唱清單 (<span id="queueCount">0</span> 首) <span class="queue-sort-hint" style="font-size:12px; font-weight:normal; color:#a8a8a8; margin-left:10px;">💡 點擊 Emoji 切換狀態</span></div>
+            <div class="queue-title">🎤 待唱清單 (<span id="queueCount">0</span> 首) <span class="queue-sort-hint" style="font-size:12px; font-weight:normal; color:#a8a8a8; margin-left:10px;">💡 拖曳歌曲可調整順序 | 點擊 Emoji 切換狀態</span></div>
             <button class="btn-queue" onclick="clearQueue()">🗑️ 清空清單</button>
         </div>
         <div id="queueList" class="queue-list">
@@ -277,8 +300,9 @@
             <h2 style="color:var(--primary); margin-top:0;">📖 系統功能說明</h2>
             <div style="text-align:left; line-height:1.8; font-size:15px; margin:20px 0;">
                 <p>🎲 <b>隨機選歌</b>：抽中後歌曲將<span style="color:var(--primary)">自動加入</span>待唱清單！</p>
-                <p>🎤 <b>待唱清單</b>：點擊歌單中的「歌曲名稱」即可加入排隊。</p>
+                <p>🎤 <b>待唱清單</b>：點擊歌單中的「歌曲名稱」即可加入排隊。支持<span style="color:var(--primary)">拖曳歌曲</span>直接調整演唱順序。</p>
                 <p>🔄 <b>狀態切換</b>：點擊待唱項前的 Emoji 切換：⏳排隊 $\to$ 🎤演唱 $\to$ ✅已唱 $\to$ 移出。</p>
+                <p>🎵 <b>試聽功能</b>：若歌曲無特定連結，點擊試聽將<span style="color:var(--primary)">自動跳轉至 YouTube 搜索</span>該歌曲。</p>
                 <p>🔐 <b>管理員</b>：登入後可直接編輯歌曲、刪除留言或清空清單。</p>
             </div>
             <button class="btn" style="background:var(--primary); color:white; padding: 10px 30px;" onclick="document.getElementById('helpModal').style.display='none'">我知道了</button>
@@ -351,6 +375,21 @@
             } 
         }
 
+        /* 🔍 搜尋框邏輯 */
+        function handleSearchInput() {
+            const input = document.getElementById('searchInput');
+            const clearBtn = document.getElementById('clearSearch');
+            clearBtn.style.display = input.value.trim() === '' ? 'none' : 'block';
+            applyFilters();
+        }
+        function clearSearch() {
+            const input = document.getElementById('searchInput');
+            input.value = '';
+            handleSearchInput();
+            input.focus();
+            showToast('🔍 已清除搜尋內容', 'info');
+        }
+
         function loadPlaylist() {
             document.getElementById('skeletonLoader').classList.add('active');
             document.getElementById('playlistTable').style.display = 'none';
@@ -371,16 +410,71 @@
             });
         }
 
+        /* 🎤 待唱清單渲染與拖曳邏輯 */
         function renderQueuePanel() {
             const queueSongs = allSongs.filter(s => s.status && s.status !== '');
             queueSongs.sort((a, b) => (a.queueTime || 0) - (b.queueTime || 0)); 
             document.getElementById('queueCount').innerText = queueSongs.length;
             const listEl = document.getElementById('queueList');
             if (queueSongs.length === 0) { listEl.innerHTML = '<div class="queue-empty" style="text-align:center; color:#888; padding:10px;">目前沒有待唱歌曲，點擊下方歌單的「歌曲名稱」即可加入！</div>'; return; }
+            
             listEl.innerHTML = queueSongs.map((s, index) => {
                 const statusEmoji = {'queued': '⏳', 'singing': '🎤', 'done': '✅'}[s.status];
-                return `<div class="queue-item ${s.status}"><span class="queue-index">${index + 1}.</span><button class="queue-status-btn" onclick="cycleQueueStatus(${s.id}, '${s.status}')">${statusEmoji}</button><span class="queue-text">${s.artist} - ${s.song}</span><button class="queue-del-btn" onclick="removeFromQueue(${s.id})">✕</button></div>`;
+                return `<div class="queue-item ${s.status}" draggable="true" data-id="${s.id}">
+                    <span class="queue-index">${index + 1}.</span>
+                    <button class="queue-status-btn" onclick="cycleQueueStatus(${s.id}, '${s.status}')">${statusEmoji}</button>
+                    <span class="queue-text">${s.artist} - ${s.song}</span>
+                    <button class="queue-del-btn" onclick="removeFromQueue(${s.id})">✕</button>
+                </div>`;
             }).join('');
+
+            initDragAndDrop();
+        }
+
+        function initDragAndDrop() {
+            const list = document.getElementById('queueList');
+            let draggedItem = null;
+
+            list.addEventListener('dragstart', (e) => {
+                if (e.target.classList.contains('queue-item')) {
+                    draggedItem = e.target;
+                    e.target.classList.add('dragging');
+                }
+            });
+
+            list.addEventListener('dragend', (e) => {
+                if (e.target.classList.contains('queue-item')) {
+                    e.target.classList.remove('dragging');
+                    draggedItem = null;
+                    // 更新序號
+                    document.querySelectorAll('.queue-index').forEach((el, idx) => el.innerText = (idx + 1) + '.');
+                }
+            });
+
+            list.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                const afterElement = getDragAfterElement(list, e.clientY);
+                if (draggedItem) {
+                    if (afterElement == null) {
+                        list.appendChild(draggedItem);
+                    } else {
+                        list.insertBefore(draggedItem, afterElement);
+                    }
+                }
+            });
+        }
+
+        function getDragAfterElement(container, y) {
+            const draggableElements = [...container.querySelectorAll('.queue-item:not(.dragging)')];
+            return draggableElements.reduce((closest, child) => {
+                const box = child.getBoundingClientRect();
+                const offset = y - box.top - box.height / 2;
+                if (offset < 0 && offset > closest.offset) {
+                    return { offset: offset, element: child };
+                } else {
+                    return closest;
+                }
+            }, { offset: Number.NEGATIVE_INFINITY }).element;
         }
 
         function cycleQueueStatus(id, currentStatus) {
