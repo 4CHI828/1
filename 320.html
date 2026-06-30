@@ -10,54 +10,58 @@
         const ADMIN_NAME = "静静"; 
         const ADMIN_TOKEN_KEY = 'adminToken';
         const ADMIN_TOKEN_DURATION = 24 * 60 * 60 * 1000;
+        
+        // 🚀 效能優化：提前發起數據請求，與 DOM 解析並行
+        const dataPromise = fetch(API_URL).then(res => res.json()).catch(() => ({ status: 'error', message: 'Network Error' }));
     </script>
     <style>
         :root { 
-            --bg-color: #f0f2f5; --text-color: #2d3436; --card-bg: #ffffff; 
+            --bg-color: #f4f6f8; --text-color: #2d3436; --card-bg: #ffffff; 
             --primary: #ff6b6b; --primary-hover: #ee5253; --secondary: #48dbfb;
             --danger: #ff7675; --success: #55efc4; --warning: #fbc531; 
             --border: #e1e4e8; --reply-bg: #f8f9fa; --accent-gold: #fbc531;
-            --shadow-sm: 0 2px 8px rgba(0,0,0,0.05);
-            --shadow-md: 0 4px 20px rgba(0,0,0,0.08);
-            --shadow-lg: 0 10px 30px rgba(0,0,0,0.12);
-            --radius-lg: 20px; --radius-md: 12px; --radius-sm: 8px;
-            --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            --shadow-sm: 0 2px 8px rgba(0,0,0,0.04);
+            --shadow-md: 0 4px 15px rgba(0,0,0,0.06);
+            --shadow-lg: 0 10px 30px rgba(0,0,0,0.1);
+            --radius-lg: 16px; --radius-md: 10px; --radius-sm: 8px;
+            --transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
         }
         body.dark-mode { 
             --bg-color: #121212; --text-color: #e0e0e0; --card-bg: #1e1e1e; 
             --primary: #ff7675; --border: #2d2d2d; --reply-bg: #2d3436; 
-            --shadow-sm: 0 2px 8px rgba(0,0,0,0.3); --shadow-md: 0 4px 20px rgba(0,0,0,0.5); --shadow-lg: 0 10px 30px rgba(0,0,0,0.7);
+            --shadow-sm: 0 2px 8px rgba(0,0,0,0.2); --shadow-md: 0 4px 15px rgba(0,0,0,0.4); --shadow-lg: 0 10px 30px rgba(0,0,0,0.6);
         }
         
         body { 
             font-family: 'PingFang TC', 'Microsoft JhengHei', 'Segoe UI', Roboto, sans-serif; 
             background-color: var(--bg-color); color: var(--text-color); 
             max-width: 900px; margin: 0 auto; padding: 20px; padding-bottom: 120px; 
-            scroll-behavior: smooth; transition: background 0.4s ease; line-height: 1.6;
-            animation: fadeInUp 0.6s ease-out;
+            scroll-behavior: smooth; transition: background 0.4s ease, color 0.4s ease; line-height: 1.6;
+            animation: fadeInUp 0.5s ease-out;
         }
 
-        @keyframes fadeInUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes fadeInUp { from { opacity: 0; transform: translateY(15px); } to { opacity: 1; transform: translateY(0); } }
 
-        h1 { text-align: center; color: var(--primary); font-size: 26px; margin-bottom: 25px; font-weight: 800; }
+        h1 { text-align: center; color: var(--primary); font-size: 26px; margin-bottom: 25px; font-weight: 800; letter-spacing: 1px; }
 
         .social-links { display: flex; justify-content: center; gap: 12px; margin-bottom: 35px; flex-wrap: wrap; }
         .social-links a { text-decoration: none; color: var(--text-color); background: var(--card-bg); padding: 8px 16px; border-radius: 50px; font-size: 13px; font-weight: 500; box-shadow: var(--shadow-sm); transition: var(--transition); border: 1px solid var(--border); }
-        .social-links a:hover { transform: translateY(-3px); color: var(--primary); box-shadow: var(--shadow-md); }
+        .social-links a:hover { transform: translateY(-3px); color: var(--primary); box-shadow: var(--shadow-md); border-color: var(--primary); }
 
-        .control-panel { background: var(--card-bg); padding: 15px; border-radius: var(--radius-lg); box-shadow: var(--shadow-md); margin-bottom: 30px; border: 1px solid var(--border); backdrop-filter: blur(10px); }
+        .control-panel { background: var(--card-bg); padding: 15px; border-radius: var(--radius-lg); box-shadow: var(--shadow-md); margin-bottom: 30px; border: 1px solid var(--border); }
         .filter-bar { display: flex; gap: 8px; flex-wrap: nowrap; overflow-x: auto; align-items: center; scrollbar-width: none; -webkit-overflow-scrolling: touch; }
         .filter-bar::-webkit-scrollbar { display: none; }
 
         .search-wrapper { position: relative; flex: 1; min-width: 160px; }
         .filter-bar input, .filter-bar select { width: 100%; padding: 10px 12px; border: 1px solid var(--border); border-radius: var(--radius-md); font-size: 13px; background: var(--bg-color); color: var(--text-color); transition: var(--transition); box-sizing: border-box; }
-        .filter-bar input:focus, .filter-bar select:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 3px rgba(255,107,107,0.1); }
+        .filter-bar input:focus, .filter-bar select:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 3px rgba(255,107,107,0.15); }
 
         .clear-search-btn { position: absolute; right: 12px; top: 50%; transform: translateY(-50%); color: #ff9f43; cursor: pointer; font-weight: bold; font-size: 16px; display: none; transition: var(--transition); z-index: 10; }
         .clear-search-btn:hover { color: var(--primary); transform: translateY(-50%) scale(1.2); }
 
         .btn { border: none; padding: 10px; border-radius: var(--radius-md); cursor: pointer; transition: var(--transition); font-size: 15px; display: inline-flex; align-items: center; justify-content: center; min-width: 40px; }
-        .btn:active { transform: scale(0.9); }
+        .btn:hover { filter: brightness(1.05); transform: translateY(-1px); }
+        .btn:active { transform: scale(0.95); }
         .btn-random { background: var(--warning); color: #636e72; }
         .btn-export { background: var(--success); color: #2d3436; }
         .btn-theme, .btn-refresh, .btn-help { background: var(--bg-color); border: 1px solid var(--border); color: var(--text-color); }
@@ -72,12 +76,12 @@
         .queue-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 10px; }
         .queue-title { font-size: 20px; font-weight: 800; display: flex; align-items: center; gap: 8px; }
         .btn-queue { padding: 8px 16px; border-radius: 10px; border: none; cursor: pointer; font-weight: 600; background: var(--danger); color: white; transition: var(--transition); }
-        .btn-queue:hover { background: #ee5253; transform: translateY(-2px); }
+        .btn-queue:hover { background: #ee5253; transform: translateY(-2px); box-shadow: 0 4px 10px rgba(255, 118, 117, 0.3); }
 
         .queue-list { display: flex; flex-direction: column; gap: 12px; max-height: 350px; overflow-y: auto; padding-right: 5px; }
-        .queue-item { background: rgba(255,255,255,0.7); padding: 14px 18px; border-radius: var(--radius-md); font-size: 15px; display: flex; align-items: center; gap: 12px; transition: var(--transition); border: 1px solid transparent; backdrop-filter: blur(8px); cursor: grab; user-select: none; }
-        .queue-item:hover { transform: translateX(5px); background: rgba(255,255,255,0.9); box-shadow: var(--shadow-sm); }
-        .queue-item.dragging { opacity: 0.5; background: var(--border); border: 2px dashed var(--primary); }
+        .queue-item { background: rgba(255,255,255,0.8); padding: 14px 18px; border-radius: var(--radius-md); font-size: 15px; display: flex; align-items: center; gap: 12px; transition: transform 0.2s ease, background 0.2s ease, box-shadow 0.2s ease; border: 1px solid transparent; cursor: grab; user-select: none; }
+        .queue-item:hover { transform: translateX(5px); background: rgba(255,255,255,0.95); box-shadow: var(--shadow-sm); }
+        .queue-item.dragging { opacity: 0.8; transform: scale(1.02); box-shadow: var(--shadow-lg); z-index: 10; background: var(--border); border: 2px dashed var(--primary); }
         body.dark-mode .queue-item { background: rgba(0,0,0,0.3); color: #e0e0e0; }
         .queue-item.singing { background: rgba(255,107,107,0.15); border-color: var(--primary); animation: pulse-queue 2s infinite; }
         .queue-item.done { opacity: 0.6; text-decoration: line-through; background: rgba(85, 239, 196, 0.1); border-color: var(--success); }
@@ -86,21 +90,21 @@
         .queue-status-btn { background: none; border: none; font-size: 20px; cursor: pointer; transition: var(--transition); }
         .queue-status-btn:hover { transform: scale(1.3); }
         .queue-text { flex: 1; font-weight: 600; }
-        .queue-del-btn { background: none; border: none; color: #b2bec3; cursor: pointer; border-radius: 50%; transition: var(--transition); }
+        .queue-del-btn { background: none; border: none; color: #b2bec3; cursor: pointer; border-radius: 50%; transition: var(--transition); width: 30px; height: 30px; display: flex; align-items: center; justify-content: center; }
         .queue-del-btn:hover { color: white; background-color: var(--danger); }
 
-        table { width: 100%; border-collapse: separate; border-spacing: 0; background: var(--card-bg); border-radius: var(--radius-lg); overflow: hidden; box-shadow: var(--shadow-md); border: 1px solid var(--border); }
+        table { width: 100%; border-collapse: separate; border-spacing: 0; background: var(--card-bg); border-radius: var(--radius-lg); overflow: hidden; box-shadow: var(--shadow-md); border: 1px solid var(--border); transition: opacity 0.3s ease; }
         th, td { padding: 18px; text-align: left; border-bottom: 1px solid var(--border); }
         th { background-color: var(--primary); color: white; font-weight: 600; font-size: 15px; }
         tr:hover { background-color: var(--bg-color); transition: var(--transition); }
         .btn-sm { padding: 6px 12px; font-size: 12px; border-radius: 8px; border: none; cursor: pointer; color: white; transition: var(--transition); }
         .btn-edit { background-color: var(--secondary); }
         .btn-del { background-color: var(--danger); }
-        .btn-sm:hover { transform: translateY(-2px); opacity: 0.9; }
+        .btn-sm:hover { transform: translateY(-2px); opacity: 0.9; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
         .tag-badge { display: inline-block; background-color: var(--reply-bg); color: #636e72; font-size: 11px; padding: 3px 8px; border-radius: 6px; margin-right: 6px; border: 1px solid var(--border); transition: var(--transition); }
         .tag-badge:hover { background-color: var(--primary); color: white; border-color: var(--primary); }
         .clickable-title { cursor: pointer; transition: var(--transition); font-weight: 600; color: var(--text-color); }
-        .clickable-title:hover { color: var(--primary); text-decoration: underline; }
+        .clickable-title:hover { color: var(--primary); text-decoration: underline; text-underline-offset: 4px; }
 
         .request-section { background: var(--card-bg); padding: 25px; border-radius: var(--radius-lg); box-shadow: var(--shadow-md); margin-top: 30px; border: 1px solid var(--border); }
         .request-form { display: flex; gap: 12px; margin-bottom: 25px; flex-wrap: wrap; }
@@ -136,8 +140,10 @@
         .footer a:hover { text-decoration: underline; }
         
         .fab-group { position: fixed; bottom: 30px; right: 30px; display: flex; flex-direction: column; gap: 15px; z-index: 1000; align-items: flex-end; }
-        .fab-btn { color: white; border: none; padding: 16px 28px; border-radius: 50px; font-size: 16px; font-weight: 800; box-shadow: 0 8px 25px rgba(0,0,0,0.2); cursor: pointer; transition: var(--transition); display: flex; align-items: center; gap: 10px; }
-        .fab-btn:hover { transform: translateY(-5px) scale(1.05); box-shadow: 0 12px 30px rgba(0,0,0,0.3); }
+        .fab-btn { color: white; border: none; padding: 16px 28px; border-radius: 50px; font-size: 16px; font-weight: 800; box-shadow: 0 8px 25px rgba(0,0,0,0.2); cursor: pointer; transition: var(--transition); display: flex; align-items: center; gap: 10px; position: relative; overflow: hidden; }
+        .fab-btn:hover { transform: translateY(-5px) scale(1.02); box-shadow: 0 12px 30px rgba(0,0,0,0.3); }
+        .fab-btn:active::after { content: ''; position: absolute; top: 50%; left: 50%; width: 200px; height: 200px; background: rgba(255,255,255,0.3); border-radius: 50%; transform: translate(-50%, -50%); animation: ripple 0.6s ease-out; }
+        @keyframes ripple { from { width: 0; height: 0; opacity: 1; } to { width: 200px; height: 200px; opacity: 0; } }
         .fab-btn.msg-btn { background: linear-gradient(45deg, #48dbfb, #0984e3); }
         .fab-btn.add-btn { background: linear-gradient(45deg, #55efc4, #00b894); }
         .fab-btn.active { background: var(--danger) !important; }
@@ -157,26 +163,29 @@
         .btn-add { background: linear-gradient(45deg, var(--primary), #ff7675); color: white; border: none; padding: 16px; border-radius: 12px; cursor: pointer; font-size: 16px; font-weight: 800; width: 100%; transition: var(--transition); }
         .btn-add:hover { transform: translateY(-3px); box-shadow: 0 8px 20px rgba(255,107,107,0.4); }
 
-        .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 2000; justify-content: center; align-items: center; backdrop-filter: blur(6px); }
+        .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 2000; justify-content: center; align-items: center; }
         .modal-content { background: var(--card-bg); padding: 35px; border-radius: var(--radius-lg); text-align: center; max-width: 500px; width: 90%; box-shadow: var(--shadow-lg); animation: popIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); color: var(--text-color); }
         @keyframes popIn { from { transform: scale(0.8); opacity: 0; } to { transform: scale(1); opacity: 1; } }
         .btn-listen { background: linear-gradient(45deg, #ff0000, #d63031); color: white; text-decoration: none; padding: 16px 32px; border-radius: 12px; display: inline-block; margin: 25px 0; font-weight: 800; transition: var(--transition); box-shadow: 0 6px 15px rgba(214,48,49,0.4); }
         .btn-listen:hover { transform: scale(1.05); box-shadow: 0 10px 25px rgba(214,48,49,0.6); }
 
         .toast-container { position: fixed; top: 20px; right: 20px; z-index: 9999; display: flex; flex-direction: column; gap: 12px; }
-        .toast { padding: 14px 26px; border-radius: 12px; color: white; font-size: 14px; font-weight: 600; box-shadow: var(--shadow-lg); animation: slideIn 0.3s ease; min-width: 220px; backdrop-filter: blur(12px); }
-        .toast.success { background-color: rgba(85, 239, 196, 0.9); color: #00b894; }
-        .toast.error { background-color: rgba(255, 118, 117, 0.9); color: #d63031; }
-        .toast.info { background-color: rgba(72, 219, 251, 0.9); color: #0984e3; }
+        .toast { padding: 14px 26px; border-radius: 12px; color: white; font-size: 14px; font-weight: 600; box-shadow: var(--shadow-lg); animation: slideIn 0.3s ease; min-width: 220px; }
+        .toast.success { background-color: #00b894; }
+        .toast.error { background-color: #d63031; }
+        .toast.info { background-color: #0984e3; }
         @keyframes slideIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
         @keyframes slideOut { from { transform: translateX(0); opacity: 1; } to { transform: translateX(100%); opacity: 0; } }
 
-        .loading { display: none; } 
-        .loading.active { display: block; } 
-        .skeleton { background: linear-gradient(90deg, var(--border) 25%, var(--bg-color) 50%, var(--border) 75%); background-size: 200% 100%; animation: shimmer 1.5s infinite; border-radius: 8px; }
+        /* 🚀 優化骨架屏 */
+        .loading { display: none; transition: opacity 0.3s ease; } 
+        .loading.active { display: block; }
+        .loading.fade-out { opacity: 0; pointer-events: none; }
+        .skeleton-table { background: var(--card-bg); border-radius: var(--radius-lg); overflow: hidden; box-shadow: var(--shadow-md); border: 1px solid var(--border); }
+        .skeleton-header { height: 54px; background: var(--primary); }
+        .skeleton-row { display: flex; padding: 18px; border-bottom: 1px solid var(--border); gap: 15px; }
+        .skeleton-cell { height: 20px; background: linear-gradient(90deg, var(--border) 25%, var(--bg-color) 50%, var(--border) 75%); background-size: 200% 100%; animation: shimmer 1.5s infinite; border-radius: 6px; }
         @keyframes shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
-        .skeleton-row { display: flex; gap: 15px; padding: 15px; border-bottom: 1px solid var(--border); }
-        .skeleton-row div { width: 25%; height: 20px; }
 
         @media (max-width: 600px) {
             body { padding: 15px; }
@@ -235,9 +244,13 @@
     <h3 style="margin-left:10px; font-weight:800; color:var(--text-color);">🎵 目前歌單 (<span id="songCount">0</span> 首)</h3>
     
     <div id="skeletonLoader" class="loading active">
-        <div class="skeleton-row"><div class="skeleton"></div><div class="skeleton"></div><div class="skeleton"></div><div class="skeleton"></div></div>
-        <div class="skeleton-row"><div class="skeleton"></div><div class="skeleton"></div><div class="skeleton"></div><div class="skeleton"></div></div>
-        <div class="skeleton-row"><div class="skeleton"></div><div class="skeleton"></div><div class="skeleton"></div><div class="skeleton"></div></div>
+        <div class="skeleton-table">
+            <div class="skeleton-header"></div>
+            <div class="skeleton-row"><div class="skeleton-cell" style="width:20%"></div><div class="skeleton-cell" style="width:40%"></div><div class="skeleton-cell" style="width:20%"></div><div class="skeleton-cell" style="width:20%"></div></div>
+            <div class="skeleton-row"><div class="skeleton-cell" style="width:20%"></div><div class="skeleton-cell" style="width:40%"></div><div class="skeleton-cell" style="width:20%"></div><div class="skeleton-cell" style="width:20%"></div></div>
+            <div class="skeleton-row"><div class="skeleton-cell" style="width:20%"></div><div class="skeleton-cell" style="width:40%"></div><div class="skeleton-cell" style="width:20%"></div><div class="skeleton-cell" style="width:20%"></div></div>
+            <div class="skeleton-row"><div class="skeleton-cell" style="width:20%"></div><div class="skeleton-cell" style="width:40%"></div><div class="skeleton-cell" style="width:20%"></div><div class="skeleton-cell" style="width:20%"></div></div>
+        </div>
     </div>
     
     <table id="playlistTable" style="display:none;">
@@ -283,7 +296,7 @@
         </div>
         <div id="batchForm" style="display:none;">
             <div class="form-group"><label>貼上清單 (每行一首，格式：歌手,歌曲)：</label><textarea id="batchInput" rows="6" placeholder="周杰倫,晴天&#10;林俊傑 修煉愛情"></textarea></div>
-            <button id="batchBtn" class la-btn-add" onclick="batchAddSongs()">🚀 批量上傳至雲端</button>
+            <button id="batchBtn" class="btn-add" onclick="batchAddSongs()">🚀 批量上傳至雲端</button>
         </div>
     </div>
 
@@ -301,7 +314,7 @@
 
     <div id="helpModal" class="modal-overlay" onclick="if(event.target===this)this.style.display='none'">
         <div class="modal-content">
-            <h2 style la="color:var(--primary); margin-top:0; font-weight:800;">📖 系統功能說明</h2>
+            <h2 style="color:var(--primary); margin-top:0; font-weight:800;">📖 系統功能說明</h2>
             <div style="text-align:left; line-height:1.8; font-size:15px; margin:20px 0;">
                 <p>🎲 <b>隨機選歌</b>：抽中後歌曲將<span style="color:var(--primary)">自動加入</span>待唱清單！</p>
                 <p>🎤 <b>待唱清單</b>：點擊歌單中的「歌曲名稱」即可加入排隊。支持<span style="color:var(--primary)">拖曳歌曲</span>直接調整演唱順序。</p>
@@ -323,6 +336,15 @@
         let visits = parseInt(localStorage.getItem('visitCount') || 0) + 1;
         localStorage.setItem('visitCount', visits);
         document.getElementById('visitCount').innerText = visits;
+
+        // 🚀 搜索防抖
+        function debounce(func, wait) {
+            let timeout;
+            return function(...args) {
+                clearTimeout(timeout);
+                timeout = setTimeout(() => func.apply(this, args), wait);
+            };
+        }
 
         function showToast(message, type = 'success', duration = 3000) {
             const container = document.getElementById('toastContainer');
@@ -379,12 +401,13 @@
             } 
         }
 
-        function handleSearchInput() {
+        const handleSearchInput = debounce(function() {
             const input = document.getElementById('searchInput');
             const clearBtn = document.getElementById('clearSearch');
             clearBtn.style.display = input.value.trim() === '' ? 'none' : 'block';
             applyFilters();
-        }
+        }, 300);
+
         function clearSearch() {
             const input = document.getElementById('searchInput');
             input.value = '';
@@ -393,24 +416,16 @@
             showToast('🔍 已清除搜尋內容', 'info');
         }
 
-        function loadPlaylist() {
-            document.getElementById('skeletonLoader').classList.add('active');
-            document.getElementById('playlistTable').style.display = 'none';
-            fetch(API_URL).then(res => res.json()).then(result => {
-                document.getElementById('skeletonLoader').classList.remove('active');
-                document.getElementById('playlistTable').style.display = 'table';
-                if (result.status === 'success') { 
-                    allSongs = result.songs; 
-                    renderRequests(result.requests || []); 
-                    renderQueuePanel(); 
-                    updateArtistFilter(); 
-                    applyFilters(); 
-                } else { showToast('❌ 載入失敗: ' + result.message, 'error'); }
-            }).catch(error => { 
-                document.getElementById('skeletonLoader').classList.remove('active'); 
-                document.getElementById('playlistTable').style.display = 'table'; 
-                showToast('❌ 網路錯誤', 'error'); 
-            });
+        // 🚀 優化：平滑隱藏骨架屏
+        function hideSkeleton() {
+            const skeleton = document.getElementById('skeletonLoader');
+            const table = document.getElementById('playlistTable');
+            skeleton.classList.add('fade-out');
+            setTimeout(() => {
+                skeleton.classList.remove('active');
+                skeleton.style.display = 'none';
+                table.style.display = 'table';
+            }, 300);
         }
 
         function renderQueuePanel() {
@@ -423,7 +438,7 @@
                 const statusEmoji = {'queued': '⏳', 'singing': '🎤', 'done': '✅'}[s.status];
                 return `<div class="queue-item ${s.status}" draggable="true" data-id="${s.id}">
                     <span class="queue-index">${index + 1}.</span>
-                    <button class="queue-status-btn" onclick="cycleQueueStatus(${s.id}, '${s.status}')">${statusEmoji}</button>
+                    <button class="queue-status-btn" onclick="cycleQueueStatus(${s.id})">${statusEmoji}</button>
                     <span class="queue-text">${s.artist} - ${s.song}</span>
                     <button class="queue-del-btn" onclick="removeFromQueue(${s.id})">✕</button>
                 </div>`;
@@ -467,11 +482,13 @@
             }, { offset: Number.NEGATIVE_INFINITY }).element;
         }
 
-        function cycleQueueStatus(id, currentStatus) {
+        function cycleQueueStatus(id) {
             requireAdmin(() => {
-                let nextStatus = currentStatus === 'queued' ? 'singing' : (currentStatus === 'singing' ? 'done' : (currentStatus === 'done' ? '' : 'queued'));
+                const song = allSongs.find(s => s.id === id);
+                if (!song) return;
+                let nextStatus = song.status === 'queued' ? 'singing' : (song.status === 'singing' ? 'done' : (song.status === 'done' ? '' : 'queued'));
                 fetch(API_URL, { method: 'POST', headers: {'Content-Type': 'text/plain'}, body: JSON.stringify({ action: 'update_status', id: id, status: nextStatus }) })
-                .then(res => res.json()).then(result => { if (result.status === 'success') { loadPlaylist(); showToast('✅ 狀態已更新'); } });
+                .then(res => res.json()).then(result => { if (result.status === 'success') { loadPlaylistData(); showToast('✅ 狀態已更新'); } });
             });
         }
 
@@ -479,23 +496,24 @@
             requireAdmin(() => {
                 if (!confirm(`確定要清空所有待唱歌曲嗎？`)) return;
                 fetch(API_URL, { method: 'POST', headers: {'Content-Type': 'text/plain'}, body: JSON.stringify({ action: 'clear_queue' }) })
-                .then(res => res.json()).then(result => { if (result.status === 'success') { showToast('🗑️ 清單已清空'); loadPlaylist(); } });
+                .then(res => res.json()).then(result => { if (result.status === 'success') { showToast('🗑️ 清單已清空'); loadPlaylistData(); } });
             });
         }
 
-        function addToQueue(id, songName) {
+        function addToQueue(id) {
             requireAdmin(() => {
                 const song = allSongs.find(s => s.id === id);
-                if (song && song.status === 'queued') return showToast('這首歌已經在待唱清單裡囉！', 'info');
+                if (!song) return;
+                if (song.status === 'queued') return showToast('這首歌已經在待唱清單裡囉！', 'info');
                 fetch(API_URL, { method: 'POST', headers: {'Content-Type': 'text/plain'}, body: JSON.stringify({ action: 'update_status', id: id, status: 'queued' }) })
-                .then(res => res.json()).then(result => { if (result.status === 'success') { showToast(`🎤 已加入待唱: ${songName}`); loadPlaylist(); } });
+                .then(res => res.json()).then(result => { if (result.status === 'success') { showToast(`🎤 已加入待唱: ${song.song}`); loadPlaylistData(); } });
             });
         }
 
         function removeFromQueue(id) {
             requireAdmin(() => {
                 fetch(API_URL, { method: 'POST', headers: {'Content-Type': 'text/plain'}, body: JSON.stringify({ action: 'update_status', id: id, status: '' }) })
-                .then(res => res.json()).then(result => { if (result.status === 'success') { showToast('✅ 已移出'); loadPlaylist(); } });
+                .then(res => res.json()).then(result => { if (result.status === 'success') { showToast('✅ 已移出'); loadPlaylistData(); } });
             });
         }
 
@@ -504,17 +522,15 @@
             const displayRequests = requests.slice(0, 15); 
             if (displayRequests.length === 0) { list.innerHTML = '<p style="text-align:center; color:#888; padding: 20px;">目前還沒有留言，快來留言吧！</p>'; return; }
             list.innerHTML = displayRequests.map(req => {
-                const safeReqId = String(req.id).replace(/'/g, "\\'"); 
                 let repliesHtml = '';
                 if (req.replies && req.replies.length > 0) {
                     repliesHtml = '<div class="replies-container">' + req.replies.map(rep => {
                         const boxClass = rep.isOfficial ? 'official' : 'general';
                         const prefix = rep.isOfficial ? '👑 ' : '💬 ';
-                        const safeRepId = String(rep.replyId).replace(/'/g, "\\'");
-                        return `<div class="reply-box ${boxClass}"><div class="reply-header ${boxClass}"><span>${prefix}${rep.replier}</span><span style="font-size:11px; color:#888;">${rep.time} <button class="reply-del-btn" onclick="confirmDeleteReply('${safeRepId}')">🗑️</button></span></div><div>${rep.content}</div></div>`;
+                        return `<div class="reply-box ${boxClass}"><div class="reply-header ${boxClass}"><span>${prefix}${rep.replier}</span><span style="font-size:11px; color:#888;">${rep.time} <button class="reply-del-btn" onclick="confirmDeleteReply(${rep.replyId})">🗑️</button></span></div><div>${rep.content}</div></div>`;
                     }).join('') + '</div>';
                 }
-                return `<div class="request-item"><div class="req-header"><span class="req-nick">${req.nickname}</span><span>${req.time}</span></div><div>${req.message}</div>${repliesHtml}<div class="req-actions"><button class="req-action-btn" onclick="toggleReplyInput('${safeReqId}')">💬 回覆</button><button class="req-action-btn" style="color:var(--danger);" onclick="confirmDeleteRequest('${safeReqId}', '${req.nickname}', '${req.message}')">🗑️ 刪除</button></div><div id="reply-input-${safeReqId}" class="reply-input-area" style="display:none;"><input type="text" id="reply-nick-${safeReqId}" placeholder="您的暱稱" value="${localStorage.getItem('lastReplyNick') || ''}"><textarea id="reply-text-${safeReqId}" placeholder="輸入內容..."></textarea><div class="reply-btn-group"><button class="btn-reply-general" onclick="submitGeneralReply('${safeReqId}')">💬 回覆</button><button class="btn-reply-official" onclick="submitOfficialReply('${safeReqId}')">👑 官方回覆</button></div></div></div>`;
+                return `<div class="request-item"><div class="req-header"><span class="req-nick">${req.nickname}</span><span>${req.time}</span></div><div>${req.message}</div>${repliesHtml}<div class="req-actions"><button class="req-action-btn" onclick="toggleReplyInput(${req.id})">💬 回覆</button><button class="req-action-btn" style="color:var(--danger);" onclick="confirmDeleteRequest(${req.id})">🗑️ 刪除</button></div><div id="reply-input-${req.id}" class="reply-input-area" style="display:none;"><input type="text" id="reply-nick-${req.id}" placeholder="您的暱稱" value="${localStorage.getItem('lastReplyNick') || ''}"><textarea id="reply-text-${req.id}" placeholder="輸入內容..."></textarea><div class="reply-btn-group"><button class="btn-reply-general" onclick="submitGeneralReply(${req.id})">💬 回覆</button><button class="btn-reply-official" onclick="submitOfficialReply(${req.id})">👑 官方回覆</button></div></div></div>`;
             }).join('');
         }
 
@@ -529,18 +545,18 @@
             if (!nick || !replyText) return showToast('請填寫暱稱與內容！', 'error');
             localStorage.setItem('lastReplyNick', nick);
             fetch(API_URL, { method: 'POST', headers: {'Content-Type': 'text/plain'}, body: JSON.stringify({ action: 'reply_request', id: id, replier: nick, replyContent: replyText, isOfficial: false }) })
-            .then(res => res.json()).then(result => { if (result.status === 'success') { loadPlaylist(); showToast('✅ 回覆成功'); } });
+            .then(res => res.json()).then(result => { if (result.status === 'success') { loadPlaylistData(); showToast('✅ 回覆成功'); } });
         }
         function submitOfficialReply(id) {
             requireAdmin(() => {
                 const replyText = document.getElementById(`reply-text-${id}`).value.trim();
                 if (!replyText) return showToast('請輸入內容！', 'error');
                 fetch(API_URL, { method: 'POST', headers: {'Content-Type': 'text/plain'}, body: JSON.stringify({ action: 'reply_request', id: id, replier: ADMIN_NAME, replyContent: replyText, isOfficial: true }) })
-                .then(res => res.json()).then(result => { if (result.status === 'success') { loadPlaylist(); showToast('✅ 官方回覆成功'); } });
+                .then(res => res.json()).then(result => { if (result.status === 'success') { loadPlaylistData(); showToast('✅ 官方回覆成功'); } });
             });
         }
         function confirmDeleteReply(replyId) {
-            requireAdmin(() => { if (!confirm("確定刪除這則回覆？")) return; fetch(API_URL, { method: 'POST', headers: {'Content-Type': 'text/plain'}, body: JSON.stringify({ action: 'delete_reply', replyId: replyId }) }).then(res => res.json()).then(result => { loadPlaylist(); showToast('✅ 已刪除'); }); });
+            requireAdmin(() => { if (!confirm("確定刪除這則回覆？")) return; fetch(API_URL, { method: 'POST', headers: {'Content-Type': 'text/plain'}, body: JSON.stringify({ action: 'delete_reply', replyId: replyId }) }).then(res => res.json()).then(result => { loadPlaylistData(); showToast('✅ 已刪除'); }); });
         }
 
         function updateArtistFilter() {
@@ -565,16 +581,15 @@
             songs.forEach(item => {
                 const tr = document.createElement('tr');
                 let displayLink = item.link || `https://www.youtube.com/results?search_query=${encodeURIComponent((item.artist||'')+' '+(item.song||''))}`;
-                const safeSong = String(item.song || '').replace(/'/g, "\\'"); 
                 const tagsHtml = item.tags ? item.tags.split(',').map(t => `<span class="tag-badge">${t.trim()}</span>`).join('') : '';
                 tr.innerHTML = `
                     <td data-label="歌手">${item.artist}<br>${tagsHtml}</td>
-                    <td data-label="歌曲名稱"><span class="clickable-title" onclick="addToQueue(${item.id}, '${safeSong}')">${item.song}</span></td>
+                    <td data-label="歌曲名稱"><span class="clickable-title" onclick="addToQueue(${item.id})">${item.song}</span></td>
                     <td data-label="試聽"><a href="${displayLink}" target="_blank" class="listen-link" style="color:var(--primary); text-decoration:none; font-weight:bold;" onclick="recordClick(${item.id})">🎵 試聽</a> <span style="font-size:12px; color:#888;">(${item.clicks || 0})</span></td>
                     <td data-label="操作">
                         <div class="action-btns">
-                            <button class="btn-sm btn-edit" onclick="editSong(${item.id}, '${item.artist}', '${safeSong}', '${displayLink.replace(/'/g, "\\'")}', '${(item.tags||'').replace(/'/g, "\\'")}')">✏️</button>
-                            <button class="btn-sm btn-del" onclick="confirmDelete(${item.id}, '${item.artist}', '${safeSong}')">🗑️</button>
+                            <button class="btn-sm btn-edit" onclick="editSong(${item.id})">✏️</button>
+                            <button class="btn-sm btn-del" onclick="confirmDelete(${item.id})">🗑️</button>
                         </div>
                     </td>
                 `;
@@ -593,7 +608,7 @@
             document.getElementById('randomModal').style.display = 'flex';
             if (randomSong.status !== 'queued') {
                 fetch(API_URL, { method: 'POST', headers: {'Content-Type': 'text/plain'}, body: JSON.stringify({ action: 'update_status', id: randomSong.id, status: 'queued' }) })
-                .then(res => res.json()).then(result => { if (result.status === 'success') { showToast(`🎲 抽中！已自動加入待唱清單`, 'success'); loadPlaylist(); } });
+                .then(res => res.json()).then(result => { if (result.status === 'success') { showToast(`🎲 抽中！已自動加入待唱清單`, 'success'); loadPlaylistData(); } });
             } else { showToast(`🎲 這首歌已經在待唱清單裡囉！`, 'info'); }
         }
 
@@ -603,7 +618,7 @@
                 if (!artist || !song) return showToast('請填寫歌手和歌曲名稱！', 'error');
                 const btn = document.getElementById('addBtn'); btn.disabled = true; btn.innerText = '新增中...';
                 fetch(API_URL, { method: 'POST', headers: {'Content-Type': 'text/plain'}, body: JSON.stringify({ action: 'add', artist, song, link: '', tags }) })
-                .then(res => res.json()).then(result => { btn.disabled = false; btn.innerText = '✨ 確認新增至雲端'; if (result.status === 'success') { document.getElementById('artist').value = ''; document.getElementById('song').value = ''; document.getElementById('tags').value = ''; toggleAddForm(); loadPlaylist(); showToast('✅ 新增成功！'); } });
+                .then(res => res.json()).then(result => { btn.disabled = false; btn.innerText = '✨ 確認新增至雲端'; if (result.status === 'success') { document.getElementById('artist').value = ''; document.getElementById('song').value = ''; document.getElementById('tags').value = ''; toggleAddForm(); loadPlaylistData(); showToast('✅ 新增成功！'); } });
             });
         }
         function batchAddSongs() {
@@ -614,30 +629,40 @@
                 if (songsToAdd.length === 0) return showToast('格式錯誤！', 'error');
                 const btn = document.getElementById('batchBtn'); btn.disabled = true; btn.innerText = '上傳中...';
                 fetch(API_URL, { method: 'POST', headers: {'Content-Type': 'text/plain'}, body: JSON.stringify({ action: 'batch_add', songs: songsToAdd }) })
-                .then(res => res.json()).then(result => { btn.disabled = false; btn.innerText = '🚀 批量上傳至雲端'; if (result.status === 'success') { document.getElementById('batchInput').value = ''; toggleAddForm(); loadPlaylist(); showToast(`✅ 成功新增 ${songsToAdd.length} 首歌曲`); } });
+                .then(res => res.json()).then(result => { btn.disabled = false; btn.innerText = '🚀 批量上傳至雲端'; if (result.status === 'success') { document.getElementById('batchInput').value = ''; toggleAddForm(); loadPlaylistData(); showToast(`✅ 成功新增 ${songsToAdd.length} 首歌曲`); } });
             });
         }
-        function editSong(id, currentArtist, currentSong, currentLink, currentTags) {
+        function editSong(id) {
             requireAdmin(() => {
-                const newArtist = prompt("修改歌手名稱：", currentArtist); if (!newArtist) return;
-                const newSong = prompt("修改歌曲名稱：", currentSong); if (!newSong) return;
-                const newTags = prompt("修改標籤：", currentTags); if (newTags === null) return;
-                fetch(API_URL, { method: 'POST', headers: {'Content-Type': 'text/plain'}, body: JSON.stringify({ action: 'edit', id, artist: newArtist.trim(), song: newSong.trim(), link: currentLink, tags: newTags.trim() }) })
-                .then(res => res.json()).then(result => { loadPlaylist(); showToast('✅ 編輯成功！'); });
+                const item = allSongs.find(s => s.id === id);
+                if (!item) return;
+                const newArtist = prompt("修改歌手名稱：", item.artist); if (!newArtist) return;
+                const newSong = prompt("修改歌曲名稱：", item.song); if (!newSong) return;
+                const newTags = prompt("修改標籤：", item.tags || ""); if (newTags === null) return;
+                fetch(API_URL, { method: 'POST', headers: {'Content-Type': 'text/plain'}, body: JSON.stringify({ action: 'edit', id, artist: newArtist.trim(), song: newSong.trim(), link: item.link || '', tags: newTags.trim() }) })
+                .then(res => res.json()).then(result => { loadPlaylistData(); showToast('✅ 編輯成功！'); });
             });
         }
-        function confirmDelete(id, artist, song) {
-            requireAdmin(() => { if (!confirm(`確定刪除「${artist} - ${song}」嗎？`)) return; fetch(API_URL, { method: 'POST', headers: {'Content-Type': 'text/plain'}, body: JSON.stringify({ action: 'delete', id }) }).then(res => res.json()).then(result => { loadPlaylist(); showToast('✅ 刪除成功！'); }); });
+        function confirmDelete(id) {
+            requireAdmin(() => { 
+                const item = allSongs.find(s => s.id === id);
+                if (!item) return;
+                if (!confirm(`確定刪除「${item.artist} - ${item.song}」嗎？`)) return; 
+                fetch(API_URL, { method: 'POST', headers: {'Content-Type': 'text/plain'}, body: JSON.stringify({ action: 'delete', id }) }).then(res => res.json()).then(result => { loadPlaylistData(); showToast('✅ 刪除成功！'); }); 
+            });
         }
-        function confirmDeleteRequest(id, nickname, message) {
-            requireAdmin(() => { if (!confirm(`確定刪除「${nickname}」的留言嗎？`)) return; fetch(API_URL, { method: 'POST', headers: {'Content-Type': 'text/plain'}, body: JSON.stringify({ action: 'delete_request', id: id }) }).then(res => res.json()).then(result => { loadPlaylist(); showToast('✅ 已刪除'); }); });
+        function confirmDeleteRequest(id) {
+            requireAdmin(() => { 
+                if (!confirm(`確定刪除這則留言嗎？`)) return; 
+                fetch(API_URL, { method: 'POST', headers: {'Content-Type': 'text/plain'}, body: JSON.stringify({ action: 'delete_request', id: id }) }).then(res => res.json()).then(result => { loadPlaylistData(); showToast('✅ 已刪除'); }); 
+            });
         }
         function submitRequest() {
             const nick = document.getElementById('reqNick').value.trim() || '匿名訪客'; const msg = document.getElementById('reqMessage').value.trim();
             if (!msg) return showToast('請輸入內容！', 'error');
             const btn = event.target; btn.disabled = true; btn.innerText = '送出中...';
             fetch(API_URL, { method: 'POST', headers: {'Content-Type': 'text/plain'}, body: JSON.stringify({ action: 'add_request', nickname: nick, message: msg }) })
-            .then(res => res.json()).then(result => { btn.disabled = false; btn.innerText = '送出'; if (result.status === 'success') { document.getElementById('reqMessage').value = ''; document.getElementById('reqNick').value = ''; loadPlaylist(); showToast('✅ 留言成功'); } });
+            .then(res => res.json()).then(result => { btn.disabled = false; btn.innerText = '送出'; if (result.status === 'success') { document.getElementById('reqMessage').value = ''; document.getElementById('reqNick').value = ''; loadPlaylistData(); showToast('✅ 留言成功'); } });
         }
         function exportCSV() {
             requireAdmin(() => {
@@ -648,9 +673,36 @@
                 a.href = url; a.download = `歌單匯出_${new Date().toISOString().slice(0,10)}.csv`; a.click(); showToast('📥 CSV 已匯出！');
             });
         }
+
+        // 🚀 優化：封裝數據處理邏輯
+        function loadPlaylistData() {
+            fetch(API_URL).then(res => res.json()).then(result => {
+                if (result.status === 'success') { 
+                    allSongs = result.songs; 
+                    renderRequests(result.requests || []); 
+                    renderQueuePanel(); 
+                    updateArtistFilter(); 
+                    applyFilters(); 
+                } else { showToast('❌ 載入失敗: ' + result.message, 'error'); }
+            }).catch(error => { showToast('❌ 網路錯誤', 'error'); });
+        }
+
         document.addEventListener('keydown', (e) => { if (e.key === 'Escape') { document.getElementById('randomModal').style.display = 'none'; document.getElementById('helpModal').style.display = 'none'; if (document.getElementById('addFormContainer').style.display === 'block') toggleAddForm(); } });
         window.addEventListener('scroll', () => { document.getElementById('scrollTopBtn').style.display = window.scrollY > 300 ? 'flex' : 'none'; });
-        window.onload = loadPlaylist;
+        
+        // 🚀 優化：DOM 載入完成後，等待提前發起的 Promise 並渲染
+        document.addEventListener('DOMContentLoaded', () => {
+            dataPromise.then(result => {
+                hideSkeleton();
+                if (result.status === 'success') { 
+                    allSongs = result.songs; 
+                    renderRequests(result.requests || []); 
+                    renderQueuePanel(); 
+                    updateArtistFilter(); 
+                    applyFilters(); 
+                } else { showToast('❌ 載入失敗: ' + result.message, 'error'); }
+            });
+        });
     </script>
 </body>
 </html>
