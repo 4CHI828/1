@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>静静在夏天🍔🎤⁰³²⁰ - 跨平台播放清單</title>
+    <!-- 引入 APlayer 核心樣式與腳本 -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/aplayer/dist/APlayer.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/aplayer/dist/APlayer.min.js"></script>
+    
+    <style>
+        /* 基礎設定與背景 */
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            color: #333;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            padding: 20px;
+        }
+        
+        /* 主卡片容器 */
+        .container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            padding: 30px;
+            max-width: 500px;
+            width: 100%;
+            text-align: center;
+        }
+        
+        h1 {
+            font-size: 24px;
+            margin-bottom: 20px;
+            color: #ff6b6b;
+        }
+        
+        /* 連結按鈕群組 */
+        .links {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        
+        .link-btn {
+            display: flex;
+            align-items: center;
+            text-decoration: none;
+            background: #f8f9fa;
+            border: 1px solid #e9ecef;
+            border-radius: 50px;
+            padding: 8px 16px;
+            font-size: 14px;
+            color: #495057;
+            transition: all 0.3s ease;
+        }
+        
+        .link-btn:hover {
+            background: #ff6b6b;
+            color: white;
+            border-color: #ff6b6b;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 10px rgba(255,107,107,0.3);
+        }
+        
+        .link-btn .icon {
+            margin-right: 6px;
+            font-size: 16px;
+        }
+        
+        /* 播放器區域 */
+        .player-section {
+            margin-top: 20px;
+            border-top: 1px solid #eee;
+            padding-top: 20px;
+        }
+        
+        .player-section h2 {
+            font-size: 18px;
+            margin-bottom: 15px;
+            color: #555;
+            text-align: left;
+        }
+
+        /* 自訂 APlayer 樣式使其融入卡片 */
+        .aplayer {
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+            margin-bottom: 20px;
+        }
+        
+        /* 底部版權 */
+        .footer {
+            margin-top: 20px;
+            font-size: 12px;
+            color: #aaa;
+        }
+        
+        .footer a {
+            color: #888;
+            text-decoration: none;
+            transition: color 0.3s;
+        }
+        
+        .footer a:hover {
+            color: #ff6b6b;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>静静在夏天🍔🎤⁰³²⁰</h1>
+    
+    <!-- 社交與平台連結 -->
+    <div class="links">
+        <a href="https://v.douyin.com/_Zfxey53n7I/" target="_blank" class="link-btn">
+            <span class="icon">🍔</span> 抖音
+        </a>
+        <a href="320.html" target="_blank" class="link-btn">
+            <span class="icon">🍔</span> 歌單
+        </a>
+        <a href="https://www.twitch.tv/jingjingzaixiatian" target="_blank" class="link-btn">
+            <span class="icon">🍔</span> 圖奇
+        </a>
+        <a href="https://pan.baidu.com/s/1xAPivGCQnj6BNFtz2MHLzA?pwd=433h" target="_blank" class="link-btn">
+            <span class="icon">🍔</span> 影片
+        </a>
+        <a href="https://www.youtube.com/playlist?list=PL3LHSN24syoOcIqA8nRwfYgAOoR5U27_U" target="_blank" class="link-btn">
+            <span class="icon">🍔</span> YT
+        </a>
+        <a href="https://discord.com/channels/865334403864461373/1467603376144646319" target="_blank" class="link-btn">
+            <span class="icon">🍔</span> DC
+        </a>
+        <a href="https://www.instagram.com/jingjing24739233910/" target="_blank" class="link-btn">
+            <span class="icon">🍔</span> IG
+        </a>
+    </div>
+
+    <!-- 跨平台播放器區域 -->
+    <div class="player-section">
+        <h2>🎧 個人專屬播放清單 (54首)</h2>
+        
+        <!-- APlayer 容器 -->
+        <div id="aplayer"></div>
+        
+        <script>
+            // 您的 54 首歌曲資料庫 (已自動解析歌手與歌名)
+            const audioList = [
+                {name:"Amazing Grace",artist:"G.E.M.鄧紫棋",url:"https://chi.xo.je/MP3/G.E.M.%E9%84%A7%E7%B4%AB%E6%A3%8B%20-%20Amazing%20Grace_%E4%BA%BA%E8%81%B2.flac"},
+                {name:"阿刁",artist:"張韶涵",url:"https://chi.xo.je/MP3/%E5%BC%B5%E9%9F%B6%E6%B6%B5%20-%20%E9%98%BF%E5%88%89_%E4%BA%BA%E8%81%B2.flac"},
+                {name:"日不落",artist:"芹靜歌",url:"https://chi.xo.je/MP3/%E8%8A%B9%E9%9D%9C%E6%AD%8C_%E6%97%A5%E4%B8%8D%E8%90%BD_%E5%B0%8D%E5%94%B1%E7%89%880.3.mp3"},
+                {name:"我只在乎你",artist:"鄧麗君",url:"https://chi.xo.je/MP3/%E9%84%A7%E9%BA%97%E5%90%9B%20-%20%E6%88%91%E5%8F%AA%E5%9C%A8%E4%B9%8E%E4%BD%A0_%E4%BA%BA%E8%81%B2.flac"},
+                {name:"任朝暮",artist:"陳粒",url:"https://chi.xo.je/MP3/%E9%99%B3%E7%B2%92%20-%20%E4%BB%BB%E6%9C%9D%E6%9A%AE_%E4%BA%BA%E8%81%B2.flac"},
+                {name:"煙火裁的塵埃",artist:"靜靜在夏天",url:"https://chi.xo.je/MP3/%E9%9D%9C%E9%9D%9C%E5%9C%A8%E5%A4%8F%E5%A4%A9%20%E7%85%99%E7%81%AB%E8%A3%A1%E7%9A%84%E5%A1%B5%E5%9F%83%20-%20StreamRecorder.mp3"},
+                {name:"煙火裁的塵埃",artist:"靜靜在夏天",url:"https://chi.xo.je/MP3/%E9%9D%9C%E9%9D%9C%E5%9C%A8%E5%A4%8F%E5%A4%A9%20%E7%85%99%E7%81%AB%E8%A3%A1%E7%9A%84%E5%A1%B5%E5%9F%83.mp3"},
+                {name:"Opera2",artist:"靜靜在夏天(圖奇)",url:"https://chi.xo.je/MP3/%E9%9D%9C%E9%9D%9C%E5%9C%A8%E5%A4%8F%E5%A4%A9%28%E5%9C%96%E5%A5%87%29%20Opera2.mp3"},
+                {name:"悟空",artist:"靜靜在夏天(圖奇)",url:"https://chi.xo.je/MP3/%E9%9D%9C%E9%9D%9C%E5%9C%A8%E5%A4%8F%E5%A4%A9%28%E5%9C%96%E5%A5%87%29%20%E6%82%9F%E7%A9%BA.mp3"},
+                {name:"武家坡",artist:"靜靜在夏天(圖奇)",url:"https://chi.xo.je/MP3/%E9%9D%9C%E9%9D%9C%E5%9C%A8%E5%A4%8F%E5%A4%A9%28%E5%9C%96%E5%A5%87%29%20%E6%AD%A6%E5%AE%B6%E5%9D%A1.mp3"},
+                {name:"静静的",artist:"靜靜在夏天(圖奇)",url:"https://chi.xo.je/MP3/%E9%9D%9C%E9%9D%9C%E5%9C%A8%E5%A4%8F%E5%A4%A9%28%E5%9C%96%E5%A5%87%29%20%E9%9D%9C%E9%9D%9C%E7%9A%84.mp3"},
+                {name:"克卜勒",artist:"靜靜在夏天(圖奇)",url:"https://chi.xo.je/MP3/%E9%9D%9C%E9%9D%9C%E5%9C%A8%E5%A4%8F%E5%A4%A9%28%E5%9C%96%E5%A5%87%29-%E5%85%8B%E5%8D%9C%E5%8B%92.mp3"},
+                {name:"天黑黑",artist:"靜靜在夏天(圖奇)",url:"https://chi.xo.je/MP3/%E9%9D%9C%E9%9D%9C%E5%9C%A8%E5%A4%8F%E5%A4%A9%28%E5%9C%96%E5%A5%87%29-%E5%A4%A9%E9%BB%91%E9%BB%91.mp3"},
+                {name:"如題",artist:"靜靜在夏天(圖奇)",url:"https://chi.xo.je/MP3/%E9%9D%9C%E9%9D%9C%E5%9C%A8%E5%A4%8F%E5%A4%A9%28%E5%9C%96%E5%A5%87%29-%E5%A6%82%E9%A1%8C.mp3"},
+                {name:"安和橋",artist:"靜靜在夏天(圖奇)",url:"https://chi.xo.je/MP3/%E9%9D%9C%E9%9D%9C%E5%9C%A8%E5%A4%8F%E5%A4%A9%28%E5%9C%96%E5%A5%87%29-%E5%AE%89%E5%92%8C%E6%A9%8B.mp3"},
+                {name:"我好想你",artist:"靜靜在夏天(圖奇)",url:"https://chi.xo.je/MP3/%E9%9D%9C%E9%9D%9C%E5%9C%A8%E5%A4%8F%E5%A4%A9%28%E5%9C%96%E5%A5%87%29-%E6%88%91%E5%A5%BD%E6%83%B3%E4%BD%A0.mp3"},
+                {name:"38 號大帝曲",artist:"靜靜在夏天",url:"https://chi.xo.je/MP3/%E9%9D%9C%E9%9D%9C%E5%9C%A8%E5%A4%8F%E5%A4%A9-38%20%E8%99%9F%E5%A4%A7%E5%B8%9D%E6%9B%B2.mp3"},
+                {name:"A.I.N.Y.",artist:"靜靜在夏天",url:"https://chi.xo.je/MP3/%E9%9D%9C%E9%9D%9C%E5%9C%A8%E5%A4%8F%E5%A4%A9-A.I.N.Y..mp3"},
+                {name:"Lydia",artist:"靜靜在夏天",url:"https://chi.xo.je/MP3/%E9%9D%9C%E9%9D%9C%E5%9C%A8%E5%A4%8F%E5%A4%A9-Lydia.mp3"},
+                {name:"Rolling in the deep",artist:"靜靜在夏天",url:"https://chi.xo.je/MP3/%E9%9D%9C%E9%9D%9C%E5%9C%A8%E5%A4%8F%E5%A4%A9-Rolling%20in%20the%20deep.mp3"},
+                {name:"一個人想著一個人",artist:"靜靜在夏天",url:"https://chi.xo.je/MP3/%E9%9D%9C%E9%9D%9C%E5%9C%A8%E5%A4%8F%E5%A4%A9-%E4%B8%80%E5%80%8B%E4%BA%BA%E6%83%B3%E8%91%97%E4%B8%80%E5%80%8B%E4%BA%BA.mp3"},
+                {name:"你把我灌醉",artist:"靜靜在夏天",url:"https://chi.xo.je/MP3/%E9%9D%9C%E9%9D%9C%E5%9C%A8%E5%A4%8F%E5%A4%A9-%E4%BD%A0%E6%8A%8A%E6%88%91%E7%81%8C%E9%86%89.mp3"},
+                {name:"克卜勒",artist:"靜靜在夏天",url:"https://chi.xo.je/MP3/%E9%9D%9C%E9%9D%9C%E5%9C%A8%E5%A4%8F%E5%A4%A9-%E5%85%8B%E5%8D%9C%E5%8B%92.mp3"},
+                {name:"公主殿下",artist:"靜靜在夏天",url:"https://chi.xo.je/MP3/%E9%9D%9C%E9%9D%9C%E5%9C%A8%E5%A4%8F%E5%A4%A9-%E5%85%AC%E4%B8%BB%E6%AE%BF%E4%B8%8B.mp3"},
+                {name:"咖哩咖哩",artist:"靜靜在夏天",url:"https://chi.xo.je/MP3/%E9%9D%9C%E9%9D%9C%E5%9C%A8%E5%A4%8F%E5%A4%A9-%E5%92%96%E5%96%B1%E5%92%96%E5%96%B1.mp3"},
+                {name:"唯一",artist:"靜靜在夏天",url:"https://chi.xo.je/MP3/%E9%9D%9C%E9%9D%9C%E5%9C%A8%E5%A4%8F%E5%A4%A9-%E5%94%AF%E4%B8%80.mp3"},
+                {name:"大魚",artist:"靜靜在夏天",url:"https://chi.xo.je/MP3/%E9%9D%9C%E9%9D%9C%E5%9C%A8%E5%A4%8F%E5%A4%A9-%E5%A4%A7%E9%AD%9A.flac"},
+                {name:"天下無雙",artist:"靜靜在夏天",url:"https://chi.xo.je/MP3/%E9%9D%9C%E9%9D%9C%E5%9C%A8%E5%A4%8F%E5%A4%A9-%E5%A4%A9%E4%B8%8B%E7%84%A1%E9%9B%99.mp3"},
+                {name:"寵愛",artist:"靜靜在夏天",url:"https://chi.xo.je/MP3/%E9%9D%9C%E9%9D%9C%E5%9C%A8%E5%A4%8F%E5%A4%A9-%E5%AF%B5%E6%84%9B.mp3"},
+                {name:"左手指月",artist:"靜靜在夏天",url:"https://chi.xo.je/MP3/%E9%9D%9C%E9%9D%9C%E5%9C%A8%E5%A4%8F%E5%A4%A9-%E5%B7%A6%E6%89%8B%E6%8C%87%E6%9C%88.mp3"},
+                {name:"情歌",artist:"靜靜在夏天",url:"https://chi.xo.je/MP3/%E9%9D%9C%E9%9D%9C%E5%9C%A8%E5%A4%8F%E5%A4%A9-%E6%83%85%E6%AD%8C.flac"},
+                {name:"愛人錯過",artist:"靜靜在夏天",url:"https://chi.xo.je/MP3/%E9%9D%9C%E9%9D%9C%E5%9C%A8%E5%A4%8F%E5%A4%A9-%E6%84%9B%E4%BA%BA%E9%8C%AF%E9%81%8E.mp3"},
+                {name:"我們的愛",artist:"靜靜在夏天",url:"https://chi.xo.je/MP3/%E9%9D%9C%E9%9D%9C%E5%9C%A8%E5%A4%8F%E5%A4%A9-%E6%88%91%E5%80%91%E7%9A%84%E6%84%9B.mp3"},
+                {name:"我想要佔有你",artist:"靜靜在夏天",url:"https://chi.xo.je/MP3/%E9%9D%9C%E9%9D%9C%E5%9C%A8%E5%A4%8F%E5%A4%A9-%E6%88%91%E6%83%B3%E8%A6%81%E4%BD%94%E6%93%9A%E4%BD%A0.mp3"},
+                {name:"我懷念的",artist:"靜靜在夏天",url:"https://chi.xo.je/MP3/%E9%9D%9C%E9%9D%9C%E5%9C%A8%E5%A4%8F%E5%A4%A9-%E6%88%91%E6%87%B7%E5%BF%B5%E7%9A%84.mp3"},
+                {name:"我要我們在一起",artist:"靜靜在夏天",url:"https://chi.xo.je/MP3/%E9%9D%9C%E9%9D%9C%E5%9C%A8%E5%A4%8F%E5%A4%A9-%E6%88%91%E8%A6%81%E6%88%91%E5%80%91%E5%9C%A8%E4%B8%80%E8%B5%B7.flac"},
+                {name:"手心的薔薇",artist:"靜靜在夏天",url:"https://chi.xo.je/MP3/%E9%9D%9C%E9%9D%9C%E5%9C%A8%E5%A4%8F%E5%A4%A9-%E6%89%8B%E5%BF%83%E7%9A%84%E8%96%94%E8%96%87.mp3"},
+                {name:"星辰大海",artist:"靜靜在夏天",url:"https://chi.xo.je/MP3/%E9%9D%9C%E9%9D%9C%E5%9C%A8%E5%A4%8F%E5%A4%A9-%E6%98%9F%E8%BE%B0%E5%A4%A7%E6%B5%B7.mp3"},
+                {name:"時間都去哪兒了",artist:"靜靜在夏天",url:"https://chi.xo.je/MP3/%E9%9D%9C%E9%9D%9C%E5%9C%A8%E5%A4%8F%E5%A4%A9-%E6%99%82%E9%96%93%E9%83%BD%E5%8E%BB%E5%93%AA%E5%85%92%E4%BA%86.mp3"},
+                {name:"會呼吸的痛",artist:"靜靜在夏天",url:"https://chi.xo.je/MP3/%E9%9D%9C%E9%9D%9C%E5%9C%A8%E5%A4%8F%E5%A4%A9-%E6%9C%83%E5%91%BC%E5%90%B8%E7%9A%84%E7%97%9B.mp3"},
+                {name:"月彎彎",artist:"靜靜在夏天",url:"https://chi.xo.je/MP3/%E9%9D%9C%E9%9D%9C%E5%9C%A8%E5%A4%8F%E5%A4%A9-%E6%9C%88%E5%BD%8E%E5%BD%8E.mp3"},
+                {name:"皮囊",artist:"靜靜在夏天",url:"https://chi.xo.je/MP3/%E9%9D%9C%E9%9D%9C%E5%9C%A8%E5%A4%8F%E5%A4%A9-%E7%9A%AE%E5%9B%8A.mp3"},
+                {name:"盛夏光年",artist:"靜靜在夏天",url:"https://chi.xo.je/MP3/%E9%9D%9C%E9%9D%9C%E5%9C%A8%E5%A4%8F%E5%A4%A9-%E7%9B%9B%E5%A4%8F%E5%85%89%E5%B9%B4.mp3"},
+                {name:"空心",artist:"靜靜在夏天",url:"https://chi.xo.je/MP3/%E9%9D%9C%E9%9D%9C%E5%9C%A8%E5%A4%8F%E5%A4%A9-%E7%A9%BA%E5%BF%83.mp3"},
+                {name:"突然好想你",artist:"靜靜在夏天",url:"https://chi.xo.je/MP3/%E9%9D%9C%E9%9D%9C%E5%9C%A8%E5%A4%8F%E5%A4%A9-%E7%AA%81%E7%84%B6%E5%A5%BD%E6%83%B3%E4%BD%A0.mp3"},
+                {name:"給你一點顏色",artist:"靜靜在夏天",url:"https://chi.xo.je/MP3/%E9%9D%9C%E9%9D%9C%E5%9C%A8%E5%A4%8F%E5%A4%A9-%E7%B5%A6%E4%BD%A0%E4%B8%80%E9%BB%9E%E9%A1%8F%E8%89%B2.mp3"},
+                {name:"給我一個理由忘記",artist:"靜靜在夏天",url:"https://chi.xo.je/MP3/%E9%9D%9C%E9%9D%9C%E5%9C%A8%E5%A4%8F%E5%A4%A9-%E7%B5%A6%E6%88%91%E4%B8%80%E5%80%8B%E7%90%86%E7%94%B1%E5%BF%98%E8%A8%98.mp3"},
+                {name:"要愛愛",artist:"靜靜在夏天",url:"https://chi.xo.je/MP3/%E9%9D%9C%E9%9D%9C%E5%9C%A8%E5%A4%8F%E5%A4%A9-%E8%A6%81%E6%84%9B%E6%84%9B.mp3"},
+                {name:"連名帶姓",artist:"靜靜在夏天",url:"https://chi.xo.je/MP3/%E9%9D%9C%E9%9D%9C%E5%9C%A8%E5%A4%8F%E5%A4%A9-%E9%80%A3%E5%90%8D%E5%B8%B6%E5%A7%93.mp3"},
+                {name:"阿刁(新舊混合最終版)",artist:"靜靜在夏天",url:"https://chi.xo.je/MP3/%E9%9D%9C%E9%9D%9C%E5%9C%A8%E5%A4%8F%E5%A4%A9-%E9%98%BF%E5%88%89%28%E6%96%B0%E8%88%8A%E6%B7%B7%E5%90%88%E6%9C%80%E7%B5%82%E7%89%88%29.mp3"},
+                {name:"阿刁",artist:"靜靜在夏天",url:"https://chi.xo.je/MP3/%E9%9D%9C%E9%9D%9C%E5%9C%A8%E5%A4%8F%E5%A4%A9-%E9%98%BF%E5%88%89.mp3"},
+                {name:"離歌",artist:"靜靜在夏天",url:"https://chi.xo.je/MP3/%E9%9D%9C%E9%9D%9C%E5%9C%A8%E5%A4%8F%E5%A4%A9-%E9%9B%A2%E6%AD%8C.mp3"},
+                {name:"静静的",artist:"靜靜在夏天",url:"https://chi.xo.je/MP3/%E9%9D%9C%E9%9D%9C%E5%9C%A8%E5%A4%8F%E5%A4%A9-%E9%9D%9C%E9%9D%9C%E7%9A%84.mp3"},
+                {name:"百年孤寂",artist:"靜靜在夏天",url:"https://chi.xo.je/MP3/%E9%9D%9C%E9%9D%9C%E5%9C%A8%E5%A4%8F%E5%A4%A9_%E7%99%BE%E5%B9%B4%E5%AD%A4%E5%AF%82.mp3"}
+            ];
+
+            // 初始化 APlayer
+            const ap = new APlayer({
+                container: document.getElementById('aplayer'),
+                autoplay: false,
+                theme: '#ff6b6b',
+                loop: 'list',       // 預設列表循環
+                listMaxHeight: 300, // 限制歌單列表高度，避免版面過長
+                audio: audioList
+            });
+        </script>
+    </div>
+
+    <!-- 底部資訊 -->
+    <div class="footer">
+        <a href="https://www.douyin.com/user/MS4wLjABAAAAamj38l-UDbYbUGcPhEdJI-rM8-Y_tAMFLy7kZAWMpJw" target="_blank">
+            新竹奇奇828 製作 🛠️
+        </a>
+    </div>
+</div>
+
+</body>
+</html>
