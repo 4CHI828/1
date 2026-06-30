@@ -50,17 +50,17 @@
 
         .control-panel { background: var(--card-bg); padding: 15px; border-radius: var(--radius-lg); box-shadow: var(--shadow-md); margin-bottom: 30px; border: 1px solid var(--border); }
         
-        /* 🎯 新增：控制列平均分配佈局 */
+        /* 🎯 控制列平均分配佈局 */
         .filter-bar { 
             display: flex; 
             gap: 8px; 
-            flex-wrap: wrap; /* 允許換行，適應小螢幕 */
-            align-items: stretch; /* 讓所有元素高度一致 */
+            flex-wrap: wrap; 
+            align-items: stretch; 
         }
         .filter-bar > * {
             flex: 1; /* 平均分配寬度 */
-            min-width: 100px; /* 防止文字被過度擠壓 */
-            max-width: 160px; /* 防止在寬螢幕上被拉得過寬 */
+            min-width: 80px; /* 調整為 80px，讓純圖示按鈕不會過寬，同時保持整齊 */
+            max-width: 160px; 
         }
         .search-wrapper {
             flex: 2; /* 搜尋框寬度約為按鈕的兩倍 */
@@ -72,19 +72,19 @@
             width: 100%;
             height: 100%;
             padding: 10px 12px;
-            font-size: 13px;
-            white-space: nowrap; /* 防止文字換行 */
+            font-size: 14px; /* 稍微放大字體讓圖示更清晰 */
+            white-space: nowrap; 
             overflow: hidden;
             text-overflow: ellipsis;
             box-sizing: border-box;
             transition: var(--transition);
         }
         .filter-bar .btn {
-            justify-content: center; /* 按鈕文字與圖標置中 */
+            justify-content: center; 
         }
         .filter-bar select {
             text-align: center;
-            text-align-last: center; /* 確保下拉選單文字置中 */
+            text-align-last: center; 
         }
 
         .filter-bar input:focus, .filter-bar select:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 3px rgba(255,107,107,0.15); }
@@ -97,7 +97,7 @@
         .btn:active { transform: scale(0.95); }
         .btn-random { background: var(--warning); color: #636e72; }
         .btn-export { background: var(--success); color: #2d3436; }
-        .btn-theme, .btn-refresh, .btn-help { background: var(--bg-color); border: 1px solid var(--border); color: var(--text-color); }
+        .btn-theme, .btn-refresh, .btn-help { background: var(--bg-color); border: 1px solid var(--border); color: var(--text-color); font-size: 18px; } /* 圖示按鈕字體加大 */
         .btn-login { background: var(--primary); color: white; }
         .btn-logout { background: var(--danger); color: white; display: none; }
         
@@ -254,9 +254,9 @@
             </select>
             <button class="btn btn-random" title="隨機選歌" onclick="pickRandomSong()">🎲 隨機</button>
             <button class="btn btn-export" title="匯出CSV" onclick="exportCSV()">📥 匯出</button>
-            <button class="btn btn-refresh" title="重新整理" onclick="location.reload()">🔄 刷新</button>
-            <button class="btn btn-theme" title="切換深色模式" onclick="toggleDarkMode()" id="themeBtn">🌙 主題</button>
-            <button class="btn btn-help" title="功能說明" onclick="showHelpModal()">❓ 說明</button>
+            <button class="btn btn-refresh" title="重新整理" onclick="location.reload()">🔄</button>
+            <button class="btn btn-theme" title="切換深色模式" onclick="toggleDarkMode()" id="themeBtn">🌙</button>
+            <button class="btn btn-help" title="功能說明" onclick="showHelpModal()">❓</button>
             <button class="btn btn-login" id="loginBtn" onclick="loginAdmin()">🔐 登入</button>
             <button class="btn btn-logout" id="logoutBtn" onclick="logoutAdmin()">🚪 登出</button>
         </div>
@@ -364,8 +364,8 @@
         let isDarkMode = localStorage.getItem('darkMode') === 'true';
         if (isDarkMode) document.body.classList.add('dark-mode');
         
-        // 🎯 更新：初始化主題按鈕文字
-        document.getElementById('themeBtn').textContent = isDarkMode ? '☀️ 主題' : '🌙 主題';
+        // 🎯 初始化主題按鈕圖示
+        document.getElementById('themeBtn').textContent = isDarkMode ? '☀️' : '🌙';
         
         let visits = parseInt(localStorage.getItem('visitCount') || 0) + 1;
         localStorage.setItem('visitCount', visits);
@@ -417,12 +417,12 @@
         }
         updateAdminUI();
 
-        // 🎯 更新：切換主題時保留「主題」文字
+        // 🎯 切換主題時僅更新圖示
         function toggleDarkMode() { 
             isDarkMode = !isDarkMode; 
             document.body.classList.toggle('dark-mode', isDarkMode); 
             localStorage.setItem('darkMode', isDarkMode); 
-            document.getElementById('themeBtn').textContent = isDarkMode ? '☀️ 主題' : '🌙 主題'; 
+            document.getElementById('themeBtn').textContent = isDarkMode ? '☀️' : '🌙'; 
         }
         
         function showHelpModal() { document.getElementById('helpModal').style.display = 'flex'; }
