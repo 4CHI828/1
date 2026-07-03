@@ -1,0 +1,891 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>静静在夏天🍔🎤⁰³²⁰線上歌單</title>
+    <!-- 🚀 引入 SortableJS 解決手機觸控拖曳痛點 -->
+    <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
+    <script>
+        const API_URL = 'https://script.google.com/macros/s/AKfycbw7NZWJ9J_C298PdmuivaKWEUARpiZ2BuaOTwwSb_xNjM9LyjQZhDtrcSD88eoWfj_F/exec'; 
+        const ADMIN_PASSWORD = "admin789"; 
+        const ADMIN_NAME = "静静"; 
+        const ADMIN_TOKEN_KEY = 'adminToken';
+        const ADMIN_TOKEN_DURATION = 24 * 60 * 60 * 1000;
+        const CACHE_KEY = 'playlist_cache_v2';
+    </script>
+    <style>
+        :root { 
+            --bg-color: #f4f6f8; --text-color: #2d3436; --card-bg: #ffffff; 
+            --primary: #ff6b6b; --primary-hover: #ee5253; --secondary: #48dbfb;
+            --danger: #ff7675; --success: #55efc4; --warning: #fbc531; 
+            --border: #e1e4e8; --reply-bg: #f8f9fa; --accent-gold: #fbc531;
+            --shadow-sm: 0 2px 8px rgba(0,0,0,0.04);
+            --shadow-md: 0 4px 15px rgba(0,0,0,0.06);
+            --shadow-lg: 0 10px 30px rgba(0,0,0,0.1);
+            --radius-lg: 16px; --radius-md: 10px; --radius-sm: 8px;
+            --transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        body.dark-mode { 
+            --bg-color: #121212; --text-color: #e0e0e0; --card-bg: #1e1e1e; 
+            --primary: #ff7675; --border: #2d2d2d; --reply-bg: #2d3436; 
+            --shadow-sm: 0 2px 8px rgba(0,0,0,0.2); --shadow-md: 0 4px 15px rgba(0,0,0,0.4); --shadow-lg: 0 10px 30px rgba(0,0,0,0.6);
+        }
+        
+        body { 
+            font-family: 'PingFang TC', 'Microsoft JhengHei', 'Segoe UI', Roboto, sans-serif; 
+            background-color: var(--bg-color); color: var(--text-color); 
+            max-width: 900px; margin: 0 auto; padding: 20px; padding-bottom: 120px; 
+            scroll-behavior: smooth; transition: background 0.4s ease, color 0.4s ease; line-height: 1.6;
+            animation: fadeInUp 0.5s ease-out;
+            /* 防止下拉刷新時頁面滾動 */
+            overscroll-behavior-y: none; 
+        }
+
+        @keyframes fadeInUp { from { opacity: 0; transform: translateY(15px); } to { opacity: 1; transform: translateY(0); } }
+
+        h1 { text-align: center; color: var(--primary); font-size: 26px; margin-bottom: 25px; font-weight: 800; letter-spacing: 1px; }
+
+        .social-links { display: flex; justify-content: center; gap: 12px; margin-bottom: 35px; flex-wrap: wrap; }
+        .social-links a { text-decoration: none; color: var(--text-color); background: var(--card-bg); padding: 8px 16px; border-radius: 50px; font-size: 13px; font-weight: 500; box-shadow: var(--shadow-sm); transition: var(--transition); border: 1px solid var(--border); }
+        .social-links a:hover { transform: translateY(-3px); color: var(--primary); box-shadow: var(--shadow-md); border-color: var(--primary); }
+
+        .control-panel { background: var(--card-bg); padding: 18px 20px; border-radius: var(--radius-lg); box-shadow: var(--shadow-md); margin-bottom: 30px; border: 1px solid var(--border); }
+
+        .filter-bar { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 14px; }
+
+        .filter-group { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+        .filter-group + .filter-group { padding-left: 14px; border-left: 1px solid var(--border); }
+        @media (max-width: 700px) { .filter-group + .filter-group { padding-left: 0; border-left: none; } }
+
+        .filter-group-search { flex: 1 1 260px; min-width: 220px; }
+        .search-wrapper { position: relative; flex: 1; min-width: 150px; max-width: 320px; }
+        #artistFilter { flex: none; width: 110px; }
+
+        .filter-bar input, .filter-bar select {
+            width: 100%; padding: 10px 14px; font-size: 14px;
+            box-sizing: border-box; transition: var(--transition);
+            border: 1px solid var(--border); border-radius: var(--radius-md);
+            background: var(--bg-color); color: var(--text-color);
+        }
+        .filter-bar select { text-align: center; text-align-last: center; cursor: pointer; }
+        .filter-bar input:focus, .filter-bar select:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 3px rgba(255,107,107,0.15); }
+
+        .clear-search-btn { position: absolute; right: 12px; top: 50%; transform: translateY(-50%); color: #ff9f43; cursor: pointer; font-weight: bold; font-size: 16px; display: none; transition: var(--transition); z-index: 10; }
+        .clear-search-btn:hover { color: var(--primary); transform: translateY(-50%) scale(1.2); }
+
+        .btn { border: none; border-radius: var(--radius-md); cursor: pointer; font-weight: 600; display: inline-flex; align-items: center; justify-content: center; padding: 10px 16px; font-size: 14px; white-space: nowrap; box-sizing: border-box; }
+        .btn:hover { filter: brightness(1.05); transform: translateY(-1px); }
+        .btn:active { transform: scale(0.95); }
+        .btn-random { background: var(--warning); color: #636e72; }
+        .btn-export { background: var(--success); color: #2d3436; }
+        .btn-icon { width: 42px; height: 42px; padding: 0; flex: none; font-size: 17px; background: var(--bg-color); border: 1px solid var(--border); color: var(--text-color); }
+        .btn-login { background: var(--primary); color: white; }
+        .btn-logout { background: var(--danger); color: white; display: none; }
+        
+        .admin-badge { display: none; background: linear-gradient(45deg, #fbc531, #f1c40f); color: #fff; padding: 4px 12px; border-radius: 50px; font-size: 12px; margin-left: 10px; vertical-align: middle; box-shadow: 0 2px 8px rgba(251, 197, 49, 0.4); }
+        .admin-badge.active { display: inline-block; }
+
+        .queue-panel { background: linear-gradient(135deg, #fffcf0 0%, #fff3cd 100%); border: 1px solid #ffeaa7; color: #856404; padding: 25px; border-radius: var(--radius-lg); margin-bottom: 30px; box-shadow: var(--shadow-md); }
+        body.dark-mode .queue-panel { background: linear-gradient(135deg, #2c2a1a 0%, #3d3b20 100%); border-color: #635c33; color: var(--accent-gold); }
+        .queue-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 20px; flex-wrap: wrap; gap: 10px; }
+        .queue-heading { display: flex; flex-direction: column; gap: 4px; }
+        .queue-title { font-size: 20px; font-weight: 800; display: flex; align-items: center; gap: 8px; }
+        .queue-sort-hint { font-size: 12px; font-weight: normal; color: #a8a8a8; }
+        .btn-queue { padding: 8px 16px; border-radius: 10px; border: none; cursor: pointer; font-weight: 600; background: var(--danger); color: white; transition: var(--transition); }
+        .btn-queue:hover { background: #ee5253; transform: translateY(-2px); box-shadow: 0 4px 10px rgba(255, 118, 117, 0.3); }
+
+        .queue-list { display: flex; flex-direction: column; gap: 12px; max-height: 350px; overflow-y: auto; padding-right: 5px; }
+        .queue-item { background: rgba(255,255,255,0.8); padding: 14px 18px; border-radius: var(--radius-md); font-size: 15px; display: flex; align-items: center; gap: 12px; transition: transform 0.2s ease, background 0.2s ease, box-shadow 0.2s ease; border: 1px solid transparent; cursor: grab; user-select: none; }
+        .queue-item:hover { transform: translateX(5px); background: rgba(255,255,255,0.95); box-shadow: var(--shadow-sm); }
+        /* SortableJS 拖曳時的樣式 */
+        .queue-item.sortable-ghost { opacity: 0.4; background: var(--border); border: 2px dashed var(--primary); }
+        .queue-item.sortable-chosen { box-shadow: var(--shadow-lg); transform: scale(1.02); }
+        
+        body.dark-mode .queue-item { background: rgba(0,0,0,0.3); color: #e0e0e0; }
+        .queue-item.singing { background: rgba(255,107,107,0.15); border-color: var(--primary); animation: pulse-queue 2s infinite; }
+        .queue-item.done { opacity: 0.6; text-decoration: line-through; background: rgba(85, 239, 196, 0.1); border-color: var(--success); }
+        @keyframes pulse-queue { 0%, 100% { box-shadow: 0 0 0 0 rgba(255,107,107,0.4); } 50% { box-shadow: 0 0 0 8px rgba(255,107,107,0); } }
+        .queue-index { font-weight: 800; color: var(--primary); min-width: 24px; font-size: 14px; cursor: grab; }
+        .queue-status-btn { background: none; border: none; font-size: 20px; cursor: pointer; transition: var(--transition); }
+        .queue-status-btn:hover { transform: scale(1.3); }
+        .queue-text { flex: 1; font-weight: 600; }
+        .queue-del-btn { background: none; border: none; color: #b2bec3; cursor: pointer; border-radius: 50%; transition: var(--transition); width: 30px; height: 30px; display: flex; align-items: center; justify-content: center; }
+        .queue-del-btn:hover { color: white; background-color: var(--danger); }
+
+        table { width: 100%; border-collapse: separate; border-spacing: 0; background: var(--card-bg); border-radius: var(--radius-lg); overflow: hidden; box-shadow: var(--shadow-md); border: 1px solid var(--border); transition: opacity 0.3s ease; }
+        th, td { padding: 18px; text-align: left; border-bottom: 1px solid var(--border); }
+        th { background-color: var(--primary); color: white; font-weight: 600; font-size: 15px; }
+        tr:hover { background-color: var(--bg-color); transition: var(--transition); }
+        .btn-sm { padding: 6px 12px; font-size: 12px; border-radius: 8px; border: none; cursor: pointer; color: white; transition: var(--transition); }
+        .btn-edit { background-color: var(--secondary); }
+        .btn-del { background-color: var(--danger); }
+        .btn-sm:hover { transform: translateY(-2px); opacity: 0.9; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        .tag-badge { display: inline-block; background-color: var(--reply-bg); color: #636e72; font-size: 11px; padding: 3px 8px; border-radius: 6px; margin-right: 6px; border: 1px solid var(--border); transition: var(--transition); }
+        .tag-badge:hover { background-color: var(--primary); color: white; border-color: var(--primary); }
+        .clickable-title { cursor: pointer; transition: var(--transition); font-weight: 600; color: var(--text-color); }
+        .clickable-title:hover { color: var(--primary); text-decoration: underline; text-underline-offset: 4px; }
+
+        .request-section { background: var(--card-bg); padding: 25px; border-radius: var(--radius-lg); box-shadow: var(--shadow-md); margin-top: 30px; border: 1px solid var(--border); }
+        .request-form { display: flex; gap: 12px; margin-bottom: 25px; flex-wrap: wrap; }
+        .request-form input, .request-form textarea { padding: 14px; border: 1px solid var(--border); border-radius: var(--radius-md); background: var(--bg-color); color: var(--text-color); transition: var(--transition); }
+        .request-form textarea { width: 100%; flex: none; resize: none; }
+        .request-item { padding: 20px; border-bottom: 1px solid var(--border); font-size: 14px; border-radius: var(--radius-md); margin-bottom: 15px; transition: var(--transition); background: var(--card-bg); border: 1px solid transparent; }
+        .request-item:hover { background-color: var(--bg-color); border-color: var(--border); box-shadow: var(--shadow-sm); }
+        .req-header { display: flex; justify-content: space-between; color: #b2bec3; font-size: 12px; margin-bottom: 10px; }
+        .req-nick { font-weight: 700; color: var(--primary); font-size: 14px; }
+        .req-actions { display: flex; gap: 12px; margin-top: 15px; }
+        .req-action-btn { background: none; border: none; color: #b2bec3; font-size: 12px; cursor: pointer; transition: var(--transition); }
+        .req-action-btn:hover { color: var(--primary); font-weight: bold; }
+
+        .replies-container { margin-top: 15px; display: flex; flex-direction: column; gap: 12px; padding-left: 20px; }
+        .reply-box { padding: 12px 18px; border-radius: var(--radius-md); font-size: 13px; border: 1px solid var(--border); max-width: 90%; position: relative; transition: var(--transition); }
+        .reply-box.official { background-color: #fffbe6; border-left: 4px solid var(--accent-gold); border-radius: 0 15px 15px 15px; }
+        body.dark-mode .reply-box.official { background-color: #2d2a1a; }
+        .reply-box.general { background-color: var(--reply-bg); border-left: 4px solid var(--secondary); border-radius: 0 15px 15px 15px; }
+        .reply-header { font-weight: 700; margin-bottom: 6px; display: flex; justify-content: space-between; align-items: center; }
+        .reply-header.official { color: #d39e00; } 
+        .reply-header.general { color: #0984e3; }
+        .reply-del-btn { background: none; border: none; color: #ccc; cursor: pointer; opacity: 0; transition: var(--transition); }
+        .reply-box:hover .reply-del-btn { opacity: 1; }
+
+        .reply-input-area { margin-top: 15px; display: flex; flex-direction: column; gap: 10px; background: var(--bg-color); padding: 20px; border-radius: var(--radius-md); border: 1px dashed var(--border); animation: slideUp 0.3s ease; }
+        .reply-input-area input, .reply-input-area textarea { padding: 12px; border: 1px solid var(--border); border-radius: 8px; background: var(--card-bg); color: var(--text-color); }
+        .reply-btn-group { display: flex; gap: 10px; justify-content: flex-end; }
+        .btn-reply-general { background: #636e72; color: white; padding: 8px 16px; border-radius: 8px; border: none; cursor: pointer; font-weight: 600; transition: var(--transition); }
+        .btn-reply-official { background: var(--accent-gold); color: #333; padding: 8px 16px; border-radius: 8px; border: none; cursor: pointer; font-weight: bold; transition: var(--transition); }
+
+        .footer { text-align: center; margin-top: 50px; color: #b2bec3; font-size: 13px; }
+        .footer a { color: var(--primary); text-decoration: none; font-weight: 600; transition: var(--transition); }
+        .footer a:hover { text-decoration: underline; }
+        
+        .fab-group { position: fixed; bottom: 30px; right: 30px; display: flex; flex-direction: column; gap: 15px; z-index: 1000; align-items: flex-end; }
+        .fab-btn { color: white; border: none; padding: 16px 28px; border-radius: 50px; font-size: 16px; font-weight: 800; box-shadow: 0 8px 25px rgba(0,0,0,0.2); cursor: pointer; transition: var(--transition); display: flex; align-items: center; gap: 10px; position: relative; overflow: hidden; }
+        .fab-btn:hover { transform: translateY(-5px) scale(1.02); box-shadow: 0 12px 30px rgba(0,0,0,0.3); }
+        .fab-btn.msg-btn { background: linear-gradient(45deg, #48dbfb, #0984e3); }
+        .fab-btn.add-btn { background: linear-gradient(45deg, #55efc4, #00b894); }
+        .fab-btn.active { background: var(--danger) !important; }
+        .scroll-top-btn { background-color: #636e72; color: white; border: none; width: 55px; height: 55px; border-radius: 50%; font-size: 20px; cursor: pointer; display: none; align-items: center; justify-content: center; box-shadow: var(--shadow-md); transition: var(--transition); }
+        .scroll-top-btn:hover { background-color: #2d3436; transform: translateY(-5px); }
+
+        .add-form-container { position: fixed; bottom: 110px; right: 30px; width: 400px; max-width: 90vw; background: var(--card-bg); padding: 30px; border-radius: var(--radius-lg); box-shadow: var(--shadow-lg); z-index: 999; display: none; animation: slideUp 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); border: 1px solid var(--border); }
+        @keyframes slideUp { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
+        .form-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; }
+        .form-tabs { display: flex; gap: 12px; margin-bottom: 25px; }
+        .form-tab { flex: 1; padding: 12px; text-align: center; background: var(--bg-color); border-radius: 10px; cursor: pointer; font-size: 14px; font-weight: 600; color: var(--text-color); transition: var(--transition); border: 1px solid var(--border); }
+        .form-tab.active { background: var(--primary); color: white; border-color: var(--primary); box-shadow: 0 4px 10px rgba(255,107,107,0.3); }
+        .form-group { margin-bottom: 20px; }
+        .form-group label { display: block; margin-bottom: 8px; font-weight: 600; font-size: 14px; color: #636e72; }
+        .form-group input, .form-group textarea { width: 100%; padding: 14px; border: 1px solid var(--border); border-radius: 10px; box-sizing: border-box; font-size: 15px; background: var(--bg-color); color: var(--text-color); transition: var(--transition); }
+        .form-group input:focus, .form-group textarea:focus { outline: none; border-color: var(--primary); }
+        .btn-add { background: linear-gradient(45deg, var(--primary), #ff7675); color: white; border: none; padding: 16px; border-radius: 12px; cursor: pointer; font-size: 16px; font-weight: 800; width: 100%; transition: var(--transition); }
+        .btn-add:hover { transform: translateY(-3px); box-shadow: 0 8px 20px rgba(255,107,107,0.4); }
+
+        .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 2000; justify-content: center; align-items: center; }
+        .modal-content { background: var(--card-bg); padding: 35px; border-radius: var(--radius-lg); text-align: center; max-width: 500px; width: 90%; box-shadow: var(--shadow-lg); animation: popIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); color: var(--text-color); }
+        @keyframes popIn { from { transform: scale(0.8); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+        .btn-listen { background: linear-gradient(45deg, #ff0000, #d63031); color: white; text-decoration: none; padding: 16px 32px; border-radius: 12px; display: inline-block; margin: 25px 0; font-weight: 800; transition: var(--transition); box-shadow: 0 6px 15px rgba(214,48,49,0.4); }
+        .btn-listen:hover { transform: scale(1.05); box-shadow: 0 10px 25px rgba(214,48,49,0.6); }
+
+        .toast-container { position: fixed; top: 20px; right: 20px; z-index: 9999; display: flex; flex-direction: column; gap: 12px; }
+        .toast { padding: 14px 26px; border-radius: 12px; color: white; font-size: 14px; font-weight: 600; box-shadow: var(--shadow-lg); animation: slideIn 0.3s ease; min-width: 220px; }
+        .toast.success { background-color: #00b894; }
+        .toast.error { background-color: #d63031; }
+        .toast.info { background-color: #0984e3; }
+        @keyframes slideIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+        @keyframes slideOut { from { transform: translateX(0); opacity: 1; } to { transform: translateX(100%); opacity: 0; } }
+
+        .loading { display: none; transition: opacity 0.3s ease; } 
+        .loading.active { display: block; }
+        .loading.fade-out { opacity: 0; pointer-events: none; }
+        .skeleton-table { background: var(--card-bg); border-radius: var(--radius-lg); overflow: hidden; box-shadow: var(--shadow-md); border: 1px solid var(--border); margin-bottom: 20px;}
+        .skeleton-header { height: 54px; background: var(--primary); }
+        .skeleton-row { display: flex; padding: 18px; border-bottom: 1px solid var(--border); gap: 15px; }
+        .skeleton-cell { height: 20px; background: linear-gradient(90deg, var(--border) 25%, var(--bg-color) 50%, var(--border) 75%); background-size: 200% 100%; animation: shimmer 1.5s infinite; border-radius: 6px; }
+        @keyframes shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
+
+        /* 🆕 下拉重新整理樣式 */
+        .pull-refresh-indicator {
+            position: fixed; top: -60px; left: 0; width: 100%; height: 60px;
+            display: flex; align-items: center; justify-content: center;
+            background: var(--card-bg); color: var(--primary); font-weight: bold;
+            box-shadow: var(--shadow-sm); z-index: 1001; transition: top 0.3s ease;
+        }
+        .pull-refresh-indicator.active { top: 0; }
+        .pull-refresh-indicator .spinner {
+            width: 20px; height: 20px; border: 3px solid var(--border);
+            border-top-color: var(--primary); border-radius: 50%;
+            animation: spin 1s linear infinite; margin-right: 10px;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        @media (max-width: 600px) {
+            body { padding: 15px; }
+            .add-form-container { width: 95vw; right: 2.5vw; bottom: 100px; }
+            .filter-bar { flex-direction: column; align-items: stretch; }
+            .filter-group { width: 100%; }
+            .filter-group-search { flex-direction: column; }
+            .search-wrapper, #artistFilter { width: 100%; max-width: none; }
+            .filter-group-actions { justify-content: space-between; }
+            .filter-group-actions .btn-random, .filter-group-actions .btn-export { flex: 1; }
+            .filter-group-auth .btn { flex: 1; }
+            table, thead, tbody, th, td, tr { display: block; }
+            thead tr { display: none; }
+            tr { background: var(--card-bg); margin-bottom: 15px; border-radius: var(--radius-lg); box-shadow: var(--shadow-sm); padding: 15px; border: 1px solid var(--border); transition: var(--transition); }
+            tr:hover { transform: translateY(-3px); box-shadow: var(--shadow-md); }
+            td { padding: 8px 0; border: none; text-align: left !important; display: flex; justify-content: space-between; align-items: center; }
+            td::before { content: attr(data-label); font-weight: 700; color: var(--primary); font-size: 13px; margin-right: 10px; }
+        }
+    </style>
+</head>
+<body id="body">
+    <!-- 🆕 下拉重新整理指示器 -->
+    <div id="pullRefreshIndicator" class="pull-refresh-indicator">
+        <div class="spinner"></div> <span id="pullText">放開即可重新整理...</span>
+    </div>
+
+    <h1 id="pageTitle">静静在夏天🍔🎤⁰³²⁰歌單 <span class="admin-badge" id="adminBadge">👑 管理員模式</span></h1>
+    
+    <div class="social-links">
+        <a href="https://v.douyin.com/mw-osadXTvk/" target="_blank">🍔 抖音</a>
+        <a href="https://www.twitch.tv/jingjingzaixiatian" target="_blank">🍔 圖奇</a>
+        <a href="https://discord.com/channels/865334403864461373/1467603376144646319" target="_blank">🍔 DC靜靜幫</a>
+        <a href="https://www.youtube.com/playlist?list=PL3LHSN24syoOcIqA8nRwfYgAOoR5U27_U" target="_blank">🍔 Youtube</a>
+        <a href="https://www.instagram.com/jingjing24739233910/" target="_blank">🍔 IG</a>
+    </div>
+
+    <div class="control-panel">
+        <div class="filter-bar">
+            <div class="filter-group filter-group-search">
+                <div class="search-wrapper">
+                    <input type="text" id="searchInput" placeholder="🔍 搜尋..." oninput="handleSearchInput()">
+                    <span id="clearSearch" class="clear-search-btn" onclick="clearSearch()">✕</span>
+                </div>
+                <select id="artistFilter" onchange="applyFilters()">
+                    <option value="all">🎤 歌手</option>
+                    <option value="__sort_clicks__">🔥 熱門</option>
+                </select>
+            </div>
+            <div class="filter-group filter-group-actions">
+                <button class="btn btn-random" title="隨機選歌" onclick="pickRandomSong()">🎲 隨機</button>
+                <button class="btn btn-export" title="匯出CSV" onclick="exportCSV()">📥 匯出</button>
+                <button class="btn btn-icon" title="重新整理" onclick="manualRefresh()">🔄</button>
+                <button class="btn btn-icon" title="切換深色模式" onclick="toggleDarkMode()" id="themeBtn">🌙</button>
+                <button class="btn btn-icon" title="功能說明" onclick="showHelpModal()">❓</button>
+            </div>
+            <div class="filter-group filter-group-auth">
+                <button class="btn btn-login" id="loginBtn" onclick="loginAdmin()">🔐 登入</button>
+                <button class="btn btn-logout" id="logoutBtn" onclick="logoutAdmin()">🚪 登出</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="queue-panel" id="queuePanel">
+        <div class="queue-header">
+            <div class="queue-heading">
+                <div class="queue-title">🎤 待唱清單 (<span id="queueCount">0</span> 首)</div>
+                <div class="queue-sort-hint">💡 拖曳歌曲可調整順序 | 點擊待唱項前的 Emoji 切換：⏳排隊 ➔ 🎤演唱 ➔ ✅已唱 ➔ 移出</div>
+            </div>
+            <button class="btn-queue" onclick="clearQueue()">🗑️ 清空清單</button>
+        </div>
+        <!-- 🆕 待唱清單骨架屏 -->
+        <div id="queueSkeleton" class="loading active">
+            <div class="skeleton-row"><div class="skeleton-cell" style="width:10%"></div><div class="skeleton-cell" style="width:10%"></div><div class="skeleton-cell" style="width:60%"></div><div class="skeleton-cell" style="width:10%"></div></div>
+            <div class="skeleton-row"><div class="skeleton-cell" style="width:10%"></div><div class="skeleton-cell" style="width:10%"></div><div class="skeleton-cell" style="width:60%"></div><div class="skeleton-cell" style="width:10%"></div></div>
+        </div>
+        <div id="queueList" class="queue-list" style="display:none;">
+            <div class="queue-empty" style="text-align:center; color:#888; padding:10px;">目前沒有待唱歌曲，點擊下方歌單的「歌曲名稱」即可加入！</div>
+        </div>
+    </div>
+
+    <h3 style="margin-left:10px; font-weight:800; color:var(--text-color);">🎵 目前歌單 (<span id="songCount">0</span> 首)</h3>
+    
+    <div id="skeletonLoader" class="loading active">
+        <div class="skeleton-table">
+            <div class="skeleton-header"></div>
+            <div class="skeleton-row"><div class="skeleton-cell" style="width:20%"></div><div class="skeleton-cell" style="width:40%"></div><div class="skeleton-cell" style="width:20%"></div><div class="skeleton-cell" style="width:20%"></div></div>
+            <div class="skeleton-row"><div class="skeleton-cell" style="width:20%"></div><div class="skeleton-cell" style="width:40%"></div><div class="skeleton-cell" style="width:20%"></div><div class="skeleton-cell" style="width:20%"></div></div>
+            <div class="skeleton-row"><div class="skeleton-cell" style="width:20%"></div><div class="skeleton-cell" style="width:40%"></div><div class="skeleton-cell" style="width:20%"></div><div class="skeleton-cell" style="width:20%"></div></div>
+        </div>
+    </div>
+    
+    <table id="playlistTable" style="display:none;">
+        <thead><tr><th style="border-radius:var(--radius-lg) 0 0 0;">歌手</th><th>歌曲名稱</th><th>試聽</th><th style="width:80px; border-radius:0 var(--radius-lg) 0 0;">操作</th></tr></thead>
+        <tbody id="playlistBody"></tbody>
+    </table>
+    
+    <div class="request-section" id="requestSection">
+        <h3 style="margin-top:0; font-weight:800;">📝 點歌與留言板 <span style="font-size:12px; font-weight:normal; color:#888;">(支援無限串樓)</span></h3>
+        <div class="request-form">
+            <input type="text" id="reqNick" placeholder="您的暱稱 (選填)" style="max-width:150px;">
+            <textarea id="reqMessage" rows="2" placeholder="想點什麼歌？或給静静的留言..."></textarea>
+            <button class="btn btn-add" onclick="submitRequest()" style="width:auto; padding:12px 24px; margin-top:0;">送出</button>
+        </div>
+        <!-- 🆕 留言板骨架屏 -->
+        <div id="requestSkeleton" class="loading active">
+            <div class="skeleton-row"><div class="skeleton-cell" style="width:30%"></div><div class="skeleton-cell" style="width:70%"></div></div>
+            <div class="skeleton-row"><div class="skeleton-cell" style="width:20%"></div><div class="skeleton-cell" style="width:80%"></div></div>
+        </div>
+        <div id="requestList" class="request-list" style="display:none;"></div>
+    </div>
+
+    <div class="footer">
+        <p>💖 造訪次數: <span id="visitCount">0</span> 次</p>
+        <p>由 <a href="https://www.douyin.com/user/MS4wLjABAAAAamj38l-UDbYbUGcPhEdJI-rM8-Y_tAMFLy7kZAWMpJw" target="_blank">新竹奇奇828</a> 協助升級製作</p>
+    </div>
+
+    <div class="fab-group">
+        <button id="scrollTopBtn" class="scroll-top-btn" onclick="window.scrollTo({top:0, behavior:'smooth'})">⬆️</button>
+        <button id="msgBtn" class="fab-btn msg-btn" onclick="scrollToRequestSection()">💬 留言</button>
+        <button id="fabBtn" class="fab-btn add-btn" onclick="toggleAddForm()">新增歌曲</button>
+    </div>
+
+    <div id="addFormContainer" class="add-form-container">
+        <div class="form-header">
+            <h3 style="margin:0; font-size:18px; font-weight:800;">📝 新增歌曲</h3>
+            <button onclick="toggleAddForm()" style="background:none; border:none; font-size:24px; cursor:pointer; color:var(--text-color);">✕</button>
+        </div>
+        <div class="form-tabs">
+            <div class="form-tab active" onclick="switchTab('single')" id="tabSingle">單首新增</div>
+            <div class="form-tab" onclick="switchTab('batch')" id="tabBatch">📋 批量新增</div>
+        </div>
+        <div id="singleForm">
+            <div class="form-group"><label>歌手：</label><input type="text" id="artist" placeholder="例如：周杰倫"></div>
+            <div class="form-group"><label>歌曲名稱：</label><input type="text" id="song" placeholder="例如：晴天"></div>
+            <div class="form-group"><label>標籤 (選填)：</label><input type="text" id="tags" placeholder="例如: #抒情, #KTV必點"></div>
+            <button id="addBtn" class="btn-add" onclick="addSong()">✨ 確認新增至雲端</button>
+        </div>
+        <div id="batchForm" style="display:none;">
+            <div class="form-group"><label>貼上清單 (每行一首，格式：歌手,歌曲)：</label><textarea id="batchInput" rows="6" placeholder="周杰倫,晴天&#10;林俊傑 修煉愛情"></textarea></div>
+            <button id="batchBtn" class="btn-add" onclick="batchAddSongs()">🚀 批量上傳至雲端</button>
+        </div>
+    </div>
+
+    <div id="randomModal" class="modal-overlay" onclick="if(event.target===this)this.style.display='none'">
+        <div class="modal-content">
+            <h2 style="color:var(--primary); margin-top:0; font-weight:800;">✨ 命運的選擇 ✨</h2>
+            <div id="randomSongInfo" style="font-size:22px; margin:30px 0; font-weight:bold; line-height:1.4;">Casting...</div>
+            <a id="randomSongLink" href="#" target="_blank" class="btn-listen">🎵 立即試聽</a>
+            <div style="margin-top:20px;">
+                <button class="btn btn-random" onclick="pickRandomSong()" style="margin-right:10px;">🎲 再抽一次</button>
+                <button class="btn" style="background:#636e72; color:white;" onclick="document.getElementById('randomModal').style.display='none'">關閉</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="helpModal" class="modal-overlay" onclick="if(event.target===this)this.style.display='none'">
+        <div class="modal-content">
+            <h2 style="color:var(--primary); margin-top:0; font-weight:800;">📖 系統功能說明</h2>
+            <div style="text-align:left; line-height:1.8; font-size:15px; margin:20px 0;">
+                <p>🎲 <b>隨機選歌</b>：抽中後歌曲將<span style="color:var(--primary)">自動加入</span>待唱清單！</p>
+                <p>🎤 <b>待唱清單</b>：點擊歌單中的「歌曲名稱」即可加入排隊。支持<span style="color:var(--primary)">拖曳歌曲</span>直接調整演唱順序。</p>
+                <p>🔄 <b>狀態切換</b>：點擊待唱項前的 Emoji 切換：⏳排隊 ➔ 🎤演唱 ➔ ✅已唱 ➔ 移出。</p>
+                <p>🎵 <b>試聽功能</b>：若歌曲無特定連結，點擊試聽將<span style="color:var(--primary)">自動跳轉至 YouTube 搜索</span>該歌曲。</p>
+                <p>🔐 <b>管理員</b>：登入後可直接編輯歌曲、刪除留言或清空清單。</p>
+            </div>
+            <button class="btn" style="background:var(--primary); color:white; padding: 12px 35px; font-weight:bold;" onclick="document.getElementById('helpModal').style.display='none'">我知道了</button>
+        </div>
+    </div>
+
+    <div id="toastContainer" class="toast-container"></div>
+
+    <script>
+        let allSongs = []; let filteredSongs = []; 
+        let isDarkMode = localStorage.getItem('darkMode') === 'true';
+        if (isDarkMode) document.body.classList.add('dark-mode');
+        document.getElementById('themeBtn').textContent = isDarkMode ? '☀️' : '🌙';
+        
+        let visits = parseInt(localStorage.getItem('visitCount') || 0) + 1;
+        localStorage.setItem('visitCount', visits);
+        document.getElementById('visitCount').innerText = visits;
+
+        // 🚀 核心優化 1：本地快取秒開
+        const cachedData = localStorage.getItem(CACHE_KEY);
+        if (cachedData) {
+            try {
+                const data = JSON.parse(cachedData);
+                if (data.songs && data.songs.length > 0) {
+                    allSongs = data.songs;
+                    renderAllData(data, true); // 立即渲染快取，實現秒開
+                    showToast('🚀 已載入本地快取，正在背景更新...', 'info', 2000);
+                }
+            } catch (e) { console.error('Cache parse error', e); }
+        }
+
+        // 🚀 核心優化 2：Fetch 重試與超時機制
+        async function fetchWithRetry(url, options = {}, retries = 2, timeout = 10000) {
+            for (let i = 0; i <= retries; i++) {
+                try {
+                    const controller = new AbortController();
+                    const id = setTimeout(() => controller.abort(), timeout);
+                    const res = await fetch(url, { ...options, signal: controller.signal });
+                    clearTimeout(id);
+                    if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
+                    return await res.json();
+                } catch (err) {
+                    if (i === retries) throw err;
+                    await new Promise(r => setTimeout(r, 1000 * (i + 1))); // 遞增延遲
+                }
+            }
+        }
+
+        function debounce(func, wait) {
+            let timeout;
+            return function(...args) {
+                clearTimeout(timeout);
+                timeout = setTimeout(() => func.apply(this, args), wait);
+            };
+        }
+
+        function showToast(message, type = 'success', duration = 3000) {
+            const container = document.getElementById('toastContainer');
+            const toast = document.createElement('div');
+            toast.className = `toast ${type}`;
+            toast.textContent = message;
+            container.appendChild(toast);
+            setTimeout(() => { toast.style.animation = 'slideOut 0.3s ease'; setTimeout(() => toast.remove(), 300); }, duration);
+        }
+
+        function isAdmin() {
+            const token = localStorage.getItem(ADMIN_TOKEN_KEY);
+            if (!token) return false;
+            const tokenData = JSON.parse(token);
+            if (Date.now() > tokenData.expiry) { localStorage.removeItem(ADMIN_TOKEN_KEY); return false; }
+            return true;
+        }
+        function setAdminToken() { localStorage.setItem(ADMIN_TOKEN_KEY, JSON.stringify({ expiry: Date.now() + ADMIN_TOKEN_DURATION })); }
+        function loginAdmin() {
+            if (isAdmin()) { showToast('您已經是管理員了！', 'info'); return; }
+            const password = prompt("⚠️ 請輸入管理員密碼：\n(登入後 24 小時內免重複輸入)");
+            if (password === ADMIN_PASSWORD) { setAdminToken(); showToast('✅ 登入成功！', 'success'); updateAdminUI(); } 
+            else if (password !== null) { showToast('❌ 密碼錯誤', 'error'); }
+        }
+        function logoutAdmin() { localStorage.removeItem(ADMIN_TOKEN_KEY); updateAdminUI(); showToast('👋 已登出', 'info'); }
+        function updateAdminUI() {
+            const isAdminMode = isAdmin();
+            document.getElementById('adminBadge').classList.toggle('active', isAdminMode);
+            document.getElementById('loginBtn').style.display = isAdminMode ? 'none' : 'inline-flex';
+            document.getElementById('logoutBtn').style.display = isAdminMode ? 'inline-flex' : 'none';
+        }
+        function requireAdmin(callback) {
+            if (isAdmin()) { callback(); return; }
+            const password = prompt("⚠️ 此操作需要管理員權限，請輸入密碼：");
+            if (password === ADMIN_PASSWORD) { setAdminToken(); showToast('✅ 權限驗證成功', 'success'); updateAdminUI(); callback(); } 
+            else if (password !== null) { showToast('❌ 密碼錯誤', 'error'); }
+        }
+        updateAdminUI();
+
+        function toggleDarkMode() { 
+            isDarkMode = !isDarkMode; 
+            document.body.classList.toggle('dark-mode', isDarkMode); 
+            localStorage.setItem('darkMode', isDarkMode); 
+            document.getElementById('themeBtn').textContent = isDarkMode ? '☀️' : '🌙'; 
+        }
+        
+        function showHelpModal() { document.getElementById('helpModal').style.display = 'flex'; }
+        function toggleAddForm() {
+            const container = document.getElementById('addFormContainer'); const fabBtn = document.getElementById('fabBtn');
+            if (container.style.display === 'none' || container.style.display === '') { container.style.display = 'block'; fabBtn.innerHTML = '關閉'; fabBtn.classList.add('active'); setTimeout(() => document.getElementById('artist').focus(), 100); } 
+            else { container.style.display = 'none'; fabBtn.innerHTML = '新增歌曲'; fabBtn.classList.remove('active'); }
+        }
+        function switchTab(tab) { document.getElementById('tabSingle').classList.toggle('active', tab === 'single'); document.getElementById('tabBatch').classList.toggle('active', tab === 'batch'); document.getElementById('singleForm').style.display = tab === 'single' ? 'block' : 'none'; document.getElementById('batchForm').style.display = tab === 'batch' ? 'block' : 'none'; }
+        function scrollToRequestSection() { 
+            const section = document.getElementById('requestSection'); 
+            if (section) { 
+                if (document.getElementById('addFormContainer').style.display === 'block') toggleAddForm(); 
+                section.scrollIntoView({ behavior: 'smooth', block: 'center' }); 
+                setTimeout(() => document.getElementById('reqMessage').focus(), 500); 
+            } 
+        }
+
+        const handleSearchInput = debounce(function() {
+            const input = document.getElementById('searchInput');
+            const clearBtn = document.getElementById('clearSearch');
+            clearBtn.style.display = input.value.trim() === '' ? 'none' : 'block';
+            applyFilters();
+        }, 300);
+
+        function clearSearch() {
+            const input = document.getElementById('searchInput');
+            input.value = '';
+            handleSearchInput();
+            input.focus();
+            showToast('🔍 已清除搜尋內容', 'info');
+        }
+
+        function hideSkeleton(id) {
+            const el = document.getElementById(id);
+            if(el) {
+                el.classList.add('fade-out');
+                setTimeout(() => { el.classList.remove('active'); el.style.display = 'none'; }, 300);
+            }
+        }
+        function showElement(id) {
+            const el = document.getElementById(id);
+            if(el) el.style.display = '';
+        }
+
+        // 🚀 核心優化 3：整合渲染邏輯
+        function renderAllData(data, isCache = false) {
+            if (data.status === 'success') { 
+                allSongs = data.songs; 
+                
+                // 保存輸入框內容，防止重新渲染時遺失
+                const reqNickVal = document.getElementById('reqNick').value;
+                const reqMsgVal = document.getElementById('reqMessage').value;
+
+                renderRequests(data.requests || []); 
+                renderQueuePanel(); 
+                updateArtistFilter(); 
+                applyFilters(); 
+
+                // 恢復輸入框內容
+                document.getElementById('reqNick').value = reqNickVal;
+                document.getElementById('reqMessage').value = reqMsgVal;
+
+                if (!isCache) {
+                    localStorage.setItem(CACHE_KEY, JSON.stringify(data)); // 更新快取
+                }
+            } else if (!isCache) { 
+                showToast('❌ 載入失敗: ' + data.message, 'error'); 
+            }
+        }
+
+        function renderQueuePanel() {
+            const queueSongs = allSongs.filter(s => s.status && s.status !== '');
+            queueSongs.sort((a, b) => (a.queueTime || 0) - (b.queueTime || 0)); 
+            document.getElementById('queueCount').innerText = queueSongs.length;
+            const listEl = document.getElementById('queueList');
+            
+            hideSkeleton('queueSkeleton');
+            showElement('queueList');
+
+            if (queueSongs.length === 0) { 
+                listEl.innerHTML = '<div class="queue-empty" style="text-align:center; color:#888; padding:10px;">目前沒有待唱歌曲，點擊下方歌單的「歌曲名稱」即可加入！</div>'; 
+                return; 
+            }
+            listEl.innerHTML = queueSongs.map((s, index) => {
+                const statusEmoji = {'queued': '⏳', 'singing': '🎤', 'done': '✅'}[s.status];
+                return `<div class="queue-item ${s.status}" data-id="${s.id}">
+                    <span class="queue-index">${index + 1}.</span>
+                    <button class="queue-status-btn" onclick="cycleQueueStatus(${s.id})">${statusEmoji}</button>
+                    <span class="queue-text">${s.artist} - ${s.song}</span>
+                    <button class="queue-del-btn" onclick="removeFromQueue(${s.id})">✕</button>
+                </div>`;
+            }).join('');
+            initSortable();
+        }
+
+        // 🚀 核心優化 4：使用 SortableJS 支援手機觸控拖曳
+        let sortableInstance;
+        function initSortable() {
+            const list = document.getElementById('queueList');
+            if (sortableInstance) sortableInstance.destroy();
+            
+            if (typeof Sortable === 'undefined') return; // 若 CDN 載入失敗則降級
+            
+            sortableInstance = Sortable.create(list, {
+                animation: 150,
+                handle: '.queue-index', // 只允許拖曳序號區域，避免誤觸按鈕
+                ghostClass: 'sortable-ghost',
+                chosenClass: 'sortable-chosen',
+                onEnd: function (evt) {
+                    // 更新前端序號顯示
+                    document.querySelectorAll('.queue-index').forEach((el, idx) => el.innerText = (idx + 1) + '.');
+                    // 注意：此處僅為前端視覺排序，若需永久保存順序需後端支援 update_order API
+                    showToast('🔀 順序已調整 (僅限當前頁面)', 'info', 2000);
+                }
+            });
+        }
+
+        function cycleQueueStatus(id) {
+            requireAdmin(() => {
+                const song = allSongs.find(s => s.id === id);
+                if (!song) return;
+                let nextStatus = song.status === 'queued' ? 'singing' : (song.status === 'singing' ? 'done' : (song.status === 'done' ? '' : 'queued'));
+                fetchWithRetry(API_URL, { method: 'POST', headers: {'Content-Type': 'text/plain'}, body: JSON.stringify({ action: 'update_status', id: id, status: nextStatus }) })
+                .then(result => { if (result.status === 'success') { loadPlaylistData(true); showToast('✅ 狀態已更新'); } });
+            });
+        }
+
+        function clearQueue() {
+            requireAdmin(() => {
+                if (!confirm(`確定要清空所有待唱歌曲嗎？`)) return;
+                fetchWithRetry(API_URL, { method: 'POST', headers: {'Content-Type': 'text/plain'}, body: JSON.stringify({ action: 'clear_queue' }) })
+                .then(result => { if (result.status === 'success') { showToast('🗑️ 清單已清空'); loadPlaylistData(true); } });
+            });
+        }
+
+        function addToQueue(id) {
+            requireAdmin(() => {
+                const song = allSongs.find(s => s.id === id);
+                if (!song) return;
+                if (song.status === 'queued') return showToast('這首歌已經在待唱清單裡囉！', 'info');
+                fetchWithRetry(API_URL, { method: 'POST', headers: {'Content-Type': 'text/plain'}, body: JSON.stringify({ action: 'update_status', id: id, status: 'queued' }) })
+                .then(result => { if (result.status === 'success') { showToast(`🎤 已加入待唱: ${song.song}`); loadPlaylistData(true); } });
+            });
+        }
+
+        function removeFromQueue(id) {
+            requireAdmin(() => {
+                fetchWithRetry(API_URL, { method: 'POST', headers: {'Content-Type': 'text/plain'}, body: JSON.stringify({ action: 'update_status', id: id, status: '' }) })
+                .then(result => { if (result.status === 'success') { showToast('✅ 已移出'); loadPlaylistData(true); } });
+            });
+        }
+
+        function renderRequests(requests) {
+            const list = document.getElementById('requestList');
+            hideSkeleton('requestSkeleton');
+            showElement('requestList');
+
+            const displayRequests = requests.slice(0, 15); 
+            if (displayRequests.length === 0) { list.innerHTML = '<p style="text-align:center; color:#888; padding: 20px;">目前還沒有留言，快來留言吧！</p>'; return; }
+            list.innerHTML = displayRequests.map(req => {
+                let repliesHtml = '';
+                if (req.replies && req.replies.length > 0) {
+                    repliesHtml = '<div class="replies-container">' + req.replies.map(rep => {
+                        const boxClass = rep.isOfficial ? 'official' : 'general';
+                        const prefix = rep.isOfficial ? '👑 ' : '💬 ';
+                        return `<div class="reply-box ${boxClass}"><div class="reply-header ${boxClass}"><span>${prefix}${rep.replier}</span><span style="font-size:11px; color:#888;">${rep.time} <button class="reply-del-btn" onclick="confirmDeleteReply(${rep.replyId})">🗑️</button></span></div><div>${rep.content}</div></div>`;
+                    }).join('') + '</div>';
+                }
+                return `<div class="request-item"><div class="req-header"><span class="req-nick">${req.nickname}</span><span>${req.time}</span></div><div>${req.message}</div>${repliesHtml}<div class="req-actions"><button class="req-action-btn" onclick="toggleReplyInput(${req.id})">💬 回覆</button><button class="req-action-btn" style="color:var(--danger);" onclick="confirmDeleteRequest(${req.id})">🗑️ 刪除</button></div><div id="reply-input-${req.id}" class="reply-input-area" style="display:none;"><input type="text" id="reply-nick-${req.id}" placeholder="您的暱稱" value="${localStorage.getItem('lastReplyNick') || ''}"><textarea id="reply-text-${req.id}" placeholder="輸入內容..."></textarea><div class="reply-btn-group"><button class="btn-reply-general" onclick="submitGeneralReply(${req.id})">💬 回覆</button><button class="btn-reply-official" onclick="submitOfficialReply(${req.id})">👑 官方回覆</button></div></div></div>`;
+            }).join('');
+        }
+
+        function toggleReplyInput(id) {
+            const inputArea = document.getElementById(`reply-input-${id}`);
+            if (inputArea.style.display === 'none') { document.querySelectorAll('.reply-input-area').forEach(el => el.style.display = 'none'); inputArea.style.display = 'flex'; document.getElementById(`reply-text-${id}`).focus(); } 
+            else { inputArea.style.display = 'none'; }
+        }
+        function submitGeneralReply(id) {
+            const nick = document.getElementById(`reply-nick-${id}`).value.trim();
+            const replyText = document.getElementById(`reply-text-${id}`).value.trim();
+            if (!nick || !replyText) return showToast('請填寫暱稱與內容！', 'error');
+            localStorage.setItem('lastReplyNick', nick);
+            fetchWithRetry(API_URL, { method: 'POST', headers: {'Content-Type': 'text/plain'}, body: JSON.stringify({ action: 'reply_request', id: id, replier: nick, replyContent: replyText, isOfficial: false }) })
+            .then(result => { if (result.status === 'success') { loadPlaylistData(true); showToast('✅ 回覆成功'); } });
+        }
+        function submitOfficialReply(id) {
+            requireAdmin(() => {
+                const replyText = document.getElementById(`reply-text-${id}`).value.trim();
+                if (!replyText) return showToast('請輸入內容！', 'error');
+                fetchWithRetry(API_URL, { method: 'POST', headers: {'Content-Type': 'text/plain'}, body: JSON.stringify({ action: 'reply_request', id: id, replier: ADMIN_NAME, replyContent: replyText, isOfficial: true }) })
+                .then(result => { if (result.status === 'success') { loadPlaylistData(true); showToast('✅ 官方回覆成功'); } });
+            });
+        }
+        function confirmDeleteReply(replyId) {
+            requireAdmin(() => { if (!confirm("確定刪除這則回覆？")) return; fetchWithRetry(API_URL, { method: 'POST', headers: {'Content-Type': 'text/plain'}, body: JSON.stringify({ action: 'delete_reply', replyId: replyId }) }).then(result => { loadPlaylistData(true); showToast('✅ 已刪除'); }); });
+        }
+
+        function updateArtistFilter() {
+            const select = document.getElementById('artistFilter');
+            const currentVal = select.value;
+            select.innerHTML = '<option value="all">🎤 歌手</option><option value="__sort_clicks__">🔥 熱門</option>';
+            [...new Set(allSongs.map(item => item.artist).filter(name => name))].sort().forEach(artist => { const opt = document.createElement('option'); opt.value = artist; opt.textContent = artist; select.appendChild(opt); });
+            select.value = currentVal; // 保持選擇
+        }
+        function applyFilters() {
+            const searchTerm = document.getElementById('searchInput').value.toLowerCase().trim();
+            const selectedValue = document.getElementById('artistFilter').value;
+            filteredSongs = allSongs.filter(item => {
+                const matchSearch = !searchTerm || item.artist.toLowerCase().includes(searchTerm) || item.song.toLowerCase().includes(searchTerm) || (item.tags||'').toLowerCase().includes(searchTerm);
+                return matchSearch && (selectedValue === 'all' || selectedValue === '__sort_clicks__' || item.artist === selectedValue);
+            });
+            if (selectedValue === '__sort_clicks__') filteredSongs.sort((a, b) => (b.clicks || 0) - (a.clicks || 0));
+            renderPlaylist(filteredSongs);
+        }
+        
+        function renderPlaylist(songs) {
+            const tbody = document.getElementById('playlistBody'); tbody.innerHTML = ''; document.getElementById('songCount').innerText = songs.length;
+            hideSkeleton('skeletonLoader');
+            showElement('playlistTable');
+
+            if (!songs || songs.length === 0) { tbody.innerHTML = '<tr><td colspan="4" style="text-align:center; padding:20px;">🎵 找不到符合條件的歌曲</td></tr>'; return; }
+            songs.forEach(item => {
+                const tr = document.createElement('tr');
+                let displayLink = item.link || `https://www.youtube.com/results?search_query=${encodeURIComponent((item.artist||'')+' '+(item.song||''))}`;
+                const tagsHtml = item.tags ? item.tags.split(',').map(t => `<span class="tag-badge">${t.trim()}</span>`).join('') : '';
+                tr.innerHTML = `
+                    <td data-label="歌手">${item.artist}<br>${tagsHtml}</td>
+                    <td data-label="歌曲名稱"><span class="clickable-title" onclick="addToQueue(${item.id})">${item.song}</span></td>
+                    <td data-label="試聽"><a href="${displayLink}" target="_blank" class="listen-link" style="color:var(--primary); text-decoration:none; font-weight:bold;" onclick="recordClick(${item.id})">🎵 試聽</a> <span style="font-size:12px; color:#888;">(${item.clicks || 0})</span></td>
+                    <td data-label="操作">
+                        <div class="action-btns">
+                            <button class="btn-sm btn-edit" onclick="editSong(${item.id})">✏️</button>
+                            <button class="btn-sm btn-del" onclick="confirmDelete(${item.id})">🗑️</button>
+                        </div>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        function recordClick(id) { fetchWithRetry(API_URL, { method: 'POST', headers: {'Content-Type': 'text/plain'}, body: JSON.stringify({ action: 'click', id: id }) }).catch(()=>{}); }
+        
+        function pickRandomSong() {
+            if (allSongs.length === 0) return showToast('目前沒有歌曲！', 'error');
+            const randomSong = allSongs[Math.floor(Math.random() * allSongs.length)];
+            let link = randomSong.link || `https://www.youtube.com/results?search_query=${encodeURIComponent((randomSong.artist||'')+' '+(randomSong.song||''))}`;
+            document.getElementById('randomSongInfo').innerHTML = `🎤 ${randomSong.artist}<br>🎵 ${randomSong.song}`;
+            document.getElementById('randomSongLink').href = link; 
+            document.getElementById('randomModal').style.display = 'flex';
+            if (randomSong.status !== 'queued') {
+                fetchWithRetry(API_URL, { method: 'POST', headers: {'Content-Type': 'text/plain'}, body: JSON.stringify({ action: 'update_status', id: randomSong.id, status: 'queued' }) })
+                .then(result => { if (result.status === 'success') { showToast(`🎲 抽中！已自動加入待唱清單`, 'success'); loadPlaylistData(true); } });
+            } else { showToast(`🎲 這首歌已經在待唱清單裡囉！`, 'info'); }
+        }
+
+        function addSong() {
+            requireAdmin(() => {
+                const artist = document.getElementById('artist').value.trim(); const song = document.getElementById('song').value.trim(); const tags = document.getElementById('tags').value.trim();
+                if (!artist || !song) return showToast('請填寫歌手和歌曲名稱！', 'error');
+                const btn = document.getElementById('addBtn'); btn.disabled = true; btn.innerText = '新增中...';
+                fetchWithRetry(API_URL, { method: 'POST', headers: {'Content-Type': 'text/plain'}, body: JSON.stringify({ action: 'add', artist, song, link: '', tags }) })
+                .then(result => { btn.disabled = false; btn.innerText = '✨ 確認新增至雲端'; if (result.status === 'success') { document.getElementById('artist').value = ''; document.getElementById('song').value = ''; document.getElementById('tags').value = ''; toggleAddForm(); loadPlaylistData(true); showToast('✅ 新增成功！'); } })
+                .catch(() => { btn.disabled = false; btn.innerText = '✨ 確認新增至雲端'; showToast('❌ 新增失敗，請重試', 'error'); });
+            });
+        }
+        function batchAddSongs() {
+            requireAdmin(() => {
+                const input = document.getElementById('batchInput').value.trim(); if (!input) return showToast('請貼上歌曲清單！', 'error');
+                const lines = input.split('\n').filter(line => line.trim() !== '');
+                const songsToAdd = lines.map(line => { const parts = line.includes(',') ? line.split(',') : line.split(/\s+/); return { artist: parts[0].trim(), song: parts.slice(1).join(' ').trim(), link: '' }; }).filter(s => s.artist && s.song);
+                if (songsToAdd.length === 0) return showToast('格式錯誤！', 'error');
+                const btn = document.getElementById('batchBtn'); btn.disabled = true; btn.innerText = '上傳中...';
+                fetchWithRetry(API_URL, { method: 'POST', headers: {'Content-Type': 'text/plain'}, body: JSON.stringify({ action: 'batch_add', songs: songsToAdd }) })
+                .then(result => { btn.disabled = false; btn.innerText = '🚀 批量上傳至雲端'; if (result.status === 'success') { document.getElementById('batchInput').value = ''; toggleAddForm(); loadPlaylistData(true); showToast(`✅ 成功新增 ${songsToAdd.length} 首歌曲`); } })
+                .catch(() => { btn.disabled = false; btn.innerText = '🚀 批量上傳至雲端'; showToast('❌ 上傳失敗，請重試', 'error'); });
+            });
+        }
+        function editSong(id) {
+            requireAdmin(() => {
+                const item = allSongs.find(s => s.id === id);
+                if (!item) return;
+                const newArtist = prompt("修改歌手名稱：", item.artist); if (!newArtist) return;
+                const newSong = prompt("修改歌曲名稱：", item.song); if (!newSong) return;
+                const newTags = prompt("修改標籤：", item.tags || ""); if (newTags === null) return;
+                fetchWithRetry(API_URL, { method: 'POST', headers: {'Content-Type': 'text/plain'}, body: JSON.stringify({ action: 'edit', id, artist: newArtist.trim(), song: newSong.trim(), link: item.link || '', tags: newTags.trim() }) })
+                .then(result => { loadPlaylistData(true); showToast('✅ 編輯成功！'); });
+            });
+        }
+        function confirmDelete(id) {
+            requireAdmin(() => { 
+                const item = allSongs.find(s => s.id === id);
+                if (!item) return;
+                if (!confirm(`確定刪除「${item.artist} - ${item.song}」嗎？`)) return; 
+                fetchWithRetry(API_URL, { method: 'POST', headers: {'Content-Type': 'text/plain'}, body: JSON.stringify({ action: 'delete', id }) }).then(result => { loadPlaylistData(true); showToast('✅ 刪除成功！'); }); 
+            });
+        }
+        function confirmDeleteRequest(id) {
+            requireAdmin(() => { 
+                if (!confirm(`確定刪除這則留言嗎？`)) return; 
+                fetchWithRetry(API_URL, { method: 'POST', headers: {'Content-Type': 'text/plain'}, body: JSON.stringify({ action: 'delete_request', id: id }) }).then(result => { loadPlaylistData(true); showToast('✅ 已刪除'); }); 
+            });
+        }
+        function submitRequest() {
+            const nick = document.getElementById('reqNick').value.trim() || '匿名訪客'; const msg = document.getElementById('reqMessage').value.trim();
+            if (!msg) return showToast('請輸入內容！', 'error');
+            const btn = event.target; btn.disabled = true; btn.innerText = '送出中...';
+            fetchWithRetry(API_URL, { method: 'POST', headers: {'Content-Type': 'text/plain'}, body: JSON.stringify({ action: 'add_request', nickname: nick, message: msg }) })
+            .then(result => { btn.disabled = false; btn.innerText = '送出'; if (result.status === 'success') { document.getElementById('reqMessage').value = ''; document.getElementById('reqNick').value = ''; loadPlaylistData(true); showToast('✅ 留言成功'); } })
+            .catch(() => { btn.disabled = false; btn.innerText = '送出'; showToast('❌ 留言失敗，請重試', 'error'); });
+        }
+        function exportCSV() {
+            requireAdmin(() => {
+                if (filteredSongs.length === 0) return showToast('沒有資料！', 'error');
+                let csvContent = "\uFEFF歌手,歌曲名稱,YouTube連結,點擊次數,標籤,狀態\n";
+                filteredSongs.forEach(item => { csvContent += `"${item.artist}","${item.song}","${item.link||''}",${item.clicks||0},"${item.tags||''}","${item.status||''}"\n`; });
+                const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' }); const url = URL.createObjectURL(blob); const a = document.createElement('a');
+                a.href = url; a.download = `歌單匯出_${new Date().toISOString().slice(0,10)}.csv`; a.click(); showToast('📥 CSV 已匯出！');
+            });
+        }
+
+        // 🚀 核心優化 5：靜默自動同步 (多人即時更新)
+        let syncInterval;
+        function startAutoSync() {
+            if (syncInterval) clearInterval(syncInterval);
+            syncInterval = setInterval(() => {
+                if (document.visibilityState === 'visible') {
+                    loadPlaylistData(false); // 靜默更新，不彈 Toast
+                }
+            }, 30000); // 每 30 秒同步一次
+        }
+
+        function loadPlaylistData(isManual = false) {
+            // 顯示骨架屏 (僅在手動刷新或初次載入時)
+            if (isManual || allSongs.length === 0) {
+                document.getElementById('skeletonLoader').classList.add('active');
+                document.getElementById('skeletonLoader').style.display = '';
+                document.getElementById('playlistTable').style.display = 'none';
+            }
+
+            fetchWithRetry(API_URL)
+                .then(result => {
+                    renderAllData(result, false);
+                })
+                .catch(error => {
+                    if (isManual) showToast('❌ 網路不穩，已顯示本地快取', 'error');
+                    console.error('Fetch error:', error);
+                });
+        }
+
+        function manualRefresh() {
+            showToast('🔄 正在重新整理...', 'info', 1500);
+            loadPlaylistData(true);
+        }
+
+        // 🆕 下拉重新整理邏輯
+        let touchStartY = 0;
+        let isPulling = false;
+        const pullIndicator = document.getElementById('pullRefreshIndicator');
+        const pullText = document.getElementById('pullText');
+
+        document.addEventListener('touchstart', (e) => {
+            if (window.scrollY === 0) {
+                touchStartY = e.touches[0].clientY;
+            }
+        });
+
+        document.addEventListener('touchmove', (e) => {
+            if (window.scrollY === 0 && e.touches[0].clientY - touchStartY > 50) {
+                isPulling = true;
+                pullIndicator.classList.add('active');
+                pullText.innerText = '放開即可重新整理...';
+            }
+        });
+
+        document.addEventListener('touchend', () => {
+            if (isPulling) {
+                pullText.innerText = '正在重新整理...';
+                manualRefresh();
+                setTimeout(() => {
+                    pullIndicator.classList.remove('active');
+                    isPulling = false;
+                }, 1000);
+            }
+        });
+
+        document.addEventListener('keydown', (e) => { if (e.key === 'Escape') { document.getElementById('randomModal').style.display = 'none'; document.getElementById('helpModal').style.display = 'none'; if (document.getElementById('addFormContainer').style.display === 'block') toggleAddForm(); } });
+        window.addEventListener('scroll', () => { document.getElementById('scrollTopBtn').style.display = window.scrollY > 300 ? 'flex' : 'none'; });
+        
+        document.addEventListener('DOMContentLoaded', () => {
+            // 如果沒有快取，則進行初次載入
+            if (allSongs.length === 0) {
+                loadPlaylistData(true);
+            } else {
+                // 有快取時，背景靜默更新最新資料
+                loadPlaylistData(false); 
+            }
+            startAutoSync(); // 啟動自動同步
+        });
+
+        // 頁面重新可見時，立即同步一次
+        document.addEventListener('visibilitychange', () => {
+            if (document.visibilityState === 'visible') {
+                loadPlaylistData(false);
+            }
+        });
+    </script>
+</body>
+</html>
