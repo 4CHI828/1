@@ -93,19 +93,29 @@
         .btn-queue { padding: 8px 16px; border-radius: 10px; border: none; cursor: pointer; font-weight: 600; background: var(--danger); color: white; transition: var(--transition); }
         .btn-queue:hover { background: #ee5253; transform: translateY(-2px); box-shadow: 0 4px 10px rgba(255, 118, 117, 0.3); }
 
-        .queue-list { display: flex; flex-direction: column; gap: 12px; max-height: 350px; overflow-y: auto; padding-right: 5px; }
-        .queue-item { background: rgba(255,255,255,0.8); padding: 14px 18px; border-radius: var(--radius-md); font-size: 15px; display: flex; align-items: center; gap: 12px; transition: transform 0.2s; }
+        /* 🆕 待唱清單分區樣式 */
+        .queue-list { display: flex; flex-direction: column; gap: 8px; max-height: 500px; overflow-y: auto; padding-right: 5px; }
+        .queue-item { background: rgba(255,255,255,0.8); padding: 14px 18px; border-radius: var(--radius-md); font-size: 15px; display: flex; align-items: center; gap: 12px; transition: all 0.3s ease; border: 1px solid transparent; }
         .queue-item:hover { transform: translateX(5px); background: rgba(255,255,255,0.95); box-shadow: var(--shadow-sm); }
         .queue-item.sortable-ghost { opacity: 0.4; background: var(--border); border: 2px dashed var(--primary); }
         .queue-item.sortable-chosen { box-shadow: var(--shadow-lg); transform: scale(1.02); }
         
         body.dark-mode .queue-item { background: rgba(0,0,0,0.3); color: #e0e0e0; }
-        .queue-item.singing { background: rgba(255,107,107,0.15); border-color: var(--primary); animation: pulse-queue 2s infinite; }
-        .queue-item.done { opacity: 0.6; text-decoration: line-through; background: rgba(85, 239, 196, 0.1); border-color: var(--success); }
-        @keyframes pulse-queue { 0%, 100% { box-shadow: 0 0 0 0 rgba(255,107,107,0.4); } 50% { box-shadow: 0 0 0 8px rgba(255,107,107,0); } }
+        
+        /* 🆕 正在演唱的歌曲 - 強烈高亮 */
+        .queue-item.singing { 
+            background: rgba(255,107,107,0.15); 
+            border: 2px solid var(--primary); 
+            box-shadow: 0 0 20px rgba(255,107,107,0.3);
+            animation: pulse-queue 2s infinite;
+        }
+        .queue-item.done { opacity: 0.55; text-decoration: line-through; background: rgba(85, 239, 196, 0.08); border-color: var(--success); }
+        .queue-item.queued { background: rgba(255,255,255,0.8); }
+        
+        @keyframes pulse-queue { 0%, 100% { box-shadow: 0 0 20px rgba(255,107,107,0.3); } 50% { box-shadow: 0 0 30px rgba(255,107,107,0.6); } }
         
         .queue-index { 
-            font-weight: 800; color: var(--primary); min-width: 24px; font-size: 14px; 
+            font-weight: 800; color: var(--primary); min-width: 28px; font-size: 14px; 
             cursor: grab; padding: 5px; border-radius: 50%; 
             background: rgba(255,107,107,0.1); text-align: center;
         }
@@ -113,9 +123,49 @@
         
         .queue-status-btn { background: none; border: none; font-size: 20px; cursor: pointer; transition: var(--transition); }
         .queue-status-btn:hover { transform: scale(1.3); }
+        .queue-status-emoji { font-size: 20px; min-width: 28px; text-align: center; } /* 🆕 非管理員顯示的靜態 emoji */
+        
         .queue-text { flex: 1; font-weight: 600; }
         .queue-del-btn { background: none; border: none; color: #b2bec3; cursor: pointer; border-radius: 50%; transition: var(--transition); width: 30px; height: 30px; display: flex; align-items: center; justify-content: center; }
         .queue-del-btn:hover { color: white; background-color: var(--danger); }
+
+        /* 🆕 統計資訊列 */
+        .queue-stats {
+            display: flex; gap: 10px; font-size: 12px; 
+            color: var(--text-color); margin-bottom: 15px; flex-wrap: wrap;
+        }
+        .queue-stats span { 
+            padding: 5px 12px; background: var(--bg-color); 
+            border-radius: 20px; border: 1px solid var(--border);
+            font-weight: 600;
+        }
+        .queue-stats .stat-singing { background: rgba(255,107,107,0.15); color: var(--primary); border-color: var(--primary); }
+        .queue-stats .stat-queued { background: rgba(72,219,251,0.1); color: #0984e3; border-color: #48dbfb; }
+        .queue-stats .stat-done { background: rgba(85,239,196,0.1); color: #00b894; border-color: #55efc4; }
+        body.dark-mode .queue-stats .stat-queued { color: #48dbfb; }
+        body.dark-mode .queue-stats .stat-done { color: #55efc4; }
+
+        /* 🆕 分區標題 */
+        .queue-section { margin-bottom: 12px; }
+        .queue-section-title { 
+            font-size: 12px; font-weight: 700; 
+            margin-bottom: 8px; padding: 6px 12px; 
+            border-radius: 8px;
+            display: flex; align-items: center; gap: 6px;
+            letter-spacing: 0.5px;
+        }
+        .queue-section-title.singing { background: rgba(255,107,107,0.15); color: var(--primary); }
+        .queue-section-title.queued { background: rgba(72,219,251,0.1); color: #0984e3; }
+        .queue-section-title.done { background: rgba(85,239,196,0.1); color: #00b894; }
+        body.dark-mode .queue-section-title.queued { color: #48dbfb; }
+        body.dark-mode .queue-section-title.done { color: #55efc4; }
+
+        /* 🆕 新歌曲淡入動畫 */
+        @keyframes fadeInQueue {
+            from { opacity: 0; transform: translateX(-20px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+        .queue-item.new-item { animation: fadeInQueue 0.5s ease-out; }
 
         table { width: 100%; border-collapse: separate; border-spacing: 0; background: var(--card-bg); border-radius: var(--radius-lg); overflow: hidden; box-shadow: var(--shadow-md); border: 1px solid var(--border); }
         th, td { padding: 18px; text-align: left; border-bottom: 1px solid var(--border); }
@@ -286,7 +336,7 @@
         <div class="queue-header">
             <div class="queue-heading">
                 <div class="queue-title">🎤 待唱清單 (<span id="queueCount">0</span> 首)</div>
-                <div class="queue-sort-hint">💡 拖曳歌曲可調整順序 | 點擊待唱項前的 Emoji 切換：⏳排隊 ➔ 🎤演唱 ➔ ✅已唱 ➔ 移出</div>
+                <div class="queue-sort-hint">💡 管理員可拖曳歌曲調整順序 | 點擊 Emoji 切換狀態</div>
             </div>
             <button class="btn-queue" onclick="clearQueue()">🗑️ 清空清單</button>
         </div>
@@ -294,9 +344,7 @@
             <div class="skeleton-row"><div class="skeleton-cell" style="width:10%"></div><div class="skeleton-cell" style="width:10%"></div><div class="skeleton-cell" style="width:60%"></div><div class="skeleton-cell" style="width:20%"></div></div>
             <div class="skeleton-row"><div class="skeleton-cell" style="width:10%"></div><div class="skeleton-cell" style="width:10%"></div><div class="skeleton-cell" style="width:60%"></div><div class="skeleton-cell" style="width:20%"></div></div>
         </div>
-        <div id="queueList" class="queue-list" style="display:none;">
-            <div class="queue-empty" style="text-align:center; color:#888; padding:10px;">目前沒有待唱歌曲，點擊下方歌單的「歌曲名稱」即可加入！</div>
-        </div>
+        <div id="queueList" class="queue-list" style="display:none;"></div>
     </div>
 
     <h3 style="margin-left:10px; font-weight:800; color:var(--text-color);">🎵 目前歌單 (<span id="songCount">0</span> 首)</h3>
@@ -378,8 +426,8 @@
             <h2 style="color:var(--primary); margin-top:0; font-weight:800;">📖 系統功能說明</h2>
             <div style="text-align:left; line-height:1.8; font-size:15px; margin:20px 0;">
                 <p>🎲 <b>隨機選歌</b>：抽中後歌曲將<span style="color:var(--primary)">自動加入</span>待唱清單！</p>
-                <p>🎤 <b>待唱清單</b>：點擊歌單中的「歌曲名稱」即可加入排隊。支持<span style="color:var(--primary)">拖曳歌曲</span>直接調整演唱順序。</p>
-                <p>🔄 <b>狀態切換</b>：點擊待唱項前的 Emoji 切換：⏳排隊 ➔ 🎤演唱 ➔ ✅已唱 ➔ 移出。</p>
+                <p>🎤 <b>待唱清單</b>：點擊歌單中的「歌曲名稱」即可加入排隊。管理員可<span style="color:var(--primary)">拖曳歌曲</span>調整順序。</p>
+                <p>🔄 <b>狀態切換</b>：管理員點擊 Emoji 切換：⏳排隊 ➔ 🎤演唱 ➔ ✅已唱 ➔ 移出。</p>
                 <p>🎵 <b>試聽功能</b>：若歌曲無特定連結，點擊試聽將<span style="color:var(--primary)">自動跳轉至 YouTube 搜索</span>該歌曲。</p>
                 <p>🔐 <b>管理員</b>：登入後可直接編輯歌曲、刪除留言或清空清單。</p>
             </div>
@@ -566,9 +614,16 @@
             }
         }
 
+        // 🆕 改進的 renderQueuePanel - 分區顯示 + 統計資訊
         function renderQueuePanel() {
             const queueSongs = allSongs.filter(s => s.status && s.status !== '');
             queueSongs.sort((a, b) => (a.queueTime || 0) - (b.queueTime || 0)); 
+            
+            // 🆕 分類統計
+            const singingSongs = queueSongs.filter(s => s.status === 'singing');
+            const queuedSongs = queueSongs.filter(s => s.status === 'queued');
+            const doneSongs = queueSongs.filter(s => s.status === 'done');
+            
             document.getElementById('queueCount').innerText = queueSongs.length;
             const listEl = document.getElementById('queueList');
             
@@ -576,33 +631,92 @@
             showElement('queueList');
 
             if (queueSongs.length === 0) { 
-                listEl.innerHTML = '<div class="queue-empty" style="text-align:center; color:#888; padding:10px;">目前沒有待唱歌曲，點擊下方歌單的「歌曲名稱」即可加入！</div>';
+                listEl.innerHTML = '<div class="queue-empty" style="text-align:center; color:#888; padding:30px 10px;"><div style="font-size:40px; margin-bottom:10px;">🎵</div>目前沒有待唱歌曲<br><small style="color:#aaa;">點擊下方歌單的「歌曲名稱」即可加入！</small></div>';
                 return; 
             }
             
             const isAdminMode = isAdmin();
-            listEl.innerHTML = queueSongs.map((s, index) => {
-                const statusEmoji = {'queued': '⏳', 'singing': '🎤', 'done': '✅'}[s.status];
-                const delBtn = isAdminMode ? `<button class="queue-del-btn" onclick="removeFromQueue('${s.id}')">✕</button>` : '';
-                
-                return `<div class="queue-item ${s.status}" data-id="${s.id}">
-                    <span class="queue-index">${index + 1}.</span>
-                    <button class="queue-status-btn" onclick="cycleQueueStatus('${s.id}')">${statusEmoji}</button>
-                    <span class="queue-text">${s.artist} - ${s.song}</span>
-                    ${delBtn}
-                </div>`;
-            }).join('');
-            initSortable();
+            let html = '';
+            
+            // 🆕 統計資訊列
+            html += `<div class="queue-stats">
+                <span class="stat-singing">🎤 演唱中 ${singingSongs.length}</span>
+                <span class="stat-queued">⏳ 排隊中 ${queuedSongs.length}</span>
+                <span class="stat-done">✅ 已完成 ${doneSongs.length}</span>
+            </div>`;
+            
+            let currentIndex = 1;
+            
+            // 🆕 正在演唱區域
+            if (singingSongs.length > 0) {
+                html += '<div class="queue-section">';
+                html += '<div class="queue-section-title singing">🎤 正在演唱</div>';
+                singingSongs.forEach(s => {
+                    html += renderQueueItem(s, currentIndex, isAdminMode);
+                    currentIndex++;
+                });
+                html += '</div>';
+            }
+            
+            // 🆕 排隊中區域
+            if (queuedSongs.length > 0) {
+                html += '<div class="queue-section">';
+                html += '<div class="queue-section-title queued">⏳ 排隊中</div>';
+                queuedSongs.forEach(s => {
+                    html += renderQueueItem(s, currentIndex, isAdminMode);
+                    currentIndex++;
+                });
+                html += '</div>';
+            }
+            
+            // 🆕 已完成區域
+            if (doneSongs.length > 0) {
+                html += '<div class="queue-section">';
+                html += '<div class="queue-section-title done">✅ 已完成 (' + doneSongs.length + ')</div>';
+                doneSongs.forEach(s => {
+                    html += renderQueueItem(s, currentIndex, isAdminMode);
+                    currentIndex++;
+                });
+                html += '</div>';
+            }
+            
+            listEl.innerHTML = html;
+            initSortable(isAdminMode); // 🆕 只有管理員啟用拖曳
+            
+            // 🆕 自動滾動到正在演唱的歌曲
+            setTimeout(() => scrollToCurrentSong(), 300);
         }
 
+        // 🆕 渲染單個待唱項目
+        function renderQueueItem(song, index, isAdminMode) {
+            const statusEmoji = {'queued': '⏳', 'singing': '🎤', 'done': '✅'}[song.status];
+            const delBtn = isAdminMode ? `<button class="queue-del-btn" onclick="removeFromQueue('${song.id}')" title="移出清單">✕</button>` : '';
+            
+            // 🆕 管理員顯示可點擊的狀態按鈕，非管理員顯示靜態 emoji
+            const statusBtn = isAdminMode 
+                ? `<button class="queue-status-btn" onclick="cycleQueueStatus('${song.id}')" title="切換狀態">${statusEmoji}</button>` 
+                : `<span class="queue-status-emoji">${statusEmoji}</span>`;
+            
+            return `<div class="queue-item ${song.status}" data-id="${song.id}">
+                <span class="queue-index">${index}.</span>
+                ${statusBtn}
+                <span class="queue-text">${song.artist} - ${song.song}</span>
+                ${delBtn}
+            </div>`;
+        }
+
+        // 🆕 改進的 initSortable - 只有管理員啟用拖曳
         let sortableInstance;
-        function initSortable() {
+        function initSortable(enableDrag) {
             const list = document.getElementById('queueList');
-            if (sortableInstance) sortableInstance.destroy();
-            if (typeof Sortable === 'undefined') return; 
+            if (sortableInstance) {
+                sortableInstance.destroy();
+                sortableInstance = null;
+            }
+            if (!enableDrag || typeof Sortable === 'undefined') return; 
             
             sortableInstance = Sortable.create(list, {
-                animation: 150,
+                animation: 200,
                 handle: '.queue-index', 
                 ghostClass: 'sortable-ghost',
                 chosenClass: 'sortable-chosen',
@@ -611,6 +725,14 @@
                     saveQueueOrder(); 
                 }
             });
+        }
+
+        // 🆕 自動滾動到正在演唱的歌曲
+        function scrollToCurrentSong() {
+            const currentSong = document.querySelector('.queue-item.singing');
+            if (currentSong) {
+                currentSong.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
         }
 
         function saveQueueOrder() {
@@ -627,13 +749,20 @@
             .catch(err => { showToast('❌ 順序同步失敗', 'error'); console.error(err); });
         }
 
+        // 🆕 狀態切換後顯示明確提示
         function cycleQueueStatus(id) {
             requireAdmin(() => {
                 const song = allSongs.find(s => String(s.id) === String(id));
                 if (!song) return;
                 let nextStatus = song.status === 'queued' ? 'singing' : (song.status === 'singing' ? 'done' : (song.status === 'done' ? '' : 'queued'));
                 fetchWithRetry(API_URL, { method: 'POST', headers: {'Content-Type': 'text/plain'}, body: JSON.stringify({ action: 'update_status', id: String(id), status: nextStatus }) })
-                .then(result => { if (result.status === 'success') { loadPlaylistData(true); showToast('✅ 狀態已更新'); } })
+                .then(result => { 
+                    if (result.status === 'success') { 
+                        loadPlaylistData(true); 
+                        const statusMap = {'queued': '⏳ 排隊中', 'singing': '🎤 演唱中', 'done': '✅ 已完成', '': '已移出'};
+                        showToast(`${song.song} → ${statusMap[nextStatus] || '已移出'}`, 'success', 2000);
+                    } 
+                })
                 .catch(err => { showToast('❌ 更新失敗，請重試', 'error'); console.error(err); });
             });
         }
@@ -647,10 +776,22 @@
             });
         }
 
+        // 🆕 改進的 addToQueue - 顯示位置提示
         function addToQueue(id) {
             const song = allSongs.find(s => String(s.id) === String(id));
             if (!song) return;
-            if (song.status === 'queued') return showToast('這首歌已經在待唱清單裡囉！', 'info');
+            
+            // 🆕 如果已在待唱清單，顯示位置
+            if (song.status === 'queued' || song.status === 'singing' || song.status === 'done') {
+                const queueSongs = allSongs.filter(s => s.status === 'queued' || s.status === 'singing' || s.status === 'done');
+                queueSongs.sort((a, b) => (a.queueTime || 0) - (b.queueTime || 0));
+                const position = queueSongs.findIndex(s => String(s.id) === String(id)) + 1;
+                let statusText = '';
+                if (song.status === 'singing') statusText = '正在演唱中';
+                else if (song.status === 'done') statusText = '已完成';
+                else statusText = `排隊中第 ${position} 位`;
+                return showToast(`📍 ${song.song} 已${statusText}`, 'info', 2500);
+            }
             
             fetchWithRetry(API_URL, { method: 'POST', headers: {'Content-Type': 'text/plain'}, body: JSON.stringify({ action: 'update_status', id: String(id), status: 'queued' }) })
             .then(result => { 
