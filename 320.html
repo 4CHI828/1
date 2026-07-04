@@ -93,8 +93,14 @@
         .btn-queue { padding: 8px 16px; border-radius: 10px; border: none; cursor: pointer; font-weight: 600; background: var(--danger); color: white; transition: var(--transition); }
         .btn-queue:hover { background: #ee5253; transform: translateY(-2px); box-shadow: 0 4px 10px rgba(255, 118, 117, 0.3); }
 
-        .queue-list { display: flex; flex-direction: column; gap: 8px; max-height: 500px; overflow-y: auto; padding-right: 5px; }
-        .queue-item { background: rgba(255,255,255,0.8); padding: 14px 18px; border-radius: var(--radius-md); font-size: 15px; display: flex; align-items: center; gap: 12px; transition: all 0.3s ease; border: 1px solid transparent; }
+        /* 🐛 修正：移除 flex 佈局，避免 queue-list 覆蓋下方主歌單 */
+        .queue-list { 
+            max-height: 500px; 
+            overflow-y: auto; 
+            padding-right: 5px; 
+        }
+        .queue-item { background: rgba(255,255,255,0.8); padding: 14px 18px; border-radius: var(--radius-md); font-size: 15px; display: flex; align-items: center; gap: 12px; transition: all 0.3s ease; border: 1px solid transparent; margin-bottom: 8px; }
+        .queue-item:last-child { margin-bottom: 0; }
         .queue-item:hover { transform: translateX(5px); background: rgba(255,255,255,0.95); box-shadow: var(--shadow-sm); }
         .queue-item.sortable-ghost { opacity: 0.4; background: var(--border); border: 2px dashed var(--primary); }
         .queue-item.sortable-chosen { box-shadow: var(--shadow-lg); transform: scale(1.02); }
@@ -155,6 +161,13 @@
         .queue-section-title.done { background: rgba(85,239,196,0.1); color: #00b894; }
         body.dark-mode .queue-section-title.queued { color: #48dbfb; }
         body.dark-mode .queue-section-title.done { color: #55efc4; }
+
+        /* 排隊中區塊的獨立容器（供 SortableJS 拖曳使用，保留 flex 佈局） */
+        .queue-queued-list {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
 
         @keyframes fadeInQueue {
             from { opacity: 0; transform: translateX(-20px); }
@@ -331,7 +344,7 @@
         <div class="queue-header">
             <div class="queue-heading">
                 <div class="queue-title">🎤 待唱清單 (<span id="queueCount">0</span> 首)</div>
-                <div class="queue-sort-hint">💡 管理員可拖曳歌曲調整順序 | 點擊 Emoji 切換狀態</div>
+                <div class="queue-sort-hint">💡 管理員可拖曳「排隊中」的歌曲調整順序 | 點擊 Emoji 切換狀態</div>
             </div>
             <button class="btn-queue" onclick="clearQueue()">🗑️ 清空清單</button>
         </div>
@@ -421,7 +434,7 @@
             <h2 style="color:var(--primary); margin-top:0; font-weight:800;">📖 系統功能說明</h2>
             <div style="text-align:left; line-height:1.8; font-size:15px; margin:20px 0;">
                 <p>🎲 <b>隨機選歌</b>：抽中後歌曲將<span style="color:var(--primary)">自動加入</span>待唱清單！</p>
-                <p>🎤 <b>待唱清單</b>：點擊歌單中的「歌曲名稱」即可加入排隊。管理員可<span style="color:var(--primary)">拖曳歌曲</span>調整順序。</p>
+                <p>🎤 <b>待唱清單</b>：點擊歌單中的「歌曲名稱」即可加入排隊。管理員可<span style="color:var(--primary)">拖曳「排隊中」的歌曲</span>調整順序。</p>
                 <p>🔄 <b>狀態切換</b>：管理員點擊 Emoji 切換：⏳排隊 ➔ 🎤演唱 ➔ ✅已唱 ➔ 移出。</p>
                 <p>🎵 <b>試聽功能</b>：若歌曲無特定連結，點擊試聽將<span style="color:var(--primary)">自動跳轉至 YouTube 搜索</span>該歌曲。</p>
                 <p>🔐 <b>管理員</b>：登入後可直接編輯歌曲、刪除留言或清空清單。</p>
@@ -609,21 +622,19 @@
             }
         }
 
-        // 🐛 修正：多重排序條件，確保順序穩定且狀態分組正確
+        let isFirstQueueRender = true;
+        
         function renderQueuePanel() {
             const queueSongs = allSongs.filter(s => s.status && s.status !== '');
             
             queueSongs.sort((a, b) => {
-                // 第一優先：狀態排序 (singing > queued > done)
                 const statusOrder = { 'singing': 0, 'queued': 1, 'done': 2 };
                 if (statusOrder[a.status] !== statusOrder[b.status]) {
                     return statusOrder[a.status] - statusOrder[b.status];
                 }
-                // 第二優先：queueTime 排序
                 if ((a.queueTime || 0) !== (b.queueTime || 0)) {
                     return (a.queueTime || 0) - (b.queueTime || 0);
                 }
-                // 第三優先：ID 排序，確保完全相同的時間也有穩定順序
                 return String(a.id).localeCompare(String(b.id));
             });
             
@@ -639,6 +650,7 @@
 
             if (queueSongs.length === 0) { 
                 listEl.innerHTML = '<div class="queue-empty" style="text-align:center; color:#888; padding:30px 10px;"><div style="font-size:40px; margin-bottom:10px;">🎵</div>目前沒有待唱歌曲<br><small style="color:#aaa;">點擊下方歌單的「歌曲名稱」即可加入！</small></div>';
+                isFirstQueueRender = true;
                 return; 
             }
             
@@ -666,10 +678,12 @@
             if (queuedSongs.length > 0) {
                 html += '<div class="queue-section">';
                 html += '<div class="queue-section-title queued">⏳ 排隊中</div>';
+                html += '<div class="queue-queued-list" id="queue-queued-list">';
                 queuedSongs.forEach(s => {
                     html += renderQueueItem(s, currentIndex, isAdminMode);
                     currentIndex++;
                 });
+                html += '</div>';
                 html += '</div>';
             }
             
@@ -686,7 +700,10 @@
             listEl.innerHTML = html;
             initSortable(isAdminMode);
             
-            setTimeout(() => scrollToCurrentSong(), 300);
+            if (isFirstQueueRender && singingSongs.length > 0) {
+                setTimeout(() => scrollToCurrentSong(), 300);
+                isFirstQueueRender = false;
+            }
         }
 
         function renderQueueItem(song, index, isAdminMode) {
@@ -707,12 +724,12 @@
 
         let sortableInstance;
         function initSortable(enableDrag) {
-            const list = document.getElementById('queueList');
+            const list = document.getElementById('queue-queued-list');
             if (sortableInstance) {
                 sortableInstance.destroy();
                 sortableInstance = null;
             }
-            if (!enableDrag || typeof Sortable === 'undefined') return; 
+            if (!enableDrag || !list || typeof Sortable === 'undefined') return; 
             
             sortableInstance = Sortable.create(list, {
                 animation: 200,
@@ -720,8 +737,18 @@
                 ghostClass: 'sortable-ghost',
                 chosenClass: 'sortable-chosen',
                 onEnd: function (evt) {
-                    document.querySelectorAll('.queue-index').forEach((el, idx) => el.innerText = (idx + 1) + '.');
+                    updateQueueIndexes();
                     saveQueueOrder(); 
+                }
+            });
+        }
+
+        function updateQueueIndexes() {
+            const allItems = document.querySelectorAll('#queueList .queue-item');
+            allItems.forEach((el, idx) => {
+                const indexEl = el.querySelector('.queue-index');
+                if (indexEl) {
+                    indexEl.innerText = (idx + 1) + '.';
                 }
             });
         }
@@ -734,8 +761,8 @@
         }
 
         function saveQueueOrder() {
-            const items = document.querySelectorAll('#queueList .queue-item');
-            const ids = Array.from(items).map(item => item.getAttribute('data-id')); 
+            const allQueueItems = document.querySelectorAll('#queueList .queue-item');
+            const ids = Array.from(allQueueItems).map(item => item.getAttribute('data-id')); 
             if (ids.length === 0) return;
 
             fetchWithRetry(API_URL, { 
@@ -753,7 +780,6 @@
                 if (!song) return;
                 let nextStatus = song.status === 'queued' ? 'singing' : (song.status === 'singing' ? 'done' : (song.status === 'done' ? '' : 'queued'));
                 
-                // 立即更新本地狀態
                 song.status = nextStatus;
                 if (nextStatus === 'queued') song.queueTime = Date.now();
                 else if (nextStatus === '') song.queueTime = 0;
@@ -779,7 +805,6 @@
             });
         }
 
-        // 🐛 修正：確保每首歌有唯一的 queueTime，並立即更新畫面
         function addToQueue(id) {
             const song = allSongs.find(s => String(s.id) === String(id));
             if (!song) return;
@@ -795,10 +820,9 @@
                 return showToast(`📍 ${song.song} 已${statusText}`, 'info', 2500);
             }
             
-            // 立即更新本地狀態與時間，確保畫面即時反應且時間戳記唯一
             song.status = 'queued';
             song.queueTime = Date.now();
-            renderQueuePanel(); // 立即重新渲染
+            renderQueuePanel();
 
             showToast(`🎤 已加入待唱: ${song.song}`, 'success');
 
@@ -963,7 +987,6 @@
             document.getElementById('randomModal').style.display = 'flex';
             
             if (randomSong.status !== 'queued' && randomSong.status !== 'singing' && randomSong.status !== 'done') {
-                // 立即更新本地狀態
                 randomSong.status = 'queued';
                 randomSong.queueTime = Date.now();
                 renderQueuePanel();
