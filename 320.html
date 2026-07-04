@@ -7,6 +7,7 @@
     <!-- 🚀 引入 SortableJS 解決手機觸控拖曳痛點 -->
     <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
     <script>
+        // ⚠️ 請將此處替換為您部署後端後獲得的 Web App URL
         const API_URL = 'https://script.google.com/macros/s/AKfycbw7NZWJ9J_C298PdmuivaKWEUARpiZ2BuaOTwwSb_xNjM9LyjQZhDtrcSD88eoWfj_F/exec'; 
         const ADMIN_PASSWORD = "admin789"; 
         const ADMIN_NAME = "静静"; 
@@ -38,7 +39,6 @@
             max-width: 900px; margin: 0 auto; padding: 20px; padding-bottom: 120px; 
             scroll-behavior: smooth; transition: background 0.4s ease, color 0.4s ease; line-height: 1.6;
             animation: fadeInUp 0.5s ease-out;
-            /* 防止下拉刷新時頁面滾動 */
             overscroll-behavior-y: none; 
         }
 
@@ -98,7 +98,6 @@
         .queue-list { display: flex; flex-direction: column; gap: 12px; max-height: 350px; overflow-y: auto; padding-right: 5px; }
         .queue-item { background: rgba(255,255,255,0.8); padding: 14px 18px; border-radius: var(--radius-md); font-size: 15px; display: flex; align-items: center; gap: 12px; transition: transform 0.2s; }
         .queue-item:hover { transform: translateX(5px); background: rgba(255,255,255,0.95); box-shadow: var(--shadow-sm); }
-        /* SortableJS 拖曳時的樣式 */
         .queue-item.sortable-ghost { opacity: 0.4; background: var(--border); border: 2px dashed var(--primary); }
         .queue-item.sortable-chosen { box-shadow: var(--shadow-lg); transform: scale(1.02); }
         
@@ -106,7 +105,18 @@
         .queue-item.singing { background: rgba(255,107,107,0.15); border-color: var(--primary); animation: pulse-queue 2s infinite; }
         .queue-item.done { opacity: 0.6; text-decoration: line-through; background: rgba(85, 239, 196, 0.1); border-color: var(--success); }
         @keyframes pulse-queue { 0%, 100% { box-shadow: 0 0 0 0 rgba(255,107,107,0.4); } 50% { box-shadow: 0 0 0 8px rgba(255,107,107,0); } }
-        .queue-index { font-weight: 800; color: var(--primary); min-width: 24px; font-size: 14px; cursor: grab; }
+        
+        .queue-index { 
+            font-weight: 800; color: var(--primary); min-width: 24px; font-size: 14px; 
+            cursor: grab; 
+            /* 🆕 優化手機觸控 */
+            padding: 5px; 
+            border-radius: 50%; 
+            background: rgba(255,107,107,0.1); 
+            text-align: center;
+        }
+        .queue-index:active { cursor: grabbing; background: rgba(255,107,107,0.3); }
+        
         .queue-status-btn { background: none; border: none; font-size: 20px; cursor: pointer; transition: var(--transition); }
         .queue-status-btn:hover { transform: scale(1.3); }
         .queue-text { flex: 1; font-weight: 600; }
@@ -204,7 +214,6 @@
         .skeleton-cell { height: 20px; background: linear-gradient(90deg, var(--border) 25%, var(--bg-color) 50%, var(--border) 75%); background-size: 200% 100%; animation: shimmer 1.5s infinite; border-radius: 4px; }
         @keyframes shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
 
-        /* 🆕 下拉重新整理樣式 */
         .pull-refresh-indicator {
             position: fixed; top: -60px; left: 0; width: 100%; height: 60px;
             display: flex; align-items: center; justify-content: center;
@@ -239,7 +248,6 @@
     </style>
 </head>
 <body id="body">
-    <!-- 🆕 下拉重新整理指示器 -->
     <div id="pullRefreshIndicator" class="pull-refresh-indicator">
         <div class="spinner"></div> <span id="pullText">放開即可重新整理...</span>
     </div>
@@ -288,7 +296,6 @@
             </div>
             <button class="btn-queue" onclick="clearQueue()">🗑️ 清空清單</button>
         </div>
-        <!-- 🆕 待唱清單骨架屏 -->
         <div id="queueSkeleton" class="loading active">
             <div class="skeleton-row"><div class="skeleton-cell" style="width:10%"></div><div class="skeleton-cell" style="width:10%"></div><div class="skeleton-cell" style="width:60%"></div><div class="skeleton-cell" style="width:20%"></div></div>
             <div class="skeleton-row"><div class="skeleton-cell" style="width:10%"></div><div class="skeleton-cell" style="width:10%"></div><div class="skeleton-cell" style="width:60%"></div><div class="skeleton-cell" style="width:20%"></div></div>
@@ -319,9 +326,9 @@
         <div class="request-form">
             <input type="text" id="reqNick" placeholder="您的暱稱 (選填)" style="max-width:150px;">
             <textarea id="reqMessage" rows="2" placeholder="想點什麼歌？或給静静的留言..."></textarea>
-            <button class="btn btn-add" onclick="submitRequest()" style="width:auto; padding:12px 24px; margin-top:0;">送出</button>
+            <!-- 🆕 修正 event 傳遞 -->
+            <button class="btn btn-add" onclick="submitRequest(this)" style="width:auto; padding:12px 24px; margin-top:0;">送出</button>
         </div>
-        <!-- 🆕 留言板骨架屏 -->
         <div id="requestSkeleton" class="loading active">
             <div class="skeleton-row"><div class="skeleton-cell" style="width:30%"></div><div class="skeleton-cell" style="width:70%"></div></div>
             <div class="skeleton-row"><div class="skeleton-cell" style="width:20%"></div><div class="skeleton-cell" style="width:80%"></div></div>
@@ -399,20 +406,18 @@
         localStorage.setItem('visitCount', visits);
         document.getElementById('visitCount').innerText = visits;
 
-        // 🚀 核心優化 1：本地快取秒開
         const cachedData = localStorage.getItem(CACHE_KEY);
         if (cachedData) {
             try {
                 const data = JSON.parse(cachedData);
                 if (data.songs && data.songs.length > 0) {
                     allSongs = data.songs;
-                    renderAllData(data, true); // 立即渲染快取，實現秒開
+                    renderAllData(data, true); 
                     showToast('🚀 已載入本地快取，正在背景更新...', 'info', 2000);
                 }
             } catch (e) { console.error('Cache parse error', e); }
         }
 
-        // 🚀 核心優化 2：Fetch 重試與超時機制
         async function fetchWithRetry(url, options = {}, retries = 2, timeout = 10000) {
             for (let i = 0; i <= retries; i++) {
                 try {
@@ -424,7 +429,7 @@
                     return await res.json();
                 } catch (err) {
                     if (i === retries) throw err;
-                    await new Promise(r => setTimeout(r, 1000 * (i + 1))); // 遞增延遲
+                    await new Promise(r => setTimeout(r, 1000 * (i + 1))); 
                 }
             }
         }
@@ -539,12 +544,10 @@
             if(el) el.style.display = '';
         }
 
-        // 🚀 核心優化 3：整合渲染邏輯
         function renderAllData(data, isCache = false) {
             if (data.status === 'success') { 
                 allSongs = data.songs; 
                 
-                // 保存輸入框內容，防止重新渲染時遺失
                 const reqNickVal = document.getElementById('reqNick').value;
                 const reqMsgVal = document.getElementById('reqMessage').value;
 
@@ -553,12 +556,11 @@
                 updateArtistFilter(); 
                 applyFilters(); 
 
-                // 恢復輸入框內容
                 document.getElementById('reqNick').value = reqNickVal;
                 document.getElementById('reqMessage').value = reqMsgVal;
 
                 if (!isCache) {
-                    localStorage.setItem(CACHE_KEY, JSON.stringify(data)); // 更新快取
+                    localStorage.setItem(CACHE_KEY, JSON.stringify(data)); 
                 }
             } else if (!isCache) { 
                 showToast('❌ 載入失敗: ' + data.message, 'error'); 
@@ -590,26 +592,41 @@
             initSortable();
         }
 
-        // 🚀 核心優化 4：使用 SortableJS 支援手機觸控拖曳
         let sortableInstance;
         function initSortable() {
             const list = document.getElementById('queueList');
             if (sortableInstance) sortableInstance.destroy();
             
-            if (typeof Sortable === 'undefined') return; // 若 CDN 載入失敗則降級
+            if (typeof Sortable === 'undefined') return; 
             
             sortableInstance = Sortable.create(list, {
                 animation: 150,
-                handle: '.queue-index', // 只允許拖曳序號區域，避免誤觸按鈕
+                handle: '.queue-index', 
                 ghostClass: 'sortable-ghost',
                 chosenClass: 'sortable-chosen',
                 onEnd: function (evt) {
-                    // 更新前端序號顯示
                     document.querySelectorAll('.queue-index').forEach((el, idx) => el.innerText = (idx + 1) + '.');
-                    // 注意：此處僅為前端視覺排序，若需永久保存順序需後端支援 update_order API
-                    showToast('🔀 順序已調整 (僅限當前頁面)', 'info', 2000);
+                    saveQueueOrder(); // 🚀 同步至雲端
                 }
             });
+        }
+
+        // 🚀 新增：保存拖曳順序至後端
+        function saveQueueOrder() {
+            const items = document.querySelectorAll('#queueList .queue-item');
+            const ids = Array.from(items).map(item => parseInt(item.getAttribute('data-id')));
+            
+            if (ids.length === 0) return;
+
+            fetchWithRetry(API_URL, { 
+                method: 'POST', 
+                headers: {'Content-Type': 'text/plain'}, 
+                body: JSON.stringify({ action: 'update_queue_order', ids: ids }) 
+            })
+            .then(result => { 
+                if (result.status === 'success') showToast('🔀 順序已同步至雲端', 'success', 2000); 
+            })
+            .catch(err => { showToast('❌ 順序同步失敗', 'error'); console.error(err); });
         }
 
         function cycleQueueStatus(id) {
@@ -632,15 +649,20 @@
             });
         }
 
+        // 🚀 開放一般訪客點歌，移除 requireAdmin
         function addToQueue(id) {
-            requireAdmin(() => {
-                const song = allSongs.find(s => s.id === id);
-                if (!song) return;
-                if (song.status === 'queued') return showToast('這首歌已經在待唱清單裡囉！', 'info');
-                fetchWithRetry(API_URL, { method: 'POST', headers: {'Content-Type': 'text/plain'}, body: JSON.stringify({ action: 'update_status', id: id, status: 'queued' }) })
-                .then(result => { if (result.status === 'success') { showToast(`🎤 已加入待唱: ${song.song}`); loadPlaylistData(true); } })
-                .catch(err => { showToast('❌ 加入失敗，請重試', 'error'); console.error(err); });
-            });
+            const song = allSongs.find(s => s.id === id);
+            if (!song) return;
+            if (song.status === 'queued') return showToast('這首歌已經在待唱清單裡囉！', 'info');
+            
+            fetchWithRetry(API_URL, { method: 'POST', headers: {'Content-Type': 'text/plain'}, body: JSON.stringify({ action: 'update_status', id: id, status: 'queued' }) })
+            .then(result => { 
+                if (result.status === 'success') { 
+                    showToast(`🎤 已加入待唱: ${song.song}`, 'success'); 
+                    loadPlaylistData(true); 
+                } 
+            })
+            .catch(err => { showToast('❌ 加入失敗，請重試', 'error'); console.error(err); });
         }
 
         function removeFromQueue(id) {
@@ -718,7 +740,7 @@
                 opt.textContent = artist; 
                 select.appendChild(opt); 
             });
-            select.value = currentVal; // 保持選擇
+            select.value = currentVal; 
         }
         function applyFilters() {
             const searchTerm = document.getElementById('searchInput').value.toLowerCase().trim();
@@ -894,11 +916,13 @@
                 });
             });
         }
-        function submitRequest() {
+        
+        // 🆕 修正 event 傳遞與保留暱稱
+        function submitRequest(btn) {
             const nick = document.getElementById('reqNick').value.trim() || '匿名訪客'; 
             const msg = document.getElementById('reqMessage').value.trim();
             if (!msg) return showToast('請輸入內容！', 'error');
-            const btn = event.target; 
+            
             btn.disabled = true; 
             btn.innerText = '送出中...';
             fetchWithRetry(API_URL, { method: 'POST', headers: {'Content-Type': 'text/plain'}, body: JSON.stringify({ action: 'add_request', nickname: nick, message: msg }) })
@@ -907,7 +931,7 @@
                 btn.innerText = '送出'; 
                 if (result.status === 'success') { 
                     document.getElementById('reqMessage').value = ''; 
-                    document.getElementById('reqNick').value = ''; 
+                    // 保留暱稱，不清空
                     showToast('✅ 留言成功！'); 
                     loadPlaylistData(true); 
                 } 
@@ -919,6 +943,7 @@
                 console.error(err);
             });
         }
+        
         function exportCSV() {
             requireAdmin(() => {
                 if (filteredSongs.length === 0) return showToast('沒有資料！', 'error');
@@ -936,19 +961,17 @@
             });
         }
 
-        // 🚀 核心優化 5：靜默自動同步 (多人即時更新)
         let syncInterval;
         function startAutoSync() {
             if (syncInterval) clearInterval(syncInterval);
             syncInterval = setInterval(() => {
                 if (document.visibilityState === 'visible') {
-                    loadPlaylistData(false); // 靜默更新，不彈 Toast
+                    loadPlaylistData(false); 
                 }
-            }, 30000); // 每 30 秒同步一次
+            }, 30000); 
         }
 
         function loadPlaylistData(isManual = false) {
-            // 顯示骨架屏 (僅在手動刷新或初次載入時)
             if (isManual || allSongs.length === 0) {
                 document.getElementById('skeletonLoader').classList.add('active');
                 document.getElementById('skeletonLoader').style.display = '';
@@ -970,7 +993,6 @@
             loadPlaylistData(true);
         }
 
-        // 🆕 下拉重新整理邏輯
         let touchStartY = 0;
         let isPulling = false;
         const pullIndicator = document.getElementById('pullRefreshIndicator');
@@ -1012,17 +1034,18 @@
         });
         
         document.addEventListener('DOMContentLoaded', () => {
-            // 如果沒有快取，則進行初次載入
+            // 🆕 自動帶入上次留言暱稱
+            const lastNick = localStorage.getItem('lastReplyNick');
+            if (lastNick) document.getElementById('reqNick').value = lastNick;
+
             if (allSongs.length === 0) {
                 loadPlaylistData(true);
             } else {
-                // 有快取時，背景靜默更新最新資料
                 loadPlaylistData(false); 
             }
-            startAutoSync(); // 啟動自動同步
+            startAutoSync(); 
         });
 
-        // 頁面重新可見時，立即同步一次
         document.addEventListener('visibilitychange', () => {
             if (document.visibilityState === 'visible') {
                 loadPlaylistData(false);
