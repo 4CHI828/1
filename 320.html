@@ -248,11 +248,21 @@
             <div class="skeleton-row"><div class="skeleton-cell" style="width:20%"></div><div class="skeleton-cell" style="width:40%"></div><div class="skeleton-cell" style="width:20%"></div><div class="skeleton-cell" style="width:20%"></div></div>
         </div>
     </div>
-    <!-- 🆕 表頭新增「點擊次數」欄位 -->
+    
+    <!-- 🆕 表頭已更新為 5 個欄位 (包含點擊次數) -->
     <table id="playlistTable" style="display:none;">
-        <thead><tr><th style="border-radius:var(--radius-lg) 0 0 0;">歌手</th><th>歌曲名稱</th><th style="text-align:center; width:90px;">點擊次數</th><th>試聽</th><th style="width:80px; border-radius:0 var(--radius-lg) 0 0;">操作</th></tr></thead>
+        <thead>
+            <tr>
+                <th style="border-radius:var(--radius-lg) 0 0 0;">歌手</th>
+                <th>歌曲名稱</th>
+                <th style="text-align:center; width:90px;">點擊次數</th>
+                <th>試聽</th>
+                <th style="width:80px; border-radius:0 var(--radius-lg) 0 0;">操作</th>
+            </tr>
+        </thead>
         <tbody id="playlistBody"></tbody>
     </table>
+
     <div class="request-section" id="requestSection">
         <h3 style="margin-top:0; font-weight:800;">📝 點歌與留言板 <span style="font-size:12px; font-weight:normal; color:#888;">(支援無限串樓)</span></h3>
         <div class="request-form">
@@ -463,9 +473,7 @@
             document.getElementById('themeBtn').textContent = isDarkMode ? '☀️' : '🌙';
         }
 
-        function showHelpModal() {
-            document.getElementById('helpModal').style.display = 'flex';
-        }
+        function showHelpModal() { document.getElementById('helpModal').style.display = 'flex'; }
 
         function toggleAddForm() {
             const container = document.getElementById('addFormContainer');
@@ -517,10 +525,7 @@
             const el = document.getElementById(id);
             if (el) {
                 el.classList.add('fade-out');
-                setTimeout(function() {
-                    el.classList.remove('active');
-                    el.style.display = 'none';
-                }, 300);
+                setTimeout(function() { el.classList.remove('active'); el.style.display = 'none'; }, 300);
             }
         }
 
@@ -530,36 +535,26 @@
         }
 
         function hideAllSkeletons() {
-            hideSkeleton('skeletonLoader');
-            showElement('playlistTable');
-            hideSkeleton('queueSkeleton');
-            showElement('queueList');
-            hideSkeleton('requestSkeleton');
-            showElement('requestList');
+            hideSkeleton('skeletonLoader'); showElement('playlistTable');
+            hideSkeleton('queueSkeleton'); showElement('queueList');
+            hideSkeleton('requestSkeleton'); showElement('requestList');
         }
 
         function renderAllData(data, isCache) {
             if (data.status === 'success') {
                 allSongs = data.songs;
-
                 if (data.fixedCount > 0 && !isCache) {
                     showToast('🔧 已自動修復 ' + data.fixedCount + ' 首歌曲的 ID，現在可以正常操作了！', 'success', 4000);
                 }
-
                 const reqNickVal = document.getElementById('reqNick').value;
                 const reqMsgVal = document.getElementById('reqMessage').value;
-
                 renderRequests(data.requests || []);
                 renderQueuePanel();
                 updateArtistFilter();
                 applyFilters();
-
                 document.getElementById('reqNick').value = reqNickVal;
                 document.getElementById('reqMessage').value = reqMsgVal;
-
-                if (!isCache) {
-                    localStorage.setItem(CACHE_KEY, JSON.stringify(data));
-                }
+                if (!isCache) { localStorage.setItem(CACHE_KEY, JSON.stringify(data)); }
             } else if (!isCache) {
                 showToast('❌ 載入失敗: ' + (data.message || '未知錯誤'), 'error');
             }
@@ -569,71 +564,47 @@
 
         function renderQueuePanel() {
             const queueSongs = allSongs.filter(function(s) { return s.status && s.status !== ''; });
-
             queueSongs.sort(function(a, b) {
                 const statusOrder = { 'singing': 0, 'queued': 1, 'done': 2 };
                 if (statusOrder[a.status] !== statusOrder[b.status]) return statusOrder[a.status] - statusOrder[b.status];
                 if ((a.queueTime || 0) !== (b.queueTime || 0)) return (a.queueTime || 0) - (b.queueTime || 0);
                 return String(a.id).localeCompare(String(b.id));
             });
-
             const singingSongs = queueSongs.filter(function(s) { return s.status === 'singing'; });
             const queuedSongs = queueSongs.filter(function(s) { return s.status === 'queued'; });
             const doneSongs = queueSongs.filter(function(s) { return s.status === 'done'; });
-
             document.getElementById('queueCount').innerText = queueSongs.length;
             const listEl = document.getElementById('queueList');
-
             hideSkeleton('queueSkeleton');
             showElement('queueList');
-
             if (queueSongs.length === 0) {
                 listEl.innerHTML = '<div class="queue-empty" style="text-align:center; color:#888; padding:30px 10px;"><div style="font-size:40px; margin-bottom:10px;">🎵</div>目前沒有待唱歌曲<br><small style="color:#aaa;">點擊下方歌單的「歌曲名稱」即可加入！</small></div>';
                 isFirstQueueRender = true;
                 return;
             }
-
             const isAdminMode = isAdmin();
-            let html = '';
-
-            html += '<div class="queue-stats">';
+            let html = '<div class="queue-stats">';
             html += '<span class="stat-singing">🎤 演唱中 ' + singingSongs.length + '</span>';
             html += '<span class="stat-queued">⏳ 排隊中 ' + queuedSongs.length + '</span>';
-            html += '<span class="stat-done">✅ 已完成 ' + doneSongs.length + '</span>';
-            html += '</div>';
-
+            html += '<span class="stat-done">✅ 已完成 ' + doneSongs.length + '</span></div>';
             let currentIndex = 1;
-
             if (singingSongs.length > 0) {
                 html += '<div class="queue-section"><div class="queue-section-title singing">🎤 正在演唱</div>';
-                for (let i = 0; i < singingSongs.length; i++) {
-                    html += renderQueueItem(singingSongs[i], currentIndex, isAdminMode);
-                    currentIndex++;
-                }
+                for (let i = 0; i < singingSongs.length; i++) { html += renderQueueItem(singingSongs[i], currentIndex, isAdminMode); currentIndex++; }
                 html += '</div>';
             }
-
             if (queuedSongs.length > 0) {
                 html += '<div class="queue-section"><div class="queue-section-title queued">⏳ 排隊中</div><div class="queue-queued-list" id="queue-queued-list">';
-                for (let i = 0; i < queuedSongs.length; i++) {
-                    html += renderQueueItem(queuedSongs[i], currentIndex, isAdminMode);
-                    currentIndex++;
-                }
+                for (let i = 0; i < queuedSongs.length; i++) { html += renderQueueItem(queuedSongs[i], currentIndex, isAdminMode); currentIndex++; }
                 html += '</div></div>';
             }
-
             if (doneSongs.length > 0) {
                 html += '<div class="queue-section"><div class="queue-section-title done">✅ 已完成 (' + doneSongs.length + ')</div>';
-                for (let i = 0; i < doneSongs.length; i++) {
-                    html += renderQueueItem(doneSongs[i], currentIndex, isAdminMode);
-                    currentIndex++;
-                }
+                for (let i = 0; i < doneSongs.length; i++) { html += renderQueueItem(doneSongs[i], currentIndex, isAdminMode); currentIndex++; }
                 html += '</div>';
             }
-
             listEl.innerHTML = html;
             initSortable(isAdminMode);
-
             if (isFirstQueueRender && singingSongs.length > 0) {
                 setTimeout(function() { scrollToCurrentSong(); }, 300);
                 isFirstQueueRender = false;
@@ -645,36 +616,18 @@
             const statusEmoji = statusEmojiMap[song.status] || '⏳';
             const songId = escapeHtml(String(song.id));
             const delBtn = isAdminMode ? '<button class="queue-del-btn" data-id="' + songId + '" onclick="removeFromQueue(this.dataset.id)" title="移出清單">✕</button>' : '';
-            const statusBtn = isAdminMode
-                ? '<button class="queue-status-btn" data-id="' + songId + '" onclick="cycleQueueStatus(this.dataset.id)" title="切換狀態">' + statusEmoji + '</button>'
-                : '<span class="queue-status-emoji">' + statusEmoji + '</span>';
-
-            return '<div class="queue-item ' + song.status + '" data-id="' + songId + '">' +
-                '<span class="queue-index">' + index + '.</span>' +
-                statusBtn +
-                '<span class="queue-text">' + escapeHtml(song.artist) + ' - ' + escapeHtml(song.song) + '</span>' +
-                delBtn +
-                '</div>';
+            const statusBtn = isAdminMode ? '<button class="queue-status-btn" data-id="' + songId + '" onclick="cycleQueueStatus(this.dataset.id)" title="切換狀態">' + statusEmoji + '</button>' : '<span class="queue-status-emoji">' + statusEmoji + '</span>';
+            return '<div class="queue-item ' + song.status + '" data-id="' + songId + '"><span class="queue-index">' + index + '.</span>' + statusBtn + '<span class="queue-text">' + escapeHtml(song.artist) + ' - ' + escapeHtml(song.song) + '</span>' + delBtn + '</div>';
         }
 
         let sortableInstance;
         function initSortable(enableDrag) {
             const list = document.getElementById('queue-queued-list');
-            if (sortableInstance) {
-                sortableInstance.destroy();
-                sortableInstance = null;
-            }
+            if (sortableInstance) { sortableInstance.destroy(); sortableInstance = null; }
             if (!enableDrag || !list || typeof Sortable === 'undefined') return;
-
             sortableInstance = Sortable.create(list, {
-                animation: 200,
-                handle: '.queue-index',
-                ghostClass: 'sortable-ghost',
-                chosenClass: 'sortable-chosen',
-                onEnd: function(evt) {
-                    updateQueueIndexes();
-                    saveQueueOrder();
-                }
+                animation: 200, handle: '.queue-index', ghostClass: 'sortable-ghost', chosenClass: 'sortable-chosen',
+                onEnd: function(evt) { updateQueueIndexes(); saveQueueOrder(); }
             });
         }
 
@@ -696,15 +649,8 @@
             if (!queuedList) return;
             const ids = Array.from(queuedList.querySelectorAll('.queue-item')).map(function(item) { return item.getAttribute('data-id'); });
             if (ids.length === 0) return;
-
-            fetchWithRetry(API_URL, {
-                method: 'POST',
-                headers: { 'Content-Type': 'text/plain' },
-                body: JSON.stringify({ action: 'update_queue_order', order: ids, password: ADMIN_PASSWORD })
-            })
-            .then(function(result) {
-                if (result.status === 'success') showToast('🔀 順序已同步至雲端', 'success', 2000);
-            })
+            fetchWithRetry(API_URL, { method: 'POST', headers: { 'Content-Type': 'text/plain' }, body: JSON.stringify({ action: 'update_queue_order', order: ids, password: ADMIN_PASSWORD }) })
+            .then(function(result) { if (result.status === 'success') showToast('🔀 順序已同步至雲端', 'success', 2000); })
             .catch(function(err) { showToast('❌ 順序同步失敗', 'error'); console.error(err); });
         }
 
@@ -712,106 +658,56 @@
             requireAdmin(function() {
                 const song = allSongs.find(function(s) { return String(s.id) === String(id); });
                 if (!song) return;
-                let nextStatus;
-                if (song.status === 'queued') nextStatus = 'singing';
-                else if (song.status === 'singing') nextStatus = 'done';
-                else if (song.status === 'done') nextStatus = '';
-                else nextStatus = 'queued';
-
+                let nextStatus = song.status === 'queued' ? 'singing' : (song.status === 'singing' ? 'done' : (song.status === 'done' ? '' : 'queued'));
                 song.status = nextStatus;
                 if (nextStatus === 'queued') song.queueTime = Date.now();
                 else if (nextStatus === '') song.queueTime = 0;
                 renderQueuePanel();
-
-                fetchWithRetry(API_URL, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'text/plain' },
-                    body: JSON.stringify({ action: 'update_status', id: String(id), status: nextStatus, password: ADMIN_PASSWORD })
-                })
+                fetchWithRetry(API_URL, { method: 'POST', headers: { 'Content-Type': 'text/plain' }, body: JSON.stringify({ action: 'update_status', id: String(id), status: nextStatus, password: ADMIN_PASSWORD }) })
                 .then(function(result) {
                     if (result.status === 'success') {
                         const statusMap = { 'queued': '⏳ 排隊中', 'singing': '🎤 演唱中', 'done': '✅ 已完成', '': '已移出' };
                         showToast(song.song + ' → ' + (statusMap[nextStatus] || '已移出'), 'success', 2000);
                     }
-                })
-                .catch(function(err) { showToast('❌ 更新失敗，請重試', 'error'); console.error(err); });
+                }).catch(function(err) { showToast('❌ 更新失敗，請重試', 'error'); console.error(err); });
             });
         }
 
         function clearQueue() {
             requireAdmin(function() {
                 if (!confirm('確定要清空所有待唱歌曲嗎？')) return;
-                fetchWithRetry(API_URL, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'text/plain' },
-                    body: JSON.stringify({ action: 'clear_queue', password: ADMIN_PASSWORD })
-                })
-                .then(function(result) {
-                    if (result.status === 'success') {
-                        showToast('🗑️ 清單已清空');
-                        loadPlaylistData(true);
-                    }
-                })
+                fetchWithRetry(API_URL, { method: 'POST', headers: { 'Content-Type': 'text/plain' }, body: JSON.stringify({ action: 'clear_queue', password: ADMIN_PASSWORD }) })
+                .then(function(result) { if (result.status === 'success') { showToast('🗑️ 清單已清空'); loadPlaylistData(true); } })
                 .catch(function(err) { showToast('❌ 清空失敗，請重試', 'error'); console.error(err); });
             });
         }
 
         function addToQueue(id) {
-            if (!id) {
-                showToast('⚠️ 此歌曲資料異常，請重新整理頁面', 'error');
-                return;
-            }
-
+            if (!id) { showToast('⚠️ 此歌曲資料異常，請重新整理頁面', 'error'); return; }
             const song = allSongs.find(function(s) { return String(s.id) === String(id); });
-            if (!song) {
-                showToast('❌ 找不到這首歌曲，請重新整理', 'error');
-                return;
-            }
-
+            if (!song) { showToast('❌ 找不到這首歌曲，請重新整理', 'error'); return; }
             if (song.status === 'queued' || song.status === 'singing' || song.status === 'done') {
                 const queueSongs = allSongs.filter(function(s) { return s.status === 'queued' || s.status === 'singing' || s.status === 'done'; });
                 queueSongs.sort(function(a, b) { return (a.queueTime || 0) - (b.queueTime || 0); });
                 const position = queueSongs.findIndex(function(s) { return String(s.id) === String(id); }) + 1;
-                let statusText = '';
-                if (song.status === 'singing') statusText = '正在演唱中';
-                else if (song.status === 'done') statusText = '已完成';
-                else statusText = '排隊中第 ' + position + ' 位';
+                let statusText = song.status === 'singing' ? '正在演唱中' : (song.status === 'done' ? '已完成' : '排隊中第 ' + position + ' 位');
                 return showToast('📍 ' + song.song + ' 已' + statusText, 'info', 2500);
             }
-
             song.status = 'queued';
             song.queueTime = Date.now();
             renderQueuePanel();
             showToast('🎤 已加入待唱: ' + song.song, 'success');
-
-            fetchWithRetry(API_URL, {
-                method: 'POST',
-                headers: { 'Content-Type': 'text/plain' },
-                body: JSON.stringify({ action: 'update_status', id: String(id), status: 'queued' })
-            })
-            .then(function(result) {
-                if (result.status !== 'success') console.error('加入待唱後端失敗');
-            })
+            fetchWithRetry(API_URL, { method: 'POST', headers: { 'Content-Type': 'text/plain' }, body: JSON.stringify({ action: 'update_status', id: String(id), status: 'queued' }) })
+            .then(function(result) { if (result.status !== 'success') console.error('加入待唱後端失敗'); })
             .catch(function(err) { showToast('❌ 加入失敗，請重試', 'error'); console.error(err); });
         }
 
         function removeFromQueue(id) {
             requireAdmin(function() {
                 const song = allSongs.find(function(s) { return String(s.id) === String(id); });
-                if (song) {
-                    song.status = '';
-                    song.queueTime = 0;
-                    renderQueuePanel();
-                }
-
-                fetchWithRetry(API_URL, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'text/plain' },
-                    body: JSON.stringify({ action: 'update_status', id: String(id), status: '', password: ADMIN_PASSWORD })
-                })
-                .then(function(result) {
-                    if (result.status === 'success') showToast('✅ 已移出');
-                })
+                if (song) { song.status = ''; song.queueTime = 0; renderQueuePanel(); }
+                fetchWithRetry(API_URL, { method: 'POST', headers: { 'Content-Type': 'text/plain' }, body: JSON.stringify({ action: 'update_status', id: String(id), status: '', password: ADMIN_PASSWORD }) })
+                .then(function(result) { if (result.status === 'success') showToast('✅ 已移出'); })
                 .catch(function(err) { showToast('❌ 移出失敗，請重試', 'error'); console.error(err); });
             });
         }
@@ -820,16 +716,13 @@
             const list = document.getElementById('requestList');
             hideSkeleton('requestSkeleton');
             showElement('requestList');
-
             const displayRequests = requests;
             if (displayRequests.length === 0) {
                 list.innerHTML = '<p style="text-align:center; color:#888; padding: 20px;">目前還沒有留言，快來留言吧！</p>';
                 return;
             }
-
             const isAdminMode = isAdmin();
             let htmlContent = '';
-
             for (let i = 0; i < displayRequests.length; i++) {
                 const req = displayRequests[i];
                 let repliesHtml = '';
@@ -840,37 +733,13 @@
                         const boxClass = rep.isOfficial ? 'official' : 'general';
                         const prefix = rep.isOfficial ? '👑 ' : '💬 ';
                         const delRepBtn = isAdminMode ? '<button class="reply-del-btn" data-id="' + escapeHtml(String(rep.replyId)) + '" onclick="confirmDeleteReply(this.dataset.id)">🗑️</button>' : '';
-                        repliesHtml += '<div class="reply-box ' + boxClass + '">' +
-                            '<div class="reply-header ' + boxClass + '">' +
-                            '<span>' + prefix + escapeHtml(rep.replier) + '</span>' +
-                            '<span style="font-size:11px; color:#888;">' + escapeHtml(rep.time) + ' ' + delRepBtn + '</span>' +
-                            '</div>' +
-                            '<div>' + escapeHtml(rep.content) + '</div>' +
-                            '</div>';
+                        repliesHtml += '<div class="reply-box ' + boxClass + '"><div class="reply-header ' + boxClass + '"><span>' + prefix + escapeHtml(rep.replier) + '</span><span style="font-size:11px; color:#888;">' + escapeHtml(rep.time) + ' ' + delRepBtn + '</span></div><div>' + escapeHtml(rep.content) + '</div></div>';
                     }
                     repliesHtml += '</div>';
                 }
                 const delReqBtn = isAdminMode ? '<button class="req-action-btn" style="color:var(--danger);" data-id="' + escapeHtml(String(req.id)) + '" onclick="confirmDeleteRequest(this.dataset.id)">🗑️ 刪除</button>' : '';
-
-                htmlContent += '<div class="request-item" data-id="' + escapeHtml(String(req.id)) + '">' +
-                    '<div class="req-header"><span class="req-nick">' + escapeHtml(req.nickname) + '</span><span>' + escapeHtml(req.time) + '</span></div>' +
-                    '<div>' + escapeHtml(req.message) + '</div>' +
-                    repliesHtml +
-                    '<div class="req-actions">' +
-                    '<button class="req-action-btn" onclick="toggleReplyInput(this)">💬 回覆</button>' +
-                    delReqBtn +
-                    '</div>' +
-                    '<div class="reply-input-area" style="display:none;">' +
-                    '<input type="text" class="reply-nick" placeholder="暱稱" value="' + escapeHtml(localStorage.getItem('lastReplyNick') || '') + '">' +
-                    '<textarea class="reply-text" placeholder="輸入回覆內容..."></textarea>' +
-                    '<div class="reply-btn-group">' +
-                    '<button class="btn-reply-general" onclick="submitGeneralReply(this)">💬 一般回覆</button>' +
-                    '<button class="btn-reply-official" onclick="submitOfficialReply(this)">👑 官方回覆</button>' +
-                    '</div>' +
-                    '</div>' +
-                    '</div>';
+                htmlContent += '<div class="request-item" data-id="' + escapeHtml(String(req.id)) + '"><div class="req-header"><span class="req-nick">' + escapeHtml(req.nickname) + '</span><span>' + escapeHtml(req.time) + '</span></div><div>' + escapeHtml(req.message) + '</div>' + repliesHtml + '<div class="req-actions"><button class="req-action-btn" onclick="toggleReplyInput(this)">💬 回覆</button>' + delReqBtn + '</div><div class="reply-input-area" style="display:none;"><input type="text" class="reply-nick" placeholder="暱稱" value="' + escapeHtml(localStorage.getItem('lastReplyNick') || '') + '"><textarea class="reply-text" placeholder="輸入回覆內容..."></textarea><div class="reply-btn-group"><button class="btn-reply-general" onclick="submitGeneralReply(this)">💬 一般回覆</button><button class="btn-reply-official" onclick="submitOfficialReply(this)">👑 官方回覆</button></div></div></div>';
             }
-
             list.innerHTML = htmlContent;
         }
 
@@ -881,9 +750,7 @@
                 document.querySelectorAll('.reply-input-area').forEach(function(el) { el.style.display = 'none'; });
                 inputArea.style.display = 'flex';
                 inputArea.querySelector('.reply-nick').focus();
-            } else if (inputArea) {
-                inputArea.style.display = 'none';
-            }
+            } else if (inputArea) { inputArea.style.display = 'none'; }
         }
 
         function submitGeneralReply(btn) {
@@ -891,22 +758,10 @@
             const id = requestItem.dataset.id;
             const nick = requestItem.querySelector('.reply-nick').value.trim();
             const replyText = requestItem.querySelector('.reply-text').value.trim();
-            if (!nick || !replyText) {
-                showToast('請填寫暱稱與內容！', 'error');
-                return;
-            }
+            if (!nick || !replyText) { showToast('請填寫暱稱與內容！', 'error'); return; }
             localStorage.setItem('lastReplyNick', nick);
-            fetchWithRetry(API_URL, {
-                method: 'POST',
-                headers: { 'Content-Type': 'text/plain' },
-                body: JSON.stringify({ action: 'reply_request', id: String(id), replier: nick, replyContent: replyText, isOfficial: false })
-            })
-            .then(function(result) {
-                if (result.status === 'success') {
-                    loadPlaylistData(true);
-                    showToast('✅ 回覆成功');
-                }
-            })
+            fetchWithRetry(API_URL, { method: 'POST', headers: { 'Content-Type': 'text/plain' }, body: JSON.stringify({ action: 'reply_request', id: String(id), replier: nick, replyContent: replyText, isOfficial: false }) })
+            .then(function(result) { if (result.status === 'success') { loadPlaylistData(true); showToast('✅ 回覆成功'); } })
             .catch(function(err) { showToast('❌ 回覆失敗，請重試', 'error'); console.error(err); });
         }
 
@@ -915,21 +770,9 @@
                 const requestItem = btn.closest('.request-item');
                 const id = requestItem.dataset.id;
                 const replyText = requestItem.querySelector('.reply-text').value.trim();
-                if (!replyText) {
-                    showToast('請輸入內容！', 'error');
-                    return;
-                }
-                fetchWithRetry(API_URL, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'text/plain' },
-                    body: JSON.stringify({ action: 'reply_request', id: String(id), replier: ADMIN_NAME, replyContent: replyText, isOfficial: true, password: ADMIN_PASSWORD })
-                })
-                .then(function(result) {
-                    if (result.status === 'success') {
-                        loadPlaylistData(true);
-                        showToast('✅ 官方回覆成功');
-                    }
-                })
+                if (!replyText) { showToast('請輸入內容！', 'error'); return; }
+                fetchWithRetry(API_URL, { method: 'POST', headers: { 'Content-Type': 'text/plain' }, body: JSON.stringify({ action: 'reply_request', id: String(id), replier: ADMIN_NAME, replyContent: replyText, isOfficial: true, password: ADMIN_PASSWORD }) })
+                .then(function(result) { if (result.status === 'success') { loadPlaylistData(true); showToast('✅ 官方回覆成功'); } })
                 .catch(function(err) { showToast('❌ 回覆失敗，請重試', 'error'); console.error(err); });
             });
         }
@@ -937,17 +780,8 @@
         function confirmDeleteReply(replyId) {
             requireAdmin(function() {
                 if (!confirm('確定刪除這則回覆？')) return;
-                fetchWithRetry(API_URL, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'text/plain' },
-                    body: JSON.stringify({ action: 'delete_reply', replyId: String(replyId), password: ADMIN_PASSWORD })
-                })
-                .then(function(result) {
-                    if (result.status === 'success') {
-                        loadPlaylistData(true);
-                        showToast('✅ 已刪除');
-                    }
-                })
+                fetchWithRetry(API_URL, { method: 'POST', headers: { 'Content-Type': 'text/plain' }, body: JSON.stringify({ action: 'delete_reply', replyId: String(replyId), password: ADMIN_PASSWORD }) })
+                .then(function(result) { if (result.status === 'success') { loadPlaylistData(true); showToast('✅ 已刪除'); } })
                 .catch(function(err) { showToast('❌ 刪除失敗，請重試', 'error'); console.error(err); });
             });
         }
@@ -957,11 +791,7 @@
             const currentVal = select.value;
             select.innerHTML = '<option value="all">🎤 歌手</option><option value="__sort_clicks__">🔥 熱門</option>';
             const uniqueArtists = [];
-            allSongs.forEach(function(item) {
-                if (item.artist && uniqueArtists.indexOf(item.artist) === -1) {
-                    uniqueArtists.push(item.artist);
-                }
-            });
+            allSongs.forEach(function(item) { if (item.artist && uniqueArtists.indexOf(item.artist) === -1) uniqueArtists.push(item.artist); });
             uniqueArtists.sort().forEach(function(artist) {
                 const opt = document.createElement('option');
                 opt.value = artist;
@@ -975,46 +805,32 @@
             const searchTerm = document.getElementById('searchInput').value.toLowerCase().trim();
             const selectedValue = document.getElementById('artistFilter').value;
             filteredSongs = allSongs.filter(function(item) {
-                const matchSearch = !searchTerm ||
-                    item.artist.toLowerCase().indexOf(searchTerm) !== -1 ||
-                    item.song.toLowerCase().indexOf(searchTerm) !== -1 ||
-                    (item.tags || '').toLowerCase().indexOf(searchTerm) !== -1;
+                const matchSearch = !searchTerm || item.artist.toLowerCase().indexOf(searchTerm) !== -1 || item.song.toLowerCase().indexOf(searchTerm) !== -1 || (item.tags || '').toLowerCase().indexOf(searchTerm) !== -1;
                 return matchSearch && (selectedValue === 'all' || selectedValue === '__sort_clicks__' || item.artist === selectedValue);
             });
-            if (selectedValue === '__sort_clicks__') {
-                filteredSongs.sort(function(a, b) { return (b.clicks || 0) - (a.clicks || 0); });
-            }
+            if (selectedValue === '__sort_clicks__') filteredSongs.sort(function(a, b) { return (b.clicks || 0) - (a.clicks || 0); });
             renderPlaylist(filteredSongs);
         }
 
-        // 🆕 渲染歌單 (新增「點擊次數」欄位)
+        // 🆕 渲染歌單 (包含 5 個欄位：歌手、歌曲、點擊次數、試聽、操作)
         function renderPlaylist(songs) {
             const tbody = document.getElementById('playlistBody');
             tbody.innerHTML = '';
             document.getElementById('songCount').innerText = songs.length;
             hideSkeleton('skeletonLoader');
             showElement('playlistTable');
-
             if (!songs || songs.length === 0) {
                 tbody.innerHTML = '<tr><td colspan="5" style="text-align:center; padding:20px;">🎵 找不到符合條件的歌曲</td></tr>';
                 return;
             }
-
             const isAdminMode = isAdmin();
             songs.forEach(function(item) {
                 const tr = document.createElement('tr');
                 let displayLink = (item.link && isValidUrl(item.link)) ? item.link : 'https://www.youtube.com/results?search_query=' + encodeURIComponent((item.artist || '') + ' ' + (item.song || ''));
                 const tagsHtml = item.tags ? item.tags.split(',').map(function(t) { return '<span class="tag-badge">' + escapeHtml(t.trim()) + '</span>'; }).join('') : '';
-
                 const songId = escapeHtml(String(item.id));
-                let actionBtns;
-                if (isAdminMode) {
-                    actionBtns = '<button class="btn-sm btn-edit" data-id="' + songId + '" onclick="editSong(this.dataset.id)">✏️</button>' +
-                        '<button class="btn-sm btn-del" data-id="' + songId + '" onclick="confirmDelete(this.dataset.id)">🗑️</button>';
-                } else {
-                    actionBtns = '<span style="color:#ccc; font-size:12px;">(訪客)</span>';
-                }
-
+                let actionBtns = isAdminMode ? '<button class="btn-sm btn-edit" data-id="' + songId + '" onclick="editSong(this.dataset.id)">✏️</button><button class="btn-sm btn-del" data-id="' + songId + '" onclick="confirmDelete(this.dataset.id)">🗑️</button>' : '<span style="color:#ccc; font-size:12px;">(訪客)</span>';
+                
                 tr.innerHTML = 
                     '<td data-label="歌手">' + escapeHtml(item.artist) + '<br>' + tagsHtml + '</td>' +
                     '<td data-label="歌曲名稱"><span class="clickable-title" data-id="' + songId + '" onclick="addToQueue(this.dataset.id)">' + escapeHtml(item.song) + '</span></td>' +
@@ -1026,47 +842,25 @@
         }
 
         function recordClick(id) {
-            fetch(API_URL, {
-                method: 'POST',
-                headers: { 'Content-Type': 'text/plain' },
-                body: JSON.stringify({ action: 'click', id: String(id) })
-            }).catch(function() {});
+            fetch(API_URL, { method: 'POST', headers: { 'Content-Type': 'text/plain' }, body: JSON.stringify({ action: 'click', id: String(id) }) }).catch(function() {});
         }
 
         // 🆕 隨機選歌 (彈窗中顯示點擊次數)
         function pickRandomSong() {
-            if (allSongs.length === 0) {
-                showToast('目前沒有歌曲！', 'error');
-                return;
-            }
+            if (allSongs.length === 0) { showToast('目前沒有歌曲！', 'error'); return; }
             const randomSong = allSongs[Math.floor(Math.random() * allSongs.length)];
             let link = (randomSong.link && isValidUrl(randomSong.link)) ? randomSong.link : 'https://www.youtube.com/results?search_query=' + encodeURIComponent((randomSong.artist || '') + ' ' + (randomSong.song || ''));
-            
-            document.getElementById('randomSongInfo').innerHTML = 
-                '🎤 ' + escapeHtml(randomSong.artist) + 
-                '<br>🎵 ' + escapeHtml(randomSong.song) + 
-                '<br><span style="font-size:16px; color:#888; margin-top:10px; display:inline-block;">🔥 已被試聽 ' + (randomSong.clicks || 0) + ' 次</span>';
-                
+            document.getElementById('randomSongInfo').innerHTML = '🎤 ' + escapeHtml(randomSong.artist) + '<br>🎵 ' + escapeHtml(randomSong.song) + '<br><span style="font-size:16px; color:#888; margin-top:10px; display:inline-block;">🔥 已被試聽 ' + (randomSong.clicks || 0) + ' 次</span>';
             document.getElementById('randomSongLink').href = link;
             document.getElementById('randomModal').style.display = 'flex';
-
             if (randomSong.status !== 'queued' && randomSong.status !== 'singing' && randomSong.status !== 'done') {
                 randomSong.status = 'queued';
                 randomSong.queueTime = Date.now();
                 renderQueuePanel();
-
-                fetchWithRetry(API_URL, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'text/plain' },
-                    body: JSON.stringify({ action: 'update_status', id: String(randomSong.id), status: 'queued' })
-                })
-                .then(function(result) {
-                    if (result.status === 'success') showToast('🎲 抽中！已自動加入待唱清單', 'success');
-                })
+                fetchWithRetry(API_URL, { method: 'POST', headers: { 'Content-Type': 'text/plain' }, body: JSON.stringify({ action: 'update_status', id: String(randomSong.id), status: 'queued' }) })
+                .then(function(result) { if (result.status === 'success') showToast('🎲 抽中！已自動加入待唱清單', 'success'); })
                 .catch(function(err) { console.error(err); });
-            } else {
-                showToast('🎲 這首歌已經在待唱清單裡囉！', 'info');
-            }
+            } else { showToast('🎲 這首歌已經在待唱清單裡囉！', 'info'); }
         }
 
         function addSong() {
@@ -1074,150 +868,65 @@
                 const artist = document.getElementById('artist').value.trim();
                 const song = document.getElementById('song').value.trim();
                 const tags = document.getElementById('tags').value.trim();
-                if (!artist || !song) {
-                    showToast('請填寫歌手和歌曲名稱！', 'error');
-                    return;
-                }
+                if (!artist || !song) { showToast('請填寫歌手和歌曲名稱！', 'error'); return; }
                 const btn = document.getElementById('addBtn');
-                btn.disabled = true;
-                btn.innerText = '新增中...';
-                fetchWithRetry(API_URL, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'text/plain' },
-                    body: JSON.stringify({ action: 'add', artist: artist, song: song, link: '', tags: tags, password: ADMIN_PASSWORD })
-                })
+                btn.disabled = true; btn.innerText = '新增中...';
+                fetchWithRetry(API_URL, { method: 'POST', headers: { 'Content-Type': 'text/plain' }, body: JSON.stringify({ action: 'add', artist: artist, song: song, link: '', tags: tags, password: ADMIN_PASSWORD }) })
                 .then(function(result) {
-                    btn.disabled = false;
-                    btn.innerText = '✨ 確認新增至雲端';
+                    btn.disabled = false; btn.innerText = '✨ 確認新增至雲端';
                     if (result.status === 'success') {
-                        document.getElementById('artist').value = '';
-                        document.getElementById('song').value = '';
-                        document.getElementById('tags').value = '';
-                        showToast('✨ 新增成功！');
-                        loadPlaylistData(true);
+                        document.getElementById('artist').value = ''; document.getElementById('song').value = ''; document.getElementById('tags').value = '';
+                        showToast('✨ 新增成功！'); loadPlaylistData(true);
                     }
-                })
-                .catch(function(err) {
-                    btn.disabled = false;
-                    btn.innerText = '✨ 確認新增至雲端';
-                    showToast('❌ 新增失敗，請重試', 'error');
-                    console.error(err);
-                });
+                }).catch(function(err) { btn.disabled = false; btn.innerText = '✨ 確認新增至雲端'; showToast('❌ 新增失敗，請重試', 'error'); console.error(err); });
             });
         }
 
         function batchAddSongs() {
             requireAdmin(function() {
                 const input = document.getElementById('batchInput').value.trim();
-                if (!input) {
-                    showToast('請貼上歌曲清單！', 'error');
-                    return;
-                }
+                if (!input) { showToast('請貼上歌曲清單！', 'error'); return; }
                 const lines = input.split('\n').filter(function(line) { return line.trim() !== ''; });
                 const songsToAdd = lines.map(function(line) {
                     let artist = '', song = '';
-                    if (line.indexOf(' - ') !== -1) {
-                        const parts = line.split(' - ');
-                        artist = parts[0].trim();
-                        song = parts.slice(1).join(' - ').trim();
-                    } else if (line.indexOf(',') !== -1) {
-                        const parts = line.split(',');
-                        artist = parts[0].trim();
-                        song = parts.slice(1).join(',').trim();
-                    } else {
-                        const match = line.match(/^(\S+)\s+(.*)$/);
-                        if (match) {
-                            artist = match[1].trim();
-                            song = match[2].trim();
-                        } else {
-                            artist = line.trim();
-                        }
-                    }
+                    if (line.indexOf(' - ') !== -1) { const parts = line.split(' - '); artist = parts[0].trim(); song = parts.slice(1).join(' - ').trim(); }
+                    else if (line.indexOf(',') !== -1) { const parts = line.split(','); artist = parts[0].trim(); song = parts.slice(1).join(',').trim(); }
+                    else { const match = line.match(/^(\S+)\s+(.*)$/); if (match) { artist = match[1].trim(); song = match[2].trim(); } else { artist = line.trim(); } }
                     return { artist: artist, song: song, link: '', tags: '' };
                 }).filter(function(s) { return s.artist && s.song; });
-
-                if (songsToAdd.length === 0) {
-                    showToast('格式錯誤！', 'error');
-                    return;
-                }
+                if (songsToAdd.length === 0) { showToast('格式錯誤！', 'error'); return; }
                 const btn = document.getElementById('batchBtn');
-                btn.disabled = true;
-                btn.innerText = '上傳中...';
-                fetchWithRetry(API_URL, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'text/plain' },
-                    body: JSON.stringify({ action: 'batch_add', songs: songsToAdd, password: ADMIN_PASSWORD })
-                })
+                btn.disabled = true; btn.innerText = '上傳中...';
+                fetchWithRetry(API_URL, { method: 'POST', headers: { 'Content-Type': 'text/plain' }, body: JSON.stringify({ action: 'batch_add', songs: songsToAdd, password: ADMIN_PASSWORD }) })
                 .then(function(result) {
-                    btn.disabled = false;
-                    btn.innerText = '🚀 批量上傳至雲端';
-                    if (result.status === 'success') {
-                        document.getElementById('batchInput').value = '';
-                        toggleAddForm();
-                        showToast('🚀 成功新增 ' + songsToAdd.length + ' 首歌曲！');
-                        loadPlaylistData(true);
-                    }
-                })
-                .catch(function(err) {
-                    btn.disabled = false;
-                    btn.innerText = '🚀 批量上傳至雲端';
-                    showToast('❌ 上傳失敗，請重試', 'error');
-                    console.error(err);
-                });
+                    btn.disabled = false; btn.innerText = '🚀 批量上傳至雲端';
+                    if (result.status === 'success') { document.getElementById('batchInput').value = ''; toggleAddForm(); showToast('🚀 成功新增 ' + songsToAdd.length + ' 首歌曲！'); loadPlaylistData(true); }
+                }).catch(function(err) { btn.disabled = false; btn.innerText = '🚀 批量上傳至雲端'; showToast('❌ 上傳失敗，請重試', 'error'); console.error(err); });
             });
         }
 
         function editSong(id) {
-            if (!id) {
-                showToast('⚠️ 此歌曲資料異常，請重新整理頁面', 'error');
-                return;
-            }
+            if (!id) { showToast('⚠️ 此歌曲資料異常，請重新整理頁面', 'error'); return; }
             requireAdmin(function() {
                 const item = allSongs.find(function(s) { return String(s.id) === String(id); });
-                if (!item) {
-                    showToast('❌ 找不到這首歌曲', 'error');
-                    return;
-                }
-                const newArtist = prompt('修改歌手名稱：', item.artist);
-                if (!newArtist) return;
-                const newSong = prompt('修改歌曲名稱：', item.song);
-                if (!newSong) return;
-                const newTags = prompt('修改標籤：', item.tags || '');
-                if (newTags === null) return;
-                fetchWithRetry(API_URL, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'text/plain' },
-                    body: JSON.stringify({ action: 'edit', id: String(id), artist: newArtist.trim(), song: newSong.trim(), link: item.link || '', tags: newTags.trim(), password: ADMIN_PASSWORD })
-                })
-                .then(function(result) {
-                    loadPlaylistData(true);
-                    showToast('✅ 編輯成功！');
-                })
+                if (!item) { showToast('❌ 找不到這首歌曲', 'error'); return; }
+                const newArtist = prompt('修改歌手名稱：', item.artist); if (!newArtist) return;
+                const newSong = prompt('修改歌曲名稱：', item.song); if (!newSong) return;
+                const newTags = prompt('修改標籤：', item.tags || ''); if (newTags === null) return;
+                fetchWithRetry(API_URL, { method: 'POST', headers: { 'Content-Type': 'text/plain' }, body: JSON.stringify({ action: 'edit', id: String(id), artist: newArtist.trim(), song: newSong.trim(), link: item.link || '', tags: newTags.trim(), password: ADMIN_PASSWORD }) })
+                .then(function(result) { loadPlaylistData(true); showToast('✅ 編輯成功！'); })
                 .catch(function(err) { showToast('❌ 編輯失敗，請重試', 'error'); console.error(err); });
             });
         }
 
         function confirmDelete(id) {
-            if (!id) {
-                showToast('⚠️ 此歌曲資料異常，請重新整理頁面', 'error');
-                return;
-            }
+            if (!id) { showToast('⚠️ 此歌曲資料異常，請重新整理頁面', 'error'); return; }
             requireAdmin(function() {
                 const item = allSongs.find(function(s) { return String(s.id) === String(id); });
-                if (!item) {
-                    showToast('❌ 找不到這首歌曲', 'error');
-                    return;
-                }
+                if (!item) { showToast('❌ 找不到這首歌曲', 'error'); return; }
                 if (!confirm('確定刪除「' + item.artist + ' - ' + item.song + '」嗎？')) return;
-                fetchWithRetry(API_URL, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'text/plain' },
-                    body: JSON.stringify({ action: 'delete', id: String(id), password: ADMIN_PASSWORD })
-                })
-                .then(function(result) {
-                    loadPlaylistData(true);
-                    showToast('✅ 已刪除');
-                })
+                fetchWithRetry(API_URL, { method: 'POST', headers: { 'Content-Type': 'text/plain' }, body: JSON.stringify({ action: 'delete', id: String(id), password: ADMIN_PASSWORD }) })
+                .then(function(result) { loadPlaylistData(true); showToast('✅ 已刪除'); })
                 .catch(function(err) { showToast('❌ 刪除失敗，請重試', 'error'); console.error(err); });
             });
         }
@@ -1225,15 +934,8 @@
         function confirmDeleteRequest(id) {
             requireAdmin(function() {
                 if (!confirm('確定刪除這則留言嗎？')) return;
-                fetchWithRetry(API_URL, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'text/plain' },
-                    body: JSON.stringify({ action: 'delete_request', id: String(id), password: ADMIN_PASSWORD })
-                })
-                .then(function(result) {
-                    loadPlaylistData(true);
-                    showToast('✅ 已刪除');
-                })
+                fetchWithRetry(API_URL, { method: 'POST', headers: { 'Content-Type': 'text/plain' }, body: JSON.stringify({ action: 'delete_request', id: String(id), password: ADMIN_PASSWORD }) })
+                .then(function(result) { loadPlaylistData(true); showToast('✅ 已刪除'); })
                 .catch(function(err) { showToast('❌ 刪除失敗，請重試', 'error'); console.error(err); });
             });
         }
@@ -1241,52 +943,25 @@
         function submitRequest(btn) {
             const nick = document.getElementById('reqNick').value.trim() || '匿名訪客';
             const msg = document.getElementById('reqMessage').value.trim();
-            if (!msg) {
-                showToast('請輸入內容！', 'error');
-                return;
-            }
+            if (!msg) { showToast('請輸入內容！', 'error'); return; }
             if (nick !== '匿名訪客') localStorage.setItem('lastReplyNick', nick);
-
-            btn.disabled = true;
-            btn.innerText = '送出中...';
-            fetchWithRetry(API_URL, {
-                method: 'POST',
-                headers: { 'Content-Type': 'text/plain' },
-                body: JSON.stringify({ action: 'add_request', nickname: nick, message: msg })
-            })
+            btn.disabled = true; btn.innerText = '送出中...';
+            fetchWithRetry(API_URL, { method: 'POST', headers: { 'Content-Type': 'text/plain' }, body: JSON.stringify({ action: 'add_request', nickname: nick, message: msg }) })
             .then(function(result) {
-                btn.disabled = false;
-                btn.innerText = '送出';
-                if (result.status === 'success') {
-                    document.getElementById('reqMessage').value = '';
-                    showToast('✅ 留言成功！');
-                    loadPlaylistData(true);
-                }
-            })
-            .catch(function(err) {
-                btn.disabled = false;
-                btn.innerText = '送出';
-                showToast('❌ 留言失敗，請重試', 'error');
-                console.error(err);
-            });
+                btn.disabled = false; btn.innerText = '送出';
+                if (result.status === 'success') { document.getElementById('reqMessage').value = ''; showToast('✅ 留言成功！'); loadPlaylistData(true); }
+            }).catch(function(err) { btn.disabled = false; btn.innerText = '送出'; showToast('❌ 留言失敗，請重試', 'error'); console.error(err); });
         }
 
         function exportCSV() {
             requireAdmin(function() {
-                if (filteredSongs.length === 0) {
-                    showToast('沒有資料！', 'error');
-                    return;
-                }
+                if (filteredSongs.length === 0) { showToast('沒有資料！', 'error'); return; }
                 let csvContent = '\uFEFF歌手,歌曲名稱,YouTube連結,點擊次數,標籤,狀態\n';
-                filteredSongs.forEach(function(item) {
-                    csvContent += '"' + item.artist + '","' + item.song + '","' + (item.link || '') + '",' + (item.clicks || 0) + ',"' + (item.tags || '') + '","' + (item.status || '') + '"\n';
-                });
+                filteredSongs.forEach(function(item) { csvContent += '"' + item.artist + '","' + item.song + '","' + (item.link || '') + '",' + (item.clicks || 0) + ',"' + (item.tags || '') + '","' + (item.status || '') + '"\n'; });
                 const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
                 const url = URL.createObjectURL(blob);
                 const a = document.createElement('a');
-                a.href = url;
-                a.download = '歌單匯出_' + new Date().toISOString().slice(0, 10) + '.csv';
-                a.click();
+                a.href = url; a.download = '歌單匯出_' + new Date().toISOString().slice(0, 10) + '.csv'; a.click();
                 showToast('📥 CSV 已匯出！');
             });
         }
@@ -1294,9 +969,7 @@
         let syncInterval;
         function startAutoSync() {
             if (syncInterval) clearInterval(syncInterval);
-            syncInterval = setInterval(function() {
-                if (document.visibilityState === 'visible') loadPlaylistData(false);
-            }, 30000);
+            syncInterval = setInterval(function() { if (document.visibilityState === 'visible') loadPlaylistData(false); }, 30000);
         }
 
         function loadPlaylistData(isManual) {
@@ -1305,72 +978,32 @@
                 document.getElementById('skeletonLoader').style.display = '';
                 document.getElementById('playlistTable').style.display = 'none';
             }
-
             fetchWithRetry(API_URL)
                 .then(function(result) { renderAllData(result, false); })
-                .catch(function(error) {
-                    hideAllSkeletons();
-                    if (isManual) showToast('❌ 網路不穩或 API 錯誤，已顯示本地快取', 'error');
-                    console.error('Fetch error:', error);
-                });
+                .catch(function(error) { hideAllSkeletons(); if (isManual) showToast('❌ 網路不穩或 API 錯誤，已顯示本地快取', 'error'); console.error('Fetch error:', error); });
         }
 
-        function manualRefresh() {
-            showToast('🔄 正在重新整理...', 'info', 1500);
-            loadPlaylistData(true);
-        }
+        function manualRefresh() { showToast('🔄 正在重新整理...', 'info', 1500); loadPlaylistData(true); }
 
-        let touchStartY = 0;
-        let isPulling = false;
+        let touchStartY = 0; let isPulling = false;
         const pullIndicator = document.getElementById('pullRefreshIndicator');
         const pullText = document.getElementById('pullText');
-
-        document.addEventListener('touchstart', function(e) {
-            if (window.scrollY === 0) touchStartY = e.touches[0].clientY;
-        });
-
+        document.addEventListener('touchstart', function(e) { if (window.scrollY === 0) touchStartY = e.touches[0].clientY; });
         document.addEventListener('touchmove', function(e) {
-            if (window.scrollY === 0 && e.touches[0].clientY - touchStartY > 50) {
-                isPulling = true;
-                pullIndicator.classList.add('active');
-                pullText.innerText = '放開即可重新整理...';
-            }
+            if (window.scrollY === 0 && e.touches[0].clientY - touchStartY > 50) { isPulling = true; pullIndicator.classList.add('active'); pullText.innerText = '放開即可重新整理...'; }
         });
-
         document.addEventListener('touchend', function() {
-            if (isPulling) {
-                pullText.innerText = '正在重新整理...';
-                manualRefresh();
-                setTimeout(function() {
-                    pullIndicator.classList.remove('active');
-                    isPulling = false;
-                }, 1000);
-            }
+            if (isPulling) { pullText.innerText = '正在重新整理...'; manualRefresh(); setTimeout(function() { pullIndicator.classList.remove('active'); isPulling = false; }, 1000); }
         });
-
-        document.addEventListener('keydown', function(e) {
-            if (e.key === 'Escape') {
-                document.getElementById('randomModal').style.display = 'none';
-                document.getElementById('helpModal').style.display = 'none';
-            }
-        });
-
-        window.addEventListener('scroll', function() {
-            document.getElementById('scrollTopBtn').style.display = window.scrollY > 300 ? 'flex' : 'none';
-        });
-
+        document.addEventListener('keydown', function(e) { if (e.key === 'Escape') { document.getElementById('randomModal').style.display = 'none'; document.getElementById('helpModal').style.display = 'none'; } });
+        window.addEventListener('scroll', function() { document.getElementById('scrollTopBtn').style.display = window.scrollY > 300 ? 'flex' : 'none'; });
         document.addEventListener('DOMContentLoaded', function() {
             const lastNick = localStorage.getItem('lastReplyNick');
             if (lastNick) document.getElementById('reqNick').value = lastNick;
-
-            if (allSongs.length === 0) loadPlaylistData(true);
-            else loadPlaylistData(false);
+            if (allSongs.length === 0) loadPlaylistData(true); else loadPlaylistData(false);
             startAutoSync();
         });
-
-        document.addEventListener('visibilitychange', function() {
-            if (document.visibilityState === 'visible') loadPlaylistData(false);
-        });
+        document.addEventListener('visibilitychange', function() { if (document.visibilityState === 'visible') loadPlaylistData(false); });
     </script>
 </body>
 </html>
