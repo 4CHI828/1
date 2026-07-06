@@ -12,6 +12,17 @@
         const ADMIN_TOKEN_KEY = 'adminToken';
         const ADMIN_TOKEN_DURATION = 24 * 60 * 60 * 1000;
         const CACHE_KEY = 'playlist_cache_v2';
+        
+        // 🆕 表情符號分類
+        const EMOJI_LIST = {
+            '笑臉': ['😀','😃','😄','😁','😆','😅','😂','🤣','😊','😇','🙂','🙃','😉','😌','😍','🥰','😘','😗','😙','😚','😋','😛','😝','😜','🤪','🤨','🧐','🤓','😎','🤩','🥳','😏','😒','😞','😔','😟','😕','🙁','☹️','😣','😖','😫','😩','🥺','😢','😭','😤','😠','😡','🤬','😱','😨','😰','😥','😓','🤗','🤔','🤭','🤫','🤥','😶','😐','😑','😬','🙄','😯','😦','😧','😮','😲','🥱','😴','🤤','😪','😵','🤐','🥴','🤢','🤮','🤧','😷','🤒','🤕'],
+            '手勢': ['👍','👎','👌','🤌','🤏','✌️','🤞','🤟','🤘','🤙','👈','👉','👆','🖕','👇','☝️','👋','🤚','🖐️','✋','🖖','👏','🙌','🤝','🙏','💪','🦾','🦵','🦿','🦶','👀','👁️','👅','👄'],
+            '愛心': ['❤️','🧡','💛','💚','💙','💜','🖤','🤍','🤎','💔','❣️','💕','💞','💓','💗','💖','💘','💝','💟','♥️','💌','💋'],
+            '音樂': ['🎵','🎶','🎼','🎤','🎧','🎷','🎸','🎹','🎺','🎻','🥁','🪘','🎬','🎭','🎨','🎪','🎯','🎳','🎮','🎲'],
+            '食物': ['🍔','🍟','🍕','🌭','🥪','🌮','🌯','🥙','🧆','🥚','🍳','🥘','🍲','🥣','🥗','🍿','🧈','🧂','🥫','🍱','🍘','🍙','🍚','🍛','🍜','🍝','🍠','🍢','🍣','🍤','🍥','🥮','🍡','🥟','🥠','🥡','🍦','🍧','🍨','🍩','🍪','🎂','🍰','🧁','🥧','🍫','🍬','🍭','🍮','🍯'],
+            '慶祝': ['🎉','🎊','🎈','🎁','🎀','🎗️','🎟️','🎫','✨','🌟','💫','⭐','🌠','🎇','🎆','🧨','🎐','🎏','🎑','🏆','🏅','🥇','🥈','🥉'],
+            '自然': ['🌈','☀️','🌤️','⛅','🌥️','☁️','🌦️','🌧️','⛈️','🌩️','🌨️','❄️','☃️','⛄','🌬️','💨','🌪️','🌫️','🌊','💧','💦','☔','🌸','💮','🏵️','🌹','🥀','🌺','🌻','🌼','🌷','🌱','🌲','🌳','🌴','🌵']
+        };
     </script>
     <style>
         :root { --bg-color: #f4f6f8; --text-color: #2d3436; --card-bg: #ffffff; --primary: #ff6b6b; --primary-hover: #ee5253; --secondary: #48dbfb; --danger: #ff7675; --success: #55efc4; --warning: #fbc531; --border: #e1e4e8; --reply-bg: #f8f9fa; --accent-gold: #fbc531; --shadow-sm: 0 2px 8px rgba(0,0,0,0.04); --shadow-md: 0 4px 15px rgba(0,0,0,0.06); --shadow-lg: 0 10px 30px rgba(0,0,0,0.1); --radius-lg: 16px; --radius-md: 10px; --radius-sm: 8px; --transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1); }
@@ -174,6 +185,66 @@
         .pull-refresh-indicator.active { top: 0; }
         .pull-refresh-indicator .spinner { width: 20px; height: 20px; border: 3px solid var(--border); border-top-color: var(--primary); border-radius: 50%; animation: spin 1s linear infinite; margin-right: 10px; }
         @keyframes spin { to { transform: rotate(360deg); } }
+        
+        /* 🆕 表情符號選擇器樣式 */
+        .emoji-wrapper { position: relative; width: 100%; }
+        .emoji-toggle-btn { 
+            background: var(--bg-color); border: 1px solid var(--border); 
+            border-radius: 50%; width: 38px; height: 38px; 
+            font-size: 18px; cursor: pointer; transition: var(--transition);
+            display: inline-flex; align-items: center; justify-content: center;
+            flex-shrink: 0;
+        }
+        .emoji-toggle-btn:hover { 
+            background: var(--primary); transform: scale(1.1); 
+            border-color: var(--primary);
+        }
+        .emoji-toggle-btn.active { 
+            background: var(--primary); border-color: var(--primary);
+            transform: rotate(15deg);
+        }
+        .emoji-panel {
+            position: absolute; bottom: 50px; left: 0; right: 0;
+            background: var(--card-bg); border: 1px solid var(--border);
+            border-radius: var(--radius-lg); box-shadow: var(--shadow-lg);
+            padding: 15px; z-index: 100;
+            display: none; animation: popIn 0.2s ease;
+            max-width: 400px;
+        }
+        .emoji-panel.show { display: block; }
+        .emoji-categories {
+            display: flex; gap: 6px; margin-bottom: 12px;
+            overflow-x: auto; padding-bottom: 6px;
+            border-bottom: 1px solid var(--border);
+        }
+        .emoji-categories::-webkit-scrollbar { height: 4px; }
+        .emoji-categories::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+        .emoji-cat-btn {
+            background: var(--bg-color); border: 1px solid var(--border);
+            border-radius: 20px; padding: 5px 12px; font-size: 12px;
+            cursor: pointer; white-space: nowrap; transition: var(--transition);
+            color: var(--text-color); font-weight: 600;
+        }
+        .emoji-cat-btn:hover { background: var(--primary); color: white; border-color: var(--primary); }
+        .emoji-cat-btn.active { background: var(--primary); color: white; border-color: var(--primary); }
+        .emoji-grid {
+            display: grid; grid-template-columns: repeat(10, 1fr);
+            gap: 4px; max-height: 200px; overflow-y: auto;
+            padding: 4px;
+        }
+        .emoji-grid::-webkit-scrollbar { width: 6px; }
+        .emoji-grid::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+        .emoji-item {
+            font-size: 22px; cursor: pointer; padding: 4px;
+            border-radius: 6px; transition: var(--transition);
+            text-align: center; user-select: none;
+            aspect-ratio: 1; display: flex; align-items: center; justify-content: center;
+        }
+        .emoji-item:hover { background: var(--bg-color); transform: scale(1.3); }
+        .emoji-item:active { transform: scale(0.9); }
+        .req-msg-row { display: flex; gap: 8px; width: 100%; align-items: flex-start; }
+        .req-msg-row textarea { flex: 1; }
+        
         @media (max-width: 600px) {
             body { padding: 15px; }
             .add-form-container { width: 95vw; right: 2.5vw; bottom: 100px; }
@@ -190,6 +261,8 @@
             tr:hover { transform: translateY(-3px); box-shadow: var(--shadow-md); }
             td { padding: 8px 0; border: none; text-align: left !important; display: flex; justify-content: space-between; align-items: center; }
             td::before { content: attr(data-label); font-weight: 700; color: var(--primary); font-size: 13px; margin-right: 10px; }
+            .emoji-panel { max-width: 100%; }
+            .emoji-grid { grid-template-columns: repeat(8, 1fr); }
         }
     </style>
 </head>
@@ -248,8 +321,6 @@
             <div class="skeleton-row"><div class="skeleton-cell" style="width:20%"></div><div class="skeleton-cell" style="width:40%"></div><div class="skeleton-cell" style="width:20%"></div><div class="skeleton-cell" style="width:20%"></div></div>
         </div>
     </div>
-    
-    <!-- 🆕 表頭已更新為 5 個欄位 (包含點擊次數) -->
     <table id="playlistTable" style="display:none;">
         <thead>
             <tr>
@@ -262,12 +333,15 @@
         </thead>
         <tbody id="playlistBody"></tbody>
     </table>
-
     <div class="request-section" id="requestSection">
         <h3 style="margin-top:0; font-weight:800;">📝 點歌與留言板 <span style="font-size:12px; font-weight:normal; color:#888;">(支援無限串樓)</span></h3>
+        <!-- 🆕 主留言表單加入表情符號 -->
         <div class="request-form">
             <input type="text" id="reqNick" placeholder="您的暱稱 (選填)" style="max-width:150px;">
-            <textarea id="reqMessage" rows="2" placeholder="想點什麼歌？或給静静的留言..."></textarea>
+            <div class="req-msg-row">
+                <textarea id="reqMessage" rows="2" placeholder="想點什麼歌？或給静静的留言..."></textarea>
+                <button type="button" class="emoji-toggle-btn" onclick="toggleEmojiPanel(this)" title="插入表情符號">😊</button>
+            </div>
             <button class="btn btn-add" onclick="submitRequest(this)" style="width:auto; padding:12px 24px; margin-top:0;">送出</button>
         </div>
         <div id="requestSkeleton" class="loading active">
@@ -324,6 +398,7 @@
                 <p>🔄 <b>狀態切換</b>：管理員點擊 Emoji 切換：⏳排隊 ➔ 🎤演唱 ➔ ✅已唱 ➔ 移出。</p>
                 <p>🎵 <b>試聽功能</b>：若歌曲無特定連結，點擊試聽將<span style="color:var(--primary)">自動跳轉至 YouTube 搜索</span>該歌曲。</p>
                 <p>🔐 <b>管理員</b>：登入後可直接編輯歌曲、刪除留言或清空清單。</p>
+                <p>😊 <b>表情符號</b>：點擊留言框旁的😊按鈕，可快速插入表情符號！</p>
             </div>
             <button class="btn" style="background:var(--primary); color:white; padding: 12px 35px; font-weight:bold;" onclick="document.getElementById('helpModal').style.display='none'">我知道了</button>
         </div>
@@ -712,6 +787,107 @@
             });
         }
 
+        // 🆕 建立表情符號面板 HTML
+        function buildEmojiPanelHTML() {
+            const categories = Object.keys(EMOJI_LIST);
+            let html = '<div class="emoji-categories">';
+            for (let i = 0; i < categories.length; i++) {
+                html += '<button type="button" class="emoji-cat-btn' + (i === 0 ? ' active' : '') + '" data-cat="' + categories[i] + '">' + categories[i] + '</button>';
+            }
+            html += '</div>';
+            html += '<div class="emoji-grid" id="emojiGridContent"></div>';
+            return html;
+        }
+
+        // 🆕 渲染指定分類的表情符號
+        function renderEmojiGrid(category, gridEl) {
+            const emojis = EMOJI_LIST[category] || [];
+            let html = '';
+            for (let i = 0; i < emojis.length; i++) {
+                html += '<span class="emoji-item" data-emoji="' + emojis[i] + '">' + emojis[i] + '</span>';
+            }
+            gridEl.innerHTML = html;
+        }
+
+        // 🆕 切換表情符號面板
+        function toggleEmojiPanel(btn) {
+            // 先關閉所有其他面板
+            document.querySelectorAll('.emoji-panel.show').forEach(function(p) {
+                if (p._toggleBtn !== btn) {
+                    p.classList.remove('show');
+                    if (p._toggleBtn) p._toggleBtn.classList.remove('active');
+                }
+            });
+            
+            let panel = btn.nextElementSibling;
+            // 如果下一個元素不是面板，則建立
+            if (!panel || !panel.classList.contains('emoji-panel')) {
+                panel = document.createElement('div');
+                panel.className = 'emoji-panel';
+                panel.innerHTML = buildEmojiPanelHTML();
+                btn.parentNode.insertBefore(panel, btn.nextSibling);
+                
+                // 綁定分類按鈕事件
+                panel.querySelectorAll('.emoji-cat-btn').forEach(function(catBtn) {
+                    catBtn.addEventListener('click', function(e) {
+                        e.stopPropagation();
+                        panel.querySelectorAll('.emoji-cat-btn').forEach(function(b) { b.classList.remove('active'); });
+                        catBtn.classList.add('active');
+                        renderEmojiGrid(catBtn.dataset.cat, panel.querySelector('#emojiGridContent'));
+                    });
+                });
+                
+                // 綁定表情符號點擊事件（事件委派）
+                panel.addEventListener('click', function(e) {
+                    const emojiItem = e.target.closest('.emoji-item');
+                    if (emojiItem) {
+                        e.stopPropagation();
+                        const emoji = emojiItem.dataset.emoji;
+                        // 找到對應的 textarea
+                        const wrapper = panel.parentNode;
+                        const textarea = wrapper.querySelector('textarea');
+                        if (textarea) {
+                            insertEmojiAtCursor(textarea, emoji);
+                        }
+                    }
+                });
+                
+                // 初始渲染第一個分類
+                const firstCat = Object.keys(EMOJI_LIST)[0];
+                renderEmojiGrid(firstCat, panel.querySelector('#emojiGridContent'));
+            }
+            
+            panel.classList.toggle('show');
+            btn.classList.toggle('active');
+            panel._toggleBtn = btn;
+        }
+
+        // 🆕 在 textarea 游標位置插入表情符號
+        function insertEmojiAtCursor(textarea, emoji) {
+            const start = textarea.selectionStart;
+            const end = textarea.selectionEnd;
+            const text = textarea.value;
+            const before = text.substring(0, start);
+            const after = text.substring(end);
+            textarea.value = before + emoji + after;
+            // 將游標移到插入的表情符號後方
+            const newPos = start + emoji.length;
+            textarea.setSelectionRange(newPos, newPos);
+            textarea.focus();
+            // 觸發 input 事件（如果有綁定的話）
+            textarea.dispatchEvent(new Event('input', { bubbles: true }));
+        }
+
+        // 🆕 點擊外部關閉表情符號面板
+        document.addEventListener('click', function(e) {
+            if (!e.target.closest('.emoji-panel') && !e.target.closest('.emoji-toggle-btn')) {
+                document.querySelectorAll('.emoji-panel.show').forEach(function(p) {
+                    p.classList.remove('show');
+                    if (p._toggleBtn) p._toggleBtn.classList.remove('active');
+                });
+            }
+        });
+
         function renderRequests(requests) {
             const list = document.getElementById('requestList');
             hideSkeleton('requestSkeleton');
@@ -738,7 +914,8 @@
                     repliesHtml += '</div>';
                 }
                 const delReqBtn = isAdminMode ? '<button class="req-action-btn" style="color:var(--danger);" data-id="' + escapeHtml(String(req.id)) + '" onclick="confirmDeleteRequest(this.dataset.id)">🗑️ 刪除</button>' : '';
-                htmlContent += '<div class="request-item" data-id="' + escapeHtml(String(req.id)) + '"><div class="req-header"><span class="req-nick">' + escapeHtml(req.nickname) + '</span><span>' + escapeHtml(req.time) + '</span></div><div>' + escapeHtml(req.message) + '</div>' + repliesHtml + '<div class="req-actions"><button class="req-action-btn" onclick="toggleReplyInput(this)">💬 回覆</button>' + delReqBtn + '</div><div class="reply-input-area" style="display:none;"><input type="text" class="reply-nick" placeholder="暱稱" value="' + escapeHtml(localStorage.getItem('lastReplyNick') || '') + '"><textarea class="reply-text" placeholder="輸入回覆內容..."></textarea><div class="reply-btn-group"><button class="btn-reply-general" onclick="submitGeneralReply(this)">💬 一般回覆</button><button class="btn-reply-official" onclick="submitOfficialReply(this)">👑 官方回覆</button></div></div></div>';
+                // 🆕 回覆區也加入表情符號按鈕
+                htmlContent += '<div class="request-item" data-id="' + escapeHtml(String(req.id)) + '"><div class="req-header"><span class="req-nick">' + escapeHtml(req.nickname) + '</span><span>' + escapeHtml(req.time) + '</span></div><div>' + escapeHtml(req.message) + '</div>' + repliesHtml + '<div class="req-actions"><button class="req-action-btn" onclick="toggleReplyInput(this)">💬 回覆</button>' + delReqBtn + '</div><div class="reply-input-area" style="display:none;"><div style="display:flex; gap:8px; align-items:flex-start; width:100%;"><input type="text" class="reply-nick" placeholder="暱稱" value="' + escapeHtml(localStorage.getItem('lastReplyNick') || '') + '" style="max-width:140px;"><div style="flex:1; position:relative;"><textarea class="reply-text" placeholder="輸入回覆內容..." rows="2" style="width:100%;"></textarea><button type="button" class="emoji-toggle-btn" onclick="toggleEmojiPanel(this)" title="插入表情符號" style="position:absolute; right:8px; top:8px; width:32px; height:32px; font-size:16px;">😊</button></div></div><div class="reply-btn-group"><button class="btn-reply-general" onclick="submitGeneralReply(this)">💬 一般回覆</button><button class="btn-reply-official" onclick="submitOfficialReply(this)">👑 官方回覆</button></div></div></div>';
             }
             list.innerHTML = htmlContent;
         }
@@ -748,6 +925,11 @@
             const inputArea = requestItem.querySelector('.reply-input-area');
             if (inputArea && inputArea.style.display === 'none') {
                 document.querySelectorAll('.reply-input-area').forEach(function(el) { el.style.display = 'none'; });
+                // 關閉所有表情符號面板
+                document.querySelectorAll('.emoji-panel.show').forEach(function(p) {
+                    p.classList.remove('show');
+                    if (p._toggleBtn) p._toggleBtn.classList.remove('active');
+                });
                 inputArea.style.display = 'flex';
                 inputArea.querySelector('.reply-nick').focus();
             } else if (inputArea) { inputArea.style.display = 'none'; }
@@ -812,7 +994,6 @@
             renderPlaylist(filteredSongs);
         }
 
-        // 🆕 渲染歌單 (包含 5 個欄位：歌手、歌曲、點擊次數、試聽、操作)
         function renderPlaylist(songs) {
             const tbody = document.getElementById('playlistBody');
             tbody.innerHTML = '';
@@ -830,7 +1011,6 @@
                 const tagsHtml = item.tags ? item.tags.split(',').map(function(t) { return '<span class="tag-badge">' + escapeHtml(t.trim()) + '</span>'; }).join('') : '';
                 const songId = escapeHtml(String(item.id));
                 let actionBtns = isAdminMode ? '<button class="btn-sm btn-edit" data-id="' + songId + '" onclick="editSong(this.dataset.id)">✏️</button><button class="btn-sm btn-del" data-id="' + songId + '" onclick="confirmDelete(this.dataset.id)">🗑️</button>' : '<span style="color:#ccc; font-size:12px;">(訪客)</span>';
-                
                 tr.innerHTML = 
                     '<td data-label="歌手">' + escapeHtml(item.artist) + '<br>' + tagsHtml + '</td>' +
                     '<td data-label="歌曲名稱"><span class="clickable-title" data-id="' + songId + '" onclick="addToQueue(this.dataset.id)">' + escapeHtml(item.song) + '</span></td>' +
@@ -845,7 +1025,6 @@
             fetch(API_URL, { method: 'POST', headers: { 'Content-Type': 'text/plain' }, body: JSON.stringify({ action: 'click', id: String(id) }) }).catch(function() {});
         }
 
-        // 🆕 隨機選歌 (彈窗中顯示點擊次數)
         function pickRandomSong() {
             if (allSongs.length === 0) { showToast('目前沒有歌曲！', 'error'); return; }
             const randomSong = allSongs[Math.floor(Math.random() * allSongs.length)];
