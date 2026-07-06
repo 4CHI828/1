@@ -6,7 +6,6 @@
     <title>静静在夏天🍔🎤⁰³²⁰線上歌單</title>
     <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
     <script>
-        // ⚠️ 請確保此 URL 是您最新部署的 GAS 網址
         const API_URL = 'https://script.google.com/macros/s/AKfycbw7NZWJ9J_C298PdmuivaKWEUARpiZ2BuaOTwwSb_xNjM9LyjQZhDtrcSD88eoWfj_F/exec'; 
         const ADMIN_PASSWORD = "admin789"; 
         const ADMIN_NAME = "静静"; 
@@ -249,8 +248,9 @@
             <div class="skeleton-row"><div class="skeleton-cell" style="width:20%"></div><div class="skeleton-cell" style="width:40%"></div><div class="skeleton-cell" style="width:20%"></div><div class="skeleton-cell" style="width:20%"></div></div>
         </div>
     </div>
+    <!-- 🆕 表頭新增「點擊次數」欄位 -->
     <table id="playlistTable" style="display:none;">
-        <thead><tr><th style="border-radius:var(--radius-lg) 0 0 0;">歌手</th><th>歌曲名稱</th><th>試聽</th><th style="width:80px; border-radius:0 var(--radius-lg) 0 0;">操作</th></tr></thead>
+        <thead><tr><th style="border-radius:var(--radius-lg) 0 0 0;">歌手</th><th>歌曲名稱</th><th style="text-align:center; width:90px;">點擊次數</th><th>試聽</th><th style="width:80px; border-radius:0 var(--radius-lg) 0 0;">操作</th></tr></thead>
         <tbody id="playlistBody"></tbody>
     </table>
     <div class="request-section" id="requestSection">
@@ -987,6 +987,7 @@
             renderPlaylist(filteredSongs);
         }
 
+        // 🆕 渲染歌單 (新增「點擊次數」欄位)
         function renderPlaylist(songs) {
             const tbody = document.getElementById('playlistBody');
             tbody.innerHTML = '';
@@ -995,7 +996,7 @@
             showElement('playlistTable');
 
             if (!songs || songs.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="4" style="text-align:center; padding:20px;">🎵 找不到符合條件的歌曲</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="5" style="text-align:center; padding:20px;">🎵 找不到符合條件的歌曲</td></tr>';
                 return;
             }
 
@@ -1014,8 +1015,10 @@
                     actionBtns = '<span style="color:#ccc; font-size:12px;">(訪客)</span>';
                 }
 
-                tr.innerHTML = '<td data-label="歌手">' + escapeHtml(item.artist) + '<br>' + tagsHtml + '</td>' +
+                tr.innerHTML = 
+                    '<td data-label="歌手">' + escapeHtml(item.artist) + '<br>' + tagsHtml + '</td>' +
                     '<td data-label="歌曲名稱"><span class="clickable-title" data-id="' + songId + '" onclick="addToQueue(this.dataset.id)">' + escapeHtml(item.song) + '</span></td>' +
+                    '<td data-label="點擊次數" style="text-align:center; font-weight:bold; color:var(--primary); font-size:15px;">' + (item.clicks || 0) + ' 🔥</td>' +
                     '<td data-label="試聽"><a href="' + displayLink + '" target="_blank" class="listen-link" data-id="' + songId + '" onclick="recordClick(this.dataset.id)" style="color:var(--primary); text-decoration:none; font-weight:bold;">🎧 試聽</a></td>' +
                     '<td data-label="操作"><div class="action-btns">' + actionBtns + '</div></td>';
                 tbody.appendChild(tr);
@@ -1030,6 +1033,7 @@
             }).catch(function() {});
         }
 
+        // 🆕 隨機選歌 (彈窗中顯示點擊次數)
         function pickRandomSong() {
             if (allSongs.length === 0) {
                 showToast('目前沒有歌曲！', 'error');
@@ -1037,7 +1041,12 @@
             }
             const randomSong = allSongs[Math.floor(Math.random() * allSongs.length)];
             let link = (randomSong.link && isValidUrl(randomSong.link)) ? randomSong.link : 'https://www.youtube.com/results?search_query=' + encodeURIComponent((randomSong.artist || '') + ' ' + (randomSong.song || ''));
-            document.getElementById('randomSongInfo').innerHTML = '🎤 ' + escapeHtml(randomSong.artist) + '<br>🎵 ' + escapeHtml(randomSong.song);
+            
+            document.getElementById('randomSongInfo').innerHTML = 
+                '🎤 ' + escapeHtml(randomSong.artist) + 
+                '<br>🎵 ' + escapeHtml(randomSong.song) + 
+                '<br><span style="font-size:16px; color:#888; margin-top:10px; display:inline-block;">🔥 已被試聽 ' + (randomSong.clicks || 0) + ' 次</span>';
+                
             document.getElementById('randomSongLink').href = link;
             document.getElementById('randomModal').style.display = 'flex';
 
