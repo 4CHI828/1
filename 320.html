@@ -6,6 +6,7 @@
     <title>静静在夏天🍔🎤⁰³²⁰線上歌單</title>
     <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
     <script>
+        // ⚠️ 請確保此 URL 是您最新部署的 GAS 網址
         const API_URL = 'https://script.google.com/macros/s/AKfycbw7NZWJ9J_C298PdmuivaKWEUARpiZ2BuaOTwwSb_xNjM9LyjQZhDtrcSD88eoWfj_F/exec'; 
         const ADMIN_PASSWORD = "admin789"; 
         const ADMIN_NAME = "静静"; 
@@ -14,64 +15,27 @@
         const CACHE_KEY = 'playlist_cache_v2';
     </script>
     <style>
-        :root { 
-            --bg-color: #f4f6f8; --text-color: #2d3436; --card-bg: #ffffff; 
-            --primary: #ff6b6b; --primary-hover: #ee5253; --secondary: #48dbfb;
-            --danger: #ff7675; --success: #55efc4; --warning: #fbc531; 
-            --border: #e1e4e8; --reply-bg: #f8f9fa; --accent-gold: #fbc531;
-            --shadow-sm: 0 2px 8px rgba(0,0,0,0.04);
-            --shadow-md: 0 4px 15px rgba(0,0,0,0.06);
-            --shadow-lg: 0 10px 30px rgba(0,0,0,0.1);
-            --radius-lg: 16px; --radius-md: 10px; --radius-sm: 8px;
-            --transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
-        }
-        body.dark-mode { 
-            --bg-color: #121212; --text-color: #e0e0e0; --card-bg: #1e1e1e; 
-            --primary: #ff7675; --border: #2d2d2d; --reply-bg: #2d3436; 
-            --shadow-sm: 0 2px 8px rgba(0,0,0,0.2); --shadow-md: 0 4px 15px rgba(0,0,0,0.4); --shadow-lg: 0 10px 30px rgba(0,0,0,0.6);
-        }
-        
-        body { 
-            font-family: 'PingFang TC', 'Microsoft JhengHei', 'Segoe UI', Roboto, sans-serif; 
-            background-color: var(--bg-color); color: var(--text-color); 
-            max-width: 900px; margin: 0 auto; padding: 20px; padding-bottom: 120px; 
-            scroll-behavior: smooth; transition: background 0.4s ease, color 0.4s ease; line-height: 1.6;
-            animation: fadeInUp 0.5s ease-out;
-            overscroll-behavior-y: none; 
-        }
-
+        :root { --bg-color: #f4f6f8; --text-color: #2d3436; --card-bg: #ffffff; --primary: #ff6b6b; --primary-hover: #ee5253; --secondary: #48dbfb; --danger: #ff7675; --success: #55efc4; --warning: #fbc531; --border: #e1e4e8; --reply-bg: #f8f9fa; --accent-gold: #fbc531; --shadow-sm: 0 2px 8px rgba(0,0,0,0.04); --shadow-md: 0 4px 15px rgba(0,0,0,0.06); --shadow-lg: 0 10px 30px rgba(0,0,0,0.1); --radius-lg: 16px; --radius-md: 10px; --radius-sm: 8px; --transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1); }
+        body.dark-mode { --bg-color: #121212; --text-color: #e0e0e0; --card-bg: #1e1e1e; --primary: #ff7675; --border: #2d2d2d; --reply-bg: #2d3436; --shadow-sm: 0 2px 8px rgba(0,0,0,0.2); --shadow-md: 0 4px 15px rgba(0,0,0,0.4); --shadow-lg: 0 10px 30px rgba(0,0,0,0.6); }
+        body { font-family: 'PingFang TC', 'Microsoft JhengHei', 'Segoe UI', Roboto, sans-serif; background-color: var(--bg-color); color: var(--text-color); max-width: 900px; margin: 0 auto; padding: 20px; padding-bottom: 120px; scroll-behavior: smooth; transition: background 0.4s ease, color 0.4s ease; line-height: 1.6; animation: fadeInUp 0.5s ease-out; overscroll-behavior-y: none; }
         @keyframes fadeInUp { from { opacity: 0; transform: translateY(15px); } to { opacity: 1; transform: translateY(0); } }
-
         h1 { text-align: center; color: var(--primary); font-size: 26px; margin-bottom: 25px; font-weight: 800; letter-spacing: 1px; }
-
         .social-links { display: flex; justify-content: center; gap: 12px; margin-bottom: 35px; flex-wrap: wrap; }
         .social-links a { text-decoration: none; color: var(--text-color); background: var(--card-bg); padding: 8px 16px; border-radius: 50px; font-size: 13px; font-weight: 500; box-shadow: var(--shadow-sm); border: 1px solid var(--border); transition: var(--transition); }
         .social-links a:hover { transform: translateY(-3px); color: var(--primary); box-shadow: var(--shadow-md); border-color: var(--primary); }
-
         .control-panel { background: var(--card-bg); padding: 18px 20px; border-radius: var(--radius-lg); box-shadow: var(--shadow-md); margin-bottom: 30px; border: 1px solid var(--border); }
-
         .filter-bar { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 14px; }
-
         .filter-group { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
         .filter-group + .filter-group { padding-left: 14px; border-left: 1px solid var(--border); }
         @media (max-width: 700px) { .filter-group + .filter-group { padding-left: 0; border-left: none; } }
-
         .filter-group-search { flex: 1 1 260px; min-width: 220px; }
         .search-wrapper { position: relative; flex: 1; min-width: 150px; max-width: 320px; }
         #artistFilter { flex: none; width: 110px; }
-
-        .filter-bar input, .filter-bar select {
-            width: 100%; padding: 10px 14px; font-size: 14px;
-            box-sizing: border-box; transition: var(--transition);
-            border: 1px solid var(--border); border-radius: var(--radius-md);
-            background: var(--bg-color); color: var(--text-color);
-        }
+        .filter-bar input, .filter-bar select { width: 100%; padding: 10px 14px; font-size: 14px; box-sizing: border-box; transition: var(--transition); border: 1px solid var(--border); border-radius: var(--radius-md); background: var(--bg-color); color: var(--text-color); }
         .filter-bar select { text-align: center; text-align-last: center; cursor: pointer; }
         .filter-bar input:focus, .filter-bar select:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 3px rgba(255,107,107,0.15); }
-
         .clear-search-btn { position: absolute; right: 12px; top: 50%; transform: translateY(-50%); color: #ff9f43; cursor: pointer; font-weight: bold; font-size: 16px; display: none; transition: var(--transition); }
         .clear-search-btn:hover { color: var(--primary); transform: translateY(-50%) scale(1.2); }
-
         .btn { border: none; border-radius: var(--radius-md); cursor: pointer; font-weight: 600; display: inline-flex; align-items: center; justify-content: center; padding: 10px 16px; font-size: 14px; transition: var(--transition); }
         .btn:hover { filter: brightness(1.05); transform: translateY(-1px); }
         .btn:active { transform: scale(0.95); }
@@ -80,10 +44,8 @@
         .btn-icon { width: 42px; height: 42px; padding: 0; flex: none; font-size: 17px; background: var(--bg-color); border: 1px solid var(--border); color: var(--text-color); }
         .btn-login { background: var(--primary); color: white; }
         .btn-logout { background: var(--danger); color: white; display: none; }
-        
         .admin-badge { display: none; background: linear-gradient(45deg, #fbc531, #f1c40f); color: #fff; padding: 4px 12px; border-radius: 50px; font-size: 12px; margin-left: 10px; vertical-align: middle; }
         .admin-badge.active { display: inline-block; }
-
         .queue-panel { background: linear-gradient(135deg, #fffcf0 0%, #fff3cd 100%); border: 1px solid #ffeaa7; color: #856404; padding: 25px; border-radius: var(--radius-lg); margin-bottom: 30px; box-shadow: var(--shadow-md); }
         body.dark-mode .queue-panel { background: linear-gradient(135deg, #2c2a1a 0%, #3d3b20 100%); border-color: #635c33; color: var(--accent-gold); }
         .queue-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 20px; flex-wrap: wrap; gap: 10px; }
@@ -92,33 +54,25 @@
         .queue-sort-hint { font-size: 12px; font-weight: normal; color: #a8a8a8; }
         .btn-queue { padding: 8px 16px; border-radius: 10px; border: none; cursor: pointer; font-weight: 600; background: var(--danger); color: white; transition: var(--transition); }
         .btn-queue:hover { background: #ee5253; transform: translateY(-2px); box-shadow: 0 4px 10px rgba(255, 118, 117, 0.3); }
-
         .queue-list { max-height: 500px; overflow-y: auto; padding-right: 5px; }
         .queue-item { background: rgba(255,255,255,0.8); padding: 14px 18px; border-radius: var(--radius-md); font-size: 15px; display: flex; align-items: center; gap: 12px; transition: all 0.3s ease; border: 1px solid transparent; margin-bottom: 8px; }
         .queue-item:last-child { margin-bottom: 0; }
         .queue-item:hover { transform: translateX(5px); background: rgba(255,255,255,0.95); box-shadow: var(--shadow-sm); }
         .queue-item.sortable-ghost { opacity: 0.4; background: var(--border); border: 2px dashed var(--primary); }
         .queue-item.sortable-chosen { box-shadow: var(--shadow-lg); transform: scale(1.02); }
-        
         body.dark-mode .queue-item { background: rgba(0,0,0,0.3); color: #e0e0e0; }
-        
         .queue-item.singing { background: rgba(255,107,107,0.15); border: 2px solid var(--primary); box-shadow: 0 0 20px rgba(255,107,107,0.3); animation: pulse-queue 2s infinite; }
         .queue-item.done { opacity: 0.55; text-decoration: line-through; background: rgba(85, 239, 196, 0.08); border-color: var(--success); }
         .queue-item.queued { background: rgba(255,255,255,0.8); }
-        
         @keyframes pulse-queue { 0%, 100% { box-shadow: 0 0 20px rgba(255,107,107,0.3); } 50% { box-shadow: 0 0 30px rgba(255,107,107,0.6); } }
-        
         .queue-index { font-weight: 800; color: var(--primary); min-width: 28px; font-size: 14px; cursor: grab; padding: 5px; border-radius: 50%; background: rgba(255,107,107,0.1); text-align: center; }
         .queue-index:active { cursor: grabbing; background: rgba(255,107,107,0.3); }
-        
         .queue-status-btn { background: none; border: none; font-size: 20px; cursor: pointer; transition: var(--transition); }
         .queue-status-btn:hover { transform: scale(1.3); }
         .queue-status-emoji { font-size: 20px; min-width: 28px; text-align: center; }
-        
         .queue-text { flex: 1; font-weight: 600; }
         .queue-del-btn { background: none; border: none; color: #b2bec3; cursor: pointer; border-radius: 50%; transition: var(--transition); width: 30px; height: 30px; display: flex; align-items: center; justify-content: center; }
         .queue-del-btn:hover { color: white; background-color: var(--danger); }
-
         .queue-stats { display: flex; gap: 10px; font-size: 12px; color: var(--text-color); margin-bottom: 15px; flex-wrap: wrap; }
         .queue-stats span { padding: 5px 12px; background: var(--bg-color); border-radius: 20px; border: 1px solid var(--border); font-weight: 600; }
         .queue-stats .stat-singing { background: rgba(255,107,107,0.15); color: var(--primary); border-color: var(--primary); }
@@ -126,7 +80,6 @@
         .queue-stats .stat-done { background: rgba(85,239,196,0.1); color: #00b894; border-color: #55efc4; }
         body.dark-mode .queue-stats .stat-queued { color: #48dbfb; }
         body.dark-mode .queue-stats .stat-done { color: #55efc4; }
-
         .queue-section { margin-bottom: 12px; }
         .queue-section-title { font-size: 12px; font-weight: 700; margin-bottom: 8px; padding: 6px 12px; border-radius: 8px; display: flex; align-items: center; gap: 6px; letter-spacing: 0.5px; }
         .queue-section-title.singing { background: rgba(255,107,107,0.15); color: var(--primary); }
@@ -134,12 +87,9 @@
         .queue-section-title.done { background: rgba(85,239,196,0.1); color: #00b894; }
         body.dark-mode .queue-section-title.queued { color: #48dbfb; }
         body.dark-mode .queue-section-title.done { color: #55efc4; }
-
         .queue-queued-list { display: flex; flex-direction: column; gap: 8px; }
-
         @keyframes fadeInQueue { from { opacity: 0; transform: translateX(-20px); } to { opacity: 1; transform: translateX(0); } }
         .queue-item.new-item { animation: fadeInQueue 0.5s ease-out; }
-
         table { width: 100%; border-collapse: separate; border-spacing: 0; background: var(--card-bg); border-radius: var(--radius-lg); overflow: hidden; box-shadow: var(--shadow-md); border: 1px solid var(--border); }
         th, td { padding: 18px; text-align: left; border-bottom: 1px solid var(--border); }
         th { background-color: var(--primary); color: white; font-weight: 600; font-size: 15px; }
@@ -152,7 +102,6 @@
         .tag-badge:hover { background-color: var(--primary); color: white; border-color: var(--primary); }
         .clickable-title { cursor: pointer; transition: var(--transition); font-weight: 600; color: var(--text-color); }
         .clickable-title:hover { color: var(--primary); text-decoration: underline; text-underline-offset: 4px; }
-
         .request-section { background: var(--card-bg); padding: 25px; border-radius: var(--radius-lg); box-shadow: var(--shadow-md); margin-top: 30px; border: 1px solid var(--border); }
         .request-form { display: flex; gap: 12px; margin-bottom: 25px; flex-wrap: wrap; }
         .request-form input, .request-form textarea { padding: 14px; border: 1px solid var(--border); border-radius: var(--radius-md); background: var(--bg-color); color: var(--text-color); transition: var(--transition); }
@@ -164,7 +113,6 @@
         .req-actions { display: flex; gap: 12px; margin-top: 15px; }
         .req-action-btn { background: none; border: none; color: #b2bec3; font-size: 12px; cursor: pointer; transition: var(--transition); }
         .req-action-btn:hover { color: var(--primary); font-weight: bold; }
-
         .replies-container { margin-top: 15px; display: flex; flex-direction: column; gap: 12px; padding-left: 20px; }
         .reply-box { padding: 12px 18px; border-radius: var(--radius-md); font-size: 13px; border: 1px solid var(--border); max-width: 90%; position: relative; transition: var(--transition); }
         .reply-box.official { background-color: #fffbe6; border-left: 4px solid var(--accent-gold); border-radius: 0 15px 15px 15px; }
@@ -175,17 +123,14 @@
         .reply-header.general { color: #0984e3; }
         .reply-del-btn { background: none; border: none; color: #ccc; cursor: pointer; opacity: 0; transition: var(--transition); }
         .reply-box:hover .reply-del-btn { opacity: 1; }
-
         .reply-input-area { margin-top: 15px; display: flex; flex-direction: column; gap: 10px; background: var(--bg-color); padding: 20px; border-radius: var(--radius-md); border: 1px dashed var(--border); }
         .reply-input-area input, .reply-input-area textarea { padding: 12px; border: 1px solid var(--border); border-radius: 8px; background: var(--card-bg); color: var(--text-color); }
         .reply-btn-group { display: flex; gap: 10px; justify-content: flex-end; }
         .btn-reply-general { background: #636e72; color: white; padding: 8px 16px; border-radius: 8px; border: none; cursor: pointer; font-weight: 600; transition: var(--transition); }
         .btn-reply-official { background: var(--accent-gold); color: #333; padding: 8px 16px; border-radius: 8px; border: none; cursor: pointer; font-weight: bold; transition: var(--transition); }
-
         .footer { text-align: center; margin-top: 50px; color: #b2bec3; font-size: 13px; }
         .footer a { color: var(--primary); text-decoration: none; font-weight: 600; transition: var(--transition); }
         .footer a:hover { text-decoration: underline; }
-        
         .fab-group { position: fixed; bottom: 30px; right: 30px; display: flex; flex-direction: column; gap: 15px; z-index: 1000; align-items: flex-end; }
         .fab-btn { color: white; border: none; padding: 16px 28px; border-radius: 50px; font-size: 16px; font-weight: 800; box-shadow: 0 8px 25px rgba(0,0,0,0.2); cursor: pointer; transition: var(--transition); }
         .fab-btn:hover { transform: translateY(-5px) scale(1.02); box-shadow: 0 12px 30px rgba(0,0,0,0.3); }
@@ -194,7 +139,6 @@
         .fab-btn.active { background: var(--danger) !important; }
         .scroll-top-btn { background-color: #636e72; color: white; border: none; width: 55px; height: 55px; border-radius: 50%; font-size: 20px; cursor: pointer; display: none; align-items: center; justify-content: center; }
         .scroll-top-btn:hover { background-color: #2d3436; transform: translateY(-5px); }
-
         .add-form-container { position: fixed; bottom: 110px; right: 30px; width: 400px; max-width: 90vw; background: var(--card-bg); padding: 30px; border-radius: var(--radius-lg); box-shadow: var(--shadow-lg); display: none; z-index: 999; animation: slideUp 0.3s ease; }
         @keyframes slideUp { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
         .form-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; }
@@ -207,13 +151,11 @@
         .form-group input:focus, .form-group textarea:focus { outline: none; border-color: var(--primary); }
         .btn-add { background: linear-gradient(45deg, var(--primary), #ff7675); color: white; border: none; padding: 16px; border-radius: 12px; cursor: pointer; font-size: 16px; font-weight: 800; width: 100%; transition: var(--transition); }
         .btn-add:hover { transform: translateY(-3px); box-shadow: 0 8px 20px rgba(255,107,107,0.4); }
-
         .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 2000; justify-content: center; align-items: center; }
         .modal-content { background: var(--card-bg); padding: 35px; border-radius: var(--radius-lg); text-align: center; max-width: 500px; width: 90%; box-shadow: var(--shadow-lg); animation: popIn 0.3s ease; }
         @keyframes popIn { from { transform: scale(0.8); opacity: 0; } to { transform: scale(1); opacity: 1; } }
         .btn-listen { background: linear-gradient(45deg, #ff0000, #d63031); color: white; text-decoration: none; padding: 16px 32px; border-radius: 12px; display: inline-block; margin: 25px 0; font-weight: 800; transition: var(--transition); }
         .btn-listen:hover { transform: scale(1.05); box-shadow: 0 10px 25px rgba(214,48,49,0.6); }
-
         .toast-container { position: fixed; top: 20px; right: 20px; z-index: 9999; display: flex; flex-direction: column; gap: 12px; }
         .toast { padding: 14px 26px; border-radius: 12px; color: white; font-size: 14px; font-weight: 600; box-shadow: var(--shadow-lg); animation: slideIn 0.3s ease; min-width: 220px; }
         .toast.success { background-color: #00b894; }
@@ -221,7 +163,6 @@
         .toast.info { background-color: #0984e3; }
         @keyframes slideIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
         @keyframes slideOut { from { transform: translateX(0); opacity: 1; } to { transform: translateX(100%); opacity: 0; } }
-
         .loading { display: none; transition: opacity 0.3s ease; } 
         .loading.active { display: block; }
         .loading.fade-out { opacity: 0; pointer-events: none; }
@@ -230,12 +171,10 @@
         .skeleton-row { display: flex; padding: 18px; border-bottom: 1px solid var(--border); gap: 15px; }
         .skeleton-cell { height: 20px; background: linear-gradient(90deg, var(--border) 25%, var(--bg-color) 50%, var(--border) 75%); background-size: 200% 100%; animation: shimmer 1.5s infinite; border-radius: 4px; }
         @keyframes shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
-
         .pull-refresh-indicator { position: fixed; top: -60px; left: 0; width: 100%; height: 60px; display: flex; align-items: center; justify-content: center; background: var(--card-bg); color: var(--primary); font-weight: bold; box-shadow: var(--shadow-sm); z-index: 1001; transition: top 0.3s ease; }
         .pull-refresh-indicator.active { top: 0; }
         .pull-refresh-indicator .spinner { width: 20px; height: 20px; border: 3px solid var(--border); border-top-color: var(--primary); border-radius: 50%; animation: spin 1s linear infinite; margin-right: 10px; }
         @keyframes spin { to { transform: rotate(360deg); } }
-
         @media (max-width: 600px) {
             body { padding: 15px; }
             .add-form-container { width: 95vw; right: 2.5vw; bottom: 100px; }
@@ -256,12 +195,8 @@
     </style>
 </head>
 <body id="body">
-    <div id="pullRefreshIndicator" class="pull-refresh-indicator">
-        <div class="spinner"></div> <span id="pullText">放開即可重新整理...</span>
-    </div>
-
+    <div id="pullRefreshIndicator" class="pull-refresh-indicator"><div class="spinner"></div> <span id="pullText">放開即可重新整理...</span></div>
     <h1 id="pageTitle">静静在夏天🍔🎤⁰³²⁰歌單 <span class="admin-badge" id="adminBadge">👑 管理員模式</span></h1>
-    
     <div class="social-links">
         <a href="https://v.douyin.com/mw-osadXTvk/" target="_blank">🍔 抖音</a>
         <a href="https://www.twitch.tv/jingjingzaixiatian" target="_blank">🍔 圖奇</a>
@@ -269,7 +204,6 @@
         <a href="https://www.youtube.com/playlist?list=PL3LHSN24syoOcIqA8nRwfYgAOoR5U27_U" target="_blank">🍔 Youtube</a>
         <a href="https://www.instagram.com/jingjing24739233910/" target="_blank">🍔 IG</a>
     </div>
-
     <div class="control-panel">
         <div class="filter-bar">
             <div class="filter-group filter-group-search">
@@ -295,7 +229,6 @@
             </div>
         </div>
     </div>
-
     <div class="queue-panel" id="queuePanel">
         <div class="queue-header">
             <div class="queue-heading">
@@ -306,27 +239,20 @@
         </div>
         <div id="queueSkeleton" class="loading active">
             <div class="skeleton-row"><div class="skeleton-cell" style="width:10%"></div><div class="skeleton-cell" style="width:10%"></div><div class="skeleton-cell" style="width:60%"></div><div class="skeleton-cell" style="width:20%"></div></div>
-            <div class="skeleton-row"><div class="skeleton-cell" style="width:10%"></div><div class="skeleton-cell" style="width:10%"></div><div class="skeleton-cell" style="width:60%"></div><div class="skeleton-cell" style="width:20%"></div></div>
         </div>
         <div id="queueList" class="queue-list" style="display:none;"></div>
     </div>
-
     <h3 style="margin-left:10px; font-weight:800; color:var(--text-color);">🎵 目前歌單 (<span id="songCount">0</span> 首)</h3>
-    
     <div id="skeletonLoader" class="loading active">
         <div class="skeleton-table">
             <div class="skeleton-header"></div>
             <div class="skeleton-row"><div class="skeleton-cell" style="width:20%"></div><div class="skeleton-cell" style="width:40%"></div><div class="skeleton-cell" style="width:20%"></div><div class="skeleton-cell" style="width:20%"></div></div>
-            <div class="skeleton-row"><div class="skeleton-cell" style="width:20%"></div><div class="skeleton-cell" style="width:40%"></div><div class="skeleton-cell" style="width:20%"></div><div class="skeleton-cell" style="width:20%"></div></div>
-            <div class="skeleton-row"><div class="skeleton-cell" style="width:20%"></div><div class="skeleton-cell" style="width:40%"></div><div class="skeleton-cell" style="width:20%"></div><div class="skeleton-cell" style="width:20%"></div></div>
         </div>
     </div>
-    
     <table id="playlistTable" style="display:none;">
         <thead><tr><th style="border-radius:var(--radius-lg) 0 0 0;">歌手</th><th>歌曲名稱</th><th>試聽</th><th style="width:80px; border-radius:0 var(--radius-lg) 0 0;">操作</th></tr></thead>
         <tbody id="playlistBody"></tbody>
     </table>
-    
     <div class="request-section" id="requestSection">
         <h3 style="margin-top:0; font-weight:800;">📝 點歌與留言板 <span style="font-size:12px; font-weight:normal; color:#888;">(支援無限串樓)</span></h3>
         <div class="request-form">
@@ -336,22 +262,18 @@
         </div>
         <div id="requestSkeleton" class="loading active">
             <div class="skeleton-row"><div class="skeleton-cell" style="width:30%"></div><div class="skeleton-cell" style="width:70%"></div></div>
-            <div class="skeleton-row"><div class="skeleton-cell" style="width:20%"></div><div class="skeleton-cell" style="width:80%"></div></div>
         </div>
         <div id="requestList" class="request-list" style="display:none;"></div>
     </div>
-
     <div class="footer">
         <p>💖 造訪次數: <span id="visitCount">0</span> 次</p>
         <p>由 <a href="https://www.douyin.com/user/MS4wLjABAAAAamj38l-UDbYbUGcPhEdJI-rM8-Y_tAMFLy7kZAWMpJw" target="_blank">新竹奇奇828</a> 協助升級製作</p>
     </div>
-
     <div class="fab-group">
         <button id="scrollTopBtn" class="scroll-top-btn" onclick="window.scrollTo({top:0, behavior:'smooth'})">⬆️</button>
         <button id="msgBtn" class="fab-btn msg-btn" onclick="scrollToRequestSection()">💬 留言</button>
         <button id="fabBtn" class="fab-btn add-btn" onclick="toggleAddForm()">新增歌曲</button>
     </div>
-
     <div id="addFormContainer" class="add-form-container">
         <div class="form-header">
             <h3 style="margin:0; font-size:18px; font-weight:800;">📝 新增歌曲</h3>
@@ -372,7 +294,6 @@
             <button id="batchBtn" class="btn-add" onclick="batchAddSongs()">🚀 批量上傳至雲端</button>
         </div>
     </div>
-
     <div id="randomModal" class="modal-overlay" onclick="if(event.target===this)this.style.display='none'">
         <div class="modal-content">
             <h2 style="color:var(--primary); margin-top:0; font-weight:800;">✨ 命運的選擇 ✨</h2>
@@ -384,7 +305,6 @@
             </div>
         </div>
     </div>
-
     <div id="helpModal" class="modal-overlay" onclick="if(event.target===this)this.style.display='none'">
         <div class="modal-content">
             <h2 style="color:var(--primary); margin-top:0; font-weight:800;">📖 系統功能說明</h2>
@@ -398,7 +318,6 @@
             <button class="btn" style="background:var(--primary); color:white; padding: 12px 35px; font-weight:bold;" onclick="document.getElementById('helpModal').style.display='none'">我知道了</button>
         </div>
     </div>
-
     <div id="toastContainer" class="toast-container"></div>
 
     <script>
@@ -460,6 +379,11 @@
             if (!text) return '';
             const map = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' };
             return text.replace(/[&<>"']/g, m => map[m]);
+        }
+
+        function isValidUrl(url) {
+            if (!url) return false;
+            return /^https?:\/\//i.test(url);
         }
 
         function isAdmin() {
@@ -561,9 +485,14 @@
             hideSkeleton('requestSkeleton'); showElement('requestList');
         }
 
+        // 🔧 核心修復：顯示 ID 修復提示
         function renderAllData(data, isCache = false) {
             if (data.status === 'success') { 
                 allSongs = data.songs; 
+                
+                if (data.fixedCount > 0 && !isCache) {
+                    showToast(`🔧 已自動修復 ${data.fixedCount} 首歌曲的 ID，現在可以正常操作了！`, 'success', 4000);
+                }
                 
                 const reqNickVal = document.getElementById('reqNick').value;
                 const reqMsgVal = document.getElementById('reqMessage').value;
@@ -580,7 +509,7 @@
                     localStorage.setItem(CACHE_KEY, JSON.stringify(data)); 
                 }
             } else if (!isCache) { 
-                showToast('❌ 載入失敗: ' + data.message, 'error'); 
+                showToast('❌ 載入失敗: ' + (data.message || '未知錯誤'), 'error'); 
             }
         }
 
@@ -652,7 +581,6 @@
 
         function renderQueueItem(song, index, isAdminMode) {
             const statusEmoji = {'queued': '⏳', 'singing': '🎤', 'done': '✅'}[song.status];
-            // 🛠️ 修正：改用 data-id 傳遞，避免特殊字元破壞 JS 語法
             const delBtn = isAdminMode ? `<button class="queue-del-btn" data-id="${escapeHtml(String(song.id))}" onclick="removeFromQueue(this.dataset.id)" title="移出清單">✕</button>` : '';
             const statusBtn = isAdminMode 
                 ? `<button class="queue-status-btn" data-id="${escapeHtml(String(song.id))}" onclick="cycleQueueStatus(this.dataset.id)" title="切換狀態">${statusEmoji}</button>` 
@@ -736,9 +664,18 @@
             });
         }
 
+        // 🔧 核心修復：加入 ID 空值檢查
         function addToQueue(id) {
+            if (!id) {
+                showToast('⚠️ 此歌曲資料異常，請重新整理頁面', 'error');
+                return;
+            }
+            
             const song = allSongs.find(s => String(s.id) === String(id));
-            if (!song) return;
+            if (!song) {
+                showToast('❌ 找不到這首歌曲，請重新整理', 'error');
+                return;
+            }
             
             if (song.status === 'queued' || song.status === 'singing' || song.status === 'done') {
                 const queueSongs = allSongs.filter(s => s.status === 'queued' || s.status === 'singing' || s.status === 'done');
@@ -777,7 +714,7 @@
             hideSkeleton('requestSkeleton');
             showElement('requestList');
 
-            const displayRequests = requests.slice(0, 15); 
+            const displayRequests = requests; 
             if (displayRequests.length === 0) { list.innerHTML = '<p style="text-align:center; color:#888; padding: 20px;">目前還沒有留言，快來留言吧！</p>'; return; }
             
             const isAdminMode = isAdmin();
@@ -787,15 +724,12 @@
                     repliesHtml = '<div class="replies-container">' + req.replies.map(rep => {
                         const boxClass = rep.isOfficial ? 'official' : 'general';
                         const prefix = rep.isOfficial ? '👑 ' : '💬 ';
-                        // 🛠️ 修正：改用 data-id 傳遞
                         const delRepBtn = isAdminMode ? `<button class="reply-del-btn" data-id="${escapeHtml(String(rep.replyId))}" onclick="confirmDeleteReply(this.dataset.id)">🗑️</button>` : '';
                         return `<div class="reply-box ${boxClass}"><div class="reply-header ${boxClass}"><span>${prefix}${escapeHtml(rep.replier)}</span><span style="font-size:11px; color:#888;">${escapeHtml(rep.time)} ${delRepBtn}</span></div><div>${escapeHtml(rep.content)}</div></div>`;
                     }).join('') + '</div>';
                 }
-                // 🛠️ 修正：改用 data-id 傳遞
                 const delReqBtn = isAdminMode ? `<button class="req-action-btn" style="color:var(--danger);" data-id="${escapeHtml(String(req.id))}" onclick="confirmDeleteRequest(this.dataset.id)">🗑️ 刪除</button>` : '';
                 
-                // 🛠️ 修正：留言回覆改用 this.closest 尋找元素，徹底解決 getElementById 找不到元素的 Bug
                 return `<div class="request-item" data-id="${escapeHtml(String(req.id))}">
                     <div class="req-header"><span class="req-nick">${escapeHtml(req.nickname)}</span><span>${escapeHtml(req.time)}</span></div>
                     <div>${escapeHtml(req.message)}</div>
@@ -816,7 +750,6 @@
             }).join('');
         }
 
-        // 🛠️ 修正：改用 this 傳遞按鈕本身，透過 closest 尋找對應的留言區塊
         function toggleReplyInput(btn) {
             const requestItem = btn.closest('.request-item');
             const inputArea = requestItem.querySelector('.reply-input-area');
@@ -900,10 +833,9 @@
             const isAdminMode = isAdmin();
             songs.forEach(item => {
                 const tr = document.createElement('tr');
-                let displayLink = item.link || `https://www.youtube.com/results?search_query=${encodeURIComponent((item.artist||'')+' '+(item.song||''))}`;
+                let displayLink = (item.link && isValidUrl(item.link)) ? item.link : `https://www.youtube.com/results?search_query=${encodeURIComponent((item.artist||'')+' '+(item.song||''))}`;
                 const tagsHtml = item.tags ? item.tags.split(',').map(t => `<span class="tag-badge">${escapeHtml(t.trim())}</span>`).join('') : '';
                 
-                // 🛠️ 修正：改用 data-id 傳遞
                 const actionBtns = isAdminMode ? `
                     <button class="btn-sm btn-edit" data-id="${escapeHtml(String(item.id))}" onclick="editSong(this.dataset.id)">✏️</button>
                     <button class="btn-sm btn-del" data-id="${escapeHtml(String(item.id))}" onclick="confirmDelete(this.dataset.id)">🗑️</button>
@@ -920,13 +852,13 @@
         }
 
         function recordClick(id) { 
-            fetch(API_URL, { method: 'POST', headers: {'Content-Type': 'text/plain'}, body: JSON.stringify({ action: 'click', id: String(id) }), keepalive: true }).catch(()=>{}); 
+            fetch(API_URL, { method: 'POST', headers: {'Content-Type': 'text/plain'}, body: JSON.stringify({ action: 'click', id: String(id) }) ).catch(()=>{}); 
         }
         
         function pickRandomSong() {
             if (allSongs.length === 0) return showToast('目前沒有歌曲！', 'error');
             const randomSong = allSongs[Math.floor(Math.random() * allSongs.length)];
-            let link = randomSong.link || `https://www.youtube.com/results?search_query=${encodeURIComponent((randomSong.artist||'')+' '+(randomSong.song||''))}`;
+            let link = (randomSong.link && isValidUrl(randomSong.link)) ? randomSong.link : `https://www.youtube.com/results?search_query=${encodeURIComponent((randomSong.artist||'')+' '+(randomSong.song||''))}`;
             document.getElementById('randomSongInfo').innerHTML = `🎤 ${escapeHtml(randomSong.artist)}<br>🎵 ${escapeHtml(randomSong.song)}`;
             document.getElementById('randomSongLink').href = link; 
             document.getElementById('randomModal').style.display = 'flex';
@@ -990,10 +922,19 @@
                 .catch(err => { btn.disabled = false; btn.innerText = '🚀 批量上傳至雲端'; showToast('❌ 上傳失敗，請重試', 'error'); console.error(err); });
             });
         }
+        
+        // 🔧 核心修復：加入 ID 空值檢查
         function editSong(id) {
+            if (!id) {
+                showToast('⚠️ 此歌曲資料異常，請重新整理頁面', 'error');
+                return;
+            }
             requireAdmin(() => {
                 const item = allSongs.find(s => String(s.id) === String(id));
-                if (!item) return;
+                if (!item) {
+                    showToast('❌ 找不到這首歌曲', 'error');
+                    return;
+                }
                 const newArtist = prompt("修改歌手名稱：", item.artist); if (!newArtist) return;
                 const newSong = prompt("修改歌曲名稱：", item.song); if (!newSong) return;
                 const newTags = prompt("修改標籤：", item.tags || ""); if (newTags === null) return;
@@ -1002,16 +943,26 @@
                 .catch(err => { showToast('❌ 編輯失敗，請重試', 'error'); console.error(err); });
             });
         }
+
+        // 🔧 核心修復：加入 ID 空值檢查
         function confirmDelete(id) {
+            if (!id) {
+                showToast('⚠️ 此歌曲資料異常，請重新整理頁面', 'error');
+                return;
+            }
             requireAdmin(() => { 
                 const item = allSongs.find(s => String(s.id) === String(id));
-                if (!item) return;
+                if (!item) {
+                    showToast('❌ 找不到這首歌曲', 'error');
+                    return;
+                }
                 if (!confirm(`確定刪除「${item.artist} - ${item.song}」嗎？`)) return; 
                 fetchWithRetry(API_URL, { method: 'POST', headers: {'Content-Type': 'text/plain'}, body: JSON.stringify({ action: 'delete', id: String(id), password: ADMIN_PASSWORD }) })
                 .then(result => { loadPlaylistData(true); showToast('✅ 已刪除'); })
                 .catch(err => { showToast('❌ 刪除失敗，請重試', 'error'); console.error(err); });
             });
         }
+
         function confirmDeleteRequest(id) {
             requireAdmin(() => { 
                 if (!confirm(`確定刪除這則留言嗎？`)) return; 
@@ -1064,7 +1015,11 @@
 
             fetchWithRetry(API_URL)
                 .then(result => renderAllData(result, false))
-                .catch(error => { hideAllSkeletons(); if (isManual) showToast('❌ 網路不穩，已顯示本地快取', 'error'); console.error('Fetch error:', error); });
+                .catch(error => { 
+                    hideAllSkeletons(); 
+                    if (isManual) showToast('❌ 網路不穩或 API 錯誤，已顯示本地快取', 'error');
+                    console.error('Fetch error:', error); 
+                });
         }
 
         function manualRefresh() { showToast('🔄 正在重新整理...', 'info', 1500); loadPlaylistData(true); }
