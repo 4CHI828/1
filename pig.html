@@ -6,599 +6,157 @@
     <title>桥巴的歌单 🎧</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        
         :root {
             --bg-gradient: linear-gradient(135deg, #0f0c29 0%, #302b63 50%, #24243e 100%);
-            --text-color: #e0e0e0;
-            --text-secondary: #aaa;
-            --text-muted: #888;
-            --card-bg: rgba(255, 255, 255, 0.05);
-            --card-bg-hover: rgba(255, 255, 255, 0.08);
-            --card-border: rgba(255, 255, 255, 0.08);
-            --input-bg: rgba(255, 255, 255, 0.05);
+            --text-color: #e0e0e0; --text-secondary: #aaa; --text-muted: #888;
+            --card-bg: rgba(255, 255, 255, 0.05); --card-bg-hover: rgba(255, 255, 255, 0.08);
+            --card-border: rgba(255, 255, 255, 0.08); --input-bg: rgba(255, 255, 255, 0.05);
             --input-border: rgba(255, 255, 255, 0.2);
             --modal-bg: linear-gradient(135deg, #1f1c2c 0%, #302b63 100%);
-            --modal-overlay: rgba(0, 0, 0, 0.7);
-            --divider: rgba(255, 255, 255, 0.08);
+            --modal-overlay: rgba(0, 0, 0, 0.7); --divider: rgba(255, 255, 255, 0.08);
             --help-section-bg: rgba(255, 255, 255, 0.03);
             --help-section-border: rgba(255, 255, 255, 0.08);
-            --list-item-bg: rgba(255,255,255,0.05);
-            --list-item-border: rgba(255,255,255,0.05);
+            --list-item-bg: rgba(255,255,255,0.05); --list-item-border: rgba(255,255,255,0.05);
             --scrollbar-thumb: #555;
         }
-        
         body.light-theme {
             --bg-gradient: linear-gradient(135deg, #f5f7fa 0%, #e4ecf7 100%);
-            --text-color: #2c3e50;
-            --text-secondary: #555;
-            --text-muted: #777;
-            --card-bg: rgba(255, 255, 255, 0.85);
-            --card-bg-hover: rgba(255, 255, 255, 0.95);
-            --card-border: rgba(0, 0, 0, 0.08);
-            --input-bg: rgba(255, 255, 255, 0.9);
+            --text-color: #2c3e50; --text-secondary: #555; --text-muted: #777;
+            --card-bg: rgba(255, 255, 255, 0.85); --card-bg-hover: rgba(255, 255, 255, 0.95);
+            --card-border: rgba(0, 0, 0, 0.08); --input-bg: rgba(255, 255, 255, 0.9);
             --input-border: rgba(0, 0, 0, 0.15);
             --modal-bg: linear-gradient(135deg, #ffffff 0%, #f0f2f5 100%);
-            --modal-overlay: rgba(0, 0, 0, 0.5);
-            --divider: rgba(0, 0, 0, 0.1);
+            --modal-overlay: rgba(0, 0, 0, 0.5); --divider: rgba(0, 0, 0, 0.1);
             --help-section-bg: rgba(0, 0, 0, 0.03);
             --help-section-border: rgba(0, 0, 0, 0.08);
-            --list-item-bg: rgba(0,0,0,0.03);
-            --list-item-border: rgba(0,0,0,0.05);
+            --list-item-bg: rgba(0,0,0,0.03); --list-item-border: rgba(0,0,0,0.05);
             --scrollbar-thumb: #bbb;
         }
-
         body {
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "PingFang SC", "Microsoft YaHei", sans-serif;
-            background: var(--bg-gradient);
-            color: var(--text-color);
-            min-height: 100vh;
-            padding: 20px;
-            line-height: 1.6;
+            background: var(--bg-gradient); color: var(--text-color);
+            min-height: 100vh; padding: 20px; line-height: 1.6;
             transition: background 0.5s ease, color 0.3s ease;
         }
-
         .container { max-width: 1200px; margin: 0 auto; }
-
-        header { 
-            text-align: center; 
-            padding: 40px 0 20px; 
-            position: relative;
-        }
-        
-        .top-icons {
-            position: absolute;
-            top: 20px;
-            right: 0;
-            display: flex;
-            gap: 10px;
-            z-index: 10;
-        }
+        header { text-align: center; padding: 40px 0 20px; position: relative; }
+        .top-icons { position: absolute; top: 20px; right: 0; display: flex; gap: 10px; z-index: 10; }
         .icon-btn {
-            width: 42px;
-            height: 42px;
-            border-radius: 50%;
-            border: 1px solid var(--card-border);
-            background: var(--card-bg);
-            color: var(--text-color);
-            font-size: 1.2rem;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: all 0.3s;
-            backdrop-filter: blur(5px);
-        }
-        .icon-btn:hover {
-            transform: translateY(-2px) scale(1.05);
-            background: var(--card-bg-hover);
-            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
-        }
-        .icon-btn.theme-btn {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: #fff;
-            border: none;
-        }
-        .icon-btn.reset-icon-btn {
-            background: linear-gradient(135deg, #f6d365 0%, #fda085 100%);
-            color: #fff;
-            border: none;
-        }
-        
-        .header-title-wrapper {
+            width: 42px; height: 42px; border-radius: 50%;
+            border: 1px solid var(--card-border); background: var(--card-bg);
+            color: var(--text-color); font-size: 1.2rem; cursor: pointer;
             display: flex; align-items: center; justify-content: center;
-            gap: 15px; flex-wrap: wrap; margin-bottom: 15px;
+            transition: all 0.3s; backdrop-filter: blur(5px);
         }
-        header h1 {
-            font-size: 2.5rem;
-            background: linear-gradient(90deg, #ff7e5f, #feb47b, #86a8e7);
-            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-            letter-spacing: 2px; margin-bottom: 0;
-        }
-
-        .douyin-link {
-            display: inline-flex; align-items: center; gap: 6px;
-            padding: 8px 18px;
-            background: linear-gradient(135deg, #25F4EE 0%, #FE2C55 100%);
-            color: #fff; text-decoration: none; border-radius: 20px;
-            font-size: 0.9rem; font-weight: bold; transition: all 0.3s;
-            box-shadow: 0 4px 12px rgba(254, 44, 85, 0.3); white-space: nowrap;
-        }
+        .icon-btn:hover { transform: translateY(-2px) scale(1.05); background: var(--card-bg-hover); box-shadow: 0 5px 15px rgba(0,0,0,0.2); }
+        .icon-btn.theme-btn { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: #fff; border: none; }
+        .icon-btn.reset-icon-btn { background: linear-gradient(135deg, #f6d365 0%, #fda085 100%); color: #fff; border: none; }
+        .header-title-wrapper { display: flex; align-items: center; justify-content: center; gap: 15px; flex-wrap: wrap; margin-bottom: 15px; }
+        header h1 { font-size: 2.5rem; background: linear-gradient(90deg, #ff7e5f, #feb47b, #86a8e7); -webkit-background-clip: text; -webkit-text-fill-color: transparent; letter-spacing: 2px; margin-bottom: 0; }
+        .douyin-link { display: inline-flex; align-items: center; gap: 6px; padding: 8px 18px; background: linear-gradient(135deg, #25F4EE 0%, #FE2C55 100%); color: #fff; text-decoration: none; border-radius: 20px; font-size: 0.9rem; font-weight: bold; transition: all 0.3s; box-shadow: 0 4px 12px rgba(254, 44, 85, 0.3); white-space: nowrap; }
         .douyin-link:hover { transform: translateY(-3px) scale(1.05); box-shadow: 0 8px 20px rgba(254, 44, 85, 0.5); }
-        .douyin-icon { font-size: 1.1rem; }
-
-        .discord-link {
-            display: inline-flex; align-items: center; gap: 6px;
-            padding: 8px 18px;
-            background: linear-gradient(135deg, #5865F2 0%, #7289da 100%);
-            color: #fff; text-decoration: none; border-radius: 20px;
-            font-size: 0.9rem; font-weight: bold; transition: all 0.3s;
-            box-shadow: 0 4px 12px rgba(88, 101, 242, 0.4); white-space: nowrap;
-        }
+        .discord-link { display: inline-flex; align-items: center; gap: 6px; padding: 8px 18px; background: linear-gradient(135deg, #5865F2 0%, #7289da 100%); color: #fff; text-decoration: none; border-radius: 20px; font-size: 0.9rem; font-weight: bold; transition: all 0.3s; box-shadow: 0 4px 12px rgba(88, 101, 242, 0.4); white-space: nowrap; }
         .discord-link:hover { transform: translateY(-3px) scale(1.05); box-shadow: 0 8px 20px rgba(88, 101, 242, 0.6); }
-
-        .stats-mini {
-            color: var(--text-secondary);
-            font-size: 0.95rem;
-            margin-top: 10px;
-        }
-        .stats-mini .count-num {
-            color: #ff7e5f;
-            font-weight: bold;
-            font-size: 1.1rem;
-            display: inline-block;
-            min-width: 30px;
-        }
-
-        .controls {
-            max-width: 900px; margin: 25px auto;
-            display: flex; gap: 15px; align-items: center; flex-wrap: wrap;
-            justify-content: center;
-        }
-        
+        .stats-mini { color: var(--text-secondary); font-size: 0.95rem; margin-top: 10px; }
+        .stats-mini .count-num { color: #ff7e5f; font-weight: bold; font-size: 1.1rem; display: inline-block; min-width: 30px; }
+        .controls { max-width: 900px; margin: 25px auto; display: flex; gap: 15px; align-items: center; flex-wrap: wrap; justify-content: center; }
         .search-box { flex: 1; min-width: 200px; position: relative; }
-        .search-box input {
-            width: 100%; padding: 15px 45px 15px 20px; border-radius: 30px;
-            border: 1px solid var(--input-border);
-            background: var(--input-bg); color: var(--text-color);
-            font-size: 1rem; outline: none; transition: all 0.3s;
-        }
-        .search-box input:focus {
-            border-color: #ff7e5f; background: var(--card-bg-hover);
-            box-shadow: 0 0 15px rgba(255, 126, 95, 0.3);
-        }
+        .search-box input { width: 100%; padding: 15px 45px 15px 20px; border-radius: 30px; border: 1px solid var(--input-border); background: var(--input-bg); color: var(--text-color); font-size: 1rem; outline: none; transition: all 0.3s; }
+        .search-box input:focus { border-color: #ff7e5f; background: var(--card-bg-hover); box-shadow: 0 0 15px rgba(255, 126, 95, 0.3); }
         .search-box input::placeholder { color: var(--text-muted); }
-        
-        .clear-search-btn {
-            position: absolute;
-            right: 15px;
-            top: 50%;
-            transform: translateY(-50%);
-            width: 26px;
-            height: 26px;
-            border-radius: 50%;
-            background: rgba(255, 126, 95, 0.2);
-            color: #ff7e5f;
-            border: none;
-            cursor: pointer;
-            font-size: 0.9rem;
-            display: none;
-            align-items: center;
-            justify-content: center;
-            transition: all 0.2s;
-        }
+        .clear-search-btn { position: absolute; right: 15px; top: 50%; transform: translateY(-50%); width: 26px; height: 26px; border-radius: 50%; background: rgba(255, 126, 95, 0.2); color: #ff7e5f; border: none; cursor: pointer; font-size: 0.9rem; display: none; align-items: center; justify-content: center; transition: all 0.2s; }
         .clear-search-btn.visible { display: flex; }
-        .clear-search-btn:hover {
-            background: #ff7e5f;
-            color: #fff;
-            transform: translateY(-50%) scale(1.1);
-        }
-
-        .action-btn {
-            padding: 15px 25px; border-radius: 30px; border: none;
-            color: #fff; font-size: 1rem; font-weight: bold;
-            cursor: pointer; transition: all 0.3s; white-space: nowrap;
-        }
-        .random-btn {
-            background: linear-gradient(135deg, #86a8e7, #7b9cf0);
-            box-shadow: 0 5px 15px rgba(134, 168, 231, 0.4);
-        }
+        .clear-search-btn:hover { background: #ff7e5f; color: #fff; transform: translateY(-50%) scale(1.1); }
+        .action-btn { padding: 15px 25px; border-radius: 30px; border: none; color: #fff; font-size: 1rem; font-weight: bold; cursor: pointer; transition: all 0.3s; white-space: nowrap; }
+        .random-btn { background: linear-gradient(135deg, #86a8e7, #7b9cf0); box-shadow: 0 5px 15px rgba(134, 168, 231, 0.4); }
         .random-btn:hover { transform: translateY(-3px) scale(1.05); box-shadow: 0 8px 20px rgba(134, 168, 231, 0.6); }
-        
-        .list-btn {
-            background: linear-gradient(135deg, #11998e, #38ef7d);
-            box-shadow: 0 5px 15px rgba(56, 239, 125, 0.3);
-        }
+        .list-btn { background: linear-gradient(135deg, #11998e, #38ef7d); box-shadow: 0 5px 15px rgba(56, 239, 125, 0.3); }
         .list-btn:hover { transform: translateY(-3px) scale(1.05); box-shadow: 0 8px 20px rgba(56, 239, 125, 0.5); }
-        .list-btn .badge {
-            background: #fff; color: #11998e; padding: 2px 8px;
-            border-radius: 10px; font-size: 0.8rem; margin-left: 5px;
-        }
-
-        /* 分類標籤 - 支援長名稱 */
-        .tabs { 
-            display: flex; 
-            flex-wrap: wrap; 
-            justify-content: center; 
-            gap: 10px; 
-            margin-bottom: 30px; 
-        }
-        .tab-btn {
-            padding: 8px 18px; 
-            border-radius: 20px;
-            border: 1px solid var(--card-border);
-            background: var(--card-bg); 
-            color: var(--text-secondary);
-            cursor: pointer; 
-            transition: all 0.3s; 
-            font-size: 0.9rem;
-            max-width: 280px;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-        }
-        .tab-btn:hover { 
-            background: var(--card-bg-hover); 
-            color: var(--text-color); 
-            transform: translateY(-2px); 
-        }
-        .tab-btn.active {
-            background: linear-gradient(135deg, #ff7e5f, #feb47b); 
-            color: #fff;
-            border-color: transparent; 
-            box-shadow: 0 5px 15px rgba(255, 126, 95, 0.4); 
-            font-weight: bold;
-            white-space: normal;
-            overflow: visible;
-        }
-
+        .list-btn .badge { background: #fff; color: #11998e; padding: 2px 8px; border-radius: 10px; font-size: 0.8rem; margin-left: 5px; }
+        .tabs { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; margin-bottom: 30px; }
+        .tab-btn { padding: 8px 18px; border-radius: 20px; border: 1px solid var(--card-border); background: var(--card-bg); color: var(--text-secondary); cursor: pointer; transition: all 0.3s; font-size: 0.9rem; max-width: 280px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .tab-btn:hover { background: var(--card-bg-hover); color: var(--text-color); transform: translateY(-2px); }
+        .tab-btn.active { background: linear-gradient(135deg, #ff7e5f, #feb47b); color: #fff; border-color: transparent; box-shadow: 0 5px 15px rgba(255, 126, 95, 0.4); font-weight: bold; white-space: normal; overflow: visible; }
         .category-section { margin-bottom: 40px; animation: fadeIn 0.5s ease; }
-        .category-title {
-            font-size: 1.5rem; margin-bottom: 20px; padding-left: 15px;
-            border-left: 4px solid #ff7e5f; color: var(--text-color);
-            display: flex; align-items: center; gap: 10px;
-            flex-wrap: wrap;
-        }
+        .category-title { font-size: 1.5rem; margin-bottom: 20px; padding-left: 15px; border-left: 4px solid #ff7e5f; color: var(--text-color); display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
         .category-title .count { font-size: 0.9rem; color: var(--text-muted); font-weight: normal; }
-
-        .songs-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
-            gap: 15px;
-        }
-
-        .song-card {
-            background: var(--card-bg);
-            border: 1px solid var(--card-border);
-            border-radius: 12px; 
-            padding: 14px 15px;
-            display: flex; 
-            flex-direction: column;
-            gap: 8px;
-            transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
-            cursor: pointer; 
-            position: relative; 
-            overflow: hidden;
-        }
-        .song-card:hover {
-            transform: translateY(-3px);
-            border-color: rgba(255, 126, 95, 0.5);
-            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
-            background: var(--card-bg-hover);
-        }
-        
-        .song-card-top {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: 8px;
-        }
-        
-        .song-name {
-            font-size: 0.95rem; color: var(--text-color); flex: 1;
-            white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-        }
-
-        .add-to-list-btn {
-            width: 26px; height: 26px; border-radius: 50%;
-            background: rgba(56, 239, 125, 0.15); border: 1px solid rgba(56, 239, 125, 0.3);
-            color: #38ef7d; font-size: 1.1rem; font-weight: bold;
-            display: flex; align-items: center; justify-content: center;
-            flex-shrink: 0; transition: all 0.2s; line-height: 1;
-        }
+        .songs-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 15px; }
+        .song-card { background: var(--card-bg); border: 1px solid var(--card-border); border-radius: 12px; padding: 14px 15px; display: flex; flex-direction: column; gap: 8px; transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1); cursor: pointer; position: relative; overflow: hidden; }
+        .song-card:hover { transform: translateY(-3px); border-color: rgba(255, 126, 95, 0.5); box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3); background: var(--card-bg-hover); }
+        .song-card-top { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+        .song-name { font-size: 0.95rem; color: var(--text-color); flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .add-to-list-btn { width: 26px; height: 26px; border-radius: 50%; background: rgba(56, 239, 125, 0.15); border: 1px solid rgba(56, 239, 125, 0.3); color: #38ef7d; font-size: 1.1rem; font-weight: bold; display: flex; align-items: center; justify-content: center; flex-shrink: 0; transition: all 0.2s; line-height: 1; }
         .song-card:hover .add-to-list-btn { background: rgba(56, 239, 125, 0.3); }
         .add-to-list-btn:hover { transform: scale(1.1); background: #38ef7d; color: #0f0c29; }
-        .add-to-list-btn.added {
-            background: #38ef7d; color: #0f0c29; border-color: #38ef7d;
-        }
-        
-        .song-card-bottom {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: 8px;
-            opacity: 0;
-            max-height: 0;
-            transition: all 0.3s ease;
-            overflow: hidden;
-        }
-        .song-card:hover .song-card-bottom {
-            opacity: 1;
-            max-height: 40px;
-            margin-top: 4px;
-        }
-        
-        .song-category-tag {
-            font-size: 0.7rem;
-            padding: 2px 8px;
-            border-radius: 10px;
-            background: rgba(134, 168, 231, 0.2);
-            color: #86a8e7;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            max-width: 60%;
-        }
-        body.light-theme .song-category-tag {
-            background: rgba(134, 168, 231, 0.15);
-            color: #5a6fd6;
-        }
-        
-        .listen-btn {
-            font-size: 0.75rem;
-            padding: 3px 10px;
-            border-radius: 10px;
-            background: rgba(255, 75, 75, 0.15);
-            color: #ff6b6b;
-            border: 1px solid rgba(255, 75, 75, 0.3);
-            cursor: pointer;
-            transition: all 0.2s;
-            white-space: nowrap;
-            text-decoration: none;
-            display: inline-flex;
-            align-items: center;
-            gap: 3px;
-        }
-        .listen-btn:hover {
-            background: #ff6b6b;
-            color: #fff;
-            transform: scale(1.05);
-        }
-
+        .add-to-list-btn.added { background: #38ef7d; color: #0f0c29; border-color: #38ef7d; }
+        .song-card-bottom { display: flex; align-items: center; justify-content: space-between; gap: 8px; opacity: 0; max-height: 0; transition: all 0.3s ease; overflow: hidden; }
+        .song-card:hover .song-card-bottom { opacity: 1; max-height: 40px; margin-top: 4px; }
+        .song-category-tag { font-size: 0.7rem; padding: 2px 8px; border-radius: 10px; background: rgba(134, 168, 231, 0.2); color: #86a8e7; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 60%; }
+        body.light-theme .song-category-tag { background: rgba(134, 168, 231, 0.15); color: #5a6fd6; }
+        .listen-btn { font-size: 0.75rem; padding: 3px 10px; border-radius: 10px; background: rgba(255, 75, 75, 0.15); color: #ff6b6b; border: 1px solid rgba(255, 75, 75, 0.3); cursor: pointer; transition: all 0.2s; white-space: nowrap; text-decoration: none; display: inline-flex; align-items: center; gap: 3px; }
+        .listen-btn:hover { background: #ff6b6b; color: #fff; transform: scale(1.05); }
         .empty-state { text-align: center; padding: 60px 20px; color: var(--text-muted); font-size: 1.2rem; }
-
-        .modal {
-            display: none; position: fixed; z-index: 100;
-            left: 0; top: 0; width: 100%; height: 100%;
-            background-color: var(--modal-overlay); backdrop-filter: blur(5px);
-            justify-content: center; align-items: center; animation: fadeIn 0.3s;
-        }
-        .modal-content {
-            background: var(--modal-bg);
-            padding: 30px; border-radius: 20px; text-align: center;
-            width: 90%; max-width: 500px; position: relative;
-            box-shadow: 0 20px 50px rgba(0,0,0,0.5);
-            border: 1px solid var(--card-border);
-            animation: zoomIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-            max-height: 80vh; display: flex; flex-direction: column;
-        }
-        .close-btn {
-            position: absolute; top: 15px; right: 20px;
-            color: var(--text-muted); font-size: 28px; font-weight: bold; cursor: pointer;
-        }
+        .modal { display: none; position: fixed; z-index: 100; left: 0; top: 0; width: 100%; height: 100%; background-color: var(--modal-overlay); backdrop-filter: blur(5px); justify-content: center; align-items: center; animation: fadeIn 0.3s; }
+        .modal-content { background: var(--modal-bg); padding: 30px; border-radius: 20px; text-align: center; width: 90%; max-width: 500px; position: relative; box-shadow: 0 20px 50px rgba(0,0,0,0.5); border: 1px solid var(--card-border); animation: zoomIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); max-height: 80vh; display: flex; flex-direction: column; }
+        .close-btn { position: absolute; top: 15px; right: 20px; color: var(--text-muted); font-size: 28px; font-weight: bold; cursor: pointer; }
         .close-btn:hover { color: var(--text-color); }
-
-        .random-song-name {
-            font-size: 2rem; font-weight: bold; color: #ff7e5f;
-            margin: 20px 0 10px; min-height: 50px;
-            text-shadow: 0 0 10px rgba(255, 126, 95, 0.5);
-        }
+        .random-song-name { font-size: 2rem; font-weight: bold; color: #ff7e5f; margin: 20px 0 10px; min-height: 50px; text-shadow: 0 0 10px rgba(255, 126, 95, 0.5); }
         .random-song-category { font-size: 1rem; color: var(--text-secondary); margin-bottom: 30px; transition: all 0.3s; }
-        .play-again-btn {
-            padding: 12px 30px; border-radius: 30px; border: none;
-            background: linear-gradient(135deg, #ff7e5f, #feb47b);
-            color: #fff; font-size: 1rem; font-weight: bold; cursor: pointer;
-        }
-
+        .play-again-btn { padding: 12px 30px; border-radius: 30px; border: none; background: linear-gradient(135deg, #ff7e5f, #feb47b); color: #fff; font-size: 1rem; font-weight: bold; cursor: pointer; }
         .list-modal-content { text-align: left; }
         .list-modal-content h2 { text-align: center; color: #38ef7d; margin-bottom: 10px; }
-        .list-modal-tip {
-            text-align: center;
-            color: var(--text-muted);
-            font-size: 0.8rem;
-            margin-bottom: 15px;
-            font-style: italic;
-        }
-        .list-items {
-            flex: 1; overflow-y: auto; margin-bottom: 20px;
-            padding-right: 10px;
-        }
+        .list-modal-tip { text-align: center; color: var(--text-muted); font-size: 0.8rem; margin-bottom: 15px; font-style: italic; }
+        .list-items { flex: 1; overflow-y: auto; margin-bottom: 20px; padding-right: 10px; }
         .list-items::-webkit-scrollbar { width: 6px; }
         .list-items::-webkit-scrollbar-thumb { background: var(--scrollbar-thumb); border-radius: 3px; }
-        
-        .list-item {
-            display: flex; justify-content: space-between; align-items: center;
-            background: var(--list-item-bg); padding: 12px 15px;
-            border-radius: 10px; margin-bottom: 10px;
-            border: 1px solid var(--list-item-border);
-            cursor: grab;
-            transition: all 0.2s;
-        }
+        .list-item { display: flex; justify-content: space-between; align-items: center; background: var(--list-item-bg); padding: 12px 15px; border-radius: 10px; margin-bottom: 10px; border: 1px solid var(--list-item-border); cursor: grab; transition: all 0.2s; }
         .list-item:active { cursor: grabbing; }
-        .list-item.dragging {
-            opacity: 0.4;
-            transform: scale(0.98);
-        }
-        .list-item.drag-over {
-            border-color: #38ef7d;
-            background: rgba(56, 239, 125, 0.1);
-            transform: translateY(-2px);
-        }
-        .drag-handle {
-            color: var(--text-muted);
-            margin-right: 10px;
-            font-size: 1rem;
-            cursor: grab;
-            flex-shrink: 0;
-        }
+        .list-item.dragging { opacity: 0.4; transform: scale(0.98); }
+        .list-item.drag-over { border-color: #38ef7d; background: rgba(56, 239, 125, 0.1); transform: translateY(-2px); }
+        .drag-handle { color: var(--text-muted); margin-right: 10px; font-size: 1rem; cursor: grab; flex-shrink: 0; }
         .list-item-info { flex: 1; overflow: hidden; }
         .list-item-name { color: var(--text-color); font-weight: bold; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
         .list-item-cat { color: var(--text-muted); font-size: 0.8rem; margin-top: 2px; }
-        .remove-btn {
-            background: rgba(255, 75, 75, 0.15); border: 1px solid rgba(255, 75, 75, 0.3);
-            color: #ff4b4b; width: 28px; height: 28px; border-radius: 50%;
-            cursor: pointer; font-size: 1rem; display: flex; align-items: center; justify-content: center;
-            transition: all 0.2s; flex-shrink: 0; margin-left: 10px;
-        }
+        .remove-btn { background: rgba(255, 75, 75, 0.15); border: 1px solid rgba(255, 75, 75, 0.3); color: #ff4b4b; width: 28px; height: 28px; border-radius: 50%; cursor: pointer; font-size: 1rem; display: flex; align-items: center; justify-content: center; transition: all 0.2s; flex-shrink: 0; margin-left: 10px; }
         .remove-btn:hover { background: #ff4b4b; color: #fff; }
-        
         .list-actions { display: flex; gap: 10px; justify-content: center; }
-        .clear-list-btn {
-            padding: 10px 25px; border-radius: 20px; border: 1px solid #ff4b4b;
-            background: transparent; color: #ff4b4b; cursor: pointer; transition: all 0.3s;
-        }
+        .clear-list-btn { padding: 10px 25px; border-radius: 20px; border: 1px solid #ff4b4b; background: transparent; color: #ff4b4b; cursor: pointer; transition: all 0.3s; }
         .clear-list-btn:hover { background: #ff4b4b; color: #fff; }
         .empty-list { text-align: center; color: var(--text-muted); padding: 40px 0; }
-
-        .help-modal-content {
-            text-align: left;
-            max-width: 600px;
-        }
-        .help-modal-content h2 {
-            text-align: center;
-            color: #ff7e5f;
-            margin-bottom: 20px;
-            font-size: 1.5rem;
-        }
-        .help-modal-content .help-subtitle {
-            text-align: center;
-            color: var(--text-secondary);
-            font-size: 0.9rem;
-            margin-bottom: 25px;
-            font-style: italic;
-        }
-        .help-body {
-            flex: 1;
-            overflow-y: auto;
-            padding-right: 10px;
-        }
+        .help-modal-content { text-align: left; max-width: 600px; }
+        .help-modal-content h2 { text-align: center; color: #ff7e5f; margin-bottom: 20px; font-size: 1.5rem; }
+        .help-modal-content .help-subtitle { text-align: center; color: var(--text-secondary); font-size: 0.9rem; margin-bottom: 25px; font-style: italic; }
+        .help-body { flex: 1; overflow-y: auto; padding-right: 10px; }
         .help-body::-webkit-scrollbar { width: 6px; }
         .help-body::-webkit-scrollbar-thumb { background: var(--scrollbar-thumb); border-radius: 3px; }
-        
-        .help-section {
-            background: var(--help-section-bg);
-            border: 1px solid var(--help-section-border);
-            border-radius: 12px;
-            padding: 15px 18px;
-            margin-bottom: 15px;
-        }
-        .help-section-title {
-            color: #ff7e5f;
-            font-size: 1.05rem;
-            font-weight: bold;
-            margin-bottom: 10px;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
+        .help-section { background: var(--help-section-bg); border: 1px solid var(--help-section-border); border-radius: 12px; padding: 15px 18px; margin-bottom: 15px; }
+        .help-section-title { color: #ff7e5f; font-size: 1.05rem; font-weight: bold; margin-bottom: 10px; display: flex; align-items: center; gap: 8px; }
         .help-section ul { list-style: none; padding-left: 0; }
-        .help-section li {
-            color: var(--text-secondary);
-            font-size: 0.9rem;
-            margin-bottom: 6px;
-            padding-left: 18px;
-            position: relative;
-            line-height: 1.5;
-        }
-        .help-section li::before {
-            content: "▸";
-            position: absolute;
-            left: 0;
-            color: #86a8e7;
-        }
+        .help-section li { color: var(--text-secondary); font-size: 0.9rem; margin-bottom: 6px; padding-left: 18px; position: relative; line-height: 1.5; }
+        .help-section li::before { content: "▸"; position: absolute; left: 0; color: #86a8e7; }
         .help-section li strong { color: var(--text-color); }
-        .help-tip {
-            background: rgba(134, 168, 231, 0.1);
-            border-left: 3px solid #86a8e7;
-            padding: 10px 15px;
-            border-radius: 6px;
-            margin-top: 10px;
-            font-size: 0.85rem;
-            color: var(--text-secondary);
-        }
+        .help-tip { background: rgba(134, 168, 231, 0.1); border-left: 3px solid #86a8e7; padding: 10px 15px; border-radius: 6px; margin-top: 10px; font-size: 0.85rem; color: var(--text-secondary); }
         .help-tip strong { color: #86a8e7; }
-
-        .site-footer {
-            text-align: center;
-            margin-top: 60px;
-            padding: 30px 0 20px;
-            border-top: 1px solid var(--divider);
-        }
-        .footer-link {
-            color: var(--text-muted); text-decoration: none; transition: all 0.3s;
-            font-size: 0.9rem; letter-spacing: 1px;
-        }
-        .footer-link:hover {
-            color: #86a8e7; text-shadow: 0 0 8px rgba(134, 168, 231, 0.5);
-        }
-
-        .float-btn-group {
-            position: fixed;
-            bottom: 30px;
-            right: 30px;
-            display: flex;
-            flex-direction: column;
-            gap: 12px;
-            z-index: 99;
-        }
-        .float-btn {
-            width: 50px;
-            height: 50px;
-            color: #fff;
-            border: none;
-            border-radius: 50%;
-            font-size: 1.5rem;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: all 0.3s ease;
-        }
-        .help-btn {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            box-shadow: 0 5px 15px rgba(118, 75, 162, 0.4);
-        }
-        .help-btn:hover {
-            transform: translateY(-3px) scale(1.1);
-            box-shadow: 0 8px 20px rgba(118, 75, 162, 0.6);
-        }
-        .back-to-top {
-            background: linear-gradient(135deg, #ff7e5f, #feb47b);
-            box-shadow: 0 5px 15px rgba(255, 126, 95, 0.4);
-            opacity: 0;
-            visibility: hidden;
-            transform: translateY(20px);
-        }
-        .back-to-top.visible {
-            opacity: 1;
-            visibility: visible;
-            transform: translateY(0);
-        }
-        .back-to-top:hover {
-            transform: translateY(-3px) scale(1.1);
-            box-shadow: 0 8px 20px rgba(255, 126, 95, 0.6);
-        }
-
+        .site-footer { text-align: center; margin-top: 60px; padding: 30px 0 20px; border-top: 1px solid var(--divider); }
+        .footer-link { color: var(--text-muted); text-decoration: none; transition: all 0.3s; font-size: 0.9rem; letter-spacing: 1px; }
+        .footer-link:hover { color: #86a8e7; text-shadow: 0 0 8px rgba(134, 168, 231, 0.5); }
+        .float-btn-group { position: fixed; bottom: 30px; right: 30px; display: flex; flex-direction: column; gap: 12px; z-index: 99; }
+        .float-btn { width: 50px; height: 50px; color: #fff; border: none; border-radius: 50%; font-size: 1.5rem; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.3s ease; }
+        .help-btn { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); box-shadow: 0 5px 15px rgba(118, 75, 162, 0.4); }
+        .help-btn:hover { transform: translateY(-3px) scale(1.1); box-shadow: 0 8px 20px rgba(118, 75, 162, 0.6); }
+        .back-to-top { background: linear-gradient(135deg, #ff7e5f, #feb47b); box-shadow: 0 5px 15px rgba(255, 126, 95, 0.4); opacity: 0; visibility: hidden; transform: translateY(20px); }
+        .back-to-top.visible { opacity: 1; visibility: visible; transform: translateY(0); }
+        .back-to-top:hover { transform: translateY(-3px) scale(1.1); box-shadow: 0 8px 20px rgba(255, 126, 95, 0.6); }
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
         @keyframes zoomIn { from { transform: scale(0.7); opacity: 0; } to { transform: scale(1); opacity: 1; } }
         @keyframes shake { 0%, 100% { transform: translateX(0); } 20%, 60% { transform: translateX(-5px); } 40%, 80% { transform: translateX(5px); } }
         .shake { animation: shake 0.5s; }
-
         @media (max-width: 600px) {
             header h1 { font-size: 1.8rem; }
             .header-title-wrapper { gap: 10px; }
             .douyin-link, .discord-link { font-size: 0.8rem; padding: 6px 14px; }
             .top-icons { top: 10px; right: 0; gap: 6px; }
-            .icon-btn { width: 36px; height: 36px; font-size: 1rem; }
+            .icon-btn { width: 36px; height: 36px; font-size: 0.95rem; }
             .controls { flex-direction: column; }
             .action-btn { width: 100%; text-align: center; justify-content: center; }
             .songs-grid { grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px; }
@@ -622,28 +180,27 @@
             <button class="icon-btn reset-icon-btn" id="resetBtn" title="重新整理">🔄</button>
             <button class="icon-btn theme-btn" id="themeBtn" title="切換主題">🌙</button>
         </div>
-        
         <div class="header-title-wrapper">
             <h1>🎧 桥巴的歌单</h1>
             <a href="https://v.douyin.com/OJHvhGS2YKc/" target="_blank" rel="noopener noreferrer" class="douyin-link">
-                <span class="douyin-icon">🎵</span> 前往桥巴的抖音
+                <span>🎵</span> 前往桥巴的抖音
             </a>
             <a href="https://discord.com/channels/865334403864461373/1516901347499184168" target="_blank" rel="noopener noreferrer" class="discord-link">
                 🐷 殺豬幫DC
             </a>
         </div>
         <div class="stats-mini">
-            共收錄 <span class="count-num" id="totalCount">0</span> 首心動旋律
+            共收录 <span class="count-num" id="totalCount">0</span> 首心动旋律
         </div>
     </header>
 
     <div class="controls">
         <div class="search-box">
-            <input type="text" id="searchInput" placeholder="🔍 搜索歌曲名稱...">
+            <input type="text" id="searchInput" placeholder="🔍 搜索歌曲名称...">
             <button class="clear-search-btn" id="clearSearchBtn" title="清除搜索">✕</button>
         </div>
-        <button class="action-btn list-btn" id="openListBtn">🎤 待唱清單 <span class="badge" id="listCountBadge">0</span></button>
-        <button class="action-btn random-btn" id="randomBtn">🎲 隨機抽一首</button>
+        <button class="action-btn list-btn" id="openListBtn">🎤 待唱清单 <span class="badge" id="listCountBadge">0</span></button>
+        <button class="action-btn random-btn" id="randomBtn">🎲 随机抽一首</button>
     </div>
 
     <nav class="tabs" id="tabs"></nav>
@@ -664,8 +221,8 @@
 <div id="randomModal" class="modal">
     <div class="modal-content">
         <span class="close-btn" data-close="randomModal">&times;</span>
-        <h2>🎉 命運之輪轉動！</h2>
-        <div class="random-song-name" id="randomSongName">準備中...</div>
+        <h2>🎉 命运之轮转动！</h2>
+        <div class="random-song-name" id="randomSongName">准备中...</div>
         <div class="random-song-category" id="randomSongCategory"></div>
         <button class="play-again-btn" id="playAgainBtn">🎲 再抽一次</button>
     </div>
@@ -674,11 +231,11 @@
 <div id="listModal" class="modal">
     <div class="modal-content list-modal-content">
         <span class="close-btn" data-close="listModal">&times;</span>
-        <h2>🎤 我的待唱清單</h2>
-        <p class="list-modal-tip">💡 拖曳歌曲可調整演唱順序</p>
+        <h2>🎤 我的待唱清单</h2>
+        <p class="list-modal-tip">💡 拖曳歌曲可调整演唱顺序</p>
         <div class="list-items" id="listItems"></div>
         <div class="list-actions">
-            <button class="clear-list-btn" id="clearListBtn">🗑️ 清空清單</button>
+            <button class="clear-list-btn" id="clearListBtn">🗑️ 清空清单</button>
         </div>
     </div>
 </div>
@@ -686,74 +243,68 @@
 <div id="helpModal" class="modal">
     <div class="modal-content help-modal-content">
         <span class="close-btn" data-close="helpModal">&times;</span>
-        <h2>📖 功能說明書</h2>
-        <p class="help-subtitle">歡迎來到橋巴的專屬KTV點歌台 🎧</p>
+        <h2>📖 功能说明书</h2>
+        <p class="help-subtitle">欢迎来到桥巴的专属KTV点歌台 🎧</p>
         <div class="help-body">
             <div class="help-section">
-                <div class="help-section-title">🎵 全新分類曲庫</div>
+                <div class="help-section-title">🎵 全新分类曲库</div>
                 <ul>
-                    <li><strong>一、甜系輕快流行</strong>：青春甜歌，元氣滿滿</li>
-                    <li><strong>二、傷感抒情 / EMO</strong>：失戀遺憾、壓抑走心</li>
-                    <li><strong>三、治癒溫柔</strong>：氛圍感抒情，治癒心靈</li>
-                    <li><strong>四、獨立民謠</strong>：敘事走心，故事感滿滿</li>
-                    <li><strong>五、戲腔/古風</strong>：國風韻味，戲腔驚艷</li>
-                    <li><strong>六、勵志熱血</strong>：力量感曲目，熱血沸騰</li>
-                    <li><strong>八、英文歌</strong>：經典英文金曲</li>
+                    <li><strong>一、甜系轻快流行</strong>：青春甜歌，元气满满</li>
+                    <li><strong>二、伤感抒情 / EMO</strong>：失恋遗憾、压抑走心</li>
+                    <li><strong>三、治愈温柔</strong>：氛围感抒情，治愈心灵</li>
+                    <li><strong>四、独立民谣</strong>：叙事走心，故事感满满</li>
+                    <li><strong>五、戏腔/古风</strong>：国风韵味，戏腔惊艳</li>
+                    <li><strong>六、励志热血</strong>：力量感曲目，热血沸腾</li>
+                    <li><strong>八、英文歌</strong>：经典英文金曲</li>
                 </ul>
             </div>
-
             <div class="help-section">
-                <div class="help-section-title">🔍 搜索與瀏覽</div>
+                <div class="help-section-title">🔍 搜索与浏览</div>
                 <ul>
-                    <li><strong>分類切換</strong>：點擊頂部分類標籤，一鍵切換曲風。</li>
-                    <li><strong>實時搜索</strong>：輸入歌名，關鍵字會<strong style="color:#ff7e5f;">橙色高亮</strong>顯示，右側 ✕ 可一鍵清除。</li>
+                    <li><strong>分类切换</strong>：点击顶部分类标签，一键切换曲风。</li>
+                    <li><strong>实时搜索</strong>：输入歌名，关键字会<strong style="color:#ff7e5f;">橙色高亮</strong>显示，右侧 ✕ 可一键清除。</li>
                 </ul>
             </div>
-
             <div class="help-section">
-                <div class="help-section-title">🎤 待唱清單（核心功能）</div>
+                <div class="help-section-title">🎤 待唱清单（核心功能）</div>
                 <ul>
-                    <li><strong>一鍵點歌</strong>：點擊歌曲卡片右側的 <strong style="color:#38ef7d;">+</strong> 加入待唱。</li>
-                    <li><strong>拖曳排序</strong>：在清單中拖曳歌曲可調整演唱順序，像KTV點歌本一樣！</li>
-                    <li><strong>本地保存</strong>：清單數據保存在瀏覽器本地，<strong>刷新或關閉網頁都不會丟失</strong>！</li>
+                    <li><strong>一键点歌</strong>：点击歌曲卡片右侧的 <strong style="color:#38ef7d;">+</strong> 加入待唱。</li>
+                    <li><strong>拖曳排序</strong>：在清单中拖曳歌曲可调整演唱顺序，像KTV点歌本一样！</li>
+                    <li><strong>本地保存</strong>：清单数据保存在浏览器本地，<strong>刷新或关闭网页都不会丢失</strong>！</li>
                 </ul>
             </div>
-
             <div class="help-section">
-                <div class="help-section-title">🎲 命運轉盤</div>
+                <div class="help-section-title">🎲 命运转盘</div>
                 <ul>
-                    <li>點擊"隨機抽一首"，體驗老虎機般的滾動動畫。</li>
-                    <li>抽中的歌曲會<strong style="color:#38ef7d;">自動加入</strong>待唱清單，懶人福音！</li>
+                    <li>点击"随机抽一首"，体验老虎机般的滚动动画。</li>
+                    <li>抽中的歌曲会<strong style="color:#38ef7d;">自动加入</strong>待唱清单，懒人福音！</li>
                 </ul>
                 <div class="help-tip">
-                    <strong>💡 小貼士：</strong>如果抽到已在清單裡的歌，系統不會重複添加，並會溫柔提示你。
+                    <strong>💡 小贴士：</strong>如果抽到已在清单里的歌，系统不会重复添加，并会温柔提示你。
                 </div>
             </div>
-
             <div class="help-section">
-                <div class="help-section-title">🎧 試聽功能</div>
+                <div class="help-section-title">🎧 试听功能</div>
                 <ul>
-                    <li>滑鼠移到歌曲卡片上，底部會顯示<strong>所屬分類</strong>和<strong style="color:#ff6b6b;">▶ 試聽</strong>按鈕。</li>
-                    <li>點擊試聽，會跳轉到 YouTube 搜索該歌曲，快速收聽。</li>
+                    <li>鼠标移到歌曲卡片上，底部会显示<strong>所属分类</strong>和<strong style="color:#ff6b6b;">▶ 试听</strong>按钮。</li>
+                    <li>点击试听，会跳转到 YouTube 搜索该歌曲，快速收听。</li>
                 </ul>
             </div>
-
             <div class="help-section">
                 <div class="help-section-title">🛠️ 快捷操作</div>
                 <ul>
-                    <li><strong>🔄 重新整理</strong>：右上角橙色按鈕，一鍵刷新頁面。</li>
-                    <li><strong>🌙/☀️ 主題切換</strong>：右上角紫色按鈕，切換日間/夜間模式。</li>
-                    <li><strong>⬆️ 回到頂部</strong>：下滑頁面時右下角浮現，點擊絲滑滾回頂部。</li>
-                    <li><strong>❓ 功能說明</strong>：隨時查看本說明書。</li>
+                    <li><strong>🔄 重新整理</strong>：右上角橙色按钮，一键刷新页面。</li>
+                    <li><strong>🌙/☀️ 主题切换</strong>：右上角紫色按钮，切换日间/夜间模式。</li>
+                    <li><strong>⬆️ 回到顶部</strong>：下滑页面时右下角浮现，点击丝滑滚回顶部。</li>
+                    <li><strong>❓ 功能说明</strong>：随时查看本说明书。</li>
                 </ul>
             </div>
-
             <div class="help-section">
-                <div class="help-section-title">🔗 社交傳送門</div>
+                <div class="help-section-title">🔗 社交传送门</div>
                 <ul>
-                    <li><strong style="color:#FE2C55;">🎵 前往橋巴的抖音</strong>：青紅漸變按鈕，直達橋巴抖音主頁。</li>
-                    <li><strong style="color:#7289da;">🐷 殺豬幫DC</strong>：紫藍漸變按鈕，一鍵傳送Discord頻道。</li>
-                    <li><strong>底部彩蛋</strong>：滑到底部，點擊"新竹奇奇製作"訪問製作人主頁。</li>
+                    <li><strong style="color:#FE2C55;">🎵 前往桥巴的抖音</strong>：青红渐变按钮，直达桥巴抖音主页。</li>
+                    <li><strong style="color:#7289da;">🐷 杀猪帮DC</strong>：紫蓝渐变按钮，一键传送Discord频道。</li>
+                    <li><strong>底部彩蛋</strong>：滑到底部，点击"新竹奇奇制作"访问制作人主页。</li>
                 </ul>
             </div>
         </div>
@@ -761,9 +312,9 @@
 </div>
 
 <script>
-    // ================= 全新歌單數據 =================
+    // ================= 歌单数据（包含新增的天下、醉清风、半壶纱） =================
     const playlistData = {
-        "一、甜系輕快流行": ["恶作剧", "爱丫爱丫", "爱你", "那么骄傲", "爱的双重魅力", "你在不在", "喜欢你", "告白气球", "爱的飞行日记", "不潮不用花钱", "第一天", "欧若拉", "梦的光点", "霓虹甜心", "夏夜最后的烟火", "慢慢喜欢你", "这条小鱼在乎", "暗号"],
+        "一、甜系轻快流行": ["恶作剧", "爱丫爱丫", "爱你", "那么骄傲", "爱的双重魅力", "你在不在", "喜欢你", "告白气球", "爱的飞行日记", "不潮不用花钱", "第一天", "欧若拉", "梦的光点", "霓虹甜心", "夏夜最后的烟火", "慢慢喜欢你", "这条小鱼在乎", "暗号"],
         
         "二、伤感抒情 / EMO": ["亲爱的那不是爱情", "下雨天", "最后一页", "达尔文", "Letting Go", "忘记时间", "是否", "一直很安静", "此生不换", "天若有情", "命运", "走马", "演员", "天外来物", "爱情讯息", "烟火里的尘埃", "下一个天亮", "雨爱", "爱我还是她", "那些你不知道的事", "爱错", "带我走", "太阳", "我们的爱", "指纹", "我是一只鱼", "你不是真正的快乐", "泡沫", "句号", "倒数", "光年之外", "红蔷薇白玫瑰", "Where Did U Go", "再见", "后会无期", "我的秘密", "桃花诺", "AINY", "画", "来自天堂的魔鬼", "差不多姑娘", "突然之间", "很久以后", "冰河时代", "情人", "岩石里的花", "寂寞星球的玫瑰", "偶尔", "我怀念的", "开始懂了", "我不难过", "泪桥", "晴天", "搁浅", "花海", "龙卷风", "给我一首歌的时间", "明明就", "枫", "一路向北", "最长的电影", "不能说的秘密", "Always Online", "江南", "可惜没有如果", "愿与愁", "美人鱼", "修炼爱情", "背对背拥抱", "那些你很冒险的梦", "她说", "交换余生", "飞云之下", "在加纳", "晚婚", "谁", "国王与乞丐", "我走后", "水星记", "唯一", "多远都要在一起", "瞬", "我知道", "可以", "冬眠", "体面", "嘉宾", "一个人想着一个人", "想自由", "记得", "给我一个理由忘记", "慢冷", "关键词", "坠落", "幸福了然后呢", "在夜里跳舞", "我只能离开", "房间", "虚拟", "路过人间", "冻结", "千千万万", "兜圈", "人质", "你要的爱", "第57次取消发送", "阳光下的星星", "最好的我", "雨天", "漂洋过海来看你", "空白格", "寂寞沙洲冷", "若把你", "爱你但说不出口", "不怕", "问", "如果的事", "输了你赢了世界又如何", "方圆几里", "心跳的证明", "雨蝶", "百年孤寂", "遗憾", "下一次爱情来的时候", "只你"],
         
@@ -771,7 +322,7 @@
         
         "四、独立民谣": ["王昭君", "安和桥", "我记得", "程艾影", "理想", "我要你", "乌兰巴托的夜"],
         
-        "五、戏腔/古风": ["赤伶", "须尽欢", "身骑白马", "壁上观", "牵丝戏", "鸳鸯戏", "光亮", "探故知", "桃花诺", "青花瓷", "苏州河"],
+        "五、戏腔/古风": ["赤伶", "须尽欢", "身骑白马", "壁上观", "牵丝戏", "鸳鸯戏", "光亮", "探故知", "桃花诺", "青花瓷", "苏州河", "天下", "醉清风", "半壶纱"],
         
         "六、励志热血": ["追梦赤子心", "倔强", "天空没有极限", "受难曲", "存在", "杀死那个石家庄人"],
         
@@ -808,6 +359,7 @@
         });
     }
 
+    // ================= 主题切换 =================
     function initTheme() {
         const savedTheme = localStorage.getItem('qiaoba_theme');
         if (savedTheme === 'light') {
@@ -826,6 +378,7 @@
         });
     }
 
+    // ================= 搜索框清除按钮 =================
     function setupSearchClear() {
         const clearBtn = document.getElementById('clearSearchBtn');
         const searchInput = document.getElementById('searchInput');
@@ -851,6 +404,7 @@
         }
     }
 
+    // ================= 统计数字滚动动画 =================
     function animateTotalCount() {
         const allSongs = new Set();
         Object.values(playlistData).forEach(songs => songs.forEach(song => allSongs.add(song)));
@@ -901,6 +455,7 @@
         });
     }
 
+    // ================= 待唱清单（含拖曳排序） =================
     function setupSingList() {
         const openListBtn = document.getElementById('openListBtn');
         const listModal = document.getElementById('listModal');
@@ -912,7 +467,7 @@
         });
 
         clearListBtn.addEventListener('click', () => {
-            if(confirm('確定要清空所有待唱歌曲嗎？')) {
+            if(confirm('确定要清空所有待唱歌曲吗？')) {
                 singList = [];
                 saveSingList();
                 renderSingListModal();
@@ -961,12 +516,13 @@
         document.getElementById('listCountBadge').textContent = singList.length;
     }
 
+    // ================= 拖曳排序逻辑 =================
     let draggedIndex = null;
     
     function renderSingListModal() {
         const listItems = document.getElementById('listItems');
         if (singList.length === 0) {
-            listItems.innerHTML = '<div class="empty-list">🎵 清單空空如也，快去挑選想唱的歌吧！</div>';
+            listItems.innerHTML = '<div class="empty-list">🎵 清单空空如也，快去挑选想唱的歌吧！</div>';
             return;
         }
 
@@ -975,7 +531,7 @@
                 <span class="drag-handle" title="拖曳排序">⋮⋮</span>
                 <div class="list-item-info">
                     <div class="list-item-name">${index + 1}. ${item.name}</div>
-                    <div class="list-item-cat">來自：${item.category}</div>
+                    <div class="list-item-cat">来自：${item.category}</div>
                 </div>
                 <button class="remove-btn" onclick="removeFromSingList('${item.name.replace(/'/g, "\\'")}')" title="移除">×</button>
             </div>
@@ -1028,6 +584,7 @@
         });
     }
 
+    // ================= 随机抽歌 =================
     function setupRandomizer() {
         const randomBtn = document.getElementById('randomBtn');
         const randomModal = document.getElementById('randomModal');
@@ -1038,7 +595,7 @@
         function openModal() {
             randomModal.style.display = 'flex';
             randomSongName.classList.remove('shake');
-            randomSongCategory.textContent = '命運選擇中...';
+            randomSongCategory.textContent = '命运选择中...';
             
             let count = 0;
             const maxCount = 15; 
@@ -1058,9 +615,9 @@
                     const addedSuccessfully = addToList(finalSong.name, finalSong.category);
                     
                     if (addedSuccessfully) {
-                        randomSongCategory.innerHTML = `來自分類：${finalSong.category} <br><span style="color: #38ef7d; font-weight: bold; font-size: 0.9rem;">🎉 已自動加入待唱清單！</span>`;
+                        randomSongCategory.innerHTML = `来自分类：${finalSong.category} <br><span style="color: #38ef7d; font-weight: bold; font-size: 0.9rem;">🎉 已自动加入待唱清单！</span>`;
                     } else {
-                        randomSongCategory.innerHTML = `來自分類：${finalSong.category} <br><span style="color: #888; font-size: 0.9rem;">(這首歌已經在待唱清單裡啦)</span>`;
+                        randomSongCategory.innerHTML = `来自分类：${finalSong.category} <br><span style="color: #888; font-size: 0.9rem;">(这首歌已经在待唱清单里啦)</span>`;
                     }
                 }
             }, 80);
@@ -1070,6 +627,7 @@
         playAgainBtn.addEventListener('click', openModal);
     }
 
+    // ================= 渲染逻辑 =================
     function renderTabs() {
         const tabsContainer = document.getElementById('tabs');
         const categories = ["全部", ...Object.keys(playlistData)];
@@ -1119,7 +677,7 @@
                                     <div class="song-card-bottom">
                                         <span class="song-category-tag">${category}</span>
                                         <a href="${ytSearchUrl}" target="_blank" rel="noopener noreferrer" class="listen-btn" onclick="event.stopPropagation()">
-                                            ▶ 試聽
+                                            ▶ 试听
                                         </a>
                                     </div>
                                 </div>
@@ -1130,7 +688,7 @@
             }
         });
 
-        if (!hasResults) html = `<div class="empty-state">🎵 沒有找到相關的歌曲，換個關鍵詞試試吧~</div>`;
+        if (!hasResults) html = `<div class="empty-state">🎵 没有找到相关的歌曲，换个关键词试试吧~</div>`;
         contentContainer.innerHTML = html;
     }
 
