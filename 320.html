@@ -7,13 +7,11 @@
     <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
     <script>
         const API_URL = 'https://script.google.com/macros/s/AKfycbw7NZWJ9J_C298PdmuivaKWEUARpiZ2BuaOTwwSb_xNjM9LyjQZhDtrcSD88eoWfj_F/exec'; 
-        const ADMIN_PASSWORD = "admin789"; 
+        // 🔐 移除 ADMIN_PASSWORD，前端不再儲存密碼
         const ADMIN_NAME = "静静"; 
-        const ADMIN_TOKEN_KEY = 'adminToken';
-        const ADMIN_TOKEN_DURATION = 24 * 60 * 60 * 1000;
+        const ADMIN_TOKEN_KEY = 'adminToken_v2'; // 🆕 新版 Token Key
         const CACHE_KEY = 'playlist_cache_v2';
         
-        // 🆕 表情符號分類
         const EMOJI_LIST = {
             '笑臉': ['😀','😃','😄','😁','😆','😅','😂','🤣','😊','😇','🙂','🙃','😉','😌','😍','🥰','😘','😗','😙','😚','😋','😛','😝','😜','🤪','🤨','🧐','🤓','😎','🤩','🥳','😏','😒','😞','😔','😟','😕','🙁','☹️','😣','😖','😫','😩','🥺','😢','😭','😤','😠','😡','🤬','😱','😨','😰','😥','😓','🤗','🤔','🤭','🤫','🤥','😶','😐','😑','😬','🙄','😯','😦','😧','😮','😲','🥱','😴','🤤','😪','😵','🤐','🥴','🤢','🤮','🤧','😷','🤒','🤕'],
             '手勢': ['👍','👎','👌','🤌','🤏','✌️','🤞','🤟','🤘','🤙','👈','👉','👆','🖕','👇','☝️','👋','🤚','🖐️','✋','🖖','👏','🙌','🤝','🙏','💪','🦾','🦵','🦿','🦶','👀','👁️','👅','👄'],
@@ -25,6 +23,7 @@
         };
     </script>
     <style>
+        /* ... (CSS 樣式與之前完全相同，請保留您原本的 CSS) ... */
         :root { --bg-color: #f4f6f8; --text-color: #2d3436; --card-bg: #ffffff; --primary: #ff6b6b; --primary-hover: #ee5253; --secondary: #48dbfb; --danger: #ff7675; --success: #55efc4; --warning: #fbc531; --border: #e1e4e8; --reply-bg: #f8f9fa; --accent-gold: #fbc531; --shadow-sm: 0 2px 8px rgba(0,0,0,0.04); --shadow-md: 0 4px 15px rgba(0,0,0,0.06); --shadow-lg: 0 10px 30px rgba(0,0,0,0.1); --radius-lg: 16px; --radius-md: 10px; --radius-sm: 8px; --transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1); }
         body.dark-mode { --bg-color: #121212; --text-color: #e0e0e0; --card-bg: #1e1e1e; --primary: #ff7675; --border: #2d2d2d; --reply-bg: #2d3436; --shadow-sm: 0 2px 8px rgba(0,0,0,0.2); --shadow-md: 0 4px 15px rgba(0,0,0,0.4); --shadow-lg: 0 10px 30px rgba(0,0,0,0.6); }
         body { font-family: 'PingFang TC', 'Microsoft JhengHei', 'Segoe UI', Roboto, sans-serif; background-color: var(--bg-color); color: var(--text-color); max-width: 900px; margin: 0 auto; padding: 20px; padding-bottom: 120px; scroll-behavior: smooth; transition: background 0.4s ease, color 0.4s ease; line-height: 1.6; animation: fadeInUp 0.5s ease-out; overscroll-behavior-y: none; }
@@ -185,66 +184,26 @@
         .pull-refresh-indicator.active { top: 0; }
         .pull-refresh-indicator .spinner { width: 20px; height: 20px; border: 3px solid var(--border); border-top-color: var(--primary); border-radius: 50%; animation: spin 1s linear infinite; margin-right: 10px; }
         @keyframes spin { to { transform: rotate(360deg); } }
-        
-        /* 🆕 表情符號選擇器樣式 */
         .emoji-wrapper { position: relative; width: 100%; }
-        .emoji-toggle-btn { 
-            background: var(--bg-color); border: 1px solid var(--border); 
-            border-radius: 50%; width: 38px; height: 38px; 
-            font-size: 18px; cursor: pointer; transition: var(--transition);
-            display: inline-flex; align-items: center; justify-content: center;
-            flex-shrink: 0;
-        }
-        .emoji-toggle-btn:hover { 
-            background: var(--primary); transform: scale(1.1); 
-            border-color: var(--primary);
-        }
-        .emoji-toggle-btn.active { 
-            background: var(--primary); border-color: var(--primary);
-            transform: rotate(15deg);
-        }
-        .emoji-panel {
-            position: absolute; bottom: 50px; left: 0; right: 0;
-            background: var(--card-bg); border: 1px solid var(--border);
-            border-radius: var(--radius-lg); box-shadow: var(--shadow-lg);
-            padding: 15px; z-index: 100;
-            display: none; animation: popIn 0.2s ease;
-            max-width: 400px;
-        }
+        .emoji-toggle-btn { background: var(--bg-color); border: 1px solid var(--border); border-radius: 50%; width: 38px; height: 38px; font-size: 18px; cursor: pointer; transition: var(--transition); display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0; }
+        .emoji-toggle-btn:hover { background: var(--primary); transform: scale(1.1); border-color: var(--primary); }
+        .emoji-toggle-btn.active { background: var(--primary); border-color: var(--primary); transform: rotate(15deg); }
+        .emoji-panel { position: absolute; bottom: 50px; left: 0; right: 0; background: var(--card-bg); border: 1px solid var(--border); border-radius: var(--radius-lg); box-shadow: var(--shadow-lg); padding: 15px; z-index: 100; display: none; animation: popIn 0.2s ease; max-width: 400px; }
         .emoji-panel.show { display: block; }
-        .emoji-categories {
-            display: flex; gap: 6px; margin-bottom: 12px;
-            overflow-x: auto; padding-bottom: 6px;
-            border-bottom: 1px solid var(--border);
-        }
+        .emoji-categories { display: flex; gap: 6px; margin-bottom: 12px; overflow-x: auto; padding-bottom: 6px; border-bottom: 1px solid var(--border); }
         .emoji-categories::-webkit-scrollbar { height: 4px; }
         .emoji-categories::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
-        .emoji-cat-btn {
-            background: var(--bg-color); border: 1px solid var(--border);
-            border-radius: 20px; padding: 5px 12px; font-size: 12px;
-            cursor: pointer; white-space: nowrap; transition: var(--transition);
-            color: var(--text-color); font-weight: 600;
-        }
+        .emoji-cat-btn { background: var(--bg-color); border: 1px solid var(--border); border-radius: 20px; padding: 5px 12px; font-size: 12px; cursor: pointer; white-space: nowrap; transition: var(--transition); color: var(--text-color); font-weight: 600; }
         .emoji-cat-btn:hover { background: var(--primary); color: white; border-color: var(--primary); }
         .emoji-cat-btn.active { background: var(--primary); color: white; border-color: var(--primary); }
-        .emoji-grid {
-            display: grid; grid-template-columns: repeat(10, 1fr);
-            gap: 4px; max-height: 200px; overflow-y: auto;
-            padding: 4px;
-        }
+        .emoji-grid { display: grid; grid-template-columns: repeat(10, 1fr); gap: 4px; max-height: 200px; overflow-y: auto; padding: 4px; }
         .emoji-grid::-webkit-scrollbar { width: 6px; }
         .emoji-grid::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
-        .emoji-item {
-            font-size: 22px; cursor: pointer; padding: 4px;
-            border-radius: 6px; transition: var(--transition);
-            text-align: center; user-select: none;
-            aspect-ratio: 1; display: flex; align-items: center; justify-content: center;
-        }
+        .emoji-item { font-size: 22px; cursor: pointer; padding: 4px; border-radius: 6px; transition: var(--transition); text-align: center; user-select: none; aspect-ratio: 1; display: flex; align-items: center; justify-content: center; }
         .emoji-item:hover { background: var(--bg-color); transform: scale(1.3); }
         .emoji-item:active { transform: scale(0.9); }
         .req-msg-row { display: flex; gap: 8px; width: 100%; align-items: flex-start; }
         .req-msg-row textarea { flex: 1; }
-        
         @media (max-width: 600px) {
             body { padding: 15px; }
             .add-form-container { width: 95vw; right: 2.5vw; bottom: 100px; }
@@ -335,7 +294,6 @@
     </table>
     <div class="request-section" id="requestSection">
         <h3 style="margin-top:0; font-weight:800;">📝 點歌與留言板 <span style="font-size:12px; font-weight:normal; color:#888;">(支援無限串樓)</span></h3>
-        <!-- 🆕 主留言表單加入表情符號 -->
         <div class="request-form">
             <input type="text" id="reqNick" placeholder="您的暱稱 (選填)" style="max-width:150px;">
             <div class="req-msg-row">
@@ -482,38 +440,100 @@
             return /^https?:\/\//i.test(url);
         }
 
+        // 🔐 新版 Token 管理
         function isAdmin() {
-            const token = localStorage.getItem(ADMIN_TOKEN_KEY);
-            if (!token) return false;
+            const tokenDataStr = localStorage.getItem(ADMIN_TOKEN_KEY);
+            if (!tokenDataStr) return false;
             try {
-                const tokenData = JSON.parse(token);
-                if (Date.now() > tokenData.expiry) {
+                const tokenData = JSON.parse(tokenDataStr);
+                if (!tokenData.token || Date.now() > tokenData.expiry) {
                     localStorage.removeItem(ADMIN_TOKEN_KEY);
                     return false;
                 }
                 return true;
-            } catch (e) { return false; }
-        }
-
-        function setAdminToken() {
-            localStorage.setItem(ADMIN_TOKEN_KEY, JSON.stringify({ expiry: Date.now() + ADMIN_TOKEN_DURATION }));
-        }
-
-        function loginAdmin() {
-            if (isAdmin()) { showToast('您已經是管理員了！', 'info'); return; }
-            const password = prompt('⚠️ 請輸入管理員密碼：\n(登入後 24 小時內免重複輸入)');
-            if (password === ADMIN_PASSWORD) {
-                setAdminToken();
-                showToast('✅ 登入成功！', 'success');
-                updateAdminUI();
-                renderAllData({ status: 'success', songs: allSongs, requests: [] }, false);
-            } else if (password !== null) {
-                showToast('❌ 密碼錯誤', 'error');
+            } catch (e) { 
+                localStorage.removeItem(ADMIN_TOKEN_KEY);
+                return false; 
             }
         }
 
+        function getAdminToken() {
+            const tokenDataStr = localStorage.getItem(ADMIN_TOKEN_KEY);
+            if (!tokenDataStr) return null;
+            try {
+                const tokenData = JSON.parse(tokenDataStr);
+                return tokenData.token;
+            } catch (e) { return null; }
+        }
+
+        // 🆕 統一處理 API 回應，自動處理 Token 過期
+        function handleApiResponse(result, successCallback) {
+            if (result.status === 'success') {
+                if (successCallback) successCallback(result);
+            } else {
+                // 如果後端回傳 Token 錯誤，自動登出
+                if (result.message && result.message.indexOf('Token') !== -1) {
+                    localStorage.removeItem(ADMIN_TOKEN_KEY);
+                    updateAdminUI();
+                    showToast('⚠️ 登入已過期，請重新登入', 'error');
+                } else {
+                    showToast('❌ ' + (result.message || '操作失敗'), 'error');
+                }
+            }
+        }
+
+        // 🆕 登入流程改為呼叫後端 API
+        let pendingAdminCallback = null;
+        function loginAdmin() {
+            if (isAdmin()) { showToast('您已經是管理員了！', 'info'); return; }
+            const password = prompt('⚠️ 請輸入管理員密碼：\n(登入後 24 小時內免重複輸入)');
+            if (!password) return;
+            
+            showToast('🔄 驗證中...', 'info', 2000);
+            fetchWithRetry(API_URL, {
+                method: 'POST',
+                headers: { 'Content-Type': 'text/plain' },
+                body: JSON.stringify({ action: 'login', password: password })
+            })
+            .then(function(result) {
+                if (result.status === 'success') {
+                    localStorage.setItem(ADMIN_TOKEN_KEY, JSON.stringify({ 
+                        token: result.token, 
+                        expiry: result.expiry 
+                    }));
+                    showToast('✅ 登入成功！', 'success');
+                    updateAdminUI();
+                    renderAllData({ status: 'success', songs: allSongs, requests: [] }, false);
+                    
+                    // 執行暫存的 callback
+                    if (pendingAdminCallback) {
+                        const cb = pendingAdminCallback;
+                        pendingAdminCallback = null;
+                        cb();
+                    }
+                } else {
+                    showToast('❌ ' + (result.message || '密碼錯誤'), 'error');
+                }
+            })
+            .catch(function(err) {
+                showToast('❌ 登入失敗，請檢查網路', 'error');
+                console.error(err);
+            });
+        }
+
+        // 🆕 登出流程改為通知後端
         function logoutAdmin() {
+            const token = getAdminToken();
             localStorage.removeItem(ADMIN_TOKEN_KEY);
+            
+            if (token) {
+                fetchWithRetry(API_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'text/plain' },
+                    body: JSON.stringify({ action: 'logout', token: token })
+                }).catch(function() {});
+            }
+            
             updateAdminUI();
             renderAllData({ status: 'success', songs: allSongs, requests: [] }, false);
             showToast('👋 已登出', 'info');
@@ -526,16 +546,15 @@
             document.getElementById('logoutBtn').style.display = isAdminMode ? 'inline-flex' : 'none';
         }
 
+        // 🆕 requireAdmin 改為提示登入
         function requireAdmin(callback) {
-            if (isAdmin()) { callback(); return; }
-            const password = prompt('⚠️ 此操作需要管理員權限，請輸入密碼：');
-            if (password === ADMIN_PASSWORD) {
-                setAdminToken();
-                showToast('✅ 權限驗證成功', 'success');
-                updateAdminUI();
-                callback();
-            } else if (password !== null) {
-                showToast('❌ 密碼錯誤', 'error');
+            if (isAdmin()) { 
+                callback(); 
+                return; 
+            }
+            pendingAdminCallback = callback;
+            if (confirm('⚠️ 此操作需要管理員權限，是否立即登入？')) {
+                loginAdmin();
             }
         }
 
@@ -724,8 +743,8 @@
             if (!queuedList) return;
             const ids = Array.from(queuedList.querySelectorAll('.queue-item')).map(function(item) { return item.getAttribute('data-id'); });
             if (ids.length === 0) return;
-            fetchWithRetry(API_URL, { method: 'POST', headers: { 'Content-Type': 'text/plain' }, body: JSON.stringify({ action: 'update_queue_order', order: ids, password: ADMIN_PASSWORD }) })
-            .then(function(result) { if (result.status === 'success') showToast('🔀 順序已同步至雲端', 'success', 2000); })
+            fetchWithRetry(API_URL, { method: 'POST', headers: { 'Content-Type': 'text/plain' }, body: JSON.stringify({ action: 'update_queue_order', order: ids, token: getAdminToken() }) })
+            .then(function(result) { handleApiResponse(result, function() { showToast('🔀 順序已同步至雲端', 'success', 2000); }); })
             .catch(function(err) { showToast('❌ 順序同步失敗', 'error'); console.error(err); });
         }
 
@@ -738,12 +757,12 @@
                 if (nextStatus === 'queued') song.queueTime = Date.now();
                 else if (nextStatus === '') song.queueTime = 0;
                 renderQueuePanel();
-                fetchWithRetry(API_URL, { method: 'POST', headers: { 'Content-Type': 'text/plain' }, body: JSON.stringify({ action: 'update_status', id: String(id), status: nextStatus, password: ADMIN_PASSWORD }) })
+                fetchWithRetry(API_URL, { method: 'POST', headers: { 'Content-Type': 'text/plain' }, body: JSON.stringify({ action: 'update_status', id: String(id), status: nextStatus, token: getAdminToken() }) })
                 .then(function(result) {
-                    if (result.status === 'success') {
+                    handleApiResponse(result, function() {
                         const statusMap = { 'queued': '⏳ 排隊中', 'singing': '🎤 演唱中', 'done': '✅ 已完成', '': '已移出' };
                         showToast(song.song + ' → ' + (statusMap[nextStatus] || '已移出'), 'success', 2000);
-                    }
+                    });
                 }).catch(function(err) { showToast('❌ 更新失敗，請重試', 'error'); console.error(err); });
             });
         }
@@ -751,8 +770,8 @@
         function clearQueue() {
             requireAdmin(function() {
                 if (!confirm('確定要清空所有待唱歌曲嗎？')) return;
-                fetchWithRetry(API_URL, { method: 'POST', headers: { 'Content-Type': 'text/plain' }, body: JSON.stringify({ action: 'clear_queue', password: ADMIN_PASSWORD }) })
-                .then(function(result) { if (result.status === 'success') { showToast('🗑️ 清單已清空'); loadPlaylistData(true); } })
+                fetchWithRetry(API_URL, { method: 'POST', headers: { 'Content-Type': 'text/plain' }, body: JSON.stringify({ action: 'clear_queue', token: getAdminToken() }) })
+                .then(function(result) { handleApiResponse(result, function() { showToast('🗑️ 清單已清空'); loadPlaylistData(true); }); })
                 .catch(function(err) { showToast('❌ 清空失敗，請重試', 'error'); console.error(err); });
             });
         }
@@ -781,13 +800,12 @@
             requireAdmin(function() {
                 const song = allSongs.find(function(s) { return String(s.id) === String(id); });
                 if (song) { song.status = ''; song.queueTime = 0; renderQueuePanel(); }
-                fetchWithRetry(API_URL, { method: 'POST', headers: { 'Content-Type': 'text/plain' }, body: JSON.stringify({ action: 'update_status', id: String(id), status: '', password: ADMIN_PASSWORD }) })
-                .then(function(result) { if (result.status === 'success') showToast('✅ 已移出'); })
+                fetchWithRetry(API_URL, { method: 'POST', headers: { 'Content-Type': 'text/plain' }, body: JSON.stringify({ action: 'update_status', id: String(id), status: '', token: getAdminToken() }) })
+                .then(function(result) { handleApiResponse(result, function() { showToast('✅ 已移出'); }); })
                 .catch(function(err) { showToast('❌ 移出失敗，請重試', 'error'); console.error(err); });
             });
         }
 
-        // 🆕 建立表情符號面板 HTML
         function buildEmojiPanelHTML() {
             const categories = Object.keys(EMOJI_LIST);
             let html = '<div class="emoji-categories">';
@@ -799,7 +817,6 @@
             return html;
         }
 
-        // 🆕 渲染指定分類的表情符號
         function renderEmojiGrid(category, gridEl) {
             const emojis = EMOJI_LIST[category] || [];
             let html = '';
@@ -809,25 +826,19 @@
             gridEl.innerHTML = html;
         }
 
-        // 🆕 切換表情符號面板
         function toggleEmojiPanel(btn) {
-            // 先關閉所有其他面板
             document.querySelectorAll('.emoji-panel.show').forEach(function(p) {
                 if (p._toggleBtn !== btn) {
                     p.classList.remove('show');
                     if (p._toggleBtn) p._toggleBtn.classList.remove('active');
                 }
             });
-            
             let panel = btn.nextElementSibling;
-            // 如果下一個元素不是面板，則建立
             if (!panel || !panel.classList.contains('emoji-panel')) {
                 panel = document.createElement('div');
                 panel.className = 'emoji-panel';
                 panel.innerHTML = buildEmojiPanelHTML();
                 btn.parentNode.insertBefore(panel, btn.nextSibling);
-                
-                // 綁定分類按鈕事件
                 panel.querySelectorAll('.emoji-cat-btn').forEach(function(catBtn) {
                     catBtn.addEventListener('click', function(e) {
                         e.stopPropagation();
@@ -836,33 +847,24 @@
                         renderEmojiGrid(catBtn.dataset.cat, panel.querySelector('#emojiGridContent'));
                     });
                 });
-                
-                // 綁定表情符號點擊事件（事件委派）
                 panel.addEventListener('click', function(e) {
                     const emojiItem = e.target.closest('.emoji-item');
                     if (emojiItem) {
                         e.stopPropagation();
                         const emoji = emojiItem.dataset.emoji;
-                        // 找到對應的 textarea
                         const wrapper = panel.parentNode;
                         const textarea = wrapper.querySelector('textarea');
-                        if (textarea) {
-                            insertEmojiAtCursor(textarea, emoji);
-                        }
+                        if (textarea) insertEmojiAtCursor(textarea, emoji);
                     }
                 });
-                
-                // 初始渲染第一個分類
                 const firstCat = Object.keys(EMOJI_LIST)[0];
                 renderEmojiGrid(firstCat, panel.querySelector('#emojiGridContent'));
             }
-            
             panel.classList.toggle('show');
             btn.classList.toggle('active');
             panel._toggleBtn = btn;
         }
 
-        // 🆕 在 textarea 游標位置插入表情符號
         function insertEmojiAtCursor(textarea, emoji) {
             const start = textarea.selectionStart;
             const end = textarea.selectionEnd;
@@ -870,15 +872,12 @@
             const before = text.substring(0, start);
             const after = text.substring(end);
             textarea.value = before + emoji + after;
-            // 將游標移到插入的表情符號後方
             const newPos = start + emoji.length;
             textarea.setSelectionRange(newPos, newPos);
             textarea.focus();
-            // 觸發 input 事件（如果有綁定的話）
             textarea.dispatchEvent(new Event('input', { bubbles: true }));
         }
 
-        // 🆕 點擊外部關閉表情符號面板
         document.addEventListener('click', function(e) {
             if (!e.target.closest('.emoji-panel') && !e.target.closest('.emoji-toggle-btn')) {
                 document.querySelectorAll('.emoji-panel.show').forEach(function(p) {
@@ -914,7 +913,6 @@
                     repliesHtml += '</div>';
                 }
                 const delReqBtn = isAdminMode ? '<button class="req-action-btn" style="color:var(--danger);" data-id="' + escapeHtml(String(req.id)) + '" onclick="confirmDeleteRequest(this.dataset.id)">🗑️ 刪除</button>' : '';
-                // 🆕 回覆區也加入表情符號按鈕
                 htmlContent += '<div class="request-item" data-id="' + escapeHtml(String(req.id)) + '"><div class="req-header"><span class="req-nick">' + escapeHtml(req.nickname) + '</span><span>' + escapeHtml(req.time) + '</span></div><div>' + escapeHtml(req.message) + '</div>' + repliesHtml + '<div class="req-actions"><button class="req-action-btn" onclick="toggleReplyInput(this)">💬 回覆</button>' + delReqBtn + '</div><div class="reply-input-area" style="display:none;"><div style="display:flex; gap:8px; align-items:flex-start; width:100%;"><input type="text" class="reply-nick" placeholder="暱稱" value="' + escapeHtml(localStorage.getItem('lastReplyNick') || '') + '" style="max-width:140px;"><div style="flex:1; position:relative;"><textarea class="reply-text" placeholder="輸入回覆內容..." rows="2" style="width:100%;"></textarea><button type="button" class="emoji-toggle-btn" onclick="toggleEmojiPanel(this)" title="插入表情符號" style="position:absolute; right:8px; top:8px; width:32px; height:32px; font-size:16px;">😊</button></div></div><div class="reply-btn-group"><button class="btn-reply-general" onclick="submitGeneralReply(this)">💬 一般回覆</button><button class="btn-reply-official" onclick="submitOfficialReply(this)">👑 官方回覆</button></div></div></div>';
             }
             list.innerHTML = htmlContent;
@@ -925,7 +923,6 @@
             const inputArea = requestItem.querySelector('.reply-input-area');
             if (inputArea && inputArea.style.display === 'none') {
                 document.querySelectorAll('.reply-input-area').forEach(function(el) { el.style.display = 'none'; });
-                // 關閉所有表情符號面板
                 document.querySelectorAll('.emoji-panel.show').forEach(function(p) {
                     p.classList.remove('show');
                     if (p._toggleBtn) p._toggleBtn.classList.remove('active');
@@ -943,7 +940,7 @@
             if (!nick || !replyText) { showToast('請填寫暱稱與內容！', 'error'); return; }
             localStorage.setItem('lastReplyNick', nick);
             fetchWithRetry(API_URL, { method: 'POST', headers: { 'Content-Type': 'text/plain' }, body: JSON.stringify({ action: 'reply_request', id: String(id), replier: nick, replyContent: replyText, isOfficial: false }) })
-            .then(function(result) { if (result.status === 'success') { loadPlaylistData(true); showToast('✅ 回覆成功'); } })
+            .then(function(result) { handleApiResponse(result, function() { loadPlaylistData(true); showToast('✅ 回覆成功'); }); })
             .catch(function(err) { showToast('❌ 回覆失敗，請重試', 'error'); console.error(err); });
         }
 
@@ -953,8 +950,8 @@
                 const id = requestItem.dataset.id;
                 const replyText = requestItem.querySelector('.reply-text').value.trim();
                 if (!replyText) { showToast('請輸入內容！', 'error'); return; }
-                fetchWithRetry(API_URL, { method: 'POST', headers: { 'Content-Type': 'text/plain' }, body: JSON.stringify({ action: 'reply_request', id: String(id), replier: ADMIN_NAME, replyContent: replyText, isOfficial: true, password: ADMIN_PASSWORD }) })
-                .then(function(result) { if (result.status === 'success') { loadPlaylistData(true); showToast('✅ 官方回覆成功'); } })
+                fetchWithRetry(API_URL, { method: 'POST', headers: { 'Content-Type': 'text/plain' }, body: JSON.stringify({ action: 'reply_request', id: String(id), replier: ADMIN_NAME, replyContent: replyText, isOfficial: true, token: getAdminToken() }) })
+                .then(function(result) { handleApiResponse(result, function() { loadPlaylistData(true); showToast('✅ 官方回覆成功'); }); })
                 .catch(function(err) { showToast('❌ 回覆失敗，請重試', 'error'); console.error(err); });
             });
         }
@@ -962,8 +959,8 @@
         function confirmDeleteReply(replyId) {
             requireAdmin(function() {
                 if (!confirm('確定刪除這則回覆？')) return;
-                fetchWithRetry(API_URL, { method: 'POST', headers: { 'Content-Type': 'text/plain' }, body: JSON.stringify({ action: 'delete_reply', replyId: String(replyId), password: ADMIN_PASSWORD }) })
-                .then(function(result) { if (result.status === 'success') { loadPlaylistData(true); showToast('✅ 已刪除'); } })
+                fetchWithRetry(API_URL, { method: 'POST', headers: { 'Content-Type': 'text/plain' }, body: JSON.stringify({ action: 'delete_reply', replyId: String(replyId), token: getAdminToken() }) })
+                .then(function(result) { handleApiResponse(result, function() { loadPlaylistData(true); showToast('✅ 已刪除'); }); })
                 .catch(function(err) { showToast('❌ 刪除失敗，請重試', 'error'); console.error(err); });
             });
         }
@@ -1050,13 +1047,13 @@
                 if (!artist || !song) { showToast('請填寫歌手和歌曲名稱！', 'error'); return; }
                 const btn = document.getElementById('addBtn');
                 btn.disabled = true; btn.innerText = '新增中...';
-                fetchWithRetry(API_URL, { method: 'POST', headers: { 'Content-Type': 'text/plain' }, body: JSON.stringify({ action: 'add', artist: artist, song: song, link: '', tags: tags, password: ADMIN_PASSWORD }) })
+                fetchWithRetry(API_URL, { method: 'POST', headers: { 'Content-Type': 'text/plain' }, body: JSON.stringify({ action: 'add', artist: artist, song: song, link: '', tags: tags, token: getAdminToken() }) })
                 .then(function(result) {
                     btn.disabled = false; btn.innerText = '✨ 確認新增至雲端';
-                    if (result.status === 'success') {
+                    handleApiResponse(result, function() {
                         document.getElementById('artist').value = ''; document.getElementById('song').value = ''; document.getElementById('tags').value = '';
                         showToast('✨ 新增成功！'); loadPlaylistData(true);
-                    }
+                    });
                 }).catch(function(err) { btn.disabled = false; btn.innerText = '✨ 確認新增至雲端'; showToast('❌ 新增失敗，請重試', 'error'); console.error(err); });
             });
         }
@@ -1076,10 +1073,10 @@
                 if (songsToAdd.length === 0) { showToast('格式錯誤！', 'error'); return; }
                 const btn = document.getElementById('batchBtn');
                 btn.disabled = true; btn.innerText = '上傳中...';
-                fetchWithRetry(API_URL, { method: 'POST', headers: { 'Content-Type': 'text/plain' }, body: JSON.stringify({ action: 'batch_add', songs: songsToAdd, password: ADMIN_PASSWORD }) })
+                fetchWithRetry(API_URL, { method: 'POST', headers: { 'Content-Type': 'text/plain' }, body: JSON.stringify({ action: 'batch_add', songs: songsToAdd, token: getAdminToken() }) })
                 .then(function(result) {
                     btn.disabled = false; btn.innerText = '🚀 批量上傳至雲端';
-                    if (result.status === 'success') { document.getElementById('batchInput').value = ''; toggleAddForm(); showToast('🚀 成功新增 ' + songsToAdd.length + ' 首歌曲！'); loadPlaylistData(true); }
+                    handleApiResponse(result, function() { document.getElementById('batchInput').value = ''; toggleAddForm(); showToast('🚀 成功新增 ' + songsToAdd.length + ' 首歌曲！'); loadPlaylistData(true); });
                 }).catch(function(err) { btn.disabled = false; btn.innerText = '🚀 批量上傳至雲端'; showToast('❌ 上傳失敗，請重試', 'error'); console.error(err); });
             });
         }
@@ -1092,8 +1089,8 @@
                 const newArtist = prompt('修改歌手名稱：', item.artist); if (!newArtist) return;
                 const newSong = prompt('修改歌曲名稱：', item.song); if (!newSong) return;
                 const newTags = prompt('修改標籤：', item.tags || ''); if (newTags === null) return;
-                fetchWithRetry(API_URL, { method: 'POST', headers: { 'Content-Type': 'text/plain' }, body: JSON.stringify({ action: 'edit', id: String(id), artist: newArtist.trim(), song: newSong.trim(), link: item.link || '', tags: newTags.trim(), password: ADMIN_PASSWORD }) })
-                .then(function(result) { loadPlaylistData(true); showToast('✅ 編輯成功！'); })
+                fetchWithRetry(API_URL, { method: 'POST', headers: { 'Content-Type': 'text/plain' }, body: JSON.stringify({ action: 'edit', id: String(id), artist: newArtist.trim(), song: newSong.trim(), link: item.link || '', tags: newTags.trim(), token: getAdminToken() }) })
+                .then(function(result) { handleApiResponse(result, function() { loadPlaylistData(true); showToast('✅ 編輯成功！'); }); })
                 .catch(function(err) { showToast('❌ 編輯失敗，請重試', 'error'); console.error(err); });
             });
         }
@@ -1104,8 +1101,8 @@
                 const item = allSongs.find(function(s) { return String(s.id) === String(id); });
                 if (!item) { showToast('❌ 找不到這首歌曲', 'error'); return; }
                 if (!confirm('確定刪除「' + item.artist + ' - ' + item.song + '」嗎？')) return;
-                fetchWithRetry(API_URL, { method: 'POST', headers: { 'Content-Type': 'text/plain' }, body: JSON.stringify({ action: 'delete', id: String(id), password: ADMIN_PASSWORD }) })
-                .then(function(result) { loadPlaylistData(true); showToast('✅ 已刪除'); })
+                fetchWithRetry(API_URL, { method: 'POST', headers: { 'Content-Type': 'text/plain' }, body: JSON.stringify({ action: 'delete', id: String(id), token: getAdminToken() }) })
+                .then(function(result) { handleApiResponse(result, function() { loadPlaylistData(true); showToast('✅ 已刪除'); }); })
                 .catch(function(err) { showToast('❌ 刪除失敗，請重試', 'error'); console.error(err); });
             });
         }
@@ -1113,8 +1110,8 @@
         function confirmDeleteRequest(id) {
             requireAdmin(function() {
                 if (!confirm('確定刪除這則留言嗎？')) return;
-                fetchWithRetry(API_URL, { method: 'POST', headers: { 'Content-Type': 'text/plain' }, body: JSON.stringify({ action: 'delete_request', id: String(id), password: ADMIN_PASSWORD }) })
-                .then(function(result) { loadPlaylistData(true); showToast('✅ 已刪除'); })
+                fetchWithRetry(API_URL, { method: 'POST', headers: { 'Content-Type': 'text/plain' }, body: JSON.stringify({ action: 'delete_request', id: String(id), token: getAdminToken() }) })
+                .then(function(result) { handleApiResponse(result, function() { loadPlaylistData(true); showToast('✅ 已刪除'); }); })
                 .catch(function(err) { showToast('❌ 刪除失敗，請重試', 'error'); console.error(err); });
             });
         }
@@ -1128,7 +1125,7 @@
             fetchWithRetry(API_URL, { method: 'POST', headers: { 'Content-Type': 'text/plain' }, body: JSON.stringify({ action: 'add_request', nickname: nick, message: msg }) })
             .then(function(result) {
                 btn.disabled = false; btn.innerText = '送出';
-                if (result.status === 'success') { document.getElementById('reqMessage').value = ''; showToast('✅ 留言成功！'); loadPlaylistData(true); }
+                handleApiResponse(result, function() { document.getElementById('reqMessage').value = ''; showToast('✅ 留言成功！'); loadPlaylistData(true); });
             }).catch(function(err) { btn.disabled = false; btn.innerText = '送出'; showToast('❌ 留言失敗，請重試', 'error'); console.error(err); });
         }
 
