@@ -7,7 +7,6 @@
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         
-        /* ================= 主題變量 ================= */
         :root {
             --bg-gradient: linear-gradient(135deg, #0f0c29 0%, #302b63 50%, #24243e 100%);
             --text-color: #e0e0e0;
@@ -60,14 +59,12 @@
 
         .container { max-width: 1200px; margin: 0 auto; }
 
-        /* ================= 頂部區域（含右上角圖標） ================= */
         header { 
             text-align: center; 
             padding: 40px 0 20px; 
             position: relative;
         }
         
-        /* 右上角圖標組 */
         .top-icons {
             position: absolute;
             top: 20px;
@@ -139,7 +136,6 @@
         }
         .discord-link:hover { transform: translateY(-3px) scale(1.05); box-shadow: 0 8px 20px rgba(88, 101, 242, 0.6); }
 
-        /* 統計資訊（標題下方小字） */
         .stats-mini {
             color: var(--text-secondary);
             font-size: 0.95rem;
@@ -153,14 +149,12 @@
             min-width: 30px;
         }
 
-        /* ================= 控制區（精簡為3個元素） ================= */
         .controls {
             max-width: 900px; margin: 25px auto;
             display: flex; gap: 15px; align-items: center; flex-wrap: wrap;
             justify-content: center;
         }
         
-        /* 搜索框 + 清除按鈕 */
         .search-box { flex: 1; min-width: 200px; position: relative; }
         .search-box input {
             width: 100%; padding: 15px 45px 15px 20px; border-radius: 30px;
@@ -174,7 +168,6 @@
         }
         .search-box input::placeholder { color: var(--text-muted); }
         
-        /* 清除按鈕 */
         .clear-search-btn {
             position: absolute;
             right: 15px;
@@ -221,17 +214,41 @@
             border-radius: 10px; font-size: 0.8rem; margin-left: 5px;
         }
 
-        .tabs { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; margin-bottom: 30px; }
-        .tab-btn {
-            padding: 8px 20px; border-radius: 20px;
-            border: 1px solid var(--card-border);
-            background: var(--card-bg); color: var(--text-secondary);
-            cursor: pointer; transition: all 0.3s; font-size: 0.95rem;
+        /* 分類標籤 - 支援長名稱 */
+        .tabs { 
+            display: flex; 
+            flex-wrap: wrap; 
+            justify-content: center; 
+            gap: 10px; 
+            margin-bottom: 30px; 
         }
-        .tab-btn:hover { background: var(--card-bg-hover); color: var(--text-color); transform: translateY(-2px); }
+        .tab-btn {
+            padding: 8px 18px; 
+            border-radius: 20px;
+            border: 1px solid var(--card-border);
+            background: var(--card-bg); 
+            color: var(--text-secondary);
+            cursor: pointer; 
+            transition: all 0.3s; 
+            font-size: 0.9rem;
+            max-width: 280px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .tab-btn:hover { 
+            background: var(--card-bg-hover); 
+            color: var(--text-color); 
+            transform: translateY(-2px); 
+        }
         .tab-btn.active {
-            background: linear-gradient(135deg, #ff7e5f, #feb47b); color: #fff;
-            border-color: transparent; box-shadow: 0 5px 15px rgba(255, 126, 95, 0.4); font-weight: bold;
+            background: linear-gradient(135deg, #ff7e5f, #feb47b); 
+            color: #fff;
+            border-color: transparent; 
+            box-shadow: 0 5px 15px rgba(255, 126, 95, 0.4); 
+            font-weight: bold;
+            white-space: normal;
+            overflow: visible;
         }
 
         .category-section { margin-bottom: 40px; animation: fadeIn 0.5s ease; }
@@ -239,6 +256,7 @@
             font-size: 1.5rem; margin-bottom: 20px; padding-left: 15px;
             border-left: 4px solid #ff7e5f; color: var(--text-color);
             display: flex; align-items: center; gap: 10px;
+            flex-wrap: wrap;
         }
         .category-title .count { font-size: 0.9rem; color: var(--text-muted); font-weight: normal; }
 
@@ -248,7 +266,6 @@
             gap: 15px;
         }
 
-        /* ================= 歌曲卡片（含 Hover 試聽） ================= */
         .song-card {
             background: var(--card-bg);
             border: 1px solid var(--card-border);
@@ -294,7 +311,6 @@
             background: #38ef7d; color: #0f0c29; border-color: #38ef7d;
         }
         
-        /* 卡片底部資訊列 */
         .song-card-bottom {
             display: flex;
             align-items: center;
@@ -443,7 +459,6 @@
         .clear-list-btn:hover { background: #ff4b4b; color: #fff; }
         .empty-list { text-align: center; color: var(--text-muted); padding: 40px 0; }
 
-        /* ================= 功能說明彈窗 ================= */
         .help-modal-content {
             text-align: left;
             max-width: 600px;
@@ -526,7 +541,6 @@
             color: #86a8e7; text-shadow: 0 0 8px rgba(134, 168, 231, 0.5);
         }
 
-        /* ================= 懸浮按鈕組 ================= */
         .float-btn-group {
             position: fixed;
             bottom: 30px;
@@ -596,6 +610,7 @@
             .float-btn { width: 45px; height: 45px; font-size: 1.2rem; }
             .modal-content { padding: 25px 20px; }
             .help-modal-content h2 { font-size: 1.3rem; }
+            .tab-btn { font-size: 0.8rem; padding: 6px 14px; max-width: 200px; }
         }
     </style>
 </head>
@@ -603,7 +618,6 @@
 
 <div class="container">
     <header>
-        <!-- 右上角圖標組 -->
         <div class="top-icons">
             <button class="icon-btn reset-icon-btn" id="resetBtn" title="重新整理">🔄</button>
             <button class="icon-btn theme-btn" id="themeBtn" title="切換主題">🌙</button>
@@ -618,13 +632,11 @@
                 🐷 殺豬幫DC
             </a>
         </div>
-        <!-- 統計資訊（標題下方小字 + 數字滾動） -->
         <div class="stats-mini">
             共收錄 <span class="count-num" id="totalCount">0</span> 首心動旋律
         </div>
     </header>
 
-    <!-- 精簡後的操作欄：搜索 + 待唱 + 隨機 -->
     <div class="controls">
         <div class="search-box">
             <input type="text" id="searchInput" placeholder="🔍 搜索歌曲名稱...">
@@ -644,13 +656,11 @@
     </footer>
 </div>
 
-<!-- 懸浮按鈕組 -->
 <div class="float-btn-group">
     <button class="float-btn help-btn" id="helpBtn" title="功能說明">❓</button>
     <button class="float-btn back-to-top" id="backToTopBtn" title="回到頂部">⬆️</button>
 </div>
 
-<!-- 隨機抽歌彈窗 -->
 <div id="randomModal" class="modal">
     <div class="modal-content">
         <span class="close-btn" data-close="randomModal">&times;</span>
@@ -661,7 +671,6 @@
     </div>
 </div>
 
-<!-- 待唱清單彈窗 -->
 <div id="listModal" class="modal">
     <div class="modal-content list-modal-content">
         <span class="close-btn" data-close="listModal">&times;</span>
@@ -674,7 +683,6 @@
     </div>
 </div>
 
-<!-- 功能說明彈窗 -->
 <div id="helpModal" class="modal">
     <div class="modal-content help-modal-content">
         <span class="close-btn" data-close="helpModal">&times;</span>
@@ -682,9 +690,21 @@
         <p class="help-subtitle">歡迎來到橋巴的專屬KTV點歌台 🎧</p>
         <div class="help-body">
             <div class="help-section">
-                <div class="help-section-title">🎵 曲庫與搜索</div>
+                <div class="help-section-title">🎵 全新分類曲庫</div>
                 <ul>
-                    <li><strong>176首精選</strong>：涵蓋華語經典、周杰倫、林俊傑、鄧紫棋、孫燕姿、五月天、民謠、戲腔、emo神曲及最新熱歌。</li>
+                    <li><strong>一、甜系輕快流行</strong>：青春甜歌，元氣滿滿</li>
+                    <li><strong>二、傷感抒情 / EMO</strong>：失戀遺憾、壓抑走心</li>
+                    <li><strong>三、治癒溫柔</strong>：氛圍感抒情，治癒心靈</li>
+                    <li><strong>四、獨立民謠</strong>：敘事走心，故事感滿滿</li>
+                    <li><strong>五、戲腔/古風</strong>：國風韻味，戲腔驚艷</li>
+                    <li><strong>六、勵志熱血</strong>：力量感曲目，熱血沸騰</li>
+                    <li><strong>八、英文歌</strong>：經典英文金曲</li>
+                </ul>
+            </div>
+
+            <div class="help-section">
+                <div class="help-section-title">🔍 搜索與瀏覽</div>
+                <ul>
                     <li><strong>分類切換</strong>：點擊頂部分類標籤，一鍵切換曲風。</li>
                     <li><strong>實時搜索</strong>：輸入歌名，關鍵字會<strong style="color:#ff7e5f;">橙色高亮</strong>顯示，右側 ✕ 可一鍵清除。</li>
                 </ul>
@@ -736,30 +756,26 @@
                     <li><strong>底部彩蛋</strong>：滑到底部，點擊"新竹奇奇製作"訪問製作人主頁。</li>
                 </ul>
             </div>
-
-            <div class="help-section">
-                <div class="help-section-title">📱 多端適配</div>
-                <ul>
-                    <li>完美支持手機、平板、電腦，橫豎屏都能絲滑操作。</li>
-                    <li>所有按鈕、彈窗、搜索框都會自動調整到最舒適的排版。</li>
-                </ul>
-            </div>
         </div>
     </div>
 </div>
 
 <script>
+    // ================= 全新歌單數據 =================
     const playlistData = {
-        "華語經典": ["惡作劇", "愛丫愛丫", "我知道", "有你在", "那麼驕傲", "愛的雙重魅力", "你在不在", "親愛的那不是愛情", "下雨天", "最後一頁", "夏天的風", "達爾文", "Letting Go", "忘記時間", "是否", "一直很安靜", "此生不換", "天若有情", "命運", "虛擬", "走馬", "奇妙能力歌", "演員", "天外來物", "愛情訊息", "煙火裡的塵埃", "特別的人", "下一個天亮", "雨愛", "若是月亮還沒來", "大山", "不要怕", "愛我還是她", "那些你不知道的事", "愛錯", "匿名的好友", "帶我走", "太陽", "夏夜最後的煙火", "慢慢", "慢慢喜歡你", "這世間那麼多人", "我們的愛", "想你的365天", "這條小魚在乎", "去有風的地方", "路過人間", "秋風", "追夢赤子心", "愛人錯過", "喜歡你", "指紋", "我是一隻魚", "霓虹甜心", "跳樓機", "殺死那個石家莊人", "百年孤寂"],
-        "五月天": ["知足", "溫柔", "你不是真正的快樂", "倔強", "無與倫比的美麗", "小情歌"],
-        "鄧紫棋": ["多遠都要在一起", "唯一", "泡沫", "喜歡你", "句號", "倒數", "光年之外", "紅薔薇白玫瑰", "Where Did U Go", "再見", "後會無期", "我的秘密", "桃花諾", "Ainy", "天空沒有極限", "受難曲", "畫", "你把我灌醉", "來自天堂的魔鬼", "你不是真正的快樂", "差不多姑娘", "突然之間", "很久以後", "冰河時代", "情人", "存在", "老人與海", "另一個童話", "岩石裡的花", "寂寞星球的玫瑰", "偶爾"],
-        "孫燕姿": ["我懷戀的", "開始懂了", "遇見", "綠光", "我不難過", "第一天", "天黑黑", "青花", "淚橋"],
-        "周杰倫": ["晴天", "搁淺", "稻香", "七里香", "花海", "龍捲風", "給我一首歌的時間", "明明就", "楓", "一路向北", "告白氣球", "愛的飛行日記", "最長的電影", "不能說的秘密"],
-        "民謠": ["王昭君", "安和橋", "我記得", "程艾影", "理想", "我要你"],
-        "林俊傑": ["Always Online", "江南", "可惜沒有如果", "願與愁", "美人魚", "修煉愛情", "背對背擁抱", "當你", "不潮不用花錢", "那些你很冒險的夢", "曹操", "她說", "交換餘生", "飛雲之下"],
-        "戲腔": ["赤伶", "須盡歡", "身騎白馬", "壁上觀", "牽絲戲", "鴛鴦戲", "光亮", "探故知"],
-        "emo": ["在加納", "晚婚", "誰", "國王與乞丐", "我走後", "水星記", "唯一", "多遠都要在一起", "瞬", "我知道", "如果可以", "冬眠", "體面", "嘉賓", "一個人想著一個人", "想自由", "記得", "背對背擁抱", "給我一個理由忘記", "慢冷", "關鍵詞", "墜落", "幸福了然後呢", "在夜裡跳舞", "我只能離開"],
-        "新歌": ["仗著", "房間", "推開世界的門", "虛擬", "這條小魚在乎", "在夜裡跳舞", "路過人間", "喜歡你", "王昭君", "給我一首歌的時間", "夢一場", "走馬", "凍結", "慢冷", "奇妙能力歌", "從前說", "千千萬萬", "旅行的意義", "我會等", "暮色迴響", "兜圈", "微風起"]
+        "一、甜系輕快流行": ["恶作剧", "爱丫爱丫", "爱你", "那么骄傲", "爱的双重魅力", "你在不在", "喜欢你", "告白气球", "爱的飞行日记", "不潮不用花钱", "第一天", "欧若拉", "梦的光点", "霓虹甜心", "夏夜最后的烟火", "慢慢喜欢你", "这条小鱼在乎", "暗号"],
+        
+        "二、伤感抒情 / EMO": ["亲爱的那不是爱情", "下雨天", "最后一页", "达尔文", "Letting Go", "忘记时间", "是否", "一直很安静", "此生不换", "天若有情", "命运", "走马", "演员", "天外来物", "爱情讯息", "烟火里的尘埃", "下一个天亮", "雨爱", "爱我还是她", "那些你不知道的事", "爱错", "带我走", "太阳", "我们的爱", "指纹", "我是一只鱼", "你不是真正的快乐", "泡沫", "句号", "倒数", "光年之外", "红蔷薇白玫瑰", "Where Did U Go", "再见", "后会无期", "我的秘密", "桃花诺", "AINY", "画", "来自天堂的魔鬼", "差不多姑娘", "突然之间", "很久以后", "冰河时代", "情人", "岩石里的花", "寂寞星球的玫瑰", "偶尔", "我怀念的", "开始懂了", "我不难过", "泪桥", "晴天", "搁浅", "花海", "龙卷风", "给我一首歌的时间", "明明就", "枫", "一路向北", "最长的电影", "不能说的秘密", "Always Online", "江南", "可惜没有如果", "愿与愁", "美人鱼", "修炼爱情", "背对背拥抱", "那些你很冒险的梦", "她说", "交换余生", "飞云之下", "在加纳", "晚婚", "谁", "国王与乞丐", "我走后", "水星记", "唯一", "多远都要在一起", "瞬", "我知道", "可以", "冬眠", "体面", "嘉宾", "一个人想着一个人", "想自由", "记得", "给我一个理由忘记", "慢冷", "关键词", "坠落", "幸福了然后呢", "在夜里跳舞", "我只能离开", "房间", "虚拟", "路过人间", "冻结", "千千万万", "兜圈", "人质", "你要的爱", "第57次取消发送", "阳光下的星星", "最好的我", "雨天", "漂洋过海来看你", "空白格", "寂寞沙洲冷", "若把你", "爱你但说不出口", "不怕", "问", "如果的事", "输了你赢了世界又如何", "方圆几里", "心跳的证明", "雨蝶", "百年孤寂", "遗憾", "下一次爱情来的时候", "只你"],
+        
+        "三、治愈温柔": ["夏天的风", "奇妙能力歌", "特别的人", "若是月亮还没来", "大山", "不要怕", "慢慢", "这世间那么多人", "去有风的地方", "秋风", "推开世界的门", "梦一场", "从前说", "旅行的意义", "我会等", "暮色回响", "微风起", "遇见", "绿光", "天黑黑", "青花", "稻香", "知足", "温柔", "无与伦比的美丽", "小情歌", "传奇", "等你的季节"],
+        
+        "四、独立民谣": ["王昭君", "安和桥", "我记得", "程艾影", "理想", "我要你", "乌兰巴托的夜"],
+        
+        "五、戏腔/古风": ["赤伶", "须尽欢", "身骑白马", "壁上观", "牵丝戏", "鸳鸯戏", "光亮", "探故知", "桃花诺", "青花瓷", "苏州河"],
+        
+        "六、励志热血": ["追梦赤子心", "倔强", "天空没有极限", "受难曲", "存在", "杀死那个石家庄人"],
+        
+        "八、英文歌": ["If I Ain't Got You", "Love Story", "Wildest Dreams", "Safe & Sound", "I Don't Wanna Live Forever", "Blank Space", "Our Song", "Faded", "Tee shirt", "You Raise Me Up", "Yellow", "A Thousand Years", "Innocence", "When You're Gone"]
     };
 
     let currentCategory = "全部";
@@ -772,9 +788,7 @@
     }
 
     function init() {
-        // 初始化主題
         initTheme();
-        
         renderTabs();
         renderContent();
         animateTotalCount();
@@ -794,7 +808,6 @@
         });
     }
 
-    // ================= 主題切換 =================
     function initTheme() {
         const savedTheme = localStorage.getItem('qiaoba_theme');
         if (savedTheme === 'light') {
@@ -813,7 +826,6 @@
         });
     }
 
-    // ================= 搜索框清除按鈕 =================
     function setupSearchClear() {
         const clearBtn = document.getElementById('clearSearchBtn');
         const searchInput = document.getElementById('searchInput');
@@ -826,7 +838,6 @@
             searchInput.focus();
         });
         
-        // 初始化時檢查
         updateClearBtnVisibility();
     }
     
@@ -840,7 +851,6 @@
         }
     }
 
-    // ================= 統計數字滾動動畫 =================
     function animateTotalCount() {
         const allSongs = new Set();
         Object.values(playlistData).forEach(songs => songs.forEach(song => allSongs.add(song)));
@@ -848,7 +858,7 @@
         const countEl = document.getElementById('totalCount');
         
         let current = 0;
-        const duration = 1200; // 1.2秒
+        const duration = 1200;
         const stepTime = 20;
         const steps = duration / stepTime;
         const increment = targetCount / steps;
@@ -891,7 +901,6 @@
         });
     }
 
-    // ================= 待唱清單（含拖曳排序） =================
     function setupSingList() {
         const openListBtn = document.getElementById('openListBtn');
         const listModal = document.getElementById('listModal');
@@ -952,7 +961,6 @@
         document.getElementById('listCountBadge').textContent = singList.length;
     }
 
-    // ================= 拖曳排序邏輯 =================
     let draggedIndex = null;
     
     function renderSingListModal() {
@@ -973,7 +981,6 @@
             </div>
         `).join('');
         
-        // 綁定拖曳事件
         setupDragAndDrop();
     }
     
@@ -1008,7 +1015,6 @@
                 const targetIndex = parseInt(item.dataset.index);
                 
                 if (draggedIndex !== null && draggedIndex !== targetIndex) {
-                    // 重新排序
                     const draggedItem = singList[draggedIndex];
                     singList.splice(draggedIndex, 1);
                     singList.splice(targetIndex, 0, draggedItem);
@@ -1022,7 +1028,6 @@
         });
     }
 
-    // ================= 隨機抽歌 =================
     function setupRandomizer() {
         const randomBtn = document.getElementById('randomBtn');
         const randomModal = document.getElementById('randomModal');
@@ -1065,12 +1070,11 @@
         playAgainBtn.addEventListener('click', openModal);
     }
 
-    // ================= 渲染邏輯 =================
     function renderTabs() {
         const tabsContainer = document.getElementById('tabs');
         const categories = ["全部", ...Object.keys(playlistData)];
         tabsContainer.innerHTML = categories.map(cat => `
-            <button class="tab-btn ${cat === currentCategory ? 'active' : ''}" data-category="${cat}">${cat}</button>
+            <button class="tab-btn ${cat === currentCategory ? 'active' : ''}" data-category="${cat}" title="${cat}">${cat}</button>
         `).join('');
 
         tabsContainer.querySelectorAll('.tab-btn').forEach(btn => {
@@ -1136,7 +1140,6 @@
         return text.replace(regex, '<span style="color: #ff7e5f; font-weight: bold;">$1</span>');
     }
 
-    // 全局彈窗關閉邏輯
     document.addEventListener('click', (e) => {
         if (e.target.classList.contains('close-btn') || e.target.classList.contains('modal')) {
             const modalId = e.target.dataset.close || e.target.id;
