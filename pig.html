@@ -101,8 +101,13 @@
         .close-btn { position: absolute; top: 15px; right: 20px; color: var(--text-muted); font-size: 28px; font-weight: bold; cursor: pointer; }
         .close-btn:hover { color: var(--text-color); }
         .random-song-name { font-size: 2rem; font-weight: bold; color: #ff7e5f; margin: 20px 0 10px; min-height: 50px; text-shadow: 0 0 10px rgba(255, 126, 95, 0.5); }
-        .random-song-category { font-size: 1rem; color: var(--text-secondary); margin-bottom: 30px; transition: all 0.3s; }
-        .play-again-btn { padding: 12px 30px; border-radius: 30px; border: none; background: linear-gradient(135deg, #ff7e5f, #feb47b); color: #fff; font-size: 1rem; font-weight: bold; cursor: pointer; }
+        .random-song-category { font-size: 1rem; color: var(--text-secondary); margin-bottom: 20px; transition: all 0.3s; }
+        .modal-buttons { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
+        .play-again-btn { padding: 12px 25px; border-radius: 30px; border: none; background: linear-gradient(135deg, #ff7e5f, #feb47b); color: #fff; font-size: 1rem; font-weight: bold; cursor: pointer; transition: all 0.3s; }
+        .play-again-btn:hover { transform: translateY(-3px) scale(1.05); box-shadow: 0 8px 20px rgba(255, 126, 95, 0.5); }
+        .listen-now-btn { padding: 12px 25px; border-radius: 30px; border: none; background: linear-gradient(135deg, #ff416c 0%, #ff4b2b 100%); color: #fff; font-size: 1rem; font-weight: bold; cursor: pointer; transition: all 0.3s; text-decoration: none; display: inline-flex; align-items: center; gap: 6px; box-shadow: 0 5px 15px rgba(255, 65, 108, 0.3); }
+        .listen-now-btn:hover { transform: translateY(-3px) scale(1.05); box-shadow: 0 8px 20px rgba(255, 65, 108, 0.6); }
+        .listen-now-btn.disabled { opacity: 0.5; pointer-events: none; cursor: not-allowed; }
         .list-modal-content { text-align: left; }
         .list-modal-content h2 { text-align: center; color: #38ef7d; margin-bottom: 10px; }
         .list-modal-tip { text-align: center; color: var(--text-muted); font-size: 0.8rem; margin-bottom: 15px; font-style: italic; }
@@ -169,6 +174,8 @@
             .modal-content { padding: 25px 20px; }
             .help-modal-content h2 { font-size: 1.3rem; }
             .tab-btn { font-size: 0.8rem; padding: 6px 14px; max-width: 200px; }
+            .modal-buttons { flex-direction: column; align-items: stretch; }
+            .play-again-btn, .listen-now-btn { width: 100%; justify-content: center; }
         }
     </style>
 </head>
@@ -224,7 +231,10 @@
         <h2>🎉 命运之轮转动！</h2>
         <div class="random-song-name" id="randomSongName">准备中...</div>
         <div class="random-song-category" id="randomSongCategory"></div>
-        <button class="play-again-btn" id="playAgainBtn">🎲 再抽一次</button>
+        <div class="modal-buttons">
+            <button class="play-again-btn" id="playAgainBtn">🎲 再抽一次</button>
+            <a href="#" class="listen-now-btn disabled" id="listenNowBtn" target="_blank" rel="noopener noreferrer">🎵 立即試聽</a>
+        </div>
     </div>
 </div>
 
@@ -278,6 +288,7 @@
                 <ul>
                     <li>点击"随机抽一首"，体验老虎机般的滚动动画。</li>
                     <li>抽中的歌曲会<strong style="color:#38ef7d;">自动加入</strong>待唱清单，懒人福音！</li>
+                    <li>抽完结果会显示<strong style="color:#ff416c;">🎵 立即試聽</strong>按钮，一键跳转 YouTube 收听！</li>
                 </ul>
                 <div class="help-tip">
                     <strong>💡 小贴士：</strong>如果抽到已在清单里的歌，系统不会重复添加，并会温柔提示你。
@@ -333,6 +344,7 @@
     let searchQuery = "";
     let allSongsFlat = [];
     let singList = JSON.parse(localStorage.getItem('qiaoba_sing_list')) || [];
+    let currentRandomSong = null; // 儲存當前隨機抽中的歌曲
 
     for (const [category, songs] of Object.entries(playlistData)) {
         songs.forEach(song => allSongsFlat.push({ name: song, category: category }));
@@ -584,11 +596,12 @@
         });
     }
 
-    // ================= 随机抽歌 =================
+    // ================= 随机抽歌（含立即試聽） =================
     function setupRandomizer() {
         const randomBtn = document.getElementById('randomBtn');
         const randomModal = document.getElementById('randomModal');
         const playAgainBtn = document.getElementById('playAgainBtn');
+        const listenNowBtn = document.getElementById('listenNowBtn');
         const randomSongName = document.getElementById('randomSongName');
         const randomSongCategory = document.getElementById('randomSongCategory');
 
@@ -596,6 +609,11 @@
             randomModal.style.display = 'flex';
             randomSongName.classList.remove('shake');
             randomSongCategory.textContent = '命运选择中...';
+            currentRandomSong = null;
+            
+            // 抽獎過程中禁用試聽按鈕
+            listenNowBtn.classList.add('disabled');
+            listenNowBtn.href = '#';
             
             let count = 0;
             const maxCount = 15; 
@@ -608,6 +626,7 @@
                     clearInterval(interval);
                     const fIndex = Math.floor(Math.random() * allSongsFlat.length);
                     const finalSong = allSongsFlat[fIndex];
+                    currentRandomSong = finalSong;
                     
                     randomSongName.textContent = finalSong.name;
                     randomSongName.classList.add('shake');
@@ -619,6 +638,11 @@
                     } else {
                         randomSongCategory.innerHTML = `来自分类：${finalSong.category} <br><span style="color: #888; font-size: 0.9rem;">(这首歌已经在待唱清单里啦)</span>`;
                     }
+                    
+                    // 啟用試聽按鈕並設置 YouTube 連結 (只搜尋歌名)
+                    const ytSearchUrl = `https://www.youtube.com/results?search_query=${encodeURIComponent(finalSong.name)}`;
+                    listenNowBtn.href = ytSearchUrl;
+                    listenNowBtn.classList.remove('disabled');
                 }
             }, 80);
         }
