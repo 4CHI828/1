@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="zh-CN">
+<html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>桥巴的歌单 🎧</title>
+    <title>橋巴的歌單 🎧</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         :root {
@@ -145,6 +145,8 @@
         .site-footer { text-align: center; margin-top: 60px; padding: 30px 0 20px; border-top: 1px solid var(--divider); }
         .footer-link { color: var(--text-muted); text-decoration: none; transition: all 0.3s; font-size: 0.9rem; letter-spacing: 1px; }
         .footer-link:hover { color: #86a8e7; text-shadow: 0 0 8px rgba(134, 168, 231, 0.5); }
+        .update-time { text-align: center; margin-top: 15px; color: var(--text-muted); font-size: 0.8rem; letter-spacing: 1px; }
+        .update-time .time-icon { margin-right: 5px; }
         .float-btn-group { position: fixed; bottom: 30px; right: 30px; display: flex; flex-direction: column; gap: 12px; z-index: 99; }
         .float-btn { width: 50px; height: 50px; color: #fff; border: none; border-radius: 50%; font-size: 1.5rem; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.3s ease; }
         .help-btn { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); box-shadow: 0 5px 15px rgba(118, 75, 162, 0.4); }
@@ -188,26 +190,26 @@
             <button class="icon-btn theme-btn" id="themeBtn" title="切換主題">🌙</button>
         </div>
         <div class="header-title-wrapper">
-            <h1>🎧 桥巴的歌单</h1>
+            <h1>🎧 橋巴的歌單</h1>
             <a href="https://v.douyin.com/OJHvhGS2YKc/" target="_blank" rel="noopener noreferrer" class="douyin-link">
-                <span>🎵</span> 前往桥巴的抖音
+                <span>🎵</span> 前往橋巴的抖音
             </a>
             <a href="https://discord.com/channels/865334403864461373/1516901347499184168" target="_blank" rel="noopener noreferrer" class="discord-link">
                 🐷 殺豬幫DC
             </a>
         </div>
         <div class="stats-mini">
-            共收录 <span class="count-num" id="totalCount">0</span> 首心动旋律
+            共收錄 <span class="count-num" id="totalCount">0</span> 首心動旋律
         </div>
     </header>
 
     <div class="controls">
         <div class="search-box">
-            <input type="text" id="searchInput" placeholder="🔍 搜索歌曲名称...">
-            <button class="clear-search-btn" id="clearSearchBtn" title="清除搜索">✕</button>
+            <input type="text" id="searchInput" placeholder="🔍 搜尋歌曲名稱...">
+            <button class="clear-search-btn" id="clearSearchBtn" title="清除搜尋">✕</button>
         </div>
-        <button class="action-btn list-btn" id="openListBtn">🎤 待唱清单 <span class="badge" id="listCountBadge">0</span></button>
-        <button class="action-btn random-btn" id="randomBtn">🎲 随机抽一首</button>
+        <button class="action-btn list-btn" id="openListBtn">🎤 待唱清單 <span class="badge" id="listCountBadge">0</span></button>
+        <button class="action-btn random-btn" id="randomBtn">🎲 隨機抽一首</button>
     </div>
 
     <nav class="tabs" id="tabs"></nav>
@@ -215,8 +217,11 @@
 
     <footer class="site-footer">
         <a href="https://www.douyin.com/user/MS4wLjABAAAAamj38l-UDbYbUGcPhEdJI-rM8-Y_tAMFLy7kZAWMpJw" target="_blank" rel="noopener noreferrer" class="footer-link">
-            新竹奇奇制作
+            新竹奇奇製作
         </a>
+        <div class="update-time">
+            <span class="time-icon">🕐</span>最後更新：<span id="updateTimeDisplay">載入中...</span>
+        </div>
     </footer>
 </div>
 
@@ -228,8 +233,8 @@
 <div id="randomModal" class="modal">
     <div class="modal-content">
         <span class="close-btn" data-close="randomModal">&times;</span>
-        <h2>🎉 命运之轮转动！</h2>
-        <div class="random-song-name" id="randomSongName">准备中...</div>
+        <h2>🎉 命運之輪轉動！</h2>
+        <div class="random-song-name" id="randomSongName">準備中...</div>
         <div class="random-song-category" id="randomSongCategory"></div>
         <div class="modal-buttons">
             <button class="play-again-btn" id="playAgainBtn">🎲 再抽一次</button>
@@ -241,11 +246,11 @@
 <div id="listModal" class="modal">
     <div class="modal-content list-modal-content">
         <span class="close-btn" data-close="listModal">&times;</span>
-        <h2>🎤 我的待唱清单</h2>
-        <p class="list-modal-tip">💡 拖曳歌曲可调整演唱顺序</p>
+        <h2>🎤 我的待唱清單</h2>
+        <p class="list-modal-tip">💡 拖曳歌曲可調整演唱順序</p>
         <div class="list-items" id="listItems"></div>
         <div class="list-actions">
-            <button class="clear-list-btn" id="clearListBtn">🗑️ 清空清单</button>
+            <button class="clear-list-btn" id="clearListBtn">🗑️ 清空清單</button>
         </div>
     </div>
 </div>
@@ -253,69 +258,69 @@
 <div id="helpModal" class="modal">
     <div class="modal-content help-modal-content">
         <span class="close-btn" data-close="helpModal">&times;</span>
-        <h2>📖 功能说明书</h2>
-        <p class="help-subtitle">欢迎来到桥巴的专属KTV点歌台 🎧</p>
+        <h2>📖 功能說明書</h2>
+        <p class="help-subtitle">歡迎來到橋巴的專屬 KTV 點歌台 🎧</p>
         <div class="help-body">
             <div class="help-section">
-                <div class="help-section-title">🎵 全新分类曲库</div>
+                <div class="help-section-title">🎵 全新分類曲庫</div>
                 <ul>
-                    <li><strong>一、甜系轻快流行</strong>：青春甜歌，元气满满</li>
-                    <li><strong>二、伤感抒情 / EMO</strong>：失恋遗憾、压抑走心</li>
-                    <li><strong>三、治愈温柔</strong>：氛围感抒情，治愈心灵</li>
-                    <li><strong>四、独立民谣</strong>：叙事走心，故事感满满</li>
-                    <li><strong>五、戏腔/古风</strong>：国风韵味，戏腔惊艳</li>
-                    <li><strong>六、励志热血</strong>：力量感曲目，热血沸腾</li>
-                    <li><strong>八、英文歌</strong>：经典英文金曲</li>
+                    <li><strong>一、甜系輕快流行</strong>：青春甜歌，元氣滿滿</li>
+                    <li><strong>二、傷感抒情 / EMO</strong>：失戀遺憾、壓抑走心</li>
+                    <li><strong>三、治癒溫柔</strong>：氛圍感抒情，治癒心靈</li>
+                    <li><strong>四、獨立民謠</strong>：敘事走心，故事感滿滿</li>
+                    <li><strong>五、戲腔/古風</strong>：國風韻味，戲腔驚豔</li>
+                    <li><strong>六、勵志熱血</strong>：力量感曲目，熱血沸騰</li>
+                    <li><strong>八、英文歌</strong>：經典英文金曲</li>
                 </ul>
             </div>
             <div class="help-section">
-                <div class="help-section-title">🔍 搜索与浏览</div>
+                <div class="help-section-title">🔍 搜尋與瀏覽</div>
                 <ul>
-                    <li><strong>分类切换</strong>：点击顶部分类标签，一键切换曲风。</li>
-                    <li><strong>实时搜索</strong>：输入歌名，关键字会<strong style="color:#ff7e5f;">橙色高亮</strong>显示，右侧 ✕ 可一键清除。</li>
+                    <li><strong>分類切換</strong>：點選頂部分類標籤，一鍵切換曲風。</li>
+                    <li><strong>即時搜尋</strong>：輸入歌名，關鍵字會<strong style="color:#ff7e5f;">橙色高亮</strong>顯示，右側 ✕ 可一鍵清除。</li>
                 </ul>
             </div>
             <div class="help-section">
-                <div class="help-section-title">🎤 待唱清单（核心功能）</div>
+                <div class="help-section-title">🎤 待唱清單（核心功能）</div>
                 <ul>
-                    <li><strong>一键点歌</strong>：点击歌曲卡片右侧的 <strong style="color:#38ef7d;">+</strong> 加入待唱。</li>
-                    <li><strong>拖曳排序</strong>：在清单中拖曳歌曲可调整演唱顺序，像KTV点歌本一样！</li>
-                    <li><strong>本地保存</strong>：清单数据保存在浏览器本地，<strong>刷新或关闭网页都不会丢失</strong>！</li>
+                    <li><strong>一鍵點歌</strong>：點選歌曲卡片右側的 <strong style="color:#38ef7d;">+</strong> 加入待唱。</li>
+                    <li><strong>拖曳排序</strong>：在清單中拖曳歌曲可調整演唱順序，像 KTV 點歌本一樣！</li>
+                    <li><strong>本地儲存</strong>：清單資料儲存在瀏覽器本地，<strong>重新整理或關閉網頁都不會遺失</strong>！</li>
                 </ul>
             </div>
             <div class="help-section">
-                <div class="help-section-title">🎲 命运转盘</div>
+                <div class="help-section-title">🎲 命運轉盤</div>
                 <ul>
-                    <li>点击"随机抽一首"，体验老虎机般的滚动动画。</li>
-                    <li>抽中的歌曲会<strong style="color:#38ef7d;">自动加入</strong>待唱清单，懒人福音！</li>
-                    <li>抽完结果会显示<strong style="color:#ff416c;">🎵 立即試聽</strong>按钮，一键跳转 YouTube 收听！</li>
+                    <li>點選「隨機抽一首」，體驗老虎機般的滾動動畫。</li>
+                    <li>抽中的歌曲會<strong style="color:#38ef7d;">自動加入</strong>待唱清單，懶人福音！</li>
+                    <li>抽完結果會顯示<strong style="color:#ff416c;">🎵 立即試聽</strong>按鈕，一鍵跳轉 YouTube 收聽！</li>
                 </ul>
                 <div class="help-tip">
-                    <strong>💡 小贴士：</strong>如果抽到已在清单里的歌，系统不会重复添加，并会温柔提示你。
+                    <strong>💡 小貼士：</strong>如果抽到已在清單裡的歌，系統不會重複新增，並會溫柔提示你。
                 </div>
             </div>
             <div class="help-section">
-                <div class="help-section-title">🎧 试听功能</div>
+                <div class="help-section-title">🎧 試聽功能</div>
                 <ul>
-                    <li>鼠标移到歌曲卡片上，底部会显示<strong>所属分类</strong>和<strong style="color:#ff6b6b;">▶ 试听</strong>按钮。</li>
-                    <li>点击试听，会跳转到 YouTube 搜索该歌曲，快速收听。</li>
+                    <li>滑鼠移到歌曲卡片上，底部會顯示<strong>所屬分類</strong>和<strong style="color:#ff6b6b;">▶ 試聽</strong>按鈕。</li>
+                    <li>點選試聽，會跳轉到 YouTube 搜尋該歌曲，快速收聽。</li>
                 </ul>
             </div>
             <div class="help-section">
                 <div class="help-section-title">🛠️ 快捷操作</div>
                 <ul>
-                    <li><strong>🔄 重新整理</strong>：右上角橙色按钮，一键刷新页面。</li>
-                    <li><strong>🌙/☀️ 主题切换</strong>：右上角紫色按钮，切换日间/夜间模式。</li>
-                    <li><strong>⬆️ 回到顶部</strong>：下滑页面时右下角浮现，点击丝滑滚回顶部。</li>
-                    <li><strong>❓ 功能说明</strong>：随时查看本说明书。</li>
+                    <li><strong>🔄 重新整理</strong>：右上角橙色按鈕，一鍵重新整理頁面。</li>
+                    <li><strong>🌙/☀️ 主題切換</strong>：右上角紫色按鈕，切換日間/夜間模式。</li>
+                    <li><strong>⬆️ 回到頂部</strong>：下滑頁面時右下角浮現，點選絲滑滾回頂部。</li>
+                    <li><strong>❓ 功能說明</strong>：隨時檢視本說明書。</li>
                 </ul>
             </div>
             <div class="help-section">
-                <div class="help-section-title">🔗 社交传送门</div>
+                <div class="help-section-title">🔗 社交傳送門</div>
                 <ul>
-                    <li><strong style="color:#FE2C55;">🎵 前往桥巴的抖音</strong>：青红渐变按钮，直达桥巴抖音主页。</li>
-                    <li><strong style="color:#7289da;">🐷 杀猪帮DC</strong>：紫蓝渐变按钮，一键传送Discord频道。</li>
-                    <li><strong>底部彩蛋</strong>：滑到底部，点击"新竹奇奇制作"访问制作人主页。</li>
+                    <li><strong style="color:#FE2C55;">🎵 前往橋巴的抖音</strong>：青紅漸層按鈕，直達橋巴抖音主頁。</li>
+                    <li><strong style="color:#7289da;">🐷 殺豬幫DC</strong>：紫藍漸層按鈕，一鍵傳送 Discord 頻道。</li>
+                    <li><strong>底部彩蛋</strong>：滑到底部，點選「新竹奇奇製作」造訪製作人主頁。</li>
                 </ul>
             </div>
         </div>
@@ -323,19 +328,19 @@
 </div>
 
 <script>
-    // ================= 歌单数据（包含新增的天下、醉清风、半壶纱） =================
+    // ================= 歌單資料（全部繁體中文） =================
     const playlistData = {
-        "一、甜系轻快流行": ["恶作剧", "爱丫爱丫", "爱你", "那么骄傲", "爱的双重魅力", "你在不在", "喜欢你", "告白气球", "爱的飞行日记", "不潮不用花钱", "第一天", "欧若拉", "梦的光点", "霓虹甜心", "夏夜最后的烟火", "慢慢喜欢你", "这条小鱼在乎", "暗号"],
+        "一、甜系輕快流行": ["惡作劇", "愛丫愛丫", "愛你", "那麼驕傲", "愛的雙重魅力", "你在不在", "喜歡你", "告白氣球", "愛的飛行日記", "不潮不用花錢", "第一天", "歐若拉", "夢的光點", "霓虹甜心", "夏夜最後的煙火", "慢慢喜歡你", "這條小魚在乎", "暗號"],
         
-        "二、伤感抒情 / EMO": ["亲爱的那不是爱情", "下雨天", "最后一页", "达尔文", "Letting Go", "忘记时间", "是否", "一直很安静", "此生不换", "天若有情", "命运", "走马", "演员", "天外来物", "爱情讯息", "烟火里的尘埃", "下一个天亮", "雨爱", "爱我还是她", "那些你不知道的事", "爱错", "带我走", "太阳", "我们的爱", "指纹", "我是一只鱼", "你不是真正的快乐", "泡沫", "句号", "倒数", "光年之外", "红蔷薇白玫瑰", "Where Did U Go", "再见", "后会无期", "我的秘密", "桃花诺", "AINY", "画", "来自天堂的魔鬼", "差不多姑娘", "突然之间", "很久以后", "冰河时代", "情人", "岩石里的花", "寂寞星球的玫瑰", "偶尔", "我怀念的", "开始懂了", "我不难过", "泪桥", "晴天", "搁浅", "花海", "龙卷风", "给我一首歌的时间", "明明就", "枫", "一路向北", "最长的电影", "不能说的秘密", "Always Online", "江南", "可惜没有如果", "愿与愁", "美人鱼", "修炼爱情", "背对背拥抱", "那些你很冒险的梦", "她说", "交换余生", "飞云之下", "在加纳", "晚婚", "谁", "国王与乞丐", "我走后", "水星记", "唯一", "多远都要在一起", "瞬", "我知道", "可以", "冬眠", "体面", "嘉宾", "一个人想着一个人", "想自由", "记得", "给我一个理由忘记", "慢冷", "关键词", "坠落", "幸福了然后呢", "在夜里跳舞", "我只能离开", "房间", "虚拟", "路过人间", "冻结", "千千万万", "兜圈", "人质", "你要的爱", "第57次取消发送", "阳光下的星星", "最好的我", "雨天", "漂洋过海来看你", "空白格", "寂寞沙洲冷", "若把你", "爱你但说不出口", "不怕", "问", "如果的事", "输了你赢了世界又如何", "方圆几里", "心跳的证明", "雨蝶", "百年孤寂", "遗憾", "下一次爱情来的时候", "只你"],
+        "二、傷感抒情 / EMO": ["親愛的那不是愛情", "下雨天", "最後一頁", "達爾文", "Letting Go", "忘記時間", "是否", "一直很安靜", "此生不換", "天若有情", "命運", "走馬", "演員", "天外來物", "愛情訊息", "煙火裡的塵埃", "下一個天亮", "雨愛", "愛我還是她", "那些你不知道的事", "愛錯", "帶我走", "太陽", "我們的愛", "指紋", "我是一隻魚", "你不是真正的快樂", "泡沫", "句號", "倒數", "光年之外", "紅薔薇白玫瑰", "Where Did U Go", "再見", "後會無期", "我的秘密", "桃花諾", "AINY", "畫", "來自天堂的魔鬼", "差不多姑娘", "突然之間", "很久以後", "冰河時代", "情人", "岩石裡的花", "寂寞星球的玫瑰", "偶爾", "我懷念的", "開始懂了", "我不難過", "淚橋", "晴天", "擱淺", "花海", "龍捲風", "給我一首歌的時間", "明明就", "楓", "一路向北", "最長的電影", "不能說的秘密", "Always Online", "江南", "可惜沒有如果", "願與愁", "美人魚", "修煉愛情", "背對背擁抱", "那些你很冒險的夢", "她說", "交換餘生", "飛雲之下", "在加納", "晚婚", "誰", "國王與乞丐", "我走後", "水星記", "唯一", "多遠都要在一起", "瞬", "我知道", "可以", "冬眠", "體面", "嘉賓", "一個人想著一個人", "想自由", "記得", "給我一個理由忘記", "慢冷", "關鍵詞", "墜落", "幸福了然後呢", "在夜裡跳舞", "我只能離開", "房間", "虛擬", "路過人間", "凍結", "千千萬萬", "兜圈", "人質", "你要的愛", "第57次取消發送", "陽光下的星星", "最好的我", "雨天", "漂洋過海來看你", "空白格", "寂寞沙洲冷", "若把你", "愛你但說不出口", "不怕", "問", "如果的事", "輸了你贏了世界又如何", "方圓幾里", "心跳的證明", "雨蝶", "百年孤寂", "遺憾", "下一次愛情來的時候", "只你"],
         
-        "三、治愈温柔": ["夏天的风", "奇妙能力歌", "特别的人", "若是月亮还没来", "大山", "不要怕", "慢慢", "这世间那么多人", "去有风的地方", "秋风", "推开世界的门", "梦一场", "从前说", "旅行的意义", "我会等", "暮色回响", "微风起", "遇见", "绿光", "天黑黑", "青花", "稻香", "知足", "温柔", "无与伦比的美丽", "小情歌", "传奇", "等你的季节"],
+        "三、治癒溫柔": ["夏天的風", "奇妙能力歌", "特別的人", "若是月亮還沒來", "大山", "不要怕", "慢慢", "這世間那麼多人", "去有風的地方", "秋風", "推開世界的門", "夢一場", "從前說", "旅行的意義", "我會等", "暮色迴響", "微風起", "遇見", "綠光", "天黑黑", "青花", "稻香", "知足", "溫柔", "無與倫比的美麗", "小情歌", "傳奇", "等你的季節"],
         
-        "四、独立民谣": ["王昭君", "安和桥", "我记得", "程艾影", "理想", "我要你", "乌兰巴托的夜"],
+        "四、獨立民謠": ["王昭君", "安和橋", "我記得", "程艾影", "理想", "我要你", "烏蘭巴托的夜"],
         
-        "五、戏腔/古风": ["赤伶", "须尽欢", "身骑白马", "壁上观", "牵丝戏", "鸳鸯戏", "光亮", "探故知", "桃花诺", "青花瓷", "苏州河", "天下", "醉清风", "半壶纱"],
+        "五、戲腔/古風": ["赤伶", "須盡歡", "身騎白馬", "壁上觀", "牽絲戲", "鴛鴦戲", "光亮", "探故知", "桃花諾", "青花瓷", "蘇州河", "天下", "醉清風", "半壺紗"],
         
-        "六、励志热血": ["追梦赤子心", "倔强", "天空没有极限", "受难曲", "存在", "杀死那个石家庄人"],
+        "六、勵志熱血": ["追夢赤子心", "倔強", "天空沒有極限", "受難曲", "存在", "殺死那個石家莊人"],
         
         "八、英文歌": ["If I Ain't Got You", "Love Story", "Wildest Dreams", "Safe & Sound", "I Don't Wanna Live Forever", "Blank Space", "Our Song", "Faded", "Tee shirt", "You Raise Me Up", "Yellow", "A Thousand Years", "Innocence", "When You're Gone"]
     };
@@ -344,7 +349,7 @@
     let searchQuery = "";
     let allSongsFlat = [];
     let singList = JSON.parse(localStorage.getItem('qiaoba_sing_list')) || [];
-    let currentRandomSong = null; // 儲存當前隨機抽中的歌曲
+    let currentRandomSong = null;
 
     for (const [category, songs] of Object.entries(playlistData)) {
         songs.forEach(song => allSongsFlat.push({ name: song, category: category }));
@@ -363,6 +368,7 @@
         setupHelpBtn();
         setupThemeBtn();
         setupSearchClear();
+        updateLastUpdateTime();
         
         document.getElementById('searchInput').addEventListener('input', (e) => {
             searchQuery = e.target.value.trim().toLowerCase();
@@ -371,7 +377,19 @@
         });
     }
 
-    // ================= 主题切换 =================
+    // ================= 最後更新時間 =================
+    function updateLastUpdateTime() {
+        const now = new Date();
+        const year = now.getFullYear();
+        const month = now.getMonth() + 1;
+        const day = now.getDate();
+        const hours = String(now.getHours()).padStart(2, '0');
+        const minutes = String(now.getMinutes()).padStart(2, '0');
+        const timeStr = `${year} 年 ${month} 月 ${day} 日 ${hours}:${minutes}`;
+        document.getElementById('updateTimeDisplay').textContent = timeStr;
+    }
+
+    // ================= 主題切換 =================
     function initTheme() {
         const savedTheme = localStorage.getItem('qiaoba_theme');
         if (savedTheme === 'light') {
@@ -390,7 +408,7 @@
         });
     }
 
-    // ================= 搜索框清除按钮 =================
+    // ================= 搜尋框清除按鈕 =================
     function setupSearchClear() {
         const clearBtn = document.getElementById('clearSearchBtn');
         const searchInput = document.getElementById('searchInput');
@@ -416,7 +434,7 @@
         }
     }
 
-    // ================= 统计数字滚动动画 =================
+    // ================= 統計數字滾動動畫 =================
     function animateTotalCount() {
         const allSongs = new Set();
         Object.values(playlistData).forEach(songs => songs.forEach(song => allSongs.add(song)));
@@ -467,7 +485,7 @@
         });
     }
 
-    // ================= 待唱清单（含拖曳排序） =================
+    // ================= 待唱清單（含拖曳排序） =================
     function setupSingList() {
         const openListBtn = document.getElementById('openListBtn');
         const listModal = document.getElementById('listModal');
@@ -479,7 +497,7 @@
         });
 
         clearListBtn.addEventListener('click', () => {
-            if(confirm('确定要清空所有待唱歌曲吗？')) {
+            if(confirm('確定要清空所有待唱歌曲嗎？')) {
                 singList = [];
                 saveSingList();
                 renderSingListModal();
@@ -528,13 +546,13 @@
         document.getElementById('listCountBadge').textContent = singList.length;
     }
 
-    // ================= 拖曳排序逻辑 =================
+    // ================= 拖曳排序邏輯 =================
     let draggedIndex = null;
     
     function renderSingListModal() {
         const listItems = document.getElementById('listItems');
         if (singList.length === 0) {
-            listItems.innerHTML = '<div class="empty-list">🎵 清单空空如也，快去挑选想唱的歌吧！</div>';
+            listItems.innerHTML = '<div class="empty-list">🎵 清單空空如也，快去挑選想唱的歌吧！</div>';
             return;
         }
 
@@ -543,7 +561,7 @@
                 <span class="drag-handle" title="拖曳排序">⋮⋮</span>
                 <div class="list-item-info">
                     <div class="list-item-name">${index + 1}. ${item.name}</div>
-                    <div class="list-item-cat">来自：${item.category}</div>
+                    <div class="list-item-cat">來自：${item.category}</div>
                 </div>
                 <button class="remove-btn" onclick="removeFromSingList('${item.name.replace(/'/g, "\\'")}')" title="移除">×</button>
             </div>
@@ -596,7 +614,7 @@
         });
     }
 
-    // ================= 随机抽歌（含立即試聽） =================
+    // ================= 隨機抽歌（含立即試聽） =================
     function setupRandomizer() {
         const randomBtn = document.getElementById('randomBtn');
         const randomModal = document.getElementById('randomModal');
@@ -608,10 +626,9 @@
         function openModal() {
             randomModal.style.display = 'flex';
             randomSongName.classList.remove('shake');
-            randomSongCategory.textContent = '命运选择中...';
+            randomSongCategory.textContent = '命運選擇中...';
             currentRandomSong = null;
             
-            // 抽獎過程中禁用試聽按鈕
             listenNowBtn.classList.add('disabled');
             listenNowBtn.href = '#';
             
@@ -634,12 +651,11 @@
                     const addedSuccessfully = addToList(finalSong.name, finalSong.category);
                     
                     if (addedSuccessfully) {
-                        randomSongCategory.innerHTML = `来自分类：${finalSong.category} <br><span style="color: #38ef7d; font-weight: bold; font-size: 0.9rem;">🎉 已自动加入待唱清单！</span>`;
+                        randomSongCategory.innerHTML = `來自分類：${finalSong.category} <br><span style="color: #38ef7d; font-weight: bold; font-size: 0.9rem;">🎉 已自動加入待唱清單！</span>`;
                     } else {
-                        randomSongCategory.innerHTML = `来自分类：${finalSong.category} <br><span style="color: #888; font-size: 0.9rem;">(这首歌已经在待唱清单里啦)</span>`;
+                        randomSongCategory.innerHTML = `來自分類：${finalSong.category} <br><span style="color: #888; font-size: 0.9rem;">（這首歌已經在待唱清單裡啦）</span>`;
                     }
                     
-                    // 啟用試聽按鈕並設置 YouTube 連結 (只搜尋歌名)
                     const ytSearchUrl = `https://www.youtube.com/results?search_query=${encodeURIComponent(finalSong.name)}`;
                     listenNowBtn.href = ytSearchUrl;
                     listenNowBtn.classList.remove('disabled');
@@ -651,7 +667,7 @@
         playAgainBtn.addEventListener('click', openModal);
     }
 
-    // ================= 渲染逻辑 =================
+    // ================= 渲染邏輯 =================
     function renderTabs() {
         const tabsContainer = document.getElementById('tabs');
         const categories = ["全部", ...Object.keys(playlistData)];
@@ -701,7 +717,7 @@
                                     <div class="song-card-bottom">
                                         <span class="song-category-tag">${category}</span>
                                         <a href="${ytSearchUrl}" target="_blank" rel="noopener noreferrer" class="listen-btn" onclick="event.stopPropagation()">
-                                            ▶ 试听
+                                            ▶ 試聽
                                         </a>
                                     </div>
                                 </div>
@@ -712,7 +728,7 @@
             }
         });
 
-        if (!hasResults) html = `<div class="empty-state">🎵 没有找到相关的歌曲，换个关键词试试吧~</div>`;
+        if (!hasResults) html = `<div class="empty-state">🎵 沒有找到相關的歌曲，換個關鍵字試試吧~</div>`;
         contentContainer.innerHTML = html;
     }
 
