@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>福岡6天5夜行程表 (互動優化版) - 2026年9月</title>
+    <title>福岡6天5夜行程表 (互動強化完整版) - 2026年9月</title>
     <style>
         :root {
             --bg-body: #f5f5f5;
@@ -36,7 +36,7 @@
 
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Microsoft JhengHei", sans-serif;
+            font-family: -apple-system, BlinkMacSystemFont, "Microsoft JhengHei", "PingFang TC", sans-serif;
             background: var(--bg-body);
             color: var(--text-primary);
             padding: 20px;
@@ -68,6 +68,8 @@
             padding-bottom: 8px;
             border-bottom: 2px solid var(--primary-color);
         }
+        h3 { color: var(--text-primary); margin-top: 20px; margin-bottom: 10px; }
+        h4 { color: var(--text-primary); margin-top: 15px; margin-bottom: 8px; }
 
         .subtitle {
             text-align: center;
@@ -122,11 +124,12 @@
             margin: 12px 0;
             display: flex;
             align-items: flex-start;
+            flex-wrap: wrap;
         }
         .time {
             font-weight: bold;
             color: var(--primary-color);
-            width: 100px;
+            width: 110px;
             flex-shrink: 0;
             font-family: monospace;
             font-size: 1.05em;
@@ -151,7 +154,6 @@
         .highlight { background: #fff3cd; color: #856404; padding: 2px 6px; border-radius: 3px; font-weight: bold; }
         .photo-highlight { background: #ffe0e6; color: #d63031; padding: 2px 6px; border-radius: 3px; font-weight: bold; font-size: 0.9em; }
         
-        /* 提示框組件 */
         .box { padding: 15px; margin: 15px 0; border-radius: 6px; border-left: 5px solid; }
         .warning-box { background: #fff3cd; border-color: #ffc107; color: #856404; }
         .success-box { background: #d4edda; border-color: #28a745; color: #155724; }
@@ -159,7 +161,7 @@
         
         [data-theme="dark"] .warning-box { background: #3a321a; color: #ffe082; }
         [data-theme="dark"] .success-box { background: #1c3323; color: #a5d6a7; }
-        [data-theme="dark"] .tips-box { background: #1b382b; }
+        [data-theme="dark"] .tips-box { background: #1b382b; color: var(--text-primary); }
 
         .info-table {
             width: 100%;
@@ -174,7 +176,50 @@
         }
         .info-table th { background: var(--primary-color); color: var(--text-light); }
 
-        /* 按鈕組 */
+        .detail-section {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+        .sub-section {
+            background: var(--bg-container);
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            padding: 15px;
+            margin: 15px 0;
+        }
+        .yatai-card {
+            background: var(--bg-container);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 15px;
+        }
+        .yatai-card h4 { color: #e67e22; margin-bottom: 8px; font-size: 18px; }
+
+        .split-plan {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-top: 15px;
+        }
+        .split-plan .plan-a {
+            background: #e3f2fd;
+            border: 2px solid #2196f3;
+            border-radius: 8px;
+            padding: 15px;
+        }
+        .split-plan .plan-b {
+            background: #f3e5f5;
+            border: 2px solid #9c27b0;
+            border-radius: 8px;
+            padding: 15px;
+        }
+        [data-theme="dark"] .split-plan .plan-a { background: #1e2c3a; color: var(--text-primary); }
+        [data-theme="dark"] .split-plan .plan-b { background: #2c1e3a; color: var(--text-primary); }
+
         .toggle-all { display: flex; justify-content: center; gap: 10px; margin: 20px 0; flex-wrap: wrap; }
         .btn {
             background: var(--primary-color);
@@ -206,7 +251,7 @@
 
         .countdown-container {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
             gap: 15px;
             margin-bottom: 30px;
         }
@@ -218,7 +263,7 @@
             text-align: center;
         }
         .countdown-card .timer {
-            font-size: 20px;
+            font-size: 18px;
             font-weight: bold;
             color: var(--accent-red);
             margin: 8px 0;
@@ -268,6 +313,15 @@
             color: var(--text-primary);
         }
 
+        .update-time {
+            text-align: center;
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 1px solid var(--border-color);
+            color: var(--text-secondary);
+            font-size: 13px;
+        }
+
         #topBtn {
             display: none;
             position: fixed;
@@ -284,12 +338,17 @@
             box-shadow: 0 2px 10px rgba(0,0,0,0.2);
         }
 
+        ul { margin-left: 20px; }
+        li { margin: 6px 0; }
+
         @media screen and (max-width: 768px) {
             body { padding: 10px; }
             .container { padding: 20px 15px; }
             .time-item { flex-direction: column; }
             .time { width: 100%; margin-bottom: 4px; }
             .btn { width: 100%; text-align: center; }
+            .split-plan { grid-template-columns: 1fr; }
+            .info-table { display: block; overflow-x: auto; white-space: nowrap; }
         }
 
         @media print {
@@ -297,23 +356,24 @@
             .container { box-shadow: none; padding: 0; width: 100%; max-width: 100%; }
             details { open: true; border: 1px solid #ccc; page-break-inside: avoid; }
             summary { background: #eee !important; color: #000 !important; }
-            .theme-toggle, .toggle-all, #topBtn, .countdown-container, .budget-tracker, .map-link { display: none !important; }
+            .theme-toggle, .toggle-all, #topBtn, .countdown-container, .budget-tracker, .map-link, .copy-icon { display: none !important; }
         }
     </style>
+<base target="_blank">
 </head>
 <body>
     <div class="container">
         <button class="theme-toggle" id="themeToggle" title="切換夜間模式" aria-label="切換主題">🌙</button>
-        <h1>🗾 福岡6天5夜行程表</h1>
+        <h1>🗾 福岡6天5夜行程表 (互動強化版)</h1>
         <p class="subtitle">2026年9月16日 - 9月21日</p>
         
         <div class="info-box">
             <p><strong>✈️ 航班資訊 (長榮航空)：</strong></p>
-            <p>去程：9/16 (三) BR106，<strong>11:20 抵達</strong>福岡機場 <a href="https://www.google.com/maps/search/?api=1&query=福岡空港" class="map-link" target="_blank">📍 地圖</a></p>
-            <p>回程：9/21 (一) BR101，預計 18:15 起飛，<strong>20:45 抵達</strong>台灣</p>
+            <p><strong>去程：</strong>9/16 (三) BR106，<strong>11:20 抵達</strong>福岡機場 <a href="https://www.google.com/maps/search/?api=1&query=福岡空港" class="map-link">📍地圖</a></p>
+            <p><strong>回程：</strong>9/21 (一) BR101，預計 18:15 起飛，<strong>20:45 抵達</strong>台灣</p>
             <p><strong>🏨 住宿：</strong>福岡天神東方快捷酒店（5晚） 
                <span class="copy-icon" data-copy="Hotel Oriental Express Fukuoka Tenjin" title="複製飯店英文名">📋</span> 
-               <a href="https://www.google.com/maps/search/?api=1&query=Hotel+Oriental+Express+Fukuoka+Tenjin" class="map-link" target="_blank">📍 地圖</a>
+               <a href="https://www.google.com/maps/search/?api=1&query=Hotel+Oriental+Express+Fukuoka+Tenjin" class="map-link">📍地圖</a>
             </p>
         </div>
 
@@ -327,6 +387,11 @@
                 <h4>🚄 新幹線搶票 (🅱案)</h4>
                 <div class="timer" id="timer-shinkansen">計算中...</div>
                 <small>8/20 (三) 09:00</small>
+            </div>
+            <div class="countdown-card">
+                <h4>📝 填寫日本入境卡</h4>
+                <div class="timer" id="timer-vjw">計算中...</div>
+                <small>8/31 (一) 開放預填</small>
             </div>
             <div class="countdown-card">
                 <h4>✈️ 距離出發</h4>
@@ -345,24 +410,241 @@
         <h2>📅 每日行程安排</h2>
 
         <details open>
-            <summary>📅 Day 1 - 9/16（三）- 抵達、一蘭與南藏院</summary>
+            <summary>📅 Day 1 - 9/16（星期三）- 抵達、一蘭與南藏院</summary>
             <div class="day-content">
                 <div class="box warning-box">
-                    <strong>⚠️ 南藏院時間注意：</strong>涅槃像胎內參拜與御朱印受付於 <strong>16:30 截止</strong>，請務必掌握時間。
+                    <strong>⚠️ 南藏院時間注意：</strong>涅槃像胎內參拜與御朱印受付於 <strong>16:30 截止</strong>，因此本日改為吃完一蘭後直接前往，參拜完畢再回飯店 Check-in，確保時間充裕！
                 </div>
-                <div class="time-item"><span class="time">11:20</span><span class="location">抵達福岡機場，辦理入境與領取行李</span></div>
-                <div class="time-item"><span class="time">13:00</span><span class="location">抵達天神站，前往酒店寄存行李</span></div>
-                <div class="time-item"><span class="time">13:30</span><span class="location">午餐：一蘭拉麵 本社總本店 <span class="copy-icon" data-copy="一蘭拉麵 本社總本店">📋</span></span></div>
-                <div class="time-item"><span class="time">15:00</span><span class="location">南藏院參拜 <span class="photo-highlight">📸 釋迦涅槃像</span></span></div>
-                <div class="time-item"><span class="time">19:00</span><span class="location">晚餐：中洲/天神屋台體驗</span></div>
+                <div class="time-item"><span class="time">11:20</span> <span class="location">抵達福岡機場，辦理入境與領取行李</span></div>
+                <div class="time-item"><span class="time">13:00</span> <span class="location">抵達天神站，前往酒店<b>寄存行李</b> (尚不可入住) <a href="https://www.google.com/maps/search/?api=1&query=Hotel+Oriental+Express+Fukuoka+Tenjin" class="map-link">📍</a></span></div>
+                <div class="time-item"><span class="time">13:30</span> <span class="location">午餐：<strong>一蘭拉麵 本社總本店</strong> <span class="copy-icon" data-copy="一蘭拉麵 本社總本店" title="複製餐廳名稱">📋</span> <a href="https://www.google.com/maps/search/?api=1&query=一蘭+本社総本店" class="map-link">📍</a> <em>(天神本店週三公休，改至24小時營業的總本店)</em></span></div>
+                <div class="time-item"><span class="time">14:30</span> <span class="location">地鐵 → <strong>博多站</strong> → JR 篠栗線 → 南藏院前站（約 23 分）</span></div>
+                <div class="time-item"><span class="time">15:00–16:30</span> <span class="location"><strong>南藏院參拜</strong> <a href="https://www.google.com/maps/search/?api=1&query=南蔵院" class="map-link">📍</a> <span class="photo-highlight">📸 世界最大青銅釋迦涅槃像（41m）；後方六所神社求財開運</span><br><em>⚠️ 務必於 16:30 前完成胎內參拜與御朱印領取</em></span></div>
+                <div class="time-item"><span class="time">17:00</span> <span class="location">JR 返回博多站 → 回天神酒店辦理入住、稍作休息</span></div>
+                <div class="time-item"><span class="time">19:00</span> <span class="location">晚餐：<strong>中洲/天神屋台體驗</strong> <a href="https://www.google.com/maps/search/?api=1&query=中洲屋台" class="map-link">📍</a> <span class="photo-highlight">📸 煙火氣夜景</span></span></div>
             </div>
         </details>
 
-        <!-- 每日行程略（維持原有豐富內容） -->
+        <details>
+            <summary>📅 Day 2 - 9/17（星期四）- 由布院溫泉鄉 🚂</summary>
+            <div class="day-content">
+                <div class="box success-box">
+                    <strong>✅ 動線優化：</strong>回程統一鎖定 17:17 的 6 號車，下午在由布院多出 1.5 小時的充裕時間，可慢慢逛湯之坪街道或泡足湯，不用趕車！
+                </div>
+                <div class="time-item"><span class="time">08:30</span> <span class="location">博多站搭乘「由布院之森」1號 <a href="https://www.google.com/maps/search/?api=1&query=JR博多駅" class="map-link">📍</a> <span class="highlight">09:17出發</span></span></div>
+                <div class="time-item"><span class="time">11:31</span> <span class="location">抵達由布院 <a href="https://www.google.com/maps/search/?api=1&query=由布院駅" class="map-link">📍</a></span></div>
+                <div class="time-item"><span class="time">11:35</span> <span class="location"><strong>先衝金鱗湖</strong>（不逛店，直奔湖邊）<a href="https://www.google.com/maps/search/?api=1&query=金鱗湖+由布院" class="map-link">📍</a> <span class="photo-highlight">📸 中午前人少、光線好</span></span></div>
+                <div class="time-item"><span class="time">12:30</span> <span class="location">午餐：豐後牛燒肉 或 湯之坪街道小吃</span></div>
+                <div class="time-item"><span class="time">14:00–16:30</span> <span class="location"><strong>湯之坪街道深度遊</strong> <a href="https://www.google.com/maps/search/?api=1&query=湯の坪街道+由布院" class="map-link">📍</a><br><em>B-speak年輪蛋糕、咖啡廳休憩、足湯體驗，享受多出來的 1.5 小時悠閒時光</em></span></div>
+                <div class="time-item"><span class="time">17:17</span> <span class="location">搭乘「由布院之森」6號返回博多 <span class="highlight">19:28抵達</span></span></div>
+                <div class="time-item"><span class="time">19:45</span> <span class="location">晚餐：博多だるま 総本店 <a href="https://www.google.com/maps/search/?api=1&query=博多だるま+総本店+福岡" class="map-link">📍</a></span></div>
+            </div>
+        </details>
+
+        <details>
+            <summary>📅 Day 3 - 9/18（星期五）- 相島貓島 + 宮地嶽神社 🐱⛩️</summary>
+            <div class="day-content">
+                <div class="box warning-box">
+                    <strong>⚠️ 車站名稱勘誤：</strong>正確車站為 <strong>JR 鹿兒島本線「福工大前駅」</strong>。<br>
+                    <strong>🚢 渡輪停航備案：</strong>若渡輪因風浪停航，可改為市區行程：博多運河城、teamLab Forest 福岡、或櫛田神社。
+                </div>
+                <div class="time-item"><span class="time">08:30</span> <span class="location">酒店出發→博多站 <a href="https://www.google.com/maps/search/?api=1&query=JR博多駅" class="map-link">📍</a></span></div>
+                <div class="time-item"><span class="time">09:00</span> <span class="location">JR博多站→<strong>福工大前駅</strong> <a href="https://www.google.com/maps/search/?api=1&query=福工大前駅" class="map-link">📍</a> <em>(約15分鐘)</em></span></div>
+                <div class="time-item"><span class="time">09:30</span> <span class="location">轉乘新宮町社區巴士→ 新宮港 <a href="https://www.google.com/maps/search/?api=1&query=新宮港" class="map-link">📍</a></span></div>
+                <div class="time-item"><span class="time">10:00</span> <span class="location">渡輪→相島 <a href="https://www.google.com/maps/search/?api=1&query=相島+福岡" class="map-link">📍</a></span></div>
+                <div class="time-item"><span class="time">10:30-15:30</span> <span class="location"><span class="highlight">相島貓島探索</span> <br>📸 <strong>必拍點：めがね岩（眼鏡岩）</strong><br>🐱 與100+隻貓咪互動、參觀若宮神社</span></div>
+                <div class="time-item"><span class="time">16:00</span> <span class="location">渡輪返回新宮港</span></div>
+                <div class="time-item"><span class="time">16:30</span> <span class="location">新宮港/福工大前站 搭乘 JR → <strong>福間站</strong> (約15分鐘) <a href="https://www.google.com/maps/search/?api=1&query=福間駅" class="map-link">📍</a></span></div>
+                <div class="time-item"><span class="time">17:00-18:00</span> <span class="location"><strong>宮地嶽神社</strong> <a href="https://www.google.com/maps/search/?api=1&query=宮地嶽神社" class="map-link">📍</a> <span class="photo-highlight">📸 必拍：巨大注連繩＋參道望海夕陽</span></span></div>
+                <div class="time-item"><span class="time">18:30</span> <span class="location">搭乘 JR 返回福岡市區 (天神/博多)</span></div>
+                <div class="time-item"><span class="time">19:30</span> <span class="location">晚餐：<strong>水炊雞鍋</strong> (建議提前請酒店代訂)</span></div>
+            </div>
+        </details>
+
+        <details>
+            <summary>📅 Day 4 - 9/19（星期六）- 太宰府 + 柳川水鄉一日遊 🛶</summary>
+            <div class="day-content">
+                <div class="box success-box">
+                    <strong>✅ 撞班解套：</strong>一蘭「合格碗」改為當日午餐，09:30 先抽號碼牌後去逛天滿宮，11:30 準時用餐，完美銜接 13:00 往柳川的電車！
+                </div>
+                <div class="time-item"><span class="time">08:30</span> <span class="location"><strong>西鐵福岡（天神）站</strong> → 太宰府 <a href="https://www.google.com/maps/search/?api=1&query=西鉄福岡(天神)駅" class="map-link">📍</a> <em>(請至三越百貨2樓購票搭乘)</em></span></div>
+                <div class="time-item"><span class="time">09:00</span> <span class="location"><strong>先衝星巴克太宰府</strong> 拍照買咖啡 <a href="https://www.google.com/maps/search/?api=1&query=スターバックス+太宰府表参道店" class="map-link">📍</a> <span class="photo-highlight">📸 此時最容易拍到少人空景！</span></span></div>
+                <div class="time-item"><span class="time">09:30</span> <span class="location"><strong>一蘭拉麵 太宰府參道店</strong> <a href="https://www.google.com/maps/search/?api=1&query=一蘭+太宰府参道店" class="map-link">📍</a> <span class="highlight">抽號碼牌</span> <em>(僅16席，先抽牌再逛景點)</em></span></div>
+                <div class="time-item"><span class="time">09:45-11:00</span> <span class="location">太宰府天滿宮參拜 + 紅橋拍照 <a href="https://www.google.com/maps/search/?api=1&query=太宰府天満宮" class="map-link">📍</a> <span class="photo-highlight">📸 經典紅橋、藤本壯介臨時本殿</span></span></div>
+                <div class="time-item"><span class="time">11:30</span> <span class="location">午餐：<strong>一蘭拉麵 太宰府參道店（合格拉麵）</strong> <span class="photo-highlight">📸 全球唯一五角形碗</span><br><em>🏆 59cm長麵條、碗底藏「決定」二字，祈求金榜題名！</em></span></div>
+                <div class="time-item"><span class="time">12:30</span> <span class="location">太宰府街道散步，準備前往車站</span></div>
+                <div class="time-item"><span class="time">13:00</span> <span class="location">太宰府→柳川（西鐵電車，二日市轉乘，約40分鐘）</span></div>
+                <div class="time-item"><span class="time">14:30-16:00</span> <span class="location"><span class="highlight">柳川遊船</span>（約70分鐘，松月乘船場） <a href="https://www.google.com/maps/search/?api=1&query=柳川下り+乗船場" class="map-link">📍</a> <span class="photo-highlight">📸 九州威尼斯</span></span></div>
+                <div class="time-item"><span class="time">16:30</span> <span class="location">柳川鰻魚飯下午茶/早晚餐 <a href="https://www.google.com/maps/search/?api=1&query=元祖本吉屋+本店+柳川" class="map-link">📍</a> <em>(推薦：元祖本吉屋 本店)</em></span></div>
+                <div class="time-item"><span class="time">18:00</span> <span class="location">柳川→天神（西鐵電車約70分鐘）</span></div>
+                <div class="time-item"><span class="time">19:30</span> <span class="location">返回福岡市區，自由休息</span></div>
+            </div>
+        </details>
+
+        <details>
+            <summary>📅 Day 5 - 9/20（星期日）- 鋼彈 🤖 → 告別午餐 → 完美分流</summary>
+            <div class="day-content">
+                <div class="time-item"><span class="time">09:15</span> <span class="location">博多站 → JR 鹿兒島本線一站到<strong>竹下站</strong>（3 分）步行即達 LaLaport</span></div>
+                <div class="time-item"><span class="time">09:30–12:00</span> <span class="location"><strong>【共同行程】LaLaport 福岡：實物大 ν 鋼彈</strong> <a href="https://www.google.com/maps/search/?api=1&query=Mitsui+Shopping+Park+LaLaport+福岡" class="map-link">📍</a> <span class="photo-highlight">📸 24.8m 日本最高！10:00／11:00 有白天啟動演出</span></span></div>
+                <div class="time-item"><span class="time">12:00</span> <span class="location"><strong>【共同行程】告別午餐</strong> <a href="https://www.google.com/maps/search/?api=1&query=JR博多駅" class="map-link">📍</a><br><em>博多站阪急、KITTE 選擇多，兩人享用最後一頓福岡美食</em></span></div>
+                
+                <div class="split-plan">
+                    <div class="plan-b">
+                        <h4 style="color: #6a1b9a;">🅱 案：赴大阪 (新幹線)</h4>
+                        <div class="time-item"><span class="time" style="color:#6a1b9a; width:auto; margin-right: 10px;">14:30</span> <span class="location"><strong>博多站搭乘新幹線</strong> 前往新大阪<br><em>後續大阪行程與住宿自理</em></span></div>
+                    </div>
+                    <div class="plan-a">
+                        <h4 style="color: #1565c0;">🅰 案：留福岡 (購物＋夜景)</h4>
+                        <div class="time-item"><span class="time" style="color:#1565c0; width:auto; margin-right: 10px;">14:00</span> <span class="location"><strong>購物黃金時段</strong><br>天神地下街、PARCO、阪急</span></div>
+                        <div class="time-item"><span class="time" style="color:#1565c0; width:auto; margin-right: 10px;">18:00</span> <span class="location"><strong>福岡塔夜景</strong> <a href="https://www.google.com/maps/search/?api=1&query=福岡タワー" class="map-link">📍</a><br><span class="photo-highlight">📸 夕陽與漸層城市夜景</span></span></div>
+                        <div class="time-item"><span class="time" style="color:#1565c0; width:auto; margin-right: 10px;">20:30</span> <span class="location">晚餐：和牛燒肉／壽喜燒</span></div>
+                    </div>
+                </div>
+            </div>
+        </details>
+
+        <details>
+            <summary>📅 Day 6 - 9/21（星期一）- 大濠公園 & 返程</summary>
+            <div class="day-content">
+                <div class="box success-box">
+                    <strong>✅ 行李安置優化：</strong>行李直接寄放天神飯店櫃檯至 15:00，不賭連假博多站滿位的置物櫃，上午可輕鬆無負擔地逛大濠公園與天神！
+                </div>
+                <div class="time-item"><span class="time">09:00</span> <span class="location">酒店退房，<b>行李寄放天神飯店櫃檯</b>（約定 15:00 前領取）</span></div>
+                <div class="time-item"><span class="time">09:30</span> <span class="location"><strong>大濠公園・福岡城跡散步</strong> <a href="https://www.google.com/maps/search/?api=1&query=大濠公園" class="map-link">📍</a> <span class="photo-highlight">📸 綠意湖景與古城，輕鬆收尾</span></span></div>
+                <div class="time-item"><span class="time">11:00</span> <span class="location">回天神商圈輕鬆逛街 / 補買伴手禮 (不用拉行李！)</span></div>
+                <div class="time-item"><span class="time">13:00</span> <span class="location">午餐：<strong>博多拉麵 Shin-Shin 博多站拉麵街道店</strong> <a href="https://www.google.com/maps/search/?api=1&query=博多らーめん+ShinShin+博多駅ラーメン街道" class="map-link">📍</a></span></div>
+                <div class="time-item"><span class="time">14:30</span> <span class="location">返回天神飯店領取行李</span></div>
+                <div class="time-item"><span class="time">15:00</span> <span class="location"><span class="highlight">從天神出發前往福岡機場</span>（地鐵直達僅 11 分鐘，或搭西鐵直達巴士）</span></div>
+                <div class="time-item"><span class="time">16:00</span> <span class="location">抵達機場國際線，辦理登機與退稅</span></div>
+                <div class="time-item"><span class="time">18:15</span> <span class="location">預計航班 BR101 起飛</span></div>
+                <div class="time-item"><span class="time">20:45</span> <span class="location">抵達台灣，圓滿結束旅程</span></div>
+            </div>
+        </details>
+
+        <details open>
+            <summary>✅ 行前待辦清單 (Checklist)</summary>
+            <div style="padding: 15px;">
+                <table class="info-table">
+                    <thead>
+                        <tr><th style="width: 30%;">期限 / 時機</th><th>待辦事項</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><input type="checkbox" class="todo-check" id="todo1"><label for="todo1"><strong>8/10 (一) 起</strong></label></td>
+                            <td><label for="todo1">🔥 <strong>由布院之森「事前申込」：</strong>送出 9/17 的訂位申請。</label></td>
+                        </tr>
+                        <tr>
+                            <td><input type="checkbox" class="todo-check" id="todo2"><label for="todo2"><strong>8/13 (三)</strong></label></td>
+                            <td><label for="todo2">🚄 <strong>新幹線「事前申込」：</strong>送出 9/20 博多→新大阪 的訂位申請 (🅱 案)。</label></td>
+                        </tr>
+                        <tr>
+                            <td><input type="checkbox" class="todo-check" id="todo3"><label for="todo3"><strong>8/17 (一) 09:00</strong></label></td>
+                            <td><label for="todo3">🔥 <strong>由布院之森正式開賣：</strong>確認事前申込結果，或手動搶 9/17 車票。</label></td>
+                        </tr>
+                        <tr>
+                            <td><input type="checkbox" class="todo-check" id="todo4"><label for="todo4"><strong>8/20 (三) 09:00</strong></label></td>
+                            <td><label for="todo4">🚄 <strong>新幹線正式開賣：</strong>確認事前申込結果，或手動搶 9/20 車票 (🅱 案)。</label></td>
+                        </tr>
+                        <tr>
+                            <td><input type="checkbox" class="todo-check" id="todo7"><label for="todo7"><strong>8/31 (一) 起</strong></label></td>
+                            <td><label for="todo7">📝 <strong>填寫 Visit Japan Web：</strong>預先線上填寫日本入境卡與海關申報，出關更迅速。</label></td>
+                        </tr>
+                        <tr>
+                            <td><input type="checkbox" class="todo-check" id="todo5"><label for="todo5"><strong>8月中旬</strong></label></td>
+                            <td><label for="todo5">🍽️ <strong>連假餐廳預約：</strong>預訂 9/18-9/20 的水炊雞鍋、柳川鰻魚飯、和牛燒肉。</label></td>
+                        </tr>
+                        <tr>
+                            <td><input type="checkbox" class="todo-check" id="todo6"><label for="todo6"><strong>9/18 (五) 早上</strong></label></td>
+                            <td><label for="todo6">🚢 <strong>確認相島渡輪：</strong>出發前務必上新宮町官網確認當日船班是否正常航行。</label></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </details>
+
+        <details>
+            <summary>🚄 新幹線搶票懶人包 (🅱 案赴大阪專用)</summary>
+            <div class="detail-section">
+                <div class="sub-section">
+                    <h4>⏰ 1. 關鍵搶票時間點</h4>
+                    <ul>
+                        <li><strong>乘車日：</strong>9/20 (日) 博多 → 新大阪。因遇 Silver Week 連假週日，指定席極度搶手！</li>
+                        <li><strong>事前申込（最重要）：</strong><b>8/13 (三)</b> 起即可於 JR 九州官網送出申請。</li>
+                        <li><strong>正式開賣：</strong><b>8/20 (三) 台灣時間 09:00</b>（乘車日一個月前）。</li>
+                        <li><strong>帳號通用：</strong>與由布院之森使用<b>同一個 JR 九州官網帳號</b>即可辦理，無需重新註冊。</li>
+                    </ul>
+                </div>
+                <div class="sub-section">
+                    <h4>🛠️ 2. 購票管道</h4>
+                    <ul>
+                        <li>直接登入 JR 九州官方預約網站（或 Smart EX App），搜尋「博多 → 新大阪」，選擇希望的班次（如 Nozomi 或 Sakura）並劃位。</li>
+                        <li>抵達日本後，可於博多站的綠色窗口或新幹線自動售票機憑信用卡與預約番號取票。</li>
+                    </ul>
+                </div>
+            </div>
+        </details>
+
+        <details>
+            <summary>🍻 中洲/天神屋台超詳細攻略（新手必看）</summary>
+            <div class="detail-section">
+                <div class="sub-section">
+                    <h4>🏮 中洲屋台推薦名單</h4>
+                    <div class="yatai-card">
+                        <h4>1. 武醬（武ちゃん）</h4>
+                        <p><strong>特色：</strong>經營 40 年以上的老字號！在中洲極具代表性。</p>
+                        <p><strong>必點：</strong>一口煎餃（底部酥脆，內餡鮮美）、關東煮。</p>
+                    </div>
+                    <div class="yatai-card">
+                        <h4>2. Tacchan（たっちゃん）</h4>
+                        <p><strong>特色：</strong>位於清流公園內，餐點種類豐富，年輕人與觀光客都很喜歡。</p>
+                        <p><strong>必點：</strong>炭烤串燒拼盤、烤明太子、關東煮與博多拉麵。</p>
+                    </div>
+                    <div class="yatai-card">
+                        <h4>3. 小島商店（小島商店）</h4>
+                        <p><strong>特色：</strong>老闆服務熱情，氣氛活潑，料理口味非常精緻。</p>
+                        <p><strong>必點：</strong>明太子歐姆蛋（蛋包滑嫩、鹹香剛好）、炭烤料理。</p>
+                    </div>
+                </div>
+
+                <div class="sub-section">
+                    <h4>⚠️ 屋台用餐潛規則與注意事項</h4>
+                    <div class="box warning-box">
+                        <strong>1. 低消規定：</strong>每人至少要點一杯飲料 + 一道餐點。<br>
+                        <strong>2. 消費偏高：</strong>中洲屋台平均單價約 1,500～3,000 日圓。<br>
+                        <strong>3. 吃完請勿久坐：</strong>享用完畢後建議儘快結帳讓位。<br>
+                        <strong>4. 注意衛生：</strong>屋台本身無洗手設備，吃之前請使用自備的濕紙巾拭手。
+                    </div>
+                </div>
+            </div>
+        </details>
 
         <div class="tips-box">
-            <h3>💰 互動記帳本 (本機儲存)</h3>
+            <h3>📌 整體行程重要提醒</h3>
+            <ul>
+                <li><strong>Day 1 南藏院：</strong>涅槃像胎內與御朱印 16:30 截止，已將行程改為 13:30 吃完一蘭即出發，確保時間充裕。</li>
+                <li><strong>Day 4 撞班解套：</strong>一蘭「合格碗」改為當日午餐，09:30 務必先抽號碼牌，再逛天滿宮，11:30 準時用餐，完美銜接 13:00 往柳川電車。</li>
+                <li><strong>Day 5 完美分流：</strong>上午共同看鋼彈與告別午餐。下午 🅱 於 14:30 博多搭新幹線赴大阪；🅰 留福岡購物，傍晚賞福岡塔夜景。</li>
+                <li><strong>Day 6 行李安置：</strong>行李直接寄放天神飯店至 15:00，不賭連假博多站滿位的置物櫃。15:00 從天神搭地鐵直達機場僅需 11 分鐘，極度安心。</li>
+                <li><strong>新幹線搶票 (🅱案)：</strong>9/20 為連假週日，8/13 事前申込、8/20 09:00 正式開賣，使用同一個 JR 九州帳號辦理。</li>
+                <li><strong>由布院之森：</strong>8/17 (一) 台灣時間 09:00 準時搶票。若遇星期四運休，請改搭普通特急「ゆふ」號。</li>
+                <li><strong>退稅：</strong>單店消費滿5,000日元可退稅，記得攜帶護照原件。</li>
+            </ul>
+        </div>
+
+        <div class="tips-box" style="background: var(--bg-card); border-color: var(--border-color);">
+            <h3>💰 預算參考（每人）</h3>
+            <ul>
+                <li><strong>✈️ 國際機票：</strong>約 TWD 16,291 (長榮航空 BR106/BR101)</li>
+                <li><strong>🏨 住宿費用：</strong>約 TWD 28,470 (福岡天神東方快捷酒店 5晚)</li>
+                <li><strong>🚄 當地交通：</strong>約 20,000 - 25,000 日圓 (含由布院之森往返、相島、柳川、南藏院、宮地嶽神社、地鐵等)</li>
+                <li><strong>🎫 推薦票券：</strong>太宰府・柳川觀光套票（比單買划算）</li>
+                <li><strong>🍜 餐飲費用：</strong>約 3,000 - 5,000 日圓 / 天 (6天約 18,000 - 30,000 日圓，含屋台預算)</li>
+                <li><strong>🎫 門票/活動：</strong>約 5,000 日圓 (柳川遊船、海之中道等，南藏院/宮地嶽神社免費)</li>
+                <li><strong>🛍️ 購物/伴手禮：</strong>依個人需求 (建議預留 10,000 - 20,000 日圓)</li>
+            </ul>
+            
             <div class="budget-tracker">
+                <h4>💰 互動記帳本 (資料存於本機瀏覽器)</h4>
                 <div class="input-group">
                     <input type="text" id="expense-name" placeholder="項目 (如: 晚餐)">
                     <input type="number" id="expense-amount" placeholder="金額 (日圓)">
@@ -376,16 +658,29 @@
         </div>
 
         <p style="text-align: center; margin-top: 40px; color: var(--text-secondary);">
-            <strong>祝您旅途愉快！🎌✨</strong>
+            <strong>祝您在福岡與大阪有一段美味、好拍、求財又放鬆的完美旅程！🎌✨🐱📸🚂🛶💰🤖🚄</strong>
         </p>
+
+        <div class="update-time">
+            <p>📅 最後更新時間：<strong id="last-updated-time"></strong></p>
+            <p>📝 如有任何疑問或需要調整行程，歡迎隨時詢問</p>
+        </div>
     </div>
 
     <button id="topBtn" title="回到頂部">⬆️</button>
     <div id="toast">已複製到剪貼簿！</div>
 
     <script>
-        // 核心邏輯封裝
         document.addEventListener('DOMContentLoaded', () => {
+            // 0. 更新時間自動渲染
+            const now = new Date();
+            const year = now.getFullYear();
+            const month = now.getMonth() + 1;
+            const day = now.getDate();
+            const hours = String(now.getHours()).padStart(2, '0');
+            const minutes = String(now.getMinutes()).padStart(2, '0');
+            document.getElementById('last-updated-time').innerText = `${year}年${month}月${day}日 ${hours}:${minutes}`;
+
             // 1. 主題切換
             const themeToggle = document.getElementById('themeToggle');
             const applyTheme = (theme) => {
@@ -403,7 +698,7 @@
                 applyTheme(currentTheme === 'dark' ? 'light' : 'dark');
             });
 
-            // 2. 展開/收合
+            // 2. 展開 / 收合
             document.getElementById('expandBtn').addEventListener('click', () => {
                 document.querySelectorAll('details').forEach(d => d.open = true);
             });
@@ -411,19 +706,20 @@
                 document.querySelectorAll('details').forEach(d => d.open = false);
             });
 
-            // 3. 倒數計時邏輯
+            // 3. 倒數計時邏輯 (含日本入境卡 Visit Japan Web 8/31)
             const dates = {
                 'timer-yufuin': new Date("2026-08-17T09:00:00+08:00").getTime(),
                 'timer-shinkansen': new Date("2026-08-20T09:00:00+08:00").getTime(),
+                'timer-vjw': new Date("2026-08-31T00:00:00+08:00").getTime(),
                 'timer-departure': new Date("2026-09-16T00:00:00+08:00").getTime()
             };
 
             function updateTimer() {
-                const now = Date.now();
+                const nowTime = Date.now();
                 Object.keys(dates).forEach(id => {
                     const el = document.getElementById(id);
                     if (!el) return;
-                    const diff = dates[id] - now;
+                    const diff = dates[id] - nowTime;
                     if (diff <= 0) {
                         el.innerText = "時間已到！";
                         el.style.color = "var(--accent-green)";
@@ -439,7 +735,7 @@
             setInterval(updateTimer, 1000);
             updateTimer();
 
-            // 4. 一鍵複製 (事件委派)
+            // 4. 一鍵複製
             document.addEventListener('click', (e) => {
                 if (e.target.classList.contains('copy-icon')) {
                     const text = e.target.getAttribute('data-copy');
@@ -454,7 +750,22 @@
                 setTimeout(() => toast.classList.remove('show'), 2500);
             }
 
-            // 5. 記帳功能
+            // 5. 行前待辦狀態記憶 (Checklist)
+            const checks = document.querySelectorAll('.todo-check');
+            checks.forEach(check => {
+                const id = check.id;
+                const label = document.querySelector(`label[for="${id}"]`);
+                if (localStorage.getItem('fukuoka_' + id) === 'true') {
+                    check.checked = true;
+                    if(label) label.classList.add('checked');
+                }
+                check.addEventListener('change', () => {
+                    localStorage.setItem('fukuoka_' + id, check.checked);
+                    if(label) label.classList.toggle('checked', check.checked);
+                });
+            });
+
+            // 6. 記帳本功能
             let expenses = JSON.parse(localStorage.getItem('fukuoka_expenses')) || [];
             const nameEl = document.getElementById('expense-name');
             const amountEl = document.getElementById('expense-amount');
@@ -496,7 +807,7 @@
             });
             renderExpenses();
 
-            // 6. Top 按鈕
+            // 7. 回頂部按鈕
             const topBtn = document.getElementById('topBtn');
             window.addEventListener('scroll', () => {
                 topBtn.style.display = window.scrollY > 400 ? 'block' : 'none';
