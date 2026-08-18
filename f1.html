@@ -259,7 +259,7 @@
 
         .countdown-container {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
             gap: 15px;
             margin-bottom: 30px;
         }
@@ -414,11 +414,6 @@
                 <h4>🎫 由布院之森車票</h4>
                 <div class="timer" style="color: var(--accent-green);">已購票劃位 ✅</div>
                 <small>去程 2車7AB ｜ 回程 5車8AB</small>
-            </div>
-            <div class="countdown-card">
-                <h4>🚄 新幹線搶票 (🅱案)</h4>
-                <div class="timer" id="timer-shinkansen">計算中...</div>
-                <small>8/20 (三) 09:00</small>
             </div>
             <div class="countdown-card">
                 <h4>📝 填寫日本入境卡</h4>
@@ -767,14 +762,6 @@
                             <td><label for="todo1">🎉 <strong>由布院之森車票已入手：</strong>9/17 去程 1號 (2車7AB) ｜ 回程 6號 (5車8AB)。</label></td>
                         </tr>
                         <tr>
-                            <td><input type="checkbox" class="todo-check" id="todo2"><label for="todo2"><strong>8/13 (三)</strong></label></td>
-                            <td><label for="todo2">🚄 <strong>新幹線「事前申込」：</strong>送出 9/20 博多→新大阪 的訂位申請 (🅱 案)。</label></td>
-                        </tr>
-                        <tr>
-                            <td><input type="checkbox" class="todo-check" id="todo4"><label for="todo4"><strong>8/20 (三) 09:00</strong></label></td>
-                            <td><label for="todo4">🚄 <strong>新幹線正式開賣：</strong>確認事前申込結果，或手動搶 9/20 車票 (🅱 案)。</label></td>
-                        </tr>
-                        <tr>
                             <td><input type="checkbox" class="todo-check" id="todo7"><label for="todo7"><strong>8/31 (一) 起</strong></label></td>
                             <td><label for="todo7">📝 <strong>填寫 Visit Japan Web：</strong>預先線上填寫日本入境卡與海關申報，出關更迅速。</label></td>
                         </tr>
@@ -788,28 +775,6 @@
                         </tr>
                     </tbody>
                 </table>
-            </div>
-        </details>
-
-        <details>
-            <summary>🚄 新幹線搶票懶人包 (🅱 案赴大阪專用)</summary>
-            <div class="detail-section">
-                <div class="sub-section">
-                    <h4>⏰ 1. 關鍵搶票時間點</h4>
-                    <ul>
-                        <li><strong>乘車日：</strong>9/20 (日) 博多 → 新大阪。因遇 Silver Week 連假週日，指定席極度搶手！</li>
-                        <li><strong>事前申込（最重要）：</strong><b>8/13 (三)</b> 起即可於 JR 九州官網送出申請。</li>
-                        <li><strong>正式開賣：</strong><b>8/20 (三) 台灣時間 09:00</b>（乘車日一個月前）。</li>
-                        <li><strong>帳號通用：</strong>與由布院之森使用<b>同一個 JR 九州官網帳號</b>即可辦理，無需重新註冊。</li>
-                    </ul>
-                </div>
-                <div class="sub-section">
-                    <h4>🛠️ 2. 購票管道</h4>
-                    <ul>
-                        <li>直接登入 JR 九州官方預約網站（或 Smart EX App），搜尋「博多 → 新大阪」，選擇希望的班次（如 Nozomi 或 Sakura）並劃位。</li>
-                        <li>抵達日本後，可於博多站的綠色窗口或新幹線自動售票機憑信用卡與預約番號取票。</li>
-                    </ul>
-                </div>
             </div>
         </details>
 
@@ -861,7 +826,6 @@
                 <li><strong>Day 4 太宰府摸聰明牛 ＆ Alpen 購物：</strong>一蘭「合格碗」改為當日午餐（09:30抽牌）；天滿宮參拜必摸<strong>御神牛（聰明牛）</strong>求智慧考運；傍晚返回市區後直奔博多運河城 <strong>Alpen FUKUOKA 旗艦店（營業至 21:00）</strong>採買運動戶外用品享免稅（實退約8%）。</li>
                 <li><strong>Day 5 鋼彈啟動秀＋分流：</strong>上午觀看鋼彈白天動態啟動秀與告別午餐。下午 🅱 於 14:30 博多搭新幹線赴大阪；🅰 留福岡遊玩糸島海景與二見浦白色鳥居。</li>
                 <li><strong>Day 6 機場交通與行李：</strong>行李寄放天神飯店至 16:00。推薦搭乘地下鐵 11 分鐘至國內線轉乘免費接駁巴士，約 16:30–16:40 到達國際線航廈，最為準時安心。</li>
-                <li><strong>新幹線搶票 (🅱案)：</strong>9/20 為連假週日，8/13 事前申込、8/20 09:00 正式開賣，使用同一個 JR 九州帳號辦理。</li>
                 <li><strong>退稅：</strong>單店消費滿5,000日元可退稅，記得攜帶護照原件。</li>
             </ul>
         </div>
@@ -979,7 +943,6 @@
 
             // 3. 倒數計時邏輯 (含 Visit Japan Web 8/31)
             const dates = {
-                'timer-shinkansen': new Date("2026-08-20T09:00:00+08:00").getTime(),
                 'timer-vjw': new Date("2026-08-31T00:00:00+08:00").getTime(),
                 'timer-departure': new Date("2026-09-16T00:00:00+08:00").getTime()
             };
