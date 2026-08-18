@@ -233,14 +233,20 @@
             background: var(--primary-color);
             color: var(--text-light);
             border: none;
-            padding: 10px 18px;
+            padding: 8px 16px;
             border-radius: 6px;
             cursor: pointer;
             font-size: 14px;
             text-decoration: none;
             transition: background 0.2s, transform 0.1s;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 4px;
         }
         .btn:hover { background: var(--primary-hover); transform: translateY(-1px); }
+        .btn-secondary { background: #6c757d; }
+        .btn-secondary:hover { background: #5a6268; }
         .btn-gradient { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); }
 
         .theme-toggle {
@@ -338,6 +344,13 @@
             color: var(--text-secondary);
             margin-top: 2px;
         }
+        .backup-toolbar {
+            display: flex;
+            justify-content: flex-end;
+            gap: 8px;
+            margin-bottom: 12px;
+            flex-wrap: wrap;
+        }
 
         .update-time {
             text-align: center;
@@ -376,6 +389,7 @@
             .split-plan { grid-template-columns: 1fr; }
             .info-table { display: block; overflow-x: auto; white-space: nowrap; }
             .input-group input { width: 100%; flex: auto; }
+            .backup-toolbar { justify-content: stretch; }
         }
 
         @media print {
@@ -445,7 +459,6 @@
                 </div>
                 <div class="time-item"><span class="time">11:20</span> <span class="location">抵達福岡機場國際線，辦理入境與領取行李</span></div>
                 
-                <!-- 福岡機場前往天神站交通指南 -->
                 <div class="sub-section" style="background: var(--bg-card); border-left: 4px solid var(--primary-color);">
                     <h4>🚏 福岡機場國際線 ➔ 天神站 交通方式（3 選 1）</h4>
                     <ul>
@@ -867,7 +880,14 @@
             </ul>
             
             <div class="budget-tracker">
-                <h4>💰 互動記帳本 (自動抓取當日即時匯率)</h4>
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; flex-wrap: wrap; gap: 8px;">
+                    <h4>💰 互動記帳本 (自動抓取當日即時匯率)</h4>
+                    <div class="backup-toolbar">
+                        <button class="btn btn-secondary" id="exportExpensesBtn" style="font-size: 12px; padding: 5px 10px;">📤 匯出資料</button>
+                        <button class="btn btn-secondary" id="importExpensesBtn" style="font-size: 12px; padding: 5px 10px;">📥 匯入資料</button>
+                        <input type="file" id="importFileInput" accept=".json" style="display: none;">
+                    </div>
+                </div>
                 <div class="input-group">
                     <input type="date" id="expense-date">
                     <input type="text" id="expense-name" placeholder="項目 (如: 太宰府 梅枝餅)">
@@ -1022,7 +1042,7 @@
                 });
             });
 
-            // 6. 記帳本功能 (即時匯率 + 日期)
+            // 6. 記帳本功能 (即時匯率 + 日期 + 匯出/匯入)
             let expenses = JSON.parse(localStorage.getItem('fukuoka_expenses_v2')) || [];
             const expDate = document.getElementById('expense-date');
             const expName = document.getElementById('expense-name');
@@ -1090,6 +1110,64 @@
                     renderExpenses();
                 }
             });
+
+            // 匯出資料 (JSON 下載)
+            document.getElementById('exportExpensesBtn').addEventListener('click', () => {
+                if (expenses.length === 0) {
+                    alert('目前尚無記帳資料可匯出！');
+                    return;
+                }
+                const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(expenses, null, 2));
+                const downloadAnchor = document.createElement('a');
+                downloadAnchor.setAttribute("href", dataStr);
+                downloadAnchor.setAttribute("download", `fukuoka_expenses_${new Date().toISOString().split('T')[0]}.json`);
+                document.body.appendChild(downloadAnchor);
+                downloadAnchor.click();
+                downloadAnchor.remove();
+                showToast('已成功匯出記帳資料檔案！');
+            });
+
+            // 匯入資料 (觸發檔案選取)
+            const importFileInput = document.getElementById('importFileInput');
+            document.getElementById('importExpensesBtn').addEventListener('click', () => {
+                importFileInput.click();
+            });
+
+            importFileInput.addEventListener('change', (event) => {
+                const file = event.target.files[0];
+                if (!file) return;
+
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    try {
+                        const importedData = JSON.parse(e.target.result);
+                        if (!Array.isArray(importedData)) {
+                            throw new Error('資料格式不正確');
+                        }
+
+                        // 驗證項目格式
+                        const isValid = importedData.every(item => item.date && item.name && typeof item.amount === 'number');
+                        if (!isValid) {
+                            throw new Error('部分項目缺少必要的欄位');
+                        }
+
+                        const choice = confirm('【確定匯入記帳資料？】\n\n點選「確定」：合併至現有記帳資料\n點選「取消」：覆蓋現有記帳資料');
+                        if (choice) {
+                            expenses = expenses.concat(importedData);
+                        } else {
+                            expenses = importedData;
+                        }
+
+                        renderExpenses();
+                        showToast('成功匯入記帳資料！');
+                    } catch (err) {
+                        alert('匯入失敗：請確認選取的是有效的記帳 JSON 檔案！');
+                    }
+                    importFileInput.value = ''; // 重置 input
+                };
+                reader.readAsText(file);
+            });
+
             renderExpenses();
 
             // 7. 回頂部按鈕
