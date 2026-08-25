@@ -386,7 +386,7 @@
             border-color: var(--primary-color);
             transform: scale(1.1);
         }
-        .refresh-rate-btn.spinning .spin-icon {
+        .refresh-rate-btn.spinning {
             animation: spin 0.8s linear infinite;
         }
         @keyframes spin { 100% { transform: rotate(360deg); } }
@@ -1083,37 +1083,65 @@
     <div id="toast">已複製到剪貼簿！</div>
 
     <script>
-        // 自動向即時匯率 API 抓取 JPY -> TWD
+        // 強化版：自動向即時匯率 API 抓取 JPY -> TWD（含防快取與雙 API 容錯）
         async function fetchExchangeRate(isManual = false) {
             const rateInput = document.getElementById('expense-rate');
             const rateStatus = document.getElementById('rate-status');
             const refreshBtn = document.getElementById('refreshRateBtn');
             
             if (refreshBtn) refreshBtn.classList.add('spinning');
-            if (rateStatus) rateStatus.innerText = '🔄 更新中...';
+            if (rateStatus) {
+                rateStatus.innerText = '🔄 連線中...';
+                rateStatus.style.color = "var(--text-secondary)";
+            }
 
+            let success = false;
+            let finalRate = null;
+
+            // 主要 API 來源 1 (Open Exchange Rates API - 帶時間戳記破快取)
             try {
-                const res = await fetch('https://open.er-api.com/v6/latest/JPY');
-                const data = await res.json();
-                if (data && data.rates && data.rates.TWD) {
-                    const rate = parseFloat(data.rates.TWD).toFixed(4);
-                    if (rateInput) rateInput.value = rate;
-                    if (rateStatus) {
-                        rateStatus.innerText = `✅ 即時: ${rate}`;
-                        rateStatus.style.color = "var(--accent-green)";
-                    }
-                    if (isManual) showToast(`已更新最新匯率：1 JPY = ${rate} TWD`);
+                const res1 = await fetch(`https://open.er-api.com/v6/latest/JPY?t=${Date.now()}`, { cache: 'no-store' });
+                const data1 = await res1.json();
+                if (data1 && data1.rates && data1.rates.TWD) {
+                    finalRate = parseFloat(data1.rates.TWD).toFixed(4);
+                    success = true;
                 }
-            } catch (e) {
+            } catch (e1) {
+                console.warn('主要匯率 API 失敗，嘗試備用來源...', e1);
+            }
+
+            // 備用 API 來源 2 (Frankfurter API)
+            if (!success) {
+                try {
+                    const res2 = await fetch(`https://api.frankfurter.dev/v1/latest?base=JPY&symbols=TWD&t=${Date.now()}`, { cache: 'no-store' });
+                    const data2 = await res2.json();
+                    if (data2 && data2.rates && data2.rates.TWD) {
+                        finalRate = parseFloat(data2.rates.TWD).toFixed(4);
+                        success = true;
+                    }
+                } catch (e2) {
+                    console.error('備用匯率 API 亦失敗', e2);
+                }
+            }
+
+            // 渲染結果
+            if (success && finalRate) {
+                if (rateInput) rateInput.value = finalRate;
+                if (rateStatus) {
+                    rateStatus.innerText = `✅ 即時: ${finalRate}`;
+                    rateStatus.style.color = "var(--accent-green)";
+                }
+                if (isManual) showToast(`已更新最新匯率：1 JPY = ${finalRate} TWD`);
+            } else {
                 if (rateStatus) {
                     rateStatus.innerText = `⚠️ 離線預設: 0.21`;
                     rateStatus.style.color = "var(--text-secondary)";
                 }
-                if (isManual) showToast('匯率更新失敗，維持預設數值');
-            } finally {
-                if (refreshBtn) {
-                    setTimeout(() => refreshBtn.classList.remove('spinning'), 500);
-                }
+                if (isManual) showToast('網路或 API 連線異常，維持原匯率數值');
+            }
+
+            if (refreshBtn) {
+                setTimeout(() => refreshBtn.classList.remove('spinning'), 600);
             }
         }
 
@@ -1137,14 +1165,21 @@
             fetchExchangeRate();
 
             // 點擊「更新匯率」按鈕
-            document.getElementById('refreshRateBtn').addEventListener('click', () => {
-                fetchExchangeRate(true);
-            });
+            const refreshRateBtn = document.getElementById('refreshRateBtn');
+            if (refreshRateBtn) {
+                refreshRateBtn.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    fetchExchangeRate(true);
+                });
+            }
 
             // 點擊右上角「重新整理網頁」按鈕
-            document.getElementById('pageRefreshBtn').addEventListener('click', () => {
-                window.location.reload();
-            });
+            const pageRefreshBtn = document.getElementById('pageRefreshBtn');
+            if (pageRefreshBtn) {
+                pageRefreshBtn.addEventListener('click', () => {
+                    window.location.reload();
+                });
+            }
 
             // 1. 主題切換
             const themeToggle = document.getElementById('themeToggle');
