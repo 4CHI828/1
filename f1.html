@@ -55,6 +55,36 @@
             position: relative;
         }
 
+        .top-action-bar {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            z-index: 10;
+        }
+
+        .round-icon-btn {
+            background: transparent;
+            border: 2px solid var(--primary-color);
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            font-size: 18px;
+            cursor: pointer;
+            color: var(--text-primary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+        }
+        .round-icon-btn:hover {
+            background: var(--primary-color);
+            color: var(--text-light);
+            transform: scale(1.05);
+        }
+
         h1 {
             text-align: center;
             color: var(--text-primary);
@@ -255,20 +285,6 @@
         .btn-excel:hover { background: #0b5a2f; }
         .btn-gradient { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); }
 
-        .theme-toggle {
-            position: absolute;
-            top: 20px;
-            right: 20px;
-            background: transparent;
-            border: 2px solid var(--primary-color);
-            border-radius: 50%;
-            width: 40px;
-            height: 40px;
-            font-size: 18px;
-            cursor: pointer;
-            color: var(--text-primary);
-        }
-
         .countdown-container {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
@@ -340,11 +356,41 @@
             color: var(--text-primary);
             font-size: 14px;
         }
+        .rate-wrapper {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
         .rate-status {
             font-size: 12px;
             color: var(--accent-green);
-            margin-left: 5px;
         }
+        .refresh-rate-btn {
+            background: var(--bg-container);
+            border: 1px solid var(--border-color);
+            border-radius: 50%;
+            width: 32px;
+            height: 32px;
+            cursor: pointer;
+            font-size: 14px;
+            color: var(--text-primary);
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+            flex-shrink: 0;
+        }
+        .refresh-rate-btn:hover {
+            background: var(--primary-color);
+            color: var(--text-light);
+            border-color: var(--primary-color);
+            transform: scale(1.1);
+        }
+        .refresh-rate-btn.spinning .spin-icon {
+            animation: spin 0.8s linear infinite;
+        }
+        @keyframes spin { 100% { transform: rotate(360deg); } }
+
         .expense-meta {
             font-size: 12px;
             color: var(--text-secondary);
@@ -395,6 +441,7 @@
             .split-plan { grid-template-columns: 1fr; }
             .info-table { display: block; overflow-x: auto; white-space: nowrap; }
             .input-group input { width: 100%; flex: auto; }
+            .rate-wrapper { width: 100%; justify-content: space-between; }
             .backup-toolbar { justify-content: stretch; }
         }
 
@@ -403,14 +450,19 @@
             .container { box-shadow: none; padding: 0; width: 100%; max-width: 100%; }
             details { open: true; border: 1px solid #ccc; page-break-inside: avoid; }
             summary { background: #eee !important; color: #000 !important; }
-            .theme-toggle, .toggle-all, #topBtn, .countdown-container, .budget-tracker, .map-link, .copy-icon { display: none !important; }
+            .top-action-bar, .toggle-all, #topBtn, .countdown-container, .budget-tracker, .map-link, .copy-icon { display: none !important; }
         }
     </style>
 <base target="_blank">
 </head>
 <body>
     <div class="container">
-        <button class="theme-toggle" id="themeToggle" title="切換夜間模式" aria-label="切換主題">🌙</button>
+        <!-- 頂部按鈕區：重新整理 ＋ 夜間模式 -->
+        <div class="top-action-bar">
+            <button class="round-icon-btn" id="pageRefreshBtn" title="重新整理網頁" aria-label="重新整理網頁">🔄</button>
+            <button class="round-icon-btn" id="themeToggle" title="切換夜間模式" aria-label="切換主題">🌙</button>
+        </div>
+
         <h1>🗾 福岡6天5夜行程表</h1>
         <p class="subtitle">2026年9月16日 - 9月21日</p>
         
@@ -998,7 +1050,15 @@
                     <input type="text" id="expense-name" placeholder="項目 (如: 放生會 屋台小吃)">
                     <input type="number" id="expense-amount" placeholder="金額 (日圓 JPY)">
                     <input type="number" id="expense-rate" placeholder="匯率 (抓取中...)" step="0.0001" value="0.21" style="max-width: 140px;">
-                    <span id="rate-status" class="rate-status">🔄 連線匯率中...</span>
+                    
+                    <!-- 匯率狀態與無文字圓形重新整理按鈕 -->
+                    <div class="rate-wrapper">
+                        <span id="rate-status" class="rate-status">🔄 連線匯率中...</span>
+                        <button type="button" class="refresh-rate-btn" id="refreshRateBtn" title="重新整理最新即時匯率" aria-label="重新整理匯率">
+                            <span class="spin-icon">🔄</span>
+                        </button>
+                    </div>
+
                     <button class="btn" id="addExpenseBtn">新增消費</button>
                 </div>
                 <ul id="expense-list" style="list-style: none; margin: 0; padding: 0;"></ul>
@@ -1024,9 +1084,14 @@
 
     <script>
         // 自動向即時匯率 API 抓取 JPY -> TWD
-        async function fetchExchangeRate() {
+        async function fetchExchangeRate(isManual = false) {
             const rateInput = document.getElementById('expense-rate');
             const rateStatus = document.getElementById('rate-status');
+            const refreshBtn = document.getElementById('refreshRateBtn');
+            
+            if (refreshBtn) refreshBtn.classList.add('spinning');
+            if (rateStatus) rateStatus.innerText = '🔄 更新中...';
+
             try {
                 const res = await fetch('https://open.er-api.com/v6/latest/JPY');
                 const data = await res.json();
@@ -1034,14 +1099,20 @@
                     const rate = parseFloat(data.rates.TWD).toFixed(4);
                     if (rateInput) rateInput.value = rate;
                     if (rateStatus) {
-                        rateStatus.innerText = `✅ 即時匯率: ${rate}`;
+                        rateStatus.innerText = `✅ 即時: ${rate}`;
                         rateStatus.style.color = "var(--accent-green)";
                     }
+                    if (isManual) showToast(`已更新最新匯率：1 JPY = ${rate} TWD`);
                 }
             } catch (e) {
                 if (rateStatus) {
                     rateStatus.innerText = `⚠️ 離線預設: 0.21`;
                     rateStatus.style.color = "var(--text-secondary)";
+                }
+                if (isManual) showToast('匯率更新失敗，維持預設數值');
+            } finally {
+                if (refreshBtn) {
+                    setTimeout(() => refreshBtn.classList.remove('spinning'), 500);
                 }
             }
         }
@@ -1064,6 +1135,16 @@
 
             // 執行匯率抓取
             fetchExchangeRate();
+
+            // 點擊「更新匯率」按鈕
+            document.getElementById('refreshRateBtn').addEventListener('click', () => {
+                fetchExchangeRate(true);
+            });
+
+            // 點擊右上角「重新整理網頁」按鈕
+            document.getElementById('pageRefreshBtn').addEventListener('click', () => {
+                window.location.reload();
+            });
 
             // 1. 主題切換
             const themeToggle = document.getElementById('themeToggle');
@@ -1286,13 +1367,11 @@
                         let parsedData = [];
 
                         if (fileName.endsWith('.csv')) {
-                            // 解析 CSV
                             const lines = content.split(/\r?\n/).filter(line => line.trim() !== '');
                             if (lines.length <= 1) throw new Error('CSV 檔案無資料');
 
                             for (let i = 1; i < lines.length; i++) {
                                 const line = lines[i];
-                                // 正則處理帶引號的 CSV 欄位
                                 const match = line.match(/(?:^|,)("(?:[^"]|"")*"|[^,]*)/g);
                                 if (!match) continue;
                                 const cols = match.map(c => c.replace(/^,/, '').replace(/^"(.*)"$/, '$1').replace(/""/g, '"').trim());
@@ -1308,7 +1387,6 @@
                                 }
                             }
                         } else if (fileName.endsWith('.txt')) {
-                            // 解析 TXT 格式 (相容本系統匯出的 TXT)
                             const itemRegex = /\[(\d{4}-\d{2}-\d{2})\]\s+([^\n\r]+)[\r\n\s]+金額:\s*¥([\d,]+)\s*JPY.*?匯率:\s*([\d.]+)/g;
                             let match;
                             while ((match = itemRegex.exec(content)) !== null) {
@@ -1338,7 +1416,7 @@
                     } catch (err) {
                         alert(`匯入失敗：${err.message || '請確認選取的 CSV 或 TXT 格式正確！'}`);
                     }
-                    importFileInput.value = ''; // 重置 input
+                    importFileInput.value = '';
                 };
                 reader.readAsText(file, 'utf-8');
             });
