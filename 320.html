@@ -2,7 +2,8 @@
 <html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <!-- 移除 user-scalable=no 提升無障礙體驗 -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>静静在夏天🍔🎤⁰³²⁰線上歌單</title>
     <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
     <script>
@@ -183,12 +184,11 @@
         .pull-refresh-indicator .spinner { width: 20px; height: 20px; border: 3px solid var(--border); border-top-color: var(--primary); border-radius: 50%; animation: spin 1s linear infinite; margin-right: 10px; }
         @keyframes spin { to { transform: rotate(360deg); } }
         
-        /* 🆕 表情符號選擇器樣式 (改為 Fixed 定位) */
         .emoji-toggle-btn { background: var(--bg-color); border: 1px solid var(--border); border-radius: 50%; width: 38px; height: 38px; font-size: 18px; cursor: pointer; transition: var(--transition); display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0; }
         .emoji-toggle-btn:hover { background: var(--primary); transform: scale(1.1); border-color: var(--primary); }
         .emoji-toggle-btn.active { background: var(--primary); border-color: var(--primary); transform: rotate(15deg); }
         .emoji-panel {
-            position: fixed; /* 🆕 改為固定定位，確保永遠在最上層 */
+            position: fixed;
             z-index: 99999; 
             background: var(--card-bg); border: 1px solid var(--border);
             border-radius: var(--radius-lg); box-shadow: var(--shadow-lg);
@@ -202,7 +202,8 @@
         .emoji-cat-btn { background: var(--bg-color); border: 1px solid var(--border); border-radius: 20px; padding: 5px 12px; font-size: 12px; cursor: pointer; white-space: nowrap; transition: var(--transition); color: var(--text-color); font-weight: 600; }
         .emoji-cat-btn:hover { background: var(--primary); color: white; border-color: var(--primary); }
         .emoji-cat-btn.active { background: var(--primary); color: white; border-color: var(--primary); }
-        .emoji-grid { display: grid; grid-template-columns: repeat(8, 1fr); gap: 4px; max-height: 200px; overflow-y: auto; padding: 4px; }
+        /* 增加 overscroll-behavior: contain 防止滾動穿透 */
+        .emoji-grid { display: grid; grid-template-columns: repeat(8, 1fr); gap: 4px; max-height: 200px; overflow-y: auto; padding: 4px; overscroll-behavior: contain; }
         .emoji-grid::-webkit-scrollbar { width: 6px; }
         .emoji-grid::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
         .emoji-item { font-size: 22px; cursor: pointer; padding: 4px; border-radius: 6px; transition: var(--transition); text-align: center; user-select: none; }
@@ -235,11 +236,12 @@
     <div id="pullRefreshIndicator" class="pull-refresh-indicator"><div class="spinner"></div> <span id="pullText">放開即可重新整理...</span></div>
     <h1 id="pageTitle">静静在夏天🍔🎤⁰³²⁰歌單 <span class="admin-badge" id="adminBadge">👑 管理員模式</span></h1>
     <div class="social-links">
-        <a href="https://v.douyin.com/mw-osadXTvk/" target="_blank">🍔 抖音</a>
-        <a href="https://www.twitch.tv/jingjingzaixiatian" target="_blank">🍔 圖奇</a>
-        <a href="https://discord.com/channels/865334403864461373/1467603376144646319" target="_blank">🍔 DC靜靜幫</a>
-        <a href="https://www.youtube.com/playlist?list=PL3LHSN24syoOcIqA8nRwfYgAOoR5U27_U" target="_blank">🍔 Youtube</a>
-        <a href="https://www.instagram.com/jingjing24739233910/" target="_blank">🍔 IG</a>
+        <!-- 新增 rel="noopener noreferrer" -->
+        <a href="https://v.douyin.com/mw-osadXTvk/" target="_blank" rel="noopener noreferrer">🍔 抖音</a>
+        <a href="https://www.twitch.tv/jingjingzaixiatian" target="_blank" rel="noopener noreferrer">🍔 圖奇</a>
+        <a href="https://discord.com/channels/865334403864461373/1467603376144646319" target="_blank" rel="noopener noreferrer">🍔 DC靜靜幫</a>
+        <a href="https://www.youtube.com/playlist?list=PL3LHSN24syoOcIqA8nRwfYgAOoR5U27_U" target="_blank" rel="noopener noreferrer">🍔 Youtube</a>
+        <a href="https://www.instagram.com/jingjing24739233910/" target="_blank" rel="noopener noreferrer">🍔 IG</a>
     </div>
     <div class="control-panel">
         <div class="filter-bar">
@@ -307,7 +309,8 @@
     </div>
     <div class="footer">
         <p>💖 造訪次數: <span id="visitCount">0</span> 次</p>
-        <p>由 <a href="https://www.douyin.com/user/MS4wLjABAAAAamj38l-UDbYbUGcPhEdJI-rM8-Y_tAMFLy7kZAWMpJw" target="_blank">新竹奇奇828</a> 協助升級製作</p>
+        <!-- 新增 rel="noopener noreferrer" -->
+        <p>由 <a href="https://www.douyin.com/user/MS4wLjABAAAAamj38l-UDbYbUGcPhEdJI-rM8-Y_tAMFLy7kZAWMpJw" target="_blank" rel="noopener noreferrer">新竹奇奇828</a> 協助升級製作</p>
     </div>
     <div class="fab-group">
         <button id="scrollTopBtn" class="scroll-top-btn" onclick="window.scrollTo({top:0, behavior:'smooth'})">⬆️</button>
@@ -338,7 +341,8 @@
         <div class="modal-content">
             <h2 style="color:var(--primary); margin-top:0; font-weight:800;">✨ 命運的選擇 ✨</h2>
             <div id="randomSongInfo" style="font-size:22px; margin:30px 0; font-weight:bold; line-height:1.4;">Casting...</div>
-            <a id="randomSongLink" href="#" target="_blank" class="btn-listen">🎵 立即試聽</a>
+            <!-- 新增 rel="noopener noreferrer" -->
+            <a id="randomSongLink" href="#" target="_blank" rel="noopener noreferrer" class="btn-listen">🎵 立即試聽</a>
             <div style="margin-top:20px;">
                 <button class="btn btn-random" onclick="pickRandomSong()" style="margin-right:10px;">🎲 再抽一次</button>
                 <button class="btn" style="background:#636e72; color:white;" onclick="document.getElementById('randomModal').style.display='none'">關閉</button>
@@ -361,7 +365,6 @@
     </div>
     <div id="toastContainer" class="toast-container"></div>
 
-    <!-- 🆕 全域表情符號面板 (固定在網頁最上層) -->
     <div id="globalEmojiPanel" class="emoji-panel"></div>
 
     <script>
@@ -387,10 +390,8 @@
             } catch (e) { console.error('Cache parse error', e); }
         }
 
-        async function fetchWithRetry(url, options, retries, timeout) {
-            options = options || {};
-            retries = retries || 2;
-            timeout = timeout || 10000;
+        // 使用預設參數優化
+        async function fetchWithRetry(url, options = {}, retries = 2, timeout = 10000) {
             for (let i = 0; i <= retries; i++) {
                 try {
                     const controller = new AbortController();
@@ -642,7 +643,15 @@
                 applyFilters();
                 document.getElementById('reqNick').value = reqNickVal;
                 document.getElementById('reqMessage').value = reqMsgVal;
-                if (!isCache) { localStorage.setItem(CACHE_KEY, JSON.stringify(data)); }
+                
+                // localStorage 保護
+                if (!isCache) { 
+                    try {
+                        localStorage.setItem(CACHE_KEY, JSON.stringify(data));
+                    } catch (e) {
+                        console.warn('快取寫入失敗，可能是空間不足:', e);
+                    }
+                }
             } else if (!isCache) {
                 showToast('❌ 載入失敗: ' + (data.message || '未知錯誤'), 'error');
             }
@@ -800,10 +809,7 @@
             });
         }
 
-        // ============================================
-        // 🆕 全域表情符號選擇器 (徹底解決失效問題)
-        // ============================================
-        let currentEmojiTarget = null; // 記錄當前要插入的 textarea
+        let currentEmojiTarget = null;
         const globalPanel = document.getElementById('globalEmojiPanel');
 
         function buildEmojiPanelHTML() {
@@ -829,7 +835,6 @@
         function initGlobalEmojiPanel() {
             globalPanel.innerHTML = buildEmojiPanelHTML();
             
-            // 綁定分類切換
             globalPanel.querySelectorAll('.emoji-cat-btn').forEach(function(catBtn) {
                 catBtn.addEventListener('click', function(e) {
                     e.stopPropagation();
@@ -839,7 +844,6 @@
                 });
             });
             
-            // 綁定 Emoji 點擊插入
             globalPanel.addEventListener('click', function(e) {
                 const emojiItem = e.target.closest('.emoji-item');
                 if (emojiItem && currentEmojiTarget) {
@@ -848,23 +852,19 @@
                 }
             });
             
-            // 預設渲染第一個分類
             const firstCat = Object.keys(EMOJI_LIST)[0];
             renderEmojiGrid(firstCat, globalPanel.querySelector('#emojiGridContent'));
         }
 
         function toggleEmojiPanel(btn) {
-            // 找到對應的 textarea
             const wrapper = btn.closest('.req-msg-row') || btn.closest('.reply-input-area') || btn.parentNode;
             currentEmojiTarget = wrapper.querySelector('textarea');
             
             if (!currentEmojiTarget) return;
             
-            // 計算面板位置 (顯示在按鈕上方)
             const rect = btn.getBoundingClientRect();
             globalPanel.style.bottom = 'auto';
             
-            // 水平位置：盡量對齊按鈕，但避免超出螢幕
             let leftPos = rect.left;
             if (leftPos + 320 > window.innerWidth) {
                 leftPos = window.innerWidth - 330;
@@ -872,7 +872,6 @@
             if (leftPos < 10) leftPos = 10;
             globalPanel.style.left = leftPos + 'px';
             
-            // 垂直位置：顯示在按鈕上方，如果上方空間不夠則顯示在下方
             if (rect.top > 280) {
                 globalPanel.style.top = (rect.top - 270) + 'px';
             } else {
@@ -895,7 +894,6 @@
             textarea.focus();
         }
 
-        // 點擊外部關閉面板
         document.addEventListener('click', function(e) {
             if (!e.target.closest('#globalEmojiPanel') && !e.target.closest('.emoji-toggle-btn')) {
                 globalPanel.classList.remove('show');
@@ -946,27 +944,51 @@
             } else if (inputArea) { inputArea.style.display = 'none'; }
         }
 
+        // 防連點機制處理
         function submitGeneralReply(btn) {
             const requestItem = btn.closest('.request-item');
             const id = requestItem.dataset.id;
             const nick = requestItem.querySelector('.reply-nick').value.trim();
             const replyText = requestItem.querySelector('.reply-text').value.trim();
             if (!nick || !replyText) { showToast('請填寫暱稱與內容！', 'error'); return; }
+            
+            const originalText = btn.innerText;
+            btn.disabled = true;
+            btn.innerText = '傳送中...';
+
             localStorage.setItem('lastReplyNick', nick);
             fetchWithRetry(API_URL, { method: 'POST', headers: { 'Content-Type': 'text/plain' }, body: JSON.stringify({ action: 'reply_request', id: String(id), replier: nick, replyContent: replyText, isOfficial: false }) })
-            .then(function(result) { handleApiResponse(result, function() { loadPlaylistData(true); showToast('✅ 回覆成功'); }); })
-            .catch(function(err) { showToast('❌ 回覆失敗，請重試', 'error'); console.error(err); });
+            .then(function(result) { 
+                btn.disabled = false; btn.innerText = originalText;
+                handleApiResponse(result, function() { loadPlaylistData(true); showToast('✅ 回覆成功'); }); 
+            })
+            .catch(function(err) { 
+                btn.disabled = false; btn.innerText = originalText;
+                showToast('❌ 回覆失敗，請重試', 'error'); console.error(err); 
+            });
         }
 
+        // 防連點機制處理
         function submitOfficialReply(btn) {
             requireAdmin(function() {
                 const requestItem = btn.closest('.request-item');
                 const id = requestItem.dataset.id;
                 const replyText = requestItem.querySelector('.reply-text').value.trim();
                 if (!replyText) { showToast('請輸入內容！', 'error'); return; }
+                
+                const originalText = btn.innerText;
+                btn.disabled = true;
+                btn.innerText = '傳送中...';
+
                 fetchWithRetry(API_URL, { method: 'POST', headers: { 'Content-Type': 'text/plain' }, body: JSON.stringify({ action: 'reply_request', id: String(id), replier: ADMIN_NAME, replyContent: replyText, isOfficial: true, token: getAdminToken() }) })
-                .then(function(result) { handleApiResponse(result, function() { loadPlaylistData(true); showToast('✅ 官方回覆成功'); }); })
-                .catch(function(err) { showToast('❌ 回覆失敗，請重試', 'error'); console.error(err); });
+                .then(function(result) { 
+                    btn.disabled = false; btn.innerText = originalText;
+                    handleApiResponse(result, function() { loadPlaylistData(true); showToast('✅ 官方回覆成功'); }); 
+                })
+                .catch(function(err) { 
+                    btn.disabled = false; btn.innerText = originalText;
+                    showToast('❌ 回覆失敗，請重試', 'error'); console.error(err); 
+                });
             });
         }
 
@@ -1022,11 +1044,13 @@
                 const tagsHtml = item.tags ? item.tags.split(',').map(function(t) { return '<span class="tag-badge">' + escapeHtml(t.trim()) + '</span>'; }).join('') : '';
                 const songId = escapeHtml(String(item.id));
                 let actionBtns = isAdminMode ? '<button class="btn-sm btn-edit" data-id="' + songId + '" onclick="editSong(this.dataset.id)">✏️</button><button class="btn-sm btn-del" data-id="' + songId + '" onclick="confirmDelete(this.dataset.id)">🗑️</button>' : '<span style="color:#ccc; font-size:12px;">(訪客)</span>';
+                
+                // 新增 rel="noopener noreferrer"
                 tr.innerHTML = 
                     '<td data-label="歌手">' + escapeHtml(item.artist) + '<br>' + tagsHtml + '</td>' +
                     '<td data-label="歌曲名稱"><span class="clickable-title" data-id="' + songId + '" onclick="addToQueue(this.dataset.id)">' + escapeHtml(item.song) + '</span></td>' +
                     '<td data-label="點擊次數" style="text-align:center; font-weight:bold; color:var(--primary); font-size:15px;">' + (item.clicks || 0) + ' 🔥</td>' +
-                    '<td data-label="試聽"><a href="' + displayLink + '" target="_blank" class="listen-link" data-id="' + songId + '" onclick="recordClick(this.dataset.id)" style="color:var(--primary); text-decoration:none; font-weight:bold;">🎧 試聽</a></td>' +
+                    '<td data-label="試聽"><a href="' + displayLink + '" target="_blank" rel="noopener noreferrer" class="listen-link" data-id="' + songId + '" onclick="recordClick(this.dataset.id)" style="color:var(--primary); text-decoration:none; font-weight:bold;">🎧 試聽</a></td>' +
                     '<td data-label="操作"><div class="action-btns">' + actionBtns + '</div></td>';
                 tbody.appendChild(tr);
             });
@@ -1175,12 +1199,27 @@
 
         function manualRefresh() { showToast('🔄 正在重新整理...', 'info', 1500); loadPlaylistData(true); }
 
-        let touchStartY = 0; let isPulling = false;
+        // 下拉刷新機制防橫滑誤觸
+        let touchStartY = 0; let touchStartX = 0; let isPulling = false;
         const pullIndicator = document.getElementById('pullRefreshIndicator');
         const pullText = document.getElementById('pullText');
-        document.addEventListener('touchstart', function(e) { if (window.scrollY === 0) touchStartY = e.touches[0].clientY; });
+        document.addEventListener('touchstart', function(e) { 
+            if (window.scrollY === 0) {
+                touchStartY = e.touches[0].clientY; 
+                touchStartX = e.touches[0].clientX;
+            }
+        });
         document.addEventListener('touchmove', function(e) {
-            if (window.scrollY === 0 && e.touches[0].clientY - touchStartY > 50) { isPulling = true; pullIndicator.classList.add('active'); pullText.innerText = '放開即可重新整理...'; }
+            if (window.scrollY === 0) {
+                let diffY = e.touches[0].clientY - touchStartY;
+                let diffX = Math.abs(e.touches[0].clientX - touchStartX);
+                // 確保向下拉距大於 50，且垂直位移大於水平位移（防止橫滑誤觸）
+                if (diffY > 50 && diffY > diffX) { 
+                    isPulling = true; 
+                    pullIndicator.classList.add('active'); 
+                    pullText.innerText = '放開即可重新整理...'; 
+                }
+            }
         });
         document.addEventListener('touchend', function() {
             if (isPulling) { pullText.innerText = '正在重新整理...'; manualRefresh(); setTimeout(function() { pullIndicator.classList.remove('active'); isPulling = false; }, 1000); }
@@ -1192,7 +1231,6 @@
             const lastNick = localStorage.getItem('lastReplyNick');
             if (lastNick) document.getElementById('reqNick').value = lastNick;
             
-            // 🆕 初始化全域表情符號面板
             initGlobalEmojiPanel();
             
             if (allSongs.length === 0) loadPlaylistData(true); else loadPlaylistData(false);
