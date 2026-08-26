@@ -120,8 +120,10 @@
 
         .sort-select { padding: 10px 20px; border-radius: 30px; border: 2px solid #ffeaa7; background: var(--input-bg); color: var(--text-color); cursor: pointer; }
         .random-btn { padding: 0 25px; background: var(--accent-grad); color: white; border: none; border-radius: 30px; cursor: pointer; font-weight: 600; transition: var(--transition); }
+        .history-btn { padding: 0 25px; background: var(--card-bg); color: var(--primary); border: 2px solid var(--primary); border-radius: 30px; cursor: pointer; font-weight: 600; transition: var(--transition); }
+        .history-btn:hover { background: var(--primary); color: white; }
 
-        /* Tab 優化：改為橫向捲動 */
+        /* Tab 優化：橫向捲動 */
         .category-tabs { 
             display: flex; 
             flex-wrap: nowrap; 
@@ -161,24 +163,56 @@
         .song-link:hover { color: var(--primary); transform: scale(1.05); }
         mark { background-color: rgba(255, 118, 117, 0.3); color: inherit; border-radius: 3px; }
 
-        /* 彈窗 */
+        /* 整合後的彈窗樣式 */
         .modal-overlay {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: rgba(0,0,0,0.7); display: none; align-items: center; justify-content: center;
             z-index: 1000; backdrop-filter: blur(15px); transition: var(--transition);
         }
         .modal-card {
-            background: var(--card-bg); padding: 40px 20px; border-radius: 40px;
+            background: var(--card-bg); padding: 25px 20px; border-radius: 35px;
             text-align: center; animation: popUp 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-            max-width: 350px; width: 85%; box-shadow: 0 30px 60px rgba(0,0,0,0.4);
+            max-width: 400px; width: 90%; box-shadow: 0 30px 60px rgba(0,0,0,0.4);
             border: 1px solid rgba(255,255,255,0.2);
+            position: relative;
+            display: flex; flex-direction: column; max-height: 90vh;
         }
         @keyframes popUp { from { transform: scale(0.5); opacity: 0; } to { transform: scale(1); opacity: 1; } }
-        .random-song { font-size: 24px; font-weight: 800; color: var(--primary); margin: 20px 0; min-height: 40px; }
-        .random-artist { font-size: 18px; margin-bottom: 35px; opacity: 0.8; }
-        .modal-actions { display: flex; flex-direction: column; gap: 12px; align-items: center; }
-        .close-btn { background: var(--accent-grad); color: white; border: none; padding: 15px 40px; border-radius: 30px; cursor: pointer; font-weight: 600; width: 80%; }
-        .retry-btn { background: var(--card-bg); color: var(--primary); border: 2px solid var(--primary); padding: 12px 40px; border-radius: 30px; cursor: pointer; font-weight: 600; width: 80%; }
+        
+        .modal-badge {
+            display: inline-block; padding: 4px 12px; background: rgba(255, 118, 117, 0.15);
+            color: var(--primary); border-radius: 15px; font-size: 13px; font-weight: 700;
+            margin-bottom: 5px; border: 1px solid rgba(255, 118, 117, 0.3);
+        }
+        .random-song { font-size: 22px; font-weight: 800; color: var(--primary); margin: 10px 0 5px 0; min-height: 32px; word-break: break-word; }
+        .random-artist { font-size: 16px; margin-bottom: 10px; opacity: 0.85; font-weight: 600; }
+        
+        .modal-meta-box {
+            background: rgba(0,0,0,0.04); border-radius: 15px; padding: 8px 14px;
+            margin-bottom: 15px; font-size: 12px; opacity: 0.8; display: flex; flex-direction: column; gap: 4px;
+            border: 1px solid var(--border-color);
+        }
+
+        .modal-actions { display: flex; flex-direction: row; gap: 10px; justify-content: center; margin-bottom: 15px; }
+        .close-btn { background: var(--accent-grad); color: white; border: none; padding: 12px 15px; border-radius: 30px; cursor: pointer; font-weight: 600; width: 48%; }
+        .retry-btn { background: var(--card-bg); color: var(--primary); border: 2px solid var(--primary); padding: 10px 15px; border-radius: 30px; cursor: pointer; font-weight: 600; width: 48%; }
+
+        /* 歷史紀錄列表樣式 */
+        .history-section { flex: 1; display: flex; flex-direction: column; overflow: hidden; border-top: 1px dashed var(--border-color); padding-top: 15px; }
+        .history-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; flex-shrink: 0; }
+        .history-list { flex: 1; overflow-y: auto; text-align: left; padding-right: 5px; margin: 0; max-height: 35vh; }
+        .history-list::-webkit-scrollbar { width: 4px; }
+        .history-list::-webkit-scrollbar-thumb { background: var(--primary); border-radius: 10px; }
+        
+        .history-item {
+            padding: 10px 12px; border-bottom: 1px solid var(--border-color);
+            background: rgba(0,0,0,0.02); border-radius: 12px; margin-bottom: 8px;
+            transition: var(--transition);
+        }
+        .history-item:hover { background: rgba(255, 118, 117, 0.05); }
+        .history-time { font-size: 11px; opacity: 0.6; margin-bottom: 4px; }
+        .history-song { font-weight: 700; color: var(--primary); font-size: 15px; margin-bottom: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .history-artist { font-size: 12px; opacity: 0.8; }
 
         .fab-btn {
             position: fixed; bottom: 30px; width: 55px; height: 55px;
@@ -206,7 +240,7 @@
             
             /* 表格轉卡片 */
             table, thead, tbody, th, td, tr { display: block; }
-            thead { display: none; } /* 隱藏表頭 */
+            thead { display: none; }
             
             .music-row { 
                 margin-bottom: 15px; 
@@ -228,8 +262,8 @@
             .col-song { font-size: 16px; font-weight: 600; }
             
             .controls-row { gap: 8px; }
-            .search-wrapper { flex: 1 1 100%; } /* 搜尋框在手機端佔滿一行 */
-            .random-btn { width: 100%; margin-top: 5px; }
+            .search-wrapper { flex: 1 1 100%; }
+            .random-btn, .history-btn { flex: 1; min-width: 45%; padding: 12px 10px; text-align: center; }
             
             .fab-btn { width: 45px; height: 45px; font-size: 18px; }
             #themeToggle { left: 15px; }
@@ -272,6 +306,7 @@
             <option value="artist" id="opt-artist">歌手 A-Z</option>
         </select>
         <button id="randomBtn" class="random-btn">🎲 隨機選歌</button>
+        <button id="historyBtn" class="history-btn">📜 抽歌紀錄</button>
     </div>
     
     <div class="category-tabs" id="categoryTabs"></div>
@@ -307,15 +342,39 @@
 <button id="langToggle" class="fab-btn" title="切換繁簡">文</button>
 <button id="backToTop" class="fab-btn">↑</button>
 
+<!-- 整合式抽歌與紀錄彈窗 -->
 <div class="modal-overlay" id="modalOverlay">
     <div class="modal-card" id="modalCard">
-        <h2 id="modalTitle">✨ 正在抽獎... ✨</h2>
-        <div class="random-song" id="resSong">...</div>
-        <div class="random-artist" id="resArtist">...</div>
-        <div class="modal-actions">
-            <button class="close-btn" id="closeModal">太棒了！</button>
-            <button class="retry-btn" id="retryBtn">再抽一次 🎲</button>
+        
+        <!-- 上半部：抽歌結果區 -->
+        <div id="drawSection" style="flex-shrink: 0;">
+            <div class="modal-badge" id="modalBadge" style="display: none;"></div>
+            <h2 id="modalTitle" style="margin-top: 0; font-size: 20px;">✨ 正在抽獎... ✨</h2>
+            <div class="random-song" id="resSong">...</div>
+            <div class="random-artist" id="resArtist">...</div>
+            
+            <div class="modal-meta-box" id="modalMetaBox" style="display: none;">
+                <div id="resDrawSeq"></div>
+                <div id="resDrawTime"></div>
+            </div>
+
+            <div class="modal-actions">
+                <button class="retry-btn" id="retryBtn">再抽一次 🎲</button>
+                <button class="close-btn" id="closeModal">太棒了！</button>
+            </div>
         </div>
+
+        <!-- 下半部：抽歌歷史紀錄區 -->
+        <div class="history-section">
+            <div class="history-header">
+                <span id="historyTitle" style="font-weight: bold; font-size: 14px; color: var(--primary);">🕒 抽歌歷史紀錄</span>
+                <button id="clearHistoryBtn" style="background: none; border: none; color: #ff7675; cursor: pointer; font-size: 13px; font-weight: bold; padding: 4px;">🗑️ 清空</button>
+            </div>
+            <div id="historyList" class="history-list">
+                <!-- JS 動態生成 -->
+            </div>
+        </div>
+
     </div>
 </div>
 
@@ -331,15 +390,19 @@
             favTab: "❤️ 最愛", allTab: "全部", highPitchTab: "🎤 高音歌", otherTab: "📦 其他",
             searchPlaceholder: "搜尋歌手或歌曲...",
             sortDefault: "預設排序", sortSong: "歌曲 A-Z", sortArtist: "歌手 A-Z",
-            randomBtn: "🎲 隨機選歌",
+            randomBtn: "🎲 隨機選歌", historyBtn: "📜 抽歌紀錄",
             statText: "目前顯示", statUnit: "首",
             thArtist: "歌手", thSong: "歌曲名稱 (點擊試聽)",
             footerVisit: "💖 你的造訪次數",
             credits: "新竹奇奇828製作",
             modalClose: "太棒了！", modalRetry: "再抽一次 🎲",
+            historyTitle: "🕒 抽歌歷史紀錄", historyEmpty: "尚無抽歌紀錄...", historyClear: "🗑️ 清空", confirmClear: "確定要清空所有抽歌紀錄嗎？",
             langBtn: "簡",
             mainTitle: "静静在夏天🍔🎤⁰³²⁰的歌單",
-            linkDouyin: "🍔 靜靜的抖音", linkTwitch: "🍔 静静的圖奇", linkDC: "🍔 DC靜靜幫", linkYT: "🍔 静静的YT", linkIG: "🍔 静静的IG"
+            linkDouyin: "🍔 靜靜的抖音", linkTwitch: "🍔 静静的圖奇", linkDC: "🍔 DC靜靜幫", linkYT: "🍔 静静的YT", linkIG: "🍔 静静的IG",
+            songSeqPrefix: "歌單序號 #",
+            drawSeqPrefix: "🎯 本次抽歌序號：第 ", drawSeqSuffix: " 次抽中",
+            drawTimePrefix: "🕒 抽取時間："
         },
         'zh-Hans': {
             greetingMorning: "早安，美好的音乐时光 ☀️",
@@ -351,15 +414,19 @@
             favTab: "❤️ 最爱", allTab: "全部", highPitchTab: "🎤 高音歌", otherTab: "📦 其他",
             searchPlaceholder: "搜索歌手或歌曲...",
             sortDefault: "默认排序", sortSong: "歌曲 A-Z", sortArtist: "歌手 A-Z",
-            randomBtn: "🎲 随机选歌",
+            randomBtn: "🎲 随机选歌", historyBtn: "📜 抽歌纪录",
             statText: "目前显示", statUnit: "首",
             thArtist: "歌手", thSong: "歌曲名称 (点击试听)",
             footerVisit: "💖 你的造访次数",
             credits: "新竹奇奇828制作",
             modalClose: "太棒了！", modalRetry: "再抽一次 🎲",
+            historyTitle: "🕒 抽歌历史纪录", historyEmpty: "尚无抽歌纪录...", historyClear: "🗑️ 清空", confirmClear: "确定要清空所有抽歌纪录吗？",
             langBtn: "繁",
             mainTitle: "静静在夏天🍔🎤⁰³²⁰的歌单",
-            linkDouyin: "🍔 静静的抖音", linkTwitch: "🍔 静静的图奇", linkDC: "🍔 DC静静帮", linkYT: "🍔 静静的YT", linkIG: "🍔 静静的IG"
+            linkDouyin: "🍔 静静的抖音", linkTwitch: "🍔 静静的图奇", linkDC: "🍔 DC静静帮", linkYT: "🍔 静静的YT", linkIG: "🍔 静静的IG",
+            songSeqPrefix: "歌单序号 #",
+            drawSeqPrefix: "🎯 本次抽歌序号：第 ", drawSeqSuffix: " 次抽中",
+            drawTimePrefix: "🕒 抽取时间："
         }
     };
 
@@ -480,7 +547,7 @@
     ];
 
     const rawMusicData = musicList.map((item, index) => ({ 
-        id: index, 
+        id: index + 1, 
         artist: (item[0] && item[0].trim() !== "") ? item[0] : "其他", 
         song: item[1] 
     }));
@@ -491,6 +558,8 @@
         theme: localStorage.getItem('theme') || 'light',
         lang: localStorage.getItem('preferred-lang') || 'zh-Hant',
         displayLimit: 30,
+        drawCount: parseInt(localStorage.getItem('drawCount') || '0'),
+        drawHistory: JSON.parse(localStorage.getItem('drawHistory')) || []
     };
 
     const musicBody = document.getElementById('musicBody');
@@ -527,6 +596,7 @@
         document.getElementById('opt-song').innerText = d.sortSong;
         document.getElementById('opt-artist').innerText = d.sortArtist;
         document.getElementById('randomBtn').innerText = d.randomBtn;
+        document.getElementById('historyBtn').innerText = d.historyBtn;
         document.getElementById('stat-text').innerText = d.statText;
         document.getElementById('stat-unit').innerText = d.statUnit;
         document.getElementById('th-artist').innerText = d.thArtist;
@@ -535,9 +605,12 @@
         document.getElementById('credit-text').innerText = d.credits;
         document.getElementById('closeModal').innerText = d.modalClose;
         document.getElementById('retryBtn').innerText = d.modalRetry;
+        document.getElementById('historyTitle').innerText = d.historyTitle;
+        document.getElementById('clearHistoryBtn').innerText = d.historyClear;
         document.getElementById('langToggle').innerText = d.langBtn;
         generateTabs();
         renderTable();
+        if (modalOverlay.style.display === 'flex') renderHistoryList(); 
     }
 
     function switchLanguage() {
@@ -661,7 +734,6 @@
     });
 
     function initVisuals() {
-        // 手機端減少粒子生成頻率
         const interval = window.innerWidth < 600 ? 1200 : 600;
         setInterval(() => {
             const symbols = ['🎵', '🎶', '🎤', '🍔', '✨', '💿', '🎸'];
@@ -691,33 +763,152 @@
         }
     }
 
-    function startRandomDraw() {
+    function formatDateTime(date) {
+        const y = date.getFullYear();
+        const m = String(date.getMonth() + 1).padStart(2, '0');
+        const d = String(date.getDate()).padStart(2, '0');
+        const h = String(date.getHours()).padStart(2, '0');
+        const min = String(date.getMinutes()).padStart(2, '0');
+        const s = String(date.getSeconds()).padStart(2, '0');
+        return `${y}/${m}/${d} ${h}:${min}:${s}`;
+    }
+
+    // 渲染歷史紀錄清單的方法
+    function renderHistoryList() {
+        const historyList = document.getElementById('historyList');
+        const d = LANG_DICT[State.lang];
+        if (State.drawHistory.length === 0) {
+            historyList.innerHTML = `<div style="text-align:center; padding: 25px 10px; opacity:0.5; font-size: 14px;">${d.historyEmpty}</div>`;
+        } else {
+            historyList.innerHTML = State.drawHistory.map(item => {
+                const searchUrl = `https://www.youtube.com/results?search_query=${encodeURIComponent(item.artist + ' ' + item.song)}`;
+                return `
+                <div class="history-item">
+                    <div class="history-time">${d.drawSeqPrefix}#${item.seq} &nbsp;|&nbsp; ${item.time}</div>
+                    <a href="${searchUrl}" target="_blank" style="text-decoration:none;">
+                        <div class="history-song">🎵 ${convertText(item.song)}</div>
+                        <div class="history-artist">🎤 ${convertText(item.artist)}</div>
+                    </a>
+                </div>
+            `}).join('');
+        }
+    }
+
+    function startRandomDraw(doAnimate = true) {
         const d = LANG_DICT[State.lang];
         const resSong = document.getElementById('resSong');
         const resArtist = document.getElementById('resArtist');
         const modalTitle = document.getElementById('modalTitle');
-        modalTitle.innerText = d.modalDrawing;
+        const modalBadge = document.getElementById('modalBadge');
+        const modalMetaBox = document.getElementById('modalMetaBox');
+        const resDrawSeq = document.getElementById('resDrawSeq');
+        const resDrawTime = document.getElementById('resDrawTime');
+
         modalOverlay.style.display = 'flex';
+        renderHistoryList(); // 打開時立刻渲染下方歷史紀錄
+
+        if (!doAnimate) {
+            // 如果不抽獎（純粹打開歷史紀錄查看），則讀取最新一筆紀錄顯示在上方
+            if (State.drawHistory.length > 0) {
+                const latest = State.drawHistory[0];
+                modalTitle.innerText = "🕒 " + d.historyBtn;
+                resSong.innerText = "✨ " + convertText(latest.song) + " ✨";
+                resArtist.innerText = "🎤 " + convertText(latest.artist);
+                modalBadge.innerText = `${d.songSeqPrefix}${latest.id}`;
+                modalBadge.style.display = 'inline-block';
+                resDrawSeq.innerHTML = `${d.drawSeqPrefix}<strong>#${latest.seq}</strong>${d.drawSeqSuffix}`;
+                resDrawTime.innerHTML = `${d.drawTimePrefix}<strong>${latest.time}</strong>`;
+                modalMetaBox.style.display = 'flex';
+            } else {
+                modalTitle.innerText = "🕒 " + d.historyBtn;
+                resSong.innerText = "...";
+                resArtist.innerText = "...";
+                modalBadge.style.display = 'none';
+                modalMetaBox.style.display = 'none';
+            }
+            return;
+        }
+
+        // 開始抽獎動畫
+        modalTitle.innerText = d.modalDrawing;
+        modalBadge.style.display = 'none';
+        modalMetaBox.style.display = 'none';
+        
         const delays = [30, 50, 100, 150, 300, 600, 1000];
         let currentStep = 0;
 
         function shuffle() {
             const tempSong = rawMusicData[Math.floor(Math.random() * rawMusicData.length)];
             resSong.innerText = convertText(tempSong.song);
-            resArtist.innerText = "歌手：" + convertText(tempSong.artist);
+            resArtist.innerText = convertText(tempSong.artist);
+            
             if (currentStep < delays.length - 1) {
                 setTimeout(shuffle, delays[currentStep]);
                 currentStep++;
             } else {
                 const finalSong = rawMusicData[Math.floor(Math.random() * rawMusicData.length)];
+                
+                // 累加並保存抽歌次數與歷史
+                State.drawCount += 1;
+                localStorage.setItem('drawCount', State.drawCount);
+                const nowStr = formatDateTime(new Date());
+
+                State.drawHistory.unshift({
+                    seq: State.drawCount,
+                    time: nowStr,
+                    song: finalSong.song,
+                    artist: finalSong.artist,
+                    id: finalSong.id
+                });
+                if(State.drawHistory.length > 50) State.drawHistory.pop(); // 最多保留50筆
+                localStorage.setItem('drawHistory', JSON.stringify(State.drawHistory));
+                
+                // 顯示抽到的歌曲、歌手
                 resSong.innerText = "✨ " + convertText(finalSong.song) + " ✨";
-                resArtist.innerText = "歌手：" + convertText(finalSong.artist);
+                resArtist.innerText = "🎤 " + convertText(finalSong.artist);
+                
+                // 顯示歌單序號 Badge
+                modalBadge.innerText = `${d.songSeqPrefix}${finalSong.id}`;
+                modalBadge.style.display = 'inline-block';
+
+                // 顯示抽歌序號與時間
+                resDrawSeq.innerHTML = `${d.drawSeqPrefix}<strong>#${State.drawCount}</strong>${d.drawSeqSuffix}`;
+                resDrawTime.innerHTML = `${d.drawTimePrefix}<strong>${nowStr}</strong>`;
+                modalMetaBox.style.display = 'flex';
+
                 modalTitle.innerText = d.modalWon;
+                
+                renderHistoryList(); // 更新歷史清單
                 fireConfetti();
             }
         }
         shuffle();
     }
+
+    // 點擊事件綁定
+    document.getElementById('randomBtn').addEventListener('click', () => startRandomDraw(true));
+    document.getElementById('retryBtn').addEventListener('click', () => startRandomDraw(true));
+    
+    // 點擊「抽歌紀錄」按鈕，打開視窗但不觸發抽歌動畫，只顯示最新一筆
+    document.getElementById('historyBtn').addEventListener('click', () => startRandomDraw(false));
+
+    document.getElementById('closeModal').addEventListener('click', () => modalOverlay.style.display = 'none');
+    
+    document.getElementById('clearHistoryBtn').addEventListener('click', () => {
+        const d = LANG_DICT[State.lang];
+        if (confirm(d.confirmClear)) {
+            State.drawHistory = [];
+            localStorage.removeItem('drawHistory');
+            renderHistoryList();
+            
+            // 清空後同步更新上方的顯示為空白狀態
+            document.getElementById('modalTitle').innerText = "🕒 " + d.historyBtn;
+            document.getElementById('resSong').innerText = "...";
+            document.getElementById('resArtist').innerText = "...";
+            document.getElementById('modalBadge').style.display = 'none';
+            document.getElementById('modalMetaBox').style.display = 'none';
+        }
+    });
 
     const observer = new IntersectionObserver((entries) => {
         if (entries[0].isIntersecting) {
@@ -728,9 +919,6 @@
 
     observer.observe(document.getElementById('loadMoreSentinel'));
 
-    document.getElementById('randomBtn').addEventListener('click', startRandomDraw);
-    document.getElementById('retryBtn').addEventListener('click', startRandomDraw);
-    document.getElementById('closeModal').addEventListener('click', () => modalOverlay.style.display = 'none');
     clearSearchBtn.addEventListener('click', () => { searchInput.value = ''; renderTable(); });
     document.getElementById('langToggle').addEventListener('click', switchLanguage);
 
