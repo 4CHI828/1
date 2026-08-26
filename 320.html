@@ -4,13 +4,16 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>静静在夏天🍔🎤⁰³²⁰線上歌單</title>
+    <!-- 引入 SortableJS 用於拖曳排序 -->
     <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
     <script>
+        // --- 配置與常量 ---
         const API_URL = 'https://script.google.com/macros/s/AKfycbw7NZWJ9J_C298PdmuivaKWEUARpiZ2BuaOTwwSb_xNjM9LyjQZhDtrcSD88eoWfj_F/exec'; 
         const ADMIN_NAME = "静静"; 
         const ADMIN_TOKEN_KEY = 'adminToken_v2';
         const CACHE_KEY = 'playlist_cache_v2';
         
+        // Emoji 分類列表
         const EMOJI_LIST = {
             '笑臉': ['😀','😃','😄','😁','😆','😅','😂','🤣','😊','😇','🙂','🙃','😉','😌','😍','🥰','😘','😗','😙','😚','😋','😛','😝','😜','🤪','🤨','🧐','🤓','😎','🤩','🥳','😏','😒','😞','😔','😟','😕','🙁','☹️','😣','😖','😫','😩','🥺','😢','😭','😤','😠','😡','🤬','😱','😨','😰','😥','😓','🤗','🤔','🤭','🤫','🤥','😶','😐','😑','😬','🙄','😯','😦','😧','😮','😲','🥱','😴','🤤','😪','😵','🤐','🥴','🤢','🤮','🤧','😷','🤒','🤕'],
             '手勢': ['👍','👎','👌','🤌','🤏','✌️','🤞','🤟','🤘','🤙','👈','👉','👆','🖕','👇','☝️','👋','🤚','🖐️','✋','🖖','👏','🙌','🤝','🙏','💪','🦾','🦵','🦿','🦶','👀','👁️','👅','👄'],
@@ -20,6 +23,20 @@
             '慶祝': ['🎉','🎊','🎈','🎁','🎀','🎗️','🎟️','🎫','✨','🌟','💫','⭐','🌠','🎇','🎆','🧨','🎐','🎏','🎑','🏆','🏅','🥇','🥈','🥉'],
             '自然': ['🌈','☀️','🌤️','⛅','🌥️','☁️','🌦️','🌧️','⛈️','🌩️','🌨️','❄️','☃️','⛄','🌬️','💨','🌪️','🌫️','🌊','💧','💦','☔','🌸','💮','🏵️','🌹','🥀','🌺','🌻','🌼','🌷','🌱','🌲','🌳','🌴','🌵']
         };
+
+        // --- 全局狀態變量 ---
+        let allSongs = [];
+        let filteredSongs = [];
+        let isDarkMode = localStorage.getItem('darkMode') === 'true';
+        let queueingLock = {}; // 用於防止重複點歌的鎖
+        let pendingAdminCallback = null;
+        let sortableInstance = null;
+        let isDraggingQueue = false;
+        let currentEmojiTarget = null;
+        let syncInterval;
+
+        // --- 初始化深色模式 ---
+        if (isDarkMode) document.body.classList.add('dark-mode');
     </script>
     <style>
         :root { --bg-color: #f4f6f8; --text-color: #2d3436; --card-bg: #ffffff; --primary: #ff6b6b; --primary-hover: #ee5253; --secondary: #48dbfb; --danger: #ff7675; --success: #55efc4; --warning: #fbc531; --border: #e1e4e8; --reply-bg: #f8f9fa; --accent-gold: #fbc531; --shadow-sm: 0 2px 8px rgba(0,0,0,0.04); --shadow-md: 0 4px 15px rgba(0,0,0,0.06); --shadow-lg: 0 10px 30px rgba(0,0,0,0.1); --radius-lg: 16px; --radius-md: 10px; --radius-sm: 8px; --transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1); }
@@ -77,7 +94,8 @@
         .queue-status-btn { background: none; border: none; font-size: 20px; cursor: pointer; transition: var(--transition); }
         .queue-status-btn:hover { transform: scale(1.3); }
         .queue-status-emoji { font-size: 20px; min-width: 28px; text-align: center; }
-        .queue-text { flex: 1; font-weight: 600; }
+        .queue-text { flex: 1; font-weight: 600; display: flex; flex-direction: column; }
+        .queue-time { font-size: 11px; color: #888; font-weight: normal; margin-top: 2px; }
         .queue-del-btn { background: none; border: none; color: #b2bec3; cursor: pointer; border-radius: 50%; transition: var(--transition); width: 30px; height: 30px; display: flex; align-items: center; justify-content: center; }
         .queue-del-btn:hover { color: white; background-color: var(--danger); }
         .queue-stats { display: flex; gap: 10px; font-size: 12px; color: var(--text-color); margin-bottom: 15px; flex-wrap: wrap; }
@@ -329,7 +347,7 @@
             <button id="addBtn" class="btn-add" onclick="addSong()">✨ 確認新增至雲端</button>
         </div>
         <div id="batchForm" style="display:none;">
-            <div class="form-group"><label>貼上清單 (支援逗號、減號或空格分隔)：</label><textarea id="batchInput" rows="6" placeholder="周杰倫,晴天&#10;林俊傑 - 修煉愛情&#10;陳奕迅 孤勇者"></textarea></div>
+            <div class="form-group"><label>貼上清單 (建議格式：歌手 - 歌名)：</label><textarea id="batchInput" rows="6" placeholder="周杰倫 - 晴天&#10;林俊傑 - 修煉愛情&#10;Taylor Swift - Love Story"></textarea></div>
             <button id="batchBtn" class="btn-add" onclick="batchAddSongs()">🚀 批量上傳至雲端</button>
         </div>
     </div>
@@ -363,43 +381,7 @@
     <div id="globalEmojiPanel" class="emoji-panel"></div>
 
     <script>
-        let allSongs = [];
-        let filteredSongs = [];
-        let isDarkMode = localStorage.getItem('darkMode') === 'true';
-        if (isDarkMode) document.body.classList.add('dark-mode');
-        document.getElementById('themeBtn').textContent = isDarkMode ? '☀️' : '🌙';
-
-        let visits = parseInt(localStorage.getItem('visitCount') || 0) + 1;
-        localStorage.setItem('visitCount', visits);
-        document.getElementById('visitCount').innerText = visits;
-
-        const cachedData = localStorage.getItem(CACHE_KEY);
-        if (cachedData) {
-            try {
-                const data = JSON.parse(cachedData);
-                if (data.songs && data.songs.length > 0) {
-                    allSongs = data.songs;
-                    renderAllData(data, true);
-                    showToast('🚀 已載入本地快取，正在背景更新...', 'info', 2000);
-                }
-            } catch (e) { console.error('Cache parse error', e); }
-        }
-
-        async function fetchWithRetry(url, options = {}, retries = 2, timeout = 10000) {
-            for (let i = 0; i <= retries; i++) {
-                try {
-                    const controller = new AbortController();
-                    const id = setTimeout(function() { controller.abort(); }, timeout);
-                    const res = await fetch(url, Object.assign({}, options, { signal: controller.signal }));
-                    clearTimeout(id);
-                    if (!res.ok) throw new Error('HTTP error! status: ' + res.status);
-                    return await res.json();
-                } catch (err) {
-                    if (i === retries) throw err;
-                    await new Promise(function(r) { setTimeout(r, 1000 * (i + 1)); });
-                }
-            }
-        }
+        // --- 工具函數 ---
 
         function debounce(func, wait) {
             let timeout;
@@ -435,6 +417,24 @@
             if (!url) return false;
             return /^https?:\/\//i.test(url);
         }
+
+        async function fetchWithRetry(url, options = {}, retries = 2, timeout = 10000) {
+            for (let i = 0; i <= retries; i++) {
+                try {
+                    const controller = new AbortController();
+                    const id = setTimeout(function() { controller.abort(); }, timeout);
+                    const res = await fetch(url, Object.assign({}, options, { signal: controller.signal }));
+                    clearTimeout(id);
+                    if (!res.ok) throw new Error('HTTP error! status: ' + res.status);
+                    return await res.json();
+                } catch (err) {
+                    if (i === retries) throw err;
+                    await new Promise(function(r) { setTimeout(r, 1000 * (i + 1)); });
+                }
+            }
+        }
+
+        // --- 管理員權限相關 ---
 
         function isAdmin() {
             const tokenDataStr = localStorage.getItem(ADMIN_TOKEN_KEY);
@@ -475,7 +475,17 @@
             }
         }
 
-        let pendingAdminCallback = null;
+        function requireAdmin(callback) {
+            if (isAdmin()) { 
+                callback(); 
+                return; 
+            }
+            pendingAdminCallback = callback;
+            if (confirm('⚠️ 此操作需要管理員權限，是否立即登入？')) {
+                loginAdmin();
+            }
+        }
+
         function loginAdmin() {
             if (isAdmin()) { showToast('您已經是管理員了！', 'info'); return; }
             const password = prompt('⚠️ 請輸入管理員密碼：\n(登入後 24 小時內免重複輸入)');
@@ -536,18 +546,7 @@
             document.getElementById('logoutBtn').style.display = isAdminMode ? 'inline-flex' : 'none';
         }
 
-        function requireAdmin(callback) {
-            if (isAdmin()) { 
-                callback(); 
-                return; 
-            }
-            pendingAdminCallback = callback;
-            if (confirm('⚠️ 此操作需要管理員權限，是否立即登入？')) {
-                loginAdmin();
-            }
-        }
-
-        updateAdminUI();
+        // --- UI 渲染與互動 ---
 
         function toggleDarkMode() {
             isDarkMode = !isDarkMode;
@@ -623,6 +622,8 @@
             hideSkeleton('requestSkeleton'); showElement('requestList');
         }
 
+        // --- 核心數據邏輯 ---
+
         function renderAllData(data, isCache) {
             if (data.status === 'success') {
                 allSongs = data.songs;
@@ -643,6 +644,7 @@
                         localStorage.setItem(CACHE_KEY, JSON.stringify(data));
                     } catch (e) {
                         console.warn('快取寫入失敗，可能是空間不足:', e);
+                        showToast('⚠️ 本地快取空間不足，部分數據可能未保存', 'warning');
                     }
                 }
             } else if (!isCache) {
@@ -651,17 +653,15 @@
         }
 
         let isFirstQueueRender = true;
-        let isDraggingQueue = false; // 用來紀錄是否正在拖曳
 
         function renderQueuePanel() {
-            if (isDraggingQueue) return; // 如果正在拖曳中，不重繪畫面
+            if (isDraggingQueue) return; // 如果正在拖曳中，不重繪畫面以避免干擾
 
             const queueSongs = allSongs.filter(function(s) { return s.status && s.status !== ''; });
             queueSongs.sort(function(a, b) {
                 const statusOrder = { 'singing': 0, 'queued': 1, 'done': 2 };
                 if (statusOrder[a.status] !== statusOrder[b.status]) return statusOrder[a.status] - statusOrder[b.status];
                 
-                // 確保 queueTime 是數字
                 const timeA = Number(a.queueTime) || 0;
                 const timeB = Number(b.queueTime) || 0;
                 if (timeA !== timeB) return timeA - timeB;
@@ -671,20 +671,24 @@
             const singingSongs = queueSongs.filter(function(s) { return s.status === 'singing'; });
             const queuedSongs = queueSongs.filter(function(s) { return s.status === 'queued'; });
             const doneSongs = queueSongs.filter(function(s) { return s.status === 'done'; });
+            
             document.getElementById('queueCount').innerText = queueSongs.length;
             const listEl = document.getElementById('queueList');
             hideSkeleton('queueSkeleton');
             showElement('queueList');
+            
             if (queueSongs.length === 0) {
                 listEl.innerHTML = '<div class="queue-empty" style="text-align:center; color:#888; padding:30px 10px;"><div style="font-size:40px; margin-bottom:10px;">🎵</div>目前沒有待唱歌曲<br><small style="color:#aaa;">點擊下方歌單的「歌曲名稱」即可加入！</small></div>';
                 isFirstQueueRender = true;
                 return;
             }
+            
             const isAdminMode = isAdmin();
             let html = '<div class="queue-stats">';
             html += '<span class="stat-singing">🎤 演唱中 ' + singingSongs.length + '</span>';
             html += '<span class="stat-queued">⏳ 排隊中 ' + queuedSongs.length + '</span>';
             html += '<span class="stat-done">✅ 已完成 ' + doneSongs.length + '</span></div>';
+            
             let currentIndex = 1;
             if (singingSongs.length > 0) {
                 html += '<div class="queue-section"><div class="queue-section-title singing">🎤 正在演唱</div>';
@@ -703,10 +707,19 @@
             }
             listEl.innerHTML = html;
             initSortable(isAdminMode);
+            
             if (isFirstQueueRender && singingSongs.length > 0) {
                 setTimeout(function() { scrollToCurrentSong(); }, 300);
                 isFirstQueueRender = false;
             }
+        }
+
+        function formatTime(timestamp) {
+            if (!timestamp) return '';
+            const date = new Date(Number(timestamp));
+            const hours = String(date.getHours()).padStart(2, '0');
+            const minutes = String(date.getMinutes()).padStart(2, '0');
+            return `${hours}:${minutes} 加入`;
         }
 
         function renderQueueItem(song, index, isAdminMode) {
@@ -715,16 +728,23 @@
             const songId = escapeHtml(String(song.id));
             const delBtn = isAdminMode ? '<button class="queue-del-btn" data-id="' + songId + '" onclick="removeFromQueue(this.dataset.id)" title="移出清單">✕</button>' : '';
             const statusBtn = isAdminMode ? '<button class="queue-status-btn" data-id="' + songId + '" onclick="cycleQueueStatus(this.dataset.id)" title="切換狀態">' + statusEmoji + '</button>' : '<span class="queue-status-emoji">' + statusEmoji + '</span>';
-            return '<div class="queue-item ' + song.status + '" data-id="' + songId + '"><span class="queue-index">' + index + '.</span>' + statusBtn + '<span class="queue-text">' + escapeHtml(song.artist) + ' - ' + escapeHtml(song.song) + '</span>' + delBtn + '</div>';
+            
+            // 增加時間顯示
+            const timeDisplay = song.queueTime ? `<div class="queue-time">${formatTime(song.queueTime)}</div>` : '';
+
+            return '<div class="queue-item ' + song.status + '" data-id="' + songId + '"><span class="queue-index">' + index + '.</span>' + statusBtn + '<div class="queue-text"><span>' + escapeHtml(song.artist) + ' - ' + escapeHtml(song.song) + '</span>' + timeDisplay + '</div>' + delBtn + '</div>';
         }
 
-        let sortableInstance;
         function initSortable(enableDrag) {
             const list = document.getElementById('queue-queued-list');
             if (sortableInstance) { sortableInstance.destroy(); sortableInstance = null; }
             if (!enableDrag || !list || typeof Sortable === 'undefined') return;
+            
             sortableInstance = Sortable.create(list, {
-                animation: 200, handle: '.queue-index', ghostClass: 'sortable-ghost', chosenClass: 'sortable-chosen',
+                animation: 200, 
+                handle: '.queue-index', 
+                ghostClass: 'sortable-ghost', 
+                chosenClass: 'sortable-chosen',
                 onStart: function() { isDraggingQueue = true; }, 
                 onEnd: function(evt) { 
                     isDraggingQueue = false; 
@@ -753,7 +773,6 @@
             const ids = Array.from(queuedList.querySelectorAll('.queue-item')).map(function(item) { return item.getAttribute('data-id'); });
             if (ids.length === 0) return;
             
-            // 將新的順序強制寫回本地端 allSongs
             const baseTime = Date.now();
             ids.forEach(function(id, index) {
                 const song = allSongs.find(function(s) { return String(s.id) === String(id); });
@@ -795,8 +814,17 @@
             });
         }
 
+        // --- 點歌邏輯 (含防抖鎖) ---
+
         function addToQueue(id) {
             if (!id) { showToast('⚠️ 此歌曲資料異常，請重新整理頁面', 'error'); return; }
+            
+            // 防止重複點擊
+            if (queueingLock[id]) {
+                showToast('⏳ 正在處理中...', 'info');
+                return;
+            }
+
             const song = allSongs.find(function(s) { return String(s.id) === String(id); });
             if (!song) { showToast('❌ 找不到這首歌曲，請重新整理', 'error'); return; }
             
@@ -814,13 +842,23 @@
                 return showToast('📍 ' + song.song + ' 已' + statusText, 'info', 2500);
             }
             
+            // 設置鎖
+            queueingLock[id] = true;
             song.status = 'queued';
             song.queueTime = Date.now();
             renderQueuePanel();
             showToast('🎤 已加入待唱: ' + song.song, 'success');
+            
             fetchWithRetry(API_URL, { method: 'POST', headers: { 'Content-Type': 'text/plain' }, body: JSON.stringify({ action: 'update_status', id: String(id), status: 'queued' }) })
-            .then(function(result) { if (result.status !== 'success') console.error('加入待唱後端失敗'); })
-            .catch(function(err) { showToast('❌ 加入失敗，請重試', 'error'); console.error(err); });
+            .then(function(result) { 
+                delete queueingLock[id]; // 釋放鎖
+                if (result.status !== 'success') console.error('加入待唱後端失敗'); 
+            })
+            .catch(function(err) { 
+                delete queueingLock[id]; // 釋放鎖
+                showToast('❌ 加入失敗，請重試', 'error'); 
+                console.error(err); 
+            });
         }
 
         function removeFromQueue(id) {
@@ -833,7 +871,8 @@
             });
         }
 
-        let currentEmojiTarget = null;
+        // --- Emoji 面板邏輯 ---
+
         const globalPanel = document.getElementById('globalEmojiPanel');
 
         function buildEmojiPanelHTML() {
@@ -924,6 +963,8 @@
                 document.querySelectorAll('.emoji-toggle-btn.active').forEach(function(b) { b.classList.remove('active'); });
             }
         });
+
+        // --- 留言系統 ---
 
         function renderRequests(requests) {
             const list = document.getElementById('requestList');
@@ -1023,6 +1064,8 @@
             });
         }
 
+        // --- 歌單渲染與過濾 ---
+
         function updateArtistFilter() {
             const select = document.getElementById('artistFilter');
             const currentVal = select.value;
@@ -1088,15 +1131,23 @@
             document.getElementById('randomSongInfo').innerHTML = '🎤 ' + escapeHtml(randomSong.artist) + '<br>🎵 ' + escapeHtml(randomSong.song) + '<br><span style="font-size:16px; color:#888; margin-top:10px; display:inline-block;">🔥 已被試聽 ' + (randomSong.clicks || 0) + ' 次</span>';
             document.getElementById('randomSongLink').href = link;
             document.getElementById('randomModal').style.display = 'flex';
+            
+            // 修正邏輯：無論狀態如何，都給予反饋
             if (randomSong.status !== 'queued' && randomSong.status !== 'singing' && randomSong.status !== 'done') {
                 randomSong.status = 'queued';
-                randomSong.queueTime = Date.now();
+                randomSong.queueTime = Date.now(); // 記錄抽到時間
                 renderQueuePanel();
                 fetchWithRetry(API_URL, { method: 'POST', headers: { 'Content-Type': 'text/plain' }, body: JSON.stringify({ action: 'update_status', id: String(randomSong.id), status: 'queued' }) })
-                .then(function(result) { if (result.status === 'success') showToast('🎲 抽中！已自動加入待唱清單', 'success'); })
+                .then(function(result) { 
+                    if (result.status === 'success') showToast('🎲 抽中！已自動加入待唱清單', 'success'); 
+                })
                 .catch(function(err) { console.error(err); });
-            } else { showToast('🎲 這首歌已經在待唱清單裡囉！', 'info'); }
+            } else {
+                showToast('🎲 這首歌已經在待唱清單裡囉！', 'info');
+            }
         }
+
+        // --- 新增與編輯歌曲 ---
 
         function addSong() {
             requireAdmin(function() {
@@ -1122,14 +1173,43 @@
                 const input = document.getElementById('batchInput').value.trim();
                 if (!input) { showToast('請貼上歌曲清單！', 'error'); return; }
                 const lines = input.split('\n').filter(function(line) { return line.trim() !== ''; });
+                
                 const songsToAdd = lines.map(function(line) {
                     let artist = '', song = '';
-                    if (line.indexOf(' - ') !== -1) { const parts = line.split(' - '); artist = parts[0].trim(); song = parts.slice(1).join(' - ').trim(); }
-                    else if (line.indexOf(',') !== -1) { const parts = line.split(','); artist = parts[0].trim(); song = parts.slice(1).join(',').trim(); }
-                    else { const match = line.match(/^(\S+)\s+(.*)$/); if (match) { artist = match[1].trim(); song = match[2].trim(); } else { artist = line.trim(); } }
+                    line = line.trim();
+                    
+                    // 優先匹配 " - "
+                    if (line.indexOf(' - ') !== -1) {
+                        const parts = line.split(' - ');
+                        artist = parts[0].trim();
+                        song = parts.slice(1).join(' - ').trim();
+                    } 
+                    // 其次匹配 ","
+                    else if (line.indexOf(',') !== -1) {
+                        const parts = line.split(',');
+                        artist = parts[0].trim();
+                        song = parts.slice(1).join(',').trim();
+                    } 
+                    // 最後嘗試智能分割 (處理英文名)
+                    else {
+                        const parts = line.split(/\s+/);
+                        if (parts.length >= 2) {
+                             artist = parts[0];
+                             song = parts.slice(1).join(' ');
+                        } else {
+                            artist = ''; 
+                            song = line;
+                        }
+                    }
+                    
+                    if (!artist && !song) return null;
+                    if (!artist) artist = '未知歌手';
+                    
                     return { artist: artist, song: song, link: '', tags: '' };
-                }).filter(function(s) { return s.artist && s.song; });
-                if (songsToAdd.length === 0) { showToast('格式錯誤！', 'error'); return; }
+                }).filter(function(s) { return s && s.song; });
+
+                if (songsToAdd.length === 0) { showToast('格式錯誤！建議使用「歌手 - 歌名」格式', 'error'); return; }
+                
                 const btn = document.getElementById('batchBtn');
                 btn.disabled = true; btn.innerText = '上傳中...';
                 fetchWithRetry(API_URL, { method: 'POST', headers: { 'Content-Type': 'text/plain' }, body: JSON.stringify({ action: 'batch_add', songs: songsToAdd, token: getAdminToken() }) })
@@ -1201,7 +1281,8 @@
             });
         }
 
-        let syncInterval;
+        // --- 數據載入與同步 ---
+
         function startAutoSync() {
             if (syncInterval) clearInterval(syncInterval);
             syncInterval = setInterval(function() { if (document.visibilityState === 'visible') loadPlaylistData(false); }, 30000);
@@ -1220,9 +1301,12 @@
 
         function manualRefresh() { showToast('🔄 正在重新整理...', 'info', 1500); loadPlaylistData(true); }
 
+        // --- 事件監聽與初始化 ---
+
         let touchStartY = 0; let touchStartX = 0; let isPulling = false;
         const pullIndicator = document.getElementById('pullRefreshIndicator');
         const pullText = document.getElementById('pullText');
+        
         document.addEventListener('touchstart', function(e) { 
             if (window.scrollY === 0) {
                 touchStartY = e.touches[0].clientY; 
@@ -1243,6 +1327,7 @@
         document.addEventListener('touchend', function() {
             if (isPulling) { pullText.innerText = '正在重新整理...'; manualRefresh(); setTimeout(function() { pullIndicator.classList.remove('active'); isPulling = false; }, 1000); }
         });
+        
         document.addEventListener('keydown', function(e) { if (e.key === 'Escape') { document.getElementById('randomModal').style.display = 'none'; document.getElementById('helpModal').style.display = 'none'; } });
         window.addEventListener('scroll', function() { document.getElementById('scrollTopBtn').style.display = window.scrollY > 300 ? 'flex' : 'none'; });
         
@@ -1250,11 +1335,34 @@
             const lastNick = localStorage.getItem('lastReplyNick');
             if (lastNick) document.getElementById('reqNick').value = lastNick;
             
+            // 初始化 UI 狀態
+            document.getElementById('themeBtn').textContent = isDarkMode ? '☀️' : '🌙';
+            updateAdminUI();
+            
+            // 計算訪問次數
+            let visits = parseInt(localStorage.getItem('visitCount') || 0) + 1;
+            localStorage.setItem('visitCount', visits);
+            document.getElementById('visitCount').innerText = visits;
+
+            // 嘗試從快取載入
+            const cachedData = localStorage.getItem(CACHE_KEY);
+            if (cachedData) {
+                try {
+                    const data = JSON.parse(cachedData);
+                    if (data.songs && data.songs.length > 0) {
+                        allSongs = data.songs;
+                        renderAllData(data, true);
+                        showToast('🚀 已載入本地快取，正在背景更新...', 'info', 2000);
+                    }
+                } catch (e) { console.error('Cache parse error', e); }
+            }
+
             initGlobalEmojiPanel();
             
             if (allSongs.length === 0) loadPlaylistData(true); else loadPlaylistData(false);
             startAutoSync();
         });
+        
         document.addEventListener('visibilitychange', function() { if (document.visibilityState === 'visible') loadPlaylistData(false); });
     </script>
 </body>
