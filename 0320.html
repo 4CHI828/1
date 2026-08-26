@@ -53,6 +53,11 @@
             transform: translate(-50%, -50%); will-change: top, left;
         }
 
+        /* 觸控設備隱藏光暈，避免殘影卡頓 */
+        @media (pointer: coarse) {
+            #cursor-glow { display: none !important; }
+        }
+
         .blob {
             position: fixed; width: 300px; height: 300px;
             background: var(--primary-glow); filter: blur(80px); border-radius: 50%;
@@ -238,7 +243,6 @@
             .container { padding: 20px 15px; border-radius: 30px; }
             h1 { font-size: 22px; }
             
-            /* 表格轉卡片 */
             table, thead, tbody, th, td, tr { display: block; }
             thead { display: none; }
             
@@ -432,6 +436,7 @@
 
     const HIGH_PITCH_SONGS = ["煎熬", "離歌", "我的美麗", "左手指月", "離不開你", "給你一點顏色", "煙火裡的塵埃"];
 
+    // 修正了部分錯字與統一了歌手名稱
     const musicList = [
         ["丁噹(Della)", "我愛他"], ["于文文", "體面"], ["小霞", "我的美麗"], ["尹露晞", "我叫長安你叫故里"],
         ["五月天", "你不是真正的快樂"], ["五月天", "突然好想你"], ["五月天", "盛夏光年"], ["井迪", "失控"],
@@ -448,7 +453,7 @@
         ["向思思", "總會有人"], ["曲婉婷", "我的歌聲裡"], ["朱俐靜", "存在的力量"], ["朴樹", "平凡之路"],
         ["江美琪", "親愛的你怎麼不在身邊"], ["江皓南", "之一而已"], ["江語晨", "最後一頁"], ["老王樂隊", "我還年輕我還年輕"],
         ["艾辰", "錯位時空"], ["何玉", "大東北我的家鄉"], ["吳克群", "為你寫詩"], ["吳青峰", "阿Q"],
-        ["吳青峰/蘇打錄", "起風了"], ["吳青峰/蘇打錄", "無與倫比的美麗"], ["告五人", "唯一"], ["告五人", "給你一瓶魔法藥水"],
+        ["吳青峰/蘇打綠", "起風了"], ["吳青峰/蘇打綠", "無與倫比的美麗"], ["告五人", "唯一"], ["告五人", "給你一瓶魔法藥水"],
         ["告五人", "愛人錯過"], ["告五人", "我想要佔據你"], ["告五人", "好不容易"], ["告五人", "披星戴月的想你"],
         ["告五人", "帶我去找夜生活"], ["宋冬野", "莉莉安"], ["宋冬野", "斑馬，斑馬"], ["宋冬野", "安和橋"],
         ["宋冬野", "郭源潮"], ["宋冬野", "董小姐"], ["岑寧兒", "追光者"], ["李谷一", "我和我的祖國"],
@@ -491,7 +496,7 @@
         ["徐佳瑩", "不捨"], ["徐佳瑩", "身騎白馬"], ["徐佳瑩", "失落沙洲"], ["徐佳瑩", "到此為止"],
         ["徐佳瑩", "行走的魚"], ["徐佳瑩", "一樣的月光"], ["徐問", "外面的世界"], ["時柏塵", "跳樓機"],
         ["烏蘭圖雅", "站在草原望北京"], ["神馬樂團", "愛河"], ["草東沒有派對", "山海"], ["袁婭維", "阿楚姑娘"],
-        ["逃跑計畫", "夜空中最亮的星"], ["逃跑計劃", "再見再見"], ["馬也", "海嶼你"], ["動力火車", "當"],
+        ["逃跑計劃", "夜空中最亮的星"], ["逃跑計劃", "再見再見"], ["馬也", "海嶼你"], ["動力火車", "當"],
         ["崔健", "假行僧"], ["庾澄慶", "春泥"], ["張杰", "這就是愛"], ["張杰", "天下"],
         ["張杰", "着魔"], ["張杰", "他不懂"], ["張杰", "逆戰"], ["張信哲", "用情"],
         ["張信哲", "過火"], ["張信哲", "愛如潮水"], ["張惠妹", "人質"], ["張惠妹", "連名帶姓"],
@@ -513,7 +518,7 @@
         ["陳奕迅", "淘汰"], ["陳姿彤", "我的世界"], ["陳粒", "任朝暮"], ["陳粒", "小半"],
         ["陳雪凝", "綠色"], ["陳詠桐", "說散就散"], ["陳勢安", "天后"], ["陳慧嫻", "千千闕歌"],
         ["陶喆", "找自己"], ["陶喆", "普通朋友"], ["陶喆", "愛我還是他"], ["陶喆", "Melody"],
-        ["陸虎", "雪落下的聲音"], ["鹿含", "致愛"], ["鹿晗", "我們的明天"], ["彭羚", "囚鳥"],
+        ["陸虎", "雪落下的聲音"], ["鹿晗", "致愛"], ["鹿晗", "我們的明天"], ["彭羚", "囚鳥"],
         ["曾沛慈", "一個人想著一個人"], ["華晨宇", "野人"], ["華晨宇", "煙火裡的塵埃"], ["菲道爾", "阿拉斯加海灣"],
         ["菲道爾", "在加納共和國離婚"], ["貳佰", "玫瑰"], ["黃詩扶", "夜奔"], ["黃綺珊", "離不開你"],
         ["黃綺珊/希林娜依高", "是媽媽是女兒"], ["黃霄雲", "星辰大海"], ["新聲一班", "心願"], ["楊乃文", "推開世界的門"],
@@ -549,11 +554,13 @@
     const rawMusicData = musicList.map((item, index) => ({ 
         id: index + 1, 
         artist: (item[0] && item[0].trim() !== "") ? item[0] : "其他", 
-        song: item[1] 
+        song: item[1],
+        // 加入唯一的 favKey，保護我的最愛紀錄不受未來歌單增減影響
+        favKey: `${item[0]}-${item[1]}` 
     }));
 
     const State = {
-        favorites: JSON.parse(localStorage.getItem('musicFavs')) || [],
+        favorites: JSON.parse(localStorage.getItem('musicFavsV2')) || [],
         currentArtist: "全部",
         theme: localStorage.getItem('theme') || 'light',
         lang: localStorage.getItem('preferred-lang') || 'zh-Hant',
@@ -561,6 +568,20 @@
         drawCount: parseInt(localStorage.getItem('drawCount') || '0'),
         drawHistory: JSON.parse(localStorage.getItem('drawHistory')) || []
     };
+
+    // 啟動時轉移舊版「數字ID」我的最愛到新版「字串ID」(如果有舊資料的話)
+    (function migrateFavorites() {
+        const oldFavs = JSON.parse(localStorage.getItem('musicFavs'));
+        if (oldFavs && oldFavs.length > 0 && !localStorage.getItem('musicFavsV2')) {
+            const newFavs = [];
+            oldFavs.forEach(oldId => {
+                const song = rawMusicData.find(s => s.id === oldId);
+                if(song) newFavs.push(song.favKey);
+            });
+            State.favorites = newFavs;
+            localStorage.setItem('musicFavsV2', JSON.stringify(State.favorites));
+        }
+    })();
 
     const musicBody = document.getElementById('musicBody');
     const searchInput = document.getElementById('searchInput');
@@ -622,8 +643,8 @@
     musicBody.addEventListener('click', (e) => {
         const favBtn = e.target.closest('.fav-btn');
         if (favBtn) {
-            const id = parseInt(favBtn.dataset.id);
-            toggleFavorite(id);
+            const favKey = favBtn.dataset.key;
+            toggleFavorite(favKey);
         }
     });
 
@@ -642,13 +663,13 @@
         if(span) span.innerText = personalVisits;
     }
 
-    function toggleFavorite(id) {
-        if (State.favorites.includes(id)) {
-            State.favorites = State.favorites.filter(fid => fid !== id);
+    function toggleFavorite(favKey) {
+        if (State.favorites.includes(favKey)) {
+            State.favorites = State.favorites.filter(fk => fk !== favKey);
         } else {
-            State.favorites.push(id);
+            State.favorites.push(favKey);
         }
-        localStorage.setItem('musicFavs', JSON.stringify(State.favorites));
+        localStorage.setItem('musicFavsV2', JSON.stringify(State.favorites));
         renderTable();
     }
 
@@ -672,9 +693,15 @@
         categoryTabs.innerHTML = tabsHTML;
     }
 
+    // 🚀 優化 1：正規表達式安全過濾，避免輸入特殊符號崩潰
+    function escapeRegExp(string) {
+        return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); 
+    }
+
     function highlight(text, term) {
         if (!term) return text;
-        const regex = new RegExp(`(${term})`, 'gi');
+        const safeTerm = escapeRegExp(term);
+        const regex = new RegExp(`(${safeTerm})`, 'gi');
         return text.replace(regex, `<mark>$1</mark>`);
     }
 
@@ -687,7 +714,7 @@
         let filtered = rawMusicData.filter(item => {
             const matchesSearch = item.artist.toLowerCase().includes(term) || item.song.toLowerCase().includes(term);
             let matchesArtist = (State.currentArtist === "全部") ? true : 
-                               (State.currentArtist === "收藏") ? State.favorites.includes(item.id) : 
+                               (State.currentArtist === "收藏") ? State.favorites.includes(item.favKey) : 
                                (State.currentArtist === "高音歌") ? HIGH_PITCH_SONGS.includes(item.song) : 
                                item.artist === State.currentArtist;
             return matchesSearch && matchesArtist;
@@ -707,7 +734,7 @@
             fragment.appendChild(tr);
         } else {
             slice.forEach((item, index) => {
-                const isFav = State.favorites.includes(item.id);
+                const isFav = State.favorites.includes(item.favKey);
                 const searchUrl = `https://www.youtube.com/results?search_query=${encodeURIComponent(item.artist + ' ' + item.song)}`;
                 const tr = document.createElement('tr');
                 tr.className = 'music-row';
@@ -717,7 +744,7 @@
                 const convSong = convertText(item.song);
 
                 tr.innerHTML = `
-                    <td class="col-fav"><button class="fav-btn ${isFav?'active':''}" data-id="${item.id}">❤</button></td>
+                    <td class="col-fav"><button class="fav-btn ${isFav?'active':''}" data-key="${item.favKey}">❤</button></td>
                     <td class="col-artist">${highlight(convArtist, term)}</td>
                     <td class="col-song"><a href="${searchUrl}" target="_blank" class="song-link">🎵 ${highlight(convSong, term)}</a></td>
                 `;
@@ -773,7 +800,6 @@
         return `${y}/${m}/${d} ${h}:${min}:${s}`;
     }
 
-    // 渲染歷史紀錄清單的方法
     function renderHistoryList() {
         const historyList = document.getElementById('historyList');
         const d = LANG_DICT[State.lang];
@@ -805,10 +831,9 @@
         const resDrawTime = document.getElementById('resDrawTime');
 
         modalOverlay.style.display = 'flex';
-        renderHistoryList(); // 打開時立刻渲染下方歷史紀錄
+        renderHistoryList(); 
 
         if (!doAnimate) {
-            // 如果不抽獎（純粹打開歷史紀錄查看），則讀取最新一筆紀錄顯示在上方
             if (State.drawHistory.length > 0) {
                 const latest = State.drawHistory[0];
                 modalTitle.innerText = "🕒 " + d.historyBtn;
@@ -829,7 +854,6 @@
             return;
         }
 
-        // 開始抽獎動畫
         modalTitle.innerText = d.modalDrawing;
         modalBadge.style.display = 'none';
         modalMetaBox.style.display = 'none';
@@ -848,7 +872,6 @@
             } else {
                 const finalSong = rawMusicData[Math.floor(Math.random() * rawMusicData.length)];
                 
-                // 累加並保存抽歌次數與歷史
                 State.drawCount += 1;
                 localStorage.setItem('drawCount', State.drawCount);
                 const nowStr = formatDateTime(new Date());
@@ -860,38 +883,31 @@
                     artist: finalSong.artist,
                     id: finalSong.id
                 });
-                if(State.drawHistory.length > 50) State.drawHistory.pop(); // 最多保留50筆
+                if(State.drawHistory.length > 50) State.drawHistory.pop(); 
                 localStorage.setItem('drawHistory', JSON.stringify(State.drawHistory));
                 
-                // 顯示抽到的歌曲、歌手
                 resSong.innerText = "✨ " + convertText(finalSong.song) + " ✨";
                 resArtist.innerText = "🎤 " + convertText(finalSong.artist);
                 
-                // 顯示歌單序號 Badge
                 modalBadge.innerText = `${d.songSeqPrefix}${finalSong.id}`;
                 modalBadge.style.display = 'inline-block';
 
-                // 顯示抽歌序號與時間
                 resDrawSeq.innerHTML = `${d.drawSeqPrefix}<strong>#${State.drawCount}</strong>${d.drawSeqSuffix}`;
                 resDrawTime.innerHTML = `${d.drawTimePrefix}<strong>${nowStr}</strong>`;
                 modalMetaBox.style.display = 'flex';
 
                 modalTitle.innerText = d.modalWon;
                 
-                renderHistoryList(); // 更新歷史清單
+                renderHistoryList(); 
                 fireConfetti();
             }
         }
         shuffle();
     }
 
-    // 點擊事件綁定
     document.getElementById('randomBtn').addEventListener('click', () => startRandomDraw(true));
     document.getElementById('retryBtn').addEventListener('click', () => startRandomDraw(true));
-    
-    // 點擊「抽歌紀錄」按鈕，打開視窗但不觸發抽歌動畫，只顯示最新一筆
     document.getElementById('historyBtn').addEventListener('click', () => startRandomDraw(false));
-
     document.getElementById('closeModal').addEventListener('click', () => modalOverlay.style.display = 'none');
     
     document.getElementById('clearHistoryBtn').addEventListener('click', () => {
@@ -901,7 +917,6 @@
             localStorage.removeItem('drawHistory');
             renderHistoryList();
             
-            // 清空後同步更新上方的顯示為空白狀態
             document.getElementById('modalTitle').innerText = "🕒 " + d.historyBtn;
             document.getElementById('resSong').innerText = "...";
             document.getElementById('resArtist').innerText = "...";
