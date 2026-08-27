@@ -53,7 +53,6 @@
             transform: translate(-50%, -50%); will-change: top, left;
         }
 
-        /* 觸控設備隱藏光暈，避免殘影卡頓 */
         @media (pointer: coarse) {
             #cursor-glow { display: none !important; }
         }
@@ -128,16 +127,9 @@
         .history-btn { padding: 0 25px; background: var(--card-bg); color: var(--primary); border: 2px solid var(--primary); border-radius: 30px; cursor: pointer; font-weight: 600; transition: var(--transition); }
         .history-btn:hover { background: var(--primary); color: white; }
 
-        /* Tab 優化：橫向捲動 */
         .category-tabs { 
-            display: flex; 
-            flex-wrap: nowrap; 
-            gap: 10px; 
-            justify-content: flex-start; 
-            margin-bottom: 25px; 
-            overflow-x: auto; 
-            padding-bottom: 10px;
-            -webkit-overflow-scrolling: touch;
+            display: flex; flex-wrap: nowrap; gap: 10px; justify-content: flex-start; 
+            margin-bottom: 25px; overflow-x: auto; padding-bottom: 10px; -webkit-overflow-scrolling: touch;
         }
         .category-tabs::-webkit-scrollbar { height: 4px; }
         .category-tabs::-webkit-scrollbar-thumb { background: var(--primary); border-radius: 10px; }
@@ -145,19 +137,15 @@
         .tab {
             padding: 8px 16px; background: var(--bg-color); border-radius: 20px;
             cursor: pointer; font-size: 13px; border: 1px solid var(--border-color); 
-            color: var(--text-color); transition: var(--transition);
-            white-space: nowrap;
+            color: var(--text-color); transition: var(--transition); white-space: nowrap;
         }
         .tab.active { background: var(--primary); color: white; transform: scale(1.05); box-shadow: 0 4px 10px var(--primary-glow); }
 
-        /* 表格基礎樣式 */
         .table-wrapper { width: 100%; overflow-x: auto; }
         table { width: 100%; border-collapse: collapse; }
         th { background: rgba(0,0,0,0.03); text-align: center; padding: 15px; color: #999; font-size: 14px; }
-        
         .music-row { opacity: 0; transform: translateY(15px); animation: rowSlideIn 0.4s ease forwards; }
         @keyframes rowSlideIn { to { opacity: 1; transform: translateY(0); } }
-
         td { padding: 12px 15px; border-bottom: 1px solid var(--border-color); text-align: center; }
         tr:hover td { background: rgba(255,118,117,0.05); }
 
@@ -168,7 +156,7 @@
         .song-link:hover { color: var(--primary); transform: scale(1.05); }
         mark { background-color: rgba(255, 118, 117, 0.3); color: inherit; border-radius: 3px; }
 
-        /* 整合後的彈窗樣式 */
+        /* 彈窗樣式 */
         .modal-overlay {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: rgba(0,0,0,0.7); display: none; align-items: center; justify-content: center;
@@ -178,8 +166,7 @@
             background: var(--card-bg); padding: 25px 20px; border-radius: 35px;
             text-align: center; animation: popUp 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
             max-width: 400px; width: 90%; box-shadow: 0 30px 60px rgba(0,0,0,0.4);
-            border: 1px solid rgba(255,255,255,0.2);
-            position: relative;
+            border: 1px solid rgba(255,255,255,0.2); position: relative;
             display: flex; flex-direction: column; max-height: 90vh;
         }
         @keyframes popUp { from { transform: scale(0.5); opacity: 0; } to { transform: scale(1); opacity: 1; } }
@@ -198,9 +185,20 @@
             border: 1px solid var(--border-color);
         }
 
-        .modal-actions { display: flex; flex-direction: row; gap: 10px; justify-content: center; margin-bottom: 15px; }
-        .close-btn { background: var(--accent-grad); color: white; border: none; padding: 12px 15px; border-radius: 30px; cursor: pointer; font-weight: 600; width: 48%; }
-        .retry-btn { background: var(--card-bg); color: var(--primary); border: 2px solid var(--primary); padding: 10px 15px; border-radius: 30px; cursor: pointer; font-weight: 600; width: 48%; }
+        .modal-actions { display: flex; flex-direction: row; gap: 10px; justify-content: center; margin-bottom: 15px; width: 100%; }
+        .close-btn { background: var(--accent-grad); color: white; border: none; padding: 12px 15px; border-radius: 30px; cursor: pointer; font-weight: 600; flex: 1; }
+        .retry-btn { background: var(--card-bg); color: var(--primary); border: 2px solid var(--primary); padding: 10px 15px; border-radius: 30px; cursor: pointer; font-weight: 600; flex: 1; }
+        
+        /* 手動停止按鈕的呼吸動畫 */
+        .stop-btn {
+            background: #ff4757 !important; color: white !important; font-size: 18px !important; width: 80% !important;
+            animation: pulseStop 1.2s infinite cubic-bezier(0.66, 0, 0, 1); margin: 0 auto;
+        }
+        @keyframes pulseStop {
+            0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(255, 71, 87, 0.6); }
+            70% { transform: scale(1.05); box-shadow: 0 0 0 15px rgba(255, 71, 87, 0); }
+            100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(255, 71, 87, 0); }
+        }
 
         /* 歷史紀錄列表樣式 */
         .history-section { flex: 1; display: flex; flex-direction: column; overflow: hidden; border-top: 1px dashed var(--border-color); padding-top: 15px; }
@@ -211,8 +209,7 @@
         
         .history-item {
             padding: 10px 12px; border-bottom: 1px solid var(--border-color);
-            background: rgba(0,0,0,0.02); border-radius: 12px; margin-bottom: 8px;
-            transition: var(--transition);
+            background: rgba(0,0,0,0.02); border-radius: 12px; margin-bottom: 8px; transition: var(--transition);
         }
         .history-item:hover { background: rgba(255, 118, 117, 0.05); }
         .history-time { font-size: 11px; opacity: 0.6; margin-bottom: 4px; }
@@ -220,9 +217,8 @@
         .history-artist { font-size: 12px; opacity: 0.8; }
 
         .fab-btn {
-            position: fixed; bottom: 30px; width: 55px; height: 55px;
-            border-radius: 50%; background: var(--accent-grad); color: white;
-            border: none; cursor: pointer; font-size: 22px; 
+            position: fixed; bottom: 30px; width: 55px; height: 55px; border-radius: 50%;
+            background: var(--accent-grad); color: white; border: none; cursor: pointer; font-size: 22px; 
             display: flex; align-items: center; justify-content: center; z-index: 99;
             box-shadow: 0 5px 15px rgba(0,0,0,0.2); transition: var(--transition);
         }
@@ -235,40 +231,20 @@
         .footer-credits { font-size: 12px; color: #bbb; text-align: center; margin-bottom: 30px; opacity: 0.6; }
         .footer-credits a { color: inherit; text-decoration: none; }
 
-        /* =========================================================================
-           4. 📱 響應式優化 (Mobile Optimization)
-           ========================================================================= */
         @media (max-width: 600px) {
             body { padding: 10px; }
             .container { padding: 20px 15px; border-radius: 30px; }
             h1 { font-size: 22px; }
-            
             table, thead, tbody, th, td, tr { display: block; }
             thead { display: none; }
-            
-            .music-row { 
-                margin-bottom: 15px; 
-                background: var(--card-bg); 
-                border: 1px solid var(--border-color); 
-                border-radius: 20px; 
-                padding: 10px; 
-                box-shadow: 0 4px 10px rgba(0,0,0,0.03);
-            }
-            .music-row td { 
-                border: none; 
-                padding: 8px; 
-                text-align: left; 
-                display: flex; 
-                align-items: center; 
-            }
+            .music-row { margin-bottom: 15px; background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 20px; padding: 10px; box-shadow: 0 4px 10px rgba(0,0,0,0.03); }
+            .music-row td { border: none; padding: 8px; text-align: left; display: flex; align-items: center; }
             .col-fav { justify-content: center; width: 40px; margin-right: -40px; position: absolute; right: 10px; top: 10px; }
             .col-artist { font-size: 13px; opacity: 0.7; color: var(--text-color); }
             .col-song { font-size: 16px; font-weight: 600; }
-            
             .controls-row { gap: 8px; }
             .search-wrapper { flex: 1 1 100%; }
             .random-btn, .history-btn { flex: 1; min-width: 45%; padding: 12px 10px; text-align: center; }
-            
             .fab-btn { width: 45px; height: 45px; font-size: 18px; }
             #themeToggle { left: 15px; }
             #langToggle { left: 15px; bottom: 80px; }
@@ -362,9 +338,16 @@
                 <div id="resDrawTime"></div>
             </div>
 
+            <!-- 操作按鈕區 -->
             <div class="modal-actions">
-                <button class="retry-btn" id="retryBtn">再抽一次 🎲</button>
-                <button class="close-btn" id="closeModal">太棒了！</button>
+                <!-- 手動停止按鈕 (抽獎進行時顯示) -->
+                <button class="close-btn stop-btn" id="stopBtn" style="display: none;">🛑 停！ (點擊停止)</button>
+                
+                <!-- 結果按鈕 (抽獎結束後顯示) -->
+                <div id="resultActions" style="display: flex; flex-direction: row; gap: 10px; justify-content: center; width: 100%;">
+                    <button class="retry-btn" id="retryBtn">再抽一次 🎲</button>
+                    <button class="close-btn" id="closeModal">太棒了！</button>
+                </div>
             </div>
         </div>
 
@@ -399,7 +382,7 @@
             thArtist: "歌手", thSong: "歌曲名稱 (點擊試聽)",
             footerVisit: "💖 你的造訪次數",
             credits: "新竹奇奇828製作",
-            modalClose: "太棒了！", modalRetry: "再抽一次 🎲",
+            modalClose: "太棒了！", modalRetry: "再抽一次 🎲", stopBtn: "🛑 停！ (點擊停止)",
             historyTitle: "🕒 抽歌歷史紀錄", historyEmpty: "尚無抽歌紀錄...", historyClear: "🗑️ 清空", confirmClear: "確定要清空所有抽歌紀錄嗎？",
             langBtn: "簡",
             mainTitle: "静静在夏天🍔🎤⁰³²⁰的歌單",
@@ -423,7 +406,7 @@
             thArtist: "歌手", thSong: "歌曲名称 (点击试听)",
             footerVisit: "💖 你的造访次数",
             credits: "新竹奇奇828制作",
-            modalClose: "太棒了！", modalRetry: "再抽一次 🎲",
+            modalClose: "太棒了！", modalRetry: "再抽一次 🎲", stopBtn: "🛑 停！ (点击停止)",
             historyTitle: "🕒 抽歌历史纪录", historyEmpty: "尚无抽歌纪录...", historyClear: "🗑️ 清空", confirmClear: "确定要清空所有抽歌纪录吗？",
             langBtn: "繁",
             mainTitle: "静静在夏天🍔🎤⁰³²⁰的歌单",
@@ -436,7 +419,6 @@
 
     const HIGH_PITCH_SONGS = ["煎熬", "離歌", "我的美麗", "左手指月", "離不開你", "給你一點顏色", "煙火裡的塵埃"];
 
-    // 修正了部分錯字與統一了歌手名稱
     const musicList = [
         ["丁噹(Della)", "我愛他"], ["于文文", "體面"], ["小霞", "我的美麗"], ["尹露晞", "我叫長安你叫故里"],
         ["五月天", "你不是真正的快樂"], ["五月天", "突然好想你"], ["五月天", "盛夏光年"], ["井迪", "失控"],
@@ -453,7 +435,7 @@
         ["向思思", "總會有人"], ["曲婉婷", "我的歌聲裡"], ["朱俐靜", "存在的力量"], ["朴樹", "平凡之路"],
         ["江美琪", "親愛的你怎麼不在身邊"], ["江皓南", "之一而已"], ["江語晨", "最後一頁"], ["老王樂隊", "我還年輕我還年輕"],
         ["艾辰", "錯位時空"], ["何玉", "大東北我的家鄉"], ["吳克群", "為你寫詩"], ["吳青峰", "阿Q"],
-        ["吳青峰/蘇打綠", "起風了"], ["吳青峰/蘇打綠", "無與倫比的美麗"], ["告五人", "唯一"], ["告五人", "給你一瓶魔法藥水"],
+        ["吳青峰/蘇打錄", "起風了"], ["吳青峰/蘇打錄", "無與倫比的美麗"], ["告五人", "唯一"], ["告五人", "給你一瓶魔法藥水"],
         ["告五人", "愛人錯過"], ["告五人", "我想要佔據你"], ["告五人", "好不容易"], ["告五人", "披星戴月的想你"],
         ["告五人", "帶我去找夜生活"], ["宋冬野", "莉莉安"], ["宋冬野", "斑馬，斑馬"], ["宋冬野", "安和橋"],
         ["宋冬野", "郭源潮"], ["宋冬野", "董小姐"], ["岑寧兒", "追光者"], ["李谷一", "我和我的祖國"],
@@ -496,7 +478,7 @@
         ["徐佳瑩", "不捨"], ["徐佳瑩", "身騎白馬"], ["徐佳瑩", "失落沙洲"], ["徐佳瑩", "到此為止"],
         ["徐佳瑩", "行走的魚"], ["徐佳瑩", "一樣的月光"], ["徐問", "外面的世界"], ["時柏塵", "跳樓機"],
         ["烏蘭圖雅", "站在草原望北京"], ["神馬樂團", "愛河"], ["草東沒有派對", "山海"], ["袁婭維", "阿楚姑娘"],
-        ["逃跑計劃", "夜空中最亮的星"], ["逃跑計劃", "再見再見"], ["馬也", "海嶼你"], ["動力火車", "當"],
+        ["逃跑計畫", "夜空中最亮的星"], ["逃跑計劃", "再見再見"], ["馬也", "海嶼你"], ["動力火車", "當"],
         ["崔健", "假行僧"], ["庾澄慶", "春泥"], ["張杰", "這就是愛"], ["張杰", "天下"],
         ["張杰", "着魔"], ["張杰", "他不懂"], ["張杰", "逆戰"], ["張信哲", "用情"],
         ["張信哲", "過火"], ["張信哲", "愛如潮水"], ["張惠妹", "人質"], ["張惠妹", "連名帶姓"],
@@ -518,7 +500,7 @@
         ["陳奕迅", "淘汰"], ["陳姿彤", "我的世界"], ["陳粒", "任朝暮"], ["陳粒", "小半"],
         ["陳雪凝", "綠色"], ["陳詠桐", "說散就散"], ["陳勢安", "天后"], ["陳慧嫻", "千千闕歌"],
         ["陶喆", "找自己"], ["陶喆", "普通朋友"], ["陶喆", "愛我還是他"], ["陶喆", "Melody"],
-        ["陸虎", "雪落下的聲音"], ["鹿晗", "致愛"], ["鹿晗", "我們的明天"], ["彭羚", "囚鳥"],
+        ["陸虎", "雪落下的聲音"], ["鹿含", "致愛"], ["鹿晗", "我們的明天"], ["彭羚", "囚鳥"],
         ["曾沛慈", "一個人想著一個人"], ["華晨宇", "野人"], ["華晨宇", "煙火裡的塵埃"], ["菲道爾", "阿拉斯加海灣"],
         ["菲道爾", "在加納共和國離婚"], ["貳佰", "玫瑰"], ["黃詩扶", "夜奔"], ["黃綺珊", "離不開你"],
         ["黃綺珊/希林娜依高", "是媽媽是女兒"], ["黃霄雲", "星辰大海"], ["新聲一班", "心願"], ["楊乃文", "推開世界的門"],
@@ -548,14 +530,50 @@
         ["BOBO", "光榮"], ["BY2", "愛丫愛丫"], ["BY2", "我知道"], ["EXO", "十二月的奇跡"],
         ["F.I.R", "我們的愛"], ["F.I.R", "Lydia"], ["F.I.R", "心之火"], ["Fine樂團", "呼吸決定"],
         ["JS", "殺破狼"], ["S.H.E", "Super Star"], ["TFBOYS", "寵愛"], ["TFBOYS", "魔法城堡"],
-        ["TFBOYS", "青春修煉手冊"], ["Vitas", "Opera #2"]
+        ["TFBOYS", "青春修煉手冊"], ["Vitas", "Opera #2"], ["HUSH", "第三人稱"], ["J.Sheon", "別問很可怕"],
+        ["TFBOYS", "快樂環島"], ["TFBOYS", "不完美小孩"], ["小時姑娘", "愛殤"], ["于冬然", "聽說你"],
+        ["五月天", "知足"], ["木頭", "复樂園"], ["牛奶咖啡", "咖喱咖喱"], ["王OK、洪佩瑜", "這條小魚在乎"],
+        ["王心凌", "Honey"], ["王心凌", "不哭"], ["王心凌", "黃昏曉"], ["王北車", "陷阱"],
+        ["王欣宇", "告白"], ["王傑", "忘了你忘了我"], ["王菲", "紅豆"], ["王雅潔", "QQ愛"],
+        ["王源", "雪崩"], ["王源", "驕傲"], ["王源", "世界上沒有真正的感同身受"], ["王麟", "要愛愛"],
+        ["王麟", "傷不起"], ["王睿卓", "茶花開了"], ["司南", "煙雨行舟"], ["田馥甄", "魔鬼中的天使"],
+        ["任素汐", "我要你"], ["任素汐", "親愛的你啊"], ["任然", "無人之島"], ["回春丹", "鮮花"],
+        ["曲婉婷", "最好的安排"], ["曲婉婷", "沒有什麼不同"], ["江皓南", "褪黑素"], ["艾薇", "絕美"],
+        ["何佳樂", "如此"], ["何野", "天亮以前說再見"], ["何潔", "你是我的風景"], ["吳青峰", "如果聲音不記得"],
+        ["李玉剛", "萬疆"], ["李昂星", "有譜"], ["李俊", "幕後者"], ["周杰倫", "烏克麗麗"],
+        ["周杰倫", "反方向的鐘"], ["周傳雄", "青花"], ["林志炫", "沒離開過"], ["林俊傑", "我還想她"],
+        ["林俊傑", "愛不會絕跡"], ["林俊傑", "愛笑的眼睛"], ["林俊傑", "不潮不用花錢"], ["林俊傑", "那些你很冒險的夢"],
+        ["林宥嘉", "浪費"], ["林宥嘉", "兜圈"], ["林宥嘉", "說謊"], ["林宥嘉", "殘酷月光"],
+        ["林倛玉", "同花順"], ["林倛玉", "一點一滴"], ["呦貓UNEKO", "夢迴還"], ["阿YueYue", "雲與海"],
+        ["花粥、王勝娚", "出山"], ["金志文", "流著淚說分手"], ["阿肆", "直到你降臨"], ["柯柯柯啊", "姑娘別哭泣"],
+        ["枯野樂隊", "三行情書"], ["柳爽", "漠河舞廳"], ["洛天依、樂正綾", "霜雪千年"], ["胡莎莎", "九兒"],
+        ["後海大鯊魚", "心要野"], ["范曉萱", "我要我們在一起"], ["郁可唯", "路過人間"], ["韋禮安", "狼"],
+        ["孫燕姿", "日落"], ["孫燕姿", "神奇"], ["孫燕姿", "逃亡"], ["祖海", "好運來"],
+        ["徐良、小凌", "客官不可以"], ["徐佳瑩", "大雨將至"], ["馬頔", "傲寒"], ["馬頔", "南山南"],
+        ["張杰", "千萬次想像"], ["張葉蕾", "還是分開"], ["張碧晨", "騙"], ["張碧晨", "胡桃夾子"],
+        ["張碧晨", "開往早晨的午夜"], ["張韶涵", "親愛的那不是愛情"], ["張震嶽", "小宇"], ["曹格", "寂寞先生"],
+        ["梁靜茹", "勇氣"], ["梁靜茹", "曖曖"], ["莫文蔚", "陰天"], ["莫文蔚", "電台情歌"],
+        ["莫文蔚", "慢慢喜歡你"], ["郭易", "星光下的夢想"], ["郭采潔", "I NEED YOU"], ["郭采潔", "愛人呢"],
+        ["郭采潔", "又圓了的月亮"], ["郭采潔", "我的未來式"], ["郭采潔、楊坤", "答案"], ["陳粒", "果實"],
+        ["陳雪凝", "你的酒館對我打了烊"], ["崔洋", "公主殿下"], ["凱瑟喵", "撒野"], ["單依純", "我表示理解"],
+        ["單依純", "想你時風起"], ["單依純", "像煙火愛過"], ["項睿嫻", "Dear D"], ["黃安", "新鴛鴦蝴蝶夢"],
+        ["黃齡", "星河嘆"], ["黃詩扶", "九萬字"], ["黃霄雲", "要不然我們就這樣一萬年"], ["華晨宇", "好想愛這個世界啊"],
+        ["楊冪", "愛的供養"], ["楊彥好", "出現又離開"], ["雷雨心", "紀念"], ["筷子兄弟", "老男孩"],
+        ["萬妮達", "算了"], ["萬能青年旅店", "殺死那個石家莊人"], ["葉炫清", "九張機"], ["虞書欣", "澎湃"],
+        ["隔壁老樊", "姬和不和"], ["夢飛船", "不值得"], ["福祿壽", "我用什麼把你留住"], ["趙紫騲", "一滴淚的時間"],
+        ["趙雷", "我記得"], ["趙雷", "程艾影"], ["趙露思", "好像掉進愛情海裡"], ["劉心", "雨過之後"],
+        ["劉惜君", "怎麼唱情歌"], ["鄧紫棋", "於是"], ["蔡依林", "Love Love Love"], ["蔡依林", "倒帶"],
+        ["蔡依林", "說愛你"], ["蔡依林", "日不落"], ["蔡依林", "愛情36計"], ["蔡依林", "我知道你很難過"],
+        ["蔡琴", "給電影人的情書"], ["歐得洋", "孤單北半球"], ["鄭潤澤", "瞬"], ["蕭亞軒", "錯的人"],
+        ["謝金燕", "月彎彎"], ["韓紅", "天亮了"], ["薛之謙", "天外來物"], ["薛之謙、張靚穎", "霸王別姬"],
+        ["薛凱琪", "剩下的你聽懂我嗎"], ["鞠婧褘", "嘆雲兮"], ["顏人中", "夏夜最後的煙火"], ["蘇運瑩", "時侯"],
+        ["王若琳", "有你的快樂"]
     ];
 
     const rawMusicData = musicList.map((item, index) => ({ 
         id: index + 1, 
-        artist: (item[0] && item[0].trim() !== "") ? item[0] : "其他", 
-        song: item[1],
-        // 加入唯一的 favKey，保護我的最愛紀錄不受未來歌單增減影響
+        artist: (item[0] && item[0].trim() !== "") ? item[0].trim() : "其他", 
+        song: item[1].trim(),
         favKey: `${item[0]}-${item[1]}` 
     }));
 
@@ -569,7 +587,6 @@
         drawHistory: JSON.parse(localStorage.getItem('drawHistory')) || []
     };
 
-    // 啟動時轉移舊版「數字ID」我的最愛到新版「字串ID」(如果有舊資料的話)
     (function migrateFavorites() {
         const oldFavs = JSON.parse(localStorage.getItem('musicFavs'));
         if (oldFavs && oldFavs.length > 0 && !localStorage.getItem('musicFavsV2')) {
@@ -626,6 +643,7 @@
         document.getElementById('credit-text').innerText = d.credits;
         document.getElementById('closeModal').innerText = d.modalClose;
         document.getElementById('retryBtn').innerText = d.modalRetry;
+        document.getElementById('stopBtn').innerText = d.stopBtn;
         document.getElementById('historyTitle').innerText = d.historyTitle;
         document.getElementById('clearHistoryBtn').innerText = d.historyClear;
         document.getElementById('langToggle').innerText = d.langBtn;
@@ -693,7 +711,6 @@
         categoryTabs.innerHTML = tabsHTML;
     }
 
-    // 🚀 優化 1：正規表達式安全過濾，避免輸入特殊符號崩潰
     function escapeRegExp(string) {
         return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); 
     }
@@ -820,6 +837,10 @@
         }
     }
 
+    // 手動抽歌控制邏輯
+    let drawInterval = null;
+    let isDrawing = false;
+
     function startRandomDraw(doAnimate = true) {
         const d = LANG_DICT[State.lang];
         const resSong = document.getElementById('resSong');
@@ -827,8 +848,8 @@
         const modalTitle = document.getElementById('modalTitle');
         const modalBadge = document.getElementById('modalBadge');
         const modalMetaBox = document.getElementById('modalMetaBox');
-        const resDrawSeq = document.getElementById('resDrawSeq');
-        const resDrawTime = document.getElementById('resDrawTime');
+        const stopBtn = document.getElementById('stopBtn');
+        const resultActions = document.getElementById('resultActions');
 
         modalOverlay.style.display = 'flex';
         renderHistoryList(); 
@@ -841,74 +862,99 @@
                 resArtist.innerText = "🎤 " + convertText(latest.artist);
                 modalBadge.innerText = `${d.songSeqPrefix}${latest.id}`;
                 modalBadge.style.display = 'inline-block';
-                resDrawSeq.innerHTML = `${d.drawSeqPrefix}<strong>#${latest.seq}</strong>${d.drawSeqSuffix}`;
-                resDrawTime.innerHTML = `${d.drawTimePrefix}<strong>${latest.time}</strong>`;
+                document.getElementById('resDrawSeq').innerHTML = `${d.drawSeqPrefix}<strong>#${latest.seq}</strong>${d.drawSeqSuffix}`;
+                document.getElementById('resDrawTime').innerHTML = `${d.drawTimePrefix}<strong>${latest.time}</strong>`;
                 modalMetaBox.style.display = 'flex';
+                stopBtn.style.display = 'none';
+                resultActions.style.display = 'flex';
             } else {
                 modalTitle.innerText = "🕒 " + d.historyBtn;
                 resSong.innerText = "...";
                 resArtist.innerText = "...";
                 modalBadge.style.display = 'none';
                 modalMetaBox.style.display = 'none';
+                stopBtn.style.display = 'none';
+                resultActions.style.display = 'flex';
             }
             return;
         }
 
+        // 開始無限滾動動畫
+        isDrawing = true;
         modalTitle.innerText = d.modalDrawing;
         modalBadge.style.display = 'none';
         modalMetaBox.style.display = 'none';
         
-        const delays = [30, 50, 100, 150, 300, 600, 1000];
-        let currentStep = 0;
-
-        function shuffle() {
+        // 切換按鈕狀態：顯示「停！」，隱藏結果按鈕
+        stopBtn.style.display = 'block';
+        resultActions.style.display = 'none';
+        
+        if (drawInterval) clearInterval(drawInterval);
+        
+        drawInterval = setInterval(() => {
             const tempSong = rawMusicData[Math.floor(Math.random() * rawMusicData.length)];
             resSong.innerText = convertText(tempSong.song);
             resArtist.innerText = convertText(tempSong.artist);
-            
-            if (currentStep < delays.length - 1) {
-                setTimeout(shuffle, delays[currentStep]);
-                currentStep++;
-            } else {
-                const finalSong = rawMusicData[Math.floor(Math.random() * rawMusicData.length)];
-                
-                State.drawCount += 1;
-                localStorage.setItem('drawCount', State.drawCount);
-                const nowStr = formatDateTime(new Date());
-
-                State.drawHistory.unshift({
-                    seq: State.drawCount,
-                    time: nowStr,
-                    song: finalSong.song,
-                    artist: finalSong.artist,
-                    id: finalSong.id
-                });
-                if(State.drawHistory.length > 50) State.drawHistory.pop(); 
-                localStorage.setItem('drawHistory', JSON.stringify(State.drawHistory));
-                
-                resSong.innerText = "✨ " + convertText(finalSong.song) + " ✨";
-                resArtist.innerText = "🎤 " + convertText(finalSong.artist);
-                
-                modalBadge.innerText = `${d.songSeqPrefix}${finalSong.id}`;
-                modalBadge.style.display = 'inline-block';
-
-                resDrawSeq.innerHTML = `${d.drawSeqPrefix}<strong>#${State.drawCount}</strong>${d.drawSeqSuffix}`;
-                resDrawTime.innerHTML = `${d.drawTimePrefix}<strong>${nowStr}</strong>`;
-                modalMetaBox.style.display = 'flex';
-
-                modalTitle.innerText = d.modalWon;
-                
-                renderHistoryList(); 
-                fireConfetti();
-            }
-        }
-        shuffle();
+        }, 60); // 快速閃爍切換
     }
+
+    // 點擊「停！」按鈕邏輯
+    document.getElementById('stopBtn').addEventListener('click', () => {
+        if (!isDrawing) return;
+        isDrawing = false;
+        clearInterval(drawInterval);
+
+        const d = LANG_DICT[State.lang];
+        const finalSong = rawMusicData[Math.floor(Math.random() * rawMusicData.length)];
+        
+        // 紀錄與結算
+        State.drawCount += 1;
+        localStorage.setItem('drawCount', State.drawCount);
+        const nowStr = formatDateTime(new Date());
+
+        State.drawHistory.unshift({
+            seq: State.drawCount,
+            time: nowStr,
+            song: finalSong.song,
+            artist: finalSong.artist,
+            id: finalSong.id
+        });
+        if(State.drawHistory.length > 50) State.drawHistory.pop(); 
+        localStorage.setItem('drawHistory', JSON.stringify(State.drawHistory));
+        
+        // 更新 UI 顯示最終結果
+        document.getElementById('resSong').innerText = "✨ " + convertText(finalSong.song) + " ✨";
+        document.getElementById('resArtist').innerText = "🎤 " + convertText(finalSong.artist);
+        
+        const modalBadge = document.getElementById('modalBadge');
+        modalBadge.innerText = `${d.songSeqPrefix}${finalSong.id}`;
+        modalBadge.style.display = 'inline-block';
+
+        document.getElementById('resDrawSeq').innerHTML = `${d.drawSeqPrefix}<strong>#${State.drawCount}</strong>${d.drawSeqSuffix}`;
+        document.getElementById('resDrawTime').innerHTML = `${d.drawTimePrefix}<strong>${nowStr}</strong>`;
+        document.getElementById('modalMetaBox').style.display = 'flex';
+
+        document.getElementById('modalTitle').innerText = d.modalWon;
+        
+        // 切換按鈕狀態：隱藏「停！」，顯示結果按鈕
+        document.getElementById('stopBtn').style.display = 'none';
+        document.getElementById('resultActions').style.display = 'flex';
+        
+        renderHistoryList(); 
+        fireConfetti();
+    });
 
     document.getElementById('randomBtn').addEventListener('click', () => startRandomDraw(true));
     document.getElementById('retryBtn').addEventListener('click', () => startRandomDraw(true));
     document.getElementById('historyBtn').addEventListener('click', () => startRandomDraw(false));
-    document.getElementById('closeModal').addEventListener('click', () => modalOverlay.style.display = 'none');
+    document.getElementById('closeModal').addEventListener('click', () => {
+        // 如果還在抽獎中卻關閉，則重置狀態
+        if (isDrawing) {
+            clearInterval(drawInterval);
+            isDrawing = false;
+        }
+        modalOverlay.style.display = 'none';
+    });
     
     document.getElementById('clearHistoryBtn').addEventListener('click', () => {
         const d = LANG_DICT[State.lang];
@@ -917,11 +963,13 @@
             localStorage.removeItem('drawHistory');
             renderHistoryList();
             
-            document.getElementById('modalTitle').innerText = "🕒 " + d.historyBtn;
-            document.getElementById('resSong').innerText = "...";
-            document.getElementById('resArtist').innerText = "...";
-            document.getElementById('modalBadge').style.display = 'none';
-            document.getElementById('modalMetaBox').style.display = 'none';
+            if (!isDrawing) {
+                document.getElementById('modalTitle').innerText = "🕒 " + d.historyBtn;
+                document.getElementById('resSong').innerText = "...";
+                document.getElementById('resArtist').innerText = "...";
+                document.getElementById('modalBadge').style.display = 'none';
+                document.getElementById('modalMetaBox').style.display = 'none';
+            }
         }
     });
 
