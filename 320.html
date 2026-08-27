@@ -30,9 +30,8 @@
         let isDraggingQueue = false;
         let currentEmojiTarget = null;
         let syncInterval;
-        let activeUpdatesCount = 0;
+        let activeUpdatesCount = 0; 
         
-        // 🔥 新增：隨機抽歌的動畫計時器
         let rollingInterval = null;
 
         if (isDarkMode) document.body.classList.add('dark-mode');
@@ -344,7 +343,6 @@
         </div>
     </div>
     
-    <!-- 🔥 修改：隨機抽歌 Modal 結構 -->
     <div id="randomModal" class="modal-overlay" onclick="if(event.target===this && !rollingInterval)this.style.display='none'">
         <div class="modal-content">
             <h2 style="color:var(--primary); margin-top:0; font-weight:800;">✨ 命運的選擇 ✨</h2>
@@ -353,10 +351,8 @@
                 準備抽獎...
             </div>
             
-            <!-- 手動停止按鈕 -->
             <button id="stopRollingBtn" class="btn-listen" onclick="stopRolling()" style="background: linear-gradient(45deg, #fbc531, #f39c12); width: 100%; max-width: 250px; font-size: 20px; display: none;">🛑 停！</button>
             
-            <!-- 抽中後的動作區塊 -->
             <div id="randomResultActions" style="display:none; width: 100%;">
                 <a id="randomSongLink" href="#" target="_blank" rel="noopener noreferrer" class="btn-listen" style="width: 100%; max-width: 250px; box-sizing: border-box; display: block; margin: 0 auto 15px auto;">🎵 立即試聽</a>
                 <div>
@@ -621,16 +617,21 @@
             hideSkeleton('requestSkeleton'); showElement('requestList');
         }
 
-        // 🔥 核心修正：加入本地記憶融合，防止排隊歌曲因為後端延遲而消失
+        // 🔥 核心防護：加入 15 秒本地更新保護機制
         function renderAllData(data, isCache) {
             if (data.status === 'success') {
                 const now = Date.now();
-                // 遍歷後端回傳的新資料
                 data.songs.forEach(function(newSong) {
                     const oldSong = allSongs.find(function(s) { return String(s.id) === String(newSong.id); });
                     if (oldSong) {
-                        // 如果這首歌在本地端「3 分鐘內」有加入排隊的紀錄，強制採用本地狀態
-                        if (oldSong.queueTime && (now - oldSong.queueTime < 180000)) {
+                        // 15 秒保護機制：只要這首歌在 15 秒內有任何本地操作，絕對信任本地端
+                        if (oldSong.localUpdateTime && (now - oldSong.localUpdateTime < 15000)) {
+                            newSong.status = oldSong.status;
+                            newSong.queueTime = oldSong.queueTime;
+                            newSong.localUpdateTime = oldSong.localUpdateTime;
+                        } 
+                        // 向下相容備用機制：3 分鐘內加入排隊的保護
+                        else if (oldSong.queueTime && (now - oldSong.queueTime < 180000) && !oldSong.localUpdateTime) {
                             newSong.status = oldSong.status;
                             newSong.queueTime = oldSong.queueTime;
                         }
@@ -651,11 +652,8 @@
                 document.getElementById('reqMessage').value = reqMsgVal;
                 
                 if (!isCache) { 
-                    try {
-                        localStorage.setItem(CACHE_KEY, JSON.stringify(data));
-                    } catch (e) {
-                        console.warn('快取寫入失敗，可能是空間不足:', e);
-                    }
+                    try { localStorage.setItem(CACHE_KEY, JSON.stringify(data)); } 
+                    catch (e) { console.warn('快取寫入失敗，可能是空間不足:', e); }
                 }
             } else if (!isCache) {
                 showToast('❌ 載入失敗: ' + (data.message || '未知錯誤'), 'error');
@@ -787,6 +785,7 @@
                 const song = allSongs.find(function(s) { return String(s.id) === String(id); });
                 if (song) {
                     song.queueTime = baseTime + (index * 100); 
+                    song.localUpdateTime = Date.now(); // 🔥 標記最後修改時間
                 }
             });
 
@@ -812,6 +811,7 @@
                 const originalQueueTime = song.queueTime;
                 
                 song.status = nextStatus;
+                song.localUpdateTime = Date.now(); // 🔥 標記最後修改時間
                 if (nextStatus === 'queued') song.queueTime = Date.now();
                 else if (nextStatus === '') song.queueTime = 0;
                 
@@ -839,10 +839,14 @@
             requireAdmin(function() {
                 if (!confirm('確定要清空所有待唱歌曲嗎？')) return;
                 
+                const backup = [];
+                // 🔥 立即本地更新 UI 並備份
                 allSongs.forEach(function(s) { 
                     if(s.status === 'queued' || s.status === 'singing' || s.status === 'done') {
+                        backup.push({ id: s.id, status: s.status, queueTime: s.queueTime });
                         s.status = ''; 
                         s.queueTime = 0; 
+                        s.localUpdateTime = Date.now(); // 🔥 標記最後修改時間
                     }
                 });
                 renderQueuePanel();
@@ -855,7 +859,17 @@
                 })
                 .catch(function(err) { 
                     activeUpdatesCount--;
-                    showToast('❌ 清空失敗，請重試', 'error'); console.error(err); 
+                    showToast('❌ 清空失敗，請檢查網路', 'error'); 
+                    // 🔥 API 失敗，將備份資料還原到畫面上
+                    backup.forEach(function(b) {
+                        const song = allSongs.find(function(s) { return String(s.id) === String(b.id); });
+                        if (song) {
+                            song.status = b.status;
+                            song.queueTime = b.queueTime;
+                            song.localUpdateTime = Date.now();
+                        }
+                    });
+                    renderQueuePanel();
                 });
             });
         }
@@ -889,6 +903,7 @@
             
             song.status = 'queued';
             song.queueTime = Date.now();
+            song.localUpdateTime = Date.now(); // 🔥 標記最後修改時間
             renderQueuePanel();
             showToast('🎤 已加入待唱: ' + song.song, 'success');
             
@@ -925,7 +940,12 @@
                 const originalStatus = song ? song.status : '';
                 const originalQueueTime = song ? song.queueTime : 0;
                 
-                if (song) { song.status = ''; song.queueTime = 0; renderQueuePanel(); }
+                if (song) { 
+                    song.status = ''; 
+                    song.queueTime = 0; 
+                    song.localUpdateTime = Date.now(); // 🔥 標記最後修改時間
+                    renderQueuePanel(); 
+                }
                 
                 activeUpdatesCount++;
                 fetchWithRetry(API_URL, { method: 'POST', headers: { 'Content-Type': 'text/plain' }, body: JSON.stringify({ action: 'update_status', id: String(id), status: '', token: getAdminToken() }) })
@@ -935,7 +955,7 @@
                 })
                 .catch(function(err) { 
                     activeUpdatesCount--;
-                    showToast('❌ 移出失敗，請重試', 'error'); console.error(err);
+                    showToast('❌ 移出失敗，請重試', 'error');
                     if (song) {
                         song.status = originalStatus;
                         song.queueTime = originalQueueTime;
@@ -945,7 +965,6 @@
             });
         }
 
-        // 🔥 新增：隨機抽獎動畫邏輯
         function pickRandomSong() {
             if (allSongs.length === 0) { showToast('目前沒有歌曲！', 'error'); return; }
             
@@ -955,18 +974,15 @@
             
             if (rollingInterval) clearInterval(rollingInterval);
             
-            // 過濾掉已經在排隊中的歌，讓抽獎更有意義
             const availableSongs = allSongs.filter(function(s) { return s.status !== 'queued' && s.status !== 'singing' && s.status !== 'done'; });
             const pool = availableSongs.length > 0 ? availableSongs : allSongs;
 
-            // 啟動極速滾動動畫 (每 60 毫秒換一首歌)
             rollingInterval = setInterval(function() {
                 const tempSong = pool[Math.floor(Math.random() * pool.length)];
                 document.getElementById('randomSongInfo').innerHTML = '🎤 ' + escapeHtml(tempSong.artist) + '<br>🎵 ' + escapeHtml(tempSong.song);
             }, 60);
         }
 
-        // 🔥 新增：手動停止動畫並開獎
         function stopRolling() {
             if (!rollingInterval) return;
             clearInterval(rollingInterval);
@@ -984,7 +1000,6 @@
             document.getElementById('randomSongInfo').innerHTML = '🎤 ' + escapeHtml(finalSong.artist) + '<br>🎵 ' + escapeHtml(finalSong.song) + '<br><span style="font-size:16px; color:#888; margin-top:10px; display:inline-block;">🔥 已被試聽 ' + (finalSong.clicks || 0) + ' 次</span>';
             document.getElementById('randomSongLink').href = link;
 
-            // 如果抽出的是還沒排隊的歌，直接加入排隊 (樂觀 UI)
             if (finalSong.status !== 'queued' && finalSong.status !== 'singing' && finalSong.status !== 'done') {
                 showToast('🎲 抽中！已自動加入待唱清單', 'success');
                 
@@ -994,6 +1009,7 @@
                 activeUpdatesCount++; 
                 finalSong.status = 'queued';
                 finalSong.queueTime = Date.now();
+                finalSong.localUpdateTime = Date.now(); // 🔥 標記最後修改時間
                 renderQueuePanel();
                 
                 const payload = { action: 'update_status', id: String(finalSong.id), status: 'queued' };
