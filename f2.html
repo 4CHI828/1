@@ -3,9 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>福岡6天5夜行程表 (手機易讀版)</title>
+    <title>福岡6天5夜行程表 (手機易讀大字版)</title>
     <style>
         :root {
+            --font-scale: 1;
             --bg-body: #f8fafc;
             --bg-container: #ffffff;
             --bg-card: #ffffff;
@@ -42,6 +43,7 @@
         }
 
         * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        html { scroll-behavior: smooth; font-size: calc(16px * var(--font-scale)); }
         
         body {
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans TC", "Microsoft JhengHei", sans-serif;
@@ -49,7 +51,7 @@
             color: var(--text-primary);
             line-height: 1.6;
             padding: 12px;
-            padding-bottom: 85px; /* 為底部導航留出空間 */
+            padding-bottom: 85px; /* 為底部導航保留空間 */
             transition: background-color 0.3s, color 0.3s;
         }
 
@@ -61,7 +63,7 @@
         /* 頂部 Header 卡片 */
         .header-card {
             background: var(--bg-container);
-            padding: 20px 16px;
+            padding: 18px 16px;
             border-radius: var(--radius-lg);
             box-shadow: var(--shadow-sm);
             margin-bottom: 12px;
@@ -69,7 +71,7 @@
             border: 1px solid var(--border-color);
         }
         .header-title {
-            font-size: 22px;
+            font-size: 1.45rem;
             font-weight: 800;
             display: flex;
             align-items: center;
@@ -77,35 +79,63 @@
         }
         .header-sub {
             color: var(--text-secondary);
-            font-size: 13.5px;
+            font-size: 0.9rem;
             font-weight: 500;
             margin-top: 2px;
         }
 
         .top-btns {
             position: absolute;
-            top: 18px;
+            top: 16px;
             right: 14px;
             display: flex;
-            gap: 8px;
+            align-items: center;
+            gap: 6px;
         }
+
+        /* 字級縮放按鈕組 */
+        .font-btn-group {
+            display: inline-flex;
+            border: 1.5px solid var(--primary);
+            border-radius: 20px;
+            overflow: hidden;
+            background: var(--bg-sub);
+        }
+        .font-btn {
+            background: transparent;
+            border: none;
+            padding: 5px 9px;
+            font-size: 0.82rem;
+            font-weight: 800;
+            color: var(--primary);
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .font-btn:hover, .font-btn:active {
+            background: var(--primary);
+            color: var(--text-light);
+        }
+        .font-btn:first-child {
+            border-right: 1px solid var(--border-color);
+        }
+
         .icon-btn {
             background: var(--bg-sub);
             border: 1px solid var(--border-color);
-            width: 36px;
-            height: 36px;
+            width: 34px;
+            height: 34px;
             border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 15px;
+            font-size: 0.95rem;
             cursor: pointer;
             color: var(--text-primary);
             transition: transform 0.1s;
         }
         .icon-btn:active { transform: scale(0.92); }
 
-        /* 快捷水平滑動天數列 */
+        /* 吸頂橫向快速導航標籤 */
         .day-nav-wrapper {
             position: sticky;
             top: 0;
@@ -126,12 +156,13 @@
             background: var(--bg-container);
             color: var(--text-primary);
             border: 1px solid var(--border-color);
-            padding: 7px 13px;
+            padding: 7px 14px;
             border-radius: 20px;
-            font-size: 12.5px;
-            font-weight: 600;
+            font-size: 0.9rem;
+            font-weight: 700;
             text-decoration: none;
             box-shadow: var(--shadow-sm);
+            cursor: pointer;
         }
         .day-chip:active { background: var(--primary); color: white; }
 
@@ -149,10 +180,10 @@
             align-items: flex-start;
             gap: 10px;
             margin-bottom: 12px;
-            font-size: 13.5px;
+            font-size: 0.95rem;
         }
         .info-row:last-child { margin-bottom: 0; }
-        .info-icon { font-size: 18px; flex-shrink: 0; margin-top: 1px; }
+        .info-icon { font-size: 1.2rem; flex-shrink: 0; margin-top: 1px; }
 
         /* 倒數看板 */
         .countdown-grid {
@@ -165,11 +196,39 @@
             background: var(--bg-container);
             border: 1px solid var(--border-color);
             border-radius: var(--radius-md);
-            padding: 12px;
+            padding: 12px 10px;
             text-align: center;
         }
-        .cd-title { font-size: 12px; color: var(--text-secondary); font-weight: 600; }
-        .cd-timer { font-size: 15px; font-weight: 800; color: var(--accent-red); margin-top: 4px; font-family: monospace; }
+        .cd-title { font-size: 0.85rem; color: var(--text-secondary); font-weight: 600; }
+        .cd-timer { font-size: 1.05rem; font-weight: 800; color: var(--accent-red); margin-top: 4px; font-family: monospace; }
+
+        /* 常用快捷按鈕列 */
+        .action-row {
+            display: flex;
+            gap: 6px;
+            margin: 12px 0;
+            flex-wrap: wrap;
+        }
+        .action-row .btn {
+            flex: 1;
+            min-width: 85px;
+            padding: 8px 10px;
+            font-size: 0.88rem;
+            border-radius: var(--radius-sm);
+            text-align: center;
+            border: none;
+            cursor: pointer;
+            text-decoration: none;
+            font-weight: 600;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 4px;
+        }
+        .btn-blue { background: var(--primary); color: white; }
+        .btn-gradient { background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%); color: white; }
+        .btn-secondary { background: var(--bg-sub); color: var(--text-primary); border: 1px solid var(--border-color); }
+        .btn-excel { background: #107c41; color: white; }
 
         /* 行程摺疊卡片 */
         details {
@@ -181,8 +240,8 @@
             box-shadow: var(--shadow-sm);
         }
         summary {
-            padding: 14px 16px;
-            font-size: 15.5px;
+            padding: 15px 16px;
+            font-size: 1.1rem;
             font-weight: 700;
             list-style: none;
             display: flex;
@@ -199,15 +258,15 @@
         summary::-webkit-details-marker { display: none; }
         summary::after {
             content: '＋';
-            font-size: 15px;
+            font-size: 1.05rem;
             font-weight: bold;
             color: var(--primary);
         }
         details[open] summary::after { content: '－'; }
 
-        .day-body { padding: 14px; }
+        .day-body { padding: 14px 12px; }
 
-        /* 卡片式時間軸節點 */
+        /* 手機易讀時間軸節點 */
         .timeline {
             position: relative;
             padding-left: 18px;
@@ -238,31 +297,35 @@
             border: 2px solid var(--bg-container);
         }
         .tl-time {
-            font-size: 12.5px;
+            font-size: 0.95rem;
             font-weight: 800;
             color: var(--primary);
             font-family: monospace;
             display: inline-block;
-            margin-bottom: 2px;
+            margin-bottom: 4px;
+            background: var(--bg-sub);
+            padding: 2px 8px;
+            border-radius: 4px;
         }
         .tl-content {
-            font-size: 14px;
-            line-height: 1.5;
+            font-size: 1.05rem;
+            line-height: 1.65;
             color: var(--text-primary);
         }
         .tl-desc {
-            font-size: 12.5px;
+            font-size: 0.92rem;
             color: var(--text-secondary);
             margin-top: 4px;
+            line-height: 1.55;
         }
 
         /* 標籤與提示塊 */
         .badge {
             display: inline-flex;
             align-items: center;
-            padding: 2px 7px;
+            padding: 3px 8px;
             border-radius: 5px;
-            font-size: 11.5px;
+            font-size: 0.85rem;
             font-weight: 600;
             margin-right: 4px;
             margin-top: 4px;
@@ -275,15 +338,25 @@
             background: var(--bg-sub);
             border-left: 4px solid var(--primary);
             border-radius: var(--radius-sm);
-            padding: 10px 12px;
-            font-size: 13px;
-            margin: 10px 0;
-            line-height: 1.5;
+            padding: 12px 14px;
+            font-size: 0.95rem;
+            margin: 12px 0;
+            line-height: 1.6;
         }
         .callout-warn { border-left-color: var(--accent-amber); background: #fefce8; color: #713f12; }
         .callout-success { border-left-color: var(--accent-green); background: #f0fdf4; color: #14532d; }
         [data-theme="dark"] .callout-warn { background: #3b2a1a; color: #fde047; }
         [data-theme="dark"] .callout-success { background: #143224; color: #86efac; }
+
+        .sub-card {
+            background: var(--bg-sub);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-sm);
+            padding: 12px;
+            margin: 10px 0;
+            font-size: 0.92rem;
+        }
+        .sub-card h4 { font-size: 1rem; margin-bottom: 6px; color: var(--primary); }
 
         /* 地圖導航連結按鈕 */
         .map-btn {
@@ -292,61 +365,13 @@
             gap: 2px;
             background: var(--primary-light);
             color: var(--primary);
-            padding: 2px 7px;
+            padding: 3px 8px;
             border-radius: 5px;
             text-decoration: none;
-            font-size: 11.5px;
+            font-size: 0.85rem;
             font-weight: 600;
             margin-left: 4px;
         }
-
-        /* 快捷按鈕列 */
-        .action-row {
-            display: flex;
-            gap: 6px;
-            margin: 12px 0;
-            flex-wrap: wrap;
-        }
-        .action-row .btn {
-            flex: 1;
-            min-width: 90px;
-            padding: 8px 10px;
-            font-size: 12.5px;
-            border-radius: var(--radius-sm);
-            text-align: center;
-            border: none;
-            cursor: pointer;
-            text-decoration: none;
-            font-weight: 600;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            gap: 4px;
-        }
-        .btn-blue { background: var(--primary); color: white; }
-        .btn-gradient { background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%); color: white; }
-        .btn-secondary { background: var(--bg-sub); color: var(--text-primary); border: 1px solid var(--border-color); }
-        .btn-excel { background: #107c41; color: white; }
-
-        /* 表格包裝 */
-        .table-wrap {
-            overflow-x: auto;
-            margin: 10px 0;
-            border-radius: var(--radius-sm);
-            border: 1px solid var(--border-color);
-        }
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            font-size: 12.5px;
-            white-space: nowrap;
-        }
-        th, td {
-            padding: 8px 10px;
-            text-align: left;
-            border-bottom: 1px solid var(--border-color);
-        }
-        th { background: var(--bg-sub); font-weight: 600; color: var(--text-secondary); }
 
         /* 互動記帳本 */
         .budget-box {
@@ -369,14 +394,14 @@
             border: 1px solid var(--border-color);
             background: var(--bg-sub);
             color: var(--text-primary);
-            font-size: 13.5px;
+            font-size: 0.95rem;
         }
         .rate-wrapper {
             display: flex;
             align-items: center;
             gap: 6px;
         }
-        .rate-status { font-size: 12px; color: var(--accent-green); font-weight: 600; }
+        .rate-status { font-size: 0.88rem; color: var(--accent-green); font-weight: 600; }
         .refresh-rate-btn {
             background: var(--bg-sub);
             border: 1px solid var(--border-color);
@@ -399,20 +424,20 @@
             border: none;
             padding: 12px;
             border-radius: var(--radius-sm);
-            font-size: 14.5px;
+            font-size: 1rem;
             font-weight: 700;
             cursor: pointer;
             margin-top: 4px;
         }
         .btn-main:active { opacity: 0.9; }
 
-        /* 底部固定操作列 (App-like Bottom Navigation) */
+        /* 底部固定快捷操作列 (App-like Bottom Navigation) */
         .bottom-bar {
             position: fixed;
             bottom: 0;
             left: 0;
             right: 0;
-            height: 60px;
+            height: 64px;
             background: var(--bg-container);
             border-top: 1px solid var(--border-color);
             display: flex;
@@ -420,7 +445,7 @@
             align-items: center;
             z-index: 50;
             padding-bottom: env(safe-area-inset-bottom);
-            box-shadow: 0 -4px 12px rgba(0,0,0,0.06);
+            box-shadow: 0 -4px 12px rgba(0,0,0,0.08);
         }
         .nav-item {
             display: flex;
@@ -429,15 +454,19 @@
             justify-content: center;
             color: var(--text-secondary);
             text-decoration: none;
-            font-size: 11px;
-            font-weight: 600;
+            font-size: 0.78rem;
+            font-weight: 700;
             gap: 2px;
             flex: 1;
             height: 100%;
             cursor: pointer;
         }
         .nav-item:active { color: var(--primary); }
-        .nav-item span { font-size: 18px; }
+        .nav-item span { font-size: 1.25rem; }
+
+        /* 清單多選框加大 */
+        .todo-check { transform: scale(1.35); margin-right: 10px; }
+        .todo-label { font-size: 0.95rem; line-height: 2.1; cursor: pointer; }
 
         /* Toast 浮動通知 */
         #toast {
@@ -453,7 +482,7 @@
             left: 50%;
             bottom: 75px;
             transform: translateX(-50%);
-            font-size: 13px;
+            font-size: 0.9rem;
             opacity: 0;
             transition: opacity 0.3s;
         }
@@ -461,15 +490,19 @@
 
         @keyframes spin { 100% { transform: rotate(360deg); } }
     </style>
-<base target="_blank">
 </head>
 <body>
 
-    <div class="container">
+    <div class="container" id="page-top">
         
         <!-- 頂部 Header -->
         <div class="header-card">
             <div class="top-btns">
+                <!-- A- / A+ 字級縮放按鈕 -->
+                <div class="font-btn-group" title="調整字體大小">
+                    <button class="font-btn" id="fontDecBtn" title="字體縮小">A-</button>
+                    <button class="font-btn" id="fontIncBtn" title="字體放大">A+</button>
+                </div>
                 <button class="icon-btn" id="pageRefreshBtn" title="重新整理">🔄</button>
                 <button class="icon-btn" id="themeToggle" title="深色模式">🌙</button>
             </div>
@@ -477,14 +510,14 @@
             <div class="header-sub">2026年9月16日 (三) – 9月21日 (一)</div>
         </div>
 
-        <!-- 吸頂橫向快速導航標籤 -->
+        <!-- 吸頂橫向快速導航標籤 (原地跳轉) -->
         <div class="day-nav-wrapper">
-            <a href="#day1" class="day-chip">D1 抵達/南藏院</a>
-            <a href="#day2" class="day-chip">D2 由布院之森</a>
-            <a href="#day3" class="day-chip">D3 貓島/放生會</a>
-            <a href="#day4" class="day-chip">D4 太宰府/柳川</a>
-            <a href="#day5" class="day-chip">D5 鋼彈/糸島</a>
-            <a href="#day6" class="day-chip">D6 大濠/返台</a>
+            <div class="day-chip" data-jump="day1">D1 抵達/南藏院</div>
+            <div class="day-chip" data-jump="day2">D2 由布院之森</div>
+            <div class="day-chip" data-jump="day3">D3 貓島/放生會</div>
+            <div class="day-chip" data-jump="day4">D4 太宰府/柳川</div>
+            <div class="day-chip" data-jump="day5">D5 鋼彈/糸島</div>
+            <div class="day-chip" data-jump="day6">D6 大濠/返台</div>
         </div>
 
         <!-- 航班與住宿快速資訊 -->
@@ -493,7 +526,7 @@
                 <div class="info-icon">✈️</div>
                 <div>
                     <strong>長榮航空 (代號: <span style="color:var(--accent-red); cursor:pointer;" data-copy="FCD249">FCD249 📋</span>)</strong><br>
-                    <span style="font-size:12.5px; color:var(--text-secondary);">
+                    <span style="font-size:0.88rem; color:var(--text-secondary);">
                         去程 9/16 BR106 08:00 ➔ 11:20 抵達福岡<br>
                         回程 9/21 BR101 19:20 ➔ 20:45 抵達桃園
                     </span>
@@ -503,7 +536,7 @@
                 <div class="info-icon">🏨</div>
                 <div>
                     <strong>福岡天神東方快捷酒店 (5晚)</strong> 
-                    <a href="https://www.google.com/maps/search/?api=1&query=Hotel+Oriental+Express+Fukuoka+Tenjin" class="map-btn">📍導航</a>
+                    <a href="https://www.google.com/maps/search/?api=1&query=Hotel+Oriental+Express+Fukuoka+Tenjin" target="_blank" class="map-btn">📍導航</a>
                 </div>
             </div>
             <div class="info-row">
@@ -529,16 +562,16 @@
         </div>
 
         <!-- 常用快捷按鈕列 -->
-        <div class="action-row">
+        <div class="action-row" id="top-map-tools">
             <button class="btn btn-secondary" id="expandBtn">📂 全部展開</button>
             <button class="btn btn-secondary" id="collapseBtn">📁 全部收合</button>
             <a href="https://www.anitabi.cn/map" target="_blank" class="btn btn-gradient">🗺️ 動漫地圖</a>
-            <a href="#rain-section" class="btn btn-blue">🌧️ 雨天備案</a>
+            <button class="btn btn-blue" id="topRainBtn">🌧️ 雨天備案</button>
         </div>
 
         <!-- 每日行程列表 -->
         <div id="day1"></div>
-        <details open>
+        <details open id="details-day1">
             <summary>📅 Day 1 - 9/16 (三) 抵達、一蘭、南藏院、福岡塔</summary>
             <div class="day-body">
                 <div class="callout callout-warn">
@@ -547,7 +580,7 @@
                 <div class="timeline">
                     <div class="tl-item">
                         <div class="tl-time">11:20</div>
-                        <div class="tl-content">抵達福岡機場國際線，辦理出關並領取行李 <a href="https://www.google.com/maps/search/?api=1&query=福岡空港国際線ターミナル" class="map-btn">📍</a></div>
+                        <div class="tl-content">抵達福岡機場國際線，出關並領取行李 <a href="https://www.google.com/maps/search/?api=1&query=福岡空港国際線ターミナル" target="_blank" class="map-btn">📍</a></div>
                     </div>
                     <div class="tl-item">
                         <div class="tl-time">12:15</div>
@@ -555,29 +588,29 @@
                     </div>
                     <div class="tl-item">
                         <div class="tl-time">13:30</div>
-                        <div class="tl-content">午餐：<strong>一蘭拉麵 本社總本店</strong> <a href="https://www.google.com/maps/search/?api=1&query=一蘭+本社総本店" class="map-btn">📍</a></div>
+                        <div class="tl-content">午餐：<strong>一蘭拉麵 本社總本店</strong> <a href="https://www.google.com/maps/search/?api=1&query=一蘭+本社総本店" target="_blank" class="map-btn">📍</a></div>
                         <div class="tl-desc">天神本店週三公休，改至 24hr 營業的總本店</div>
                     </div>
                     <div class="tl-item">
                         <div class="tl-time">15:00</div>
-                        <div class="tl-content"><strong>南藏院參拜</strong> <a href="https://www.google.com/maps/search/?api=1&query=南蔵院" class="map-btn">📍</a> <span class="badge badge-photo">📸 世界最大青銅涅槃佛</span></div>
+                        <div class="tl-content"><strong>南藏院參拜</strong> <a href="https://www.google.com/maps/search/?api=1&query=南蔵院" target="_blank" class="map-btn">📍</a> <span class="badge badge-photo">📸 世界最大青銅涅槃佛</span></div>
                         <div class="tl-desc">博多搭 JR 篠栗線 23 分至城戶南藏院前站</div>
                     </div>
                     <div class="tl-item">
                         <div class="tl-time">18:00</div>
-                        <div class="tl-content"><strong>福岡塔夕陽與夜景</strong> <a href="https://www.google.com/maps/search/?api=1&query=福岡タワー" class="map-btn">📍</a></div>
+                        <div class="tl-content"><strong>福岡塔夕陽與夜景</strong> <a href="https://www.google.com/maps/search/?api=1&query=福岡タワー" target="_blank" class="map-btn">📍</a></div>
                         <div class="tl-desc">出示護照門票享 640 日圓外國人特惠</div>
                     </div>
                     <div class="tl-item">
                         <div class="tl-time">20:30</div>
-                        <div class="tl-content">晚餐：<strong>中洲/天神 屋台體驗</strong> <a href="https://www.google.com/maps/search/?api=1&query=中洲屋台" class="map-btn">📍</a></div>
+                        <div class="tl-content">晚餐：<strong>中洲/天神 屋台體驗</strong> <a href="https://www.google.com/maps/search/?api=1&query=中洲屋台" target="_blank" class="map-btn">📍</a></div>
                     </div>
                 </div>
             </div>
         </details>
 
         <div id="day2"></div>
-        <details open>
+        <details open id="details-day2">
             <summary>📅 Day 2 - 9/17 (四) 由布院溫泉鄉 🚂 ＆ 貓頭鷹之森</summary>
             <div class="day-body">
                 <div class="callout callout-success">
@@ -590,15 +623,15 @@
                     </div>
                     <div class="tl-item">
                         <div class="tl-time">11:35</div>
-                        <div class="tl-content"><strong>先衝金鱗湖</strong> <a href="https://www.google.com/maps/search/?api=1&query=金鱗湖+由布院" class="map-btn">📍</a> <span class="badge badge-photo">📸 水中鳥居倒影</span></div>
+                        <div class="tl-content"><strong>先衝金鱗湖</strong> <a href="https://www.google.com/maps/search/?api=1&query=金鱗湖+由布院" target="_blank" class="map-btn">📍</a> <span class="badge badge-photo">📸 水中鳥居倒影</span></div>
                     </div>
                     <div class="tl-item">
                         <div class="tl-time">12:30</div>
-                        <div class="tl-content">午餐：<strong>由布まぶし 心</strong> (豐後牛三吃釜飯) 或 街道特色小吃</div>
+                        <div class="tl-content">午餐：<strong>由布まぶし 心</strong> (豐後牛三吃釜飯) 或 街道小吃</div>
                     </div>
                     <div class="tl-item">
                         <div class="tl-time">14:00</div>
-                        <div class="tl-content"><strong>湯之坪街道 ＆ 貓頭鷹之森 ＆ 甜點散步</strong> <a href="https://www.google.com/maps/search/?api=1&query=Yufuin+Floral+Village" class="map-btn">📍</a></div>
+                        <div class="tl-content"><strong>湯之坪街道 ＆ 貓頭鷹之森 ＆ 甜點散步</strong> <a href="https://www.google.com/maps/search/?api=1&query=Yufuin+Floral+Village" target="_blank" class="map-btn">📍</a></div>
                         <div class="tl-desc">必吃：花麹菊家布丁銅鑼燒、B-speak 蛋糕捲、Milch 起司</div>
                     </div>
                     <div class="tl-item">
@@ -607,23 +640,23 @@
                     </div>
                     <div class="tl-item">
                         <div class="tl-time">22:00</div>
-                        <div class="tl-content">宵夜：<strong>博多拉麵 ShinShin 天神本店</strong> <a href="https://www.google.com/maps/search/?api=1&query=博多らーめん+ShinShin+天神本店" class="map-btn">📍</a></div>
+                        <div class="tl-content">宵夜：<strong>博多拉麵 ShinShin 天神本店</strong> <a href="https://www.google.com/maps/search/?api=1&query=博多らーめん+ShinShin+天神本店" target="_blank" class="map-btn">📍</a></div>
                     </div>
                 </div>
             </div>
         </details>
 
         <div id="day3"></div>
-        <details open>
+        <details open id="details-day3">
             <summary>📅 Day 3 - 9/18 (五) 相島貓島 ＋ 放生會 ＋ 宮地嶽神社 ＋ 鋼彈</summary>
-            <div class="day-content">
+            <div class="day-body">
                 <div class="callout callout-success">
                     🌟 <strong>神級順路動線：</strong>利用 JR 鹿兒島本線空檔，下午快閃一年一度「筥崎宮放生會」秋季大祭！
                 </div>
                 <div class="timeline">
                     <div class="tl-item">
                         <div class="tl-time">10:00</div>
-                        <div class="tl-content">新宮港搭渡輪 ➔ <strong>相島貓島探索 (約 3 小時)</strong> <a href="https://www.google.com/maps/search/?api=1&query=相島+福岡" class="map-btn">📍</a> <span class="badge badge-photo">📸 眼鏡岩</span></div>
+                        <div class="tl-content">新宮港搭渡輪 ➔ <strong>相島貓島探索 (約 3 小時)</strong> <a href="https://www.google.com/maps/search/?api=1&query=相島+福岡" target="_blank" class="map-btn">📍</a> <span class="badge badge-photo">📸 眼鏡岩</span></div>
                     </div>
                     <div class="tl-item">
                         <div class="tl-time">13:50</div>
@@ -631,16 +664,16 @@
                     </div>
                     <div class="tl-item">
                         <div class="tl-time">14:40</div>
-                        <div class="tl-content"><strong>⛩️ 筥崎宮放生會 (博多三大祭最後一日！)</strong> <a href="https://www.google.com/maps/search/?api=1&query=筥崎宮" class="map-btn">📍</a></div>
+                        <div class="tl-content"><strong>⛩️ 筥崎宮放生會 (博多三大祭最後一日！)</strong> <a href="https://www.google.com/maps/search/?api=1&query=筥崎宮" target="_blank" class="map-link">📍</a></div>
                         <div class="tl-desc">JR 箱崎站步行 8 分，體驗長達 1 公里、500 間熱鬧屋台</div>
                     </div>
                     <div class="tl-item">
                         <div class="tl-time">17:30</div>
-                        <div class="tl-content"><strong>宮地嶽神社</strong> <a href="https://www.google.com/maps/search/?api=1&query=宮地嶽神社" class="map-btn">📍</a> <span class="badge badge-photo">📸 巨型注連繩 ＆ 夕陽光之道</span></div>
+                        <div class="tl-content"><strong>宮地嶽神社</strong> <a href="https://www.google.com/maps/search/?api=1&query=宮地嶽神社" target="_blank" class="map-btn">📍</a> <span class="badge badge-photo">📸 巨型注連繩 ＆ 夕陽光之道</span></div>
                     </div>
                     <div class="tl-item">
                         <div class="tl-time">19:50</div>
-                        <div class="tl-content"><strong>LaLaport 福岡：實物大 ν 鋼彈</strong> <a href="https://www.google.com/maps/search/?api=1&query=Mitsui+Shopping+Park+LaLaport+福岡" class="map-btn">📍</a></div>
+                        <div class="tl-content"><strong>LaLaport 福岡：實物大 ν 鋼彈</strong> <a href="https://www.google.com/maps/search/?api=1&query=Mitsui+Shopping+Park+LaLaport+福岡" target="_blank" class="map-btn">📍</a></div>
                         <div class="tl-desc">欣賞 20:00 夜間燈光秀與牆面投影表演</div>
                     </div>
                 </div>
@@ -648,7 +681,7 @@
         </details>
 
         <div id="day4"></div>
-        <details>
+        <details id="details-day4">
             <summary>📅 Day 4 - 9/19 (六) 太宰府 (摸聰明牛) ＋ 柳川水鄉 ＋ Alpen</summary>
             <div class="day-body">
                 <div class="timeline">
@@ -658,7 +691,7 @@
                     </div>
                     <div class="tl-item">
                         <div class="tl-time">09:45</div>
-                        <div class="tl-content"><strong>太宰府天滿宮參拜 ＆ 摸御神牛求智慧</strong> <a href="https://www.google.com/maps/search/?api=1&query=太宰府天満宮+御神牛" class="map-btn">📍</a></div>
+                        <div class="tl-content"><strong>太宰府天滿宮參拜 ＆ 摸御神牛求智慧</strong> <a href="https://www.google.com/maps/search/?api=1&query=太宰府天満宮+御神牛" target="_blank" class="map-btn">📍</a></div>
                     </div>
                     <div class="tl-item">
                         <div class="tl-time">11:30</div>
@@ -666,11 +699,11 @@
                     </div>
                     <div class="tl-item">
                         <div class="tl-time">14:30</div>
-                        <div class="tl-content"><strong>柳川遊船 (70分鐘)</strong> <a href="https://www.google.com/maps/search/?api=1&query=柳川下り+乗船場" class="map-btn">📍</a> ➔ 享用元祖本吉屋鰻魚飯</div>
+                        <div class="tl-content"><strong>柳川遊船 (70分鐘)</strong> <a href="https://www.google.com/maps/search/?api=1&query=柳川下り+乗船場" target="_blank" class="map-btn">📍</a> ➔ 享用元祖本吉屋鰻魚飯</div>
                     </div>
                     <div class="tl-item">
                         <div class="tl-time">19:30</div>
-                        <div class="tl-content"><strong>Alpen FUKUOKA 旗艦店 (博多運河城南棟 1-3F)</strong> <a href="https://www.google.com/maps/search/?api=1&query=Alpen+FUKUOKA+キャナルシティ博多" class="map-btn">📍</a></div>
+                        <div class="tl-content"><strong>Alpen FUKUOKA 旗艦店 (博多運河城南棟 1-3F)</strong> <a href="https://www.google.com/maps/search/?api=1&query=Alpen+FUKUOKA+キャナルシティ博多" target="_blank" class="map-btn">📍</a></div>
                         <div class="tl-desc">營業至 21:00，建議 20:30 前完成免稅退稅手續！</div>
                     </div>
                 </div>
@@ -678,7 +711,7 @@
         </details>
 
         <div id="day5"></div>
-        <details>
+        <details id="details-day5">
             <summary>📅 Day 5 - 9/20 (日) 鋼彈白天秀 ➔ 告別午餐 ➔ 糸島海景</summary>
             <div class="day-body">
                 <div class="timeline">
@@ -692,7 +725,7 @@
                     </div>
                     <div class="tl-item">
                         <div class="tl-time">13:30</div>
-                        <div class="tl-content"><strong>🅰 留福岡：糸島海景巡禮</strong> (櫻井二見浦白色鳥居 ＋ PALM BEACH 鞦韆夕陽) <a href="https://www.google.com/maps/search/?api=1&query=桜井二見ヶ浦+糸島" class="map-btn">📍</a></div>
+                        <div class="tl-content"><strong>🅰 留福岡：糸島海景巡禮</strong> (櫻井二見浦白色鳥居 ＋ PALM BEACH 鞦韆夕陽) <a href="https://www.google.com/maps/search/?api=1&query=桜井二見ヶ浦+糸島" target="_blank" class="map-btn">📍</a></div>
                         <div class="tl-desc">🅱 赴大阪：14:30 搭新幹線前往新大阪</div>
                     </div>
                 </div>
@@ -700,7 +733,7 @@
         </details>
 
         <div id="day6"></div>
-        <details>
+        <details id="details-day6">
             <summary>📅 Day 6 - 9/21 (一) 大濠公園 ＆ 機場返程指南</summary>
             <div class="day-body">
                 <div class="timeline">
@@ -710,7 +743,7 @@
                     </div>
                     <div class="tl-item">
                         <div class="tl-time">09:30</div>
-                        <div class="tl-content"><strong>大濠公園・福岡城跡晨間漫步</strong> <a href="https://www.google.com/maps/search/?api=1&query=大濠公園" class="map-btn">📍</a></div>
+                        <div class="tl-content"><strong>大濠公園・福岡城跡晨間漫步</strong> <a href="https://www.google.com/maps/search/?api=1&query=大濠公園" target="_blank" class="map-btn">📍</a></div>
                     </div>
                     <div class="tl-item">
                         <div class="tl-time">11:30</div>
@@ -731,15 +764,15 @@
 
         <!-- 雨天備案專題 -->
         <div id="rain-section"></div>
-        <details>
+        <details id="details-rain">
             <summary>🌧️ 全天候雨天備案精選</summary>
             <div class="day-body">
                 <div class="callout">
                     ☔ <strong>雨天室內首選清單：</strong><br>
-                    • <strong>teamLab Forest Fukuoka</strong> (光影沉浸展) <a href="https://www.google.com/maps/search/?api=1&query=teamLab+Forest+Fukuoka" class="map-btn">📍</a><br>
-                    • <strong>博多運河城</strong> (室內水舞秀 ＋ 拉麵競技場) <a href="https://www.google.com/maps/search/?api=1&query=キャナルシティ博多" class="map-btn">📍</a><br>
-                    • <strong>九州國立博物館</strong> (太宰府室內步道直達) <a href="https://www.google.com/maps/search/?api=1&query=九州国立博物館" class="map-btn">📍</a><br>
-                    • <strong>Marine World 水族館</strong> (海之中道全天候室內) <a href="https://www.google.com/maps/search/?api=1&query=マリンワールド海の中道" class="map-btn">📍</a><br>
+                    • <strong>teamLab Forest Fukuoka</strong> (光影沉浸展) <a href="https://www.google.com/maps/search/?api=1&query=teamLab+Forest+Fukuoka" target="_blank" class="map-btn">📍</a><br>
+                    • <strong>博多運河城</strong> (室內水舞秀 ＋ 拉麵競技場) <a href="https://www.google.com/maps/search/?api=1&query=キャナルシティ博多" target="_blank" class="map-btn">📍</a><br>
+                    • <strong>九州國立博物館</strong> (太宰府室內步道直達) <a href="https://www.google.com/maps/search/?api=1&query=九州国立博物館" target="_blank" class="map-btn">📍</a><br>
+                    • <strong>Marine World 水族館</strong> (海之中道全天候室內) <a href="https://www.google.com/maps/search/?api=1&query=マリンワールド海の中道" target="_blank" class="map-btn">📍</a><br>
                     • <strong>天神地下街</strong> (全長 600m 直通各大百貨，免撐傘)
                 </div>
             </div>
@@ -749,12 +782,12 @@
         <details>
             <summary>✅ 行前待辦清單 (Checklist)</summary>
             <div class="day-body">
-                <div style="font-size:13.5px; line-height: 2.1;">
-                    <label><input type="checkbox" checked disabled> 🎫 由布院之森車票 ＆ 車上便當 (已完成)</label><br>
-                    <label><input type="checkbox" id="chk_vjw"> 📝 8/31 起填寫 Visit Japan Web 並截圖 QR Code</label><br>
-                    <label><input type="checkbox" id="chk_card"> 💳 Apple Wallet 綁定交通 IC 卡 (Suica/ICOCA)</label><br>
-                    <label><input type="checkbox" id="chk_res"> 🍽️ 8月中旬 預訂水炊雞鍋與燒肉名店</label><br>
-                    <label><input type="checkbox" id="chk_boat"> 🚢 9/18 出發前確認相島渡輪航行狀態</label>
+                <div style="line-height: 2.1;">
+                    <label class="todo-label"><input type="checkbox" class="todo-check" checked disabled> 🎫 由布院之森車票 ＆ 車上便當 (已完成)</label><br>
+                    <label class="todo-label"><input type="checkbox" class="todo-check" id="chk_vjw"> 📝 8/31 起填寫 Visit Japan Web 並截圖 QR Code</label><br>
+                    <label class="todo-label"><input type="checkbox" class="todo-check" id="chk_card"> 💳 Apple Wallet 綁定交通 IC 卡 (Suica/ICOCA)</label><br>
+                    <label class="todo-label"><input type="checkbox" class="todo-check" id="chk_res"> 🍽️ 8月中旬 預訂水炊雞鍋與燒肉名店</label><br>
+                    <label class="todo-label"><input type="checkbox" class="todo-check" id="chk_boat"> 🚢 9/18 出發前確認相島渡輪航行狀態</label>
                 </div>
             </div>
         </details>
@@ -762,7 +795,7 @@
         <!-- 互動記帳本 -->
         <div id="budget-section" class="budget-box">
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
-                <h3 style="font-size:15.5px;">💰 旅費即時記帳</h3>
+                <h3 style="font-size:1.05rem;">💰 旅費即時記帳</h3>
                 <div class="rate-wrapper">
                     <span id="rate-status" class="rate-status">連線匯率中...</span>
                     <button class="refresh-rate-btn" id="refreshRateBtn" title="更新最新匯率">
@@ -783,7 +816,7 @@
 
             <ul id="expense-list" style="list-style:none; margin-top:14px;"></ul>
 
-            <div style="margin-top:14px; padding-top:10px; border-top:1px solid var(--border-color); display:flex; justify-content:space-between; font-weight:800; font-size:14.5px;">
+            <div style="margin-top:14px; padding-top:10px; border-top:1px solid var(--border-color); display:flex; justify-content:space-between; font-weight:800; font-size:1rem;">
                 <span>日圓: <span id="total-jpy" style="color:var(--accent-red);">0</span> 円</span>
                 <span>台幣: 約 NT$ <span id="total-twd" style="color:var(--primary);">0</span></span>
             </div>
@@ -796,27 +829,27 @@
             </div>
         </div>
 
-        <p style="text-align: center; margin-top: 30px; color: var(--text-secondary); font-size: 13px;">
+        <p style="text-align: center; margin-top: 30px; color: var(--text-secondary); font-size: 0.85rem;">
             <strong>祝您在福岡有一段美好的旅程！🎌✨🐮🐱🦉🍮🍱📸🚂🛶💰🤖🏕️🚄</strong>
         </p>
 
     </div>
 
-    <!-- 底部固定快捷列 -->
+    <!-- 底部固定快捷操作列 (原地跳轉，絕不另開新視窗) -->
     <div class="bottom-bar">
-        <a href="#day1" class="nav-item">
+        <div class="nav-item" id="navBottomDay">
             <span>📅</span>行程
-        </a>
-        <a href="#rain-section" class="nav-item">
+        </div>
+        <div class="nav-item" id="navBottomRain">
             <span>🌧️</span>雨天
-        </a>
-        <a href="#budget-section" class="nav-item">
+        </div>
+        <div class="nav-item" id="navBottomBudget">
             <span>💰</span>記帳
-        </a>
-        <a href="https://www.google.com/maps/search/?api=1&query=福岡市" class="nav-item">
+        </div>
+        <div class="nav-item" id="navBottomMap">
             <span>📍</span>地圖
-        </a>
-        <div class="nav-item" id="bottomTopBtn">
+        </div>
+        <div class="nav-item" id="navBottomTop">
             <span>⬆️</span>置頂
         </div>
     </div>
@@ -875,7 +908,37 @@
             setTimeout(() => toast.classList.remove('show'), 2200);
         }
 
+        // 原地平滑滾動並展開指定區塊
+        function smoothScrollTo(elementId, openDetails = false) {
+            const el = document.getElementById(elementId);
+            if (el) {
+                if (openDetails && el.tagName === 'DETAILS') {
+                    el.open = true;
+                }
+                el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
+        }
+
         document.addEventListener('DOMContentLoaded', () => {
+            // 0. 字體大小縮放控制 (A- / A+)
+            let currentScale = parseFloat(localStorage.getItem('fukuoka_mobile_font_scale')) || 1.0;
+            const setFontScale = (scale) => {
+                currentScale = Math.min(Math.max(scale, 0.8), 1.5); // 限制縮放範圍在 80% ~ 150%
+                document.documentElement.style.setProperty('--font-scale', currentScale);
+                localStorage.setItem('fukuoka_mobile_font_scale', currentScale);
+            };
+            setFontScale(currentScale);
+
+            document.getElementById('fontIncBtn').addEventListener('click', () => {
+                setFontScale(currentScale + 0.1);
+                showToast(`字體已放大 (${Math.round(currentScale * 100)}%)`);
+            });
+
+            document.getElementById('fontDecBtn').addEventListener('click', () => {
+                setFontScale(currentScale - 0.1);
+                showToast(`字體已縮小 (${Math.round(currentScale * 100)}%)`);
+            });
+
             // 初始化日期與匯率
             const dateInput = document.getElementById('expense-date');
             if (dateInput) dateInput.value = new Date().toISOString().split('T')[0];
@@ -899,6 +962,22 @@
             document.getElementById('refreshRateBtn').addEventListener('click', () => fetchExchangeRate(true));
             document.getElementById('expandBtn').addEventListener('click', () => document.querySelectorAll('details').forEach(d => d.open = true));
             document.getElementById('collapseBtn').addEventListener('click', () => document.querySelectorAll('details').forEach(d => d.removeAttribute('open')));
+
+            // 底部快捷列原地跳轉
+            document.getElementById('navBottomDay').addEventListener('click', () => smoothScrollTo('details-day1', true));
+            document.getElementById('navBottomRain').addEventListener('click', () => smoothScrollTo('details-rain', true));
+            document.getElementById('navBottomBudget').addEventListener('click', () => smoothScrollTo('budget-section'));
+            document.getElementById('navBottomMap').addEventListener('click', () => smoothScrollTo('top-map-tools'));
+            document.getElementById('navBottomTop').addEventListener('click', () => window.scrollTo({ top: 0, behavior: 'smooth' }));
+            document.getElementById('topRainBtn').addEventListener('click', () => smoothScrollTo('details-rain', true));
+
+            // 吸頂橫向滑動天數標籤 (D1～D6) 原地跳轉
+            document.querySelectorAll('.day-chip').forEach(chip => {
+                chip.addEventListener('click', () => {
+                    const dayKey = chip.getAttribute('data-jump');
+                    smoothScrollTo(`details-${dayKey}`, true);
+                });
+            });
 
             // 一鍵複製
             document.addEventListener('click', (e) => {
@@ -964,15 +1043,15 @@
                     totalTwd += twd;
 
                     const li = document.createElement('li');
-                    li.style.cssText = "display:flex; justify-content:space-between; align-items:center; padding:9px 0; border-bottom:1px dashed var(--border-color); font-size:13.5px;";
+                    li.style.cssText = "display:flex; justify-content:space-between; align-items:center; padding:9px 0; border-bottom:1px dashed var(--border-color); font-size:0.95rem;";
                     li.innerHTML = `
                         <div>
                             <strong>${exp.name}</strong>
-                            <div style="font-size:11.5px; color:var(--text-secondary);">${exp.date}</div>
+                            <div style="font-size:0.82rem; color:var(--text-secondary);">${exp.date}</div>
                         </div>
                         <div style="text-align:right;">
-                            <div>¥${exp.amount.toLocaleString()} <span style="font-size:11.5px; color:var(--text-secondary);">(NT$${twd.toLocaleString()})</span>
-                            <button style="color:var(--accent-red);background:none;border:none;margin-left:6px;font-size:13px;" data-idx="${i}">✕</button></div>
+                            <div>¥${exp.amount.toLocaleString()} <span style="font-size:0.82rem; color:var(--text-secondary);">(NT$${twd.toLocaleString()})</span>
+                            <button style="color:var(--accent-red);background:none;border:none;margin-left:6px;font-size:0.95rem;cursor:pointer;" data-idx="${i}">✕</button></div>
                         </div>
                     `;
                     listEl.appendChild(li);
@@ -1050,14 +1129,12 @@
                         if (file.name.toLowerCase().endsWith('.csv')) {
                             const lines = content.split(/\r?\n/).filter(l => l.trim() !== '');
                             for (let i = 1; i < lines.length; i++) {
-                                const match = lines[i].match(/(?:^|,)("(?:[^"]|"")*"|[^,]*)/g);
-                                if (!match) continue;
-                                const cols = match.map(c => c.replace(/^,/, '').replace(/^"(.*)"$/, '$1').replace(/""/g, '"').trim());
+                                const cols = lines[i].split(',');
                                 if (cols.length >= 3) {
                                     parsed.push({
-                                        date: cols[0],
-                                        name: cols[1],
-                                        amount: parseInt(cols[2].replace(/,/g, '')) || 0,
+                                        date: cols[0].trim(),
+                                        name: cols[1].replace(/"/g, '').trim(),
+                                        amount: parseInt(cols[2]) || 0,
                                         rate: parseFloat(cols[3]) || 0.21
                                     });
                                 }
@@ -1078,11 +1155,6 @@
             });
 
             renderExpenses();
-
-            // 底部置頂
-            document.getElementById('bottomTopBtn').addEventListener('click', () => {
-                window.scrollTo({ top: 0, behavior: 'smooth' });
-            });
         });
     </script>
 </body>
