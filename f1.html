@@ -2,8 +2,8 @@
 <html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>福岡6天5夜行程表 - 2026年9月</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>福岡6天5夜行程表 - 2026年9月 (雙模式版)</title>
     <style>
         :root {
             --bg-body: #f5f5f5;
@@ -20,6 +20,8 @@
             --accent-purple: #8e44ad;
             --border-color: #dee2e6;
             --shadow: 0 4px 15px rgba(0,0,0,0.08);
+            --radius-md: 8px;
+            --radius-sm: 6px;
         }
 
         [data-theme="dark"] {
@@ -35,7 +37,7 @@
             --shadow: 0 4px 15px rgba(0,0,0,0.4);
         }
 
-        * { margin: 0; padding: 0; box-sizing: border-box; }
+        * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
         body {
             font-family: -apple-system, BlinkMacSystemFont, "Microsoft JhengHei", "PingFang TC", sans-serif;
             background: var(--bg-body);
@@ -55,14 +57,33 @@
             position: relative;
         }
 
+        /* 頂部操作按鈕列 */
         .top-action-bar {
-            position: absolute;
-            top: 20px;
-            right: 20px;
             display: flex;
-            gap: 10px;
+            justify-content: flex-end;
             align-items: center;
-            z-index: 10;
+            gap: 10px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        .mode-toggle-btn {
+            background: var(--bg-card);
+            border: 2px solid var(--primary-color);
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-size: 13px;
+            font-weight: bold;
+            color: var(--primary-color);
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            transition: all 0.2s;
+        }
+        .mode-toggle-btn:hover {
+            background: var(--primary-color);
+            color: var(--text-light);
         }
 
         .round-icon-btn {
@@ -108,6 +129,36 @@
             margin-bottom: 30px;
             font-size: 18px;
         }
+
+        /* 手機模式吸頂天數導航 */
+        .day-nav-wrapper {
+            display: none;
+            position: sticky;
+            top: 0;
+            z-index: 40;
+            background: var(--bg-body);
+            padding: 10px 0;
+            margin: -20px -16px 16px -16px;
+            padding-left: 16px;
+            overflow-x: auto;
+            scrollbar-width: none;
+            gap: 8px;
+            backdrop-filter: blur(8px);
+        }
+        .day-nav-wrapper::-webkit-scrollbar { display: none; }
+        .day-chip {
+            flex-shrink: 0;
+            background: var(--bg-container);
+            color: var(--text-primary);
+            border: 1px solid var(--border-color);
+            padding: 7px 13px;
+            border-radius: 20px;
+            font-size: 12.5px;
+            font-weight: 600;
+            text-decoration: none;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+        }
+        .day-chip:active { background: var(--primary-color); color: white; }
 
         .info-box {
             background: var(--bg-info);
@@ -413,6 +464,39 @@
             font-size: 13px;
         }
 
+        /* 底部固定導航列 (手機模式專用) */
+        .bottom-bar {
+            display: none;
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 60px;
+            background: var(--bg-container);
+            border-top: 1px solid var(--border-color);
+            justify-content: space-around;
+            align-items: center;
+            z-index: 50;
+            padding-bottom: env(safe-area-inset-bottom);
+            box-shadow: 0 -4px 12px rgba(0,0,0,0.08);
+        }
+        .nav-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-size: 11px;
+            font-weight: 600;
+            gap: 2px;
+            flex: 1;
+            height: 100%;
+            cursor: pointer;
+        }
+        .nav-item:active { color: var(--primary-color); }
+        .nav-item span { font-size: 18px; }
+
         #topBtn {
             display: none;
             position: fixed;
@@ -432,17 +516,65 @@
         ul { margin-left: 20px; }
         li { margin: 6px 0; }
 
+        /* =========================================
+           📱 手機易讀模式 (Mobile-View Active) 專用樣式
+           ========================================= */
+        body.mobile-view {
+            padding: 12px;
+            padding-bottom: 80px;
+        }
+        body.mobile-view .container {
+            padding: 16px;
+            border-radius: 12px;
+            box-shadow: none;
+        }
+        body.mobile-view h1 { font-size: 24px; }
+        body.mobile-view .day-nav-wrapper { display: flex; }
+        body.mobile-view .bottom-bar { display: flex; }
+        body.mobile-view #topBtn { display: none !important; }
+        
+        /* 手機模式下的卡片式時間軸 */
+        body.mobile-view .day-content { padding: 12px; }
+        body.mobile-view .time-item {
+            position: relative;
+            flex-direction: column;
+            padding-left: 18px;
+            margin: 16px 0;
+            border-left: 2px solid var(--primary-color);
+        }
+        body.mobile-view .time-item::before {
+            content: '';
+            position: absolute;
+            left: -6px;
+            top: 4px;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: var(--primary-color);
+        }
+        body.mobile-view .time {
+            width: 100%;
+            font-size: 12px;
+            margin-bottom: 2px;
+        }
+        body.mobile-view .location { font-size: 14px; }
+        body.mobile-view .split-plan { grid-template-columns: 1fr; }
+        body.mobile-view .info-table { display: block; overflow-x: auto; white-space: nowrap; }
+        body.mobile-view .input-group input { width: 100%; }
+        body.mobile-view .rate-wrapper { width: 100%; justify-content: space-between; }
+        body.mobile-view .backup-toolbar { justify-content: stretch; }
+        body.mobile-view .backup-toolbar .btn { flex: 1; font-size: 11.5px; padding: 6px 8px; }
+
         @media screen and (max-width: 768px) {
-            body { padding: 10px; }
-            .container { padding: 20px 15px; }
-            .time-item { flex-direction: column; }
-            .time { width: 100%; margin-bottom: 4px; }
-            .btn { width: 100%; text-align: center; }
-            .split-plan { grid-template-columns: 1fr; }
-            .info-table { display: block; overflow-x: auto; white-space: nowrap; }
-            .input-group input { width: 100%; flex: auto; }
-            .rate-wrapper { width: 100%; justify-content: space-between; }
-            .backup-toolbar { justify-content: stretch; }
+            body:not(.mobile-view) { padding: 10px; }
+            body:not(.mobile-view) .container { padding: 20px 15px; }
+            body:not(.mobile-view) .time-item { flex-direction: column; }
+            body:not(.mobile-view) .time { width: 100%; margin-bottom: 4px; }
+            body:not(.mobile-view) .split-plan { grid-template-columns: 1fr; }
+            body:not(.mobile-view) .info-table { display: block; overflow-x: auto; white-space: nowrap; }
+            body:not(.mobile-view) .input-group input { width: 100%; flex: auto; }
+            body:not(.mobile-view) .rate-wrapper { width: 100%; justify-content: space-between; }
+            body:not(.mobile-view) .backup-toolbar { justify-content: stretch; }
         }
 
         @media print {
@@ -450,15 +582,18 @@
             .container { box-shadow: none; padding: 0; width: 100%; max-width: 100%; }
             details { open: true; border: 1px solid #ccc; page-break-inside: avoid; }
             summary { background: #eee !important; color: #000 !important; }
-            .top-action-bar, .toggle-all, #topBtn, .countdown-container, .budget-tracker, .map-link, .copy-icon { display: none !important; }
+            .top-action-bar, .toggle-all, #topBtn, .countdown-container, .budget-tracker, .map-link, .copy-icon, .bottom-bar, .day-nav-wrapper { display: none !important; }
         }
     </style>
 <base target="_blank">
 </head>
 <body>
     <div class="container">
-        <!-- 頂部按鈕區：重新整理 ＋ 夜間模式 -->
+        <!-- 頂部操作按鈕區：模式切換 ＋ 重新整理 ＋ 夜間模式 -->
         <div class="top-action-bar">
+            <button class="mode-toggle-btn" id="viewModeToggle" title="切換 網頁完整版 / 手機易讀版">
+                <span id="modeIcon">📱</span> <span id="modeText">手機易讀版</span>
+            </button>
             <button class="round-icon-btn" id="pageRefreshBtn" title="重新整理網頁" aria-label="重新整理網頁">🔄</button>
             <button class="round-icon-btn" id="themeToggle" title="切換夜間模式" aria-label="切換主題">🌙</button>
         </div>
@@ -466,6 +601,16 @@
         <h1>🗾 福岡6天5夜行程表</h1>
         <p class="subtitle">2026年9月16日 - 9月21日</p>
         
+        <!-- 手機模式專用：吸頂橫向天數導航 -->
+        <div class="day-nav-wrapper">
+            <a href="#day1" class="day-chip">D1 抵達/南藏院</a>
+            <a href="#day2" class="day-chip">D2 由布院之森</a>
+            <a href="#day3" class="day-chip">D3 貓島/放生會</a>
+            <a href="#day4" class="day-chip">D4 太宰府/柳川</a>
+            <a href="#day5" class="day-chip">D5 鋼彈/糸島</a>
+            <a href="#day6" class="day-chip">D6 大濠/返台</a>
+        </div>
+
         <div class="info-box">
             <p><strong>✈️ 航班資訊 (<a href="https://www.evaair.com/zh-tw/index.html" target="_blank">長榮航空</a>)：</strong></p>
             <p><strong>訂位代號：</strong><span class="highlight">FCD249</span> <span class="copy-icon" data-copy="FCD249" title="複製訂位代號">📋</span> ｜ <strong>交易金額：</strong>TWD 16,291</p>
@@ -513,6 +658,7 @@
 
         <h2>📅 每日行程安排</h2>
 
+        <div id="day1"></div>
         <details open>
             <summary>📅 Day 1 - 9/16（星期三）- 機場入境 ➔ 天神、一蘭、南藏院與福岡塔夕陽夜景</summary>
             <div class="day-content">
@@ -553,6 +699,7 @@
             </div>
         </details>
 
+        <div id="day2"></div>
         <details open>
             <summary>📅 Day 2 - 9/17（星期四）- 由布院溫泉鄉 🚂 ＆ 貓頭鷹之森 ＆ 甜點美食 ＆ 宵夜拉麵</summary>
             <div class="day-content">
@@ -577,6 +724,7 @@
             </div>
         </details>
 
+        <div id="day3"></div>
         <details open>
             <summary>📅 Day 3 - 9/18（星期五）- 相島貓島 🐱 + 放生會大祭 🏮 + 宮地嶽神社 + LaLaport 🤖</summary>
             <div class="day-content">
@@ -599,6 +747,7 @@
             </div>
         </details>
 
+        <div id="day4"></div>
         <details>
             <summary>📅 Day 4 - 9/19（星期六）- 太宰府 (摸聰明牛🐮) + 柳川水鄉 + Alpen FUKUOKA 旗艦店 🛶🏕️</summary>
             <div class="day-content">
@@ -621,6 +770,7 @@
             </div>
         </details>
 
+        <div id="day5"></div>
         <details>
             <summary>📅 Day 5 - 9/20（星期日）- 鋼彈白天啟動秀 🤖 → 告別午餐 → 完美分流 (糸島海景 🌊)</summary>
             <div class="day-content">
@@ -644,6 +794,7 @@
             </div>
         </details>
 
+        <div id="day6"></div>
         <details>
             <summary>📅 Day 6 - 9/21（星期一）- 大濠公園 ＆ 機場返程交通指南 ✈️</summary>
             <div class="day-content">
@@ -684,7 +835,8 @@
         </details>
 
         <!-- 🌧️ 全天候雨天備案專題 -->
-        <details id="rain-section" open>
+        <div id="rain-section"></div>
+        <details open>
             <summary>🌧️ 全天候雨天備案指南（Rainy Day Alternatives）</summary>
             <div class="detail-section">
                 <div class="sub-section" style="border-left: 4px solid #6366f1;">
@@ -1035,7 +1187,7 @@
                 <li><strong>🛍️ 購物/伴手禮：</strong>依個人需求 (Alpen FUKUOKA 滿額免稅退約 8%, 建議預留 10,000 - 30,000 日圓)</li>
             </ul>
             
-            <div class="budget-tracker">
+            <div id="budget-section" class="budget-tracker">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; flex-wrap: wrap; gap: 8px;">
                     <h4>💰 互動記帳本 (自動抓取當日即時匯率)</h4>
                     <div class="backup-toolbar">
@@ -1076,6 +1228,25 @@
         <div class="update-time">
             <p>📅 最後更新時間：<strong id="last-updated-time"></strong></p>
             <p>📝 如有任何疑問或需要調整行程，歡迎隨時詢問</p>
+        </div>
+    </div>
+
+    <!-- 底部固定操作列 (手機易讀模式時顯示) -->
+    <div class="bottom-bar">
+        <a href="#day1" class="nav-item">
+            <span>📅</span>行程
+        </a>
+        <a href="#rain-section" class="nav-item">
+            <span>🌧️</span>雨天
+        </a>
+        <a href="#budget-section" class="nav-item">
+            <span>💰</span>記帳
+        </a>
+        <a href="https://www.google.com/maps/search/?api=1&query=福岡市" class="nav-item">
+            <span>📍</span>地圖
+        </a>
+        <div class="nav-item" id="bottomTopBtn">
+            <span>⬆️</span>置頂
         </div>
     </div>
 
@@ -1146,7 +1317,38 @@
         }
 
         document.addEventListener('DOMContentLoaded', () => {
-            // 0. 更新時間自動渲染
+            // 0. 模式切換邏輯 (網頁版 / 手機易讀版)
+            const viewModeToggle = document.getElementById('viewModeToggle');
+            const modeIcon = document.getElementById('modeIcon');
+            const modeText = document.getElementById('modeText');
+
+            const applyViewMode = (isMobile) => {
+                if (isMobile) {
+                    document.body.classList.add('mobile-view');
+                    modeIcon.innerText = '💻';
+                    modeText.innerText = '電腦模式';
+                } else {
+                    document.body.classList.remove('mobile-view');
+                    modeIcon.innerText = '📱';
+                    modeText.innerText = '手機易讀版';
+                }
+                localStorage.setItem('fukuoka_view_mode', isMobile ? 'mobile' : 'desktop');
+            };
+
+            const savedMode = localStorage.getItem('fukuoka_view_mode');
+            if (savedMode) {
+                applyViewMode(savedMode === 'mobile');
+            } else {
+                applyViewMode(window.innerWidth <= 768);
+            }
+
+            viewModeToggle.addEventListener('click', () => {
+                const isCurrentlyMobile = document.body.classList.contains('mobile-view');
+                applyViewMode(!isCurrentlyMobile);
+                showToast(`已切換為：${!isCurrentlyMobile ? '📱 手機易讀版' : '💻 電腦完整版'}`);
+            });
+
+            // 更新時間自動渲染
             const now = new Date();
             const year = now.getFullYear();
             const month = now.getMonth() + 1;
@@ -1235,8 +1437,9 @@
 
             // 4. 一鍵複製
             document.addEventListener('click', (e) => {
-                if (e.target.classList.contains('copy-icon')) {
-                    const text = e.target.getAttribute('data-copy');
+                const target = e.target.closest('[data-copy]');
+                if (target) {
+                    const text = target.getAttribute('data-copy');
                     navigator.clipboard.writeText(text).then(() => showToast(`已複製：${text}`));
                 }
             });
@@ -1245,7 +1448,7 @@
                 const toast = document.getElementById('toast');
                 toast.innerText = msg;
                 toast.classList.add('show');
-                setTimeout(() => toast.classList.remove('show'), 2500);
+                setTimeout(() => toast.classList.remove('show'), 2200);
             }
 
             // 5. 行前待辦狀態記憶 (Checklist)
@@ -1289,7 +1492,7 @@
                     totalTwd += twd;
 
                     const li = document.createElement('li');
-                    li.style.cssText = "display:flex; justify-content:space-between; align-items:center; padding:10px 0; border-bottom:1px dashed var(--border-color)";
+                    li.style.cssText = "display:flex; justify-content:space-between; align-items:center; padding:10px 0; border-bottom:1px dashed var(--border-color); font-size:14px;";
                     li.innerHTML = `
                         <div>
                             <strong>${exp.name}</strong>
@@ -1323,6 +1526,7 @@
                 expName.value = '';
                 expAmount.value = '';
                 renderExpenses();
+                showToast('已新增一筆消費記錄');
             };
 
             document.getElementById('addExpenseBtn').addEventListener('click', addExpense);
@@ -1458,12 +1662,15 @@
 
             renderExpenses();
 
-            // 7. 回頂部按鈕
+            // 7. 回頂部按鈕 (網頁版浮動按鈕 ＆ 手機版底部列按鈕)
             const topBtn = document.getElementById('topBtn');
             window.addEventListener('scroll', () => {
-                topBtn.style.display = window.scrollY > 400 ? 'block' : 'none';
+                if (!document.body.classList.contains('mobile-view')) {
+                    topBtn.style.display = window.scrollY > 400 ? 'block' : 'none';
+                }
             });
             topBtn.addEventListener('click', () => window.scrollTo({ top: 0, behavior: 'smooth' }));
+            document.getElementById('bottomTopBtn').addEventListener('click', () => window.scrollTo({ top: 0, behavior: 'smooth' }));
         });
     </script>
 </body>
