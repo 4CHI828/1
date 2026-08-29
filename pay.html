@@ -268,6 +268,7 @@
   </footer>
 
   <script>
+    // 你的 Apps Script 部署網址 (務必確認是你自己發布的最新 URL)
     const API_URL = "https://script.google.com/macros/s/AKfycbyLdzLuX2UzEpgD2fc-P_2l8L0yjfjsUgLaOTdn7tJWcRdhIG6ZY4lxFp5WAY7pFXxW/exec";
     
     let currentSheet = localStorage.getItem("app_active_sheet") || "預設帳本";
@@ -354,11 +355,12 @@
     document.getElementById("themeToggleBtn").addEventListener("click", () => {
       const isDark = document.documentElement.classList.toggle("dark");
       localStorage.setItem("theme", isDark ? "dark" : "light");
+      themeToggleBtn.textContent = isDark ? "☀️" : "🌙";
     });
 
     function getPassword() { return document.getElementById("accessPassword").value.trim() || localStorage.getItem("app_pwd") || ""; }
 
-    // 帳本分頁切換
+    // 帳本切換
     document.getElementById("sheetSelector").addEventListener("change", (e) => {
       currentSheet = e.target.value; localStorage.setItem("app_active_sheet", currentSheet); loadRecords();
     });
@@ -373,7 +375,29 @@
       }
     });
 
-    // 帳務與分攤邏輯
+    async function fetchSheetList() {
+      const pwd = getPassword();
+      if (!pwd) return;
+      try {
+        const res = await fetch(`${API_URL}?password=${encodeURIComponent(pwd)}&action=get_sheets`);
+        const data = await res.json();
+        if (data && data.sheets) {
+          sheetSelector.innerHTML = data.sheets.map(s => `<option value="${escapeHtml(s)}" ${s === currentSheet ? 'selected' : ''}>${escapeHtml(s)}</option>`).join("");
+        }
+      } catch (e) {}
+    }
+
+    // 計算折合台幣
+    function calculateTwd() {
+      const amount = parseFloat(document.getElementById("originalAmount").value) || 0;
+      const rate = exchangeRates[document.getElementById("currency").value] || 1;
+      return { rate, twd: Math.round(amount * rate) };
+    }
+
+    // 分攤模式切換
+    document.getElementById("modeEqualBtn").addEventListener("click", () => setSplitMode("equal"));
+    document.getElementById("modeCustomBtn").addEventListener("click", () => setSplitMode("custom"));
+
     function setSplitMode(mode) {
       currentSplitMode = mode;
       const eBtn = document.getElementById("modeEqualBtn"), cBtn = document.getElementById("modeCustomBtn");
@@ -387,14 +411,6 @@
         eBtn.className = "px-3 py-1 rounded-md text-gray-500 dark:text-gray-400 font-medium hover:text-gray-800 transition";
         eBox.classList.add("hidden"); cBox.classList.remove("hidden"); checkCustomSplitTotal();
       }
-    }
-    document.getElementById("modeEqualBtn").addEventListener("click", () => setSplitMode("equal"));
-    document.getElementById("modeCustomBtn").addEventListener("click", () => setSplitMode("custom"));
-
-    function calculateTwd() {
-      const amount = parseFloat(document.getElementById("originalAmount").value) || 0;
-      const rate = exchangeRates[document.getElementById("currency").value] || 1;
-      return { rate, twd: Math.round(amount * rate) };
     }
 
     function updateTwdPreview() {
@@ -559,6 +575,7 @@
       tEl.innerHTML = tInst.length ? `<div class="font-bold text-blue-900 dark:text-blue-300 mb-2">💡 最佳平帳轉帳路徑：</div><div class="space-y-1.5">${tInst.join("")}</div>` : `<div class="text-gray-400 text-center font-medium">🎉 帳務已完全打平</div>`;
     }
 
+    // 渲染明細清單
     function renderRecordsList() {
       document.getElementById("recordCountDisplay").textContent = cachedRecords.length;
       const listEl = document.getElementById("recordList"); listEl.innerHTML = "";
@@ -574,23 +591,52 @@
       });
     }
 
+    // 🌟 強化除錯版載入邏輯
     async function loadRecords() {
       const pwd = getPassword();
-      if(!pwd) { document.getElementById("recordList").innerHTML=`<div class="text-amber-500 text-center py-6 font-bold">🔒 請解鎖以載入資料</div>`; return; }
+      if(!pwd) { 
+        document.getElementById("recordList").innerHTML=`<div class="text-amber-500 text-center py-6 font-bold">🔒 請解鎖以載入資料</div>`; 
+        return; 
+      }
       showToast("🔄 同步資料中...", "info");
       try {
-        const res = await fetch(`${API_URL}?password=${encodeURIComponent(pwd)}&sheetName=${encodeURIComponent(currentSheet)}`);
-        const data = await res.json();
-        if(data.error==="AUTH_FAILED") { showToast("❌ 密碼錯誤", "error"); return; }
+        const res = await fetch(`${API_URL}?password=${encodeURIComponent(pwd)}&sheetName=${encodeURIComponent(currentSheet)}`, {
+          redirect: "follow"
+        });
+        const textResponse = await res.text();
+        
+        let data;
+        try {
+          data = JSON.parse(textResponse);
+        } catch (parseError) {
+          console.error("❌ 收到非預期的格式 (可能是權限被擋，回傳了網頁):", textResponse);
+          throw new Error("Google 權限阻擋或網址錯誤");
+        }
+
+        if(data.error === "AUTH_FAILED") { 
+          showToast("❌ 密碼錯誤", "error"); 
+          return; 
+        }
+
         localStorage.setItem("app_pwd", pwd);
-        cachedRecords = Array.isArray(data)?data:[];
-        renderRecordsList(); renderSettlement(cachedRecords);
-        if(!document.getElementById("sheetSelector").options.length || document.getElementById("sheetSelector").options[0].value==="預設帳本") fetchSheetList();
+        cachedRecords = Array.isArray(data) ? data : [];
+        
+        renderRecordsList(); 
+        renderSettlement(cachedRecords);
+        
+        if(!document.getElementById("sheetSelector").options.length || document.getElementById("sheetSelector").options[0].value === "預設帳本") {
+          fetchSheetList();
+        }
         showToast("✅ 同步完成");
-      } catch(e) { showToast("❌ 網路連線失敗", "error"); }
+
+      } catch(e) { 
+        console.error("連線錯誤詳情:", e);
+        showToast(`❌ 連線失敗: ${e.message}`, "error"); 
+        document.getElementById("recordList").innerHTML = `<div class="text-red-500 text-center py-6 font-bold">讀取失敗，請按 F12 查看 Console 錯誤訊息</div>`;
+      }
     }
 
-    // 🌟 極速樂觀寫入 UI
+    // 極速樂觀寫入 UI
     document.getElementById("saveRecordBtn").addEventListener("click", async () => {
       const pwd = getPassword(); if(!pwd){ showToast("請先輸入密碼解鎖", "error"); document.getElementById("accessPassword").focus(); return; }
       const title = document.getElementById("title").value.trim(); const origAmt = parseFloat(document.getElementById("originalAmount").value);
@@ -649,14 +695,103 @@
       } catch(e) { cachedRecords=backup; renderRecordsList(); renderSettlement(cachedRecords); showToast("❌ 刪除失敗", "error"); }
     };
 
-    // 啟動初始化
-    initTheme(); applyFontSize(localStorage.getItem("app_custom_font_size")||16);
-    document.getElementById("date").value = getTodayString(); updateTimestampDisplay();
+    // 匯出與匯入功能
+    document.getElementById("exportCsvBtn").addEventListener("click", () => {
+      if (cachedRecords.length === 0) return alert("目前沒有可匯出的資料或尚未解鎖！");
+      const headers = ["日期", "類型", "類別", "項目", "原始金額", "幣別", "匯率", "折合台幣", "付款人", "分攤成員/金額"];
+      const rows = cachedRecords.map(r => [
+        `"${r.date}"`, `"${r.type === 'expense' ? '支出' : '收入'}"`, `"${r.category || '其他'}"`, `"${(r.title || '').replace(/"/g, '""')}"`,
+        r.originalAmount, `"${r.currency}"`, r.rate, r.twdAmount, `"${r.payer || ''}"`, `"${(r.splitMembers || []).join(';')}"`
+      ]);
+      const csvContent = "\uFEFF" + [headers.join(","), ...rows.map(e => e.join(","))].join("\n");
+      downloadBlob(csvContent, `記帳明細_${currentSheet}_${getFormattedDate()}.csv`, "text/csv;charset=utf-8;");
+    });
+
+    document.getElementById("exportTxtBtn").addEventListener("click", () => {
+      if (cachedRecords.length === 0) return alert("目前沒有可匯出的資料或尚未解鎖！");
+      let txtContent = `=== 記帳備份【${currentSheet}】(${getFormattedDate()}) ===\n\n`;
+      cachedRecords.forEach((r, i) => {
+        txtContent += `【#${i + 1}】${r.date} | [${r.category || '其他'}] ${r.type === 'expense' ? '支出' : '收入'} - ${r.title}\n`;
+        txtContent += `  金額: ${r.currency} ${r.originalAmount} (折合 NT$ ${r.twdAmount})\n`;
+        if (r.type === 'expense') {
+          const shares = parseShares(r);
+          const shareText = Object.entries(shares).map(([n, a]) => `${n}($${Math.round(a)})`).join(", ");
+          txtContent += `  付款人: ${r.payer || '無'} | 分攤者: ${shareText || '全體'}\n`;
+        }
+        txtContent += `----------------------------------------\n`;
+      });
+      downloadBlob(txtContent, `記帳明細_${currentSheet}_${getFormattedDate()}.txt`, "text/plain;charset=utf-8;");
+    });
+
+    function downloadBlob(content, filename, mimeType) {
+      const blob = new Blob([content], { type: mimeType });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a"); a.href = url; a.download = filename;
+      document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(url);
+    }
+
+    function getFormattedDate() { return new Date().toISOString().split("T")[0]; }
+
+    document.getElementById("importBtn").addEventListener("click", async () => {
+      const pwd = getPassword();
+      if (!pwd) return alert("請先輸入密碼解鎖後再進行匯入！");
+      const fileInput = document.getElementById("importFileInput");
+      if (!fileInput.files.length) return alert("請先選擇要匯入的 CSV 或 TXT 檔案！");
+
+      const file = fileInput.files[0];
+      const text = await file.text();
+      let itemsToImport = [];
+
+      try {
+        if (file.name.endsWith(".csv")) {
+          const lines = text.split(/\r?\n/).filter(line => line.trim() !== "");
+          if (lines.length <= 1) return alert("CSV 檔案內無有效資料！");
+          for (let i = 1; i < lines.length; i++) {
+            const cols = lines[i].split(",").map(c => c.replace(/^"|"$/g, "").trim());
+            if (cols.length >= 8) {
+              itemsToImport.push({
+                date: cols[0], type: cols[1] === "收入" ? "income" : "expense", category: cols[2] || "其他", title: cols[3] || "未命名",
+                originalAmount: parseFloat(cols[4]) || 0, currency: cols[5] || "TWD", rate: parseFloat(cols[6]) || 1, twdAmount: parseFloat(cols[7]) || 0,
+                payer: cols[8] || "", splitMembers: cols[9] ? cols[9].split(";") : []
+              });
+            }
+          }
+        } else {
+          const blocks = text.split("----------------------------------------");
+          blocks.forEach(b => {
+            const titleMatch = b.match(/】(.+?)\s*\|\s*\[?(.*?)\]?\s*(支出|收入)\s*-\s*(.+)/);
+            const amountMatch = b.match(/金額:\s*([A-Z]+)\s*([\d.]+)\s*\(折合 NT\$\s*([\d.]+)\)/);
+            const payerMatch = b.match(/付款人:\s*(.*?)\s*\|\s*分攤者:\s*(.*)/);
+            if (titleMatch && amountMatch) {
+              itemsToImport.push({
+                date: titleMatch[1].trim(), category: titleMatch[2].trim() || "其他", type: titleMatch[3].trim() === "收入" ? "income" : "expense",
+                title: titleMatch[4].trim(), currency: amountMatch[1].trim(), originalAmount: parseFloat(amountMatch[2]) || 0,
+                twdAmount: parseFloat(amountMatch[3]) || 0, rate: (parseFloat(amountMatch[3]) / (parseFloat(amountMatch[2]) || 1)) || 1,
+                payer: payerMatch ? payerMatch[1].trim() : "", splitMembers: payerMatch && payerMatch[2] ? payerMatch[2].split(",").map(s => s.trim()) : []
+              });
+            }
+          });
+        }
+
+        if (itemsToImport.length === 0) return alert("無法解析檔案內容，請確認檔案格式是否相容！");
+        if (!confirm(`已成功解析 ${itemsToImport.length} 筆紀錄，確定要全部匯入到【${currentSheet}】嗎？`)) return;
+
+        showToast("⏳ 匯入中...", "info");
+        const res = await fetch(API_URL, { method: "POST", headers: { "Content-Type": "text/plain" }, body: JSON.stringify({ action: "batch_import", password: pwd, sheetName: currentSheet, items: itemsToImport }) });
+        const result = await res.json();
+        if (result.status === "success") { showToast(`✅ 成功匯入 ${result.count} 筆資料`); fileInput.value = ""; await loadRecords(); }
+        else { showToast("❌ 匯入失敗", "error"); }
+      } catch (err) { showToast("❌ 檔案解析錯誤", "error"); }
+    });
+
+    // 啟動初始化綁定
     document.getElementById("authBtn").addEventListener("click", loadRecords);
     document.getElementById("accessPassword").addEventListener("keydown", e => { if (e.key === "Enter") loadRecords(); });
     document.getElementById("clearAuthBtn").addEventListener("click", () => { localStorage.removeItem("app_pwd"); document.getElementById("accessPassword").value = ""; cachedRecords = []; loadRecords(); });
     document.getElementById("refreshBtn").addEventListener("click", loadRecords);
     
+    initTheme(); applyFontSize(localStorage.getItem("app_custom_font_size")||16);
+    document.getElementById("date").value = getTodayString(); updateTimestampDisplay();
     if(localStorage.getItem("app_pwd")) document.getElementById("accessPassword").value = localStorage.getItem("app_pwd");
     renderMemberControls(); fetchExchangeRates().then(() => loadRecords());
   </script>
