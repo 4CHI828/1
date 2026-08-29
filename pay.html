@@ -58,7 +58,7 @@
         <button type="button" id="pwaInstallBtn" class="hidden text-xs bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white font-semibold px-3 py-1.5 rounded-xl shadow transition active:scale-95">📲 安裝App</button>
         <button type="button" id="themeToggleBtn" class="p-1.5 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 rounded-xl transition active:scale-95 shadow-sm text-sm">🌙</button>
         <button type="button" id="toggleFontPanelBtn" class="text-xs bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 px-2.5 py-1.5 rounded-xl font-medium shadow-sm transition active:scale-95">🔤</button>
-        <button type="button" id="toggleMemberBtn" class="text-xs bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 px-2.5 py-1.5 rounded-xl font-medium shadow-sm transition active:scale-95">👥 成員</button>
+        <button type="button" id="toggleMemberBtn" class="text-xs bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 px-2.5 py-1.5 rounded-xl font-medium shadow-sm transition active:scale-95">⚙️ 成員</button>
         <button type="button" id="toggleDataBtn" class="text-xs bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 px-2.5 py-1.5 rounded-xl font-medium shadow-sm transition active:scale-95">📁 備份</button>
         <button type="button" id="refreshBtn" class="text-xs bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300 font-bold px-3 py-1.5 rounded-xl hover:bg-blue-200 dark:hover:bg-blue-800 transition active:scale-95 shadow-sm">↻ 更新</button>
       </div>
@@ -103,8 +103,9 @@
       </div>
     </div>
 
+    <!-- 🌟 成員管理設定面板 -->
     <div id="memberConfigPanel" class="hidden bg-white/60 dark:bg-slate-900/60 border border-gray-200/50 dark:border-gray-700/50 rounded-2xl p-4 space-y-3 shadow-inner">
-      <div class="text-xs font-bold text-gray-700 dark:text-gray-300 mb-1">👥 管理分攤成員</div>
+      <div class="text-xs font-bold text-gray-700 dark:text-gray-300 mb-1">👥 管理分攤成員名單</div>
       <div class="flex gap-2">
         <input type="text" id="newMemberName" placeholder="輸入新成員名字" class="flex-1 border border-gray-300 dark:border-gray-600 rounded-xl px-3 py-1.5 text-xs bg-white dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none transition">
         <button type="button" id="addMemberBtn" class="bg-gray-800 dark:bg-gray-700 hover:bg-black text-white px-4 py-1.5 rounded-xl text-xs font-medium shadow transition active:scale-95">加入</button>
@@ -155,7 +156,6 @@
           </div>
         </div>
         
-        <!-- 🌟 常用項目快速記帳範本列 -->
         <div class="flex gap-1.5 overflow-x-auto pb-1 text-xs">
           <button type="button" onclick="applyTemplate('超商咖啡', '餐飲', 65, 'TWD')" class="flex-shrink-0 bg-gray-50 dark:bg-gray-700/60 border border-gray-200 dark:border-gray-600 px-2.5 py-1 rounded-xl hover:bg-blue-50 dark:hover:bg-gray-600 transition">☕ 咖啡 $65</button>
           <button type="button" onclick="applyTemplate('地鐵交通', '交通', 200, 'TWD')" class="flex-shrink-0 bg-gray-50 dark:bg-gray-700/60 border border-gray-200 dark:border-gray-600 px-2.5 py-1 rounded-xl hover:bg-blue-50 dark:hover:bg-gray-600 transition">🚆 交通 $200</button>
@@ -360,7 +360,6 @@
 
     function getPassword() { return document.getElementById("accessPassword").value.trim() || localStorage.getItem("app_pwd") || ""; }
 
-    // 🌟 多帳本即時切換與防護
     document.getElementById("sheetSelector").addEventListener("change", async (e) => {
       const newSheet = e.target.value;
       if (newSheet === currentSheet) return;
@@ -475,9 +474,17 @@
 
     document.getElementById("addMemberBtn").addEventListener("click", () => {
       const val = document.getElementById("newMemberName").value.trim();
-      if (val && !members.includes(val)) { members.push(val); document.getElementById("newMemberName").value = ""; renderMemberControls(); }
+      if (val && !members.includes(val)) { members.push(val); document.getElementById("newMemberName").value = ""; renderMemberControls(); showToast(`👥 已新增成員：${val}`); }
     });
-    window.removeMember = function(idx) { if (members.length > 1) { members.splice(idx, 1); renderMemberControls(); } else alert("至少需保留一位！"); };
+    window.removeMember = function(idx) { 
+      if (members.length > 1) { 
+        const removed = members.splice(idx, 1); 
+        renderMemberControls(); 
+        showToast(`已移除成員：${removed}`, "info");
+      } else {
+        alert("至少需保留一位成員！");
+      }
+    };
 
     document.getElementById("toggleMemberBtn").addEventListener("click", () => document.getElementById("memberConfigPanel").classList.toggle("hidden"));
     document.getElementById("toggleDataBtn").addEventListener("click", () => document.getElementById("dataConfigPanel").classList.toggle("hidden"));
@@ -485,7 +492,6 @@
     document.getElementById("currency").addEventListener("change", updateTwdPreview);
     document.getElementById("originalAmount").addEventListener("input", updateTwdPreview);
 
-    // 🌟 常用項目快速記帳範本
     window.applyTemplate = function(title, category, amount, currency) {
       document.getElementById("title").value = title;
       document.getElementById("category").value = category;
@@ -681,7 +687,6 @@
       } catch(e) { showToast(`❌ 連線失敗: ${e.message}`, "error"); }
     }
 
-    // 🌟 儲存 / 修改紀錄邏輯（支援後端覆蓋更新）
     document.getElementById("saveRecordBtn").addEventListener("click", async () => {
       const pwd = getPassword(); if(!pwd){ showToast("請先輸入密碼解鎖", "error"); document.getElementById("accessPassword").focus(); return; }
       const title = document.getElementById("title").value.trim(); const origAmt = parseFloat(document.getElementById("originalAmount").value);
@@ -756,7 +761,6 @@
       } catch(e) { cachedRecords=backup; renderRecordsList(); renderSettlement(cachedRecords); showToast("❌ 刪除失敗", "error"); }
     };
 
-    // 匯出與匯入功能
     document.getElementById("exportCsvBtn").addEventListener("click", () => {
       if (cachedRecords.length === 0) return alert("目前沒有可匯出的資料或尚未解鎖！");
       const headers = ["日期", "類型", "類別", "項目", "原始金額", "幣別", "匯率", "折合台幣", "付款人", "分攤成員/金額"];
