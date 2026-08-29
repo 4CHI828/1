@@ -1,88 +1,128 @@
 <!DOCTYPE html>
-<html lang="zh-TW">
+<html lang="zh-TW" style="font-size: 16px;">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>雲端分帳與多幣別記帳</title>
   <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+    }
+  </script>
 </head>
-<body class="bg-gray-100 min-h-screen p-3 md:p-6 text-gray-800">
-  <div class="max-w-xl mx-auto bg-white rounded-2xl shadow-lg p-5 md:p-6 space-y-5">
+<body class="bg-gray-100 dark:bg-gray-900 min-h-screen p-3 md:p-6 text-gray-800 dark:text-gray-100 transition-colors duration-200">
+  <div class="max-w-xl mx-auto bg-white dark:bg-gray-800 rounded-2xl shadow-lg p-5 md:p-6 space-y-5 border border-transparent dark:border-gray-700 transition-colors duration-200">
     
-    <div class="flex justify-between items-center border-b pb-3">
+    <div class="flex flex-wrap justify-between items-center border-b border-gray-200 dark:border-gray-700 pb-3 gap-2">
       <div>
-        <h1 class="text-xl font-bold text-gray-900">分帳與多幣別記帳</h1>
-        <div id="rateStatus" class="text-xs text-gray-400 mt-0.5">即時匯率載入中...</div>
+        <h1 class="text-xl font-bold text-gray-900 dark:text-white">分帳與多幣別記帳</h1>
+        <div id="rateStatus" class="text-xs text-gray-400 dark:text-gray-400 mt-0.5">即時匯率載入中...</div>
       </div>
-      <div class="flex gap-2">
-        <button id="toggleMemberBtn" class="text-xs bg-gray-100 hover:bg-gray-200 text-gray-700 px-2.5 py-1.5 rounded-lg transition">⚙️ 成員</button>
-        <button id="refreshBtn" class="text-xs bg-blue-50 hover:bg-blue-100 text-blue-600 font-medium px-2.5 py-1.5 rounded-lg transition">重整</button>
+
+      <div class="flex items-center gap-1.5">
+        <button id="themeToggleBtn" class="p-1.5 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 border border-gray-200 dark:border-gray-600 rounded-lg text-sm transition" title="切換深淺模式">
+          🌙
+        </button>
+
+        <button id="toggleFontPanelBtn" class="text-xs bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 px-2 py-1.5 rounded-lg border border-gray-200 dark:border-gray-600 transition">🔤 字體</button>
+        <button id="toggleMemberBtn" class="text-xs bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 px-2 py-1.5 rounded-lg border border-gray-200 dark:border-gray-600 transition">⚙️ 成員</button>
+        <button id="toggleDataBtn" class="text-xs bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 px-2 py-1.5 rounded-lg border border-gray-200 dark:border-gray-600 transition">📁 備份</button>
+        <button id="refreshBtn" class="text-xs bg-blue-50 dark:bg-blue-950 hover:bg-blue-100 dark:hover:bg-blue-900 text-blue-600 dark:text-blue-300 font-medium px-2.5 py-1.5 rounded-lg border border-blue-200 dark:border-blue-800 transition">重整</button>
       </div>
     </div>
 
-    <div class="bg-amber-50 border border-amber-200 rounded-xl p-3 flex flex-wrap items-center justify-between gap-2">
+    <div id="fontConfigPanel" class="hidden bg-gray-50 dark:bg-slate-900/60 border border-gray-200 dark:border-gray-700 rounded-xl p-3.5 space-y-2">
+      <div class="flex justify-between items-center text-xs font-bold text-gray-700 dark:text-gray-300">
+        <span>自訂全站字體大小</span>
+        <span id="fontSizeDisplay" class="text-blue-600 dark:text-blue-400 font-mono text-sm">16px</span>
+      </div>
+      <div class="flex items-center gap-3">
+        <button id="fontDecBtn" class="w-8 h-8 flex items-center justify-center bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg text-sm font-bold active:scale-95 transition">-</button>
+        <input type="range" id="fontSlider" min="12" max="24" step="1" value="16" class="flex-1 accent-blue-600 cursor-pointer h-2 bg-gray-200 dark:bg-gray-700 rounded-lg">
+        <button id="fontIncBtn" class="w-8 h-8 flex items-center justify-center bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg text-sm font-bold active:scale-95 transition">+</button>
+        <button id="fontResetBtn" class="text-xs text-gray-500 dark:text-gray-400 hover:text-blue-500 underline ml-1">重設</button>
+      </div>
+    </div>
+
+    <div class="bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800/60 rounded-xl p-3 flex flex-wrap items-center justify-between gap-2">
       <div class="flex items-center gap-2 flex-1 min-w-[200px]">
-        <span class="text-xs font-semibold text-amber-900">🔒 存取密碼：</span>
-        <input type="password" id="accessPassword" placeholder="請輸入密碼解鎖" class="flex-1 border rounded-lg px-2.5 py-1 text-xs bg-white focus:outline-amber-500">
+        <span class="text-xs font-semibold text-amber-900 dark:text-amber-300">🔒 密碼：</span>
+        <input type="password" id="accessPassword" placeholder="請輸入密碼解鎖" class="flex-1 border border-gray-300 dark:border-gray-600 rounded-lg px-2.5 py-1 text-xs bg-white dark:bg-gray-700 dark:text-white focus:outline-amber-500">
       </div>
       <div class="flex items-center gap-2">
-        <button id="authBtn" class="bg-amber-600 hover:bg-amber-700 text-white px-3 py-1 rounded-lg text-xs font-medium transition">解鎖資料</button>
-        <button id="clearAuthBtn" class="text-xs text-gray-500 hover:text-red-500 underline">鎖定</button>
+        <button id="authBtn" class="bg-amber-600 hover:bg-amber-700 text-white px-3 py-1 rounded-lg text-xs font-medium transition">解鎖</button>
+        <button id="clearAuthBtn" class="text-xs text-gray-500 dark:text-gray-400 hover:text-red-500 underline">鎖定</button>
       </div>
     </div>
 
-    <div id="memberConfigPanel" class="hidden bg-gray-50 border border-gray-200 rounded-xl p-4 space-y-3">
-      <div class="text-xs font-bold text-gray-700">管理分攤成員名單</div>
+    <div id="dataConfigPanel" class="hidden bg-slate-50 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-700 rounded-xl p-4 space-y-3">
+      <div class="text-xs font-bold text-slate-700 dark:text-slate-300">資料備份與還原</div>
+      <div class="grid grid-cols-2 gap-2 text-xs">
+        <button id="exportCsvBtn" class="bg-emerald-600 hover:bg-emerald-700 text-white py-1.5 px-2 rounded-lg font-medium transition">📥 匯出 試算表 (CSV)</button>
+        <button id="exportTxtBtn" class="bg-indigo-600 hover:bg-indigo-700 text-white py-1.5 px-2 rounded-lg font-medium transition">📥 匯出 文字檔 (TXT)</button>
+      </div>
+      <div class="pt-2 border-t border-slate-200 dark:border-slate-700">
+        <div class="text-[11px] text-gray-500 dark:text-gray-400 mb-1.5">從檔案匯入至雲端 (支援 CSV / TXT)：</div>
+        <div class="flex gap-2">
+          <input type="file" id="importFileInput" accept=".csv,.txt" class="text-xs text-slate-500 dark:text-slate-400 file:mr-2 file:py-1 file:px-2 file:rounded-md file:border-0 file:text-xs file:bg-slate-200 dark:file:bg-slate-700 file:text-slate-700 dark:file:text-slate-200 hover:file:bg-slate-300">
+          <button id="importBtn" class="bg-slate-800 dark:bg-slate-700 hover:bg-black dark:hover:bg-slate-600 text-white px-3 py-1 rounded-lg text-xs font-medium transition">開始匯入</button>
+        </div>
+      </div>
+    </div>
+
+    <div id="memberConfigPanel" class="hidden bg-gray-50 dark:bg-slate-900/60 border border-gray-200 dark:border-gray-700 rounded-xl p-4 space-y-3">
+      <div class="text-xs font-bold text-gray-700 dark:text-gray-300">管理分攤成員名單</div>
       <div class="flex gap-2">
-        <input type="text" id="newMemberName" placeholder="輸入成員名字" class="flex-1 border rounded-lg px-3 py-1.5 text-xs bg-white focus:outline-blue-500">
-        <button id="addMemberBtn" class="bg-gray-800 hover:bg-black text-white px-3 py-1.5 rounded-lg text-xs font-medium transition">加入</button>
+        <input type="text" id="newMemberName" placeholder="輸入成員名字" class="flex-1 border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-1.5 text-xs bg-white dark:bg-gray-700 dark:text-white focus:outline-blue-500">
+        <button id="addMemberBtn" class="bg-gray-800 dark:bg-slate-700 hover:bg-black dark:hover:bg-slate-600 text-white px-3 py-1.5 rounded-lg text-xs font-medium transition">加入</button>
       </div>
       <div id="memberTagList" class="flex flex-wrap gap-1.5 text-xs"></div>
     </div>
 
-    <div class="bg-blue-50 border border-blue-100 rounded-xl p-4">
-      <div class="text-xs font-bold text-blue-800 uppercase tracking-wider mb-2">成員分帳結算 (TWD)</div>
+    <div class="bg-blue-50 dark:bg-blue-950/30 border border-blue-100 dark:border-blue-900/50 rounded-xl p-4">
+      <div class="text-xs font-bold text-blue-800 dark:text-blue-300 uppercase tracking-wider mb-2">成員分帳結算 (TWD)</div>
       <div id="settlementGrid" class="grid grid-cols-2 sm:grid-cols-4 gap-2 text-center text-xs">
-        <div class="col-span-full text-gray-400 py-1">請先解鎖以查看結算金額</div>
+        <div class="col-span-full text-gray-400 dark:text-gray-500 py-1">請先解鎖以查看結算金額</div>
       </div>
     </div>
 
     <form id="recordForm" class="space-y-4">
       <div class="grid grid-cols-3 gap-2">
-        <select id="type" class="border rounded-lg px-2.5 py-2 text-sm bg-gray-50 focus:bg-white focus:outline-blue-500">
+        <select id="type" class="border border-gray-300 dark:border-gray-600 rounded-lg px-2.5 py-2 text-sm bg-gray-50 dark:bg-gray-700 dark:text-white focus:bg-white focus:outline-blue-500">
           <option value="expense">支出</option>
           <option value="income">個人收入</option>
         </select>
-        <input type="text" id="title" placeholder="項目名稱 (如: 居酒屋晚餐)" required class="col-span-2 border rounded-lg px-3 py-2 text-sm focus:outline-blue-500">
+        <input type="text" id="title" placeholder="項目名稱 (如: 居酒屋晚餐)" required class="col-span-2 border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 text-sm bg-white dark:bg-gray-700 dark:text-white focus:outline-blue-500">
       </div>
 
       <div class="grid grid-cols-3 gap-2">
-        <select id="currency" class="border rounded-lg px-2.5 py-2 text-sm bg-gray-50 focus:bg-white focus:outline-blue-500 font-semibold">
+        <select id="currency" class="border border-gray-300 dark:border-gray-600 rounded-lg px-2.5 py-2 text-sm bg-gray-50 dark:bg-gray-700 dark:text-white focus:bg-white focus:outline-blue-500 font-semibold">
           <option value="TWD">TWD 台幣</option>
           <option value="JPY">JPY 日圓</option>
           <option value="USD">USD 美元</option>
           <option value="KRW">KRW 韓元</option>
           <option value="EUR">EUR 歐元</option>
         </select>
-        <input type="number" id="originalAmount" placeholder="原始金額" step="any" min="0.01" required class="border rounded-lg px-3 py-2 text-sm focus:outline-blue-500">
-        <div class="flex items-center text-xs text-gray-500 bg-gray-50 px-3 py-2 rounded-lg border">
-          折合 <span id="previewTwd" class="font-bold text-blue-600 ml-1">0</span> TWD
+        <input type="number" id="originalAmount" placeholder="原始金額" step="any" min="0.01" required class="border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 text-sm bg-white dark:bg-gray-700 dark:text-white focus:outline-blue-500">
+        <div class="flex items-center text-xs text-gray-500 dark:text-gray-400 bg-gray-50 dark:bg-gray-700 px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600">
+          折合 <span id="previewTwd" class="font-bold text-blue-600 dark:text-blue-400 ml-1">0</span> TWD
         </div>
       </div>
 
-      <div id="splitSection" class="p-3 bg-gray-50 rounded-xl border border-gray-200 space-y-2">
+      <div id="splitSection" class="p-3 bg-gray-50 dark:bg-slate-900/40 rounded-xl border border-gray-200 dark:border-gray-700 space-y-2">
         <div class="flex items-center justify-between text-xs">
-          <span class="font-medium text-gray-600">誰先代墊 (付款人)：</span>
-          <select id="payer" class="border rounded-lg px-2 py-1 bg-white text-xs"></select>
+          <span class="font-medium text-gray-600 dark:text-gray-300">誰先代墊 (付款人)：</span>
+          <select id="payer" class="border border-gray-300 dark:border-gray-600 rounded-lg px-2 py-1 bg-white dark:bg-gray-700 dark:text-white text-xs"></select>
         </div>
         <div>
-          <div class="text-xs font-medium text-gray-600 mb-1">分攤成員 (平分)：</div>
+          <div class="text-xs font-medium text-gray-600 dark:text-gray-300 mb-1">分攤成員 (平分)：</div>
           <div class="flex flex-wrap gap-3 text-xs" id="membersCheckboxes"></div>
         </div>
       </div>
 
       <div class="flex gap-2">
-        <input type="date" id="date" required class="w-1/2 border rounded-lg px-3 py-2 text-sm focus:outline-blue-500">
+        <input type="date" id="date" required class="w-1/2 border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 text-sm bg-white dark:bg-gray-700 dark:text-white focus:outline-blue-500">
         <button type="submit" id="submitBtn" class="w-1/2 bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 rounded-lg text-sm transition">
           儲存紀錄
         </button>
@@ -90,9 +130,9 @@
     </form>
 
     <div>
-      <h2 class="text-sm font-semibold text-gray-500 mb-2">歷史明細</h2>
-      <div id="recordList" class="space-y-2 max-h-80 overflow-y-auto">
-        <p class="text-gray-400 text-center text-sm py-4">請輸入密碼以讀取雲端資料</p>
+      <h2 class="text-sm font-semibold text-gray-500 dark:text-gray-400 mb-2">歷史明細</h2>
+      <div id="recordList" class="space-y-2 max-h-80 overflow-y-auto pr-1">
+        <p class="text-gray-400 dark:text-gray-500 text-center text-sm py-4">請輸入密碼以讀取雲端資料</p>
       </div>
     </div>
 
@@ -105,26 +145,74 @@
     let exchangeRates = { TWD: 1, JPY: 0.21, USD: 32.5, KRW: 0.024, EUR: 35.2 };
     let cachedRecords = [];
 
-    // 取得當前輸入或儲存的密碼
+    // --- 🔤 自訂字體大小控制 ---
+    const fontSlider = document.getElementById("fontSlider");
+    const fontDisplay = document.getElementById("fontSizeDisplay");
+
+    function applyFontSize(size) {
+      size = parseInt(size, 10);
+      if (isNaN(size) || size < 12) size = 12;
+      if (size > 24) size = 24;
+
+      document.documentElement.style.fontSize = `${size}px`;
+      fontSlider.value = size;
+      fontDisplay.textContent = `${size}px`;
+      localStorage.setItem("app_custom_font_size", size);
+    }
+
+    fontSlider.addEventListener("input", (e) => applyFontSize(e.target.value));
+    document.getElementById("fontDecBtn").addEventListener("click", () => applyFontSize(parseInt(fontSlider.value, 10) - 1));
+    document.getElementById("fontIncBtn").addEventListener("click", () => applyFontSize(parseInt(fontSlider.value, 10) + 1));
+    document.getElementById("fontResetBtn").addEventListener("click", () => applyFontSize(16));
+    document.getElementById("toggleFontPanelBtn").addEventListener("click", () => {
+      document.getElementById("fontConfigPanel").classList.toggle("hidden");
+    });
+
+    function initFontSize() {
+      const saved = localStorage.getItem("app_custom_font_size") || 16;
+      applyFontSize(saved);
+    }
+
+    // --- 🌙 主題切換 (Dark Mode) ---
+    const themeToggleBtn = document.getElementById("themeToggleBtn");
+    
+    function initTheme() {
+      const isDark = localStorage.getItem("theme") === "dark" || 
+        (!localStorage.getItem("theme") && window.matchMedia("(prefers-color-scheme: dark)").matches);
+      if (isDark) {
+        document.documentElement.classList.add("dark");
+        themeToggleBtn.textContent = "☀️";
+      } else {
+        document.documentElement.classList.remove("dark");
+        themeToggleBtn.textContent = "🌙";
+      }
+    }
+
+    themeToggleBtn.addEventListener("click", () => {
+      const isDark = document.documentElement.classList.toggle("dark");
+      localStorage.setItem("theme", isDark ? "dark" : "light");
+      themeToggleBtn.textContent = isDark ? "☀️" : "🌙";
+    });
+
+    // --- 🔒 密碼與成員邏輯 ---
     function getPassword() {
       return document.getElementById("accessPassword").value.trim() || localStorage.getItem("app_pwd") || "";
     }
 
-    // 初始化成員選單
     function renderMemberControls() {
       const payerSelect = document.getElementById("payer");
       payerSelect.innerHTML = members.map(m => `<option value="${m}">${m}</option>`).join("");
 
       const cbContainer = document.getElementById("membersCheckboxes");
       cbContainer.innerHTML = members.map(m => `
-        <label class="flex items-center gap-1 cursor-pointer bg-white px-2 py-1 rounded border border-gray-200">
+        <label class="flex items-center gap-1 cursor-pointer bg-white dark:bg-gray-700 px-2 py-1 rounded border border-gray-200 dark:border-gray-600">
           <input type="checkbox" value="${m}" checked class="member-cb"> ${m}
         </label>
       `).join("");
 
       const tagList = document.getElementById("memberTagList");
       tagList.innerHTML = members.map((m, idx) => `
-        <span class="inline-flex items-center gap-1 bg-white border border-gray-300 px-2 py-0.5 rounded-md">
+        <span class="inline-flex items-center gap-1 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 px-2 py-0.5 rounded-md text-gray-700 dark:text-gray-200">
           ${m}
           <button onclick="removeMember(${idx})" class="text-red-400 hover:text-red-600 font-bold ml-1">×</button>
         </span>
@@ -153,7 +241,11 @@
     document.getElementById("toggleMemberBtn").addEventListener("click", () => {
       document.getElementById("memberConfigPanel").classList.toggle("hidden");
     });
+    document.getElementById("toggleDataBtn").addEventListener("click", () => {
+      document.getElementById("dataConfigPanel").classList.toggle("hidden");
+    });
 
+    // --- 💱 匯率與換算 ---
     async function fetchExchangeRates() {
       try {
         const res = await fetch("https://open.er-api.com/v6/latest/TWD");
@@ -187,6 +279,7 @@
     document.getElementById("originalAmount").addEventListener("input", updateTwdPreview);
     document.getElementById("date").valueAsDate = new Date();
 
+    // --- 渲染分帳卡片 ---
     function renderSettlement(records) {
       const balances = {};
       members.forEach(m => balances[m] = 0);
@@ -214,9 +307,12 @@
         const isPositive = roundedBal > 0;
         const isZero = roundedBal === 0;
         grid.innerHTML += `
-          <div class="bg-white p-2 rounded-lg border ${isZero ? 'border-gray-200' : isPositive ? 'border-green-200' : 'border-red-200'}">
-            <div class="font-medium text-gray-600">${member}</div>
-            <div class="font-bold mt-1 ${isZero ? 'text-gray-400' : isPositive ? 'text-green-600' : 'text-red-500'}">
+          <div class="bg-white dark:bg-gray-800 p-2 rounded-lg border ${
+            isZero ? 'border-gray-200 dark:border-gray-700' : 
+            isPositive ? 'border-green-200 dark:border-green-800' : 'border-red-200 dark:border-red-800'
+          }">
+            <div class="font-medium text-gray-600 dark:text-gray-300">${member}</div>
+            <div class="font-bold mt-1 ${isZero ? 'text-gray-400 dark:text-gray-500' : isPositive ? 'text-green-600 dark:text-green-400' : 'text-red-500 dark:text-red-400'}">
               ${isZero ? '$0' : (isPositive ? `+應收 $${roundedBal}` : `-應付 $${Math.abs(roundedBal)}`)}
             </div>
           </div>
@@ -224,51 +320,50 @@
       }
     }
 
-    // 讀取資料
+    // --- 載入資料 ---
     async function loadRecords() {
       const pwd = getPassword();
       const listEl = document.getElementById("recordList");
       const grid = document.getElementById("settlementGrid");
 
       if (!pwd) {
-        listEl.innerHTML = `<p class="text-amber-600 text-center text-sm py-4">🔒 請輸入密碼以載入資料</p>`;
-        grid.innerHTML = `<div class="col-span-full text-gray-400 py-1">請先解鎖以查看結算金額</div>`;
+        listEl.innerHTML = `<p class="text-amber-600 dark:text-amber-400 text-center text-sm py-4">🔒 請輸入密碼以載入資料</p>`;
+        grid.innerHTML = `<div class="col-span-full text-gray-400 dark:text-gray-500 py-1">請先解鎖以查看結算金額</div>`;
         return;
       }
 
-      listEl.innerHTML = `<p class="text-gray-400 text-center text-sm py-4">驗證中並載入資料...</p>`;
+      listEl.innerHTML = `<p class="text-gray-400 dark:text-gray-500 text-center text-sm py-4">驗證中並載入資料...</p>`;
 
       try {
         const res = await fetch(`${API_URL}?password=${encodeURIComponent(pwd)}`);
         const data = await res.json();
 
         if (data.error === "AUTH_FAILED") {
-          listEl.innerHTML = `<p class="text-red-500 text-center text-sm py-4">❌ 密碼錯誤，無法讀取資料</p>`;
+          listEl.innerHTML = `<p class="text-red-500 dark:text-red-400 text-center text-sm py-4">❌ 密碼錯誤，無法讀取資料</p>`;
           grid.innerHTML = `<div class="col-span-full text-red-400 py-1">密碼錯誤</div>`;
           return;
         }
 
-        // 認證成功，記住密碼
         localStorage.setItem("app_pwd", pwd);
         cachedRecords = data || [];
         listEl.innerHTML = "";
 
         if (cachedRecords.length === 0) {
-          listEl.innerHTML = `<p class="text-gray-400 text-center text-sm py-4">目前尚無資料</p>`;
+          listEl.innerHTML = `<p class="text-gray-400 dark:text-gray-500 text-center text-sm py-4">目前尚無資料</p>`;
         }
 
         cachedRecords.forEach(item => {
           const isExp = item.type === "expense";
           const row = document.createElement("div");
-          row.className = "p-3 bg-gray-50 rounded-xl border border-gray-100 text-xs flex justify-between items-start";
+          row.className = "p-3 bg-gray-50 dark:bg-gray-700/60 rounded-xl border border-gray-100 dark:border-gray-700 text-xs flex justify-between items-start";
           row.innerHTML = `
             <div>
-              <div class="font-bold text-sm text-gray-800">${item.title}</div>
-              <div class="text-gray-400 mt-0.5">${item.date} · ${isExp ? `由 <b>${item.payer}</b> 先付` : '個人收入'}</div>
-              ${isExp && item.splitMembers && item.splitMembers.length ? `<div class="text-gray-500 mt-1">分攤: ${item.splitMembers.join(", ")}</div>` : ''}
+              <div class="font-bold text-sm text-gray-800 dark:text-gray-100">${item.title}</div>
+              <div class="text-gray-400 dark:text-gray-400 mt-0.5">${item.date} · ${isExp ? `由 <b>${item.payer}</b> 先付` : '個人收入'}</div>
+              ${isExp && item.splitMembers && item.splitMembers.length ? `<div class="text-gray-500 dark:text-gray-300 mt-1">分攤: ${item.splitMembers.join(", ")}</div>` : ''}
             </div>
             <div class="text-right">
-              <div class="font-bold text-sm ${isExp ? 'text-gray-900' : 'text-green-600'}">
+              <div class="font-bold text-sm ${isExp ? 'text-gray-900 dark:text-gray-100' : 'text-green-600 dark:text-green-400'}">
                 ${item.currency !== 'TWD' ? `${item.currency} ${(item.originalAmount || 0).toLocaleString()} ≈ ` : ''}NT$ ${(item.twdAmount || 0).toLocaleString()}
               </div>
               <button onclick="deleteRecord('${item.id}')" class="text-red-400 hover:text-red-600 text-xs mt-1">刪除</button>
@@ -284,7 +379,7 @@
       }
     }
 
-    // 新增資料
+    // --- 新增紀錄 ---
     document.getElementById("recordForm").addEventListener("submit", async (e) => {
       e.preventDefault();
       const pwd = getPassword();
@@ -335,7 +430,7 @@
       }
     });
 
-    // 刪除資料
+    // --- 刪除紀錄 ---
     window.deleteRecord = async function(id) {
       const pwd = getPassword();
       if (!pwd) return alert("請先輸入密碼！");
@@ -353,10 +448,151 @@
       }
     };
 
-    // 密碼解鎖按鈕
+    // --- 📥 匯出與 📤 匯入 ---
+    document.getElementById("exportCsvBtn").addEventListener("click", () => {
+      if (cachedRecords.length === 0) return alert("目前沒有可匯出的資料或尚未解鎖！");
+
+      const headers = ["日期", "類型", "項目", "原始金額", "幣別", "匯率", "折合台幣", "付款人", "分攤成員"];
+      const rows = cachedRecords.map(r => [
+        `"${r.date}"`,
+        `"${r.type === 'expense' ? '支出' : '收入'}"`,
+        `"${(r.title || '').replace(/"/g, '""')}"`,
+        r.originalAmount,
+        `"${r.currency}"`,
+        r.rate,
+        r.twdAmount,
+        `"${r.payer || ''}"`,
+        `"${(r.splitMembers || []).join(';')}"`
+      ]);
+
+      const csvContent = "\uFEFF" + [headers.join(","), ...rows.map(e => e.join(","))].join("\n");
+      downloadBlob(csvContent, `記帳明細_${getFormattedDate()}.csv`, "text/csv;charset=utf-8;");
+    });
+
+    document.getElementById("exportTxtBtn").addEventListener("click", () => {
+      if (cachedRecords.length === 0) return alert("目前沒有可匯出的資料或尚未解鎖！");
+
+      let txtContent = `=== 記帳與分帳明細備份 (${getFormattedDate()}) ===\n\n`;
+      cachedRecords.forEach((r, i) => {
+        txtContent += `【#${i + 1}】${r.date} | ${r.type === 'expense' ? '支出' : '收入'} - ${r.title}\n`;
+        txtContent += `  金額: ${r.currency} ${r.originalAmount} (折合 NT$ ${r.twdAmount})\n`;
+        if (r.type === 'expense') {
+          txtContent += `  付款人: ${r.payer || '無'} | 分攤者: ${(r.splitMembers || []).join(', ') || '全體'}\n`;
+        }
+        txtContent += `----------------------------------------\n`;
+      });
+
+      downloadBlob(txtContent, `記帳明細_${getFormattedDate()}.txt`, "text/plain;charset=utf-8;");
+    });
+
+    function downloadBlob(content, filename, mimeType) {
+      const blob = new Blob([content], { type: mimeType });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    }
+
+    function getFormattedDate() {
+      return new Date().toISOString().split("T")[0];
+    }
+
+    document.getElementById("importBtn").addEventListener("click", async () => {
+      const pwd = getPassword();
+      if (!pwd) return alert("請先輸入密碼解鎖後再進行匯入！");
+
+      const fileInput = document.getElementById("importFileInput");
+      if (!fileInput.files.length) return alert("請先選擇要匯入的 CSV 或 TXT 檔案！");
+
+      const file = fileInput.files[0];
+      const text = await file.text();
+      let itemsToImport = [];
+
+      try {
+        if (file.name.endsWith(".csv")) {
+          const lines = text.split(/\r?\n/).filter(line => line.trim() !== "");
+          if (lines.length <= 1) return alert("CSV 檔案內無有效資料！");
+
+          for (let i = 1; i < lines.length; i++) {
+            const cols = lines[i].split(",").map(c => c.replace(/^"|"$/g, "").trim());
+            if (cols.length >= 7) {
+              itemsToImport.push({
+                date: cols[0],
+                type: cols[1] === "收入" ? "income" : "expense",
+                title: cols[2],
+                originalAmount: parseFloat(cols[3]) || 0,
+                currency: cols[4] || "TWD",
+                rate: parseFloat(cols[5]) || 1,
+                twdAmount: parseFloat(cols[6]) || 0,
+                payer: cols[7] || "",
+                splitMembers: cols[8] ? cols[8].split(";") : []
+              });
+            }
+          }
+        } else {
+          const blocks = text.split("----------------------------------------");
+          blocks.forEach(b => {
+            const titleMatch = b.match(/】(.+?)\s*\|\s*(支出|收入)\s*-\s*(.+)/);
+            const amountMatch = b.match(/金額:\s*([A-Z]+)\s*([\d.]+)\s*\(折合 NT\$\s*([\d.]+)\)/);
+            const payerMatch = b.match(/付款人:\s*(.*?)\s*\|\s*分攤者:\s*(.*)/);
+
+            if (titleMatch && amountMatch) {
+              itemsToImport.push({
+                date: titleMatch[1].trim(),
+                type: titleMatch[2].trim() === "收入" ? "income" : "expense",
+                title: titleMatch[3].trim(),
+                currency: amountMatch[1].trim(),
+                originalAmount: parseFloat(amountMatch[2]) || 0,
+                twdAmount: parseFloat(amountMatch[3]) || 0,
+                rate: (parseFloat(amountMatch[3]) / (parseFloat(amountMatch[2]) || 1)) || 1,
+                payer: payerMatch ? payerMatch[1].trim() : "",
+                splitMembers: payerMatch && payerMatch[2] ? payerMatch[2].split(",").map(s => s.trim()) : []
+              });
+            }
+          });
+        }
+
+        if (itemsToImport.length === 0) return alert("無法解析檔案內容，請確認檔案格式是否相容！");
+        if (!confirm(`已成功解析 ${itemsToImport.length} 筆紀錄，確定要全部匯入到雲端試算表嗎？`)) return;
+
+        const btn = document.getElementById("importBtn");
+        btn.disabled = true;
+        btn.textContent = "匯入中...";
+
+        const res = await fetch(API_URL, {
+          method: "POST",
+          headers: { "Content-Type": "text/plain;charset=utf-8" },
+          body: JSON.stringify({
+            action: "batch_import",
+            password: pwd,
+            items: itemsToImport
+          })
+        });
+
+        const result = await res.json();
+        if (result.status === "success") {
+          alert(`成功匯入 ${result.count} 筆資料！`);
+          fileInput.value = "";
+          await loadRecords();
+        } else {
+          alert("匯入失敗: " + result.message);
+        }
+
+      } catch (err) {
+        alert("匯入發生錯誤: " + err.message);
+      } finally {
+        const btn = document.getElementById("importBtn");
+        btn.disabled = false;
+        btn.textContent = "開始匯入";
+      }
+    });
+
+    // --- 密碼認證綁定 ---
     document.getElementById("authBtn").addEventListener("click", loadRecords);
-    
-    // 鎖定按鈕（清除本地儲存的密碼）
     document.getElementById("clearAuthBtn").addEventListener("click", () => {
       localStorage.removeItem("app_pwd");
       document.getElementById("accessPassword").value = "";
@@ -366,7 +602,10 @@
 
     document.getElementById("refreshBtn").addEventListener("click", loadRecords);
 
-    // 啟動初始化
+    // --- 頁面啟動初始化 ---
+    initTheme();
+    initFontSize();
+
     const savedPwd = localStorage.getItem("app_pwd");
     if (savedPwd) {
       document.getElementById("accessPassword").value = savedPwd;
