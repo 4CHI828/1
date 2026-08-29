@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Google 試算表雲端記帳</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 min-h-screen p-4 md:p-8">
+  <div class="max-w-md mx-auto bg-white rounded-xl shadow-md p-6">
+    <div class="flex items-center justify-between mb-4">
+      <h1 class="text-xl font-bold text-gray-800">試算表雲端記帳</h1>
+      <button id="refreshBtn" class="text-xs bg-gray-100 hover:bg-gray-200 text-gray-600 px-2 py-1 rounded">重新整理</button>
+    </div>
+
+    <!-- 總收支統計 -->
+    <div class="grid grid-cols-2 gap-4 mb-6 text-center">
+      <div class="bg-red-50 p-3 rounded-lg border border-red-200">
+        <div class="text-xs text-red-600 font-medium">總支出</div>
+        <div id="totalExpense" class="text-xl font-bold text-red-700">$0</div>
+      </div>
+      <div class="bg-green-50 p-3 rounded-lg border border-green-200">
+        <div class="text-xs text-green-600 font-medium">總收入</div>
+        <div id="totalIncome" class="text-xl font-bold text-green-700">$0</div>
+      </div>
+    </div>
+
+    <!-- 新增紀錄表單 -->
+    <form id="recordForm" class="space-y-3 mb-6">
+      <div class="flex gap-2">
+        <select id="type" class="border rounded px-3 py-2 text-sm bg-white focus:outline-blue-500">
+          <option value="expense">支出</option>
+          <option value="income">收入</option>
+        </select>
+        <input type="text" id="title" placeholder="項目名稱 (如: 午餐)" required class="flex-1 border rounded px-3 py-2 text-sm focus:outline-blue-500">
+      </div>
+      <div class="flex gap-2">
+        <input type="number" id="amount" placeholder="金額" min="1" required class="w-1/2 border rounded px-3 py-2 text-sm focus:outline-blue-500">
+        <input type="date" id="date" required class="w-1/2 border rounded px-3 py-2 text-sm focus:outline-blue-500">
+      </div>
+      <button type="submit" id="submitBtn" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 rounded-lg text-sm transition flex justify-center items-center">
+        <span>新增紀錄至試算表</span>
+      </button>
+    </form>
+
+    <!-- 紀錄清單 -->
+    <h2 class="text-sm font-semibold text-gray-500 mb-2">雲端試算表記錄</h2>
+    <div id="recordList" class="space-y-2 max-h-80 overflow-y-auto">
+      <p class="text-gray-400 text-center text-sm py-4">資料載入中...</p>
+    </div>
+  </div>
+
+  <script>
+    // 替換為你的 Apps Script 部署 URL
+    const API_URL = "YOUR_GAS_WEB_APP_URL";
+
+    document.getElementById("date").valueAsDate = new Date();
+
+    // 載入資料
+    async function loadRecords() {
+      const listEl = document.getElementById("recordList");
+      listEl.innerHTML = `<p class="text-gray-400 text-center text-sm py-4">載入中...</p>`;
+
+      try {
+        const res = await fetch(API_URL);
+        const data = await res.json();
+        
+        listEl.innerHTML = "";
+        let totalExp = 0;
+        let totalInc = 0;
+
+        if (data.length === 0) {
+          listEl.innerHTML = `<p class="text-gray-400 text-center text-sm py-4">目前尚無資料</p>`;
+        }
+
+        data.forEach(item => {
+          if (item.type === "expense") totalExp += item.amount;
+          if (item.type === "income") totalInc += item.amount;
+
+          const isExp = item.type === "expense";
+          const row = document.createElement("div");
+          row.className = "flex justify-between items-center bg-gray-50 p-3 rounded border text-sm";
+          row.innerHTML = `
+            <div>
+              <div class="font-medium text-gray-800">${item.title}</div>
+              <div class="text-xs text-gray-400">${item.date}</div>
+            </div>
+            <div class="flex items-center gap-3">
+              <span class="font-bold ${isExp ? 'text-red-600' : 'text-green-600'}">
+                ${isExp ? '-' : '+'}$${item.amount.toLocaleString()}
+              </span>
+              <button onclick="deleteRecord('${item.id}')" class="text-gray-400 hover:text-red-500 text-xs">刪除</button>
+            </div>
+          `;
+          listEl.appendChild(row);
+        });
+
+        document.getElementById("totalExpense").textContent = `$${totalExp.toLocaleString()}`;
+        document.getElementById("totalIncome").textContent = `$${totalInc.toLocaleString()}`;
+      } catch (err) {
+        listEl.innerHTML = `<p class="text-red-400 text-center text-sm py-4">載入失敗，請檢查 API 網址</p>`;
+      }
+    }
+
+    // 新增資料
+    document.getElementById("recordForm").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const btn = document.getElementById("submitBtn");
+      btn.disabled = true;
+      btn.textContent = "儲存中...";
+
+      const payload = {
+        title: document.getElementById("title").value,
+        amount: Number(document.getElementById("amount").value),
+        type: document.getElementById("type").value,
+        date: document.getElementById("date").value
+      };
+
+      try {
+        await fetch(API_URL, {
+          method: "POST",
+          body: JSON.stringify(payload)
+        });
+        document.getElementById("title").value = "";
+        document.getElementById("amount").value = "";
+        await loadRecords();
+      } catch (err) {
+        alert("儲存失敗");
+      } finally {
+        btn.disabled = false;
+        btn.textContent = "新增紀錄至試算表";
+      }
+    });
+
+    // 刪除資料
+    async function deleteRecord(id) {
+      if (!confirm("確定要刪除這筆紀錄？")) return;
+      try {
+        await fetch(API_URL, {
+          method: "POST",
+          body: JSON.stringify({ action: "delete", id: id })
+        });
+        loadRecords();
+      } catch (err) {
+        alert("刪除失敗");
+      }
+    }
+
+    document.getElementById("refreshBtn").addEventListener("click", loadRecords);
+    loadRecords();
+  </script>
+</body>
+</html>
