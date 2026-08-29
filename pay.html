@@ -5,7 +5,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>雲端全能分帳記帳系統</title>
   
-  <!-- 內嵌 PWA Manifest Data URL -->
   <link rel="manifest" href="data:application/manifest+json;base64,eyJuYW1lIjoi6Zuy56uv5YWo6IO95YiG5biz6KiY5biz57O757WxIiwic2hvcnRfbmFtZSI6IumZvueuuKiY5bizIiwiZGVzY3JpcHRpb24iOiLmlK/mjIjlhb5Lq65YiG5biz44CB5aSa5bmj5Yil44CB6KiY5biz5ZyW6aSF5ZyW44CBSlBXRU9DUiDlm77ljZrlpKrlpKrlpKoiLCJzdGFydF91cmwiOiIuLyIsImRpc3BsYXkiOiJzdGFuZGFsb25lIiwiYmFja2dyb3VuZF9jb2xvciI6IiMxMTE4MjciLCJ0aGVtZV9jb2xvciI6IiMyNTYzZWIiLCJpY29ucyI6W3sic3JjIjoiaHR0cHM6Ly9jZG4taWNvbnMtcG5nLmZsYXRpY29uLmNvbS81MTIvMjkzNi8yOTM2NzU4LnBuZyIsInNpemVzIjoiMTkyeDE5MiIsInR5cGUiOiJpbWFnZS9wbmciLCJwdXJwb3NlIjoiYW55IG1hc2thYmxlIn0seyJzcmMiOiiaHR0cHM6Ly9jZG4taWNvbnMtcG5nLmZsYXRpY29uLmNvbS81MTIvMjkzNi8yOTM2NzU4LnBuZyIsInNpemVzIjoiNTEyeDUxMiIsInR5cGUiOiJpbWFnZS9wbmciLCJwdXJwb3NlIjoiYW55IG1hc2thYmxlIn1dfQ==">
   
   <meta name="theme-color" content="#2563eb">
@@ -14,7 +13,6 @@
   <meta name="apple-mobile-web-app-title" content="雲端記帳">
   <link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/2936/2936758.png">
 
-  <!-- 第三方函式庫 -->
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
@@ -26,7 +24,6 @@
 <body class="bg-gray-100 dark:bg-gray-900 min-h-screen p-2 sm:p-4 md:p-6 text-gray-800 dark:text-gray-100 transition-colors duration-200 flex flex-col justify-between">
   <div class="max-w-2xl mx-auto w-full bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-4 sm:p-6 space-y-4 border border-transparent dark:border-gray-700 transition-colors duration-200">
     
-    <!-- 頂部控制列 -->
     <div class="flex flex-wrap justify-between items-center border-b border-gray-200 dark:border-gray-700 pb-3 gap-2">
       <div class="flex items-center gap-2">
         <h1 class="text-lg sm:text-xl font-bold text-gray-900 dark:text-white">雲端全能記帳</h1>
@@ -46,7 +43,6 @@
       </div>
     </div>
 
-    <!-- 即時匯率全覽橫幅 -->
     <div class="bg-gray-50 dark:bg-slate-900/60 border border-gray-200 dark:border-gray-700 rounded-xl p-2.5">
       <div class="flex items-center justify-between text-[11px] font-semibold text-gray-500 dark:text-gray-400 mb-1.5">
         <span>💱 即時參考匯率 (對 TWD)</span>
@@ -57,7 +53,6 @@
       </div>
     </div>
 
-    <!-- 自訂字體大小面板 -->
     <div id="fontConfigPanel" class="hidden bg-gray-50 dark:bg-slate-900/60 border border-gray-200 dark:border-gray-700 rounded-xl p-3.5 space-y-2">
       <div class="flex justify-between items-center text-xs font-bold text-gray-700 dark:text-gray-300">
         <span>自訂全站字體大小</span>
@@ -71,7 +66,6 @@
       </div>
     </div>
 
-    <!-- 密碼解鎖列 -->
     <div class="bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800/60 rounded-xl p-3 flex flex-wrap items-center justify-between gap-2">
       <div class="flex items-center gap-2 flex-1 min-w-[200px]">
         <span class="text-xs font-semibold text-amber-900 dark:text-amber-300">🔒 密碼：</span>
@@ -83,7 +77,6 @@
       </div>
     </div>
 
-    <!-- 匯出與匯入面板 -->
     <div id="dataConfigPanel" class="hidden bg-slate-50 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-700 rounded-xl p-4 space-y-3">
       <div class="text-xs font-bold text-slate-700 dark:text-slate-300">資料備份與還原</div>
       <div class="grid grid-cols-2 gap-2 text-xs">
@@ -99,7 +92,6 @@
       </div>
     </div>
 
-    <!-- 成員設定面板 -->
     <div id="memberConfigPanel" class="hidden bg-gray-50 dark:bg-slate-900/60 border border-gray-200 dark:border-gray-700 rounded-xl p-4 space-y-3">
       <div class="text-xs font-bold text-gray-700 dark:text-gray-300">管理分攤成員名單</div>
       <div class="flex gap-2">
@@ -109,7 +101,6 @@
       <div id="memberTagList" class="flex flex-wrap gap-1.5 text-xs"></div>
     </div>
 
-    <!-- 分帳結算卡片 -->
     <div class="bg-blue-50 dark:bg-blue-950/30 border border-blue-100 dark:border-blue-900/50 rounded-xl p-4 space-y-3">
       <div class="text-xs font-bold text-blue-800 dark:text-blue-300 uppercase tracking-wider">成員分帳結算 (TWD)</div>
       <div id="settlementGrid" class="grid grid-cols-2 sm:grid-cols-4 gap-2 text-center text-xs">
@@ -118,7 +109,6 @@
       <div id="settlementTransfers" class="pt-2 border-t border-blue-200/60 dark:border-blue-800/50 text-xs"></div>
     </div>
 
-    <!-- 收款 QR Code 面板 -->
     <div id="qrCodePanel" class="hidden bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-800/60 rounded-xl p-3.5 space-y-2.5 text-xs text-center">
       <div class="font-bold text-emerald-900 dark:text-emerald-200">📱 掃碼收款 (QR Code)</div>
       <div class="flex justify-center p-2 bg-white rounded-lg inline-block mx-auto border" id="qrcodeCanvas"></div>
@@ -127,7 +117,6 @@
       <button type="button" id="generateQrBtn" class="bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-1 rounded text-xs font-medium">生成 QR Code</button>
     </div>
 
-    <!-- 記帳輸入區塊 -->
     <div id="recordFormBox" class="space-y-3">
       <div class="flex items-center justify-between bg-blue-50/50 dark:bg-gray-750 p-2 rounded-xl border border-blue-100 dark:border-gray-700 text-xs">
         <span class="font-semibold text-blue-900 dark:text-blue-300">✨ 智慧輔助輸入：</span>
@@ -219,7 +208,6 @@
       </div>
     </div>
 
-    <!-- 歷史明細清單 -->
     <div>
       <div class="flex justify-between items-center mb-2">
         <h2 class="text-xs font-semibold text-gray-500 dark:text-gray-400">歷史紀錄 (<span id="recordCountDisplay">0</span> 筆)</h2>
@@ -230,7 +218,6 @@
       </div>
     </div>
 
-    <!-- 🎯 總預算管理 -->
     <div id="budgetConfigPanel" class="bg-indigo-50 dark:bg-indigo-950/30 border border-indigo-100 dark:border-indigo-900/50 rounded-xl p-3.5 space-y-2">
       <div class="flex justify-between items-center text-xs">
         <span class="font-bold text-indigo-900 dark:text-indigo-300">🎯 總預算管理</span>
@@ -251,12 +238,10 @@
 
   </div>
 
-  <!-- 照片放大檢視彈窗 -->
   <div id="imageModal" class="hidden fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4" onclick="closeImageModal()">
     <img id="modalImg" class="max-w-full max-h-[85vh] rounded-lg shadow-2xl" src="" alt="收據照片">
   </div>
 
-  <!-- 底部更新時間與奇奇828連結 -->
   <footer class="max-w-2xl mx-auto w-full mt-6 py-3 border-t border-gray-200 dark:border-gray-800 text-center text-xs text-gray-500 dark:text-gray-400 flex flex-wrap items-center justify-center gap-x-3 gap-y-1">
     <div>網頁更新時間：<span id="lastUpdatedDisplay" class="font-mono font-medium text-gray-700 dark:text-gray-300">讀取中...</span></div>
     <span class="text-gray-300 dark:text-gray-600">|</span>
@@ -985,7 +970,7 @@
       }
     }
 
-    // 儲存紀錄
+    // 儲存紀錄邏輯 (含完整驗證與錯誤回報)
     document.getElementById("saveRecordBtn").addEventListener("click", async () => {
       const pwd = getPassword();
       if (!pwd) {
@@ -1047,8 +1032,8 @@
         title: title,
         originalAmount: originalAmount,
         currency: document.getElementById("currency").value,
-        rate: rate,
-        twdAmount: twd,
+        rate: Number(rate) || 1,
+        twdAmount: Number(twd) || 0,
         payer: type === "expense" ? document.getElementById("payer").value : "",
         splitMembers: splitMembersData,
         receiptImage: uploadedReceiptBase64 || "",
@@ -1061,11 +1046,12 @@
           headers: { "Content-Type": "text/plain;charset=utf-8" },
           body: JSON.stringify(payload)
         });
+        
         const result = await res.json();
         
         if (result.status === "error") {
-          alert("儲存失敗：" + (result.message || "未知錯誤"));
-        } else {
+          alert("儲存失敗：" + (result.message || "未知後端錯誤"));
+        } else if (result.status === "success") {
           document.getElementById("title").value = "";
           document.getElementById("originalAmount").value = "";
           document.querySelectorAll(".custom-split-input").forEach(i => i.value = "");
@@ -1074,9 +1060,12 @@
           uploadedReceiptBase64 = "";
           updateTwdPreview();
           await loadRecords();
+        } else {
+          alert("後端回傳非預期結果：" + JSON.stringify(result));
         }
       } catch (err) {
-        alert("儲存失敗，請檢查網路連線或 Apps Script 設定: " + err.message);
+        console.error("儲存失敗錯誤詳情:", err);
+        alert("連線失敗！請按 F12 開啟 Console 查看詳細錯誤，或確認 Apps Script 部署權限是否設為「所有人」。\n錯誤訊息：" + err.message);
       } finally {
         btn.disabled = false;
         btn.textContent = "儲存紀錄至雲端";
