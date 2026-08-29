@@ -14,7 +14,6 @@
   <link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/2936/2936758.png">
 
   <script src="https://cdn.tailwindcss.com"></script>
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 
@@ -70,7 +69,7 @@
     <div class="bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800/60 rounded-xl p-3 flex flex-wrap items-center justify-between gap-2">
       <div class="flex items-center gap-2 flex-1 min-w-[200px]">
         <span class="text-xs font-semibold text-amber-900 dark:text-amber-300">🔒 密碼：</span>
-        <input type="password" id="accessPassword" placeholder="預設密碼 8888" class="flex-1 border border-gray-300 dark:border-gray-600 rounded-lg px-2.5 py-1 text-xs bg-white dark:bg-gray-700 dark:text-white focus:outline-amber-500">
+        <input type="password" id="accessPassword" placeholder="請輸入存取密碼" class="flex-1 border border-gray-300 dark:border-gray-600 rounded-lg px-2.5 py-1 text-xs bg-white dark:bg-gray-700 dark:text-white focus:outline-amber-500">
       </div>
       <div class="flex items-center gap-2">
         <button type="button" id="authBtn" class="bg-amber-600 hover:bg-amber-700 text-white px-3 py-1 rounded-lg text-xs font-medium transition">解鎖</button>
@@ -209,39 +208,10 @@
       </div>
     </div>
 
-    <div class="bg-gray-50 dark:bg-gray-750 p-3 rounded-xl border border-gray-200 dark:border-gray-700 space-y-2">
-      <div class="text-xs font-bold text-gray-700 dark:text-gray-300">🔍 搜尋與篩選明細</div>
-      <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs">
-        <input type="text" id="filterKeyword" placeholder="搜尋項目名稱..." class="border border-gray-300 dark:border-gray-600 rounded-lg px-2 py-1 bg-white dark:bg-gray-700 dark:text-white">
-        <select id="filterCategory" class="border border-gray-300 dark:border-gray-600 rounded-lg px-2 py-1 bg-white dark:bg-gray-700 dark:text-white">
-          <option value="">所有類別</option>
-          <option value="餐飲">🍔 餐飲</option>
-          <option value="交通">🚆 交通</option>
-          <option value="住宿">🏨 住宿</option>
-          <option value="購物">🛍️ 購物</option>
-          <option value="門票">🎟️ 門票</option>
-          <option value="娛樂">🎮 娛樂</option>
-          <option value="生活">🛒 生活</option>
-          <option value="其他">📦 其他</option>
-        </select>
-        <select id="filterPayer" class="border border-gray-300 dark:border-gray-600 rounded-lg px-2 py-1 bg-white dark:bg-gray-700 dark:text-white">
-          <option value="">所有付款人</option>
-        </select>
-        <select id="filterCurrency" class="border border-gray-300 dark:border-gray-600 rounded-lg px-2 py-1 bg-white dark:bg-gray-700 dark:text-white">
-          <option value="">所有幣別</option>
-          <option value="TWD">TWD</option>
-          <option value="JPY">JPY</option>
-          <option value="CNY">CNY</option>
-          <option value="USD">USD</option>
-          <option value="KRW">KRW</option>
-        </select>
-      </div>
-    </div>
-
     <div>
       <div class="flex justify-between items-center mb-2">
-        <h2 class="text-xs font-semibold text-gray-500 dark:text-gray-400">歷史紀錄 (已過濾 <span id="recordCountDisplay">0</span> 筆)</h2>
-        <span id="filterTotalSum" class="text-xs font-bold text-gray-700 dark:text-gray-300">合計: $0</span>
+        <h2 class="text-xs font-semibold text-gray-500 dark:text-gray-400">歷史紀錄 (<span id="recordCountDisplay">0</span> 筆)</h2>
+        <span id="filterTotalSum" class="text-xs font-bold text-gray-700 dark:text-gray-300">總計: $0</span>
       </div>
       <div id="recordList" class="space-y-2 max-h-96 overflow-y-auto pr-1">
         <p class="text-gray-400 dark:text-gray-500 text-center text-sm py-4">請輸入密碼以讀取雲端資料</p>
@@ -263,19 +233,6 @@
         <span>已支出：<b id="budgetSpentDisplay" class="font-mono">$0</b></span>
         <span>剩餘：<b id="budgetRemainingDisplay" class="font-mono">$0</b></span>
         <span>使用率：<b id="budgetPercentDisplay" class="font-mono">0%</b></span>
-      </div>
-    </div>
-
-    <div id="statsConfigPanel" class="bg-slate-50 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-700 rounded-xl p-3.5 space-y-3">
-      <div class="text-xs font-bold text-slate-700 dark:text-slate-300 flex justify-between items-center">
-        <span>📊 消費類別支出統計 (TWD)</span>
-        <span id="chartTotalExpense" class="text-blue-600 dark:text-blue-400 font-mono">總支出: $0</span>
-      </div>
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-3 items-center">
-        <div class="h-44 flex items-center justify-center">
-          <canvas id="categoryChart"></canvas>
-        </div>
-        <div id="categoryBreakdownList" class="space-y-1 text-xs max-h-40 overflow-y-auto pr-1"></div>
       </div>
     </div>
 
@@ -303,7 +260,6 @@
     let cachedRecords = [];
     let currentSplitMode = "equal";
     let uploadedReceiptBase64 = "";
-    let categoryChartInstance = null;
 
     function getTodayString() {
       const d = new Date();
@@ -360,7 +316,7 @@
     });
     window.addEventListener("appinstalled", () => pwaInstallBtn.classList.add("hidden"));
 
-    // 字體大小控制
+    // 字體大小
     const fontSlider = document.getElementById("fontSlider");
     const fontDisplay = document.getElementById("fontSizeDisplay");
     function applyFontSize(size) {
@@ -397,7 +353,6 @@
       const isDark = document.documentElement.classList.toggle("dark");
       localStorage.setItem("theme", isDark ? "dark" : "light");
       themeToggleBtn.textContent = isDark ? "☀️" : "🌙";
-      if (categoryChartInstance) renderCategoryChart(cachedRecords);
     });
 
     function getPassword() {
@@ -439,7 +394,7 @@
       } catch (e) {}
     }
 
-    // 分攤模式切換
+    // 分攤模式
     document.getElementById("modeEqualBtn").addEventListener("click", () => setSplitMode("equal"));
     document.getElementById("modeCustomBtn").addEventListener("click", () => setSplitMode("custom"));
 
@@ -503,9 +458,6 @@
     function renderMemberControls() {
       const payerSelect = document.getElementById("payer");
       payerSelect.innerHTML = members.map(m => `<option value="${m}">${m}</option>`).join("");
-
-      const filterPayer = document.getElementById("filterPayer");
-      filterPayer.innerHTML = `<option value="">所有付款人</option>` + members.map(m => `<option value="${m}">${m}</option>`).join("");
 
       const cbContainer = document.getElementById("membersCheckboxes");
       cbContainer.innerHTML = members.map(m => `
@@ -783,67 +735,6 @@
       updateBudgetProgress(exp);
     });
 
-    // 統計圖表
-    function renderCategoryChart(records) {
-      const catTotals = { "餐飲": 0, "交通": 0, "住宿": 0, "購物": 0, "門票": 0, "娛樂": 0, "生活": 0, "其他": 0 };
-      let totalExp = 0;
-
-      records.forEach(r => {
-        if (r.type === "expense") {
-          const cat = r.category || "其他";
-          const twd = r.twdAmount || 0;
-          catTotals[cat] = (catTotals[cat] || 0) + twd;
-          totalExp += twd;
-        }
-      });
-
-      document.getElementById("chartTotalExpense").textContent = `總支出: $${totalExp.toLocaleString()}`;
-      updateBudgetProgress(totalExp);
-
-      const activeCategories = Object.keys(catTotals).filter(k => catTotals[k] > 0);
-      const dataValues = activeCategories.map(k => catTotals[k]);
-      const colors = ["#ef4444", "#3b82f6", "#8b5cf6", "#ec4899", "#f59e0b", "#10b981", "#6366f1", "#64748b"];
-
-      const breakdownEl = document.getElementById("categoryBreakdownList");
-      if (activeCategories.length === 0) {
-        breakdownEl.innerHTML = `<div class="text-gray-400 py-2 text-center">尚無支出數據</div>`;
-      } else {
-        breakdownEl.innerHTML = activeCategories.map((cat, i) => {
-          const pct = Math.round((catTotals[cat] / totalExp) * 100);
-          return `
-            <div class="flex justify-between items-center bg-white dark:bg-gray-700/60 p-1.5 rounded border border-gray-100 dark:border-gray-600">
-              <span class="flex items-center gap-1.5">
-                <span class="w-2.5 h-2.5 rounded-full" style="background-color: ${colors[i % colors.length]}"></span>
-                <span>${cat}</span>
-              </span>
-              <span class="font-mono font-medium">$${catTotals[cat].toLocaleString()} (${pct}%)</span>
-            </div>
-          `;
-        }).join("");
-      }
-
-      const ctx = document.getElementById('categoryChart').getContext('2d');
-      if (categoryChartInstance) categoryChartInstance.destroy();
-
-      categoryChartInstance = new Chart(ctx, {
-        type: 'doughnut',
-        data: {
-          labels: activeCategories.length ? activeCategories : ['無資料'],
-          datasets: [{
-            data: dataValues.length ? dataValues : [1],
-            backgroundColor: dataValues.length ? colors.slice(0, activeCategories.length) : ['#e2e8f0'],
-            borderWidth: 0
-          }]
-        },
-        options: {
-          responsive: true,
-          maintainAspectRatio: false,
-          plugins: { legend: { display: false } },
-          cutout: '70%'
-        }
-      });
-    }
-
     // QR Code
     window.showQrCodeModal = function(transferText) {
       document.getElementById("qrCodePanel").classList.remove("hidden");
@@ -981,34 +872,29 @@
       }
     }
 
-    function renderFilteredRecords() {
-      const keyword = document.getElementById("filterKeyword").value.trim().toLowerCase();
-      const cat = document.getElementById("filterCategory").value;
-      const payer = document.getElementById("filterPayer").value;
-      const curr = document.getElementById("filterCurrency").value;
+    // 渲染所有明細清單
+    function renderRecordsList() {
+      document.getElementById("recordCountDisplay").textContent = cachedRecords.length;
+      let totalTwd = 0;
+      let totalExpense = 0;
 
-      const filtered = cachedRecords.filter(r => {
-        const matchKw = !keyword || (r.title && r.title.toLowerCase().includes(keyword));
-        const matchCat = !cat || (r.category === cat);
-        const matchPayer = !payer || (r.payer === payer);
-        const matchCurr = !curr || (r.currency === curr);
-        return matchKw && matchCat && matchPayer && matchCurr;
+      cachedRecords.forEach(r => {
+        totalTwd += (r.twdAmount || 0);
+        if (r.type === "expense") totalExpense += (r.twdAmount || 0);
       });
 
-      document.getElementById("recordCountDisplay").textContent = filtered.length;
-      let totalFilteredTwd = 0;
-      filtered.forEach(r => totalFilteredTwd += (r.twdAmount || 0));
-      document.getElementById("filterTotalSum").textContent = `合計: $${totalFilteredTwd.toLocaleString()}`;
+      document.getElementById("filterTotalSum").textContent = `總計: $${totalTwd.toLocaleString()}`;
+      updateBudgetProgress(totalExpense);
 
       const listEl = document.getElementById("recordList");
       listEl.innerHTML = "";
 
-      if (filtered.length === 0) {
-        listEl.innerHTML = `<p class="text-gray-400 dark:text-gray-500 text-center text-sm py-4">無符合條件的資料</p>`;
+      if (cachedRecords.length === 0) {
+        listEl.innerHTML = `<p class="text-gray-400 dark:text-gray-500 text-center text-sm py-4">目前尚無資料</p>`;
         return;
       }
 
-      filtered.forEach(item => {
+      cachedRecords.forEach(item => {
         const isExp = item.type === "expense";
         const shares = parseMemberShares(item);
         const shareText = Object.entries(shares).map(([n, a]) => `${n}($${Math.round(a)})`).join(", ");
@@ -1035,11 +921,6 @@
         listEl.appendChild(row);
       });
     }
-
-    document.getElementById("filterKeyword").addEventListener("input", renderFilteredRecords);
-    document.getElementById("filterCategory").addEventListener("change", renderFilteredRecords);
-    document.getElementById("filterPayer").addEventListener("change", renderFilteredRecords);
-    document.getElementById("filterCurrency").addEventListener("change", renderFilteredRecords);
 
     async function loadRecords() {
       const pwd = getPassword();
@@ -1069,9 +950,8 @@
         localStorage.setItem("app_pwd", pwd);
         cachedRecords = data || [];
 
-        renderFilteredRecords();
+        renderRecordsList();
         renderSettlement(cachedRecords);
-        renderCategoryChart(cachedRecords);
         fetchSheetList();
 
       } catch (err) {
