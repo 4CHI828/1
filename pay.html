@@ -3,10 +3,9 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>雲端分帳與多幣別記帳</title>
+  <title>雲端全能分帳記帳系統</title>
   
-  <!-- 內嵌 Manifest Data URL -->
-  <link rel="manifest" href="data:application/manifest+json;base64,eyJuYW1lIjoi6Zuy56uv5YiG5biz6IiH5aSa5bmj5Yil6KiY5bizIiwic2hvcnRfbmFtZSI6IumZvueuuKiY5bizIiwiZGVzY3JpcHRpb24iOiLmlK/mjIjlhb5Lq65YiG5biz44CB5aSa5bmj5Yil5Yyv546H5o+b566X6IiH6ams566X6KGow5Hlho3lkIzmraXnmoToqJjntrLlt6XlhbciLCJzdGFydF91cmwiOiIuLyIsImRpc3BsYXkiOiJzdGFuZGFsb25lIiwiYmFja2dyb3VuZF9jb2xvciI6IiMxMTE4MjciLCJ0aGVtZV9jb2xvciI6IiMyNTYzZWIiLCJpY29ucyI6W3sic3JjIjoiaHR0cHM6Ly9jZG4taWNvbnMtcG5nLmZsYXRpY29uLmNvbS81MTIvMjkzNi8yOTM2NzU4LnBuZyIsInNpemVzIjoiMTkyeDE5MiIsInR5cGUiOiJpbWFnZS9wbmciLCJwdXJwb3NlIjoiYW55IG1hc2thYmxlIn0seyJzcmMiOiiaHR0cHM6Ly9jZG4taWNvbnMtcG5nLmZsYXRpY29uLmNvbS81MTIvMjkzNi8yOTM2NzU4LnBuZyIsInNpemVzIjoiNTEyeDUxMiIsInR5cGUiOiJpbWFnZS9wbmciLCJwdXJwb3NlIjoiYW55IG1hc2thYmxlIn1dfQ==">
+  <link rel="manifest" href="data:application/manifest+json;base64,eyJuYW1lIjoi6Zuy56uv5YWo6IO95YiG5biz6KiY5biz57O757WxIiwic2hvcnRfbmFtZSI6IumZvueuuKiY5bizIiwiZGVzY3JpcHRpb24iOiLmlK/mjIjlhb5Lq65YiG5biz44CB5aSa5bmj5Yil44CB6KiY5biz5ZyW6aSF5ZyW44CBSlBXRU9DUiDlm77ljZrlpKrlpKrlpKoiLCJzdGFydF91cmwiOiIuLyIsImRpc3BsYXkiOiJzdGFuZGFsb25lIiwiYmFja2dyb3VuZF9jb2xvciI6IiMxMTE4MjciLCJ0aGVtZV9jb2xvciI6IiMyNTYzZWIiLCJpY29ucyI6W3sic3JjIjoiaHR0cHM6Ly9jZG4taWNvbnMtcG5nLmZsYXRpY29uLmNvbS81MTIvMjkzNi8yOTM2NzU4LnBuZyIsInNpemVzIjoiMTkyeDE5MiIsInR5cGUiOiJpbWFnZS9wbmciLCJwdXJwb3NlIjoiYW55IG1hc2thYmxlIn0seyJzcmMiOiiaHR0cHM6Ly9jZG4taWNvbnMtcG5nLmZsYXRpY29uLmNvbS81MTIvMjkzNi8yOTM2NzU4LnBuZyIsInNpemVzIjoiNTEyeDUxMiIsInR5cGUiOiJpbWFnZS9wbmciLCJwdXJwb3NlIjoiYW55IG1hc2thYmxlIn1dfQ==">
   
   <meta name="theme-color" content="#2563eb">
   <meta name="apple-mobile-web-app-capable" content="yes">
@@ -15,35 +14,41 @@
   <link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/2936/2936758.png">
 
   <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+
   <script>
     tailwind.config = { darkMode: 'class' }
   </script>
 </head>
-<body class="bg-gray-100 dark:bg-gray-900 min-h-screen p-3 md:p-6 text-gray-800 dark:text-gray-100 transition-colors duration-200 flex flex-col justify-between">
-  <div class="max-w-xl mx-auto w-full bg-white dark:bg-gray-800 rounded-2xl shadow-lg p-5 md:p-6 space-y-4 border border-transparent dark:border-gray-700 transition-colors duration-200">
+<body class="bg-gray-100 dark:bg-gray-900 min-h-screen p-2 sm:p-4 md:p-6 text-gray-800 dark:text-gray-100 transition-colors duration-200 flex flex-col justify-between">
+  <div class="max-w-2xl mx-auto w-full bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-4 sm:p-6 space-y-4 border border-transparent dark:border-gray-700 transition-colors duration-200">
     
-    <!-- 頂部控制列 -->
     <div class="flex flex-wrap justify-between items-center border-b border-gray-200 dark:border-gray-700 pb-3 gap-2">
-      <div>
-        <h1 class="text-xl font-bold text-gray-900 dark:text-white">分帳與多幣別記帳</h1>
+      <div class="flex items-center gap-2">
+        <h1 class="text-lg sm:text-xl font-bold text-gray-900 dark:text-white">雲端全能記帳</h1>
+        <select id="sheetSelector" class="border border-gray-300 dark:border-gray-600 rounded-lg px-2 py-1 text-xs bg-gray-50 dark:bg-gray-700 dark:text-white font-medium focus:outline-blue-500">
+          <option value="預設帳本">預設帳本</option>
+        </select>
+        <button id="addSheetBtn" class="text-xs bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 px-2 py-1 rounded-lg" title="新增帳本分頁">＋</button>
       </div>
 
-      <div class="flex items-center gap-1.5">
-        <button id="pwaInstallBtn" class="hidden text-xs bg-emerald-600 hover:bg-emerald-700 text-white font-semibold px-2.5 py-1.5 rounded-lg shadow-sm transition">
-          📲 安裝 App
-        </button>
-        <button id="themeToggleBtn" class="p-1.5 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 border border-gray-200 dark:border-gray-600 rounded-lg text-sm transition" title="切換深淺模式">🌙</button>
-        <button id="toggleFontPanelBtn" class="text-xs bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 px-2 py-1.5 rounded-lg border border-gray-200 dark:border-gray-600 transition">🔤 字體</button>
-        <button id="toggleMemberBtn" class="text-xs bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 px-2 py-1.5 rounded-lg border border-gray-200 dark:border-gray-600 transition">⚙️ 成員</button>
-        <button id="toggleDataBtn" class="text-xs bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 px-2 py-1.5 rounded-lg border border-gray-200 dark:border-gray-600 transition">📁 備份</button>
-        <button id="refreshBtn" class="text-xs bg-blue-50 dark:bg-blue-950 hover:bg-blue-100 dark:hover:bg-blue-900 text-blue-600 dark:text-blue-300 font-medium px-2.5 py-1.5 rounded-lg border border-blue-200 dark:border-blue-800 transition">重整</button>
+      <div class="flex items-center gap-1.5 flex-wrap">
+        <button id="pwaInstallBtn" class="hidden text-xs bg-emerald-600 hover:bg-emerald-700 text-white font-semibold px-2 py-1 rounded-lg shadow-sm transition">📲 安裝 App</button>
+        <button id="themeToggleBtn" class="p-1 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 border border-gray-200 dark:border-gray-600 rounded-lg text-sm transition" title="切換深淺模式">🌙</button>
+        <button id="toggleFontPanelBtn" class="text-xs bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 px-2 py-1 rounded-lg border border-gray-200 dark:border-gray-600">🔤 字體</button>
+        <button id="toggleBudgetBtn" class="text-xs bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 px-2 py-1 rounded-lg border border-gray-200 dark:border-gray-600">🎯 預算</button>
+        <button id="toggleStatsBtn" class="text-xs bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 px-2 py-1 rounded-lg border border-gray-200 dark:border-gray-600">📊 統計</button>
+        <button id="toggleMemberBtn" class="text-xs bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 px-2 py-1 rounded-lg border border-gray-200 dark:border-gray-600">⚙️ 成員</button>
+        <button id="toggleDataBtn" class="text-xs bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 px-2 py-1 rounded-lg border border-gray-200 dark:border-gray-600">📁 備份</button>
+        <button id="refreshBtn" class="text-xs bg-blue-50 dark:bg-blue-950 hover:bg-blue-100 dark:hover:bg-blue-900 text-blue-600 dark:text-blue-300 font-medium px-2 py-1 rounded-lg border border-blue-200 dark:border-blue-800">重整</button>
       </div>
     </div>
 
-    <!-- 即時匯率全覽 -->
     <div class="bg-gray-50 dark:bg-slate-900/60 border border-gray-200 dark:border-gray-700 rounded-xl p-2.5">
       <div class="flex items-center justify-between text-[11px] font-semibold text-gray-500 dark:text-gray-400 mb-1.5">
-        <span>💱 即時參考匯率 (對新台幣 TWD)</span>
+        <span>💱 即時參考匯率 (對 TWD)</span>
         <span id="rateUpdateTime" class="font-mono text-[10px]">更新中...</span>
       </div>
       <div id="rateChipsContainer" class="flex gap-1.5 overflow-x-auto pb-0.5 text-xs">
@@ -51,7 +56,37 @@
       </div>
     </div>
 
-    <!-- 自訂字體大小面板 -->
+    <div id="budgetConfigPanel" class="bg-indigo-50 dark:bg-indigo-950/30 border border-indigo-100 dark:border-indigo-900/50 rounded-xl p-3.5 space-y-2">
+      <div class="flex justify-between items-center text-xs">
+        <span class="font-bold text-indigo-900 dark:text-indigo-300">🎯 總預算管理</span>
+        <div class="flex items-center gap-1.5">
+          <span class="text-gray-500 dark:text-gray-400">設定預算 $</span>
+          <input type="number" id="budgetLimitInput" value="30000" class="w-20 border border-indigo-200 dark:border-indigo-800 rounded px-1.5 py-0.5 text-xs bg-white dark:bg-gray-700 text-right font-mono">
+        </div>
+      </div>
+      <div class="w-full bg-indigo-200 dark:bg-indigo-900/60 rounded-full h-2.5 overflow-hidden">
+        <div id="budgetProgressBar" class="bg-indigo-600 h-2.5 rounded-full transition-all duration-300" style="width: 0%"></div>
+      </div>
+      <div class="flex justify-between items-center text-[11px] text-indigo-900 dark:text-indigo-200 font-medium">
+        <span>已支出：<b id="budgetSpentDisplay" class="font-mono">$0</b></span>
+        <span>剩餘：<b id="budgetRemainingDisplay" class="font-mono">$0</b></span>
+        <span>使用率：<b id="budgetPercentDisplay" class="font-mono">0%</b></span>
+      </div>
+    </div>
+
+    <div id="statsConfigPanel" class="bg-slate-50 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-700 rounded-xl p-3.5 space-y-3">
+      <div class="text-xs font-bold text-slate-700 dark:text-slate-300 flex justify-between items-center">
+        <span>📊 消費類別支出統計 (TWD)</span>
+        <span id="chartTotalExpense" class="text-blue-600 dark:text-blue-400 font-mono">總支出: $0</span>
+      </div>
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-3 items-center">
+        <div class="h-44 flex items-center justify-center">
+          <canvas id="categoryChart"></canvas>
+        </div>
+        <div id="categoryBreakdownList" class="space-y-1 text-xs max-h-40 overflow-y-auto pr-1"></div>
+      </div>
+    </div>
+
     <div id="fontConfigPanel" class="hidden bg-gray-50 dark:bg-slate-900/60 border border-gray-200 dark:border-gray-700 rounded-xl p-3.5 space-y-2">
       <div class="flex justify-between items-center text-xs font-bold text-gray-700 dark:text-gray-300">
         <span>自訂全站字體大小</span>
@@ -65,7 +100,6 @@
       </div>
     </div>
 
-    <!-- 密碼解鎖列 -->
     <div class="bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800/60 rounded-xl p-3 flex flex-wrap items-center justify-between gap-2">
       <div class="flex items-center gap-2 flex-1 min-w-[200px]">
         <span class="text-xs font-semibold text-amber-900 dark:text-amber-300">🔒 密碼：</span>
@@ -77,7 +111,6 @@
       </div>
     </div>
 
-    <!-- 匯出與匯入面板 -->
     <div id="dataConfigPanel" class="hidden bg-slate-50 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-700 rounded-xl p-4 space-y-3">
       <div class="text-xs font-bold text-slate-700 dark:text-slate-300">資料備份與還原</div>
       <div class="grid grid-cols-2 gap-2 text-xs">
@@ -93,7 +126,6 @@
       </div>
     </div>
 
-    <!-- 成員設定面板 -->
     <div id="memberConfigPanel" class="hidden bg-gray-50 dark:bg-slate-900/60 border border-gray-200 dark:border-gray-700 rounded-xl p-4 space-y-3">
       <div class="text-xs font-bold text-gray-700 dark:text-gray-300">管理分攤成員名單</div>
       <div class="flex gap-2">
@@ -103,75 +135,160 @@
       <div id="memberTagList" class="flex flex-wrap gap-1.5 text-xs"></div>
     </div>
 
-    <!-- 分帳結算卡片 -->
     <div class="bg-blue-50 dark:bg-blue-950/30 border border-blue-100 dark:border-blue-900/50 rounded-xl p-4 space-y-3">
       <div class="text-xs font-bold text-blue-800 dark:text-blue-300 uppercase tracking-wider">成員分帳結算 (TWD)</div>
-      
-      <!-- 個人結餘網格 -->
       <div id="settlementGrid" class="grid grid-cols-2 sm:grid-cols-4 gap-2 text-center text-xs">
         <div class="col-span-full text-gray-400 dark:text-gray-500 py-1">請先解鎖以查看結算金額</div>
       </div>
-
-      <!-- 轉帳結清指引 -->
       <div id="settlementTransfers" class="pt-2 border-t border-blue-200/60 dark:border-blue-800/50 text-xs"></div>
     </div>
 
-    <!-- 記帳表單 -->
-    <form id="recordForm" class="space-y-4">
-      <div class="grid grid-cols-3 gap-2">
-        <select id="type" class="border border-gray-300 dark:border-gray-600 rounded-lg px-2.5 py-2 text-sm bg-gray-50 dark:bg-gray-700 dark:text-white focus:bg-white focus:outline-blue-500">
+    <div id="qrCodePanel" class="hidden bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-800/60 rounded-xl p-3.5 space-y-2.5 text-xs text-center">
+      <div class="font-bold text-emerald-900 dark:text-emerald-200">📱 掃碼收款 (QR Code)</div>
+      <div class="flex justify-center p-2 bg-white rounded-lg inline-block mx-auto border" id="qrcodeCanvas"></div>
+      <div class="text-[11px] text-gray-500 dark:text-gray-400">可將個人收款帳號或轉帳連結轉為 QR 碼提供掃碼</div>
+      <input type="text" id="qrCodeInputText" placeholder="輸入收款銀行帳號或街口/LINE轉帳網址" class="w-full border border-gray-300 dark:border-gray-600 rounded px-2.5 py-1 text-xs bg-white dark:bg-gray-700">
+      <button id="generateQrBtn" class="bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-1 rounded text-xs font-medium">生成 QR Code</button>
+    </div>
+
+    <form id="recordForm" class="space-y-3">
+      
+      <div class="flex items-center justify-between bg-blue-50/50 dark:bg-gray-750 p-2 rounded-xl border border-blue-100 dark:border-gray-700 text-xs">
+        <span class="font-semibold text-blue-900 dark:text-blue-300">✨ 智慧輔助輸入：</span>
+        <div class="flex items-center gap-2">
+          <button type="button" id="voiceInputBtn" class="flex items-center gap-1 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 px-2 py-1 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-600 text-blue-600 dark:text-blue-400 font-medium transition">
+            🎤 語音記帳
+          </button>
+          <label class="flex items-center gap-1 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 px-2 py-1 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-600 text-emerald-600 dark:text-emerald-400 font-medium cursor-pointer transition">
+            📷 辨識收據
+            <input type="file" id="ocrReceiptInput" accept="image/*" class="hidden">
+          </label>
+        </div>
+      </div>
+      <div id="aiStatusNotice" class="hidden text-center text-xs text-blue-600 dark:text-blue-400 font-medium py-1 animate-pulse"></div>
+
+      <div class="grid grid-cols-4 gap-2">
+        <select id="type" class="border border-gray-300 dark:border-gray-600 rounded-lg px-2 py-2 text-xs bg-gray-50 dark:bg-gray-700 dark:text-white focus:outline-blue-500">
           <option value="expense">支出</option>
           <option value="income">個人收入</option>
         </select>
-        <input type="text" id="title" placeholder="項目名稱 (如: 居酒屋晚餐)" required class="col-span-2 border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 text-sm bg-white dark:bg-gray-700 dark:text-white focus:outline-blue-500">
+        <select id="category" class="border border-gray-300 dark:border-gray-600 rounded-lg px-2 py-2 text-xs bg-gray-50 dark:bg-gray-700 dark:text-white font-medium focus:outline-blue-500">
+          <option value="餐飲">🍔 餐飲</option>
+          <option value="交通">🚆 交通</option>
+          <option value="住宿">🏨 住宿</option>
+          <option value="購物">🛍️ 購物</option>
+          <option value="門票">🎟️ 門票</option>
+          <option value="娛樂">🎮 娛樂</option>
+          <option value="生活">🛒 生活</option>
+          <option value="其他">📦 其他</option>
+        </select>
+        <input type="text" id="title" placeholder="項目名稱 (如: 居酒屋晚餐)" required class="col-span-2 border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 text-xs bg-white dark:bg-gray-700 dark:text-white focus:outline-blue-500">
       </div>
 
       <div class="grid grid-cols-3 gap-2">
-        <!-- 移除 EUR，保留 TWD, JPY, CNY, USD, KRW -->
-        <select id="currency" class="border border-gray-300 dark:border-gray-600 rounded-lg px-2.5 py-2 text-sm bg-gray-50 dark:bg-gray-700 dark:text-white focus:bg-white focus:outline-blue-500 font-semibold">
+        <select id="currency" class="border border-gray-300 dark:border-gray-600 rounded-lg px-2.5 py-2 text-xs bg-gray-50 dark:bg-gray-700 dark:text-white focus:bg-white focus:outline-blue-500 font-semibold">
           <option value="TWD">TWD 台幣</option>
           <option value="JPY">JPY 日圓</option>
           <option value="CNY">CNY 人民幣</option>
           <option value="USD">USD 美元</option>
           <option value="KRW">KRW 韓元</option>
         </select>
-        <input type="number" id="originalAmount" placeholder="原始金額" step="any" min="0.01" required class="border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 text-sm bg-white dark:bg-gray-700 dark:text-white focus:outline-blue-500">
+        <input type="number" id="originalAmount" placeholder="原始金額" step="any" min="0.01" required class="border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 text-xs bg-white dark:bg-gray-700 dark:text-white focus:outline-blue-500">
         <div class="flex items-center text-xs text-gray-500 dark:text-gray-400 bg-gray-50 dark:bg-gray-700 px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600">
           折合 <span id="previewTwd" class="font-bold text-blue-600 dark:text-blue-400 ml-1">0</span> TWD
         </div>
       </div>
 
-      <div id="splitSection" class="p-3 bg-gray-50 dark:bg-slate-900/40 rounded-xl border border-gray-200 dark:border-gray-700 space-y-2">
+      <div id="splitSection" class="p-3 bg-gray-50 dark:bg-slate-900/40 rounded-xl border border-gray-200 dark:border-gray-700 space-y-3">
         <div class="flex items-center justify-between text-xs">
           <span class="font-medium text-gray-600 dark:text-gray-300">誰先代墊 (付款人)：</span>
           <select id="payer" class="border border-gray-300 dark:border-gray-600 rounded-lg px-2 py-1 bg-white dark:bg-gray-700 dark:text-white text-xs"></select>
         </div>
-        <div>
-          <div class="text-xs font-medium text-gray-600 dark:text-gray-300 mb-1">分攤成員 (平分)：</div>
-          <div class="flex flex-wrap gap-3 text-xs" id="membersCheckboxes"></div>
+
+        <div class="flex items-center justify-between border-t border-gray-200 dark:border-gray-700 pt-2 text-xs">
+          <span class="font-medium text-gray-600 dark:text-gray-300">分攤模式：</span>
+          <div class="flex bg-gray-200 dark:bg-gray-700 p-0.5 rounded-lg text-xs">
+            <button type="button" id="modeEqualBtn" class="px-2.5 py-1 rounded bg-white dark:bg-gray-600 font-bold text-blue-600 dark:text-blue-400 shadow-sm transition">平分</button>
+            <button type="button" id="modeCustomBtn" class="px-2.5 py-1 rounded text-gray-600 dark:text-gray-300 hover:text-black dark:hover:text-white transition">自訂成員金額</button>
+          </div>
+        </div>
+
+        <div id="splitModeEqualContainer">
+          <div class="text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">分攤成員 (平分)：</div>
+          <div class="flex flex-wrap gap-2 text-xs" id="membersCheckboxes"></div>
+        </div>
+
+        <div id="splitModeCustomContainer" class="hidden space-y-2">
+          <div class="flex justify-between items-center text-xs">
+            <span class="font-medium text-gray-500 dark:text-gray-400">指定應付金額 (TWD)：</span>
+            <span id="customSumStatus" class="font-mono text-xs text-gray-400">合計 $0 / 總計 $0</span>
+          </div>
+          <div id="customMembersList" class="space-y-1.5 max-h-48 overflow-y-auto pr-1"></div>
         </div>
       </div>
 
+      <div class="flex items-center justify-between bg-gray-50 dark:bg-gray-750 p-2 rounded-xl border border-gray-200 dark:border-gray-700 text-xs">
+        <label class="cursor-pointer flex items-center gap-1 text-gray-600 dark:text-gray-300 hover:text-blue-500">
+          <span>📎 附加收據照片：</span>
+          <input type="file" id="receiptPhotoInput" accept="image/*" class="text-xs text-slate-500 file:mr-2 file:py-0.5 file:px-2 file:rounded file:border-0 file:text-xs file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100">
+        </label>
+        <div id="receiptPreviewThumb" class="hidden w-7 h-7 rounded border bg-cover bg-center"></div>
+      </div>
+
       <div class="flex gap-2">
-        <input type="date" id="date" required class="w-1/2 border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 text-sm bg-white dark:bg-gray-700 dark:text-white focus:outline-blue-500">
-        <button type="submit" id="submitBtn" class="w-1/2 bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 rounded-lg text-sm transition">
-          儲存紀錄
+        <input type="date" id="date" required class="w-1/2 border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 text-xs bg-white dark:bg-gray-700 dark:text-white focus:outline-blue-500">
+        <button type="submit" id="submitBtn" class="w-1/2 bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 rounded-lg text-xs transition">
+          儲存紀錄至雲端
         </button>
       </div>
     </form>
 
-    <!-- 紀錄清單 -->
+    <div class="bg-gray-50 dark:bg-gray-750 p-3 rounded-xl border border-gray-200 dark:border-gray-700 space-y-2">
+      <div class="text-xs font-bold text-gray-700 dark:text-gray-300">🔍 搜尋與篩選明細</div>
+      <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs">
+        <input type="text" id="filterKeyword" placeholder="搜尋項目名稱..." class="border border-gray-300 dark:border-gray-600 rounded-lg px-2 py-1 bg-white dark:bg-gray-700 dark:text-white">
+        <select id="filterCategory" class="border border-gray-300 dark:border-gray-600 rounded-lg px-2 py-1 bg-white dark:bg-gray-700 dark:text-white">
+          <option value="">所有類別</option>
+          <option value="餐飲">🍔 餐飲</option>
+          <option value="交通">🚆 交通</option>
+          <option value="住宿">🏨 住宿</option>
+          <option value="購物">🛍️ 購物</option>
+          <option value="門票">🎟️ 門票</option>
+          <option value="娛樂">🎮 娛樂</option>
+          <option value="生活">🛒 生活</option>
+          <option value="其他">📦 其他</option>
+        </select>
+        <select id="filterPayer" class="border border-gray-300 dark:border-gray-600 rounded-lg px-2 py-1 bg-white dark:bg-gray-700 dark:text-white">
+          <option value="">所有付款人</option>
+        </select>
+        <select id="filterCurrency" class="border border-gray-300 dark:border-gray-600 rounded-lg px-2 py-1 bg-white dark:bg-gray-700 dark:text-white">
+          <option value="">所有幣別</option>
+          <option value="TWD">TWD</option>
+          <option value="JPY">JPY</option>
+          <option value="CNY">CNY</option>
+          <option value="USD">USD</option>
+          <option value="KRW">KRW</option>
+        </select>
+      </div>
+    </div>
+
     <div>
-      <h2 class="text-sm font-semibold text-gray-500 dark:text-gray-400 mb-2">歷史明細</h2>
-      <div id="recordList" class="space-y-2 max-h-80 overflow-y-auto pr-1">
+      <div class="flex justify-between items-center mb-2">
+        <h2 class="text-xs font-semibold text-gray-500 dark:text-gray-400">歷史紀錄 (已過濾 <span id="recordCountDisplay">0</span> 筆)</h2>
+        <span id="filterTotalSum" class="text-xs font-bold text-gray-700 dark:text-gray-300">合計: $0</span>
+      </div>
+      <div id="recordList" class="space-y-2 max-h-96 overflow-y-auto pr-1">
         <p class="text-gray-400 dark:text-gray-500 text-center text-sm py-4">請輸入密碼以讀取雲端資料</p>
       </div>
     </div>
 
   </div>
 
-  <!-- 底部更新時間與奇奇828連結 -->
-  <footer class="max-w-xl mx-auto w-full mt-6 py-3 border-t border-gray-200 dark:border-gray-800 text-center text-xs text-gray-500 dark:text-gray-400 flex flex-wrap items-center justify-center gap-x-3 gap-y-1">
+  <div id="imageModal" class="hidden fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4" onclick="closeImageModal()">
+    <img id="modalImg" class="max-w-full max-h-[85vh] rounded-lg shadow-2xl" src="" alt="收據照片">
+  </div>
+
+  <footer class="max-w-2xl mx-auto w-full mt-6 py-3 border-t border-gray-200 dark:border-gray-800 text-center text-xs text-gray-500 dark:text-gray-400 flex flex-wrap items-center justify-center gap-x-3 gap-y-1">
     <div>網頁更新時間：<span id="lastUpdatedDisplay" class="font-mono font-medium text-gray-700 dark:text-gray-300">載入中...</span></div>
     <span class="text-gray-300 dark:text-gray-600">|</span>
     <a href="https://v.douyin.com/XmUkpVat8Lg/" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-1 font-semibold text-blue-600 dark:text-blue-400 hover:underline">
@@ -183,10 +300,13 @@
   <script>
     const API_URL = "https://script.google.com/macros/s/AKfycbyLdzLuX2UzEpgD2fc-P_2l8L0yjfjsUgLaOTdn7tJWcRdhIG6ZY4lxFp5WAY7pFXxW/exec";
     
+    let currentSheet = localStorage.getItem("app_active_sheet") || "預設帳本";
     let members = JSON.parse(localStorage.getItem("split_members")) || ["我", "小明", "小華"];
-    // 預設匯率表 (移除 EUR)
     let exchangeRates = { TWD: 1, JPY: 0.21, CNY: 4.45, USD: 32.5, KRW: 0.024 };
     let cachedRecords = [];
+    let currentSplitMode = "equal";
+    let uploadedReceiptBase64 = "";
+    let categoryChartInstance = null;
 
     function updateTimestampDisplay() {
       const now = new Date();
@@ -196,7 +316,7 @@
       if (el) el.textContent = timeStr;
     }
 
-    // Service Worker
+    // 內嵌 Service Worker
     if ("serviceWorker" in navigator) {
       window.addEventListener("load", () => {
         const swCode = `
@@ -248,9 +368,6 @@
     document.getElementById("toggleFontPanelBtn").addEventListener("click", () => {
       document.getElementById("fontConfigPanel").classList.toggle("hidden");
     });
-    function initFontSize() {
-      applyFontSize(localStorage.getItem("app_custom_font_size") || 16);
-    }
 
     // 主題切換
     const themeToggleBtn = document.getElementById("themeToggleBtn");
@@ -269,28 +386,147 @@
       const isDark = document.documentElement.classList.toggle("dark");
       localStorage.setItem("theme", isDark ? "dark" : "light");
       themeToggleBtn.textContent = isDark ? "☀️" : "🌙";
+      if (categoryChartInstance) renderCategoryChart(cachedRecords);
     });
 
     function getPassword() {
       return document.getElementById("accessPassword").value.trim() || localStorage.getItem("app_pwd") || "";
     }
 
+    // 帳本分頁管理
+    const sheetSelector = document.getElementById("sheetSelector");
+    sheetSelector.addEventListener("change", (e) => {
+      currentSheet = e.target.value;
+      localStorage.setItem("app_active_sheet", currentSheet);
+      loadRecords();
+    });
+
+    document.getElementById("addSheetBtn").addEventListener("click", () => {
+      const name = prompt("請輸入新帳本/分頁名稱（如：2026日本行、個人日常）：");
+      if (name && name.trim()) {
+        const cleanName = name.trim();
+        const opt = document.createElement("option");
+        opt.value = cleanName;
+        opt.textContent = cleanName;
+        sheetSelector.appendChild(opt);
+        sheetSelector.value = cleanName;
+        currentSheet = cleanName;
+        localStorage.setItem("app_active_sheet", currentSheet);
+        loadRecords();
+      }
+    });
+
+    async function fetchSheetList() {
+      const pwd = getPassword();
+      if (!pwd) return;
+      try {
+        const res = await fetch(`${API_URL}?password=${encodeURIComponent(pwd)}&action=get_sheets`);
+        const data = await res.json();
+        if (data && data.sheets) {
+          sheetSelector.innerHTML = data.sheets.map(s => `<option value="${s}" ${s === currentSheet ? 'selected' : ''}>${s}</option>`).join("");
+        }
+      } catch (e) {}
+    }
+
+    // 分攤模式切換
+    document.getElementById("modeEqualBtn").addEventListener("click", () => setSplitMode("equal"));
+    document.getElementById("modeCustomBtn").addEventListener("click", () => setSplitMode("custom"));
+
+    function setSplitMode(mode) {
+      currentSplitMode = mode;
+      const equalBtn = document.getElementById("modeEqualBtn");
+      const customBtn = document.getElementById("modeCustomBtn");
+      const equalBox = document.getElementById("splitModeEqualContainer");
+      const customBox = document.getElementById("splitModeCustomContainer");
+
+      if (mode === "equal") {
+        equalBtn.className = "px-2.5 py-1 rounded bg-white dark:bg-gray-600 font-bold text-blue-600 dark:text-blue-400 shadow-sm transition";
+        customBtn.className = "px-2.5 py-1 rounded text-gray-600 dark:text-gray-300 hover:text-black dark:hover:text-white transition";
+        equalBox.classList.remove("hidden");
+        customBox.classList.add("hidden");
+      } else {
+        customBtn.className = "px-2.5 py-1 rounded bg-white dark:bg-gray-600 font-bold text-blue-600 dark:text-blue-400 shadow-sm transition";
+        equalBtn.className = "px-2.5 py-1 rounded text-gray-600 dark:text-gray-300 hover:text-black dark:hover:text-white transition";
+        equalBox.classList.add("hidden");
+        customBox.classList.remove("hidden");
+        checkCustomSplitTotal();
+      }
+    }
+
+    function checkCustomSplitTotal() {
+      const totalTwd = updateTwdPreview().twd;
+      let sum = 0;
+      document.querySelectorAll(".custom-split-input").forEach(input => {
+        sum += parseFloat(input.value) || 0;
+      });
+
+      const statusEl = document.getElementById("customSumStatus");
+      const diff = totalTwd - sum;
+
+      if (Math.abs(diff) < 0.01 && totalTwd > 0) {
+        statusEl.innerHTML = `<span class="text-green-600 dark:text-green-400 font-bold">✓ 合計 $${sum} (吻合)</span>`;
+      } else {
+        statusEl.innerHTML = `<span class="text-red-500 dark:text-red-400 font-medium">合計 $${sum} / 總計 $${totalTwd} (差 $${diff})</span>`;
+      }
+    }
+
+    window.autoFillDifference = function(memberName) {
+      const totalTwd = updateTwdPreview().twd;
+      let sumOther = 0;
+      let targetInput = null;
+
+      document.querySelectorAll(".custom-split-input").forEach(input => {
+        if (input.dataset.member === memberName) {
+          targetInput = input;
+        } else {
+          sumOther += parseFloat(input.value) || 0;
+        }
+      });
+
+      if (targetInput) {
+        targetInput.value = Math.max(0, totalTwd - sumOther);
+        checkCustomSplitTotal();
+      }
+    };
+
     function renderMemberControls() {
       const payerSelect = document.getElementById("payer");
       payerSelect.innerHTML = members.map(m => `<option value="${m}">${m}</option>`).join("");
 
+      const filterPayer = document.getElementById("filterPayer");
+      filterPayer.innerHTML = `<option value="">所有付款人</option>` + members.map(m => `<option value="${m}">${m}</option>`).join("");
+
       const cbContainer = document.getElementById("membersCheckboxes");
       cbContainer.innerHTML = members.map(m => `
-        <label class="flex items-center gap-1 cursor-pointer bg-white dark:bg-gray-700 px-2 py-1 rounded border border-gray-200 dark:border-gray-600">
+        <label class="flex items-center gap-1 cursor-pointer bg-white dark:bg-gray-700 px-2 py-1 rounded border border-gray-200 dark:border-gray-600 text-xs">
           <input type="checkbox" value="${m}" checked class="member-cb"> ${m}
         </label>
       `).join("");
+
+      const customList = document.getElementById("customMembersList");
+      customList.innerHTML = members.map(m => `
+        <div class="flex items-center gap-2 bg-white dark:bg-gray-700/70 p-1.5 rounded-lg border border-gray-200 dark:border-gray-600 text-xs">
+          <span class="w-14 font-medium text-gray-700 dark:text-gray-200 truncate">${m}</span>
+          <div class="relative flex-1">
+            <span class="absolute left-2 top-1 text-gray-400">$</span>
+            <input type="number" step="any" min="0" placeholder="0" data-member="${m}" 
+                   class="custom-split-input w-full pl-5 pr-2 py-0.5 border border-gray-200 dark:border-gray-600 rounded bg-gray-50 dark:bg-gray-800 text-xs text-right font-mono focus:outline-blue-500">
+          </div>
+          <button type="button" onclick="autoFillDifference('${m}')" class="text-[10px] bg-blue-50 dark:bg-blue-950 text-blue-600 dark:text-blue-300 border border-blue-200 dark:border-blue-800 px-1.5 py-0.5 rounded hover:bg-blue-100 transition whitespace-nowrap">
+            補差額
+          </button>
+        </div>
+      `).join("");
+
+      document.querySelectorAll(".custom-split-input").forEach(input => {
+        input.addEventListener("input", checkCustomSplitTotal);
+      });
 
       const tagList = document.getElementById("memberTagList");
       tagList.innerHTML = members.map((m, idx) => `
         <span class="inline-flex items-center gap-1 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 px-2 py-0.5 rounded-md text-gray-700 dark:text-gray-200">
           ${m}
-          <button onclick="removeMember(${idx})" class="text-red-400 hover:text-red-600 font-bold ml-1">×</button>
+          <button type="button" onclick="removeMember(${idx})" class="text-red-400 hover:text-red-600 font-bold ml-1">×</button>
         </span>
       `).join("");
 
@@ -314,14 +550,13 @@
       renderMemberControls();
     };
 
-    document.getElementById("toggleMemberBtn").addEventListener("click", () => {
-      document.getElementById("memberConfigPanel").classList.toggle("hidden");
-    });
-    document.getElementById("toggleDataBtn").addEventListener("click", () => {
-      document.getElementById("dataConfigPanel").classList.toggle("hidden");
-    });
+    // 展開收合開關
+    document.getElementById("toggleMemberBtn").addEventListener("click", () => document.getElementById("memberConfigPanel").classList.toggle("hidden"));
+    document.getElementById("toggleDataBtn").addEventListener("click", () => document.getElementById("dataConfigPanel").classList.toggle("hidden"));
+    document.getElementById("toggleBudgetBtn").addEventListener("click", () => document.getElementById("budgetConfigPanel").classList.toggle("hidden"));
+    document.getElementById("toggleStatsBtn").addEventListener("click", () => document.getElementById("statsConfigPanel").classList.toggle("hidden"));
 
-    // 匯率顯示 (移除 EUR)
+    // 匯率同步
     function renderExchangeRateChips() {
       const container = document.getElementById("rateChipsContainer");
       const targetCurrencies = [
@@ -368,6 +603,7 @@
       const rate = exchangeRates[curr] || 1;
       const twd = Math.round(amount * rate);
       document.getElementById("previewTwd").textContent = twd.toLocaleString();
+      checkCustomSplitTotal();
       return { rate, twd };
     }
 
@@ -378,20 +614,287 @@
     document.getElementById("originalAmount").addEventListener("input", updateTwdPreview);
     document.getElementById("date").valueAsDate = new Date();
 
-    // 分帳結算演算法
+    // 收據照片處理 (壓縮為 Base64)
+    document.getElementById("receiptPhotoInput").addEventListener("change", function(e) {
+      const file = e.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = function(evt) {
+        const img = new Image();
+        img.onload = function() {
+          const canvas = document.createElement("canvas");
+          const maxDim = 800;
+          let w = img.width, h = img.height;
+          if (w > maxDim || h > maxDim) {
+            if (w > h) { h = (maxDim / w) * h; w = maxDim; }
+            else { w = (maxDim / h) * w; h = maxDim; }
+          }
+          canvas.width = w; canvas.height = h;
+          canvas.getContext("2d").drawImage(img, 0, 0, w, h);
+          uploadedReceiptBase64 = canvas.toDataURL("image/jpeg", 0.6);
+          
+          const thumb = document.getElementById("receiptPreviewThumb");
+          thumb.style.backgroundImage = `url(${uploadedReceiptBase64})`;
+          thumb.classList.remove("hidden");
+        };
+        img.src = evt.target.result;
+      };
+      reader.readAsDataURL(file);
+    });
+
+    // 🎤 語音記帳 (Web Speech API)
+    const voiceBtn = document.getElementById("voiceInputBtn");
+    const aiStatus = document.getElementById("aiStatusNotice");
+    if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
+      const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+      const recognition = new SpeechRecognition();
+      recognition.lang = 'zh-TW';
+
+      voiceBtn.addEventListener("click", () => {
+        aiStatus.textContent = "🎙️ 請說話 (例如：午餐拉麵日圓1200 / 計程車台幣250)...";
+        aiStatus.classList.remove("hidden");
+        recognition.start();
+      });
+
+      recognition.onresult = (event) => {
+        const speechText = event.results[0][0].transcript;
+        aiStatus.textContent = `聽到：「${speechText}」- 自動填表中...`;
+
+        // 智慧解析幣別
+        if (speechText.includes("日圓") || speechText.includes("日幣") || speechText.includes("JPY")) document.getElementById("currency").value = "JPY";
+        else if (speechText.includes("人民幣") || speechText.includes("CNY")) document.getElementById("currency").value = "CNY";
+        else if (speechText.includes("美元") || speechText.includes("美金") || speechText.includes("USD")) document.getElementById("currency").value = "USD";
+        else if (speechText.includes("韓元") || speechText.includes("韓幣") || speechText.includes("KRW")) document.getElementById("currency").value = "KRW";
+        else document.getElementById("currency").value = "TWD";
+
+        // 智慧解析分類
+        if (/吃|午餐|晚餐|早餐|拉麵|咖啡|飯|飲料/.test(speechText)) document.getElementById("category").value = "餐飲";
+        else if (/車|捷運|地鐵|機票|高鐵|計程車|uber/i.test(speechText)) document.getElementById("category").value = "交通";
+        else if (/住|飯店|民宿|airbnb/i.test(speechText)) document.getElementById("category").value = "住宿";
+        else if (/買|購物|衣服|藥妝/.test(speechText)) document.getElementById("category").value = "購物";
+        else if (/門票|門券|展覽|影城|電影/.test(speechText)) document.getElementById("category").value = "門票";
+
+        // 智慧抓取金額數字
+        const numbers = speechText.match(/\d+/g);
+        if (numbers && numbers.length > 0) {
+          document.getElementById("originalAmount").value = numbers[numbers.length - 1];
+        }
+
+        // 項目名稱
+        document.getElementById("title").value = speechText.replace(/\d+/g, '').replace(/元|塊|台幣|日圓|日幣|美金|美元|韓元|人民幣/g, '').trim() || speechText;
+        updateTwdPreview();
+
+        setTimeout(() => aiStatus.classList.add("hidden"), 3000);
+      };
+
+      recognition.onerror = () => {
+        aiStatus.textContent = "語音辨識逾時或未偵測到聲音";
+        setTimeout(() => aiStatus.classList.add("hidden"), 2000);
+      };
+    } else {
+      voiceBtn.classList.add("opacity-50", "cursor-not-allowed");
+      voiceBtn.title = "您的瀏覽器不支援 Web Speech 語音辨識";
+    }
+
+    // 📷 OCR 收據發票辨識 (Tesseract.js)
+    document.getElementById("ocrReceiptInput").addEventListener("change", async (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+
+      aiStatus.textContent = "🔍 OCR 辨識收據中，請稍候...";
+      aiStatus.classList.remove("hidden");
+
+      try {
+        const { data: { text } } = await Tesseract.recognize(file, 'eng+chi_tra');
+        aiStatus.textContent = "辨識完成，自動擷取金額與日期...";
+
+        // 搜尋金額正則 (尋找 Total, 合計, 或最大數字)
+        const amountMatches = text.match(/(?:TOTAL|合計|小計|NT\$|\$|JPY|￥)\s*[:：]?\s*([0-9,.]+)/i) || text.match(/[0-9,.]+/g);
+        if (amountMatches) {
+          const numbers = amountMatches.map(n => parseFloat(n.replace(/,/g, ''))).filter(n => !isNaN(n) && n > 0 && n < 1000000);
+          if (numbers.length > 0) {
+            document.getElementById("originalAmount").value = Math.max(...numbers);
+          }
+        }
+
+        // 搜尋日期 (YYYY/MM/DD 或 YYYY-MM-DD)
+        const dateMatch = text.match(/20\d{2}[-/.]\d{1,2}[-/.]\d{1,2}/);
+        if (dateMatch) {
+          const formattedDate = dateMatch[0].replace(/[/.]/g, '-');
+          document.getElementById("date").value = formattedDate;
+        }
+
+        document.getElementById("title").value = "收據消費";
+        updateTwdPreview();
+
+        setTimeout(() => aiStatus.classList.add("hidden"), 3000);
+      } catch (err) {
+        aiStatus.textContent = "OCR 辨識失敗，請手動輸入";
+        setTimeout(() => aiStatus.classList.add("hidden"), 2000);
+      }
+    });
+
+    // 🌟 解析成員分攤
+    function parseMemberShares(item) {
+      const shares = {};
+      const twd = Number(item.twdAmount) || 0;
+      const rawList = item.splitMembers || [];
+
+      if (!rawList || rawList.length === 0) return shares;
+
+      const isCustomFormat = rawList.some(s => String(s).includes(":"));
+
+      if (isCustomFormat) {
+        rawList.forEach(str => {
+          const parts = String(str).split(":");
+          const name = parts[0].trim();
+          const amt = parseFloat(parts[1]) || 0;
+          if (name) shares[name] = amt;
+        });
+      } else {
+        const validMembers = rawList.map(s => String(s).trim()).filter(s => s !== "");
+        if (validMembers.length > 0 && twd > 0) {
+          const perShare = twd / validMembers.length;
+          validMembers.forEach(m => shares[m] = perShare);
+        }
+      }
+      return shares;
+    }
+
+    // 🎯 預算進度條更新
+    function updateBudgetProgress(totalExpense) {
+      const budgetLimit = parseFloat(document.getElementById("budgetLimitInput").value) || 30000;
+      const remaining = Math.max(0, budgetLimit - totalExpense);
+      const percent = Math.min(100, Math.round((totalExpense / budgetLimit) * 100)) || 0;
+
+      document.getElementById("budgetSpentDisplay").textContent = `$${totalExpense.toLocaleString()}`;
+      document.getElementById("budgetRemainingDisplay").textContent = `$${remaining.toLocaleString()}`;
+      document.getElementById("budgetPercentDisplay").textContent = `${percent}%`;
+
+      const bar = document.getElementById("budgetProgressBar");
+      bar.style.width = `${percent}%`;
+      if (percent >= 90) bar.className = "bg-red-500 h-2.5 rounded-full transition-all duration-300";
+      else if (percent >= 70) bar.className = "bg-amber-500 h-2.5 rounded-full transition-all duration-300";
+      else bar.className = "bg-indigo-600 h-2.5 rounded-full transition-all duration-300";
+    }
+
+    document.getElementById("budgetLimitInput").addEventListener("input", () => {
+      let exp = 0;
+      cachedRecords.forEach(r => { if (r.type === "expense") exp += (r.twdAmount || 0); });
+      updateBudgetProgress(exp);
+    });
+
+    // 📊 渲染消費分類圖表 (Chart.js)
+    function renderCategoryChart(records) {
+      const catTotals = { "餐飲": 0, "交通": 0, "住宿": 0, "購物": 0, "門票": 0, "娛樂": 0, "生活": 0, "其他": 0 };
+      let totalExp = 0;
+
+      records.forEach(r => {
+        if (r.type === "expense") {
+          const cat = r.category || "其他";
+          const twd = r.twdAmount || 0;
+          catTotals[cat] = (catTotals[cat] || 0) + twd;
+          totalExp += twd;
+        }
+      });
+
+      document.getElementById("chartTotalExpense").textContent = `總支出: $${totalExp.toLocaleString()}`;
+      updateBudgetProgress(totalExp);
+
+      const activeCategories = Object.keys(catTotals).filter(k => catTotals[k] > 0);
+      const dataValues = activeCategories.map(k => catTotals[k]);
+      const colors = ["#ef4444", "#3b82f6", "#8b5cf6", "#ec4899", "#f59e0b", "#10b981", "#6366f1", "#64748b"];
+
+      // 產生右側清單
+      const breakdownEl = document.getElementById("categoryBreakdownList");
+      if (activeCategories.length === 0) {
+        breakdownEl.innerHTML = `<div class="text-gray-400 py-2 text-center">尚無支出數據</div>`;
+      } else {
+        breakdownEl.innerHTML = activeCategories.map((cat, i) => {
+          const pct = Math.round((catTotals[cat] / totalExp) * 100);
+          return `
+            <div class="flex justify-between items-center bg-white dark:bg-gray-700/60 p-1.5 rounded border border-gray-100 dark:border-gray-600">
+              <span class="flex items-center gap-1.5">
+                <span class="w-2.5 h-2.5 rounded-full" style="background-color: ${colors[i % colors.length]}"></span>
+                <span>${cat}</span>
+              </span>
+              <span class="font-mono font-medium">$${catTotals[cat].toLocaleString()} (${pct}%)</span>
+            </div>
+          `;
+        }).join("");
+      }
+
+      // 繪製 Chart.js
+      const ctx = document.getElementById('categoryChart').getContext('2d');
+      if (categoryChartInstance) categoryChartInstance.destroy();
+
+      categoryChartInstance = new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+          labels: activeCategories.length ? activeCategories : ['無資料'],
+          datasets: [{
+            data: dataValues.length ? dataValues : [1],
+            backgroundColor: dataValues.length ? colors.slice(0, activeCategories.length) : ['#e2e8f0'],
+            borderWidth: 0
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { display: false }
+          },
+          cutout: '70%'
+        }
+      });
+    }
+
+    // 📱 收款 QR Code 生成
+    window.showQrCodeModal = function(transferText) {
+      document.getElementById("qrCodePanel").classList.remove("hidden");
+      document.getElementById("qrCodeInputText").value = transferText || "";
+      generateQrCode(transferText || "請輸入收款帳號");
+      document.getElementById("qrCodePanel").scrollIntoView({ behavior: 'smooth' });
+    };
+
+    function generateQrCode(text) {
+      const qrel = document.getElementById("qrcodeCanvas");
+      qrel.innerHTML = "";
+      new QRCode(qrel, {
+        text: text,
+        width: 140,
+        height: 140,
+        colorDark : "#000000",
+        colorLight : "#ffffff",
+        correctLevel : QRCode.CorrectLevel.M
+      });
+    }
+
+    document.getElementById("generateQrBtn").addEventListener("click", () => {
+      const text = document.getElementById("qrCodeInputText").value.trim();
+      if (text) generateQrCode(text);
+    });
+
+    // 圖片放大檢視
+    window.openImageModal = function(src) {
+      document.getElementById("modalImg").src = src;
+      document.getElementById("imageModal").classList.remove("hidden");
+    };
+    window.closeImageModal = function() {
+      document.getElementById("imageModal").classList.add("hidden");
+    };
+
+    // 分帳結算與轉帳演算法
     function renderSettlement(records) {
       const balances = {};
       members.forEach(m => balances[m] = 0);
 
       records.forEach(item => {
         if (item.type === "expense") {
-          if (item.payer && balances[item.payer] === undefined) {
-            balances[item.payer] = 0;
-          }
-          (item.splitMembers || []).forEach(m => {
-            if (m && balances[m] === undefined) {
-              balances[m] = 0;
-            }
+          if (item.payer && balances[item.payer] === undefined) balances[item.payer] = 0;
+          const memberShares = parseMemberShares(item);
+          Object.keys(memberShares).forEach(m => {
+            if (balances[m] === undefined) balances[m] = 0;
           });
         }
       });
@@ -399,20 +902,12 @@
       records.forEach(item => {
         if (item.type === "expense") {
           const twd = Number(item.twdAmount) || 0;
-          const validSplitMembers = (item.splitMembers || []).filter(m => m.trim() !== "");
-          const splitCount = validSplitMembers.length;
+          const memberShares = parseMemberShares(item);
 
-          if (splitCount > 0 && twd > 0) {
-            const perPersonShare = twd / splitCount;
-
-            if (item.payer) {
-              balances[item.payer] = (balances[item.payer] || 0) + twd;
-            }
-
-            validSplitMembers.forEach(m => {
-              balances[m] = (balances[m] || 0) - perPersonShare;
-            });
-          }
+          if (item.payer && twd > 0) balances[item.payer] = (balances[item.payer] || 0) + twd;
+          Object.entries(memberShares).forEach(([m, shareAmt]) => {
+            balances[m] = (balances[m] || 0) - shareAmt;
+          });
         }
       });
 
@@ -459,10 +954,14 @@
       while (d < debtors.length && c < creditors.length) {
         const settleAmt = Math.min(debtors[d].amount, creditors[c].amount);
         if (settleAmt > 0) {
+          const tText = `${debtors[d].name} 轉帳給 ${creditors[c].name} NT$ ${Math.round(settleAmt)}`;
           transferInstructions.push(`
             <div class="flex justify-between items-center bg-white/70 dark:bg-gray-800/80 px-2.5 py-1.5 rounded-md border border-blue-100 dark:border-gray-700">
               <span><b>${debtors[d].name}</b> ➔ 轉給 <b>${creditors[c].name}</b></span>
-              <span class="font-bold text-blue-600 dark:text-blue-400">NT$ ${Math.round(settleAmt).toLocaleString()}</span>
+              <div class="flex items-center gap-2">
+                <span class="font-bold text-blue-600 dark:text-blue-400">NT$ ${Math.round(settleAmt).toLocaleString()}</span>
+                <button onclick="showQrCodeModal('${tText}')" class="text-[10px] bg-emerald-50 text-emerald-600 dark:bg-emerald-950 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800 px-1.5 py-0.5 rounded hover:bg-emerald-100">QR收款</button>
+              </div>
             </div>
           `);
         }
@@ -489,6 +988,68 @@
       }
     }
 
+    // 🔍 篩選過濾並渲染明細
+    function renderFilteredRecords() {
+      const keyword = document.getElementById("filterKeyword").value.trim().toLowerCase();
+      const cat = document.getElementById("filterCategory").value;
+      const payer = document.getElementById("filterPayer").value;
+      const curr = document.getElementById("filterCurrency").value;
+
+      const filtered = cachedRecords.filter(r => {
+        const matchKw = !keyword || (r.title && r.title.toLowerCase().includes(keyword));
+        const matchCat = !cat || (r.category === cat);
+        const matchPayer = !payer || (r.payer === payer);
+        const matchCurr = !curr || (r.currency === curr);
+        return matchKw && matchCat && matchPayer && matchCurr;
+      });
+
+      document.getElementById("recordCountDisplay").textContent = filtered.length;
+      let totalFilteredTwd = 0;
+      filtered.forEach(r => totalFilteredTwd += (r.twdAmount || 0));
+      document.getElementById("filterTotalSum").textContent = `合計: $${totalFilteredTwd.toLocaleString()}`;
+
+      const listEl = document.getElementById("recordList");
+      listEl.innerHTML = "";
+
+      if (filtered.length === 0) {
+        listEl.innerHTML = `<p class="text-gray-400 dark:text-gray-500 text-center text-sm py-4">無符合條件的資料</p>`;
+        return;
+      }
+
+      filtered.forEach(item => {
+        const isExp = item.type === "expense";
+        const shares = parseMemberShares(item);
+        const shareText = Object.entries(shares).map(([n, a]) => `${n}($${Math.round(a)})`).join(", ");
+
+        const row = document.createElement("div");
+        row.className = "p-3 bg-gray-50 dark:bg-gray-750 dark:bg-gray-700/60 rounded-xl border border-gray-100 dark:border-gray-700 text-xs flex justify-between items-start gap-2";
+        row.innerHTML = `
+          <div class="flex-1">
+            <div class="flex items-center gap-1.5">
+              <span class="px-1.5 py-0.5 rounded text-[10px] font-semibold bg-blue-100 text-blue-800 dark:bg-blue-900/60 dark:text-blue-300">${item.category || '其他'}</span>
+              <span class="font-bold text-sm text-gray-800 dark:text-gray-100">${item.title}</span>
+              ${item.receiptImage ? `<button onclick="openImageModal('${item.receiptImage}')" class="text-[10px] bg-emerald-50 text-emerald-600 px-1 py-0.5 rounded border border-emerald-200">📷 照片</button>` : ''}
+            </div>
+            <div class="text-gray-400 dark:text-gray-400 mt-1">${item.date} · ${isExp ? `由 <b>${item.payer}</b> 先付` : '個人收入'}</div>
+            ${isExp && shareText ? `<div class="text-gray-500 dark:text-gray-300 mt-0.5">分攤: ${shareText}</div>` : ''}
+          </div>
+          <div class="text-right flex-shrink-0">
+            <div class="font-bold text-sm ${isExp ? 'text-gray-900 dark:text-gray-100' : 'text-green-600 dark:text-green-400'}">
+              ${item.currency !== 'TWD' ? `${item.currency} ${(item.originalAmount || 0).toLocaleString()} ≈ ` : ''}NT$ ${(item.twdAmount || 0).toLocaleString()}
+            </div>
+            <button onclick="deleteRecord('${item.id}')" class="text-red-400 hover:text-red-600 text-xs mt-1">刪除</button>
+          </div>
+        `;
+        listEl.appendChild(row);
+      });
+    }
+
+    // 監聽篩選器變更
+    document.getElementById("filterKeyword").addEventListener("input", renderFilteredRecords);
+    document.getElementById("filterCategory").addEventListener("change", renderFilteredRecords);
+    document.getElementById("filterPayer").addEventListener("change", renderFilteredRecords);
+    document.getElementById("filterCurrency").addEventListener("change", renderFilteredRecords);
+
     // 載入資料
     async function loadRecords() {
       const pwd = getPassword();
@@ -502,10 +1063,10 @@
         return;
       }
 
-      listEl.innerHTML = `<p class="text-gray-400 dark:text-gray-500 text-center text-sm py-4">驗證中並載入資料...</p>`;
+      listEl.innerHTML = `<p class="text-gray-400 dark:text-gray-500 text-center text-sm py-4">驗證中並同步【${currentSheet}】資料...</p>`;
 
       try {
-        const res = await fetch(`${API_URL}?password=${encodeURIComponent(pwd)}`);
+        const res = await fetch(`${API_URL}?password=${encodeURIComponent(pwd)}&sheetName=${encodeURIComponent(currentSheet)}`);
         const data = await res.json();
 
         if (data.error === "AUTH_FAILED") {
@@ -517,37 +1078,15 @@
 
         localStorage.setItem("app_pwd", pwd);
         cachedRecords = data || [];
-        listEl.innerHTML = "";
 
-        if (cachedRecords.length === 0) {
-          listEl.innerHTML = `<p class="text-gray-400 dark:text-gray-500 text-center text-sm py-4">目前尚無資料</p>`;
-        }
-
-        cachedRecords.forEach(item => {
-          const isExp = item.type === "expense";
-          const row = document.createElement("div");
-          row.className = "p-3 bg-gray-50 dark:bg-gray-750 dark:bg-gray-700/60 rounded-xl border border-gray-100 dark:border-gray-700 text-xs flex justify-between items-start";
-          row.innerHTML = `
-            <div>
-              <div class="font-bold text-sm text-gray-800 dark:text-gray-100">${item.title}</div>
-              <div class="text-gray-400 dark:text-gray-400 mt-0.5">${item.date} · ${isExp ? `由 <b>${item.payer}</b> 先付` : '個人收入'}</div>
-              ${isExp && item.splitMembers && item.splitMembers.length ? `<div class="text-gray-500 dark:text-gray-300 mt-1">分攤: ${item.splitMembers.join(", ")}</div>` : ''}
-            </div>
-            <div class="text-right">
-              <div class="font-bold text-sm ${isExp ? 'text-gray-900 dark:text-gray-100' : 'text-green-600 dark:text-green-400'}">
-                ${item.currency !== 'TWD' ? `${item.currency} ${(item.originalAmount || 0).toLocaleString()} ≈ ` : ''}NT$ ${(item.twdAmount || 0).toLocaleString()}
-              </div>
-              <button onclick="deleteRecord('${item.id}')" class="text-red-400 hover:text-red-600 text-xs mt-1">刪除</button>
-            </div>
-          `;
-          listEl.appendChild(row);
-        });
-
+        renderFilteredRecords();
         renderSettlement(cachedRecords);
+        renderCategoryChart(cachedRecords);
         updateTimestampDisplay();
+        fetchSheetList();
 
       } catch (err) {
-        listEl.innerHTML = `<p class="text-red-400 text-center text-sm py-4">連線失敗，請檢查網路或 Apps Script 設定</p>`;
+        listEl.innerHTML = `<p class="text-red-400 text-center text-sm py-4">連線失敗，請檢查網路或 Apps Script 部署設定</p>`;
       }
     }
 
@@ -558,28 +1097,47 @@
       if (!pwd) return alert("請先在上方輸入密碼解鎖！");
 
       const type = document.getElementById("type").value;
-      const selectedMembers = Array.from(document.querySelectorAll(".member-cb:checked")).map(cb => cb.value);
+      const { rate, twd } = updateTwdPreview();
+      let splitMembersData = [];
 
-      if (type === "expense" && selectedMembers.length === 0) {
-        return alert("請至少勾選一位分攤成員！");
+      if (type === "expense") {
+        if (currentSplitMode === "equal") {
+          splitMembersData = Array.from(document.querySelectorAll(".member-cb:checked")).map(cb => cb.value);
+          if (splitMembersData.length === 0) return alert("請至少勾選一位平分成員！");
+        } else {
+          let customSum = 0;
+          document.querySelectorAll(".custom-split-input").forEach(input => {
+            const val = parseFloat(input.value) || 0;
+            if (val > 0) {
+              splitMembersData.push(`${input.dataset.member}:${val}`);
+              customSum += val;
+            }
+          });
+
+          if (splitMembersData.length === 0) return alert("請至少為一位成員設定大於 0 的金額！");
+          if (Math.abs(customSum - twd) >= 1) {
+            return alert(`指定金額總計 ($${customSum}) 與總金額 ($${twd}) 不符，請點選「補差額」調整！`);
+          }
+        }
       }
 
       const btn = document.getElementById("submitBtn");
       btn.disabled = true;
-      btn.textContent = "儲存中...";
-
-      const { rate, twd } = updateTwdPreview();
+      btn.textContent = "雲端儲存中...";
 
       const payload = {
         password: pwd,
+        sheetName: currentSheet,
         type: type,
+        category: document.getElementById("category").value,
         title: document.getElementById("title").value,
         originalAmount: parseFloat(document.getElementById("originalAmount").value),
         currency: document.getElementById("currency").value,
         rate: rate,
         twdAmount: twd,
         payer: type === "expense" ? document.getElementById("payer").value : "",
-        splitMembers: type === "expense" ? selectedMembers : [],
+        splitMembers: splitMembersData,
+        receiptImage: uploadedReceiptBase64,
         date: document.getElementById("date").value
       };
 
@@ -596,6 +1154,10 @@
         } else {
           document.getElementById("title").value = "";
           document.getElementById("originalAmount").value = "";
+          document.querySelectorAll(".custom-split-input").forEach(i => i.value = "");
+          document.getElementById("receiptPhotoInput").value = "";
+          document.getElementById("receiptPreviewThumb").classList.add("hidden");
+          uploadedReceiptBase64 = "";
           updateTwdPreview();
           await loadRecords();
         }
@@ -603,10 +1165,11 @@
         alert("儲存失敗，請檢查網路連線");
       } finally {
         btn.disabled = false;
-        btn.textContent = "儲存紀錄";
+        btn.textContent = "儲存紀錄至雲端";
       }
     });
 
+    // 刪除紀錄
     window.deleteRecord = async function(id) {
       const pwd = getPassword();
       if (!pwd) return alert("請先輸入密碼！");
@@ -616,7 +1179,7 @@
         await fetch(API_URL, {
           method: "POST",
           headers: { "Content-Type": "text/plain;charset=utf-8" },
-          body: JSON.stringify({ action: "delete", id: id, password: pwd })
+          body: JSON.stringify({ action: "delete", id: id, password: pwd, sheetName: currentSheet })
         });
         loadRecords();
       } catch (err) {
@@ -628,30 +1191,32 @@
     document.getElementById("exportCsvBtn").addEventListener("click", () => {
       if (cachedRecords.length === 0) return alert("目前沒有可匯出的資料或尚未解鎖！");
 
-      const headers = ["日期", "類型", "項目", "原始金額", "幣別", "匯率", "折合台幣", "付款人", "分攤成員"];
+      const headers = ["日期", "類型", "類別", "項目", "原始金額", "幣別", "匯率", "折合台幣", "付款人", "分攤成員/金額"];
       const rows = cachedRecords.map(r => [
-        `"${r.date}"`, `"${r.type === 'expense' ? '支出' : '收入'}"`, `"${(r.title || '').replace(/"/g, '""')}"`,
+        `"${r.date}"`, `"${r.type === 'expense' ? '支出' : '收入'}"`, `"${r.category || '其他'}"`, `"${(r.title || '').replace(/"/g, '""')}"`,
         r.originalAmount, `"${r.currency}"`, r.rate, r.twdAmount, `"${r.payer || ''}"`, `"${(r.splitMembers || []).join(';')}"`
       ]);
 
       const csvContent = "\uFEFF" + [headers.join(","), ...rows.map(e => e.join(","))].join("\n");
-      downloadBlob(csvContent, `記帳明細_${getFormattedDate()}.csv`, "text/csv;charset=utf-8;");
+      downloadBlob(csvContent, `記帳明細_${currentSheet}_${getFormattedDate()}.csv`, "text/csv;charset=utf-8;");
     });
 
     document.getElementById("exportTxtBtn").addEventListener("click", () => {
       if (cachedRecords.length === 0) return alert("目前沒有可匯出的資料或尚未解鎖！");
 
-      let txtContent = `=== 記帳與分帳明細備份 (${getFormattedDate()}) ===\n\n`;
+      let txtContent = `=== 記帳備份【${currentSheet}】(${getFormattedDate()}) ===\n\n`;
       cachedRecords.forEach((r, i) => {
-        txtContent += `【#${i + 1}】${r.date} | ${r.type === 'expense' ? '支出' : '收入'} - ${r.title}\n`;
+        txtContent += `【#${i + 1}】${r.date} | [${r.category || '其他'}] ${r.type === 'expense' ? '支出' : '收入'} - ${r.title}\n`;
         txtContent += `  金額: ${r.currency} ${r.originalAmount} (折合 NT$ ${r.twdAmount})\n`;
         if (r.type === 'expense') {
-          txtContent += `  付款人: ${r.payer || '無'} | 分攤者: ${(r.splitMembers || []).join(', ') || '全體'}\n`;
+          const shares = parseMemberShares(r);
+          const shareText = Object.entries(shares).map(([n, a]) => `${n}($${Math.round(a)})`).join(", ");
+          txtContent += `  付款人: ${r.payer || '無'} | 分攤者: ${shareText || '全體'}\n`;
         }
         txtContent += `----------------------------------------\n`;
       });
 
-      downloadBlob(txtContent, `記帳明細_${getFormattedDate()}.txt`, "text/plain;charset=utf-8;");
+      downloadBlob(txtContent, `記帳明細_${currentSheet}_${getFormattedDate()}.txt`, "text/plain;charset=utf-8;");
     });
 
     function downloadBlob(content, filename, mimeType) {
@@ -693,28 +1258,30 @@
               itemsToImport.push({
                 date: cols[0],
                 type: cols[1] === "收入" ? "income" : "expense",
-                title: cols[2],
-                originalAmount: parseFloat(cols[3]) || 0,
-                currency: cols[4] || "TWD",
-                rate: parseFloat(cols[5]) || 1,
-                twdAmount: parseFloat(cols[6]) || 0,
-                payer: cols[7] || "",
-                splitMembers: cols[8] ? cols[8].split(";") : []
+                category: cols[2] || "其他",
+                title: cols[3] || "未命名",
+                originalAmount: parseFloat(cols[4]) || 0,
+                currency: cols[5] || "TWD",
+                rate: parseFloat(cols[6]) || 1,
+                twdAmount: parseFloat(cols[7]) || 0,
+                payer: cols[8] || "",
+                splitMembers: cols[9] ? cols[9].split(";") : []
               });
             }
           }
         } else {
           const blocks = text.split("----------------------------------------");
           blocks.forEach(b => {
-            const titleMatch = b.match(/】(.+?)\s*\|\s*(支出|收入)\s*-\s*(.+)/);
+            const titleMatch = b.match(/】(.+?)\s*\|\s*\[?(.*?)\]?\s*(支出|收入)\s*-\s*(.+)/);
             const amountMatch = b.match(/金額:\s*([A-Z]+)\s*([\d.]+)\s*\(折合 NT\$\s*([\d.]+)\)/);
             const payerMatch = b.match(/付款人:\s*(.*?)\s*\|\s*分攤者:\s*(.*)/);
 
             if (titleMatch && amountMatch) {
               itemsToImport.push({
                 date: titleMatch[1].trim(),
-                type: titleMatch[2].trim() === "收入" ? "income" : "expense",
-                title: titleMatch[3].trim(),
+                category: titleMatch[2].trim() || "其他",
+                type: titleMatch[3].trim() === "收入" ? "income" : "expense",
+                title: titleMatch[4].trim(),
                 currency: amountMatch[1].trim(),
                 originalAmount: parseFloat(amountMatch[2]) || 0,
                 twdAmount: parseFloat(amountMatch[3]) || 0,
@@ -727,7 +1294,7 @@
         }
 
         if (itemsToImport.length === 0) return alert("無法解析檔案內容，請確認檔案格式是否相容！");
-        if (!confirm(`已成功解析 ${itemsToImport.length} 筆紀錄，確定要全部匯入到雲端試算表嗎？`)) return;
+        if (!confirm(`已成功解析 ${itemsToImport.length} 筆紀錄，確定要全部匯入到【${currentSheet}】嗎？`)) return;
 
         const btn = document.getElementById("importBtn");
         btn.disabled = true;
@@ -739,6 +1306,7 @@
           body: JSON.stringify({
             action: "batch_import",
             password: pwd,
+            sheetName: currentSheet,
             items: itemsToImport
           })
         });
@@ -773,7 +1341,7 @@
 
     // 啟動初始化
     initTheme();
-    initFontSize();
+    applyFontSize(localStorage.getItem("app_custom_font_size") || 16);
     updateTimestampDisplay();
 
     const savedPwd = localStorage.getItem("app_pwd");
