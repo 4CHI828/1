@@ -58,7 +58,7 @@
         <button type="button" id="pwaInstallBtn" class="hidden text-xs bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white font-semibold px-3 py-1.5 rounded-xl shadow transition active:scale-95">📲 安裝App</button>
         <button type="button" id="themeToggleBtn" class="p-1.5 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 rounded-xl transition active:scale-95 shadow-sm text-sm">🌙</button>
         <button type="button" id="toggleFontPanelBtn" class="text-xs bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 px-2.5 py-1.5 rounded-xl font-medium shadow-sm transition active:scale-95">🔤</button>
-        <button type="button" id="toggleMemberBtn" class="text-xs bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 px-2.5 py-1.5 rounded-xl font-medium shadow-sm transition active:scale-95">⚙️ 成員</button>
+        <button type="button" id="toggleMemberBtn" class="text-xs bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 px-2.5 py-1.5 rounded-xl font-medium shadow-sm transition active:scale-95">👥 成員</button>
         <button type="button" id="toggleDataBtn" class="text-xs bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 px-2.5 py-1.5 rounded-xl font-medium shadow-sm transition active:scale-95">📁 備份</button>
         <button type="button" id="refreshBtn" class="text-xs bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300 font-bold px-3 py-1.5 rounded-xl hover:bg-blue-200 dark:hover:bg-blue-800 transition active:scale-95 shadow-sm">↻ 更新</button>
       </div>
@@ -103,9 +103,9 @@
       </div>
     </div>
 
-    <!-- 🌟 成員管理設定面板 -->
+    <!-- 🌟 成員管理與重新命名設定面板 -->
     <div id="memberConfigPanel" class="hidden bg-white/60 dark:bg-slate-900/60 border border-gray-200/50 dark:border-gray-700/50 rounded-2xl p-4 space-y-3 shadow-inner">
-      <div class="text-xs font-bold text-gray-700 dark:text-gray-300 mb-1">👥 管理分攤成員名單</div>
+      <div class="text-xs font-bold text-gray-700 dark:text-gray-300 mb-1">👥 管理與編輯分攤成員名字</div>
       <div class="flex gap-2">
         <input type="text" id="newMemberName" placeholder="輸入新成員名字" class="flex-1 border border-gray-300 dark:border-gray-600 rounded-xl px-3 py-1.5 text-xs bg-white dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none transition">
         <button type="button" id="addMemberBtn" class="bg-gray-800 dark:bg-gray-700 hover:bg-black text-white px-4 py-1.5 rounded-xl text-xs font-medium shadow transition active:scale-95">加入</button>
@@ -462,12 +462,55 @@
       }
     };
 
+    // 🌟 成員名字即時編輯與重新命名
+    window.editMemberName = function(idx) {
+      const oldName = members[idx];
+      const newName = prompt(`修改「${oldName}」的名字為：`, oldName);
+      if (!newName || !newName.trim()) return;
+      const cleanName = newName.trim();
+      
+      if (members.includes(cleanName)) {
+        alert("此名字已存在！");
+        return;
+      }
+
+      // 1. 更新成員陣列
+      members[idx] = cleanName;
+
+      // 2. 自動連動更新快取歷史紀錄中的成員名稱（付款人與分攤名單）
+      cachedRecords.forEach(item => {
+        if (item.payer === oldName) item.payer = cleanName;
+        if (Array.isArray(item.splitMembers)) {
+          item.splitMembers = item.splitMembers.map(m => {
+            if (String(m).startsWith(oldName + ":")) {
+              return cleanName + ":" + m.split(":")[1];
+            }
+            return m === oldName ? cleanName : m;
+          });
+        }
+      });
+
+      renderMemberControls();
+      renderRecordsList();
+      renderSettlement(cachedRecords);
+      showToast(`✏️ 成員已從「${oldName}」改名為「${cleanName}」`, "info");
+    };
+
     function renderMemberControls() {
       document.getElementById("payer").innerHTML = members.map(m => `<option value="${escapeHtml(m)}">${escapeHtml(m)}</option>`).join("");
       document.getElementById("membersCheckboxes").innerHTML = members.map(m => `<label class="flex items-center gap-1.5 cursor-pointer bg-white dark:bg-gray-700 px-2.5 py-1.5 rounded-lg border border-gray-200 dark:border-gray-600 shadow-sm active:scale-95 transition"><input type="checkbox" value="${escapeHtml(m)}" checked class="member-cb text-blue-500 focus:ring-blue-500 h-4 w-4 rounded"> <span>${escapeHtml(m)}</span></label>`).join("");
-      document.getElementById("customMembersList").innerHTML = members.map(m => `<div class="flex items-center gap-2 bg-white dark:bg-gray-700/80 p-2 rounded-xl border border-gray-100 dark:border-gray-600 shadow-sm"><span class="w-12 font-bold text-gray-700 dark:text-gray-200 truncate">${escapeHtml(m)}</span><div class="relative flex-1"><span class="absolute left-2 top-1.5 text-gray-400 font-mono">$</span><input type="number" step="any" min="0" data-member="${escapeHtml(m)}" class="custom-split-input w-full pl-6 pr-2 py-1 border border-gray-200 dark:border-gray-600 rounded-lg bg-gray-50 dark:bg-gray-800 text-right font-mono focus:ring-2 focus:ring-blue-500 outline-none"></div><button type="button" onclick="autoFillDifference('${escapeHtml(m)}')" class="bg-blue-50 dark:bg-blue-900/50 text-blue-600 dark:text-blue-300 font-bold px-2 py-1 rounded-lg hover:bg-blue-100 active:scale-95 transition">補滿</button></div>`).join("");
+      document.getElementById("customMembersList").innerHTML = members.map(m => `<div class="flex items-center gap-2 bg-white dark:bg-gray-700/80 p-2 rounded-xl border border-gray-100 dark:border-gray-600 shadow-sm"><span class="w-16 font-bold text-gray-700 dark:text-gray-200 truncate" title="${escapeHtml(m)}">${escapeHtml(m)}</span><div class="relative flex-1"><span class="absolute left-2 top-1.5 text-gray-400 font-mono">$</span><input type="number" step="any" min="0" data-member="${escapeHtml(m)}" class="custom-split-input w-full pl-6 pr-2 py-1 border border-gray-200 dark:border-gray-600 rounded-lg bg-gray-50 dark:bg-gray-800 text-right font-mono focus:ring-2 focus:ring-blue-500 outline-none"></div><button type="button" onclick="autoFillDifference('${escapeHtml(m)}')" class="bg-blue-50 dark:bg-blue-900/50 text-blue-600 dark:text-blue-300 font-bold px-2 py-1 rounded-lg hover:bg-blue-100 active:scale-95 transition">補滿</button></div>`).join("");
       document.querySelectorAll(".custom-split-input").forEach(i => i.addEventListener("input", checkCustomSplitTotal));
-      document.getElementById("memberTagList").innerHTML = members.map((m, idx) => `<span class="inline-flex items-center gap-1 bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 px-2.5 py-1 rounded-lg shadow-sm font-medium text-gray-700 dark:text-gray-200">${escapeHtml(m)}<button type="button" onclick="removeMember(${idx})" class="text-red-400 hover:text-red-600 text-lg ml-0.5 leading-none">×</button></span>`).join("");
+      
+      // 成員標籤列：加入編輯與刪除按鈕
+      document.getElementById("memberTagList").innerHTML = members.map((m, idx) => `
+        <span class="inline-flex items-center gap-1 bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 px-2.5 py-1 rounded-lg shadow-sm font-medium text-gray-700 dark:text-gray-200">
+          ${escapeHtml(m)}
+          <button type="button" onclick="editMemberName(${idx})" class="text-blue-400 hover:text-blue-600 text-xs ml-1 font-bold" title="編輯名字">✏️</button>
+          <button type="button" onclick="removeMember(${idx})" class="text-red-400 hover:text-red-600 text-base ml-0.5 leading-none font-bold" title="刪除成員">×</button>
+        </span>
+      `).join("");
+
       localStorage.setItem("split_members", JSON.stringify(members));
       if (cachedRecords.length > 0) renderSettlement(cachedRecords);
     }
