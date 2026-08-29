@@ -286,7 +286,7 @@
   </div>
 
   <footer class="max-w-2xl mx-auto w-full mt-6 py-3 border-t border-gray-200 dark:border-gray-800 text-center text-xs text-gray-500 dark:text-gray-400 flex flex-wrap items-center justify-center gap-x-3 gap-y-1">
-    <div>網頁更新時間：<span id="lastUpdatedDisplay" class="font-mono font-medium text-gray-700 dark:text-gray-300">載入中...</span></div>
+    <div>網頁更新時間：<span id="lastUpdatedDisplay" class="font-mono font-medium text-gray-700 dark:text-gray-300">讀取中...</span></div>
     <span class="text-gray-300 dark:text-gray-600">|</span>
     <a href="https://v.douyin.com/XmUkpVat8Lg/" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-1 font-semibold text-blue-600 dark:text-blue-400 hover:underline">
       <span>奇奇828</span>
@@ -312,12 +312,24 @@
       return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
     }
 
+    // 🌟 讀取網頁檔案實際存檔/修改時間 (document.lastModified)
     function updateTimestampDisplay() {
-      const now = new Date();
-      const pad = (n) => String(n).padStart(2, '0');
-      const timeStr = `${now.getFullYear()}/${pad(now.getMonth() + 1)}/${pad(now.getDate())} ${pad(now.getHours())}:${pad(now.getMinutes())}:${pad(now.getSeconds())}`;
       const el = document.getElementById("lastUpdatedDisplay");
-      if (el) el.textContent = timeStr;
+      if (!el) return;
+
+      try {
+        const modifiedTime = new Date(document.lastModified);
+        if (isNaN(modifiedTime.getTime())) {
+          el.textContent = "無法取得存檔時間";
+          return;
+        }
+
+        const pad = (n) => String(n).padStart(2, '0');
+        const timeStr = `${modifiedTime.getFullYear()}/${pad(modifiedTime.getMonth() + 1)}/${pad(modifiedTime.getDate())} ${pad(modifiedTime.getHours())}:${pad(modifiedTime.getMinutes())}:${pad(modifiedTime.getSeconds())}`;
+        el.textContent = timeStr;
+      } catch (e) {
+        el.textContent = "無法讀取";
+      }
     }
 
     // 內嵌 Service Worker
@@ -554,9 +566,11 @@
       renderMemberControls();
     };
 
+    // 展開收合開關
     document.getElementById("toggleMemberBtn").addEventListener("click", () => document.getElementById("memberConfigPanel").classList.toggle("hidden"));
     document.getElementById("toggleDataBtn").addEventListener("click", () => document.getElementById("dataConfigPanel").classList.toggle("hidden"));
 
+    // 匯率同步
     function renderExchangeRateChips() {
       const container = document.getElementById("rateChipsContainer");
       const targetCurrencies = [
@@ -622,7 +636,7 @@
         const img = new Image();
         img.onload = function() {
           const canvas = document.createElement("canvas");
-          const maxDim = 600; // 壓縮解析度防止 Base64 過大
+          const maxDim = 600;
           let w = img.width, h = img.height;
           if (w > maxDim || h > maxDim) {
             if (w > h) { h = (maxDim / w) * h; w = maxDim; }
@@ -1065,7 +1079,6 @@
         renderFilteredRecords();
         renderSettlement(cachedRecords);
         renderCategoryChart(cachedRecords);
-        updateTimestampDisplay();
         fetchSheetList();
 
       } catch (err) {
@@ -1073,7 +1086,7 @@
       }
     }
 
-    // 🌟 修正後的表單儲存邏輯 (含完整驗證與錯誤處理)
+    // 表單儲存邏輯
     document.getElementById("recordForm").addEventListener("submit", async (e) => {
       e.preventDefault();
       
