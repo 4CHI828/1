@@ -3,60 +3,140 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Google 試算表雲端記帳</title>
+  <title>雲端分帳與跨幣別記帳</title>
   <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body class="bg-gray-100 min-h-screen p-4 md:p-8">
-  <div class="max-w-md mx-auto bg-white rounded-xl shadow-md p-6">
-    <div class="flex items-center justify-between mb-4">
-      <h1 class="text-xl font-bold text-gray-800">試算表雲端記帳</h1>
-      <button id="refreshBtn" class="text-xs bg-gray-100 hover:bg-gray-200 text-gray-600 px-2 py-1 rounded">重新整理</button>
+<body class="bg-gray-100 min-h-screen p-3 md:p-6 text-gray-800">
+  <div class="max-w-xl mx-auto bg-white rounded-2xl shadow-lg p-5 md:p-6 space-y-6">
+    
+    <!-- 頂部標題 -->
+    <div class="flex justify-between items-center border-b pb-3">
+      <div>
+        <h1 class="text-xl font-bold text-gray-900">分帳與多幣別記帳</h1>
+        <div id="rateStatus" class="text-xs text-gray-400 mt-0.5">即時匯率載入中...</div>
+      </div>
+      <button id="refreshBtn" class="text-xs bg-gray-100 hover:bg-gray-200 px-3 py-1.5 rounded-lg transition">重新整理</button>
     </div>
 
-    <!-- 總收支統計 -->
-    <div class="grid grid-cols-2 gap-4 mb-6 text-center">
-      <div class="bg-red-50 p-3 rounded-lg border border-red-200">
-        <div class="text-xs text-red-600 font-medium">總支出</div>
-        <div id="totalExpense" class="text-xl font-bold text-red-700">$0</div>
-      </div>
-      <div class="bg-green-50 p-3 rounded-lg border border-green-200">
-        <div class="text-xs text-green-600 font-medium">總收入</div>
-        <div id="totalIncome" class="text-xl font-bold text-green-700">$0</div>
+    <!-- 分帳結算卡片 -->
+    <div class="bg-blue-50 border border-blue-100 rounded-xl p-4">
+      <div class="text-xs font-bold text-blue-800 uppercase tracking-wider mb-2">成員分帳結算 (TWD)</div>
+      <div id="settlementGrid" class="grid grid-cols-2 sm:grid-cols-4 gap-2 text-center text-xs">
+        <!-- 結算動態產生 -->
       </div>
     </div>
 
-    <!-- 新增紀錄表單 -->
-    <form id="recordForm" class="space-y-3 mb-6">
-      <div class="flex gap-2">
-        <select id="type" class="border rounded px-3 py-2 text-sm bg-white focus:outline-blue-500">
+    <!-- 記帳表單 -->
+    <form id="recordForm" class="space-y-4">
+      <div class="grid grid-cols-3 gap-2">
+        <select id="type" class="border rounded-lg px-2.5 py-2 text-sm bg-gray-50 focus:bg-white focus:outline-blue-500">
           <option value="expense">支出</option>
-          <option value="income">收入</option>
+          <option value="income">個人收入</option>
         </select>
-        <input type="text" id="title" placeholder="項目名稱 (如: 午餐)" required class="flex-1 border rounded px-3 py-2 text-sm focus:outline-blue-500">
+        <input type="text" id="title" placeholder="項目名稱 (如: 居酒屋晚餐)" required class="col-span-2 border rounded-lg px-3 py-2 text-sm focus:outline-blue-500">
       </div>
+
+      <!-- 幣別與金額 -->
+      <div class="grid grid-cols-3 gap-2">
+        <select id="currency" class="border rounded-lg px-2.5 py-2 text-sm bg-gray-50 focus:bg-white focus:outline-blue-500 font-semibold">
+          <option value="TWD">TWD 台幣</option>
+          <option value="JPY">JPY 日圓</option>
+          <option value="USD">USD 美元</option>
+          <option value="KRW">KRW 韓元</option>
+          <option value="EUR">EUR 歐元</option>
+        </select>
+        <input type="number" id="originalAmount" placeholder="原始金額" step="any" min="0.01" required class="border rounded-lg px-3 py-2 text-sm focus:outline-blue-500">
+        <div class="flex items-center text-xs text-gray-500 bg-gray-50 px-3 py-2 rounded-lg border">
+          折合 <span id="previewTwd" class="font-bold text-blue-600 ml-1">0</span> TWD
+        </div>
+      </div>
+
+      <!-- 分帳設定區塊 -->
+      <div id="splitSection" class="p-3 bg-gray-50 rounded-xl border border-gray-200 space-y-2">
+        <div class="flex items-center justify-between text-xs">
+          <span class="font-medium text-gray-600">誰先代墊 (付款人)：</span>
+          <select id="payer" class="border rounded px-2 py-1 bg-white text-xs">
+            <option value="我">我</option>
+            <option value="小明">小明</option>
+            <option value="小華">小華</option>
+            <option value="小美">小美</option>
+          </select>
+        </div>
+        <div>
+          <div class="text-xs font-medium text-gray-600 mb-1">分攤成員 (平分)：</div>
+          <div class="flex flex-wrap gap-3 text-xs" id="membersCheckboxes">
+            <label class="flex items-center gap-1 cursor-pointer"><input type="checkbox" value="我" checked class="member-cb"> 我</label>
+            <label class="flex items-center gap-1 cursor-pointer"><input type="checkbox" value="小明" checked class="member-cb"> 小明</label>
+            <label class="flex items-center gap-1 cursor-pointer"><input type="checkbox" value="小華" checked class="member-cb"> 小華</label>
+            <label class="flex items-center gap-1 cursor-pointer"><input type="checkbox" value="小美" checked class="member-cb"> 小美</label>
+          </div>
+        </div>
+      </div>
+
       <div class="flex gap-2">
-        <input type="number" id="amount" placeholder="金額" min="1" required class="w-1/2 border rounded px-3 py-2 text-sm focus:outline-blue-500">
-        <input type="date" id="date" required class="w-1/2 border rounded px-3 py-2 text-sm focus:outline-blue-500">
+        <input type="date" id="date" required class="w-1/2 border rounded-lg px-3 py-2 text-sm focus:outline-blue-500">
+        <button type="submit" id="submitBtn" class="w-1/2 bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 rounded-lg text-sm transition">
+          儲存紀錄
+        </button>
       </div>
-      <button type="submit" id="submitBtn" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 rounded-lg text-sm transition flex justify-center items-center">
-        <span>新增紀錄至試算表</span>
-      </button>
     </form>
 
     <!-- 紀錄清單 -->
-    <h2 class="text-sm font-semibold text-gray-500 mb-2">雲端試算表記錄</h2>
-    <div id="recordList" class="space-y-2 max-h-80 overflow-y-auto">
-      <p class="text-gray-400 text-center text-sm py-4">資料載入中...</p>
+    <div>
+      <h2 class="text-sm font-semibold text-gray-500 mb-2">歷史明細</h2>
+      <div id="recordList" class="space-y-2 max-h-80 overflow-y-auto">
+        <p class="text-gray-400 text-center text-sm py-4">資料載入中...</p>
+      </div>
     </div>
+
   </div>
 
   <script>
-    // 替換為你的 Apps Script 部署 URL
-    const API_URL = "YOUR_GAS_WEB_APP_URL";
+    // 已綁定您的 Google Apps Script 網址
+    const API_URL = "https://script.google.com/macros/s/AKfycbyLdzLuX2UzEpgD2fc-P_2l8L0yjfjsUgLaOTdn7tJWcRdhIG6ZY4lxFp5WAY7pFXxW/exec";
+    const ALL_MEMBERS = ["我", "小明", "小華", "小美"];
+    
+    // 預設與即時匯率表 (以 TWD 為基準)
+    let exchangeRates = { TWD: 1, JPY: 0.21, USD: 32.5, KRW: 0.024, EUR: 35.2 };
 
+    // 取得最新匯率
+    async function fetchExchangeRates() {
+      try {
+        const res = await fetch("https://open.er-api.com/v6/latest/TWD");
+        const data = await res.json();
+        if (data && data.rates) {
+          exchangeRates.JPY = 1 / data.rates.JPY;
+          exchangeRates.USD = 1 / data.rates.USD;
+          exchangeRates.KRW = 1 / data.rates.KRW;
+          exchangeRates.EUR = 1 / data.rates.EUR;
+          document.getElementById("rateStatus").textContent = `匯率更新成功 (1 USD ≈ ${exchangeRates.USD.toFixed(1)} TWD)`;
+        }
+      } catch (e) {
+        document.getElementById("rateStatus").textContent = "使用預設快取匯率";
+      }
+      updateTwdPreview();
+    }
+
+    // 計算預覽台幣金額
+    function updateTwdPreview() {
+      const curr = document.getElementById("currency").value;
+      const amount = parseFloat(document.getElementById("originalAmount").value) || 0;
+      const rate = exchangeRates[curr] || 1;
+      const twd = Math.round(amount * rate);
+      document.getElementById("previewTwd").textContent = twd.toLocaleString();
+      return { rate, twd };
+    }
+
+    // 切換支出/收入時切換分帳區塊
+    document.getElementById("type").addEventListener("change", (e) => {
+      document.getElementById("splitSection").style.display = e.target.value === "expense" ? "block" : "none";
+    });
+
+    document.getElementById("currency").addEventListener("change", updateTwdPreview);
+    document.getElementById("originalAmount").addEventListener("input", updateTwdPreview);
     document.getElementById("date").valueAsDate = new Date();
 
-    // 載入資料
+    // 讀取資料並計算分帳
     async function loadRecords() {
       const listEl = document.getElementById("recordList");
       listEl.innerHTML = `<p class="text-gray-400 text-center text-sm py-4">載入中...</p>`;
@@ -64,71 +144,109 @@
       try {
         const res = await fetch(API_URL);
         const data = await res.json();
-        
         listEl.innerHTML = "";
-        let totalExp = 0;
-        let totalInc = 0;
 
-        if (data.length === 0) {
+        const balances = {};
+        ALL_MEMBERS.forEach(m => balances[m] = 0);
+
+        if (!data || data.length === 0) {
           listEl.innerHTML = `<p class="text-gray-400 text-center text-sm py-4">目前尚無資料</p>`;
         }
 
-        data.forEach(item => {
-          if (item.type === "expense") totalExp += item.amount;
-          if (item.type === "income") totalInc += item.amount;
+        (data || []).forEach(item => {
+          if (item.type === "expense" && item.splitMembers && item.splitMembers.length > 0) {
+            const splitCount = item.splitMembers.length;
+            const perPersonShare = (item.twdAmount || 0) / splitCount;
+
+            if (balances[item.payer] !== undefined) {
+              balances[item.payer] += item.twdAmount || 0;
+            }
+            item.splitMembers.forEach(m => {
+              if (balances[m] !== undefined) {
+                balances[m] -= perPersonShare;
+              }
+            });
+          }
 
           const isExp = item.type === "expense";
           const row = document.createElement("div");
-          row.className = "flex justify-between items-center bg-gray-50 p-3 rounded border text-sm";
+          row.className = "p-3 bg-gray-50 rounded-xl border border-gray-100 text-xs flex justify-between items-start";
           row.innerHTML = `
             <div>
-              <div class="font-medium text-gray-800">${item.title}</div>
-              <div class="text-xs text-gray-400">${item.date}</div>
+              <div class="font-bold text-sm text-gray-800">${item.title}</div>
+              <div class="text-gray-400 mt-0.5">${item.date} · ${isExp ? `由 <b>${item.payer}</b> 先付` : '個人收入'}</div>
+              ${isExp && item.splitMembers && item.splitMembers.length ? `<div class="text-gray-500 mt-1">分攤: ${item.splitMembers.join(", ")}</div>` : ''}
             </div>
-            <div class="flex items-center gap-3">
-              <span class="font-bold ${isExp ? 'text-red-600' : 'text-green-600'}">
-                ${isExp ? '-' : '+'}$${item.amount.toLocaleString()}
-              </span>
-              <button onclick="deleteRecord('${item.id}')" class="text-gray-400 hover:text-red-500 text-xs">刪除</button>
+            <div class="text-right">
+              <div class="font-bold text-sm ${isExp ? 'text-gray-900' : 'text-green-600'}">
+                ${item.currency !== 'TWD' ? `${item.currency} ${(item.originalAmount || 0).toLocaleString()} ≈ ` : ''}NT$ ${(item.twdAmount || 0).toLocaleString()}
+              </div>
+              <button onclick="deleteRecord('${item.id}')" class="text-red-400 hover:text-red-600 text-xs mt-1">刪除</button>
             </div>
           `;
           listEl.appendChild(row);
         });
 
-        document.getElementById("totalExpense").textContent = `$${totalExp.toLocaleString()}`;
-        document.getElementById("totalIncome").textContent = `$${totalInc.toLocaleString()}`;
+        // 渲染成員結算卡片
+        const grid = document.getElementById("settlementGrid");
+        grid.innerHTML = "";
+        for (const [member, bal] of Object.entries(balances)) {
+          const roundedBal = Math.round(bal);
+          const isPositive = roundedBal > 0;
+          const isZero = roundedBal === 0;
+          grid.innerHTML += `
+            <div class="bg-white p-2 rounded-lg border ${isZero ? 'border-gray-200' : isPositive ? 'border-green-200' : 'border-red-200'}">
+              <div class="font-medium text-gray-600">${member}</div>
+              <div class="font-bold mt-1 ${isZero ? 'text-gray-400' : isPositive ? 'text-green-600' : 'text-red-500'}">
+                ${isZero ? '$0' : (isPositive ? `+應收 $${roundedBal}` : `-應付 $${Math.abs(roundedBal)}`)}
+              </div>
+            </div>
+          `;
+        }
+
       } catch (err) {
-        listEl.innerHTML = `<p class="text-red-400 text-center text-sm py-4">載入失敗，請檢查 API 網址</p>`;
+        listEl.innerHTML = `<p class="text-red-400 text-center text-sm py-4">載入失敗，請確認試算表權限與部署設定</p>`;
       }
     }
 
-    // 新增資料
+    // 新增資料 (使用 text/plain 避免 CORS preflight 限制)
     document.getElementById("recordForm").addEventListener("submit", async (e) => {
       e.preventDefault();
       const btn = document.getElementById("submitBtn");
       btn.disabled = true;
       btn.textContent = "儲存中...";
 
+      const { rate, twd } = updateTwdPreview();
+      const type = document.getElementById("type").value;
+      const selectedMembers = Array.from(document.querySelectorAll(".member-cb:checked")).map(cb => cb.value);
+
       const payload = {
+        type: type,
         title: document.getElementById("title").value,
-        amount: Number(document.getElementById("amount").value),
-        type: document.getElementById("type").value,
+        originalAmount: parseFloat(document.getElementById("originalAmount").value),
+        currency: document.getElementById("currency").value,
+        rate: rate,
+        twdAmount: twd,
+        payer: type === "expense" ? document.getElementById("payer").value : "",
+        splitMembers: type === "expense" ? selectedMembers : [],
         date: document.getElementById("date").value
       };
 
       try {
         await fetch(API_URL, {
           method: "POST",
+          headers: { "Content-Type": "text/plain;charset=utf-8" },
           body: JSON.stringify(payload)
         });
         document.getElementById("title").value = "";
-        document.getElementById("amount").value = "";
+        document.getElementById("originalAmount").value = "";
+        updateTwdPreview();
         await loadRecords();
       } catch (err) {
         alert("儲存失敗");
       } finally {
         btn.disabled = false;
-        btn.textContent = "新增紀錄至試算表";
+        btn.textContent = "儲存紀錄";
       }
     });
 
@@ -138,6 +256,7 @@
       try {
         await fetch(API_URL, {
           method: "POST",
+          headers: { "Content-Type": "text/plain;charset=utf-8" },
           body: JSON.stringify({ action: "delete", id: id })
         });
         loadRecords();
@@ -147,7 +266,9 @@
     }
 
     document.getElementById("refreshBtn").addEventListener("click", loadRecords);
-    loadRecords();
+
+    // 初始化載入
+    fetchExchangeRates().then(() => loadRecords());
   </script>
 </body>
 </html>
