@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>雲端全能分帳記帳系統</title>
   
-  <link rel="manifest" href="data:application/manifest+json;base64,eyJuYW1lIjoi6Zuy56uv5YWo6IO95YiG5biz6KiY5biz57O757WxIiwic2hvcnRfbmFtZSI6IumZvueuuKiY5bizIiwiZGVzY3JpcHRpb24iOiLmlK/mjIjlhb5Lq65YiG5biz44CB5aSa5bmj5Yil44CB6KiY5biz5ZyW6aSF5ZyW44CBSlBXRU9DUiDlm77ljZrlpKrlpKrlpKoiLCJzdGFydF91cmwiOiIuLyIsImRpc3BsYXkiOiJzdGFuZGFsb25lIiwiYmFja2dyb3VuZF9jb2xvciI6IiMxMTE4MjciLCJ0aGVtZV9jb2xvciI6IiMyNTYzZWIiLCJpY29ucyI6W3sic3JjIjoiaHR0cHM6Ly9jZG4taWNvbnMtcG5nLmZsYXRpY29uLmNvbS81MTIvMjkzNi8yOTM2NzU4LnBuZyIsInNpemVzIjoiMTkyeDE5MiIsInR5cGUiOiJpbWFnZS9wbmciLCJwdXJwb3NlIjoiYW55IG1hc2thYmxlIn0seyJzcmMiOiJodHRwczovL2Nkbi1pY29ucy1wbmcuZmxhdGljb24uY29tLzUxMi8yOTM2LDI5MzY3NTgucG5nIiwic2l6ZXMiOiI1MTJ4NTEyIiwidHlwZSI6ImltYWdlL3BuZyIsInB1cnBvc2UiOiJhbnkgbWFza2FibGUifV1fQ==">
+  <link rel="manifest" href="data:application/manifest+json;base64,eyJuYW1lIjoi6Zuy56uv5YWo6IO95YiG5biz6KiY5biz57O757WxIiwic2hvcnRfbmFtZSI6IumZvueuuKiY5bizIiwiZGVzY3JpcHRpb24iOiLmlK/mjIjlhb5Lq65YiG5biz44CB5aSa5bmj5Yil44CB6KiY5biz5ZyW6aSF5ZyW44CBSlBXRU9DUiDlm77ljZrlpKrlpKrlpKoiLCJzdGFydF91cmwiOiIuLyIsImRpc3BsYXkiOiJzdGFuZGFsb25lIiwiYmFja2dyb3VuZF9jb2xvciI6IiMxMTE4MjciLCJ0aGVtZV9jb2xvciI6IiMyNTYzZWIiLCJpY29ucyI6W3sic3JjIjoiaHR0cHM6Ly9jZG4taWNvbnMtcG5nLmZsYXRpY29uLmNvbS81MTIvMjkzNi8yOTM2NzU4LnBuZyIsInNpemVzIjoiMTkyeDE5MiIsInR5cGUiOiJpbWFnZS9wbmciLCJwdXJwb3NlIjoiYW55IG1hc2thYmxlIn0seyJzcmMiOiiaHR0cHM6Ly9jZG4taWNvbnMtcG5nLmZsYXRpY29uLmNvbS81MTIvMjkzNi8yOTM2NzU4LnBuZyIsInNpemVzIjoiNTEyeDUxMiIsInR5cGUiOiJpbWFnZS9wbmciLCJwdXJwb3NlIjoiYW55IG1hc2thYmxlIn1dfQ==">
   <meta name="theme-color" content="#3b82f6">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -181,7 +181,6 @@
       </div>
 
       <div class="grid grid-cols-5 gap-2.5">
-        <!-- 🌟 幣別選項加入 EUR 歐元 -->
         <select id="currency" class="col-span-2 border border-gray-200 dark:border-gray-600 rounded-xl px-2 py-2 text-xs bg-blue-50/50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300 font-bold focus:ring-2 focus:ring-blue-500 outline-none">
           <option value="TWD">TWD 台幣</option>
           <option value="EUR">EUR 歐元</option>
@@ -289,7 +288,6 @@
     
     let currentSheet = localStorage.getItem("app_active_sheet") || "預設帳本";
     let members = JSON.parse(localStorage.getItem("split_members")) || ["我", "小明", "小華"];
-    // 🌟 預設匯率加入 EUR 歐元
     let exchangeRates = { TWD: 1, EUR: 35.0, JPY: 0.21, CNY: 4.45, USD: 32.5, KRW: 0.024 };
     let cachedRecords = [];
     let currentSplitMode = "equal";
@@ -533,7 +531,6 @@
       showToast(`⚡ 已套用範本：${title}`, "info");
     };
 
-    // 🌟 自動更新匯率機制 (支援 EUR、USD、JPY、CNY、KRW)
     async function fetchExchangeRates() {
       try {
         const res = await fetch("https://open.er-api.com/v6/latest/TWD"); 
@@ -559,35 +556,100 @@
       updateTwdPreview();
     }
 
+    // 🌟 優化版：圖片上傳前自動縮小，提升 OCR 效能與避免手機當機
     document.getElementById("receiptPhotoInput").addEventListener("change", e => {
-      const f = e.target.files[0]; if(!f) return; const reader = new FileReader();
-      reader.onload = evt => {
-        const img = new Image(); img.onload = () => {
-          const cvs = document.createElement("canvas"); let w=img.width, h=img.height;
-          if(w>600||h>600){ if(w>h){h=(600/w)*h;w=600;}else{w=(600/h)*w;h=600;} }
-          cvs.width=w; cvs.height=h; cvs.getContext("2d").drawImage(img,0,0,w,h);
-          uploadedReceiptBase64 = cvs.toDataURL("image/jpeg", 0.5);
-          document.getElementById("receiptPreviewThumb").style.backgroundImage = `url(${uploadedReceiptBase64})`;
-          document.getElementById("receiptPreviewThumb").classList.remove("hidden");
-        }; img.src = evt.target.result;
-      }; reader.readAsDataURL(f);
+      const f = e.target.files[0]; if(!f) return;
+      processImageForUpload(f, (base64) => {
+        uploadedReceiptBase64 = base64;
+        document.getElementById("receiptPreviewThumb").style.backgroundImage = `url(${uploadedReceiptBase64})`;
+        document.getElementById("receiptPreviewThumb").classList.remove("hidden");
+      });
     });
 
+    function processImageForUpload(file, callback, maxDim = 800) {
+      const reader = new FileReader();
+      reader.onload = evt => {
+        const img = new Image();
+        img.onload = () => {
+          const cvs = document.createElement("canvas");
+          let w = img.width, h = img.height;
+          if (w > maxDim || h > maxDim) {
+            if (w > h) { h = (maxDim / w) * h; w = maxDim; }
+            else { w = (maxDim / h) * w; h = maxDim; }
+          }
+          cvs.width = w; cvs.height = h;
+          cvs.getContext("2d").drawImage(img, 0, 0, w, h);
+          callback(cvs.toDataURL("image/jpeg", 0.6));
+        };
+        img.src = evt.target.result;
+      };
+      reader.readAsDataURL(file);
+    }
+
+    // 🌟 優化版：語音辨識防呆與錯誤攔截
     const voiceBtn = document.getElementById("voiceInputBtn"), aiStatus = document.getElementById("aiStatusNotice");
     if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
-      const rec = new (window.SpeechRecognition || window.webkitSpeechRecognition)(); rec.lang = 'zh-TW';
-      voiceBtn.addEventListener("click", () => { aiStatus.textContent = "🎙️ 請說話..."; aiStatus.classList.remove("hidden"); rec.start(); });
+      const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+      const rec = new SpeechRecognition();
+      rec.lang = 'zh-TW';
+      rec.interimResults = false;
+
+      voiceBtn.addEventListener("click", () => {
+        try {
+          aiStatus.textContent = "🎙️ 請說話..."; 
+          aiStatus.classList.remove("hidden"); 
+          rec.start();
+        } catch (err) {
+          aiStatus.classList.add("hidden");
+          showToast("❌ 語音啟動失敗，請確認麥克風權限", "error");
+        }
+      });
+
       rec.onresult = e => {
-        const txt = e.results[0][0].transcript; aiStatus.textContent = `解析中: ${txt}`;
-        if(txt.includes("歐")) document.getElementById("currency").value = "EUR";
-        else if(txt.includes("日")) document.getElementById("currency").value = "JPY"; 
-        else if(txt.includes("美")) document.getElementById("currency").value = "USD"; 
+        const txt = e.results[0][0].transcript; 
+        aiStatus.textContent = `解析中: ${txt}`;
+        if (txt.includes("歐")) document.getElementById("currency").value = "EUR";
+        else if (txt.includes("日")) document.getElementById("currency").value = "JPY"; 
+        else if (txt.includes("美")) document.getElementById("currency").value = "USD"; 
         else document.getElementById("currency").value = "TWD";
-        const nums = txt.match(/\d+/g); if(nums) document.getElementById("originalAmount").value = nums[nums.length-1];
+        
+        const nums = txt.match(/\d+/g); 
+        if (nums) document.getElementById("originalAmount").value = nums[nums.length-1];
+        
         document.getElementById("title").value = txt.replace(/\d+|元|塊|台幣|日幣|美金|歐元/g, '').trim() || "語音記帳";
-        updateTwdPreview(); setTimeout(() => aiStatus.classList.add("hidden"), 2000);
+        updateTwdPreview(); 
+        setTimeout(() => aiStatus.classList.add("hidden"), 2000);
       };
+
+      rec.onerror = () => {
+        aiStatus.textContent = "❌ 語音辨識失敗或無聲";
+        setTimeout(() => aiStatus.classList.add("hidden"), 2000);
+      };
+    } else {
+      voiceBtn.addEventListener("click", () => showToast("❌ 您的瀏覽器不支援語音辨識", "error"));
     }
+
+    // 🌟 優化版：OCR 辨識自動壓縮圖片，大幅加快速度
+    document.getElementById("ocrReceiptInput").addEventListener("change", async e => {
+      const f = e.target.files[0]; if(!f) return; 
+      aiStatus.textContent = "🔍 照片辨識中..."; 
+      aiStatus.classList.remove("hidden");
+      
+      processImageForUpload(f, async (compressedBase64) => {
+        try {
+          const { data: { text } } = await Tesseract.recognize(compressedBase64, 'eng+chi_tra');
+          const nums = (text.match(/[0-9,.]+/g)||[]).map(n=>parseFloat(n.replace(/,/g,''))).filter(n=>n>0&&n<1000000);
+          if (nums.length) document.getElementById("originalAmount").value = Math.max(...nums);
+          document.getElementById("title").value = "收據截取"; 
+          updateTwdPreview();
+          showToast("✅ 收據辨識完成");
+        } catch(err) { 
+          showToast("❌ 收據辨識失敗", "error"); 
+        } finally {
+          aiStatus.classList.add("hidden");
+        }
+      }, 600); // OCR 使用較小的 600px 尺寸以達最佳效能
+    });
 
     function parseShares(item) {
       const shares = {}; const twd = Number(item.twdAmount)||0; const list = item.splitMembers||[];
