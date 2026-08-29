@@ -4,11 +4,18 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>雲端分帳與多幣別記帳</title>
+  
+  <link rel="manifest" href="data:application/manifest+json;base64,eyJuYW1lIjoi6Zuy56uv5YiG5biz6IiH5aSa5bmj5Yil6KiY5bizIiwic2hvcnRfbmFtZSI6IumZvueu AccurateKiY5bizIiwiZGVzY3JpcHRpb24iOiLmlK/mjI Tanks5Lq65YiG5biz44CB5aSa5bmj5Yil5Yyv546H5o+b566X6IiH6ams566X6KGow5Hlho3lkIzmraXnmoToqJjntrLlt6XlhbciLCJzdGFydF91cmwiOiIuLyIsImRpc3BsYXkiOiJzdGFuZGFsb25lIiwiYmFja2dyb3VuZF9jb2xvciI6IiMxMTE4MjciLCJ0aGVtZV9jb2xvciI6IiMyNTYzZWIiLCJpY29ucyI6W3sic3JjIjoiaHR0cHM6Ly9jZG4taWNvbnMtcG5nLmZsYXRpY29uLmNvbS81MTIvMjkzNi8yOTM2NzU4LnBuZyIsInNpemVzIjoiMTkyeDE5MiIsInR5cGUiOiJpbWFnZS9wbmciLCJwdXJwb3NlIjoiYW55IG1hc2thYmxlIn0seyJzcmMiOiiaHR0cHM6Ly9jZG4taWNvbnMtcG5nLmZsYXRpY29uLmNvbS81MTIvMjkzNi8yOTM2NzU4LnBuZyIsInNpemVzIjoiNTEyeDUxMiIsInR5cGUiOiJpbWFnZS9wbmciLCJwdXJwb3NlIjoiYW55IG1hc2thYmxlIn1dfQ==">
+  
+  <meta name="theme-color" content="#2563eb">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="雲端記帳">
+  <link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/2936/2936758.png">
+
   <script src="https://cdn.tailwindcss.com"></script>
   <script>
-    tailwind.config = {
-      darkMode: 'class',
-    }
+    tailwind.config = { darkMode: 'class' }
   </script>
 </head>
 <body class="bg-gray-100 dark:bg-gray-900 min-h-screen p-3 md:p-6 text-gray-800 dark:text-gray-100 transition-colors duration-200">
@@ -21,10 +28,10 @@
       </div>
 
       <div class="flex items-center gap-1.5">
-        <button id="themeToggleBtn" class="p-1.5 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 border border-gray-200 dark:border-gray-600 rounded-lg text-sm transition" title="切換深淺模式">
-          🌙
+        <button id="pwaInstallBtn" class="hidden text-xs bg-emerald-600 hover:bg-emerald-700 text-white font-semibold px-2.5 py-1.5 rounded-lg shadow-sm transition">
+          📲 安裝 App
         </button>
-
+        <button id="themeToggleBtn" class="p-1.5 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 border border-gray-200 dark:border-gray-600 rounded-lg text-sm transition" title="切換深淺模式">🌙</button>
         <button id="toggleFontPanelBtn" class="text-xs bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 px-2 py-1.5 rounded-lg border border-gray-200 dark:border-gray-600 transition">🔤 字體</button>
         <button id="toggleMemberBtn" class="text-xs bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 px-2 py-1.5 rounded-lg border border-gray-200 dark:border-gray-600 transition">⚙️ 成員</button>
         <button id="toggleDataBtn" class="text-xs bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 px-2 py-1.5 rounded-lg border border-gray-200 dark:border-gray-600 transition">📁 備份</button>
@@ -145,7 +152,47 @@
     let exchangeRates = { TWD: 1, JPY: 0.21, USD: 32.5, KRW: 0.024, EUR: 35.2 };
     let cachedRecords = [];
 
-    // --- 🔤 自訂字體大小控制 ---
+    // --- 2. 內嵌 Service Worker (免額外 sw.js 檔案) ---
+    if ("serviceWorker" in navigator) {
+      window.addEventListener("load", () => {
+        const swCode = `
+          self.addEventListener("install", (e) => self.skipWaiting());
+          self.addEventListener("activate", (e) => self.clients.claim());
+          self.addEventListener("fetch", (e) => {
+            if (e.request.url.includes("script.google.com") || e.request.url.includes("open.er-api.com")) return;
+            e.respondWith(fetch(e.request).catch(() => caches.match(e.request)));
+          });
+        `;
+        const blob = new Blob([swCode], { type: "text/javascript" });
+        navigator.serviceWorker.register(URL.createObjectURL(blob)).catch(() => {});
+      });
+    }
+
+    // --- PWA 安裝事件 ---
+    let deferredPrompt;
+    const pwaInstallBtn = document.getElementById("pwaInstallBtn");
+
+    window.addEventListener("beforeinstallprompt", (e) => {
+      e.preventDefault();
+      deferredPrompt = e;
+      pwaInstallBtn.classList.remove("hidden");
+    });
+
+    pwaInstallBtn.addEventListener("click", async () => {
+      if (!deferredPrompt) return;
+      deferredPrompt.prompt();
+      const { outcome } = await deferredPrompt.userChoice;
+      if (outcome === "accepted") {
+        pwaInstallBtn.classList.add("hidden");
+      }
+      deferredPrompt = null;
+    });
+
+    window.addEventListener("appinstalled", () => {
+      pwaInstallBtn.classList.add("hidden");
+    });
+
+    // --- 字體大小控制 ---
     const fontSlider = document.getElementById("fontSlider");
     const fontDisplay = document.getElementById("fontSizeDisplay");
 
@@ -173,7 +220,7 @@
       applyFontSize(saved);
     }
 
-    // --- 🌙 主題切換 (Dark Mode) ---
+    // --- 主題切換 (Dark Mode) ---
     const themeToggleBtn = document.getElementById("themeToggleBtn");
     
     function initTheme() {
@@ -194,7 +241,7 @@
       themeToggleBtn.textContent = isDark ? "☀️" : "🌙";
     });
 
-    // --- 🔒 密碼與成員邏輯 ---
+    // --- 密碼與成員 ---
     function getPassword() {
       return document.getElementById("accessPassword").value.trim() || localStorage.getItem("app_pwd") || "";
     }
@@ -245,7 +292,7 @@
       document.getElementById("dataConfigPanel").classList.toggle("hidden");
     });
 
-    // --- 💱 匯率與換算 ---
+    // --- 匯率換算 ---
     async function fetchExchangeRates() {
       try {
         const res = await fetch("https://open.er-api.com/v6/latest/TWD");
@@ -279,7 +326,7 @@
     document.getElementById("originalAmount").addEventListener("input", updateTwdPreview);
     document.getElementById("date").valueAsDate = new Date();
 
-    // --- 渲染分帳卡片 ---
+    // --- 結算卡片 ---
     function renderSettlement(records) {
       const balances = {};
       members.forEach(m => balances[m] = 0);
@@ -320,7 +367,7 @@
       }
     }
 
-    // --- 載入資料 ---
+    // --- 載入與操作 ---
     async function loadRecords() {
       const pwd = getPassword();
       const listEl = document.getElementById("recordList");
@@ -379,7 +426,6 @@
       }
     }
 
-    // --- 新增紀錄 ---
     document.getElementById("recordForm").addEventListener("submit", async (e) => {
       e.preventDefault();
       const pwd = getPassword();
@@ -430,7 +476,6 @@
       }
     });
 
-    // --- 刪除紀錄 ---
     window.deleteRecord = async function(id) {
       const pwd = getPassword();
       if (!pwd) return alert("請先輸入密碼！");
@@ -448,21 +493,14 @@
       }
     };
 
-    // --- 📥 匯出與 📤 匯入 ---
+    // 匯出 CSV / TXT
     document.getElementById("exportCsvBtn").addEventListener("click", () => {
       if (cachedRecords.length === 0) return alert("目前沒有可匯出的資料或尚未解鎖！");
 
       const headers = ["日期", "類型", "項目", "原始金額", "幣別", "匯率", "折合台幣", "付款人", "分攤成員"];
       const rows = cachedRecords.map(r => [
-        `"${r.date}"`,
-        `"${r.type === 'expense' ? '支出' : '收入'}"`,
-        `"${(r.title || '').replace(/"/g, '""')}"`,
-        r.originalAmount,
-        `"${r.currency}"`,
-        r.rate,
-        r.twdAmount,
-        `"${r.payer || ''}"`,
-        `"${(r.splitMembers || []).join(';')}"`
+        `"${r.date}"`, `"${r.type === 'expense' ? '支出' : '收入'}"`, `"${(r.title || '').replace(/"/g, '""')}"`,
+        r.originalAmount, `"${r.currency}"`, r.rate, r.twdAmount, `"${r.payer || ''}"`, `"${(r.splitMembers || []).join(';')}"`
       ]);
 
       const csvContent = "\uFEFF" + [headers.join(","), ...rows.map(e => e.join(","))].join("\n");
@@ -501,6 +539,7 @@
       return new Date().toISOString().split("T")[0];
     }
 
+    // 匯入 CSV / TXT
     document.getElementById("importBtn").addEventListener("click", async () => {
       const pwd = getPassword();
       if (!pwd) return alert("請先輸入密碼解鎖後再進行匯入！");
@@ -591,7 +630,6 @@
       }
     });
 
-    // --- 密碼認證綁定 ---
     document.getElementById("authBtn").addEventListener("click", loadRecords);
     document.getElementById("clearAuthBtn").addEventListener("click", () => {
       localStorage.removeItem("app_pwd");
@@ -602,7 +640,7 @@
 
     document.getElementById("refreshBtn").addEventListener("click", loadRecords);
 
-    // --- 頁面啟動初始化 ---
+    // 啟動
     initTheme();
     initFontSize();
 
