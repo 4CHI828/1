@@ -51,7 +51,7 @@
             color: var(--text-primary);
             line-height: 1.6;
             padding: 12px;
-            padding-bottom: 85px; /* 為底部導航保留空間 */
+            padding-bottom: 85px;
             transition: background-color 0.3s, color 0.3s;
         }
 
@@ -60,7 +60,6 @@
             margin: 0 auto;
         }
 
-        /* 頂部 Header 卡片 */
         .header-card {
             background: var(--bg-container);
             padding: 18px 16px;
@@ -93,7 +92,6 @@
             gap: 6px;
         }
 
-        /* 字級縮放按鈕組 */
         .font-btn-group {
             display: inline-flex;
             border: 1.5px solid var(--primary);
@@ -135,7 +133,6 @@
         }
         .icon-btn:active { transform: scale(0.92); }
 
-        /* 吸頂橫向快速導航標籤 */
         .day-nav-wrapper {
             position: sticky;
             top: 0;
@@ -166,7 +163,6 @@
         }
         .day-chip:active { background: var(--primary); color: white; }
 
-        /* 核心資訊卡片 */
         .info-card {
             background: var(--bg-container);
             border: 1px solid var(--border-color);
@@ -185,7 +181,6 @@
         .info-row:last-child { margin-bottom: 0; }
         .info-icon { font-size: 1.2rem; flex-shrink: 0; margin-top: 1px; }
 
-        /* 倒數看板 */
         .countdown-grid {
             display: grid;
             grid-template-columns: repeat(2, 1fr);
@@ -202,7 +197,6 @@
         .cd-title { font-size: 0.85rem; color: var(--text-secondary); font-weight: 600; }
         .cd-timer { font-size: 1.05rem; font-weight: 800; color: var(--accent-red); margin-top: 4px; font-family: monospace; }
 
-        /* 常用快捷按鈕列 */
         .action-row {
             display: flex;
             gap: 6px;
@@ -231,7 +225,6 @@
         .btn-secondary { background: var(--bg-sub); color: var(--text-primary); border: 1px solid var(--border-color); }
         .btn-excel { background: #107c41; color: white; }
 
-        /* 行程摺疊卡片 */
         details {
             background: var(--bg-container);
             border: 1px solid var(--border-color);
@@ -267,7 +260,6 @@
 
         .day-body { padding: 14px 12px; }
 
-        /* 手機易讀時間軸節點 */
         .timeline {
             position: relative;
             padding-left: 18px;
@@ -320,7 +312,6 @@
             line-height: 1.55;
         }
 
-        /* 標籤與提示塊 */
         .badge {
             display: inline-flex;
             align-items: center;
@@ -349,17 +340,6 @@
         [data-theme="dark"] .callout-warn { background: #3b2a1a; color: #fde047; }
         [data-theme="dark"] .callout-success { background: #143224; color: #86efac; }
 
-        .sub-card {
-            background: var(--bg-sub);
-            border: 1px solid var(--border-color);
-            border-radius: var(--radius-sm);
-            padding: 12px;
-            margin: 10px 0;
-            font-size: 0.92rem;
-        }
-        .sub-card h4 { font-size: 1rem; margin-bottom: 6px; color: var(--primary); }
-
-        /* 地圖導航連結按鈕 */
         .map-btn {
             display: inline-flex;
             align-items: center;
@@ -374,7 +354,6 @@
             margin-left: 4px;
         }
 
-        /* 互動記帳本 */
         .budget-box {
             background: var(--bg-container);
             border: 2px dashed var(--border-color);
@@ -432,7 +411,6 @@
         }
         .btn-main:active { opacity: 0.9; }
 
-        /* 底部固定快捷操作列 (App-like Bottom Navigation) */
         .bottom-bar {
             position: fixed;
             bottom: 0;
@@ -465,11 +443,9 @@
         .nav-item:active { color: var(--primary); }
         .nav-item span { font-size: 1.25rem; }
 
-        /* 清單多選框加大 */
         .todo-check { transform: scale(1.35); margin-right: 10px; }
         .todo-label { font-size: 0.95rem; line-height: 2.1; cursor: pointer; }
 
-        /* Toast 浮動通知 */
         #toast {
             visibility: hidden;
             min-width: 180px;
@@ -499,7 +475,6 @@
         <!-- 頂部 Header -->
         <div class="header-card">
             <div class="top-btns">
-                <!-- A- / A+ 字級縮放按鈕 -->
                 <div class="font-btn-group" title="調整字體大小">
                     <button class="font-btn" id="fontDecBtn" title="字體縮小">A-</button>
                     <button class="font-btn" id="fontIncBtn" title="字體放大">A+</button>
@@ -562,7 +537,7 @@
             </div>
         </div>
 
-        <!-- 常用快捷按鈕列 (已新增「💰 記帳」按鈕) -->
+        <!-- 常用快捷按鈕列 -->
         <div class="action-row" id="top-map-tools">
             <button class="btn btn-secondary" id="expandBtn">📂 全部展開</button>
             <button class="btn btn-secondary" id="collapseBtn">📁 全部收合</button>
@@ -837,7 +812,7 @@
 
     </div>
 
-    <!-- 底部固定快捷操作列 (已將「記帳」按鈕同步設定為直連 https://4chi828.github.io/1/pay.html) -->
+    <!-- 底部固定快捷操作列 -->
     <div class="bottom-bar">
         <div class="nav-item" id="navBottomDay">
             <span>📅</span>行程
@@ -859,7 +834,6 @@
     <div id="toast">已完成！</div>
 
     <script>
-        // 匯率自動抓取 (含防快取與雙 API 容錯)
         async function fetchExchangeRate(isManual = false) {
             const rateInput = document.getElementById('expense-rate');
             const rateStatus = document.getElementById('rate-status');
@@ -910,7 +884,6 @@
             setTimeout(() => toast.classList.remove('show'), 2200);
         }
 
-        // 原地平滑滾動並展開指定區塊
         function smoothScrollTo(elementId, openDetails = false) {
             const el = document.getElementById(elementId);
             if (el) {
@@ -922,10 +895,9 @@
         }
 
         document.addEventListener('DOMContentLoaded', () => {
-            // 0. 字體大小縮放控制 (A- / A+)
             let currentScale = parseFloat(localStorage.getItem('fukuoka_mobile_font_scale')) || 1.0;
             const setFontScale = (scale) => {
-                currentScale = Math.min(Math.max(scale, 0.8), 1.5); // 限制縮放範圍在 80% ~ 150%
+                currentScale = Math.min(Math.max(scale, 0.8), 1.5);
                 document.documentElement.style.setProperty('--font-scale', currentScale);
                 localStorage.setItem('fukuoka_mobile_font_scale', currentScale);
             };
@@ -941,12 +913,10 @@
                 showToast(`字體已縮小 (${Math.round(currentScale * 100)}%)`);
             });
 
-            // 初始化日期與匯率
             const dateInput = document.getElementById('expense-date');
             if (dateInput) dateInput.value = new Date().toISOString().split('T')[0];
             fetchExchangeRate();
 
-            // 主題切換 (深色 / 淺色)
             const themeToggle = document.getElementById('themeToggle');
             const applyTheme = (theme) => {
                 document.body.setAttribute('data-theme', theme);
@@ -959,20 +929,17 @@
                 applyTheme(isDark ? 'light' : 'dark');
             });
 
-            // 重新整理與展開收合
             document.getElementById('pageRefreshBtn').addEventListener('click', () => location.reload());
             document.getElementById('refreshRateBtn').addEventListener('click', () => fetchExchangeRate(true));
             document.getElementById('expandBtn').addEventListener('click', () => document.querySelectorAll('details').forEach(d => d.open = true));
             document.getElementById('collapseBtn').addEventListener('click', () => document.querySelectorAll('details').forEach(d => d.removeAttribute('open')));
 
-            // 底部快捷列原地跳轉
             document.getElementById('navBottomDay').addEventListener('click', () => smoothScrollTo('details-day1', true));
             document.getElementById('navBottomRain').addEventListener('click', () => smoothScrollTo('details-rain', true));
             document.getElementById('navBottomMap').addEventListener('click', () => smoothScrollTo('top-map-tools'));
             document.getElementById('navBottomTop').addEventListener('click', () => window.scrollTo({ top: 0, behavior: 'smooth' }));
             document.getElementById('topRainBtn').addEventListener('click', () => smoothScrollTo('details-rain', true));
 
-            // 吸頂橫向滑動天數標籤 (D1～D6) 原地跳轉
             document.querySelectorAll('.day-chip').forEach(chip => {
                 chip.addEventListener('click', () => {
                     const dayKey = chip.getAttribute('data-jump');
@@ -980,7 +947,6 @@
                 });
             });
 
-            // 一鍵複製
             document.addEventListener('click', (e) => {
                 const target = e.target.closest('[data-copy]');
                 if (target) {
@@ -989,7 +955,6 @@
                 }
             });
 
-            // 倒數計時
             const dates = {
                 'timer-vjw': new Date("2026-08-31T00:00:00+08:00").getTime(),
                 'timer-departure': new Date("2026-09-16T00:00:00+08:00").getTime()
@@ -1012,7 +977,6 @@
             setInterval(updateTimers, 1000);
             updateTimers();
 
-            // 行前清單記憶
             const checkboxes = ['chk_vjw', 'chk_card', 'chk_res', 'chk_boat'];
             checkboxes.forEach(id => {
                 const el = document.getElementById(id);
@@ -1021,7 +985,6 @@
                 el.addEventListener('change', () => localStorage.setItem('fukuoka_' + id, el.checked));
             });
 
-            // 記帳本功能
             let expenses = JSON.parse(localStorage.getItem('fukuoka_expenses_v2')) || [
                 { date: "2026-09-17", name: "由布院之森 車上便當2份", amount: 4800, rate: 0.21 }
             ];
@@ -1087,7 +1050,6 @@
                 }
             });
 
-            // 匯出 CSV / TXT
             document.getElementById('exportCsvBtn').addEventListener('click', () => {
                 if (expenses.length === 0) return alert('無記帳資料');
                 let csv = "\uFEFF日期,項目,日圓金額(JPY),匯率,台幣估算(TWD)\n";
@@ -1116,7 +1078,6 @@
                 a.click();
             });
 
-            // 匯入檔案
             const importFileInput = document.getElementById('importFileInput');
             document.getElementById('importExpensesBtn').addEventListener('click', () => importFileInput.click());
             importFileInput.addEventListener('change', (e) => {
