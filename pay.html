@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>雲端分帳與多幣別記帳</title>
   
+  <!-- 內嵌 Manifest Data URL -->
   <link rel="manifest" href="data:application/manifest+json;base64,eyJuYW1lIjoi6Zuy56uv5YiG5biz6IiH5aSa5bmj5Yil6KiY5bizIiwic2hvcnRfbmFtZSI6IumZvueuuKiY5bizIiwiZGVzY3JpcHRpb24iOiLmlK/mjIjlhb5Lq65YiG5biz44CB5aSa5bmj5Yil5Yyv546H5o+b566X6IiH6ams566X6KGow5Hlho3lkIzmraXnmoToqJjntrLlt6XlhbciLCJzdGFydF91cmwiOiIuLyIsImRpc3BsYXkiOiJzdGFuZGFsb25lIiwiYmFja2dyb3VuZF9jb2xvciI6IiMxMTE4MjciLCJ0aGVtZV9jb2xvciI6IiMyNTYzZWIiLCJpY29ucyI6W3sic3JjIjoiaHR0cHM6Ly9jZG4taWNvbnMtcG5nLmZsYXRpY29uLmNvbS81MTIvMjkzNi8yOTM2NzU4LnBuZyIsInNpemVzIjoiMTkyeDE5MiIsInR5cGUiOiJpbWFnZS9wbmciLCJwdXJwb3NlIjoiYW55IG1hc2thYmxlIn0seyJzcmMiOiiaHR0cHM6Ly9jZG4taWNvbnMtcG5nLmZsYXRpY29uLmNvbS81MTIvMjkzNi8yOTM2NzU4LnBuZyIsInNpemVzIjoiNTEyeDUxMiIsInR5cGUiOiJpbWFnZS9wbmciLCJwdXJwb3NlIjoiYW55IG1hc2thYmxlIn1dfQ==">
   
   <meta name="theme-color" content="#2563eb">
@@ -21,6 +22,7 @@
 <body class="bg-gray-100 dark:bg-gray-900 min-h-screen p-3 md:p-6 text-gray-800 dark:text-gray-100 transition-colors duration-200 flex flex-col justify-between">
   <div class="max-w-xl mx-auto w-full bg-white dark:bg-gray-800 rounded-2xl shadow-lg p-5 md:p-6 space-y-4 border border-transparent dark:border-gray-700 transition-colors duration-200">
     
+    <!-- 頂部控制列 -->
     <div class="flex flex-wrap justify-between items-center border-b border-gray-200 dark:border-gray-700 pb-3 gap-2">
       <div>
         <h1 class="text-xl font-bold text-gray-900 dark:text-white">分帳與多幣別記帳</h1>
@@ -38,6 +40,7 @@
       </div>
     </div>
 
+    <!-- 即時匯率全覽 -->
     <div class="bg-gray-50 dark:bg-slate-900/60 border border-gray-200 dark:border-gray-700 rounded-xl p-2.5">
       <div class="flex items-center justify-between text-[11px] font-semibold text-gray-500 dark:text-gray-400 mb-1.5">
         <span>💱 即時參考匯率 (對新台幣 TWD)</span>
@@ -48,6 +51,7 @@
       </div>
     </div>
 
+    <!-- 自訂字體大小面板 -->
     <div id="fontConfigPanel" class="hidden bg-gray-50 dark:bg-slate-900/60 border border-gray-200 dark:border-gray-700 rounded-xl p-3.5 space-y-2">
       <div class="flex justify-between items-center text-xs font-bold text-gray-700 dark:text-gray-300">
         <span>自訂全站字體大小</span>
@@ -61,6 +65,7 @@
       </div>
     </div>
 
+    <!-- 密碼解鎖列 -->
     <div class="bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800/60 rounded-xl p-3 flex flex-wrap items-center justify-between gap-2">
       <div class="flex items-center gap-2 flex-1 min-w-[200px]">
         <span class="text-xs font-semibold text-amber-900 dark:text-amber-300">🔒 密碼：</span>
@@ -72,6 +77,7 @@
       </div>
     </div>
 
+    <!-- 匯出與匯入面板 -->
     <div id="dataConfigPanel" class="hidden bg-slate-50 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-700 rounded-xl p-4 space-y-3">
       <div class="text-xs font-bold text-slate-700 dark:text-slate-300">資料備份與還原</div>
       <div class="grid grid-cols-2 gap-2 text-xs">
@@ -87,6 +93,7 @@
       </div>
     </div>
 
+    <!-- 成員設定面板 -->
     <div id="memberConfigPanel" class="hidden bg-gray-50 dark:bg-slate-900/60 border border-gray-200 dark:border-gray-700 rounded-xl p-4 space-y-3">
       <div class="text-xs font-bold text-gray-700 dark:text-gray-300">管理分攤成員名單</div>
       <div class="flex gap-2">
@@ -96,17 +103,20 @@
       <div id="memberTagList" class="flex flex-wrap gap-1.5 text-xs"></div>
     </div>
 
+    <!-- 分帳結算卡片 -->
     <div class="bg-blue-50 dark:bg-blue-950/30 border border-blue-100 dark:border-blue-900/50 rounded-xl p-4 space-y-3">
       <div class="text-xs font-bold text-blue-800 dark:text-blue-300 uppercase tracking-wider">成員分帳結算 (TWD)</div>
       
+      <!-- 個人結餘網格 -->
       <div id="settlementGrid" class="grid grid-cols-2 sm:grid-cols-4 gap-2 text-center text-xs">
         <div class="col-span-full text-gray-400 dark:text-gray-500 py-1">請先解鎖以查看結算金額</div>
       </div>
 
-      <div id="settlementTransfers" class="pt-2 border-t border-blue-200/60 dark:border-blue-800/50 text-xs">
-        </div>
+      <!-- 轉帳結清指引 -->
+      <div id="settlementTransfers" class="pt-2 border-t border-blue-200/60 dark:border-blue-800/50 text-xs"></div>
     </div>
 
+    <!-- 記帳表單 -->
     <form id="recordForm" class="space-y-4">
       <div class="grid grid-cols-3 gap-2">
         <select id="type" class="border border-gray-300 dark:border-gray-600 rounded-lg px-2.5 py-2 text-sm bg-gray-50 dark:bg-gray-700 dark:text-white focus:bg-white focus:outline-blue-500">
@@ -117,13 +127,13 @@
       </div>
 
       <div class="grid grid-cols-3 gap-2">
+        <!-- 移除 EUR，保留 TWD, JPY, CNY, USD, KRW -->
         <select id="currency" class="border border-gray-300 dark:border-gray-600 rounded-lg px-2.5 py-2 text-sm bg-gray-50 dark:bg-gray-700 dark:text-white focus:bg-white focus:outline-blue-500 font-semibold">
           <option value="TWD">TWD 台幣</option>
           <option value="JPY">JPY 日圓</option>
           <option value="CNY">CNY 人民幣</option>
           <option value="USD">USD 美元</option>
           <option value="KRW">KRW 韓元</option>
-          <option value="EUR">EUR 歐元</option>
         </select>
         <input type="number" id="originalAmount" placeholder="原始金額" step="any" min="0.01" required class="border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 text-sm bg-white dark:bg-gray-700 dark:text-white focus:outline-blue-500">
         <div class="flex items-center text-xs text-gray-500 dark:text-gray-400 bg-gray-50 dark:bg-gray-700 px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600">
@@ -150,6 +160,7 @@
       </div>
     </form>
 
+    <!-- 紀錄清單 -->
     <div>
       <h2 class="text-sm font-semibold text-gray-500 dark:text-gray-400 mb-2">歷史明細</h2>
       <div id="recordList" class="space-y-2 max-h-80 overflow-y-auto pr-1">
@@ -159,6 +170,7 @@
 
   </div>
 
+  <!-- 底部更新時間與奇奇828連結 -->
   <footer class="max-w-xl mx-auto w-full mt-6 py-3 border-t border-gray-200 dark:border-gray-800 text-center text-xs text-gray-500 dark:text-gray-400 flex flex-wrap items-center justify-center gap-x-3 gap-y-1">
     <div>網頁更新時間：<span id="lastUpdatedDisplay" class="font-mono font-medium text-gray-700 dark:text-gray-300">載入中...</span></div>
     <span class="text-gray-300 dark:text-gray-600">|</span>
@@ -172,7 +184,8 @@
     const API_URL = "https://script.google.com/macros/s/AKfycbyLdzLuX2UzEpgD2fc-P_2l8L0yjfjsUgLaOTdn7tJWcRdhIG6ZY4lxFp5WAY7pFXxW/exec";
     
     let members = JSON.parse(localStorage.getItem("split_members")) || ["我", "小明", "小華"];
-    let exchangeRates = { TWD: 1, JPY: 0.21, CNY: 4.45, USD: 32.5, KRW: 0.024, EUR: 35.2 };
+    // 預設匯率表 (移除 EUR)
+    let exchangeRates = { TWD: 1, JPY: 0.21, CNY: 4.45, USD: 32.5, KRW: 0.024 };
     let cachedRecords = [];
 
     function updateTimestampDisplay() {
@@ -308,14 +321,14 @@
       document.getElementById("dataConfigPanel").classList.toggle("hidden");
     });
 
+    // 匯率顯示 (移除 EUR)
     function renderExchangeRateChips() {
       const container = document.getElementById("rateChipsContainer");
       const targetCurrencies = [
         { code: "USD", name: "美元" },
         { code: "JPY", name: "日圓" },
         { code: "CNY", name: "人民幣" },
-        { code: "KRW", name: "韓元" },
-        { code: "EUR", name: "歐元" }
+        { code: "KRW", name: "韓元" }
       ];
 
       container.innerHTML = targetCurrencies.map(c => {
@@ -340,7 +353,6 @@
           exchangeRates.CNY = 1 / data.rates.CNY;
           exchangeRates.USD = 1 / data.rates.USD;
           exchangeRates.KRW = 1 / data.rates.KRW;
-          exchangeRates.EUR = 1 / data.rates.EUR;
           document.getElementById("rateUpdateTime").textContent = `已同步最新`;
         }
       } catch (e) {
@@ -366,14 +378,11 @@
     document.getElementById("originalAmount").addEventListener("input", updateTwdPreview);
     document.getElementById("date").valueAsDate = new Date();
 
-    // 🌟 核心分帳與結算演算法（修復漏算、浮點數與轉帳指引）
+    // 分帳結算演算法
     function renderSettlement(records) {
       const balances = {};
-      
-      // 1. 初始化所有設定成員
       members.forEach(m => balances[m] = 0);
 
-      // 2. 自動補充歷史紀錄中出現過的所有成員，防止漏算
       records.forEach(item => {
         if (item.type === "expense") {
           if (item.payer && balances[item.payer] === undefined) {
@@ -387,7 +396,6 @@
         }
       });
 
-      // 3. 逐筆精確計算淨額
       records.forEach(item => {
         if (item.type === "expense") {
           const twd = Number(item.twdAmount) || 0;
@@ -397,12 +405,10 @@
           if (splitCount > 0 && twd > 0) {
             const perPersonShare = twd / splitCount;
 
-            // 付款人墊付全額
             if (item.payer) {
               balances[item.payer] = (balances[item.payer] || 0) + twd;
             }
 
-            // 分攤成員各扣份額
             validSplitMembers.forEach(m => {
               balances[m] = (balances[m] || 0) - perPersonShare;
             });
@@ -410,7 +416,6 @@
         }
       });
 
-      // 4. 渲染成員淨額卡片
       const grid = document.getElementById("settlementGrid");
       grid.innerHTML = "";
       const memberKeys = Object.keys(balances);
@@ -436,9 +441,8 @@
         `;
       });
 
-      // 5. 最佳化轉帳平帳演算法（Debt Simplification）
-      const debtors = [];  // 應付者
-      const creditors = []; // 應收者
+      const debtors = [];
+      const creditors = [];
 
       memberKeys.forEach(m => {
         const bal = Math.round(balances[m]);
