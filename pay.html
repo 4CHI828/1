@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>雲端全能分帳記帳系統</title>
   
+  <!-- 內嵌 PWA Manifest Data URL -->
   <link rel="manifest" href="data:application/manifest+json;base64,eyJuYW1lIjoi6Zuy56uv5YWo6IO95YiG5biz6KiY5biz57O757WxIiwic2hvcnRfbmFtZSI6IumZvueuuKiY5bizIiwiZGVzY3JpcHRpb24iOiLmlK/mjIjlhb5Lq65YiG5biz44CB5aSa5bmj5Yil44CB6KiY5biz5ZyW6aSF5ZyW44CBSlBXRU9DUiDlm77ljZrlpKrlpKrlpKoiLCJzdGFydF91cmwiOiIuLyIsImRpc3BsYXkiOiJzdGFuZGFsb25lIiwiYmFja2dyb3VuZF9jb2xvciI6IiMxMTE4MjciLCJ0aGVtZV9jb2xvciI6IiMyNTYzZWIiLCJpY29ucyI6W3sic3JjIjoiaHR0cHM6Ly9jZG4taWNvbnMtcG5nLmZsYXRpY29uLmNvbS81MTIvMjkzNi8yOTM2NzU4LnBuZyIsInNpemVzIjoiMTkyeDE5MiIsInR5cGUiOiJpbWFnZS9wbmciLCJwdXJwb3NlIjoiYW55IG1hc2thYmxlIn0seyJzcmMiOiiaHR0cHM6Ly9jZG4taWNvbnMtcG5nLmZsYXRpY29uLmNvbS81MTIvMjkzNi8yOTM2NzU4LnBuZyIsInNpemVzIjoiNTEyeDUxMiIsInR5cGUiOiJpbWFnZS9wbmciLCJwdXJwb3NlIjoiYW55IG1hc2thYmxlIn1dfQ==">
   
   <meta name="theme-color" content="#2563eb">
@@ -13,6 +14,7 @@
   <meta name="apple-mobile-web-app-title" content="雲端記帳">
   <link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/2936/2936758.png">
 
+  <!-- 第三方函式庫 -->
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
@@ -25,6 +27,7 @@
 <body class="bg-gray-100 dark:bg-gray-900 min-h-screen p-2 sm:p-4 md:p-6 text-gray-800 dark:text-gray-100 transition-colors duration-200 flex flex-col justify-between">
   <div class="max-w-2xl mx-auto w-full bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-4 sm:p-6 space-y-4 border border-transparent dark:border-gray-700 transition-colors duration-200">
     
+    <!-- 頂部控制列 -->
     <div class="flex flex-wrap justify-between items-center border-b border-gray-200 dark:border-gray-700 pb-3 gap-2">
       <div class="flex items-center gap-2">
         <h1 class="text-lg sm:text-xl font-bold text-gray-900 dark:text-white">雲端全能記帳</h1>
@@ -35,17 +38,16 @@
       </div>
 
       <div class="flex items-center gap-1.5 flex-wrap">
-        <button id="pwaInstallBtn" class="hidden text-xs bg-emerald-600 hover:bg-emerald-700 text-white font-semibold px-2 py-1 rounded-lg shadow-sm transition">📲 安裝 App</button>
+        <button id="pwaInstallBtn" class="hidden text-xs bg-emerald-600 hover:bg-emerald-700 text-white font-semibold px-2.5 py-1.5 rounded-lg shadow-sm transition">📲 安裝 App</button>
         <button id="themeToggleBtn" class="p-1 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 border border-gray-200 dark:border-gray-600 rounded-lg text-sm transition" title="切換深淺模式">🌙</button>
         <button id="toggleFontPanelBtn" class="text-xs bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 px-2 py-1 rounded-lg border border-gray-200 dark:border-gray-600">🔤 字體</button>
-        <button id="toggleBudgetBtn" class="text-xs bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 px-2 py-1 rounded-lg border border-gray-200 dark:border-gray-600">🎯 預算</button>
-        <button id="toggleStatsBtn" class="text-xs bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 px-2 py-1 rounded-lg border border-gray-200 dark:border-gray-600">📊 統計</button>
         <button id="toggleMemberBtn" class="text-xs bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 px-2 py-1 rounded-lg border border-gray-200 dark:border-gray-600">⚙️ 成員</button>
         <button id="toggleDataBtn" class="text-xs bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 px-2 py-1 rounded-lg border border-gray-200 dark:border-gray-600">📁 備份</button>
-        <button id="refreshBtn" class="text-xs bg-blue-50 dark:bg-blue-950 hover:bg-blue-100 dark:hover:bg-blue-900 text-blue-600 dark:text-blue-300 font-medium px-2 py-1 rounded-lg border border-blue-200 dark:border-blue-800">重整</button>
+        <button id="refreshBtn" class="text-xs bg-blue-50 dark:bg-blue-950 hover:bg-blue-100 dark:hover:bg-blue-900 text-blue-600 dark:text-blue-300 font-medium px-2.5 py-1 rounded-lg border border-blue-200 dark:border-blue-800">重整</button>
       </div>
     </div>
 
+    <!-- 即時匯率全覽橫幅 -->
     <div class="bg-gray-50 dark:bg-slate-900/60 border border-gray-200 dark:border-gray-700 rounded-xl p-2.5">
       <div class="flex items-center justify-between text-[11px] font-semibold text-gray-500 dark:text-gray-400 mb-1.5">
         <span>💱 即時參考匯率 (對 TWD)</span>
@@ -56,37 +58,7 @@
       </div>
     </div>
 
-    <div id="budgetConfigPanel" class="bg-indigo-50 dark:bg-indigo-950/30 border border-indigo-100 dark:border-indigo-900/50 rounded-xl p-3.5 space-y-2">
-      <div class="flex justify-between items-center text-xs">
-        <span class="font-bold text-indigo-900 dark:text-indigo-300">🎯 總預算管理</span>
-        <div class="flex items-center gap-1.5">
-          <span class="text-gray-500 dark:text-gray-400">設定預算 $</span>
-          <input type="number" id="budgetLimitInput" value="30000" class="w-20 border border-indigo-200 dark:border-indigo-800 rounded px-1.5 py-0.5 text-xs bg-white dark:bg-gray-700 text-right font-mono">
-        </div>
-      </div>
-      <div class="w-full bg-indigo-200 dark:bg-indigo-900/60 rounded-full h-2.5 overflow-hidden">
-        <div id="budgetProgressBar" class="bg-indigo-600 h-2.5 rounded-full transition-all duration-300" style="width: 0%"></div>
-      </div>
-      <div class="flex justify-between items-center text-[11px] text-indigo-900 dark:text-indigo-200 font-medium">
-        <span>已支出：<b id="budgetSpentDisplay" class="font-mono">$0</b></span>
-        <span>剩餘：<b id="budgetRemainingDisplay" class="font-mono">$0</b></span>
-        <span>使用率：<b id="budgetPercentDisplay" class="font-mono">0%</b></span>
-      </div>
-    </div>
-
-    <div id="statsConfigPanel" class="bg-slate-50 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-700 rounded-xl p-3.5 space-y-3">
-      <div class="text-xs font-bold text-slate-700 dark:text-slate-300 flex justify-between items-center">
-        <span>📊 消費類別支出統計 (TWD)</span>
-        <span id="chartTotalExpense" class="text-blue-600 dark:text-blue-400 font-mono">總支出: $0</span>
-      </div>
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-3 items-center">
-        <div class="h-44 flex items-center justify-center">
-          <canvas id="categoryChart"></canvas>
-        </div>
-        <div id="categoryBreakdownList" class="space-y-1 text-xs max-h-40 overflow-y-auto pr-1"></div>
-      </div>
-    </div>
-
+    <!-- 🔤 自訂字體大小面板 (預設隱藏) -->
     <div id="fontConfigPanel" class="hidden bg-gray-50 dark:bg-slate-900/60 border border-gray-200 dark:border-gray-700 rounded-xl p-3.5 space-y-2">
       <div class="flex justify-between items-center text-xs font-bold text-gray-700 dark:text-gray-300">
         <span>自訂全站字體大小</span>
@@ -100,6 +72,7 @@
       </div>
     </div>
 
+    <!-- 密碼解鎖列 -->
     <div class="bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800/60 rounded-xl p-3 flex flex-wrap items-center justify-between gap-2">
       <div class="flex items-center gap-2 flex-1 min-w-[200px]">
         <span class="text-xs font-semibold text-amber-900 dark:text-amber-300">🔒 密碼：</span>
@@ -111,6 +84,7 @@
       </div>
     </div>
 
+    <!-- 匯出與匯入面板 (預設隱藏) -->
     <div id="dataConfigPanel" class="hidden bg-slate-50 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-700 rounded-xl p-4 space-y-3">
       <div class="text-xs font-bold text-slate-700 dark:text-slate-300">資料備份與還原</div>
       <div class="grid grid-cols-2 gap-2 text-xs">
@@ -126,6 +100,7 @@
       </div>
     </div>
 
+    <!-- 成員設定面板 (預設隱藏) -->
     <div id="memberConfigPanel" class="hidden bg-gray-50 dark:bg-slate-900/60 border border-gray-200 dark:border-gray-700 rounded-xl p-4 space-y-3">
       <div class="text-xs font-bold text-gray-700 dark:text-gray-300">管理分攤成員名單</div>
       <div class="flex gap-2">
@@ -135,6 +110,7 @@
       <div id="memberTagList" class="flex flex-wrap gap-1.5 text-xs"></div>
     </div>
 
+    <!-- 分帳結算卡片與平帳轉帳指引 -->
     <div class="bg-blue-50 dark:bg-blue-950/30 border border-blue-100 dark:border-blue-900/50 rounded-xl p-4 space-y-3">
       <div class="text-xs font-bold text-blue-800 dark:text-blue-300 uppercase tracking-wider">成員分帳結算 (TWD)</div>
       <div id="settlementGrid" class="grid grid-cols-2 sm:grid-cols-4 gap-2 text-center text-xs">
@@ -143,6 +119,7 @@
       <div id="settlementTransfers" class="pt-2 border-t border-blue-200/60 dark:border-blue-800/50 text-xs"></div>
     </div>
 
+    <!-- 收款 QR Code 彈窗/面板 -->
     <div id="qrCodePanel" class="hidden bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-800/60 rounded-xl p-3.5 space-y-2.5 text-xs text-center">
       <div class="font-bold text-emerald-900 dark:text-emerald-200">📱 掃碼收款 (QR Code)</div>
       <div class="flex justify-center p-2 bg-white rounded-lg inline-block mx-auto border" id="qrcodeCanvas"></div>
@@ -151,8 +128,8 @@
       <button id="generateQrBtn" class="bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-1 rounded text-xs font-medium">生成 QR Code</button>
     </div>
 
+    <!-- 記帳表單 -->
     <form id="recordForm" class="space-y-3">
-      
       <div class="flex items-center justify-between bg-blue-50/50 dark:bg-gray-750 p-2 rounded-xl border border-blue-100 dark:border-gray-700 text-xs">
         <span class="font-semibold text-blue-900 dark:text-blue-300">✨ 智慧輔助輸入：</span>
         <div class="flex items-center gap-2">
@@ -243,6 +220,7 @@
       </div>
     </form>
 
+    <!-- 🔍 多條件搜尋與篩選器 -->
     <div class="bg-gray-50 dark:bg-gray-750 p-3 rounded-xl border border-gray-200 dark:border-gray-700 space-y-2">
       <div class="text-xs font-bold text-gray-700 dark:text-gray-300">🔍 搜尋與篩選明細</div>
       <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs">
@@ -272,6 +250,7 @@
       </div>
     </div>
 
+    <!-- 歷史明細清單 -->
     <div>
       <div class="flex justify-between items-center mb-2">
         <h2 class="text-xs font-semibold text-gray-500 dark:text-gray-400">歷史紀錄 (已過濾 <span id="recordCountDisplay">0</span> 筆)</h2>
@@ -282,12 +261,47 @@
       </div>
     </div>
 
+    <!-- 🎯 總預算管理 (已移至下方) -->
+    <div id="budgetConfigPanel" class="bg-indigo-50 dark:bg-indigo-950/30 border border-indigo-100 dark:border-indigo-900/50 rounded-xl p-3.5 space-y-2">
+      <div class="flex justify-between items-center text-xs">
+        <span class="font-bold text-indigo-900 dark:text-indigo-300">🎯 總預算管理</span>
+        <div class="flex items-center gap-1.5">
+          <span class="text-gray-500 dark:text-gray-400">設定預算 $</span>
+          <input type="number" id="budgetLimitInput" value="30000" class="w-20 border border-indigo-200 dark:border-indigo-800 rounded px-1.5 py-0.5 text-xs bg-white dark:bg-gray-700 text-right font-mono">
+        </div>
+      </div>
+      <div class="w-full bg-indigo-200 dark:bg-indigo-900/60 rounded-full h-2.5 overflow-hidden">
+        <div id="budgetProgressBar" class="bg-indigo-600 h-2.5 rounded-full transition-all duration-300" style="width: 0%"></div>
+      </div>
+      <div class="flex justify-between items-center text-[11px] text-indigo-900 dark:text-indigo-200 font-medium">
+        <span>已支出：<b id="budgetSpentDisplay" class="font-mono">$0</b></span>
+        <span>剩餘：<b id="budgetRemainingDisplay" class="font-mono">$0</b></span>
+        <span>使用率：<b id="budgetPercentDisplay" class="font-mono">0%</b></span>
+      </div>
+    </div>
+
+    <!-- 📊 消費類別支出統計 (TWD) (已移至下方) -->
+    <div id="statsConfigPanel" class="bg-slate-50 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-700 rounded-xl p-3.5 space-y-3">
+      <div class="text-xs font-bold text-slate-700 dark:text-slate-300 flex justify-between items-center">
+        <span>📊 消費類別支出統計 (TWD)</span>
+        <span id="chartTotalExpense" class="text-blue-600 dark:text-blue-400 font-mono">總支出: $0</span>
+      </div>
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-3 items-center">
+        <div class="h-44 flex items-center justify-center">
+          <canvas id="categoryChart"></canvas>
+        </div>
+        <div id="categoryBreakdownList" class="space-y-1 text-xs max-h-40 overflow-y-auto pr-1"></div>
+      </div>
+    </div>
+
   </div>
 
+  <!-- 照片放大檢視彈窗 -->
   <div id="imageModal" class="hidden fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4" onclick="closeImageModal()">
     <img id="modalImg" class="max-w-full max-h-[85vh] rounded-lg shadow-2xl" src="" alt="收據照片">
   </div>
 
+  <!-- 底部更新時間與奇奇828連結 -->
   <footer class="max-w-2xl mx-auto w-full mt-6 py-3 border-t border-gray-200 dark:border-gray-800 text-center text-xs text-gray-500 dark:text-gray-400 flex flex-wrap items-center justify-center gap-x-3 gap-y-1">
     <div>網頁更新時間：<span id="lastUpdatedDisplay" class="font-mono font-medium text-gray-700 dark:text-gray-300">載入中...</span></div>
     <span class="text-gray-300 dark:text-gray-600">|</span>
@@ -553,8 +567,6 @@
     // 展開收合開關
     document.getElementById("toggleMemberBtn").addEventListener("click", () => document.getElementById("memberConfigPanel").classList.toggle("hidden"));
     document.getElementById("toggleDataBtn").addEventListener("click", () => document.getElementById("dataConfigPanel").classList.toggle("hidden"));
-    document.getElementById("toggleBudgetBtn").addEventListener("click", () => document.getElementById("budgetConfigPanel").classList.toggle("hidden"));
-    document.getElementById("toggleStatsBtn").addEventListener("click", () => document.getElementById("statsConfigPanel").classList.toggle("hidden"));
 
     // 匯率同步
     function renderExchangeRateChips() {
@@ -614,7 +626,7 @@
     document.getElementById("originalAmount").addEventListener("input", updateTwdPreview);
     document.getElementById("date").valueAsDate = new Date();
 
-    // 收據照片處理 (壓縮為 Base64)
+    // 收據照片處理
     document.getElementById("receiptPhotoInput").addEventListener("change", function(e) {
       const file = e.target.files[0];
       if (!file) return;
@@ -642,7 +654,7 @@
       reader.readAsDataURL(file);
     });
 
-    // 🎤 語音記帳 (Web Speech API)
+    // 🎤 語音記帳
     const voiceBtn = document.getElementById("voiceInputBtn");
     const aiStatus = document.getElementById("aiStatusNotice");
     if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
@@ -660,27 +672,23 @@
         const speechText = event.results[0][0].transcript;
         aiStatus.textContent = `聽到：「${speechText}」- 自動填表中...`;
 
-        // 智慧解析幣別
         if (speechText.includes("日圓") || speechText.includes("日幣") || speechText.includes("JPY")) document.getElementById("currency").value = "JPY";
         else if (speechText.includes("人民幣") || speechText.includes("CNY")) document.getElementById("currency").value = "CNY";
         else if (speechText.includes("美元") || speechText.includes("美金") || speechText.includes("USD")) document.getElementById("currency").value = "USD";
         else if (speechText.includes("韓元") || speechText.includes("韓幣") || speechText.includes("KRW")) document.getElementById("currency").value = "KRW";
         else document.getElementById("currency").value = "TWD";
 
-        // 智慧解析分類
         if (/吃|午餐|晚餐|早餐|拉麵|咖啡|飯|飲料/.test(speechText)) document.getElementById("category").value = "餐飲";
         else if (/車|捷運|地鐵|機票|高鐵|計程車|uber/i.test(speechText)) document.getElementById("category").value = "交通";
         else if (/住|飯店|民宿|airbnb/i.test(speechText)) document.getElementById("category").value = "住宿";
         else if (/買|購物|衣服|藥妝/.test(speechText)) document.getElementById("category").value = "購物";
         else if (/門票|門券|展覽|影城|電影/.test(speechText)) document.getElementById("category").value = "門票";
 
-        // 智慧抓取金額數字
         const numbers = speechText.match(/\d+/g);
         if (numbers && numbers.length > 0) {
           document.getElementById("originalAmount").value = numbers[numbers.length - 1];
         }
 
-        // 項目名稱
         document.getElementById("title").value = speechText.replace(/\d+/g, '').replace(/元|塊|台幣|日圓|日幣|美金|美元|韓元|人民幣/g, '').trim() || speechText;
         updateTwdPreview();
 
@@ -696,7 +704,7 @@
       voiceBtn.title = "您的瀏覽器不支援 Web Speech 語音辨識";
     }
 
-    // 📷 OCR 收據發票辨識 (Tesseract.js)
+    // 📷 OCR 收據辨識
     document.getElementById("ocrReceiptInput").addEventListener("change", async (e) => {
       const file = e.target.files[0];
       if (!file) return;
@@ -708,7 +716,6 @@
         const { data: { text } } = await Tesseract.recognize(file, 'eng+chi_tra');
         aiStatus.textContent = "辨識完成，自動擷取金額與日期...";
 
-        // 搜尋金額正則 (尋找 Total, 合計, 或最大數字)
         const amountMatches = text.match(/(?:TOTAL|合計|小計|NT\$|\$|JPY|￥)\s*[:：]?\s*([0-9,.]+)/i) || text.match(/[0-9,.]+/g);
         if (amountMatches) {
           const numbers = amountMatches.map(n => parseFloat(n.replace(/,/g, ''))).filter(n => !isNaN(n) && n > 0 && n < 1000000);
@@ -717,7 +724,6 @@
           }
         }
 
-        // 搜尋日期 (YYYY/MM/DD 或 YYYY-MM-DD)
         const dateMatch = text.match(/20\d{2}[-/.]\d{1,2}[-/.]\d{1,2}/);
         if (dateMatch) {
           const formattedDate = dateMatch[0].replace(/[/.]/g, '-');
@@ -734,7 +740,6 @@
       }
     });
 
-    // 🌟 解析成員分攤
     function parseMemberShares(item) {
       const shares = {};
       const twd = Number(item.twdAmount) || 0;
@@ -805,7 +810,6 @@
       const dataValues = activeCategories.map(k => catTotals[k]);
       const colors = ["#ef4444", "#3b82f6", "#8b5cf6", "#ec4899", "#f59e0b", "#10b981", "#6366f1", "#64748b"];
 
-      // 產生右側清單
       const breakdownEl = document.getElementById("categoryBreakdownList");
       if (activeCategories.length === 0) {
         breakdownEl.innerHTML = `<div class="text-gray-400 py-2 text-center">尚無支出數據</div>`;
@@ -824,7 +828,6 @@
         }).join("");
       }
 
-      // 繪製 Chart.js
       const ctx = document.getElementById('categoryChart').getContext('2d');
       if (categoryChartInstance) categoryChartInstance.destroy();
 
@@ -875,7 +878,6 @@
       if (text) generateQrCode(text);
     });
 
-    // 圖片放大檢視
     window.openImageModal = function(src) {
       document.getElementById("modalImg").src = src;
       document.getElementById("imageModal").classList.remove("hidden");
@@ -884,7 +886,6 @@
       document.getElementById("imageModal").classList.add("hidden");
     };
 
-    // 分帳結算與轉帳演算法
     function renderSettlement(records) {
       const balances = {};
       members.forEach(m => balances[m] = 0);
@@ -988,7 +989,6 @@
       }
     }
 
-    // 🔍 篩選過濾並渲染明細
     function renderFilteredRecords() {
       const keyword = document.getElementById("filterKeyword").value.trim().toLowerCase();
       const cat = document.getElementById("filterCategory").value;
@@ -1044,13 +1044,11 @@
       });
     }
 
-    // 監聽篩選器變更
     document.getElementById("filterKeyword").addEventListener("input", renderFilteredRecords);
     document.getElementById("filterCategory").addEventListener("change", renderFilteredRecords);
     document.getElementById("filterPayer").addEventListener("change", renderFilteredRecords);
     document.getElementById("filterCurrency").addEventListener("change", renderFilteredRecords);
 
-    // 載入資料
     async function loadRecords() {
       const pwd = getPassword();
       const listEl = document.getElementById("recordList");
@@ -1090,7 +1088,6 @@
       }
     }
 
-    // 新增紀錄
     document.getElementById("recordForm").addEventListener("submit", async (e) => {
       e.preventDefault();
       const pwd = getPassword();
@@ -1169,7 +1166,6 @@
       }
     });
 
-    // 刪除紀錄
     window.deleteRecord = async function(id) {
       const pwd = getPassword();
       if (!pwd) return alert("請先輸入密碼！");
