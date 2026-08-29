@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>雲端全能分帳記帳系統</title>
   
+  <!-- 內嵌 PWA Manifest Data URL -->
   <link rel="manifest" href="data:application/manifest+json;base64,eyJuYW1lIjoi6Zuy56uv5YWo6IO95YiG5biz6KiY5biz57O757WxIiwic2hvcnRfbmFtZSI6IumZvueuuKiY5bizIiwiZGVzY3JpcHRpb24iOiLmlK/mjIjlhb5Lq65YiG5biz44CB5aSa5bmj5Yil44CB6KiY5biz5ZyW6aSF5ZyW44CBSlBXRU9DUiDlm77ljZrlpKrlpKrlpKoiLCJzdGFydF91cmwiOiIuLyIsImRpc3BsYXkiOiJzdGFuZGFsb25lIiwiYmFja2dyb3VuZF9jb2xvciI6IiMxMTE4MjciLCJ0aGVtZV9jb2xvciI6IiMyNTYzZWIiLCJpY29ucyI6W3sic3JjIjoiaHR0cHM6Ly9jZG4taWNvbnMtcG5nLmZsYXRpY29uLmNvbS81MTIvMjkzNi8yOTM2NzU4LnBuZyIsInNpemVzIjoiMTkyeDE5MiIsInR5cGUiOiJpbWFnZS9wbmciLCJwdXJwb3NlIjoiYW55IG1hc2thYmxlIn0seyJzcmMiOiiaHR0cHM6Ly9jZG4taWNvbnMtcG5nLmZsYXRpY29uLmNvbS81MTIvMjkzNi8yOTM2NzU4LnBuZyIsInNpemVzIjoiNTEyeDUxMiIsInR5cGUiOiJpbWFnZS9wbmciLCJwdXJwb3NlIjoiYW55IG1hc2thYmxlIn1dfQ==">
   
   <meta name="theme-color" content="#2563eb">
@@ -13,6 +14,7 @@
   <meta name="apple-mobile-web-app-title" content="雲端記帳">
   <link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/2936/2936758.png">
 
+  <!-- 第三方函式庫 -->
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
@@ -24,6 +26,7 @@
 <body class="bg-gray-100 dark:bg-gray-900 min-h-screen p-2 sm:p-4 md:p-6 text-gray-800 dark:text-gray-100 transition-colors duration-200 flex flex-col justify-between">
   <div class="max-w-2xl mx-auto w-full bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-4 sm:p-6 space-y-4 border border-transparent dark:border-gray-700 transition-colors duration-200">
     
+    <!-- 頂部控制列 -->
     <div class="flex flex-wrap justify-between items-center border-b border-gray-200 dark:border-gray-700 pb-3 gap-2">
       <div class="flex items-center gap-2">
         <h1 class="text-lg sm:text-xl font-bold text-gray-900 dark:text-white">雲端全能記帳</h1>
@@ -43,6 +46,7 @@
       </div>
     </div>
 
+    <!-- 即時匯率全覽橫幅 -->
     <div class="bg-gray-50 dark:bg-slate-900/60 border border-gray-200 dark:border-gray-700 rounded-xl p-2.5">
       <div class="flex items-center justify-between text-[11px] font-semibold text-gray-500 dark:text-gray-400 mb-1.5">
         <span>💱 即時參考匯率 (對 TWD)</span>
@@ -53,6 +57,7 @@
       </div>
     </div>
 
+    <!-- 自訂字體大小面板 -->
     <div id="fontConfigPanel" class="hidden bg-gray-50 dark:bg-slate-900/60 border border-gray-200 dark:border-gray-700 rounded-xl p-3.5 space-y-2">
       <div class="flex justify-between items-center text-xs font-bold text-gray-700 dark:text-gray-300">
         <span>自訂全站字體大小</span>
@@ -66,6 +71,7 @@
       </div>
     </div>
 
+    <!-- 密碼解鎖列 -->
     <div class="bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800/60 rounded-xl p-3 flex flex-wrap items-center justify-between gap-2">
       <div class="flex items-center gap-2 flex-1 min-w-[200px]">
         <span class="text-xs font-semibold text-amber-900 dark:text-amber-300">🔒 密碼：</span>
@@ -77,6 +83,7 @@
       </div>
     </div>
 
+    <!-- 匯出與匯入面板 -->
     <div id="dataConfigPanel" class="hidden bg-slate-50 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-700 rounded-xl p-4 space-y-3">
       <div class="text-xs font-bold text-slate-700 dark:text-slate-300">資料備份與還原</div>
       <div class="grid grid-cols-2 gap-2 text-xs">
@@ -92,6 +99,7 @@
       </div>
     </div>
 
+    <!-- 成員設定面板 -->
     <div id="memberConfigPanel" class="hidden bg-gray-50 dark:bg-slate-900/60 border border-gray-200 dark:border-gray-700 rounded-xl p-4 space-y-3">
       <div class="text-xs font-bold text-gray-700 dark:text-gray-300">管理分攤成員名單</div>
       <div class="flex gap-2">
@@ -101,6 +109,7 @@
       <div id="memberTagList" class="flex flex-wrap gap-1.5 text-xs"></div>
     </div>
 
+    <!-- 分帳結算卡片 -->
     <div class="bg-blue-50 dark:bg-blue-950/30 border border-blue-100 dark:border-blue-900/50 rounded-xl p-4 space-y-3">
       <div class="text-xs font-bold text-blue-800 dark:text-blue-300 uppercase tracking-wider">成員分帳結算 (TWD)</div>
       <div id="settlementGrid" class="grid grid-cols-2 sm:grid-cols-4 gap-2 text-center text-xs">
@@ -109,6 +118,7 @@
       <div id="settlementTransfers" class="pt-2 border-t border-blue-200/60 dark:border-blue-800/50 text-xs"></div>
     </div>
 
+    <!-- 收款 QR Code 面板 -->
     <div id="qrCodePanel" class="hidden bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-800/60 rounded-xl p-3.5 space-y-2.5 text-xs text-center">
       <div class="font-bold text-emerald-900 dark:text-emerald-200">📱 掃碼收款 (QR Code)</div>
       <div class="flex justify-center p-2 bg-white rounded-lg inline-block mx-auto border" id="qrcodeCanvas"></div>
@@ -117,6 +127,7 @@
       <button type="button" id="generateQrBtn" class="bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-1 rounded text-xs font-medium">生成 QR Code</button>
     </div>
 
+    <!-- 記帳輸入區塊 -->
     <div id="recordFormBox" class="space-y-3">
       <div class="flex items-center justify-between bg-blue-50/50 dark:bg-gray-750 p-2 rounded-xl border border-blue-100 dark:border-gray-700 text-xs">
         <span class="font-semibold text-blue-900 dark:text-blue-300">✨ 智慧輔助輸入：</span>
@@ -208,6 +219,7 @@
       </div>
     </div>
 
+    <!-- 歷史明細清單 -->
     <div>
       <div class="flex justify-between items-center mb-2">
         <h2 class="text-xs font-semibold text-gray-500 dark:text-gray-400">歷史紀錄 (<span id="recordCountDisplay">0</span> 筆)</h2>
@@ -218,6 +230,7 @@
       </div>
     </div>
 
+    <!-- 🎯 總預算管理 -->
     <div id="budgetConfigPanel" class="bg-indigo-50 dark:bg-indigo-950/30 border border-indigo-100 dark:border-indigo-900/50 rounded-xl p-3.5 space-y-2">
       <div class="flex justify-between items-center text-xs">
         <span class="font-bold text-indigo-900 dark:text-indigo-300">🎯 總預算管理</span>
@@ -238,10 +251,12 @@
 
   </div>
 
+  <!-- 照片放大檢視彈窗 -->
   <div id="imageModal" class="hidden fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4" onclick="closeImageModal()">
     <img id="modalImg" class="max-w-full max-h-[85vh] rounded-lg shadow-2xl" src="" alt="收據照片">
   </div>
 
+  <!-- 底部更新時間與奇奇828連結 -->
   <footer class="max-w-2xl mx-auto w-full mt-6 py-3 border-t border-gray-200 dark:border-gray-800 text-center text-xs text-gray-500 dark:text-gray-400 flex flex-wrap items-center justify-center gap-x-3 gap-y-1">
     <div>網頁更新時間：<span id="lastUpdatedDisplay" class="font-mono font-medium text-gray-700 dark:text-gray-300">讀取中...</span></div>
     <span class="text-gray-300 dark:text-gray-600">|</span>
@@ -260,6 +275,17 @@
     let cachedRecords = [];
     let currentSplitMode = "equal";
     let uploadedReceiptBase64 = "";
+
+    // XSS 跳脫過濾輔助函式
+    function escapeHtml(str) {
+      if (!str) return "";
+      return String(str)
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+    }
 
     function getTodayString() {
       const d = new Date();
@@ -316,7 +342,7 @@
     });
     window.addEventListener("appinstalled", () => pwaInstallBtn.classList.add("hidden"));
 
-    // 字體大小
+    // 字體大小控制
     const fontSlider = document.getElementById("fontSlider");
     const fontDisplay = document.getElementById("fontSizeDisplay");
     function applyFontSize(size) {
@@ -336,7 +362,7 @@
       document.getElementById("fontConfigPanel").classList.toggle("hidden");
     });
 
-    // 主題切換
+    // 主題切換 (Dark Mode)
     const themeToggleBtn = document.getElementById("themeToggleBtn");
     function initTheme() {
       const isDark = localStorage.getItem("theme") === "dark" || 
@@ -389,12 +415,12 @@
         const res = await fetch(`${API_URL}?password=${encodeURIComponent(pwd)}&action=get_sheets`);
         const data = await res.json();
         if (data && data.sheets) {
-          sheetSelector.innerHTML = data.sheets.map(s => `<option value="${s}" ${s === currentSheet ? 'selected' : ''}>${s}</option>`).join("");
+          sheetSelector.innerHTML = data.sheets.map(s => `<option value="${escapeHtml(s)}" ${s === currentSheet ? 'selected' : ''}>${escapeHtml(s)}</option>`).join("");
         }
       } catch (e) {}
     }
 
-    // 分攤模式
+    // 分攤模式切換
     document.getElementById("modeEqualBtn").addEventListener("click", () => setSplitMode("equal"));
     document.getElementById("modeCustomBtn").addEventListener("click", () => setSplitMode("custom"));
 
@@ -457,25 +483,25 @@
 
     function renderMemberControls() {
       const payerSelect = document.getElementById("payer");
-      payerSelect.innerHTML = members.map(m => `<option value="${m}">${m}</option>`).join("");
+      payerSelect.innerHTML = members.map(m => `<option value="${escapeHtml(m)}">${escapeHtml(m)}</option>`).join("");
 
       const cbContainer = document.getElementById("membersCheckboxes");
       cbContainer.innerHTML = members.map(m => `
         <label class="flex items-center gap-1 cursor-pointer bg-white dark:bg-gray-700 px-2 py-1 rounded border border-gray-200 dark:border-gray-600 text-xs">
-          <input type="checkbox" value="${m}" checked class="member-cb"> ${m}
+          <input type="checkbox" value="${escapeHtml(m)}" checked class="member-cb"> ${escapeHtml(m)}
         </label>
       `).join("");
 
       const customList = document.getElementById("customMembersList");
       customList.innerHTML = members.map(m => `
         <div class="flex items-center gap-2 bg-white dark:bg-gray-700/70 p-1.5 rounded-lg border border-gray-200 dark:border-gray-600 text-xs">
-          <span class="w-14 font-medium text-gray-700 dark:text-gray-200 truncate">${m}</span>
+          <span class="w-14 font-medium text-gray-700 dark:text-gray-200 truncate">${escapeHtml(m)}</span>
           <div class="relative flex-1">
             <span class="absolute left-2 top-1 text-gray-400">$</span>
-            <input type="number" step="any" min="0" placeholder="0" data-member="${m}" 
+            <input type="number" step="any" min="0" placeholder="0" data-member="${escapeHtml(m)}" 
                    class="custom-split-input w-full pl-5 pr-2 py-0.5 border border-gray-200 dark:border-gray-600 rounded bg-gray-50 dark:bg-gray-800 text-xs text-right font-mono focus:outline-blue-500">
           </div>
-          <button type="button" onclick="autoFillDifference('${m}')" class="text-[10px] bg-blue-50 dark:bg-blue-950 text-blue-600 dark:text-blue-300 border border-blue-200 dark:border-blue-800 px-1.5 py-0.5 rounded hover:bg-blue-100 transition whitespace-nowrap">
+          <button type="button" onclick="autoFillDifference('${escapeHtml(m)}')" class="text-[10px] bg-blue-50 dark:bg-blue-950 text-blue-600 dark:text-blue-300 border border-blue-200 dark:border-blue-800 px-1.5 py-0.5 rounded hover:bg-blue-100 transition whitespace-nowrap">
             補差額
           </button>
         </div>
@@ -488,7 +514,7 @@
       const tagList = document.getElementById("memberTagList");
       tagList.innerHTML = members.map((m, idx) => `
         <span class="inline-flex items-center gap-1 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 px-2 py-0.5 rounded-md text-gray-700 dark:text-gray-200">
-          ${m}
+          ${escapeHtml(m)}
           <button type="button" onclick="removeMember(${idx})" class="text-red-400 hover:text-red-600 font-bold ml-1">×</button>
         </span>
       `).join("");
@@ -543,10 +569,10 @@
         const res = await fetch("https://open.er-api.com/v6/latest/TWD");
         const data = await res.json();
         if (data && data.rates) {
-          exchangeRates.JPY = 1 / data.rates.JPY;
-          exchangeRates.CNY = 1 / data.rates.CNY;
-          exchangeRates.USD = 1 / data.rates.USD;
-          exchangeRates.KRW = 1 / data.rates.KRW;
+          exchangeRates.JPY = 1 / (data.rates.JPY || 4.7);
+          exchangeRates.CNY = 1 / (data.rates.CNY || 0.22);
+          exchangeRates.USD = 1 / (data.rates.USD || 0.031);
+          exchangeRates.KRW = 1 / (data.rates.KRW || 41.5);
           document.getElementById("rateUpdateTime").textContent = `已同步最新`;
         }
       } catch (e) {
@@ -812,7 +838,7 @@
             isZero ? 'border-gray-200 dark:border-gray-700' : 
             isPositive ? 'border-green-200 dark:border-green-800' : 'border-red-200 dark:border-red-800'
           }">
-            <div class="font-medium text-gray-600 dark:text-gray-300">${member}</div>
+            <div class="font-medium text-gray-600 dark:text-gray-300">${escapeHtml(member)}</div>
             <div class="font-bold mt-1 ${isZero ? 'text-gray-400 dark:text-gray-500' : isPositive ? 'text-green-600 dark:text-green-400' : 'text-red-500 dark:text-red-400'}">
               ${isZero ? '$0' : (isPositive ? `+應收 $${roundedBal}` : `-應付 $${Math.abs(roundedBal)}`)}
             </div>
@@ -841,10 +867,10 @@
           const tText = `${debtors[d].name} 轉帳給 ${creditors[c].name} NT$ ${Math.round(settleAmt)}`;
           transferInstructions.push(`
             <div class="flex justify-between items-center bg-white/70 dark:bg-gray-800/80 px-2.5 py-1.5 rounded-md border border-blue-100 dark:border-gray-700">
-              <span><b>${debtors[d].name}</b> ➔ 轉給 <b>${creditors[c].name}</b></span>
+              <span><b>${escapeHtml(debtors[d].name)}</b> ➔ 轉給 <b>${escapeHtml(creditors[c].name)}</b></span>
               <div class="flex items-center gap-2">
                 <span class="font-bold text-blue-600 dark:text-blue-400">NT$ ${Math.round(settleAmt).toLocaleString()}</span>
-                <button type="button" onclick="showQrCodeModal('${tText}')" class="text-[10px] bg-emerald-50 text-emerald-600 dark:bg-emerald-950 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800 px-1.5 py-0.5 rounded hover:bg-emerald-100">QR收款</button>
+                <button type="button" onclick="showQrCodeModal('${escapeHtml(tText)}')" class="text-[10px] bg-emerald-50 text-emerald-600 dark:bg-emerald-950 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800 px-1.5 py-0.5 rounded hover:bg-emerald-100">QR收款</button>
               </div>
             </div>
           `);
@@ -872,7 +898,7 @@
       }
     }
 
-    // 渲染所有明細清單
+    // 渲染明細清單
     function renderRecordsList() {
       document.getElementById("recordCountDisplay").textContent = cachedRecords.length;
       let totalTwd = 0;
@@ -904,18 +930,18 @@
         row.innerHTML = `
           <div class="flex-1">
             <div class="flex items-center gap-1.5">
-              <span class="px-1.5 py-0.5 rounded text-[10px] font-semibold bg-blue-100 text-blue-800 dark:bg-blue-900/60 dark:text-blue-300">${item.category || '其他'}</span>
-              <span class="font-bold text-sm text-gray-800 dark:text-gray-100">${item.title}</span>
+              <span class="px-1.5 py-0.5 rounded text-[10px] font-semibold bg-blue-100 text-blue-800 dark:bg-blue-900/60 dark:text-blue-300">${escapeHtml(item.category || '其他')}</span>
+              <span class="font-bold text-sm text-gray-800 dark:text-gray-100">${escapeHtml(item.title)}</span>
               ${item.receiptImage ? `<button type="button" onclick="openImageModal('${item.receiptImage}')" class="text-[10px] bg-emerald-50 text-emerald-600 px-1 py-0.5 rounded border border-emerald-200">📷 照片</button>` : ''}
             </div>
-            <div class="text-gray-400 dark:text-gray-400 mt-1">${item.date} · ${isExp ? `由 <b>${item.payer}</b> 先付` : '個人收入'}</div>
-            ${isExp && shareText ? `<div class="text-gray-500 dark:text-gray-300 mt-0.5">分攤: ${shareText}</div>` : ''}
+            <div class="text-gray-400 dark:text-gray-400 mt-1">${escapeHtml(item.date)} · ${isExp ? `由 <b>${escapeHtml(item.payer)}</b> 先付` : '個人收入'}</div>
+            ${isExp && shareText ? `<div class="text-gray-500 dark:text-gray-300 mt-0.5">分攤: ${escapeHtml(shareText)}</div>` : ''}
           </div>
           <div class="text-right flex-shrink-0">
             <div class="font-bold text-sm ${isExp ? 'text-gray-900 dark:text-gray-100' : 'text-green-600 dark:text-green-400'}">
-              ${item.currency !== 'TWD' ? `${item.currency} ${(item.originalAmount || 0).toLocaleString()} ≈ ` : ''}NT$ ${(item.twdAmount || 0).toLocaleString()}
+              ${item.currency !== 'TWD' ? `${escapeHtml(item.currency)} ${(item.originalAmount || 0).toLocaleString()} ≈ ` : ''}NT$ ${(item.twdAmount || 0).toLocaleString()}
             </div>
-            <button type="button" onclick="deleteRecord('${item.id}')" class="text-red-400 hover:text-red-600 text-xs mt-1">刪除</button>
+            <button type="button" onclick="deleteRecord('${escapeHtml(item.id)}')" class="text-red-400 hover:text-red-600 text-xs mt-1">刪除</button>
           </div>
         `;
         listEl.appendChild(row);
@@ -934,7 +960,7 @@
         return;
       }
 
-      listEl.innerHTML = `<p class="text-gray-400 dark:text-gray-500 text-center text-sm py-4">驗證中並同步【${currentSheet}】資料...</p>`;
+      listEl.innerHTML = `<p class="text-gray-400 dark:text-gray-500 text-center text-sm py-4">驗證中並同步【${escapeHtml(currentSheet)}】資料...</p>`;
 
       try {
         const res = await fetch(`${API_URL}?password=${encodeURIComponent(pwd)}&sheetName=${encodeURIComponent(currentSheet)}`);
@@ -948,7 +974,7 @@
         }
 
         localStorage.setItem("app_pwd", pwd);
-        cachedRecords = data || [];
+        cachedRecords = Array.isArray(data) ? data : [];
 
         renderRecordsList();
         renderSettlement(cachedRecords);
@@ -959,7 +985,7 @@
       }
     }
 
-    // 儲存紀錄邏輯
+    // 儲存紀錄
     document.getElementById("saveRecordBtn").addEventListener("click", async () => {
       const pwd = getPassword();
       if (!pwd) {
@@ -1142,7 +1168,7 @@
 
           for (let i = 1; i < lines.length; i++) {
             const cols = lines[i].split(",").map(c => c.replace(/^"|"$/g, "").trim());
-            if (cols.length >= 7) {
+            if (cols.length >= 8) {
               itemsToImport.push({
                 date: cols[0],
                 type: cols[1] === "收入" ? "income" : "expense",
@@ -1217,7 +1243,12 @@
       }
     });
 
+    // 密碼解鎖與 Enter 鍵綁定
     document.getElementById("authBtn").addEventListener("click", loadRecords);
+    document.getElementById("accessPassword").addEventListener("keydown", (e) => {
+      if (e.key === "Enter") loadRecords();
+    });
+
     document.getElementById("clearAuthBtn").addEventListener("click", () => {
       localStorage.removeItem("app_pwd");
       document.getElementById("accessPassword").value = "";
