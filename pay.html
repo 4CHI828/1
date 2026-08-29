@@ -19,12 +19,11 @@
   </script>
 </head>
 <body class="bg-gray-100 dark:bg-gray-900 min-h-screen p-3 md:p-6 text-gray-800 dark:text-gray-100 transition-colors duration-200 flex flex-col justify-between">
-  <div class="max-w-xl mx-auto w-full bg-white dark:bg-gray-800 rounded-2xl shadow-lg p-5 md:p-6 space-y-5 border border-transparent dark:border-gray-700 transition-colors duration-200">
+  <div class="max-w-xl mx-auto w-full bg-white dark:bg-gray-800 rounded-2xl shadow-lg p-5 md:p-6 space-y-4 border border-transparent dark:border-gray-700 transition-colors duration-200">
     
     <div class="flex flex-wrap justify-between items-center border-b border-gray-200 dark:border-gray-700 pb-3 gap-2">
       <div>
         <h1 class="text-xl font-bold text-gray-900 dark:text-white">分帳與多幣別記帳</h1>
-        <div id="rateStatus" class="text-xs text-gray-400 dark:text-gray-400 mt-0.5">即時匯率載入中...</div>
       </div>
 
       <div class="flex items-center gap-1.5">
@@ -36,6 +35,16 @@
         <button id="toggleMemberBtn" class="text-xs bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 px-2 py-1.5 rounded-lg border border-gray-200 dark:border-gray-600 transition">⚙️ 成員</button>
         <button id="toggleDataBtn" class="text-xs bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 px-2 py-1.5 rounded-lg border border-gray-200 dark:border-gray-600 transition">📁 備份</button>
         <button id="refreshBtn" class="text-xs bg-blue-50 dark:bg-blue-950 hover:bg-blue-100 dark:hover:bg-blue-900 text-blue-600 dark:text-blue-300 font-medium px-2.5 py-1.5 rounded-lg border border-blue-200 dark:border-blue-800 transition">重整</button>
+      </div>
+    </div>
+
+    <div class="bg-gray-50 dark:bg-slate-900/60 border border-gray-200 dark:border-gray-700 rounded-xl p-2.5">
+      <div class="flex items-center justify-between text-[11px] font-semibold text-gray-500 dark:text-gray-400 mb-1.5">
+        <span>💱 即時參考匯率 (對新台幣 TWD)</span>
+        <span id="rateUpdateTime" class="font-mono text-[10px]">更新中...</span>
+      </div>
+      <div id="rateChipsContainer" class="flex gap-1.5 overflow-x-auto pb-0.5 text-xs">
+        <div class="text-gray-400 text-xs py-1">載入匯率中...</div>
       </div>
     </div>
 
@@ -107,6 +116,7 @@
         <select id="currency" class="border border-gray-300 dark:border-gray-600 rounded-lg px-2.5 py-2 text-sm bg-gray-50 dark:bg-gray-700 dark:text-white focus:bg-white focus:outline-blue-500 font-semibold">
           <option value="TWD">TWD 台幣</option>
           <option value="JPY">JPY 日圓</option>
+          <option value="CNY">CNY 人民幣</option>
           <option value="USD">USD 美元</option>
           <option value="KRW">KRW 韓元</option>
           <option value="EUR">EUR 歐元</option>
@@ -158,7 +168,8 @@
     const API_URL = "https://script.google.com/macros/s/AKfycbyLdzLuX2UzEpgD2fc-P_2l8L0yjfjsUgLaOTdn7tJWcRdhIG6ZY4lxFp5WAY7pFXxW/exec";
     
     let members = JSON.parse(localStorage.getItem("split_members")) || ["我", "小明", "小華"];
-    let exchangeRates = { TWD: 1, JPY: 0.21, USD: 32.5, KRW: 0.024, EUR: 35.2 };
+    // 預設匯率表 (包含 CNY 人民幣)
+    let exchangeRates = { TWD: 1, JPY: 0.21, CNY: 4.45, USD: 32.5, KRW: 0.024, EUR: 35.2 };
     let cachedRecords = [];
 
     // --- 更新時間顯示 ---
@@ -170,7 +181,7 @@
       if (el) el.textContent = timeStr;
     }
 
-    // --- 2. 內嵌 Service Worker (免額外 sw.js 檔案) ---
+    // --- 內嵌 Service Worker ---
     if ("serviceWorker" in navigator) {
       window.addEventListener("load", () => {
         const swCode = `
@@ -310,21 +321,47 @@
       document.getElementById("dataConfigPanel").classList.toggle("hidden");
     });
 
-    // --- 匯率換算 ---
+    // --- 💱 匯率同步與顯示全部幣別 ---
+    function renderExchangeRateChips() {
+      const container = document.getElementById("rateChipsContainer");
+      const targetCurrencies = [
+        { code: "USD", name: "美元" },
+        { code: "JPY", name: "日圓" },
+        { code: "CNY", name: "人民幣" },
+        { code: "KRW", name: "韓元" },
+        { code: "EUR", name: "歐元" }
+      ];
+
+      container.innerHTML = targetCurrencies.map(c => {
+        const rate = exchangeRates[c.code] || 1;
+        // 依照數值大小決定小數位數
+        const formattedRate = rate < 1 ? rate.toFixed(4) : rate.toFixed(2);
+        return `
+          <div class="flex-shrink-0 bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 px-2.5 py-1 rounded-lg text-[11px] shadow-sm">
+            <span class="font-bold text-gray-700 dark:text-gray-200">${c.code}</span>
+            <span class="text-gray-400 dark:text-gray-400 mx-0.5 text-[10px]">(${c.name})</span>
+            <span class="font-semibold text-blue-600 dark:text-blue-400">≈ ${formattedRate}</span>
+          </div>
+        `;
+      }).join("");
+    }
+
     async function fetchExchangeRates() {
       try {
         const res = await fetch("https://open.er-api.com/v6/latest/TWD");
         const data = await res.json();
         if (data && data.rates) {
           exchangeRates.JPY = 1 / data.rates.JPY;
+          exchangeRates.CNY = 1 / data.rates.CNY;
           exchangeRates.USD = 1 / data.rates.USD;
           exchangeRates.KRW = 1 / data.rates.KRW;
           exchangeRates.EUR = 1 / data.rates.EUR;
-          document.getElementById("rateStatus").textContent = `匯率已同步 (1 USD ≈ ${exchangeRates.USD.toFixed(1)} TWD)`;
+          document.getElementById("rateUpdateTime").textContent = `已同步最新`;
         }
       } catch (e) {
-        document.getElementById("rateStatus").textContent = "使用預設匯率";
+        document.getElementById("rateUpdateTime").textContent = "使用預設匯率";
       }
+      renderExchangeRateChips();
       updateTwdPreview();
     }
 
@@ -659,7 +696,7 @@
 
     document.getElementById("refreshBtn").addEventListener("click", loadRecords);
 
-    // 啟動
+    // 啟動初始化
     initTheme();
     initFontSize();
     updateTimestampDisplay();
