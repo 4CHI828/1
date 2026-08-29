@@ -152,7 +152,7 @@
       </div>
 
       <div class="grid grid-cols-3 gap-2">
-        <select id="currency" class="border border-gray-300 dark:border-gray-600 rounded-lg px-2.5 py-2 text-xs bg-gray-50 dark:bg-gray-700 dark:text-white focus:bg-white focus:outline-blue-500 font-semibold">
+        <select id="currency" class="border border-gray-300 dark:border-gray-600 rounded-lg px-2.5 py-2 text-xs bg-gray-50 dark:bg-gray-700 dark:text-white focus:outline-blue-500 font-semibold">
           <option value="TWD">TWD 台幣</option>
           <option value="JPY">JPY 日圓</option>
           <option value="CNY">CNY 人民幣</option>
@@ -360,7 +360,7 @@
     });
     window.addEventListener("appinstalled", () => pwaInstallBtn.classList.add("hidden"));
 
-    // 字體大小
+    // 字體大小控制
     const fontSlider = document.getElementById("fontSlider");
     const fontDisplay = document.getElementById("fontSizeDisplay");
     function applyFontSize(size) {
@@ -439,7 +439,7 @@
       } catch (e) {}
     }
 
-    // 分攤模式
+    // 分攤模式切換
     document.getElementById("modeEqualBtn").addEventListener("click", () => setSplitMode("equal"));
     document.getElementById("modeCustomBtn").addEventListener("click", () => setSplitMode("custom"));
 
@@ -474,10 +474,10 @@
       const statusEl = document.getElementById("customSumStatus");
       const diff = totalTwd - sum;
 
-      if (Math.abs(diff) < 0.01 && totalTwd > 0) {
-        statusEl.innerHTML = `<span class="text-green-600 dark:text-green-400 font-bold">✓ 合計 $${sum} (吻合)</span>`;
+      if (Math.abs(Math.round(diff)) === 0 && totalTwd > 0) {
+        statusEl.innerHTML = `<span class="text-green-600 dark:text-green-400 font-bold">✓ 合計 $${Math.round(sum)} (吻合)</span>`;
       } else {
-        statusEl.innerHTML = `<span class="text-red-500 dark:text-red-400 font-medium">合計 $${sum} / 總計 $${totalTwd} (差 $${diff})</span>`;
+        statusEl.innerHTML = `<span class="text-red-500 dark:text-red-400 font-medium">合計 $${Math.round(sum)} / 總計 $${totalTwd} (差 $${Math.round(diff)})</span>`;
       }
     }
 
@@ -1079,7 +1079,7 @@
       }
     }
 
-    // 🌟 核心修復：直接綁定按鈕 Click 事件，絕不被瀏覽器靜默阻擋
+    // 儲存紀錄邏輯
     document.getElementById("saveRecordBtn").addEventListener("click", async () => {
       const pwd = getPassword();
       if (!pwd) {
@@ -1123,8 +1123,8 @@
           });
 
           if (splitMembersData.length === 0) return alert("請至少為一位成員設定大於 0 的金額！");
-          if (Math.abs(customSum - twd) >= 1) {
-            return alert(`指定金額總計 ($${customSum}) 與總金額 ($${twd}) 不符，請點選「補差額」調整！`);
+          if (Math.abs(Math.round(customSum) - Math.round(twd)) > 0) {
+            return alert(`指定金額總計 ($${Math.round(customSum)}) 與總金額 ($${twd}) 不符，請點選「補差額」調整！`);
           }
         }
       }
