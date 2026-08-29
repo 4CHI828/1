@@ -5,7 +5,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>雲端全能分帳記帳系統</title>
   
-  <!-- 內嵌 PWA Manifest Data URL -->
   <link rel="manifest" href="data:application/manifest+json;base64,eyJuYW1lIjoi6Zuy56uv5YWo6IO95YiG5biz6KiY5biz57O757WxIiwic2hvcnRfbmFtZSI6IumZvueuuKiY5bizIiwiZGVzY3JpcHRpb24iOiLmlK/mjIjlhb5Lq65YiG5biz44CB5aSa5bmj5Yil44CB6KiY5biz5ZyW6aSF5ZyW44CBSlBXRU9DUiDlm77ljZrlpKrlpKrlpKoiLCJzdGFydF91cmwiOiIuLyIsImRpc3BsYXkiOiJzdGFuZGFsb25lIiwiYmFja2dyb3VuZF9jb2xvciI6IiMxMTE4MjciLCJ0aGVtZV9jb2xvciI6IiMyNTYzZWIiLCJpY29ucyI6W3sic3JjIjoiaHR0cHM6Ly9jZG4taWNvbnMtcG5nLmZsYXRpY29uLmNvbS81MTIvMjkzNi8yOTM2NzU4LnBuZyIsInNpemVzIjoiMTkyeDE5MiIsInR5cGUiOiJpbWFnZS9wbmciLCJwdXJwb3NlIjoiYW55IG1hc2thYmxlIn0seyJzcmMiOiiaHR0cHM6Ly9jZG4taWNvbnMtcG5nLmZsYXRpY29uLmNvbS81MTIvMjkzNi8yOTM2NzU4LnBuZyIsInNpemVzIjoiNTEyeDUxMiIsInR5cGUiOiJpbWFnZS9wbmciLCJwdXJwb3NlIjoiYW55IG1hc2thYmxlIn1dfQ==">
   
   <meta name="theme-color" content="#2563eb">
@@ -14,7 +13,6 @@
   <meta name="apple-mobile-web-app-title" content="雲端記帳">
   <link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/2936/2936758.png">
 
-  <!-- 第三方函式庫 -->
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
@@ -27,27 +25,25 @@
 <body class="bg-gray-100 dark:bg-gray-900 min-h-screen p-2 sm:p-4 md:p-6 text-gray-800 dark:text-gray-100 transition-colors duration-200 flex flex-col justify-between">
   <div class="max-w-2xl mx-auto w-full bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-4 sm:p-6 space-y-4 border border-transparent dark:border-gray-700 transition-colors duration-200">
     
-    <!-- 頂部控制列 -->
     <div class="flex flex-wrap justify-between items-center border-b border-gray-200 dark:border-gray-700 pb-3 gap-2">
       <div class="flex items-center gap-2">
         <h1 class="text-lg sm:text-xl font-bold text-gray-900 dark:text-white">雲端全能記帳</h1>
         <select id="sheetSelector" class="border border-gray-300 dark:border-gray-600 rounded-lg px-2 py-1 text-xs bg-gray-50 dark:bg-gray-700 dark:text-white font-medium focus:outline-blue-500">
           <option value="預設帳本">預設帳本</option>
         </select>
-        <button id="addSheetBtn" class="text-xs bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 px-2 py-1 rounded-lg" title="新增帳本分頁">＋</button>
+        <button type="button" id="addSheetBtn" class="text-xs bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 px-2 py-1 rounded-lg" title="新增帳本分頁">＋</button>
       </div>
 
       <div class="flex items-center gap-1.5 flex-wrap">
-        <button id="pwaInstallBtn" class="hidden text-xs bg-emerald-600 hover:bg-emerald-700 text-white font-semibold px-2.5 py-1.5 rounded-lg shadow-sm transition">📲 安裝 App</button>
-        <button id="themeToggleBtn" class="p-1 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 border border-gray-200 dark:border-gray-600 rounded-lg text-sm transition" title="切換深淺模式">🌙</button>
-        <button id="toggleFontPanelBtn" class="text-xs bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 px-2 py-1 rounded-lg border border-gray-200 dark:border-gray-600">🔤 字體</button>
-        <button id="toggleMemberBtn" class="text-xs bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 px-2 py-1 rounded-lg border border-gray-200 dark:border-gray-600">⚙️ 成員</button>
-        <button id="toggleDataBtn" class="text-xs bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 px-2 py-1 rounded-lg border border-gray-200 dark:border-gray-600">📁 備份</button>
-        <button id="refreshBtn" class="text-xs bg-blue-50 dark:bg-blue-950 hover:bg-blue-100 dark:hover:bg-blue-900 text-blue-600 dark:text-blue-300 font-medium px-2.5 py-1 rounded-lg border border-blue-200 dark:border-blue-800">重整</button>
+        <button type="button" id="pwaInstallBtn" class="hidden text-xs bg-emerald-600 hover:bg-emerald-700 text-white font-semibold px-2.5 py-1.5 rounded-lg shadow-sm transition">📲 安裝 App</button>
+        <button type="button" id="themeToggleBtn" class="p-1 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 border border-gray-200 dark:border-gray-600 rounded-lg text-sm transition" title="切換深淺模式">🌙</button>
+        <button type="button" id="toggleFontPanelBtn" class="text-xs bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 px-2 py-1 rounded-lg border border-gray-200 dark:border-gray-600">🔤 字體</button>
+        <button type="button" id="toggleMemberBtn" class="text-xs bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 px-2 py-1 rounded-lg border border-gray-200 dark:border-gray-600">⚙️ 成員</button>
+        <button type="button" id="toggleDataBtn" class="text-xs bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 px-2 py-1 rounded-lg border border-gray-200 dark:border-gray-600">📁 備份</button>
+        <button type="button" id="refreshBtn" class="text-xs bg-blue-50 dark:bg-blue-950 hover:bg-blue-100 dark:hover:bg-blue-900 text-blue-600 dark:text-blue-300 font-medium px-2.5 py-1.5 rounded-lg border border-blue-200 dark:border-blue-800">重整</button>
       </div>
     </div>
 
-    <!-- 即時匯率全覽橫幅 -->
     <div class="bg-gray-50 dark:bg-slate-900/60 border border-gray-200 dark:border-gray-700 rounded-xl p-2.5">
       <div class="flex items-center justify-between text-[11px] font-semibold text-gray-500 dark:text-gray-400 mb-1.5">
         <span>💱 即時參考匯率 (對 TWD)</span>
@@ -58,59 +54,54 @@
       </div>
     </div>
 
-    <!-- 🔤 自訂字體大小面板 (預設隱藏) -->
     <div id="fontConfigPanel" class="hidden bg-gray-50 dark:bg-slate-900/60 border border-gray-200 dark:border-gray-700 rounded-xl p-3.5 space-y-2">
       <div class="flex justify-between items-center text-xs font-bold text-gray-700 dark:text-gray-300">
         <span>自訂全站字體大小</span>
         <span id="fontSizeDisplay" class="text-blue-600 dark:text-blue-400 font-mono text-sm">16px</span>
       </div>
       <div class="flex items-center gap-3">
-        <button id="fontDecBtn" class="w-8 h-8 flex items-center justify-center bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg text-sm font-bold active:scale-95 transition">-</button>
+        <button type="button" id="fontDecBtn" class="w-8 h-8 flex items-center justify-center bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg text-sm font-bold active:scale-95 transition">-</button>
         <input type="range" id="fontSlider" min="12" max="24" step="1" value="16" class="flex-1 accent-blue-600 cursor-pointer h-2 bg-gray-200 dark:bg-gray-700 rounded-lg">
-        <button id="fontIncBtn" class="w-8 h-8 flex items-center justify-center bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg text-sm font-bold active:scale-95 transition">+</button>
-        <button id="fontResetBtn" class="text-xs text-gray-500 dark:text-gray-400 hover:text-blue-500 underline ml-1">重設</button>
+        <button type="button" id="fontIncBtn" class="w-8 h-8 flex items-center justify-center bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg text-sm font-bold active:scale-95 transition">+</button>
+        <button type="button" id="fontResetBtn" class="text-xs text-gray-500 dark:text-gray-400 hover:text-blue-500 underline ml-1">重設</button>
       </div>
     </div>
 
-    <!-- 密碼解鎖列 -->
     <div class="bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800/60 rounded-xl p-3 flex flex-wrap items-center justify-between gap-2">
       <div class="flex items-center gap-2 flex-1 min-w-[200px]">
         <span class="text-xs font-semibold text-amber-900 dark:text-amber-300">🔒 密碼：</span>
         <input type="password" id="accessPassword" placeholder="請輸入密碼解鎖" class="flex-1 border border-gray-300 dark:border-gray-600 rounded-lg px-2.5 py-1 text-xs bg-white dark:bg-gray-700 dark:text-white focus:outline-amber-500">
       </div>
       <div class="flex items-center gap-2">
-        <button id="authBtn" class="bg-amber-600 hover:bg-amber-700 text-white px-3 py-1 rounded-lg text-xs font-medium transition">解鎖</button>
-        <button id="clearAuthBtn" class="text-xs text-gray-500 dark:text-gray-400 hover:text-red-500 underline">鎖定</button>
+        <button type="button" id="authBtn" class="bg-amber-600 hover:bg-amber-700 text-white px-3 py-1 rounded-lg text-xs font-medium transition">解鎖</button>
+        <button type="button" id="clearAuthBtn" class="text-xs text-gray-500 dark:text-gray-400 hover:text-red-500 underline">鎖定</button>
       </div>
     </div>
 
-    <!-- 匯出與匯入面板 (預設隱藏) -->
     <div id="dataConfigPanel" class="hidden bg-slate-50 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-700 rounded-xl p-4 space-y-3">
       <div class="text-xs font-bold text-slate-700 dark:text-slate-300">資料備份與還原</div>
       <div class="grid grid-cols-2 gap-2 text-xs">
-        <button id="exportCsvBtn" class="bg-emerald-600 hover:bg-emerald-700 text-white py-1.5 px-2 rounded-lg font-medium transition">📥 匯出 試算表 (CSV)</button>
-        <button id="exportTxtBtn" class="bg-indigo-600 hover:bg-indigo-700 text-white py-1.5 px-2 rounded-lg font-medium transition">📥 匯出 文字檔 (TXT)</button>
+        <button type="button" id="exportCsvBtn" class="bg-emerald-600 hover:bg-emerald-700 text-white py-1.5 px-2 rounded-lg font-medium transition">📥 匯出 試算表 (CSV)</button>
+        <button type="button" id="exportTxtBtn" class="bg-indigo-600 hover:bg-indigo-700 text-white py-1.5 px-2 rounded-lg font-medium transition">📥 匯出 文字檔 (TXT)</button>
       </div>
       <div class="pt-2 border-t border-slate-200 dark:border-slate-700">
         <div class="text-[11px] text-gray-500 dark:text-gray-400 mb-1.5">從檔案匯入至雲端 (支援 CSV / TXT)：</div>
         <div class="flex gap-2">
           <input type="file" id="importFileInput" accept=".csv,.txt" class="text-xs text-slate-500 dark:text-slate-400 file:mr-2 file:py-1 file:px-2 file:rounded-md file:border-0 file:text-xs file:bg-slate-200 dark:file:bg-slate-700 file:text-slate-700 dark:file:text-slate-200 hover:file:bg-slate-300">
-          <button id="importBtn" class="bg-slate-800 dark:bg-slate-700 hover:bg-black dark:hover:bg-slate-600 text-white px-3 py-1 rounded-lg text-xs font-medium transition">開始匯入</button>
+          <button type="button" id="importBtn" class="bg-slate-800 dark:bg-slate-700 hover:bg-black dark:hover:bg-slate-600 text-white px-3 py-1 rounded-lg text-xs font-medium transition">開始匯入</button>
         </div>
       </div>
     </div>
 
-    <!-- 成員設定面板 (預設隱藏) -->
     <div id="memberConfigPanel" class="hidden bg-gray-50 dark:bg-slate-900/60 border border-gray-200 dark:border-gray-700 rounded-xl p-4 space-y-3">
       <div class="text-xs font-bold text-gray-700 dark:text-gray-300">管理分攤成員名單</div>
       <div class="flex gap-2">
         <input type="text" id="newMemberName" placeholder="輸入成員名字" class="flex-1 border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-1.5 text-xs bg-white dark:bg-gray-700 dark:text-white focus:outline-blue-500">
-        <button id="addMemberBtn" class="bg-gray-800 dark:bg-slate-700 hover:bg-black dark:hover:bg-slate-600 text-white px-3 py-1.5 rounded-lg text-xs font-medium transition">加入</button>
+        <button type="button" id="addMemberBtn" class="bg-gray-800 dark:bg-slate-700 hover:bg-black dark:hover:bg-slate-600 text-white px-3 py-1.5 rounded-lg text-xs font-medium transition">加入</button>
       </div>
       <div id="memberTagList" class="flex flex-wrap gap-1.5 text-xs"></div>
     </div>
 
-    <!-- 分帳結算卡片與平帳轉帳指引 -->
     <div class="bg-blue-50 dark:bg-blue-950/30 border border-blue-100 dark:border-blue-900/50 rounded-xl p-4 space-y-3">
       <div class="text-xs font-bold text-blue-800 dark:text-blue-300 uppercase tracking-wider">成員分帳結算 (TWD)</div>
       <div id="settlementGrid" class="grid grid-cols-2 sm:grid-cols-4 gap-2 text-center text-xs">
@@ -119,16 +110,14 @@
       <div id="settlementTransfers" class="pt-2 border-t border-blue-200/60 dark:border-blue-800/50 text-xs"></div>
     </div>
 
-    <!-- 收款 QR Code 彈窗/面板 -->
     <div id="qrCodePanel" class="hidden bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-800/60 rounded-xl p-3.5 space-y-2.5 text-xs text-center">
       <div class="font-bold text-emerald-900 dark:text-emerald-200">📱 掃碼收款 (QR Code)</div>
       <div class="flex justify-center p-2 bg-white rounded-lg inline-block mx-auto border" id="qrcodeCanvas"></div>
       <div class="text-[11px] text-gray-500 dark:text-gray-400">可將個人收款帳號或轉帳連結轉為 QR 碼提供掃碼</div>
       <input type="text" id="qrCodeInputText" placeholder="輸入收款銀行帳號或街口/LINE轉帳網址" class="w-full border border-gray-300 dark:border-gray-600 rounded px-2.5 py-1 text-xs bg-white dark:bg-gray-700">
-      <button id="generateQrBtn" class="bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-1 rounded text-xs font-medium">生成 QR Code</button>
+      <button type="button" id="generateQrBtn" class="bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-1 rounded text-xs font-medium">生成 QR Code</button>
     </div>
 
-    <!-- 記帳表單 -->
     <form id="recordForm" class="space-y-3">
       <div class="flex items-center justify-between bg-blue-50/50 dark:bg-gray-750 p-2 rounded-xl border border-blue-100 dark:border-gray-700 text-xs">
         <span class="font-semibold text-blue-900 dark:text-blue-300">✨ 智慧輔助輸入：</span>
@@ -220,7 +209,6 @@
       </div>
     </form>
 
-    <!-- 🔍 多條件搜尋與篩選器 -->
     <div class="bg-gray-50 dark:bg-gray-750 p-3 rounded-xl border border-gray-200 dark:border-gray-700 space-y-2">
       <div class="text-xs font-bold text-gray-700 dark:text-gray-300">🔍 搜尋與篩選明細</div>
       <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs">
@@ -250,7 +238,6 @@
       </div>
     </div>
 
-    <!-- 歷史明細清單 -->
     <div>
       <div class="flex justify-between items-center mb-2">
         <h2 class="text-xs font-semibold text-gray-500 dark:text-gray-400">歷史紀錄 (已過濾 <span id="recordCountDisplay">0</span> 筆)</h2>
@@ -261,7 +248,6 @@
       </div>
     </div>
 
-    <!-- 🎯 總預算管理 (已移至下方) -->
     <div id="budgetConfigPanel" class="bg-indigo-50 dark:bg-indigo-950/30 border border-indigo-100 dark:border-indigo-900/50 rounded-xl p-3.5 space-y-2">
       <div class="flex justify-between items-center text-xs">
         <span class="font-bold text-indigo-900 dark:text-indigo-300">🎯 總預算管理</span>
@@ -280,7 +266,6 @@
       </div>
     </div>
 
-    <!-- 📊 消費類別支出統計 (TWD) (已移至下方) -->
     <div id="statsConfigPanel" class="bg-slate-50 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-700 rounded-xl p-3.5 space-y-3">
       <div class="text-xs font-bold text-slate-700 dark:text-slate-300 flex justify-between items-center">
         <span>📊 消費類別支出統計 (TWD)</span>
@@ -296,12 +281,10 @@
 
   </div>
 
-  <!-- 照片放大檢視彈窗 -->
   <div id="imageModal" class="hidden fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4" onclick="closeImageModal()">
     <img id="modalImg" class="max-w-full max-h-[85vh] rounded-lg shadow-2xl" src="" alt="收據照片">
   </div>
 
-  <!-- 底部更新時間與奇奇828連結 -->
   <footer class="max-w-2xl mx-auto w-full mt-6 py-3 border-t border-gray-200 dark:border-gray-800 text-center text-xs text-gray-500 dark:text-gray-400 flex flex-wrap items-center justify-center gap-x-3 gap-y-1">
     <div>網頁更新時間：<span id="lastUpdatedDisplay" class="font-mono font-medium text-gray-700 dark:text-gray-300">載入中...</span></div>
     <span class="text-gray-300 dark:text-gray-600">|</span>
@@ -321,6 +304,13 @@
     let currentSplitMode = "equal";
     let uploadedReceiptBase64 = "";
     let categoryChartInstance = null;
+
+    // 格式化今日日期 (YYYY-MM-DD)
+    function getTodayString() {
+      const d = new Date();
+      const pad = (n) => String(n).padStart(2, '0');
+      return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+    }
 
     function updateTimestampDisplay() {
       const now = new Date();
@@ -564,11 +554,9 @@
       renderMemberControls();
     };
 
-    // 展開收合開關
     document.getElementById("toggleMemberBtn").addEventListener("click", () => document.getElementById("memberConfigPanel").classList.toggle("hidden"));
     document.getElementById("toggleDataBtn").addEventListener("click", () => document.getElementById("dataConfigPanel").classList.toggle("hidden"));
 
-    // 匯率同步
     function renderExchangeRateChips() {
       const container = document.getElementById("rateChipsContainer");
       const targetCurrencies = [
@@ -624,7 +612,6 @@
     });
     document.getElementById("currency").addEventListener("change", updateTwdPreview);
     document.getElementById("originalAmount").addEventListener("input", updateTwdPreview);
-    document.getElementById("date").valueAsDate = new Date();
 
     // 收據照片處理
     document.getElementById("receiptPhotoInput").addEventListener("change", function(e) {
@@ -635,7 +622,7 @@
         const img = new Image();
         img.onload = function() {
           const canvas = document.createElement("canvas");
-          const maxDim = 800;
+          const maxDim = 600; // 壓縮解析度防止 Base64 過大
           let w = img.width, h = img.height;
           if (w > maxDim || h > maxDim) {
             if (w > h) { h = (maxDim / w) * h; w = maxDim; }
@@ -643,7 +630,7 @@
           }
           canvas.width = w; canvas.height = h;
           canvas.getContext("2d").drawImage(img, 0, 0, w, h);
-          uploadedReceiptBase64 = canvas.toDataURL("image/jpeg", 0.6);
+          uploadedReceiptBase64 = canvas.toDataURL("image/jpeg", 0.5);
           
           const thumb = document.getElementById("receiptPreviewThumb");
           thumb.style.backgroundImage = `url(${uploadedReceiptBase64})`;
@@ -701,7 +688,7 @@
       };
     } else {
       voiceBtn.classList.add("opacity-50", "cursor-not-allowed");
-      voiceBtn.title = "您的瀏覽器不支援 Web Speech 語音辨識";
+      voiceBtn.title = "您的瀏覽器不支援語音辨識";
     }
 
     // 📷 OCR 收據辨識
@@ -844,9 +831,7 @@
         options: {
           responsive: true,
           maintainAspectRatio: false,
-          plugins: {
-            legend: { display: false }
-          },
+          plugins: { legend: { display: false } },
           cutout: '70%'
         }
       });
@@ -961,7 +946,7 @@
               <span><b>${debtors[d].name}</b> ➔ 轉給 <b>${creditors[c].name}</b></span>
               <div class="flex items-center gap-2">
                 <span class="font-bold text-blue-600 dark:text-blue-400">NT$ ${Math.round(settleAmt).toLocaleString()}</span>
-                <button onclick="showQrCodeModal('${tText}')" class="text-[10px] bg-emerald-50 text-emerald-600 dark:bg-emerald-950 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800 px-1.5 py-0.5 rounded hover:bg-emerald-100">QR收款</button>
+                <button type="button" onclick="showQrCodeModal('${tText}')" class="text-[10px] bg-emerald-50 text-emerald-600 dark:bg-emerald-950 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800 px-1.5 py-0.5 rounded hover:bg-emerald-100">QR收款</button>
               </div>
             </div>
           `);
@@ -1028,7 +1013,7 @@
             <div class="flex items-center gap-1.5">
               <span class="px-1.5 py-0.5 rounded text-[10px] font-semibold bg-blue-100 text-blue-800 dark:bg-blue-900/60 dark:text-blue-300">${item.category || '其他'}</span>
               <span class="font-bold text-sm text-gray-800 dark:text-gray-100">${item.title}</span>
-              ${item.receiptImage ? `<button onclick="openImageModal('${item.receiptImage}')" class="text-[10px] bg-emerald-50 text-emerald-600 px-1 py-0.5 rounded border border-emerald-200">📷 照片</button>` : ''}
+              ${item.receiptImage ? `<button type="button" onclick="openImageModal('${item.receiptImage}')" class="text-[10px] bg-emerald-50 text-emerald-600 px-1 py-0.5 rounded border border-emerald-200">📷 照片</button>` : ''}
             </div>
             <div class="text-gray-400 dark:text-gray-400 mt-1">${item.date} · ${isExp ? `由 <b>${item.payer}</b> 先付` : '個人收入'}</div>
             ${isExp && shareText ? `<div class="text-gray-500 dark:text-gray-300 mt-0.5">分攤: ${shareText}</div>` : ''}
@@ -1037,7 +1022,7 @@
             <div class="font-bold text-sm ${isExp ? 'text-gray-900 dark:text-gray-100' : 'text-green-600 dark:text-green-400'}">
               ${item.currency !== 'TWD' ? `${item.currency} ${(item.originalAmount || 0).toLocaleString()} ≈ ` : ''}NT$ ${(item.twdAmount || 0).toLocaleString()}
             </div>
-            <button onclick="deleteRecord('${item.id}')" class="text-red-400 hover:text-red-600 text-xs mt-1">刪除</button>
+            <button type="button" onclick="deleteRecord('${item.id}')" class="text-red-400 hover:text-red-600 text-xs mt-1">刪除</button>
           </div>
         `;
         listEl.appendChild(row);
@@ -1088,12 +1073,25 @@
       }
     }
 
+    // 🌟 修正後的表單儲存邏輯 (含完整驗證與錯誤處理)
     document.getElementById("recordForm").addEventListener("submit", async (e) => {
       e.preventDefault();
+      
       const pwd = getPassword();
-      if (!pwd) return alert("請先在上方輸入密碼解鎖！");
+      if (!pwd) {
+        alert("請先在上方輸入密碼並點擊「解鎖」！");
+        document.getElementById("accessPassword").focus();
+        return;
+      }
 
       const type = document.getElementById("type").value;
+      const title = document.getElementById("title").value.trim();
+      const originalAmount = parseFloat(document.getElementById("originalAmount").value);
+      const dateVal = document.getElementById("date").value || getTodayString();
+
+      if (!title) return alert("請填寫項目名稱！");
+      if (isNaN(originalAmount) || originalAmount <= 0) return alert("請輸入有效的金額！");
+
       const { rate, twd } = updateTwdPreview();
       let splitMembersData = [];
 
@@ -1124,18 +1122,18 @@
 
       const payload = {
         password: pwd,
-        sheetName: currentSheet,
+        sheetName: currentSheet || "預設帳本",
         type: type,
         category: document.getElementById("category").value,
-        title: document.getElementById("title").value,
-        originalAmount: parseFloat(document.getElementById("originalAmount").value),
+        title: title,
+        originalAmount: originalAmount,
         currency: document.getElementById("currency").value,
         rate: rate,
         twdAmount: twd,
         payer: type === "expense" ? document.getElementById("payer").value : "",
         splitMembers: splitMembersData,
-        receiptImage: uploadedReceiptBase64,
-        date: document.getElementById("date").value
+        receiptImage: uploadedReceiptBase64 || "",
+        date: dateVal
       };
 
       try {
@@ -1147,7 +1145,7 @@
         const result = await res.json();
         
         if (result.status === "error") {
-          alert("儲存失敗：" + result.message);
+          alert("儲存失敗：" + (result.message || "未知錯誤"));
         } else {
           document.getElementById("title").value = "";
           document.getElementById("originalAmount").value = "";
@@ -1159,13 +1157,14 @@
           await loadRecords();
         }
       } catch (err) {
-        alert("儲存失敗，請檢查網路連線");
+        alert("儲存失敗，請檢查網路連線或 Apps Script 設定: " + err.message);
       } finally {
         btn.disabled = false;
         btn.textContent = "儲存紀錄至雲端";
       }
     });
 
+    // 刪除紀錄
     window.deleteRecord = async function(id) {
       const pwd = getPassword();
       if (!pwd) return alert("請先輸入密碼！");
@@ -1338,6 +1337,7 @@
     // 啟動初始化
     initTheme();
     applyFontSize(localStorage.getItem("app_custom_font_size") || 16);
+    document.getElementById("date").value = getTodayString();
     updateTimestampDisplay();
 
     const savedPwd = localStorage.getItem("app_pwd");
