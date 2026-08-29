@@ -96,11 +96,15 @@
       <div id="memberTagList" class="flex flex-wrap gap-1.5 text-xs"></div>
     </div>
 
-    <div class="bg-blue-50 dark:bg-blue-950/30 border border-blue-100 dark:border-blue-900/50 rounded-xl p-4">
-      <div class="text-xs font-bold text-blue-800 dark:text-blue-300 uppercase tracking-wider mb-2">成員分帳結算 (TWD)</div>
+    <div class="bg-blue-50 dark:bg-blue-950/30 border border-blue-100 dark:border-blue-900/50 rounded-xl p-4 space-y-3">
+      <div class="text-xs font-bold text-blue-800 dark:text-blue-300 uppercase tracking-wider">成員分帳結算 (TWD)</div>
+      
       <div id="settlementGrid" class="grid grid-cols-2 sm:grid-cols-4 gap-2 text-center text-xs">
         <div class="col-span-full text-gray-400 dark:text-gray-500 py-1">請先解鎖以查看結算金額</div>
       </div>
+
+      <div id="settlementTransfers" class="pt-2 border-t border-blue-200/60 dark:border-blue-800/50 text-xs">
+        </div>
     </div>
 
     <form id="recordForm" class="space-y-4">
@@ -168,11 +172,9 @@
     const API_URL = "https://script.google.com/macros/s/AKfycbyLdzLuX2UzEpgD2fc-P_2l8L0yjfjsUgLaOTdn7tJWcRdhIG6ZY4lxFp5WAY7pFXxW/exec";
     
     let members = JSON.parse(localStorage.getItem("split_members")) || ["我", "小明", "小華"];
-    // 預設匯率表 (包含 CNY 人民幣)
     let exchangeRates = { TWD: 1, JPY: 0.21, CNY: 4.45, USD: 32.5, KRW: 0.024, EUR: 35.2 };
     let cachedRecords = [];
 
-    // --- 更新時間顯示 ---
     function updateTimestampDisplay() {
       const now = new Date();
       const pad = (n) => String(n).padStart(2, '0');
@@ -181,7 +183,7 @@
       if (el) el.textContent = timeStr;
     }
 
-    // --- 內嵌 Service Worker ---
+    // Service Worker
     if ("serviceWorker" in navigator) {
       window.addEventListener("load", () => {
         const swCode = `
@@ -197,45 +199,35 @@
       });
     }
 
-    // --- PWA 安裝事件 ---
+    // PWA 安裝
     let deferredPrompt;
     const pwaInstallBtn = document.getElementById("pwaInstallBtn");
-
     window.addEventListener("beforeinstallprompt", (e) => {
       e.preventDefault();
       deferredPrompt = e;
       pwaInstallBtn.classList.remove("hidden");
     });
-
     pwaInstallBtn.addEventListener("click", async () => {
       if (!deferredPrompt) return;
       deferredPrompt.prompt();
       const { outcome } = await deferredPrompt.userChoice;
-      if (outcome === "accepted") {
-        pwaInstallBtn.classList.add("hidden");
-      }
+      if (outcome === "accepted") pwaInstallBtn.classList.add("hidden");
       deferredPrompt = null;
     });
+    window.addEventListener("appinstalled", () => pwaInstallBtn.classList.add("hidden"));
 
-    window.addEventListener("appinstalled", () => {
-      pwaInstallBtn.classList.add("hidden");
-    });
-
-    // --- 字體大小控制 ---
+    // 字體大小控制
     const fontSlider = document.getElementById("fontSlider");
     const fontDisplay = document.getElementById("fontSizeDisplay");
-
     function applyFontSize(size) {
       size = parseInt(size, 10);
       if (isNaN(size) || size < 12) size = 12;
       if (size > 24) size = 24;
-
       document.documentElement.style.fontSize = `${size}px`;
       fontSlider.value = size;
       fontDisplay.textContent = `${size}px`;
       localStorage.setItem("app_custom_font_size", size);
     }
-
     fontSlider.addEventListener("input", (e) => applyFontSize(e.target.value));
     document.getElementById("fontDecBtn").addEventListener("click", () => applyFontSize(parseInt(fontSlider.value, 10) - 1));
     document.getElementById("fontIncBtn").addEventListener("click", () => applyFontSize(parseInt(fontSlider.value, 10) + 1));
@@ -243,15 +235,12 @@
     document.getElementById("toggleFontPanelBtn").addEventListener("click", () => {
       document.getElementById("fontConfigPanel").classList.toggle("hidden");
     });
-
     function initFontSize() {
-      const saved = localStorage.getItem("app_custom_font_size") || 16;
-      applyFontSize(saved);
+      applyFontSize(localStorage.getItem("app_custom_font_size") || 16);
     }
 
-    // --- 主題切換 (Dark Mode) ---
+    // 主題切換
     const themeToggleBtn = document.getElementById("themeToggleBtn");
-    
     function initTheme() {
       const isDark = localStorage.getItem("theme") === "dark" || 
         (!localStorage.getItem("theme") && window.matchMedia("(prefers-color-scheme: dark)").matches);
@@ -263,14 +252,12 @@
         themeToggleBtn.textContent = "🌙";
       }
     }
-
     themeToggleBtn.addEventListener("click", () => {
       const isDark = document.documentElement.classList.toggle("dark");
       localStorage.setItem("theme", isDark ? "dark" : "light");
       themeToggleBtn.textContent = isDark ? "☀️" : "🌙";
     });
 
-    // --- 密碼與成員 ---
     function getPassword() {
       return document.getElementById("accessPassword").value.trim() || localStorage.getItem("app_pwd") || "";
     }
@@ -321,7 +308,6 @@
       document.getElementById("dataConfigPanel").classList.toggle("hidden");
     });
 
-    // --- 💱 匯率同步與顯示全部幣別 ---
     function renderExchangeRateChips() {
       const container = document.getElementById("rateChipsContainer");
       const targetCurrencies = [
@@ -334,7 +320,6 @@
 
       container.innerHTML = targetCurrencies.map(c => {
         const rate = exchangeRates[c.code] || 1;
-        // 依照數值大小決定小數位數
         const formattedRate = rate < 1 ? rate.toFixed(4) : rate.toFixed(2);
         return `
           <div class="flex-shrink-0 bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 px-2.5 py-1 rounded-lg text-[11px] shadow-sm">
@@ -381,31 +366,61 @@
     document.getElementById("originalAmount").addEventListener("input", updateTwdPreview);
     document.getElementById("date").valueAsDate = new Date();
 
-    // --- 結算卡片 ---
+    // 🌟 核心分帳與結算演算法（修復漏算、浮點數與轉帳指引）
     function renderSettlement(records) {
       const balances = {};
+      
+      // 1. 初始化所有設定成員
       members.forEach(m => balances[m] = 0);
 
+      // 2. 自動補充歷史紀錄中出現過的所有成員，防止漏算
       records.forEach(item => {
-        if (item.type === "expense" && item.splitMembers && item.splitMembers.length > 0) {
-          const splitCount = item.splitMembers.length;
-          const perPersonShare = (item.twdAmount || 0) / splitCount;
-
-          if (balances[item.payer] !== undefined) {
-            balances[item.payer] += item.twdAmount || 0;
+        if (item.type === "expense") {
+          if (item.payer && balances[item.payer] === undefined) {
+            balances[item.payer] = 0;
           }
-          item.splitMembers.forEach(m => {
-            if (balances[m] !== undefined) {
-              balances[m] -= perPersonShare;
+          (item.splitMembers || []).forEach(m => {
+            if (m && balances[m] === undefined) {
+              balances[m] = 0;
             }
           });
         }
       });
 
+      // 3. 逐筆精確計算淨額
+      records.forEach(item => {
+        if (item.type === "expense") {
+          const twd = Number(item.twdAmount) || 0;
+          const validSplitMembers = (item.splitMembers || []).filter(m => m.trim() !== "");
+          const splitCount = validSplitMembers.length;
+
+          if (splitCount > 0 && twd > 0) {
+            const perPersonShare = twd / splitCount;
+
+            // 付款人墊付全額
+            if (item.payer) {
+              balances[item.payer] = (balances[item.payer] || 0) + twd;
+            }
+
+            // 分攤成員各扣份額
+            validSplitMembers.forEach(m => {
+              balances[m] = (balances[m] || 0) - perPersonShare;
+            });
+          }
+        }
+      });
+
+      // 4. 渲染成員淨額卡片
       const grid = document.getElementById("settlementGrid");
       grid.innerHTML = "";
-      for (const [member, bal] of Object.entries(balances)) {
-        const roundedBal = Math.round(bal);
+      const memberKeys = Object.keys(balances);
+
+      if (memberKeys.length === 0) {
+        grid.innerHTML = `<div class="col-span-full text-gray-400 dark:text-gray-500 py-1">尚無分帳紀錄</div>`;
+      }
+
+      memberKeys.forEach(member => {
+        const roundedBal = Math.round(balances[member]);
         const isPositive = roundedBal > 0;
         const isZero = roundedBal === 0;
         grid.innerHTML += `
@@ -419,10 +434,58 @@
             </div>
           </div>
         `;
+      });
+
+      // 5. 最佳化轉帳平帳演算法（Debt Simplification）
+      const debtors = [];  // 應付者
+      const creditors = []; // 應收者
+
+      memberKeys.forEach(m => {
+        const bal = Math.round(balances[m]);
+        if (bal < -0.5) debtors.push({ name: m, amount: -bal });
+        else if (bal > 0.5) creditors.push({ name: m, amount: bal });
+      });
+
+      debtors.sort((a, b) => b.amount - a.amount);
+      creditors.sort((a, b) => b.amount - a.amount);
+
+      const transferInstructions = [];
+      let d = 0, c = 0;
+
+      while (d < debtors.length && c < creditors.length) {
+        const settleAmt = Math.min(debtors[d].amount, creditors[c].amount);
+        if (settleAmt > 0) {
+          transferInstructions.push(`
+            <div class="flex justify-between items-center bg-white/70 dark:bg-gray-800/80 px-2.5 py-1.5 rounded-md border border-blue-100 dark:border-gray-700">
+              <span><b>${debtors[d].name}</b> ➔ 轉給 <b>${creditors[c].name}</b></span>
+              <span class="font-bold text-blue-600 dark:text-blue-400">NT$ ${Math.round(settleAmt).toLocaleString()}</span>
+            </div>
+          `);
+        }
+
+        debtors[d].amount -= settleAmt;
+        creditors[c].amount -= settleAmt;
+
+        if (debtors[d].amount < 0.5) d++;
+        if (creditors[c].amount < 0.5) c++;
+      }
+
+      const transfersEl = document.getElementById("settlementTransfers");
+      if (transferInstructions.length > 0) {
+        transfersEl.innerHTML = `
+          <div class="font-semibold text-blue-900 dark:text-blue-200 mb-1.5 flex items-center gap-1">
+            <span>💡 最少轉帳平帳指引：</span>
+          </div>
+          <div class="space-y-1">${transferInstructions.join("")}</div>
+        `;
+        transfersEl.classList.remove("hidden");
+      } else {
+        transfersEl.innerHTML = `<div class="text-gray-400 dark:text-gray-500 text-center py-0.5">🎉 所有分帳已完全打平，無須轉帳！</div>`;
+        transfersEl.classList.remove("hidden");
       }
     }
 
-    // --- 載入與操作 ---
+    // 載入資料
     async function loadRecords() {
       const pwd = getPassword();
       const listEl = document.getElementById("recordList");
@@ -431,6 +494,7 @@
       if (!pwd) {
         listEl.innerHTML = `<p class="text-amber-600 dark:text-amber-400 text-center text-sm py-4">🔒 請輸入密碼以載入資料</p>`;
         grid.innerHTML = `<div class="col-span-full text-gray-400 dark:text-gray-500 py-1">請先解鎖以查看結算金額</div>`;
+        document.getElementById("settlementTransfers").innerHTML = "";
         return;
       }
 
@@ -443,6 +507,7 @@
         if (data.error === "AUTH_FAILED") {
           listEl.innerHTML = `<p class="text-red-500 dark:text-red-400 text-center text-sm py-4">❌ 密碼錯誤，無法讀取資料</p>`;
           grid.innerHTML = `<div class="col-span-full text-red-400 py-1">密碼錯誤</div>`;
+          document.getElementById("settlementTransfers").innerHTML = "";
           return;
         }
 
@@ -457,7 +522,7 @@
         cachedRecords.forEach(item => {
           const isExp = item.type === "expense";
           const row = document.createElement("div");
-          row.className = "p-3 bg-gray-50 dark:bg-gray-700/60 rounded-xl border border-gray-100 dark:border-gray-700 text-xs flex justify-between items-start";
+          row.className = "p-3 bg-gray-50 dark:bg-gray-750 dark:bg-gray-700/60 rounded-xl border border-gray-100 dark:border-gray-700 text-xs flex justify-between items-start";
           row.innerHTML = `
             <div>
               <div class="font-bold text-sm text-gray-800 dark:text-gray-100">${item.title}</div>
@@ -482,18 +547,24 @@
       }
     }
 
+    // 新增紀錄
     document.getElementById("recordForm").addEventListener("submit", async (e) => {
       e.preventDefault();
       const pwd = getPassword();
       if (!pwd) return alert("請先在上方輸入密碼解鎖！");
+
+      const type = document.getElementById("type").value;
+      const selectedMembers = Array.from(document.querySelectorAll(".member-cb:checked")).map(cb => cb.value);
+
+      if (type === "expense" && selectedMembers.length === 0) {
+        return alert("請至少勾選一位分攤成員！");
+      }
 
       const btn = document.getElementById("submitBtn");
       btn.disabled = true;
       btn.textContent = "儲存中...";
 
       const { rate, twd } = updateTwdPreview();
-      const type = document.getElementById("type").value;
-      const selectedMembers = Array.from(document.querySelectorAll(".member-cb:checked")).map(cb => cb.value);
 
       const payload = {
         password: pwd,
