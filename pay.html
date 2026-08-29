@@ -3,9 +3,9 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>雲端全能分帳記帳</title>
+  <title>雲端全能分帳記帳系統</title>
   
-  <link rel="manifest" href="data:application/manifest+json;base64,eyJuYW1lIjoi6Zuy56uv5YWo6IO95YiG5biz6KiY5biz57O757WxIiwic2hvcnRfbmFtZSI6IumZvueuuKiY5bizIiwiZGVzY3JpcHRpb24iOiLmlK/mjIjlhb5Lq65YiG5biz44CB5aSa5bmj5Yil44CB6KiY5biz5ZyW6aSF5ZyW44CBSlBXRU9DUiDlm77ljZrlpKrlpKrlpKoiLCJzdGFydF91cmwiOiIuLyIsImRpc3BsYXkiOiJzdGFuZGFsb25lIiwiYmFja2dyb3VuZF9jb2xvciI6IiMxMTE4MjciLCJ0aGVtZV9jb2xvciI6IiMyNTYzZWIiLCJpY29ucyI6W3sic3JjIjoiaHR0cHM6Ly9jZG4taWNvbnMtcG5nLmZsYXRpY29uLmNvbS81MTIvMjkzNi8yOTM2NzU4LnBuZyIsInNpemVzIjoiMTkyeDE5MiIsInR5cGUiOiJpbWFnZS9wbmciLCJwdXJwb3NlIjoiYW55IG1hc2thYmxlIn0seyJzcmMiOiJodHRwczovL2Nkbi1pY29ucy1wbmcuZmxhdGljb24uY29tLzUxMi8yOTM2LDI5MzY3NTgucG5nIiwic2l6ZXMiOiI1MTJ4NTEyIiwidHlwZSI6ImltYWdlL3BuZyIsInB1cnBvc2UiOiJhbnkgbWFza2FibGUifV1fQ==">
+  <link rel="manifest" href="data:application/manifest+json;base64,eyJuYW1lIjoi6Zuy56uv5YWo6IO95YiG5biz6KiY5biz57O757WxIiwic2hvcnRfbmFtZSI6IumZvueuuKiY5bizIiwiZGVzY3JpcHRpb24iOiLmlK/mjIjlhb5Lq65YiG5biz44CB5aSa5bmj5Yil44CB6KiY5biz5ZyW6aSF5ZyW44CBSlBXRU9DUiDlm77ljZrlpKrlpKrlpKoiLCJzdGFydF91cmwiOiIuLyIsImRpc3BsYXkiOiJzdGFuZGFsb25lIiwiYmFja2dyb3VuZF9jb2xvciI6IiMxMTE4MjciLCJ0aGVtZV9jb2xvciI6IiMyNTYzZWIiLCJpY29ucyI6W3sic3JjIjoiaHR0cHM6Ly9jZG4taWNvbnMtcG5nLmZsYXRpY29uLmNvbS81MTIvMjkzNi8yOTM2NzU4LnBuZyIsInNpemVzIjoiMTkyeDE5MiIsInR5cGUiOiJpbWFnZS9wbmciLCJwdXJwb3NlIjoiYW55IG1hc2thYmxlIn0seyJzcmMiOiiaHR0cHM6Ly9jZG4taWNvbnMtcG5nLmZsYXRpY29uLmNvbS81MTIvMjkzNi8yOTM2NzU4LnBuZyIsInNpemVzIjoiNTEyeDUxMiIsInR5cGUiOiJpbWFnZS9wbmciLCJwdXJwb3NlIjoiYW55IG1hc2thYmxlIn1dfQ==">
   <meta name="theme-color" content="#3b82f6">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -139,25 +139,31 @@
     <!-- 記帳輸入表單區 -->
     <div id="recordFormBox" class="bg-white/80 dark:bg-gray-800/90 border border-gray-100 dark:border-gray-700 shadow-sm rounded-2xl p-4 space-y-4">
       
-      <!-- 編輯模式提醒橫幅 (預設隱藏) -->
+      <!-- 編輯模式提醒橫幅 -->
       <div id="editModeBanner" class="hidden flex items-center justify-between bg-amber-500 text-white px-3 py-1.5 rounded-xl text-xs font-bold shadow-sm">
-        <span>✏️ 目前正在編輯紀錄 ID: <span id="editingIdText" class="font-mono"></span></span>
-        <button type="button" onclick="cancelEdit()" class="bg-black/20 hover:bg-black/30 px-2 py-0.5 rounded text-[11px] transition">取消編輯</button>
+        <span>✏️ 正在編輯紀錄 ID: <span id="editingIdText" class="font-mono"></span></span>
+        <button type="button" onclick="cancelEdit()" class="bg-black/20 hover:bg-black/30 px-2 py-0.5 rounded text-[11px] transition">取消</button>
       </div>
 
-      <!-- AI 輔助輸入 -->
-      <div class="flex items-center justify-between bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-slate-800 dark:to-indigo-900/30 p-2.5 rounded-xl border border-blue-100/50 dark:border-indigo-800/50 text-xs">
-        <span class="font-bold text-blue-900 dark:text-blue-200 flex items-center gap-1">✨ <span>智慧記帳</span></span>
-        <div class="flex items-center gap-2">
-          <button type="button" id="voiceInputBtn" class="flex items-center gap-1 bg-white/80 dark:bg-gray-700 shadow-sm border border-gray-200/50 dark:border-gray-600 px-2.5 py-1.5 rounded-lg text-blue-600 dark:text-blue-300 font-bold hover:scale-105 transition">
-            🎤 語音
-          </button>
-          <label class="flex items-center gap-1 bg-white/80 dark:bg-gray-700 shadow-sm border border-gray-200/50 dark:border-gray-600 px-2.5 py-1.5 rounded-lg text-emerald-600 dark:text-emerald-400 font-bold cursor-pointer hover:scale-105 transition">
-            📷 辨識收據
-            <input type="file" id="ocrReceiptInput" accept="image/*" class="hidden">
-          </label>
+      <!-- AI 輔助與快速記帳範本 -->
+      <div class="space-y-2">
+        <div class="flex items-center justify-between bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-slate-800 dark:to-indigo-900/30 p-2.5 rounded-xl border border-blue-100/50 dark:border-indigo-800/50 text-xs">
+          <span class="font-bold text-blue-900 dark:text-blue-200 flex items-center gap-1">✨ <span>智慧記帳</span></span>
+          <div class="flex items-center gap-2">
+            <button type="button" id="voiceInputBtn" class="flex items-center gap-1 bg-white/80 dark:bg-gray-700 shadow-sm border border-gray-200/50 dark:border-gray-600 px-2.5 py-1.5 rounded-lg text-blue-600 dark:text-blue-300 font-bold hover:scale-105 transition">🎤 語音</button>
+            <label class="flex items-center gap-1 bg-white/80 dark:bg-gray-700 shadow-sm border border-gray-200/50 dark:border-gray-600 px-2.5 py-1.5 rounded-lg text-emerald-600 dark:text-emerald-400 font-bold cursor-pointer hover:scale-105 transition">📷 辨識收據<input type="file" id="ocrReceiptInput" accept="image/*" class="hidden"></label>
+          </div>
+        </div>
+        
+        <!-- 🌟 常用項目快速記帳範本列 -->
+        <div class="flex gap-1.5 overflow-x-auto pb-1 text-xs">
+          <button type="button" onclick="applyTemplate('超商咖啡', '餐飲', 65, 'TWD')" class="flex-shrink-0 bg-gray-50 dark:bg-gray-700/60 border border-gray-200 dark:border-gray-600 px-2.5 py-1 rounded-xl hover:bg-blue-50 dark:hover:bg-gray-600 transition">☕ 咖啡 $65</button>
+          <button type="button" onclick="applyTemplate('地鐵交通', '交通', 200, 'TWD')" class="flex-shrink-0 bg-gray-50 dark:bg-gray-700/60 border border-gray-200 dark:border-gray-600 px-2.5 py-1 rounded-xl hover:bg-blue-50 dark:hover:bg-gray-600 transition">🚆 交通 $200</button>
+          <button type="button" onclick="applyTemplate('超商零食', '生活', 150, 'TWD')" class="flex-shrink-0 bg-gray-50 dark:bg-gray-700/60 border border-gray-200 dark:border-gray-600 px-2.5 py-1 rounded-xl hover:bg-blue-50 dark:hover:bg-gray-600 transition">🛒 超商 $150</button>
+          <button type="button" onclick="applyTemplate('居酒屋晚餐', '餐飲', 3500, 'JPY')" class="flex-shrink-0 bg-gray-50 dark:bg-gray-700/60 border border-gray-200 dark:border-gray-600 px-2.5 py-1 rounded-xl hover:bg-blue-50 dark:hover:bg-gray-600 transition">🍺 居酒屋 ¥3500</button>
         </div>
       </div>
+
       <div id="aiStatusNotice" class="hidden text-center text-xs text-blue-600 bg-blue-50 dark:bg-blue-900/30 dark:text-blue-300 font-bold py-1.5 rounded-lg animate-pulse"></div>
 
       <!-- 欄位輸入區 -->
@@ -282,7 +288,7 @@
     let cachedRecords = [];
     let currentSplitMode = "equal";
     let uploadedReceiptBase64 = "";
-    let editingRecordId = null; // 🌟 追蹤目前是否處於編輯狀態
+    let editingRecordId = null;
 
     function escapeHtml(str) {
       if (!str) return "";
@@ -354,9 +360,18 @@
 
     function getPassword() { return document.getElementById("accessPassword").value.trim() || localStorage.getItem("app_pwd") || ""; }
 
-    document.getElementById("sheetSelector").addEventListener("change", (e) => {
-      currentSheet = e.target.value; localStorage.setItem("app_active_sheet", currentSheet); loadRecords();
+    // 🌟 多帳本即時切換與防護
+    document.getElementById("sheetSelector").addEventListener("change", async (e) => {
+      const newSheet = e.target.value;
+      if (newSheet === currentSheet) return;
+      if (editingRecordId && !confirm("目前正在編輯紀錄，切換帳本將會取消編輯，是否繼續？")) {
+        e.target.value = currentSheet; return;
+      }
+      currentSheet = newSheet; localStorage.setItem("app_active_sheet", currentSheet);
+      if (typeof cancelEdit === "function") cancelEdit();
+      await loadRecords();
     });
+
     document.getElementById("addSheetBtn").addEventListener("click", () => {
       const name = prompt("新增帳本名稱（例：2026日本行）：");
       if (name && name.trim()) {
@@ -450,7 +465,7 @@
 
     function renderMemberControls() {
       document.getElementById("payer").innerHTML = members.map(m => `<option value="${escapeHtml(m)}">${escapeHtml(m)}</option>`).join("");
-      document.getElementById("membersCheckboxes").innerHTML = members.map(m => `<label class="flex items-center gap-1.5 cursor-pointer bg-white dark:bg-gray-700 px-2.5 py-1.5 rounded-lg border border-gray-200 dark:border-gray-600 shadow-sm"><input type="checkbox" value="${escapeHtml(m)}" checked class="member-cb text-blue-500 focus:ring-blue-500 h-4 w-4 rounded"> <span>${escapeHtml(m)}</span></label>`).join("");
+      document.getElementById("membersCheckboxes").innerHTML = members.map(m => `<label class="flex items-center gap-1.5 cursor-pointer bg-white dark:bg-gray-700 px-2.5 py-1.5 rounded-lg border border-gray-200 dark:border-gray-600 shadow-sm active:scale-95 transition"><input type="checkbox" value="${escapeHtml(m)}" checked class="member-cb text-blue-500 focus:ring-blue-500 h-4 w-4 rounded"> <span>${escapeHtml(m)}</span></label>`).join("");
       document.getElementById("customMembersList").innerHTML = members.map(m => `<div class="flex items-center gap-2 bg-white dark:bg-gray-700/80 p-2 rounded-xl border border-gray-100 dark:border-gray-600 shadow-sm"><span class="w-12 font-bold text-gray-700 dark:text-gray-200 truncate">${escapeHtml(m)}</span><div class="relative flex-1"><span class="absolute left-2 top-1.5 text-gray-400 font-mono">$</span><input type="number" step="any" min="0" data-member="${escapeHtml(m)}" class="custom-split-input w-full pl-6 pr-2 py-1 border border-gray-200 dark:border-gray-600 rounded-lg bg-gray-50 dark:bg-gray-800 text-right font-mono focus:ring-2 focus:ring-blue-500 outline-none"></div><button type="button" onclick="autoFillDifference('${escapeHtml(m)}')" class="bg-blue-50 dark:bg-blue-900/50 text-blue-600 dark:text-blue-300 font-bold px-2 py-1 rounded-lg hover:bg-blue-100 active:scale-95 transition">補滿</button></div>`).join("");
       document.querySelectorAll(".custom-split-input").forEach(i => i.addEventListener("input", checkCustomSplitTotal));
       document.getElementById("memberTagList").innerHTML = members.map((m, idx) => `<span class="inline-flex items-center gap-1 bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 px-2.5 py-1 rounded-lg shadow-sm font-medium text-gray-700 dark:text-gray-200">${escapeHtml(m)}<button type="button" onclick="removeMember(${idx})" class="text-red-400 hover:text-red-600 text-lg ml-0.5 leading-none">×</button></span>`).join("");
@@ -469,6 +484,16 @@
     document.getElementById("type").addEventListener("change", (e) => document.getElementById("splitSection").style.display = e.target.value === "expense" ? "block" : "none");
     document.getElementById("currency").addEventListener("change", updateTwdPreview);
     document.getElementById("originalAmount").addEventListener("input", updateTwdPreview);
+
+    // 🌟 常用項目快速記帳範本
+    window.applyTemplate = function(title, category, amount, currency) {
+      document.getElementById("title").value = title;
+      document.getElementById("category").value = category;
+      document.getElementById("currency").value = currency;
+      document.getElementById("originalAmount").value = amount;
+      updateTwdPreview();
+      showToast(`⚡ 已套用範本：${title}`, "info");
+    };
 
     async function fetchExchangeRates() {
       try {
@@ -570,7 +595,6 @@
       tEl.innerHTML = tInst.length ? `<div class="font-bold text-blue-900 dark:text-blue-300 mb-2">💡 最佳平帳轉帳路徑：</div><div class="space-y-1.5">${tInst.join("")}</div>` : `<div class="text-gray-400 text-center font-medium">🎉 帳務已完全打平</div>`;
     }
 
-    // 🌟 點擊歷史紀錄中的「編輯」按鈕，將資料載入表單
     window.startEditRecord = function(id) {
       const item = cachedRecords.find(r => r.id === id);
       if (!item) return;
@@ -580,7 +604,6 @@
       document.getElementById("editModeBanner").classList.remove("hidden");
       document.getElementById("saveBtnText").textContent = "儲存修改";
 
-      // 填入表單
       document.getElementById("type").value = item.type || "expense";
       document.getElementById("category").value = item.category || "其他";
       document.getElementById("title").value = item.title || "";
@@ -591,8 +614,6 @@
       if (item.type === "expense") {
         document.getElementById("splitSection").style.display = "block";
         document.getElementById("payer").value = item.payer || members[0];
-        
-        // 判斷是否為自訂分攤格式
         const rawList = item.splitMembers || [];
         const isCustom = rawList.some(s => String(s).includes(":"));
         if (isCustom) {
@@ -607,9 +628,7 @@
           });
         } else {
           setSplitMode("equal");
-          document.querySelectorAll(".member-cb").forEach(cb => {
-            cb.checked = rawList.includes(cb.value);
-          });
+          document.querySelectorAll(".member-cb").forEach(cb => { cb.checked = rawList.includes(cb.value); });
         }
       }
 
@@ -639,7 +658,7 @@
         const st = Object.entries(shares).map(([n,a])=>`${n}($${Math.round(a)})`).join(", ");
         const r = document.createElement("div");
         r.className = `p-3.5 bg-white/80 dark:bg-gray-800/80 rounded-2xl shadow-sm border ${isExp?'border-gray-100 dark:border-gray-700':'border-emerald-100 dark:border-emerald-900/50'} text-xs flex justify-between items-start gap-2`;
-        r.innerHTML = `<div class="flex-1 space-y-1.5"><div class="flex items-center gap-2"><span class="px-2 py-0.5 rounded-lg text-[10px] font-bold ${isExp?'bg-blue-100 text-blue-700 dark:bg-blue-900/50':'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/50'}">${escapeHtml(item.category||(isExp?'支出':'收入'))}</span><span class="font-bold text-sm text-gray-900 dark:text-gray-100">${escapeHtml(item.title)}</span>${item.receiptImage?`<button onclick="openImageModal('${item.receiptImage}')" class="text-[10px] bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 rounded px-1.5 py-0.5 border border-gray-200 dark:border-gray-600">📷照</button>`:''}</div><div class="text-gray-500 dark:text-gray-400 font-mono">${escapeHtml(item.date)} · ${isExp?`<b>${escapeHtml(item.payer)}</b> 付`:'個人'}</div>${isExp&&st?`<div class="text-gray-400 dark:text-gray-500 truncate text-[11px]">${escapeHtml(st)}</div>`:''}</div><div class="text-right flex flex-col items-end gap-1.5"><div class="font-mono font-bold text-base ${isExp?'text-gray-900 dark:text-white':'text-emerald-600 dark:text-emerald-400'}">${item.currency!=='TWD'?`<span class="text-[10px] text-gray-400 font-normal block -mb-1">${escapeHtml(item.currency)}${item.originalAmount}</span>`:''}$${(item.twdAmount||0).toLocaleString()}</div><div class="flex items-center gap-1.5"><button onclick="startEditRecord('${escapeHtml(item.id)}')" class="text-[10px] font-bold text-blue-500 hover:text-blue-700 bg-blue-50 dark:bg-blue-900/20 px-2 py-1 rounded-lg">編輯</button><button onclick="deleteRecord('${escapeHtml(item.id)}')" class="text-[10px] font-bold text-red-400 hover:text-red-600 bg-red-50 dark:bg-red-900/20 px-2 py-1 rounded-lg">刪除</button></div></div>`;
+        r.innerHTML = `<div class="flex-1 space-y-1.5"><div class="flex items-center gap-2"><span class="px-2 py-0.5 rounded-lg text-[10px] font-bold ${isExp?'bg-blue-100 text-blue-700 dark:bg-blue-900/50':'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/50'}">${escapeHtml(item.category||(isExp?'支出':'收入'))}</span><span class="font-bold text-sm text-gray-900 dark:text-gray-100">${escapeHtml(item.title)}</span>${item.receiptImage?`<button onclick="openImageModal('${item.receiptImage}')" class="text-[10px] bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 rounded px-1.5 py-0.5 border border-gray-200 dark:border-gray-600">📷照</button>`:''}</div><div class="text-gray-500 dark:text-gray-400 font-mono">${escapeHtml(item.date)} · ${isExp?`<b>${escapeHtml(item.payer)}</b> 付`:'個人'}</div>${isExp&&st?`<div class="text-gray-400 dark:text-gray-500 truncate text-[11px]">${escapeHtml(st)}</div>`:''}</div><div class="text-right flex flex-col items-end gap-1.5"><div class="font-mono font-bold text-base ${isExp?'text-gray-900 dark:text-white':'text-emerald-600 dark:text-emerald-400'}">${item.currency!=='TWD'?`<span class="text-[10px] text-gray-400 font-normal block -mb-1">${escapeHtml(item.currency)}${item.originalAmount}</span>`:''}$${(item.twdAmount||0).toLocaleString()}</div><div class="flex items-center gap-1.5"><button onclick="startEditRecord('${escapeHtml(item.id)}')" class="text-[10px] font-bold text-blue-500 hover:text-blue-700 bg-blue-50 dark:bg-blue-900/20 px-2 py-1 rounded-lg active:scale-95">編輯</button><button onclick="deleteRecord('${escapeHtml(item.id)}')" class="text-[10px] font-bold text-red-400 hover:text-red-600 bg-red-50 dark:bg-red-900/20 px-2 py-1 rounded-lg active:scale-95">刪除</button></div></div>`;
         listEl.appendChild(r);
       });
     }
@@ -662,7 +681,7 @@
       } catch(e) { showToast(`❌ 連線失敗: ${e.message}`, "error"); }
     }
 
-    // 🌟 儲存 / 修改紀錄邏輯
+    // 🌟 儲存 / 修改紀錄邏輯（支援後端覆蓋更新）
     document.getElementById("saveRecordBtn").addEventListener("click", async () => {
       const pwd = getPassword(); if(!pwd){ showToast("請先輸入密碼解鎖", "error"); document.getElementById("accessPassword").focus(); return; }
       const title = document.getElementById("title").value.trim(); const origAmt = parseFloat(document.getElementById("originalAmount").value);
@@ -694,7 +713,7 @@
       const isEditing = Boolean(editingRecordId);
       const targetId = isEditing ? editingRecordId : generateUUID();
       const payloadRec = {
-        id: targetId, type: type, category: document.getElementById("category").value, title: title,
+        id: targetId, action: isEditing ? "update" : "append", type: type, category: document.getElementById("category").value, title: title,
         originalAmount: origAmt, currency: document.getElementById("currency").value, rate: rate, twdAmount: twd,
         payer: type==="expense"?document.getElementById("payer").value:"", splitMembers: splitData,
         receiptImage: uploadedReceiptBase64 || (isEditing ? (cachedRecords.find(r=>r.id===targetId)?.receiptImage || "") : ""), 
@@ -714,15 +733,14 @@
       showToast(isEditing ? "⏳ 更新雲端中..." : "⏳ 雲端寫入中...", "info");
       
       try {
-        const actionType = isEditing ? "update" : "append"; // 若後端以 append 支援覆蓋相同 ID，或直接傳送
-        const res = await fetch(API_URL, { method: "POST", headers: {"Content-Type":"text/plain"}, body: JSON.stringify({...payloadRec, action: actionType, password:pwd, sheetName:currentSheet}) });
+        const res = await fetch(API_URL, { method: "POST", headers: {"Content-Type":"text/plain"}, body: JSON.stringify({...payloadRec, password:pwd, sheetName:currentSheet}) });
         const result = await res.json();
-        if(result.status==="success" || result.status==="updated" || result.status==="deleted") {
+        if(result.status==="success" || result.status==="updated") {
           showToast(isEditing ? "✅ 修改已同步至雲端" : "✅ 已安全儲存至雲端");
         } else throw new Error(result.message);
       } catch(e) {
         showToast("❌ 雲端同步失敗", "error"); console.error(e);
-        loadRecords(); // 失敗時重新從雲端抓取還原
+        loadRecords();
       }
     });
 
@@ -737,6 +755,95 @@
         showToast("✅ 已從雲端刪除");
       } catch(e) { cachedRecords=backup; renderRecordsList(); renderSettlement(cachedRecords); showToast("❌ 刪除失敗", "error"); }
     };
+
+    // 匯出與匯入功能
+    document.getElementById("exportCsvBtn").addEventListener("click", () => {
+      if (cachedRecords.length === 0) return alert("目前沒有可匯出的資料或尚未解鎖！");
+      const headers = ["日期", "類型", "類別", "項目", "原始金額", "幣別", "匯率", "折合台幣", "付款人", "分攤成員/金額"];
+      const rows = cachedRecords.map(r => [
+        `"${r.date}"`, `"${r.type === 'expense' ? '支出' : '收入'}"`, `"${r.category || '其他'}"`, `"${(r.title || '').replace(/"/g, '""')}"`,
+        r.originalAmount, `"${r.currency}"`, r.rate, r.twdAmount, `"${r.payer || ''}"`, `"${(r.splitMembers || []).join(';')}"`
+      ]);
+      const csvContent = "\uFEFF" + [headers.join(","), ...rows.map(e => e.join(","))].join("\n");
+      downloadBlob(csvContent, `記帳明細_${currentSheet}_${getFormattedDate()}.csv`, "text/csv;charset=utf-8;");
+    });
+
+    document.getElementById("exportTxtBtn").addEventListener("click", () => {
+      if (cachedRecords.length === 0) return alert("目前沒有可匯出的資料或尚未解鎖！");
+      let txtContent = `=== 記帳備份【${currentSheet}】(${getFormattedDate()}) ===\n\n`;
+      cachedRecords.forEach((r, i) => {
+        txtContent += `【#${i + 1}】${r.date} | [${r.category || '其他'}] ${r.type === 'expense' ? '支出' : '收入'} - ${r.title}\n`;
+        txtContent += `  金額: ${r.currency} ${r.originalAmount} (折合 NT$ ${r.twdAmount})\n`;
+        if (r.type === 'expense') {
+          const shares = parseShares(r);
+          const shareText = Object.entries(shares).map(([n, a]) => `${n}($${Math.round(a)})`).join(", ");
+          txtContent += `  付款人: ${r.payer || '無'} | 分攤者: ${shareText || '全體'}\n`;
+        }
+        txtContent += `----------------------------------------\n`;
+      });
+      downloadBlob(txtContent, `記帳明細_${currentSheet}_${getFormattedDate()}.txt`, "text/plain;charset=utf-8;");
+    });
+
+    function downloadBlob(content, filename, mimeType) {
+      const blob = new Blob([content], { type: mimeType });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a"); a.href = url; a.download = filename;
+      document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(url);
+    }
+
+    function getFormattedDate() { return new Date().toISOString().split("T")[0]; }
+
+    document.getElementById("importBtn").addEventListener("click", async () => {
+      const pwd = getPassword();
+      if (!pwd) return alert("請先輸入密碼解鎖後再進行匯入！");
+      const fileInput = document.getElementById("importFileInput");
+      if (!fileInput.files.length) return alert("請先選擇要匯入的 CSV 或 TXT 檔案！");
+
+      const file = fileInput.files[0];
+      const text = await file.text();
+      let itemsToImport = [];
+
+      try {
+        if (file.name.endsWith(".csv")) {
+          const lines = text.split(/\r?\n/).filter(line => line.trim() !== "");
+          if (lines.length <= 1) return alert("CSV 檔案內無有效資料！");
+          for (let i = 1; i < lines.length; i++) {
+            const cols = lines[i].split(",").map(c => c.replace(/^"|"$/g, "").trim());
+            if (cols.length >= 8) {
+              itemsToImport.push({
+                date: cols[0], type: cols[1] === "收入" ? "income" : "expense", category: cols[2] || "其他", title: cols[3] || "未命名",
+                originalAmount: parseFloat(cols[4]) || 0, currency: cols[5] || "TWD", rate: parseFloat(cols[6]) || 1, twdAmount: parseFloat(cols[7]) || 0,
+                payer: cols[8] || "", splitMembers: cols[9] ? cols[9].split(";") : []
+              });
+            }
+          }
+        } else {
+          const blocks = text.split("----------------------------------------");
+          blocks.forEach(b => {
+            const titleMatch = b.match(/】(.+?)\s*\|\s*\[?(.*?)\]?\s*(支出|收入)\s*-\s*(.+)/);
+            const amountMatch = b.match(/金額:\s*([A-Z]+)\s*([\d.]+)\s*\(折合 NT\$\s*([\d.]+)\)/);
+            const payerMatch = b.match(/付款人:\s*(.*?)\s*\|\s*分攤者:\s*(.*)/);
+            if (titleMatch && amountMatch) {
+              itemsToImport.push({
+                date: titleMatch[1].trim(), category: titleMatch[2].trim() || "其他", type: titleMatch[3].trim() === "收入" ? "income" : "expense",
+                title: titleMatch[4].trim(), currency: amountMatch[1].trim(), originalAmount: parseFloat(amountMatch[2]) || 0,
+                twdAmount: parseFloat(amountMatch[3]) || 0, rate: (parseFloat(amountMatch[3]) / (parseFloat(amountMatch[2]) || 1)) || 1,
+                payer: payerMatch ? payerMatch[1].trim() : "", splitMembers: payerMatch && payerMatch[2] ? payerMatch[2].split(",").map(s => s.trim()) : []
+              });
+            }
+          });
+        }
+
+        if (itemsToImport.length === 0) return alert("無法解析檔案內容，請確認檔案格式是否相容！");
+        if (!confirm(`已成功解析 ${itemsToImport.length} 筆紀錄，確定要全部匯入到【${currentSheet}】嗎？`)) return;
+
+        showToast("⏳ 匯入中...", "info");
+        const res = await fetch(API_URL, { method: "POST", headers: { "Content-Type": "text/plain" }, body: JSON.stringify({ action: "batch_import", password: pwd, sheetName: currentSheet, items: itemsToImport }) });
+        const result = await res.json();
+        if (result.status === "success") { showToast(`✅ 成功匯入 ${result.count} 筆資料`); fileInput.value = ""; await loadRecords(); }
+        else { showToast("❌ 匯入失敗", "error"); }
+      } catch (err) { showToast("❌ 檔案解析錯誤", "error"); }
+    });
 
     document.getElementById("authBtn").addEventListener("click", loadRecords);
     document.getElementById("accessPassword").addEventListener("keydown", e => { if (e.key === "Enter") loadRecords(); });
