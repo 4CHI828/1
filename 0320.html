@@ -419,7 +419,6 @@
 
     const HIGH_PITCH_SONGS = ["煎熬", "離歌", "我的美麗", "左手指月", "離不開你", "給你一點顏色", "煙火裡的塵埃"];
 
-    // 解析直接從陣列匯入的新歌單字串 (使用您最新提供的 400+ 首)
     const inputList = [
         "隊長 - 11", "鄧紫棋 - 倒數", "鄧紫棋 - 句號", "王力宏 - 唯一", "鄧紫棋 - 透明", "鄧紫棋 - 泡沫", 
         "鄧紫棋 - 桃花諾", "周杰倫 - 龍捲風", "鄧紫棋 - A.I.N.Y.", "Beyond - 海闊天空", "鄧紫棋 - 很久以後", 
@@ -437,7 +436,7 @@
         "宋冬野 - 莉莉安", "徐佳瑩 - 身騎白馬", "徐佳瑩 - 失落沙洲", "徐佳瑩 - 到此為止", "徐佳瑩 - 行走的魚", 
         "田馥甄 - 不醉不會", "蘇打綠 - 我好想你", "張韶涵 - 阿刁", "張韶涵 - 歐若拉", "毛不易 - 無名的人", 
         "張韶涵 - 淋雨一直走", "GALA - 追夢赤子心", "張韶涵 - 隱形的翅膀", "張紫豪 - 悄悄", "薛之謙 - 平庸", 
-        "張靚穎 - 畫心", "張靚穎 - 天下無雙", "張靚穎 - 只為你等候", "范瑋琪 - 到不了", "范瑋琪&張韶涵 - 如果的事", 
+        "張靚穎 - 畫心", "張靚穎 - 天下無雙", "張靚穎 - 只為你著迷", "范瑋琪 - 到不了", "范瑋琪&張韶涵 - 如果的事", 
         "范瑋琪 - 最初的夢想", "范瑋琪 - 一個像夏天一個像秋天", "王菲 - 傳奇", "王菲 - 如願", "王菲 - 匆匆那年", 
         "王菲 - 百年孤寂", "陳奕迅&王菲 - 因為愛情", "王菲 - 世界贈予我的", "蔡健雅 - 紫", "蔡健雅 - 空白格", 
         "蔡健雅 - 紅色高跟鞋", "蔡健雅 - 越來越不懂", "蔡健雅 - 達爾文", "蔡健雅 - 無底洞", "周杰倫 - 楓", 
@@ -544,7 +543,6 @@
         "顏人中 - 夏夜最後的煙火", "蘇運瑩 - 時侯"
     ];
 
-    // 利用 Set 去除重複項目（以 歌手-歌名 作為唯一判斷依據）
     const uniqueMap = new Map();
     inputList.forEach(item => {
         const parts = item.split(" - ");
@@ -820,7 +818,6 @@
         }
     }
 
-    // 手動抽歌控制邏輯
     let drawInterval = null;
     let isDrawing = false;
 
@@ -862,13 +859,11 @@
             return;
         }
 
-        // 開始無限滾動動畫
         isDrawing = true;
         modalTitle.innerText = d.modalDrawing;
         modalBadge.style.display = 'none';
         modalMetaBox.style.display = 'none';
         
-        // 切換按鈕狀態：顯示「停！」，隱藏結果按鈕
         stopBtn.style.display = 'block';
         resultActions.style.display = 'none';
         
@@ -878,10 +873,9 @@
             const tempSong = rawMusicData[Math.floor(Math.random() * rawMusicData.length)];
             resSong.innerText = convertText(tempSong.song);
             resArtist.innerText = convertText(tempSong.artist);
-        }, 60); // 快速閃爍切換
+        }, 60); 
     }
 
-    // 點擊「停！」按鈕邏輯
     document.getElementById('stopBtn').addEventListener('click', () => {
         if (!isDrawing) return;
         isDrawing = false;
@@ -890,7 +884,6 @@
         const d = LANG_DICT[State.lang];
         const finalSong = rawMusicData[Math.floor(Math.random() * rawMusicData.length)];
         
-        // 紀錄與結算
         State.drawCount += 1;
         localStorage.setItem('drawCount', State.drawCount);
         const nowStr = formatDateTime(new Date());
@@ -905,7 +898,6 @@
         if(State.drawHistory.length > 50) State.drawHistory.pop(); 
         localStorage.setItem('drawHistory', JSON.stringify(State.drawHistory));
         
-        // 更新 UI 顯示最終結果
         document.getElementById('resSong').innerText = "✨ " + convertText(finalSong.song) + " ✨";
         document.getElementById('resArtist').innerText = "🎤 " + convertText(finalSong.artist);
         
@@ -919,7 +911,6 @@
 
         document.getElementById('modalTitle').innerText = d.modalWon;
         
-        // 切換按鈕狀態：隱藏「停！」，顯示結果按鈕
         document.getElementById('stopBtn').style.display = 'none';
         document.getElementById('resultActions').style.display = 'flex';
         
@@ -931,7 +922,6 @@
     document.getElementById('retryBtn').addEventListener('click', () => startRandomDraw(true));
     document.getElementById('historyBtn').addEventListener('click', () => startRandomDraw(false));
     document.getElementById('closeModal').addEventListener('click', () => {
-        // 如果還在抽獎中卻關閉，則重置狀態
         if (isDrawing) {
             clearInterval(drawInterval);
             isDrawing = false;
