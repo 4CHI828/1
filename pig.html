@@ -293,8 +293,8 @@
             <div class="help-section">
                 <div class="help-section-title">🎲 命運轉盤</div>
                 <ul>
-                    <li>點選「隨機抽一首」，啟動 30 秒自動滾動動畫（同時展示歌曲與歌手/分類）。</li>
-                    <li>可隨時點選<strong>「⏹️ 停止抽歌」</strong>按鈕手動停下，或等待倒數結束。</li>
+                    <li>點選「隨機抽一首」，啟動 30 秒自動倒數滾動動畫（同時展示歌曲與歌手/分類）。</li>
+                    <li>可隨時點選<strong>「⏹️ 停止抽歌」</strong>按鈕手動停下，或等待 30 秒倒數結束。</li>
                     <li>抽中的歌曲會<strong style="color:#38ef7d;">自動加入</strong>待唱清單（含時間標記），並提供 YouTube 試聽按鈕！</li>
                 </ul>
                 <div class="help-tip">
@@ -338,7 +338,7 @@
         
         "三、治癒溫柔": ["夏天的風", "奇妙能力歌", "特別的人", "若是月亮還沒來", "大山", "不要怕", "慢慢", "這世間那麼多人", "去有風的地方", "秋風", "推開世界的門", "夢一場", "從前說", "旅行的意義", "我會等", "暮色迴響", "微風起", "遇見", "綠光", "天黑黑", "青花", "稻香", "知足", "溫柔", "無與倫比的美麗", "小情歌", "傳奇", "等你的季節"],
         
-        "四、獨立民謠": ["王昭君", "安和橋", "我記得", "程艾影", "理想", "我要你", "烏蘭巴托的夜"],
+        "四,獨立民謠": ["王昭君", "安和橋", "我記得", "程艾影", "理想", "我要你", "烏蘭巴托的夜"],
         
         "五、戲腔/古風": ["赤伶", "須盡歡", "身騎白馬", "壁上觀", "牽絲戲", "鴛鴦戲", "光亮", "探故知", "桃花諾", "青花瓷", "蘇州河", "天下", "醉清風", "半壺紗"],
         
@@ -391,15 +391,17 @@
         return `${year}/${month}/${day} ${hours}:${minutes}:${seconds}`;
     }
 
-    // ================= 最後更新時間 =================
+    // ================= 檔案存檔時間（顯示程式碼檔案最後修改時間） =================
     function updateLastUpdateTime() {
-        const now = new Date();
-        const year = now.getFullYear();
-        const month = now.getMonth() + 1;
-        const day = now.getDate();
-        const hours = String(now.getHours()).padStart(2, '0');
-        const minutes = String(now.getMinutes()).padStart(2, '0');
-        const timeStr = `${year} 年 ${month} 月 ${day} 日 ${hours}:${minutes}`;
+        const fileLastMod = new Date(document.lastModified);
+        const year = fileLastMod.getFullYear();
+        const month = fileLastMod.getMonth() + 1;
+        const day = fileLastMod.getDate();
+        const hours = String(fileLastMod.getHours()).padStart(2, '0');
+        const minutes = String(fileLastMod.getMinutes()).padStart(2, '0');
+        const seconds = String(fileLastMod.getSeconds()).padStart(2, '0');
+        
+        const timeStr = `${year} 年 ${month} 月 ${day} 日 ${hours}:${minutes}:${seconds}`;
         document.getElementById('updateTimeDisplay').textContent = timeStr;
     }
 
@@ -576,7 +578,7 @@
                 <div class="list-item-info">
                     <div class="list-item-name">${index + 1}. ${item.name}</div>
                     <div class="list-item-cat">
-                        <span>分類/歌手：${item.category}</span>
+                        <span>歌手/分類 : ${item.category}</span>
                         <span class="list-item-time">🕐 ${item.time || '未知時間'}</span>
                     </div>
                 </div>
@@ -631,7 +633,7 @@
         });
     }
 
-    // ================= 隨機抽歌（30秒動畫 + 手動停止按鈕 + 歌曲與歌手顯示） =================
+    // ================= 隨機抽歌（30秒動畫 + 秒數倒數 + 停止按鈕 + 歌曲與歌手顯示） =================
     function setupRandomizer() {
         const randomBtn = document.getElementById('randomBtn');
         const randomModal = document.getElementById('randomModal');
@@ -646,20 +648,19 @@
         function finalizeSong(selectedSong) {
             currentRandomSong = selectedSong;
             randomSongName.textContent = selectedSong.name;
-            randomSongCategory.textContent = `歌手/分類：${selectedSong.category}`;
+            randomSongCategory.textContent = `歌手/分類 : ${selectedSong.category}`;
             randomSongName.classList.add('shake');
 
             const addedSuccessfully = addToList(selectedSong.name, selectedSong.category);
 
             if (addedSuccessfully) {
-                randomSongCategory.innerHTML = `歌手/分類：${selectedSong.category} <br><span style="color: #38ef7d; font-weight: bold; font-size: 0.9rem;">🎉 已自動加入待唱清單（${getFormattedTime()}）！</span>`;
+                randomSongCategory.innerHTML = `歌手/分類 : ${selectedSong.category} <br><span style="color: #38ef7d; font-weight: bold; font-size: 0.9rem;">🎉 已自動加入待唱清單（${getFormattedTime()}）！</span>`;
             } else {
-                randomSongCategory.innerHTML = `歌手/分類：${selectedSong.category} <br><span style="color: #888; font-size: 0.9rem;">（這首歌已經在待唱清單裡啦）</span>`;
+                randomSongCategory.innerHTML = `歌手/分類 : ${selectedSong.category} <br><span style="color: #888; font-size: 0.9rem;">（這首歌已經在待唱清單裡啦）</span>`;
             }
 
             const ytSearchUrl = `https://www.youtube.com/results?search_query=${encodeURIComponent(selectedSong.name)}`;
             
-            // 顯示最終按鈕：再抽一次 & 立即試聽
             randomModalButtons.innerHTML = `
                 <button class="play-again-btn" id="playAgainBtn">🎲 再抽一次</button>
                 <a href="${ytSearchUrl}" class="listen-now-btn" id="listenNowBtn" target="_blank" rel="noopener noreferrer">🎵 立即試聽</a>
@@ -676,33 +677,29 @@
             randomModal.style.display = 'flex';
             randomSongName.classList.remove('shake');
             
-            // 顯示「停止抽歌」按鈕與倒數提示
             randomModalButtons.innerHTML = `
                 <button class="stop-spin-btn" id="stopSpinBtn">⏹️ 停止抽歌</button>
             `;
 
-            let timeLeft = 30; // 30秒自動倒數
+            let timeLeft = 30; // 30秒倒數
             randomSongCategory.textContent = `🎲 高速旋轉中... (剩餘 ${timeLeft} 秒)`;
 
-            // 滾動歌名與分類
+            // 滾動歌名與歌手分類
             spinInterval = setInterval(() => {
                 const rIndex = Math.floor(Math.random() * allSongsFlat.length);
                 const currentObj = allSongsFlat[rIndex];
                 randomSongName.textContent = currentObj.name;
-                randomSongCategory.textContent = `歌手/分類：${currentObj.category} (轉動中...)`;
+                randomSongCategory.textContent = `歌手/分類 : ${currentObj.category} (剩餘 ${timeLeft} 秒)`;
             }, 80);
 
-            // 綁定停止按鈕事件
             document.getElementById('stopSpinBtn').addEventListener('click', () => {
                 stopSpinning();
             });
 
-            // 30秒自動倒數計時器
+            // 每秒更新倒數數字
             countdownInterval = setInterval(() => {
                 timeLeft--;
-                if (timeLeft > 0) {
-                    // 維持旋轉，僅更新秒數顯示一部分
-                } else {
+                if (timeLeft <= 0) {
                     stopSpinning();
                 }
             }, 1000);
