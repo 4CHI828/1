@@ -121,7 +121,8 @@
         .drag-handle { color: var(--text-muted); margin-right: 10px; font-size: 1rem; cursor: grab; flex-shrink: 0; }
         .list-item-info { flex: 1; overflow: hidden; }
         .list-item-name { color: var(--text-color); font-weight: bold; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-        .list-item-cat { color: var(--text-muted); font-size: 0.8rem; margin-top: 2px; }
+        .list-item-cat { color: var(--text-muted); font-size: 0.8rem; margin-top: 2px; display: flex; gap: 10px; flex-wrap: wrap; }
+        .list-item-time { color: #86a8e7; font-size: 0.75rem; background: rgba(134, 168, 231, 0.15); padding: 1px 6px; border-radius: 6px; }
         .remove-btn { background: rgba(255, 75, 75, 0.15); border: 1px solid rgba(255, 75, 75, 0.3); color: #ff4b4b; width: 28px; height: 28px; border-radius: 50%; cursor: pointer; font-size: 1rem; display: flex; align-items: center; justify-content: center; transition: all 0.2s; flex-shrink: 0; margin-left: 10px; }
         .remove-btn:hover { background: #ff4b4b; color: #fff; }
         .list-actions { display: flex; gap: 10px; justify-content: center; }
@@ -283,7 +284,7 @@
             <div class="help-section">
                 <div class="help-section-title">🎤 待唱清單（核心功能）</div>
                 <ul>
-                    <li><strong>一鍵點歌</strong>：點選歌曲卡片右側的 <strong style="color:#38ef7d;">+</strong> 加入待唱。</li>
+                    <li><strong>一鍵點歌</strong>：點選歌曲卡片右側的 <strong style="color:#38ef7d;">+</strong> 加入待唱，並記錄加入時間。</li>
                     <li><strong>拖曳排序</strong>：在清單中拖曳歌曲可調整演唱順序，像 KTV 點歌本一樣！</li>
                     <li><strong>本地儲存</strong>：清單資料儲存在瀏覽器本地，<strong>重新整理或關閉網頁都不會遺失</strong>！</li>
                 </ul>
@@ -291,8 +292,8 @@
             <div class="help-section">
                 <div class="help-section-title">🎲 命運轉盤</div>
                 <ul>
-                    <li>點選「隨機抽一首」，體驗老虎機般的滾動動畫。</li>
-                    <li>抽中的歌曲會<strong style="color:#38ef7d;">自動加入</strong>待唱清單，懶人福音！</li>
+                    <li>點選「隨機抽一首」，體驗 30 秒倒數老虎機滾動動畫。</li>
+                    <li>抽中的歌曲會<strong style="color:#38ef7d;">自動加入</strong>待唱清單（含時間標記）。</li>
                     <li>抽完結果會顯示<strong style="color:#ff416c;">🎵 立即試聽</strong>按鈕，一鍵跳轉 YouTube 收聽！</li>
                 </ul>
                 <div class="help-tip">
@@ -375,6 +376,18 @@
             updateClearBtnVisibility();
             renderContent();
         });
+    }
+
+    // ================= 時間格式化工具 =================
+    function getFormattedTime() {
+        const now = new Date();
+        const year = now.getFullYear();
+        const month = now.getMonth() + 1;
+        const day = now.getDate();
+        const hours = String(now.getHours()).padStart(2, '0');
+        const minutes = String(now.getMinutes()).padStart(2, '0');
+        const seconds = String(now.getSeconds()).padStart(2, '0');
+        return `${year}/${month}/${day} ${hours}:${minutes}:${seconds}`;
     }
 
     // ================= 最後更新時間 =================
@@ -485,7 +498,7 @@
         });
     }
 
-    // ================= 待唱清單（含拖曳排序） =================
+    // ================= 待唱清單（含時間與拖曳排序） =================
     function setupSingList() {
         const openListBtn = document.getElementById('openListBtn');
         const listModal = document.getElementById('listModal');
@@ -511,7 +524,7 @@
         if (index > -1) {
             singList.splice(index, 1);
         } else {
-            singList.push({ name: songName, category: category });
+            singList.push({ name: songName, category: category, time: getFormattedTime() });
         }
         saveSingList();
         updateListCount();
@@ -521,7 +534,7 @@
     function addToList(songName, category) {
         const isAlreadyInList = singList.some(item => item.name === songName);
         if (!isAlreadyInList) {
-            singList.push({ name: songName, category: category });
+            singList.push({ name: songName, category: category, time: getFormattedTime() });
             saveSingList();
             updateListCount();
             renderContent();
@@ -561,7 +574,10 @@
                 <span class="drag-handle" title="拖曳排序">⋮⋮</span>
                 <div class="list-item-info">
                     <div class="list-item-name">${index + 1}. ${item.name}</div>
-                    <div class="list-item-cat">來自：${item.category}</div>
+                    <div class="list-item-cat">
+                        <span>來自：${item.category}</span>
+                        <span class="list-item-time">🕐 ${item.time || '未知時間'}</span>
+                    </div>
                 </div>
                 <button class="remove-btn" onclick="removeFromSingList('${item.name.replace(/'/g, "\\'")}')" title="移除">×</button>
             </div>
@@ -614,7 +630,7 @@
         });
     }
 
-    // ================= 隨機抽歌（含立即試聽） =================
+    // ================= 隨機抽歌（30秒動畫） =================
     function setupRandomizer() {
         const randomBtn = document.getElementById('randomBtn');
         const randomModal = document.getElementById('randomModal');
@@ -623,24 +639,39 @@
         const randomSongName = document.getElementById('randomSongName');
         const randomSongCategory = document.getElementById('randomSongCategory');
 
+        let isSpinning = false;
+
         function openModal() {
+            if (isSpinning) return;
+            isSpinning = true;
+
             randomModal.style.display = 'flex';
             randomSongName.classList.remove('shake');
-            randomSongCategory.textContent = '命運選擇中...';
+            playAgainBtn.disabled = true;
+            playAgainBtn.style.opacity = '0.5';
             currentRandomSong = null;
             
             listenNowBtn.classList.add('disabled');
             listenNowBtn.href = '#';
             
-            let count = 0;
-            const maxCount = 15; 
-            const interval = setInterval(() => {
+            let timeLeft = 30; // 30秒動畫
+            randomSongCategory.textContent = `🎲 命運轉盤高速旋轉中... 剩餘 ${timeLeft} 秒`;
+            
+            // 快速滾動歌名的碼表
+            const spinInterval = setInterval(() => {
                 const rIndex = Math.floor(Math.random() * allSongsFlat.length);
                 randomSongName.textContent = allSongsFlat[rIndex].name;
-                count++;
-                
-                if (count >= maxCount) {
-                    clearInterval(interval);
+            }, 80);
+
+            // 倒數計時器（每秒更新秒數）
+            const countdownInterval = setInterval(() => {
+                timeLeft--;
+                if (timeLeft > 0) {
+                    randomSongCategory.textContent = `🎲 命運轉盤高速旋轉中... 剩餘 ${timeLeft} 秒`;
+                } else {
+                    clearInterval(countdownInterval);
+                    clearInterval(spinInterval);
+
                     const fIndex = Math.floor(Math.random() * allSongsFlat.length);
                     const finalSong = allSongsFlat[fIndex];
                     currentRandomSong = finalSong;
@@ -651,7 +682,7 @@
                     const addedSuccessfully = addToList(finalSong.name, finalSong.category);
                     
                     if (addedSuccessfully) {
-                        randomSongCategory.innerHTML = `來自分類：${finalSong.category} <br><span style="color: #38ef7d; font-weight: bold; font-size: 0.9rem;">🎉 已自動加入待唱清單！</span>`;
+                        randomSongCategory.innerHTML = `來自分類：${finalSong.category} <br><span style="color: #38ef7d; font-weight: bold; font-size: 0.9rem;">🎉 已自動加入待唱清單（${getFormattedTime()}）！</span>`;
                     } else {
                         randomSongCategory.innerHTML = `來自分類：${finalSong.category} <br><span style="color: #888; font-size: 0.9rem;">（這首歌已經在待唱清單裡啦）</span>`;
                     }
@@ -659,12 +690,18 @@
                     const ytSearchUrl = `https://www.youtube.com/results?search_query=${encodeURIComponent(finalSong.name)}`;
                     listenNowBtn.href = ytSearchUrl;
                     listenNowBtn.classList.remove('disabled');
+
+                    playAgainBtn.disabled = false;
+                    playAgainBtn.style.opacity = '1';
+                    isSpinning = false;
                 }
-            }, 80);
+            }, 1000);
         }
 
         randomBtn.addEventListener('click', openModal);
-        playAgainBtn.addEventListener('click', openModal);
+        playAgainBtn.addEventListener('click', () => {
+            if (!isSpinning) openModal();
+        });
     }
 
     // ================= 渲染邏輯 =================
@@ -721,7 +758,7 @@
                                         </a>
                                     </div>
                                 </div>
-                            `}).join('')}
+                                `}).join('')}
                         </div>
                     </section>
                 `;
