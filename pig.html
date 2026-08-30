@@ -18,6 +18,7 @@
             --help-section-border: rgba(255, 255, 255, 0.08);
             --list-item-bg: rgba(255,255,255,0.05); --list-item-border: rgba(255,255,255,0.05);
             --scrollbar-thumb: #555;
+            --font-scale: 1rem;
         }
         body.light-theme {
             --bg-gradient: linear-gradient(135deg, #f5f7fa 0%, #e4ecf7 100%);
@@ -37,6 +38,7 @@
             background: var(--bg-gradient); color: var(--text-color);
             min-height: 100vh; padding: 20px; line-height: 1.6;
             transition: background 0.5s ease, color 0.3s ease;
+            font-size: var(--font-scale);
         }
         .container { max-width: 1200px; margin: 0 auto; }
         header { text-align: center; padding: 40px 0 20px; position: relative; }
@@ -51,6 +53,7 @@
         .icon-btn:hover { transform: translateY(-2px) scale(1.05); background: var(--card-bg-hover); box-shadow: 0 5px 15px rgba(0,0,0,0.2); }
         .icon-btn.theme-btn { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: #fff; border: none; }
         .icon-btn.reset-icon-btn { background: linear-gradient(135deg, #f6d365 0%, #fda085 100%); color: #fff; border: none; }
+        .icon-btn.font-btn { background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%); color: #0f0c29; font-weight: bold; border: none; font-size: 0.95rem; }
         .header-title-wrapper { display: flex; align-items: center; justify-content: center; gap: 15px; flex-wrap: wrap; margin-bottom: 15px; }
         header h1 { font-size: 2.5rem; background: linear-gradient(90deg, #ff7e5f, #feb47b, #86a8e7); -webkit-background-clip: text; -webkit-text-fill-color: transparent; letter-spacing: 2px; margin-bottom: 0; }
         .douyin-link { display: inline-flex; align-items: center; gap: 6px; padding: 8px 18px; background: linear-gradient(135deg, #25F4EE 0%, #FE2C55 100%); color: #fff; text-decoration: none; border-radius: 20px; font-size: 0.9rem; font-weight: bold; transition: all 0.3s; box-shadow: 0 4px 12px rgba(254, 44, 85, 0.3); white-space: nowrap; }
@@ -100,7 +103,8 @@
         .modal-content { background: var(--modal-bg); padding: 30px; border-radius: 20px; text-align: center; width: 90%; max-width: 500px; position: relative; box-shadow: 0 20px 50px rgba(0,0,0,0.5); border: 1px solid var(--card-border); animation: zoomIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); max-height: 80vh; display: flex; flex-direction: column; }
         .close-btn { position: absolute; top: 15px; right: 20px; color: var(--text-muted); font-size: 28px; font-weight: bold; cursor: pointer; }
         .close-btn:hover { color: var(--text-color); }
-        .random-song-name { font-size: 2rem; font-weight: bold; color: #ff7e5f; margin: 20px 0 5px; min-height: 50px; text-shadow: 0 0 10px rgba(255, 126, 95, 0.5); }
+        .random-countdown-timer { font-size: 1.1rem; color: #ff7e5f; font-weight: bold; margin-bottom: 5px; }
+        .random-song-name { font-size: 2rem; font-weight: bold; color: #ff7e5f; margin: 15px 0 5px; min-height: 50px; text-shadow: 0 0 10px rgba(255, 126, 95, 0.5); }
         .random-song-category { font-size: 1.1rem; color: var(--text-secondary); margin-bottom: 20px; transition: all 0.3s; min-height: 30px; }
         .modal-buttons { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
         .play-again-btn { padding: 12px 25px; border-radius: 30px; border: none; background: linear-gradient(135deg, #ff7e5f, #feb47b); color: #fff; font-size: 1rem; font-weight: bold; cursor: pointer; transition: all 0.3s; }
@@ -189,6 +193,8 @@
 <div class="container">
     <header>
         <div class="top-icons">
+            <button class="icon-btn font-btn" id="fontMinusBtn" title="字體縮小">A-</button>
+            <button class="icon-btn font-btn" id="fontPlusBtn" title="字體放大">A+</button>
             <button class="icon-btn reset-icon-btn" id="resetBtn" title="重新整理">🔄</button>
             <button class="icon-btn theme-btn" id="themeBtn" title="切換主題">🌙</button>
         </div>
@@ -237,6 +243,7 @@
     <div class="modal-content">
         <span class="close-btn" data-close="randomModal">&times;</span>
         <h2>🎉 命運之輪轉動！</h2>
+        <div class="random-countdown-timer" id="randomCountdownTimer">剩餘時間：60 秒</div>
         <div class="random-song-name" id="randomSongName">準備中...</div>
         <div class="random-song-category" id="randomSongCategory"></div>
         <div class="modal-buttons" id="randomModalButtons">
@@ -293,8 +300,8 @@
             <div class="help-section">
                 <div class="help-section-title">🎲 命運轉盤</div>
                 <ul>
-                    <li>點選「隨機抽一首」，啟動 30 秒自動倒數滾動動畫（同時展示歌曲與歌手/分類）。</li>
-                    <li>可隨時點選<strong>「⏹️ 停止抽歌」</strong>按鈕手動停下，或等待 30 秒倒數結束。</li>
+                    <li>點選「隨機抽一首」，啟動 1 分鐘自動倒數滾動動畫（獨立倒數計時，時間不隨歌曲跳動）。</li>
+                    <li>可隨時點選<strong>「⏹️ 停止抽歌」</strong>按鈕手動停下，或等待 1 分鐘倒數結束。</li>
                     <li>抽中的歌曲會<strong style="color:#38ef7d;">自動加入</strong>待唱清單（含時間標記），並提供 YouTube 試聽按鈕！</li>
                 </ul>
                 <div class="help-tip">
@@ -311,6 +318,7 @@
             <div class="help-section">
                 <div class="help-section-title">🛠️ 快捷操作</div>
                 <ul>
+                    <li><strong>🔠 字體調整 (A- / A+)</strong>：右上角綠色按鈕，自由放大或縮小全站字體。</li>
                     <li><strong>🔄 重新整理</strong>：右上角橙色按鈕，一鍵重新整理頁面。</li>
                     <li><strong>🌙/☀️ 主題切換</strong>：右上角紫色按鈕，切換日間/夜間模式。</li>
                     <li><strong>⬆️ 回到頂部</strong>：下滑頁面時右下角浮現，點選絲滑滾回頂部。</li>
@@ -338,7 +346,7 @@
         
         "三、治癒溫柔": ["夏天的風", "奇妙能力歌", "特別的人", "若是月亮還沒來", "大山", "不要怕", "慢慢", "這世間那麼多人", "去有風的地方", "秋風", "推開世界的門", "夢一場", "從前說", "旅行的意義", "我會等", "暮色迴響", "微風起", "遇見", "綠光", "天黑黑", "青花", "稻香", "知足", "溫柔", "無與倫比的美麗", "小情歌", "傳奇", "等你的季節"],
         
-        "四,獨立民謠": ["王昭君", "安和橋", "我記得", "程艾影", "理想", "我要你", "烏蘭巴托的夜"],
+        "四、獨立民謠": ["王昭君", "安和橋", "我記得", "程艾影", "理想", "我要你", "烏蘭巴托的夜"],
         
         "五、戲腔/古風": ["赤伶", "須盡歡", "身騎白馬", "壁上觀", "牽絲戲", "鴛鴦戲", "光亮", "探故知", "桃花諾", "青花瓷", "蘇州河", "天下", "醉清風", "半壺紗"],
         
@@ -359,6 +367,7 @@
 
     function init() {
         initTheme();
+        initFontSize();
         renderTabs();
         renderContent();
         animateTotalCount();
@@ -369,6 +378,7 @@
         setupBackToTop();
         setupHelpBtn();
         setupThemeBtn();
+        setupFontResize();
         setupSearchClear();
         updateLastUpdateTime();
         
@@ -376,6 +386,38 @@
             searchQuery = e.target.value.trim().toLowerCase();
             updateClearBtnVisibility();
             renderContent();
+        });
+    }
+
+    // ================= 字體大小調整功能 =================
+    const fontSizes = ['0.85rem', '1rem', '1.15rem', '1.3rem'];
+    let currentFontIndex = parseInt(localStorage.getItem('qiaoba_font_index')) || 1;
+
+    function initFontSize() {
+        applyFontSize();
+    }
+
+    function applyFontSize() {
+        document.documentElement.style.setProperty('--font-scale', fontSizes[currentFontIndex]);
+        localStorage.setItem('qiaoba_font_index', currentFontIndex);
+    }
+
+    function setupFontResize() {
+        const fontPlusBtn = document.getElementById('fontPlusBtn');
+        const fontMinusBtn = document.getElementById('fontMinusBtn');
+
+        fontPlusBtn.addEventListener('click', () => {
+            if (currentFontIndex < fontSizes.length - 1) {
+                currentFontIndex++;
+                applyFontSize();
+            }
+        });
+
+        fontMinusBtn.addEventListener('click', () => {
+            if (currentFontIndex > 0) {
+                currentFontIndex--;
+                applyFontSize();
+            }
         });
     }
 
@@ -633,11 +675,12 @@
         });
     }
 
-    // ================= 隨機抽歌（30秒動畫 + 秒數倒數 + 停止按鈕 + 歌曲與歌手顯示） =================
+    // ================= 隨機抽歌（1分鐘動畫 + 獨立計時器不隨歌曲跳動 + 停止按鈕） =================
     function setupRandomizer() {
         const randomBtn = document.getElementById('randomBtn');
         const randomModal = document.getElementById('randomModal');
         const randomModalButtons = document.getElementById('randomModalButtons');
+        const randomCountdownTimer = document.getElementById('randomCountdownTimer');
         const randomSongName = document.getElementById('randomSongName');
         const randomSongCategory = document.getElementById('randomSongCategory');
 
@@ -647,6 +690,7 @@
 
         function finalizeSong(selectedSong) {
             currentRandomSong = selectedSong;
+            randomCountdownTimer.style.display = 'none'; // 結算時隱藏倒數器
             randomSongName.textContent = selectedSong.name;
             randomSongCategory.textContent = `歌手/分類 : ${selectedSong.category}`;
             randomSongName.classList.add('shake');
@@ -676,30 +720,34 @@
 
             randomModal.style.display = 'flex';
             randomSongName.classList.remove('shake');
+            randomCountdownTimer.style.display = 'block';
             
             randomModalButtons.innerHTML = `
                 <button class="stop-spin-btn" id="stopSpinBtn">⏹️ 停止抽歌</button>
             `;
 
-            let timeLeft = 30; // 30秒倒數
-            randomSongCategory.textContent = `🎲 高速旋轉中... (剩餘 ${timeLeft} 秒)`;
+            let timeLeft = 60; // 60秒（1分鐘）倒數
+            randomCountdownTimer.textContent = `剩餘時間：${timeLeft} 秒`;
+            randomSongCategory.textContent = `🎲 高速旋轉中...`;
 
-            // 滾動歌名與歌手分類
+            // 僅滾動歌名與歌手分類（數字獨立，不隨歌曲跳動）
             spinInterval = setInterval(() => {
                 const rIndex = Math.floor(Math.random() * allSongsFlat.length);
                 const currentObj = allSongsFlat[rIndex];
                 randomSongName.textContent = currentObj.name;
-                randomSongCategory.textContent = `歌手/分類 : ${currentObj.category} (剩餘 ${timeLeft} 秒)`;
+                randomSongCategory.textContent = `歌手/分類 : ${currentObj.category}`;
             }, 80);
 
             document.getElementById('stopSpinBtn').addEventListener('click', () => {
                 stopSpinning();
             });
 
-            // 每秒更新倒數數字
+            // 獨立的 1 秒倒數計時器
             countdownInterval = setInterval(() => {
                 timeLeft--;
-                if (timeLeft <= 0) {
+                if (timeLeft > 0) {
+                    randomCountdownTimer.textContent = `剩餘時間：${timeLeft} 秒`;
+                } else {
                     stopSpinning();
                 }
             }, 1000);
