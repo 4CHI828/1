@@ -82,7 +82,7 @@
 
     .player-container {
       background: var(--player-bg); backdrop-filter: blur(30px); -webkit-backdrop-filter: blur(30px);
-      border-radius: 40px; padding: 30px 30px 30px 30px; width: 100%; max-width: 400px; margin: 0 auto;
+      border-radius: 40px; padding: 30px; width: 100%; max-width: 400px; margin: 0 auto;
       box-shadow: 0 30px 60px rgba(0,0,0,0.5), 0 0 20px rgba(0, 255, 255, 0.2);
       color: white; border: 1px solid var(--glass-border); box-sizing: border-box; position: relative;
       animation: playerBreath 4s ease-in-out infinite;
@@ -162,11 +162,11 @@
     <div class="header-wrapper">
       <h1 id="mainTitle">静静在夏天🍔🎤⁰³²⁰<div class="ketchup"></div></h1>
       <div class="theme-group">
-        <div class="theme-dot dot-yellow" onclick="setTheme('yellow')" title="經典黃"></div>
-        <div class="theme-dot dot-red" onclick="setTheme('red')" title="番茄紅"></div>
-        <div class="theme-dot dot-green" onclick="setTheme('green')" title="萵苣綠"></div>
-        <div class="theme-dot dot-brown" onclick="setTheme('brown')" title="巧克力褐"></div>
-        <button class="refresh-btn" onclick="location.reload()" title="重新整理">↻</button>
+        <div class="theme-dot dot-yellow" title="經典黃"></div>
+        <div class="theme-dot dot-red" title="番茄紅"></div>
+        <div class="theme-dot dot-green" title="萵苣綠"></div>
+        <div class="theme-dot dot-brown" title="巧克力褐"></div>
+        <button class="refresh-btn" id="refresh-btn" title="重新整理">↻</button>
       </div>
     </div>
 
@@ -186,7 +186,7 @@
       </div>
     </div>
 
-    <div class="player-container" id="player-main">
+    <div class="player-container" id="player-main" role="region" aria-label="音樂播放器">
       <div class="now-playing" id="current-song">
         <div class="eq-bars">
           <div class="eq-bar"></div><div class="eq-bar"></div><div class="eq-bar"></div>
@@ -197,25 +197,25 @@
       </div>
       
       <div class="mode-group">
-        <button class="mode-btn active" id="btn-seq" onclick="setPlaybackMode('sequence', this)">列表循環</button>
-        <button class="mode-btn" id="btn-loop" onclick="setPlaybackMode('loopOne', this)">單曲循環</button>
-        <button class="mode-btn" id="btn-shuffle" onclick="setPlaybackMode('shuffle', this)">隨機播放</button>
+        <button class="mode-btn active" id="btn-seq">列表循環</button>
+        <button class="mode-btn" id="btn-loop">單曲循環</button>
+        <button class="mode-btn" id="btn-shuffle">隨機播放</button>
       </div>
       
       <div class="controls">
-        <button class="ctrl-btn" id="vol-btn" onclick="toggleVolumePanel()" title="音量調整">🔊</button>
-        <button class="ctrl-btn" onclick="playPrevious()" title="上一首 (←)">⏮️</button>
-        <button class="ctrl-btn" id="play-pause-btn" onclick="togglePlay()" title="播放/暫停 (Space)">▶️</button>
-        <button class="ctrl-btn" onclick="playNext()" title="下一首 (→)">⏭️</button>
+        <button class="ctrl-btn" id="vol-btn" title="音量調整">🔊</button>
+        <button class="ctrl-btn" id="prev-btn" title="上一首 (←)">⏮️</button>
+        <button class="ctrl-btn" id="play-pause-btn" title="播放/暫停 (Space)">▶️</button>
+        <button class="ctrl-btn" id="next-btn" title="下一首 (→)">⏭️</button>
         <div class="volume-panel" id="volume-panel">
           <span class="vol-value" id="vol-value">20%</span>
-          <input type="range" class="volume-slider" id="volume-slider" min="0" max="1" step="0.01" value="0.2">
+          <input type="range" class="volume-slider" id="volume-slider" aria-label="音量控制" min="0" max="1" step="0.01" value="0.2">
         </div>
       </div>
 
       <div class="progress-container">
         <span id="curr-time">0:00</span>
-        <div class="progress-bar" id="progress-bar">
+        <div class="progress-bar" id="progress-bar" role="slider" aria-label="播放進度" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
           <div class="progress-fill" id="progress-fill"></div>
           <div class="progress-knob" id="progress-knob"></div>
         </div>
@@ -507,6 +507,7 @@
       const percent = (audioPlayer.currentTime / audioPlayer.duration) * 100 || 0;
       progressFill.style.width = percent + '%';
       progressKnob.style.left = percent + '%';
+      progressBar.setAttribute('aria-valuenow', Math.round(percent));
       currTimeText.innerText = formatTime(audioPlayer.currentTime);
       if (audioPlayer.duration) totalTimeText.innerText = formatTime(audioPlayer.duration);
     }
@@ -551,7 +552,21 @@
       if (e.code === 'ArrowRight') playNext();
     };
 
-    window.onload = () => { 
+    
+    // Event listeners for buttons (moved from inline onclick)
+    document.querySelectorAll('.theme-dot').forEach(dot => {
+      dot.addEventListener('click', () => setTheme(dot.dataset.theme));
+    });
+    document.getElementById('refresh-btn').addEventListener('click', () => location.reload());
+    document.querySelectorAll('.mode-btn').forEach(btn => {
+      btn.addEventListener('click', () => setPlaybackMode(btn.dataset.mode, btn));
+    });
+    document.getElementById('vol-btn').addEventListener('click', toggleVolumePanel);
+    document.getElementById('prev-btn').addEventListener('click', playPrevious);
+    document.getElementById('play-pause-btn').addEventListener('click', togglePlay);
+    document.getElementById('next-btn').addEventListener('click', playNext);
+
+window.addEventListener("load", () => { 
       Visuals.initFloatingBg(); 
       const savedVol = localStorage.getItem('preferred-volume');
       if (savedVol !== null) {
@@ -571,7 +586,7 @@
         updateMarquee(Player.playlist[Player.index]?.title || "準備播放...");
         refreshListText();
       }
-    };
+    });
   </script>
 </body>
 </html>
