@@ -138,7 +138,7 @@
       </div>
     </div>
 
-    <!-- 分帳結算卡片 (含 LINE 一鍵分享按鈕) -->
+    <!-- 分帳結算卡片 -->
     <div class="bg-gradient-to-br from-blue-50 to-blue-100/50 dark:from-slate-800/80 dark:to-blue-900/20 border border-blue-200/60 dark:border-blue-800/50 rounded-2xl p-4 shadow-sm space-y-3">
       <div class="flex items-center justify-between">
         <div class="text-[11px] font-bold text-blue-800 dark:text-blue-300 uppercase tracking-widest flex items-center gap-1">
@@ -212,7 +212,8 @@
           <option value="USD">USD 美元</option>
           <option value="KRW">KRW 韓元</option>
         </select>
-        <input type="number" id="originalAmount" placeholder="輸入金額" step="any" class="col-span-3 border border-gray-200 dark:border-gray-600 rounded-xl px-3 py-2 text-base font-bold bg-white dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none shadow-inner text-right">
+        <!-- 修改為 type="text" 支援千分位 -->
+        <input type="text" id="originalAmount" placeholder="輸入金額" class="col-span-3 border border-gray-200 dark:border-gray-600 rounded-xl px-3 py-2 text-base font-bold bg-white dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none shadow-inner text-right">
       </div>
       <div class="flex items-center justify-end text-xs text-gray-400 pr-1">
         折合台幣 <span id="previewTwd" class="font-bold text-blue-600 dark:text-blue-400 text-sm ml-1.5">0</span>
@@ -237,6 +238,7 @@
         </div>
         
         <div id="splitModeCustomContainer" class="hidden space-y-2 pt-1">
+          <!-- 加入一鍵均分按鈕 -->
           <div class="flex justify-between items-center text-[11px] font-medium text-gray-500">
             <div class="flex items-center gap-1.5">
               <span>分攤金額：</span>
@@ -244,6 +246,7 @@
                 <option value="auto">依原幣別輸入</option>
                 <option value="TWD">依台幣輸入 (TWD)</option>
               </select>
+              <button type="button" onclick="autoEqualSplit()" class="bg-blue-100 text-blue-600 dark:bg-blue-900/50 dark:text-blue-300 px-2 py-0.5 rounded hover:bg-blue-200 transition active:scale-95">一鍵均分</button>
             </div>
             <span id="customSumStatus" class="font-mono text-gray-400">0 / 0</span>
           </div>
@@ -356,6 +359,23 @@
       } catch (e) { el.textContent = "無法讀取"; }
     }
 
+    // 🌟 千分位格式化輔助函數
+    function setOriginalAmount(val) {
+      let strVal = String(val).replace(/[^0-9.]/g, '');
+      if (strVal) {
+        let parts = strVal.split('.');
+        parts[0] = parseInt(parts[0] || 0).toLocaleString('en-US');
+        document.getElementById("originalAmount").value = parts.join('.');
+      } else {
+        document.getElementById("originalAmount").value = '';
+      }
+      updateTwdPreview();
+    }
+
+    document.getElementById("originalAmount").addEventListener("input", function(e) {
+      setOriginalAmount(this.value);
+    });
+
     // 🌟 離線狀態偵測與佇列同步
     window.addEventListener('online', () => {
       document.getElementById("networkStatusBadge").classList.add("hidden");
@@ -458,7 +478,8 @@
     }
 
     function calculateTwd() {
-      const amount = parseFloat(document.getElementById("originalAmount").value) || 0;
+      const amountStr = document.getElementById("originalAmount").value.replace(/,/g, '');
+      const amount = parseFloat(amountStr) || 0;
       const rate = exchangeRates[document.getElementById("currency").value] || 1;
       return { rate, twd: Math.round(amount * rate) };
     }
@@ -490,7 +511,7 @@
     function checkCustomSplitTotal() {
       const splitCurrency = document.getElementById("customSplitCurrency").value;
       const { twd: totalTwd } = calculateTwd();
-      const origAmt = parseFloat(document.getElementById("originalAmount").value) || 0;
+      const origAmt = parseFloat(document.getElementById("originalAmount").value.replace(/,/g, '')) || 0;
       const targetTotal = splitCurrency === "TWD" ? totalTwd : origAmt;
       let sum = 0;
       document.querySelectorAll(".custom-split-input").forEach(i => sum += parseFloat(i.value) || 0);
@@ -513,7 +534,7 @@
     window.autoFillDifference = function(memberName) {
       const splitCurrency = document.getElementById("customSplitCurrency").value;
       const { twd: totalTwd } = calculateTwd();
-      const origAmt = parseFloat(document.getElementById("originalAmount").value) || 0;
+      const origAmt = parseFloat(document.getElementById("originalAmount").value.replace(/,/g, '')) || 0;
       const targetTotal = splitCurrency === "TWD" ? totalTwd : origAmt;
       let sumOther = 0; let targetInput = null;
       document.querySelectorAll(".custom-split-input").forEach(i => {
@@ -524,6 +545,23 @@
         targetInput.value = splitCurrency === "TWD" ? Math.round(diff) : parseFloat(diff.toFixed(2)); 
         checkCustomSplitTotal(); 
       }
+    };
+
+    // 🌟 一鍵均分功能
+    window.autoEqualSplit = function() {
+      const splitCurrency = document.getElementById("customSplitCurrency").value;
+      const { twd: totalTwd } = calculateTwd();
+      const origAmt = parseFloat(document.getElementById("originalAmount").value.replace(/,/g, '')) || 0;
+      const targetTotal = splitCurrency === "TWD" ? totalTwd : origAmt;
+      
+      const inputs = document.querySelectorAll(".custom-split-input");
+      if(inputs.length === 0) return;
+      
+      const splitAmt = targetTotal / inputs.length;
+      inputs.forEach(i => {
+        i.value = splitCurrency === "TWD" ? Math.round(splitAmt) : parseFloat(splitAmt.toFixed(2));
+      });
+      checkCustomSplitTotal();
     };
 
     window.editMemberName = function(idx) {
@@ -564,7 +602,6 @@
       if (cachedRecords.length > 0) renderSettlement(cachedRecords);
     }
 
-    // 🌟 自訂類別管理邏輯
     function renderCategoryControls() {
       const catSelect = document.getElementById("category");
       const currentVal = catSelect.value;
@@ -618,14 +655,12 @@
     document.getElementById("toggleDataBtn").addEventListener("click", () => document.getElementById("dataConfigPanel").classList.toggle("hidden"));
     document.getElementById("type").addEventListener("change", (e) => document.getElementById("splitSection").style.display = e.target.value === "expense" ? "block" : "none");
     document.getElementById("currency").addEventListener("change", updateTwdPreview);
-    document.getElementById("originalAmount").addEventListener("input", updateTwdPreview);
 
     window.applyTemplate = function(title, category, amount, currency) {
       document.getElementById("title").value = title;
       if (categories.includes(category)) document.getElementById("category").value = category;
       document.getElementById("currency").value = currency;
-      document.getElementById("originalAmount").value = amount;
-      updateTwdPreview();
+      setOriginalAmount(amount);
       showToast(`⚡ 已套用範本：${title}`, "info");
     };
 
@@ -713,10 +748,9 @@
         else document.getElementById("currency").value = "TWD";
         
         const nums = txt.match(/\d+/g); 
-        if (nums) document.getElementById("originalAmount").value = nums[nums.length-1];
+        if (nums) setOriginalAmount(nums[nums.length-1]);
         
         document.getElementById("title").value = txt.replace(/\d+|元|塊|台幣|日幣|美金|歐元/g, '').trim() || "語音記帳";
-        updateTwdPreview(); 
         setTimeout(() => aiStatus.classList.add("hidden"), 2000);
       };
 
@@ -737,9 +771,8 @@
         try {
           const { data: { text } } = await Tesseract.recognize(compressedBase64, 'eng+chi_tra');
           const nums = (text.match(/[0-9,.]+/g)||[]).map(n=>parseFloat(n.replace(/,/g,''))).filter(n=>n>0&&n<1000000);
-          if (nums.length) document.getElementById("originalAmount").value = Math.max(...nums);
+          if (nums.length) setOriginalAmount(Math.max(...nums));
           document.getElementById("title").value = "收據截取"; 
-          updateTwdPreview();
           showToast("✅ 收據辨識完成");
         } catch(err) { 
           showToast("❌ 收據辨識失敗", "error"); 
@@ -793,7 +826,7 @@
       const g = document.getElementById("settlementGrid"); g.innerHTML="";
       Object.keys(bals).forEach(m => {
         const val = Math.round(bals[m]); const isP = val>0; const isZ = val===0;
-        g.innerHTML += `<div class="bg-white/80 dark:bg-gray-800 p-2.5 rounded-xl shadow-sm border ${isZ?'border-gray-200 dark:border-gray-700':isP?'border-emerald-200 dark:border-emerald-800':'border-red-200 dark:border-red-800'}"><div class="font-bold text-gray-700 dark:text-gray-300 truncate">${escapeHtml(m)}</div><div class="font-mono font-bold mt-1 text-sm ${isZ?'text-gray-400':isP?'text-emerald-600 dark:text-emerald-400':'text-red-500 dark:text-red-400'}">${isZ?'$0':(isP?`+$${val}`:`-$${Math.abs(val)}`)}</div></div>`;
+        g.innerHTML += `<div class="bg-white/80 dark:bg-gray-800 p-2.5 rounded-xl shadow-sm border ${isZ?'border-gray-200 dark:border-gray-700':isP?'border-emerald-200 dark:border-emerald-800':'border-red-200 dark:border-red-800'}"><div class="font-bold text-gray-700 dark:text-gray-300 truncate">${escapeHtml(m)}</div><div class="font-mono font-bold mt-1 text-sm ${isZ?'text-gray-400':isP?'text-emerald-600 dark:text-emerald-400':'text-red-500 dark:text-red-400'}">${isZ?'$0':(isP?`+$${val.toLocaleString()}`:`-$${Math.abs(val).toLocaleString()}`)}</div></div>`;
       });
 
       const d=[], c=[]; Object.keys(bals).forEach(m=>{ const v=Math.round(bals[m]); if(v<-0.5)d.push({n:m,a:-v}); else if(v>0.5)c.push({n:m,a:v}); });
@@ -807,8 +840,16 @@
           const creditor = c[j].n;
           const transAmt = Math.round(amt);
           lastTransferInstructions.push({ debtor, creditor, amount: transAmt });
-          const txt = `${debtor} 轉給 ${creditor} $${transAmt}`;
-          tInst.push(`<div class="flex justify-between items-center bg-white/60 dark:bg-gray-800/60 px-3 py-2 rounded-xl shadow-sm border border-blue-100 dark:border-gray-700"><span><b class="text-gray-800 dark:text-gray-200">${escapeHtml(debtor)}</b> <span class="text-gray-400">➔</span> <b class="text-gray-800 dark:text-gray-200">${escapeHtml(creditor)}</b></span><div class="flex items-center gap-2"><span class="font-mono font-bold text-blue-600 dark:text-blue-400">$${transAmt}</span><button onclick="showQrCodeModal('${escapeHtml(txt)}')" class="bg-emerald-100 text-emerald-700 dark:bg-emerald-900/50 dark:text-emerald-300 px-2 py-1 rounded text-[10px] font-bold active:scale-90">QR</button></div></div>`);
+          const txt = `${debtor} 轉給 ${creditor} $${transAmt.toLocaleString()}`;
+          const uniqueId = `transfer_${i}_${j}_${transAmt}`;
+          tInst.push(`<div id="${uniqueId}" class="flex justify-between items-center bg-white/60 dark:bg-gray-800/60 px-3 py-2 rounded-xl shadow-sm border border-blue-100 dark:border-gray-700 transition-all duration-300">
+            <span><b class="text-gray-800 dark:text-gray-200">${escapeHtml(debtor)}</b> <span class="text-gray-400">➔</span> <b class="text-gray-800 dark:text-gray-200">${escapeHtml(creditor)}</b></span>
+            <div class="flex items-center gap-1.5">
+              <span class="font-mono font-bold text-blue-600 dark:text-blue-400">$${transAmt.toLocaleString()}</span>
+              <button onclick="document.getElementById('${uniqueId}').classList.toggle('opacity-40'); document.getElementById('${uniqueId}').classList.toggle('grayscale');" class="bg-gray-200 text-gray-600 dark:bg-gray-700 dark:text-gray-300 px-2 py-1 rounded text-[10px] font-bold active:scale-90 transition">✓ 已收</button>
+              <button onclick="showQrCodeModal('${escapeHtml(txt)}')" class="bg-emerald-100 text-emerald-700 dark:bg-emerald-900/50 dark:text-emerald-300 px-2 py-1 rounded text-[10px] font-bold active:scale-90">QR</button>
+            </div>
+          </div>`);
         }
         d[i].a-=amt; c[j].a-=amt; if(d[i].a<0.5)i++; if(c[j].a<0.5)j++;
       }
@@ -825,7 +866,7 @@
       text += `====================\n`;
       text += `💡 最佳平帳轉帳路徑：\n`;
       lastTransferInstructions.forEach((t, idx) => {
-        text += `${idx + 1}. 👤 ${t.debtor} ➔ 👤 ${t.creditor}：💰 $${t.amount} TWD\n`;
+        text += `${idx + 1}. 👤 ${t.debtor} ➔ 👤 ${t.creditor}：💰 $${t.amount.toLocaleString()} TWD\n`;
       });
       text += `====================\n`;
       text += `請大家轉帳後截圖回傳，謝謝！`;
@@ -852,7 +893,7 @@
       }
       document.getElementById("title").value = item.title || "";
       document.getElementById("currency").value = item.currency || "TWD";
-      document.getElementById("originalAmount").value = item.originalAmount || "";
+      setOriginalAmount(item.originalAmount || "");
       document.getElementById("date").value = item.date || getTodayString();
       
       if (item.type === "expense") {
@@ -881,6 +922,16 @@
       showToast("✏️ 已載入紀錄至表單進行編輯", "info");
     };
 
+    // 🌟 複製紀錄功能
+    window.copyRecord = function(id) {
+      startEditRecord(id);
+      editingRecordId = null; // 清除 ID 代表新增一筆
+      document.getElementById("editModeBanner").classList.add("hidden");
+      document.getElementById("saveBtnText").textContent = "儲存紀錄 (複製)";
+      document.getElementById("title").value += " (複製)"; 
+      showToast("📋 已複製紀錄，請確認金額與日期後儲存", "info");
+    };
+
     window.cancelEdit = function() {
       editingRecordId = null;
       document.getElementById("editModeBanner").classList.add("hidden");
@@ -899,10 +950,14 @@
       
       cachedRecords.forEach(item => {
         const isExp = item.type === "expense"; const shares = parseShares(item);
-        const st = Object.entries(shares).map(([n,a])=>`${n}($${Math.round(a)})`).join(", ");
+        const st = Object.entries(shares).map(([n,a])=>`${n}($${Math.round(a).toLocaleString()})`).join(", ");
         const r = document.createElement("div");
         r.className = `p-3.5 bg-white/80 dark:bg-gray-800/80 rounded-2xl shadow-sm border ${isExp?'border-gray-100 dark:border-gray-700':'border-emerald-100 dark:border-emerald-900/50'} text-xs flex justify-between items-start gap-2`;
-        r.innerHTML = `<div class="flex-1 space-y-1.5"><div class="flex items-center gap-2"><span class="px-2 py-0.5 rounded-lg text-[10px] font-bold ${isExp?'bg-blue-100 text-blue-700 dark:bg-blue-900/50':'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/50'}">${escapeHtml(item.category||(isExp?'支出':'收入'))}</span><span class="font-bold text-sm text-gray-900 dark:text-gray-100">${escapeHtml(item.title)}</span>${item.receiptImage?`<button onclick="openImageModal('${item.receiptImage}')" class="text-[10px] bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 rounded px-1.5 py-0.5 border border-gray-200 dark:border-gray-600">📷照</button>`:''}</div><div class="text-gray-500 dark:text-gray-400 font-mono">${escapeHtml(item.date)} · ${isExp?`<b>${escapeHtml(item.payer)}</b> 付`:'個人'}</div>${isExp&&st?`<div class="text-gray-400 dark:text-gray-500 truncate text-[11px]">${escapeHtml(st)}</div>`:''}</div><div class="text-right flex flex-col items-end gap-1.5"><div class="font-mono font-bold text-base ${isExp?'text-gray-900 dark:text-white':'text-emerald-600 dark:text-emerald-400'}">${item.currency!=='TWD'?`<span class="text-[10px] text-gray-400 font-normal block -mb-1">${escapeHtml(item.currency)}${item.originalAmount}</span>`:''}$${(item.twdAmount||0).toLocaleString()}</div><div class="flex items-center gap-1.5"><button onclick="startEditRecord('${escapeHtml(item.id)}')" class="text-[10px] font-bold text-blue-500 hover:text-blue-700 bg-blue-50 dark:bg-blue-900/20 px-2 py-1 rounded-lg active:scale-95">編輯</button><button onclick="deleteRecord('${escapeHtml(item.id)}')" class="text-[10px] font-bold text-red-400 hover:text-red-600 bg-red-50 dark:bg-red-900/20 px-2 py-1 rounded-lg active:scale-95">刪除</button></div></div>`;
+        
+        const origAmtDisplay = item.originalAmount ? Number(item.originalAmount).toLocaleString() : '0';
+        const twdAmountDisplay = (item.twdAmount||0).toLocaleString();
+
+        r.innerHTML = `<div class="flex-1 space-y-1.5"><div class="flex items-center gap-2"><span class="px-2 py-0.5 rounded-lg text-[10px] font-bold ${isExp?'bg-blue-100 text-blue-700 dark:bg-blue-900/50':'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/50'}">${escapeHtml(item.category||(isExp?'支出':'收入'))}</span><span class="font-bold text-sm text-gray-900 dark:text-gray-100">${escapeHtml(item.title)}</span>${item.receiptImage?`<button onclick="openImageModal('${item.receiptImage}')" class="text-[10px] bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 rounded px-1.5 py-0.5 border border-gray-200 dark:border-gray-600">📷照</button>`:''}</div><div class="text-gray-500 dark:text-gray-400 font-mono">${escapeHtml(item.date)} · ${isExp?`<b>${escapeHtml(item.payer)}</b> 付`:'個人'}</div>${isExp&&st?`<div class="text-gray-400 dark:text-gray-500 truncate text-[11px]">${escapeHtml(st)}</div>`:''}</div><div class="text-right flex flex-col items-end gap-1.5"><div class="font-mono font-bold text-base ${isExp?'text-gray-900 dark:text-white':'text-emerald-600 dark:text-emerald-400'}">${item.currency!=='TWD'?`<span class="text-[10px] text-gray-400 font-normal block -mb-1">${escapeHtml(item.currency)}${origAmtDisplay}</span>`:''}$${twdAmountDisplay}</div><div class="flex items-center gap-1.5"><button onclick="copyRecord('${escapeHtml(item.id)}')" class="text-[10px] font-bold text-emerald-600 hover:text-emerald-700 bg-emerald-50 dark:bg-emerald-900/20 px-2 py-1 rounded-lg active:scale-95">複製</button><button onclick="startEditRecord('${escapeHtml(item.id)}')" class="text-[10px] font-bold text-blue-500 hover:text-blue-700 bg-blue-50 dark:bg-blue-900/20 px-2 py-1 rounded-lg active:scale-95">編輯</button><button onclick="deleteRecord('${escapeHtml(item.id)}')" class="text-[10px] font-bold text-red-400 hover:text-red-600 bg-red-50 dark:bg-red-900/20 px-2 py-1 rounded-lg active:scale-95">刪除</button></div></div>`;
         listEl.appendChild(r);
       });
     }
@@ -927,7 +982,9 @@
 
     document.getElementById("saveRecordBtn").addEventListener("click", async () => {
       const pwd = getPassword(); if(!pwd){ showToast("請先輸入密碼解鎖", "error"); document.getElementById("accessPassword").focus(); return; }
-      const title = document.getElementById("title").value.trim(); const origAmt = parseFloat(document.getElementById("originalAmount").value);
+      const title = document.getElementById("title").value.trim(); 
+      const origAmt = parseFloat(document.getElementById("originalAmount").value.replace(/,/g, ''));
+      
       if(!title){ showToast("請填寫名稱", "error"); document.getElementById("title").focus(); return; }
       if(isNaN(origAmt)||origAmt<=0){ showToast("請輸入有效金額", "error"); document.getElementById("originalAmount").focus(); return; }
 
@@ -1026,10 +1083,10 @@
       let txtContent = `=== 記帳備份【${currentSheet}】(${getFormattedDate()}) ===\n\n`;
       cachedRecords.forEach((r, i) => {
         txtContent += `【#${i + 1}】${r.date} | [${r.category || '其他'}] ${r.type === 'expense' ? '支出' : '收入'} - ${r.title}\n`;
-        txtContent += `  金額: ${r.currency} ${r.originalAmount} (折合 NT$ ${r.twdAmount})\n`;
+        txtContent += `  金額: ${r.currency} ${Number(r.originalAmount).toLocaleString()} (折合 NT$ ${r.twdAmount.toLocaleString()})\n`;
         if (r.type === 'expense') {
           const shares = parseShares(r);
-          const shareText = Object.entries(shares).map(([n, a]) => `${n}($${Math.round(a)})`).join(", ");
+          const shareText = Object.entries(shares).map(([n, a]) => `${n}($${Math.round(a).toLocaleString()})`).join(", ");
           txtContent += `  付款人: ${r.payer || '無'} | 分攤者: ${shareText || '全體'}\n`;
         }
         txtContent += `----------------------------------------\n`;
@@ -1074,13 +1131,15 @@
           const blocks = text.split("----------------------------------------");
           blocks.forEach(b => {
             const titleMatch = b.match(/】(.+?)\s*\|\s*\[?(.*?)\]?\s*(支出|收入)\s*-\s*(.+)/);
-            const amountMatch = b.match(/金額:\s*([A-Z]+)\s*([\d.]+)\s*\(折合 NT\$\s*([\d.]+)\)/);
+            const amountMatch = b.match(/金額:\s*([A-Z]+)\s*([\d,.]+)\s*\(折合 NT\$\s*([\d,.]+)\)/);
             const payerMatch = b.match(/付款人:\s*(.*?)\s*\|\s*分攤者:\s*(.*)/);
             if (titleMatch && amountMatch) {
+              const parsedOrigAmt = parseFloat(amountMatch[2].replace(/,/g, '')) || 0;
+              const parsedTwdAmt = parseFloat(amountMatch[3].replace(/,/g, '')) || 0;
               itemsToImport.push({
                 date: titleMatch[1].trim(), category: titleMatch[2].trim() || "其他", type: titleMatch[3].trim() === "收入" ? "income" : "expense",
-                title: titleMatch[4].trim(), currency: amountMatch[1].trim(), originalAmount: parseFloat(amountMatch[2]) || 0,
-                twdAmount: parseFloat(amountMatch[3]) || 0, rate: (parseFloat(amountMatch[3]) / (parseFloat(amountMatch[2]) || 1)) || 1,
+                title: titleMatch[4].trim(), currency: amountMatch[1].trim(), originalAmount: parsedOrigAmt,
+                twdAmount: parsedTwdAmt, rate: (parsedTwdAmt / (parsedOrigAmt || 1)) || 1,
                 payer: payerMatch ? payerMatch[1].trim() : "", splitMembers: payerMatch && payerMatch[2] ? payerMatch[2].split(",").map(s => s.trim()) : []
               });
             }
