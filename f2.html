@@ -3,150 +3,180 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>福岡6天5夜行程表 (手機易讀大字版)</title>
+    <title>福岡6天5夜行程表 - 2026年9月 (雙模式大字整合版)</title>
     <style>
         :root {
             --font-scale: 1;
-            --bg-body: #f8fafc;
+            --bg-body: #f5f5f5;
             --bg-container: #ffffff;
-            --bg-card: #ffffff;
+            --bg-card: #f8f9fa;
+            --bg-info: #ecf0f1;
             --bg-sub: #f1f5f9;
-            --text-primary: #1e293b;
-            --text-secondary: #64748b;
+            --text-primary: #2c3e50;
+            --text-secondary: #7f8c8d;
             --text-light: #ffffff;
-            --primary: #2563eb;
+            --primary-color: #3498db;
             --primary-light: #dbeafe;
-            --primary-hover: #1d4ed8;
-            --accent-red: #ef4444;
-            --accent-green: #10b981;
-            --accent-purple: #8b5cf6;
+            --primary-hover: #2980b9;
+            --accent-red: #e74c3c;
+            --accent-green: #27ae60;
+            --accent-purple: #8e44ad;
             --accent-amber: #f59e0b;
-            --border-color: #e2e8f0;
+            --border-color: #dee2e6;
+            --shadow: 0 4px 15px rgba(0,0,0,0.08);
             --shadow-sm: 0 1px 3px rgba(0,0,0,0.05);
-            --shadow-md: 0 4px 12px rgba(0,0,0,0.08);
             --radius-lg: 16px;
-            --radius-md: 12px;
-            --radius-sm: 8px;
+            --radius-md: 10px;
+            --radius-sm: 6px;
         }
 
         [data-theme="dark"] {
-            --bg-body: #0f172a;
-            --bg-container: #1e293b;
-            --bg-card: #1e293b;
+            --bg-body: #121212;
+            --bg-container: #1e1e1e;
+            --bg-card: #2c2c2c;
+            --bg-info: #2a2a2a;
             --bg-sub: #334155;
-            --text-primary: #f8fafc;
-            --text-secondary: #94a3b8;
-            --primary: #3b82f6;
+            --text-primary: #e0e0e0;
+            --text-secondary: #aaa;
+            --primary-color: #64b5f6;
             --primary-light: #1e3a8a;
-            --border-color: #334155;
-            --shadow-md: 0 4px 12px rgba(0,0,0,0.3);
+            --primary-hover: #42a5f5;
+            --border-color: #444;
+            --shadow: 0 4px 15px rgba(0,0,0,0.4);
         }
 
         * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
         html { scroll-behavior: smooth; font-size: calc(16px * var(--font-scale)); }
-        
         body {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans TC", "Microsoft JhengHei", sans-serif;
+            font-family: -apple-system, BlinkMacSystemFont, "Microsoft JhengHei", "PingFang TC", "Segoe UI", Roboto, sans-serif;
             background: var(--bg-body);
             color: var(--text-primary);
+            padding: 20px;
             line-height: 1.6;
-            padding: 12px;
-            padding-bottom: 85px; /* 為底部導航保留空間 */
-            transition: background-color 0.3s, color 0.3s;
+            transition: background 0.3s, color 0.3s;
         }
 
         .container {
-            max-width: 600px;
+            max-width: 950px;
             margin: 0 auto;
-        }
-
-        /* 頂部 Header 卡片 */
-        .header-card {
             background: var(--bg-container);
-            padding: 18px 16px;
-            border-radius: var(--radius-lg);
-            box-shadow: var(--shadow-sm);
-            margin-bottom: 12px;
+            padding: 40px;
+            border-radius: 12px;
+            box-shadow: var(--shadow);
             position: relative;
-            border: 1px solid var(--border-color);
-        }
-        .header-title {
-            font-size: 1.45rem;
-            font-weight: 800;
-            display: flex;
-            align-items: center;
-            gap: 6px;
-        }
-        .header-sub {
-            color: var(--text-secondary);
-            font-size: 0.9rem;
-            font-weight: 500;
-            margin-top: 2px;
         }
 
-        .top-btns {
-            position: absolute;
-            top: 16px;
-            right: 14px;
+        /* 頂部操作按鈕列 */
+        .top-action-bar {
             display: flex;
+            justify-content: flex-end;
             align-items: center;
-            gap: 6px;
+            gap: 8px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
         }
 
-        /* 字級縮放按鈕組 */
         .font-btn-group {
             display: inline-flex;
-            border: 1.5px solid var(--primary);
+            border: 2px solid var(--primary-color);
             border-radius: 20px;
             overflow: hidden;
-            background: var(--bg-sub);
+            background: var(--bg-card);
         }
         .font-btn {
             background: transparent;
             border: none;
-            padding: 5px 9px;
-            font-size: 0.82rem;
-            font-weight: 800;
-            color: var(--primary);
+            padding: 6px 10px;
+            font-size: 13px;
+            font-weight: bold;
+            color: var(--primary-color);
             cursor: pointer;
             transition: all 0.2s;
         }
-        .font-btn:hover, .font-btn:active {
-            background: var(--primary);
+        .font-btn:hover {
+            background: var(--primary-color);
             color: var(--text-light);
         }
         .font-btn:first-child {
             border-right: 1px solid var(--border-color);
         }
 
-        .icon-btn {
-            background: var(--bg-sub);
-            border: 1px solid var(--border-color);
-            width: 34px;
-            height: 34px;
+        .mode-toggle-btn {
+            background: var(--bg-card);
+            border: 2px solid var(--primary-color);
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-size: 13px;
+            font-weight: bold;
+            color: var(--primary-color);
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            transition: all 0.2s;
+        }
+        .mode-toggle-btn:hover {
+            background: var(--primary-color);
+            color: var(--text-light);
+        }
+
+        .round-icon-btn {
+            background: transparent;
+            border: 2px solid var(--primary-color);
             border-radius: 50%;
+            width: 38px;
+            height: 38px;
+            font-size: 16px;
+            cursor: pointer;
+            color: var(--text-primary);
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 0.95rem;
-            cursor: pointer;
-            color: var(--text-primary);
-            transition: transform 0.1s;
+            transition: all 0.2s;
         }
-        .icon-btn:active { transform: scale(0.92); }
+        .round-icon-btn:hover {
+            background: var(--primary-color);
+            color: var(--text-light);
+            transform: scale(1.05);
+        }
 
-        /* 吸頂橫向快速導航標籤 */
+        h1 {
+            text-align: center;
+            color: var(--text-primary);
+            margin-bottom: 10px;
+            font-size: 2rem;
+            border-bottom: 3px solid var(--primary-color);
+            padding-bottom: 15px;
+        }
+        h2 {
+            color: var(--text-primary);
+            margin: 30px 0 15px;
+            padding-bottom: 8px;
+            border-bottom: 2px solid var(--primary-color);
+            font-size: 1.5rem;
+        }
+        h3 { color: var(--text-primary); margin-top: 20px; margin-bottom: 10px; font-size: 1.25rem; }
+        h4 { color: var(--text-primary); margin-top: 15px; margin-bottom: 8px; font-size: 1.1rem; }
+
+        .subtitle {
+            text-align: center;
+            color: var(--text-secondary);
+            margin-bottom: 30px;
+            font-size: 1.1rem;
+        }
+
+        /* 吸頂天數導航 (手機模式專用) */
         .day-nav-wrapper {
+            display: none;
             position: sticky;
             top: 0;
             z-index: 40;
             background: var(--bg-body);
-            padding: 8px 0;
-            margin: 0 -12px 12px -12px;
-            padding-left: 12px;
+            padding: 10px 0;
+            margin: -20px -16px 16px -16px;
+            padding-left: 16px;
             overflow-x: auto;
             scrollbar-width: none;
-            display: flex;
             gap: 8px;
             backdrop-filter: blur(10px);
         }
@@ -156,283 +186,325 @@
             background: var(--bg-container);
             color: var(--text-primary);
             border: 1px solid var(--border-color);
-            padding: 7px 14px;
+            padding: 8px 15px;
             border-radius: 20px;
-            font-size: 0.9rem;
+            font-size: 0.95rem;
             font-weight: 700;
             text-decoration: none;
-            box-shadow: var(--shadow-sm);
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
             cursor: pointer;
         }
-        .day-chip:active { background: var(--primary); color: white; }
+        .day-chip:active { background: var(--primary-color); color: white; }
 
-        /* 核心資訊卡片 */
-        .info-card {
+        .info-box {
+            background: var(--bg-info);
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 30px;
+        }
+        .info-box p { margin: 8px 0; font-size: 1rem; }
+
+        details {
             background: var(--bg-container);
             border: 1px solid var(--border-color);
-            border-radius: var(--radius-lg);
-            padding: 16px;
-            margin-bottom: 12px;
-            box-shadow: var(--shadow-sm);
+            border-left: 5px solid var(--primary-color);
+            margin-bottom: 20px;
+            border-radius: 6px;
+            overflow: hidden;
+            transition: border-color 0.3s;
         }
-        .info-row {
+        details:nth-child(odd) { border-left-color: var(--accent-red); }
+
+        summary {
+            background: var(--primary-color);
+            color: var(--text-light);
+            padding: 15px 20px;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 1.15rem;
+            list-style: none;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        details:nth-child(odd) summary { background: var(--accent-red); }
+        summary::-webkit-details-marker { display: none; }
+        summary::after {
+            content: '▼';
+            font-size: 0.9rem;
+            transition: transform 0.3s;
+        }
+        details[open] summary::after { transform: rotate(180deg); }
+
+        .day-content { padding: 20px; }
+
+        .time-item {
+            margin: 12px 0;
             display: flex;
             align-items: flex-start;
-            gap: 10px;
-            margin-bottom: 12px;
-            font-size: 0.95rem;
-        }
-        .info-row:last-child { margin-bottom: 0; }
-        .info-icon { font-size: 1.2rem; flex-shrink: 0; margin-top: 1px; }
-
-        /* 倒數看板 */
-        .countdown-grid {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 10px;
-            margin-bottom: 12px;
-        }
-        .cd-card {
-            background: var(--bg-container);
-            border: 1px solid var(--border-color);
-            border-radius: var(--radius-md);
-            padding: 12px 10px;
-            text-align: center;
-        }
-        .cd-title { font-size: 0.85rem; color: var(--text-secondary); font-weight: 600; }
-        .cd-timer { font-size: 1.05rem; font-weight: 800; color: var(--accent-red); margin-top: 4px; font-family: monospace; }
-
-        /* 常用快捷按鈕列 */
-        .action-row {
-            display: flex;
-            gap: 6px;
-            margin: 12px 0;
             flex-wrap: wrap;
         }
-        .action-row .btn {
-            flex: 1;
-            min-width: 85px;
-            padding: 8px 10px;
-            font-size: 0.88rem;
-            border-radius: var(--radius-sm);
-            text-align: center;
-            border: none;
-            cursor: pointer;
+        .time {
+            font-weight: bold;
+            color: var(--primary-color);
+            width: 110px;
+            flex-shrink: 0;
+            font-family: monospace;
+            font-size: 1.05rem;
+        }
+        details:nth-child(odd) .time { color: var(--accent-red); }
+        .location { flex: 1; font-size: 1rem; }
+
+        .map-link {
+            display: inline-flex;
+            align-items: center;
+            margin-left: 8px;
+            color: var(--primary-color);
             text-decoration: none;
-            font-weight: 600;
+            font-size: 0.88rem;
+            padding: 2px 6px;
+            border-radius: 4px;
+            border: 1px solid var(--primary-color);
+            transition: all 0.2s;
+        }
+        .map-link:hover { background: var(--primary-color); color: var(--text-light); }
+
+        .highlight { background: #fff3cd; color: #856404; padding: 2px 6px; border-radius: 3px; font-weight: bold; }
+        .photo-highlight { background: #ffe0e6; color: #d63031; padding: 2px 6px; border-radius: 3px; font-weight: bold; font-size: 0.9rem; }
+        .ticket-badge { background: #e0f2fe; color: #0369a1; padding: 3px 8px; border-radius: 4px; font-weight: bold; font-size: 0.88rem; border: 1px solid #bae6fd; }
+        .rain-badge { background: #e0e7ff; color: #3730a3; padding: 2px 6px; border-radius: 3px; font-weight: bold; font-size: 0.85rem; margin-left: 6px; }
+
+        .box { padding: 15px; margin: 15px 0; border-radius: 6px; border-left: 5px solid; font-size: 0.95rem; }
+        .warning-box { background: #fff3cd; border-color: #ffc107; color: #856404; }
+        .success-box { background: #d4edda; border-color: #28a745; color: #155724; }
+        .ticket-box { background: #f0fdf4; border: 2px solid #86efac; padding: 15px; border-radius: 8px; margin: 12px 0; font-size: 0.95rem; }
+        .rain-box { background: #eef2ff; border: 2px solid #818cf8; padding: 15px; border-radius: 8px; margin: 15px 0; }
+        .tips-box { background: #d5f4e6; border: 2px solid var(--accent-green); padding: 20px; border-radius: 8px; margin-top: 30px; font-size: 0.95rem; }
+        
+        [data-theme="dark"] .warning-box { background: #3a321a; color: #ffe082; }
+        [data-theme="dark"] .success-box { background: #1c3323; color: #a5d6a7; }
+        [data-theme="dark"] .ticket-box { background: #162e20; border-color: #2e7d32; color: #e0e0e0; }
+        [data-theme="dark"] .rain-box { background: #1e1e38; border-color: #4f46e5; color: #e0e0e0; }
+        [data-theme="dark"] .tips-box { background: #1b382b; color: var(--text-primary); }
+
+        .info-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 15px 0;
+            font-size: 0.9rem;
+        }
+        .info-table th, .info-table td {
+            border: 1px solid var(--border-color);
+            padding: 10px;
+            text-align: left;
+        }
+        .info-table th { background: var(--primary-color); color: var(--text-light); }
+        .info-table tfoot td {
+            background: var(--bg-card);
+            font-weight: bold;
+            color: var(--accent-red);
+        }
+
+        .detail-section {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+        .sub-section {
+            background: var(--bg-container);
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            padding: 15px;
+            margin: 15px 0;
+        }
+        .yatai-card {
+            background: var(--bg-container);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 15px;
+        }
+        .yatai-card h4 { color: #e67e22; margin-bottom: 8px; font-size: 1.1rem; display: flex; justify-content: space-between; align-items: center; }
+
+        .split-plan {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-top: 15px;
+        }
+        .split-plan .plan-a {
+            background: #e3f2fd;
+            border: 2px solid #2196f3;
+            border-radius: 8px;
+            padding: 15px;
+        }
+        .split-plan .plan-b {
+            background: #f3e5f5;
+            border: 2px solid #9c27b0;
+            border-radius: 8px;
+            padding: 15px;
+        }
+        [data-theme="dark"] .split-plan .plan-a { background: #1e2c3a; color: var(--text-primary); }
+        [data-theme="dark"] .split-plan .plan-b { background: #2c1e3a; color: var(--text-primary); }
+
+        .toggle-all { display: flex; justify-content: center; gap: 10px; margin: 20px 0; flex-wrap: wrap; }
+        .btn {
+            background: var(--primary-color);
+            color: var(--text-light);
+            border: none;
+            padding: 8px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.95rem;
+            text-decoration: none;
+            transition: background 0.2s, transform 0.1s;
             display: inline-flex;
             align-items: center;
             justify-content: center;
             gap: 4px;
         }
-        .btn-blue { background: var(--primary); color: white; }
-        .btn-gradient { background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%); color: white; }
-        .btn-secondary { background: var(--bg-sub); color: var(--text-primary); border: 1px solid var(--border-color); }
-        .btn-excel { background: #107c41; color: white; }
+        .btn:hover { background: var(--primary-hover); transform: translateY(-1px); }
+        .btn-blue { background: var(--primary-color); color: white; }
+        .btn-green { background: var(--accent-green); color: white; }
+        .btn-secondary { background: #6c757d; }
+        .btn-secondary:hover { background: #5a6268; }
+        .btn-excel { background: #107c41; }
+        .btn-excel:hover { background: #0b5a2f; }
+        .btn-gradient { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); }
 
-        /* 行程摺疊卡片 */
-        details {
-            background: var(--bg-container);
-            border: 1px solid var(--border-color);
-            border-radius: var(--radius-lg);
-            margin-bottom: 12px;
-            overflow: hidden;
-            box-shadow: var(--shadow-sm);
-        }
-        summary {
-            padding: 15px 16px;
-            font-size: 1.1rem;
-            font-weight: 700;
-            list-style: none;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            cursor: pointer;
-            background: var(--bg-container);
-            border-bottom: 1px solid transparent;
-        }
-        details[open] summary {
-            border-bottom-color: var(--border-color);
-            background: var(--bg-sub);
-        }
-        summary::-webkit-details-marker { display: none; }
-        summary::after {
-            content: '＋';
-            font-size: 1.05rem;
-            font-weight: bold;
-            color: var(--primary);
-        }
-        details[open] summary::after { content: '－'; }
-
-        .day-body { padding: 14px 12px; }
-
-        /* 手機易讀時間軸節點 */
-        .timeline {
-            position: relative;
-            padding-left: 18px;
-        }
-        .timeline::before {
-            content: '';
-            position: absolute;
-            left: 5px;
-            top: 6px;
-            bottom: 6px;
-            width: 2px;
-            background: var(--border-color);
-        }
-        .tl-item {
-            position: relative;
-            margin-bottom: 18px;
-        }
-        .tl-item:last-child { margin-bottom: 0; }
-        .tl-item::before {
-            content: '';
-            position: absolute;
-            left: -18px;
-            top: 5px;
-            width: 12px;
-            height: 12px;
-            border-radius: 50%;
-            background: var(--primary);
-            border: 2px solid var(--bg-container);
-        }
-        .tl-time {
-            font-size: 0.95rem;
-            font-weight: 800;
-            color: var(--primary);
-            font-family: monospace;
-            display: inline-block;
-            margin-bottom: 4px;
-            background: var(--bg-sub);
-            padding: 2px 8px;
-            border-radius: 4px;
-        }
-        .tl-content {
-            font-size: 1.05rem;
-            line-height: 1.65;
-            color: var(--text-primary);
-        }
-        .tl-desc {
-            font-size: 0.92rem;
-            color: var(--text-secondary);
-            margin-top: 4px;
-            line-height: 1.55;
-        }
-
-        /* 標籤與提示塊 */
-        .badge {
-            display: inline-flex;
-            align-items: center;
-            padding: 3px 8px;
-            border-radius: 5px;
-            font-size: 0.85rem;
-            font-weight: 600;
-            margin-right: 4px;
-            margin-top: 4px;
-        }
-        .badge-ticket { background: #e0f2fe; color: #0369a1; }
-        .badge-photo { background: #ffe4e6; color: #e11d48; }
-        .badge-rain { background: #ede9fe; color: #6d28d9; }
-
-        .callout {
-            background: var(--bg-sub);
-            border-left: 4px solid var(--primary);
-            border-radius: var(--radius-sm);
-            padding: 12px 14px;
-            font-size: 0.95rem;
-            margin: 12px 0;
-            line-height: 1.6;
-        }
-        .callout-warn { border-left-color: var(--accent-amber); background: #fefce8; color: #713f12; }
-        .callout-success { border-left-color: var(--accent-green); background: #f0fdf4; color: #14532d; }
-        [data-theme="dark"] .callout-warn { background: #3b2a1a; color: #fde047; }
-        [data-theme="dark"] .callout-success { background: #143224; color: #86efac; }
-
-        .sub-card {
-            background: var(--bg-sub);
-            border: 1px solid var(--border-color);
-            border-radius: var(--radius-sm);
-            padding: 12px;
-            margin: 10px 0;
-            font-size: 0.92rem;
-        }
-        .sub-card h4 { font-size: 1rem; margin-bottom: 6px; color: var(--primary); }
-
-        /* 地圖導航連結按鈕 */
-        .map-btn {
-            display: inline-flex;
-            align-items: center;
-            gap: 2px;
-            background: var(--primary-light);
-            color: var(--primary);
-            padding: 3px 8px;
-            border-radius: 5px;
-            text-decoration: none;
-            font-size: 0.85rem;
-            font-weight: 600;
-            margin-left: 4px;
-        }
-
-        /* 互動記帳本 */
-        .budget-box {
-            background: var(--bg-container);
-            border: 2px dashed var(--border-color);
-            border-radius: var(--radius-lg);
-            padding: 16px;
-            margin-top: 14px;
-        }
-        .form-grid {
+        .countdown-container {
             display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 8px;
-            margin-bottom: 8px;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 15px;
+            margin-bottom: 30px;
         }
-        .form-grid input {
-            width: 100%;
-            padding: 10px 12px;
-            border-radius: var(--radius-sm);
+        .countdown-card {
+            background: var(--bg-card);
             border: 1px solid var(--border-color);
-            background: var(--bg-sub);
+            border-radius: 8px;
+            padding: 15px;
+            text-align: center;
+        }
+        .countdown-card .timer {
+            font-size: 1.15rem;
+            font-weight: bold;
+            color: var(--accent-red);
+            margin: 8px 0;
+            font-family: monospace;
+        }
+
+        .copy-icon { cursor: pointer; margin-left: 5px; opacity: 0.7; }
+        .copy-icon:hover { opacity: 1; }
+
+        #toast {
+            visibility: hidden;
+            min-width: 200px;
+            background-color: rgba(15, 23, 42, 0.92);
+            color: #fff;
+            text-align: center;
+            border-radius: 20px;
+            padding: 10px 20px;
+            position: fixed;
+            z-index: 1000;
+            left: 50%;
+            bottom: 30px;
+            transform: translateX(-50%);
+            font-size: 0.95rem;
+            transition: opacity 0.3s;
+            opacity: 0;
+        }
+        #toast.show { visibility: visible; opacity: 1; }
+
+        .todo-check { transform: scale(1.2); margin-right: 8px; cursor: pointer; }
+        .todo-text.checked { text-decoration: line-through; opacity: 0.5; }
+
+        /* 記帳本專用樣式 */
+        .budget-tracker {
+            background: var(--bg-card);
+            border: 2px dashed var(--border-color);
+            padding: 20px;
+            border-radius: 8px;
+            margin-top: 20px;
+        }
+        .input-group { 
+            display: flex; 
+            gap: 10px; 
+            margin-bottom: 15px; 
+            flex-wrap: wrap; 
+            align-items: center;
+        }
+        .input-group input {
+            flex: 1;
+            min-width: 120px;
+            padding: 8px 12px;
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            background: var(--bg-container);
             color: var(--text-primary);
             font-size: 0.95rem;
         }
         .rate-wrapper {
             display: flex;
             align-items: center;
-            gap: 6px;
+            gap: 8px;
         }
-        .rate-status { font-size: 0.88rem; color: var(--accent-green); font-weight: 600; }
+        .rate-status {
+            font-size: 0.85rem;
+            color: var(--accent-green);
+        }
         .refresh-rate-btn {
-            background: var(--bg-sub);
+            background: var(--bg-container);
             border: 1px solid var(--border-color);
             border-radius: 50%;
             width: 32px;
             height: 32px;
             cursor: pointer;
+            font-size: 14px;
+            color: var(--text-primary);
             display: inline-flex;
             align-items: center;
             justify-content: center;
-            color: var(--text-primary);
-            transition: transform 0.2s;
+            transition: all 0.2s;
+            flex-shrink: 0;
         }
-        .refresh-rate-btn.spinning { animation: spin 0.8s linear infinite; }
-
-        .btn-main {
-            width: 100%;
-            background: var(--primary);
-            color: white;
-            border: none;
-            padding: 12px;
-            border-radius: var(--radius-sm);
-            font-size: 1rem;
-            font-weight: 700;
-            cursor: pointer;
-            margin-top: 4px;
+        .refresh-rate-btn:hover {
+            background: var(--primary-color);
+            color: var(--text-light);
+            border-color: var(--primary-color);
+            transform: scale(1.1);
         }
-        .btn-main:active { opacity: 0.9; }
+        .refresh-rate-btn.spinning {
+            animation: spin 0.8s linear infinite;
+        }
+        @keyframes spin { 100% { transform: rotate(360deg); } }
 
-        /* 底部固定快捷操作列 (App-like Bottom Navigation) */
+        .expense-meta {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            margin-top: 2px;
+        }
+        .backup-toolbar {
+            display: flex;
+            justify-content: flex-end;
+            gap: 8px;
+            margin-bottom: 12px;
+            flex-wrap: wrap;
+        }
+
+        .update-time {
+            text-align: center;
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 1px solid var(--border-color);
+            color: var(--text-secondary);
+            font-size: 0.85rem;
+        }
+
+        /* 底部固定導航列 (手機模式專用) */
         .bottom-bar {
+            display: none;
             position: fixed;
             bottom: 0;
             left: 0;
@@ -440,7 +512,6 @@
             height: 64px;
             background: var(--bg-container);
             border-top: 1px solid var(--border-color);
-            display: flex;
             justify-content: space-around;
             align-items: center;
             z-index: 50;
@@ -461,701 +532,53 @@
             height: 100%;
             cursor: pointer;
         }
-        .nav-item:active { color: var(--primary); }
+        .nav-item:active { color: var(--primary-color); }
         .nav-item span { font-size: 1.25rem; }
 
-        /* 清單多選框加大 */
-        .todo-check { transform: scale(1.35); margin-right: 10px; }
-        .todo-label { font-size: 0.95rem; line-height: 2.1; cursor: pointer; }
-
-        /* Toast 浮動通知 */
-        #toast {
-            visibility: hidden;
-            min-width: 180px;
-            background: rgba(15, 23, 42, 0.92);
-            color: white;
-            text-align: center;
-            border-radius: 20px;
-            padding: 9px 16px;
+        #topBtn {
+            display: none;
             position: fixed;
-            z-index: 1000;
-            left: 50%;
-            bottom: 75px;
-            transform: translateX(-50%);
-            font-size: 0.9rem;
-            opacity: 0;
-            transition: opacity 0.3s;
-        }
-        #toast.show { visibility: visible; opacity: 1; }
-
-        @keyframes spin { 100% { transform: rotate(360deg); } }
-    </style>
-</head>
-<body>
-
-    <div class="container" id="page-top">
-        
-        <!-- 頂部 Header -->
-        <div class="header-card">
-            <div class="top-btns">
-                <!-- A- / A+ 字級縮放按鈕 -->
-                <div class="font-btn-group" title="調整字體大小">
-                    <button class="font-btn" id="fontDecBtn" title="字體縮小">A-</button>
-                    <button class="font-btn" id="fontIncBtn" title="字體放大">A+</button>
-                </div>
-                <button class="icon-btn" id="pageRefreshBtn" title="重新整理">🔄</button>
-                <button class="icon-btn" id="themeToggle" title="深色模式">🌙</button>
-            </div>
-            <div class="header-title">🗾 福岡 6 天 5 夜</div>
-            <div class="header-sub">2026年9月16日 (三) – 9月21日 (一)</div>
-        </div>
-
-        <!-- 吸頂橫向快速導航標籤 (原地跳轉) -->
-        <div class="day-nav-wrapper">
-            <div class="day-chip" data-jump="day1">D1 抵達/南藏院</div>
-            <div class="day-chip" data-jump="day2">D2 由布院之森</div>
-            <div class="day-chip" data-jump="day3">D3 貓島/放生會</div>
-            <div class="day-chip" data-jump="day4">D4 太宰府/柳川</div>
-            <div class="day-chip" data-jump="day5">D5 鋼彈/糸島</div>
-            <div class="day-chip" data-jump="day6">D6 大濠/返台</div>
-        </div>
-
-        <!-- 航班與住宿快速資訊 -->
-        <div class="info-card">
-            <div class="info-row">
-                <div class="info-icon">✈️</div>
-                <div>
-                    <strong>長榮航空 (代號: <span style="color:var(--accent-red); cursor:pointer;" data-copy="FCD249">FCD249 📋</span>)</strong><br>
-                    <span style="font-size:0.88rem; color:var(--text-secondary);">
-                        去程 9/16 BR106 08:00 ➔ 11:20 抵達福岡<br>
-                        回程 9/21 BR101 19:20 ➔ 20:45 抵達桃園
-                    </span>
-                </div>
-            </div>
-            <div class="info-row">
-                <div class="info-icon">🏨</div>
-                <div>
-                    <strong>福岡天神東方快捷酒店 (5晚)</strong> 
-                    <a href="https://www.google.com/maps/search/?api=1&query=Hotel+Oriental+Express+Fukuoka+Tenjin" target="_blank" class="map-btn">📍導航</a>
-                </div>
-            </div>
-            <div class="info-row">
-                <div class="info-icon">🚂</div>
-                <div>
-                    <strong>由布院之森 (已劃位 & 便當已訂)</strong><br>
-                    <span class="badge badge-ticket">去程 1號: 2車7AB 09:17</span>
-                    <span class="badge badge-ticket">回程 6號: 5車8AB 17:17</span>
-                </div>
-            </div>
-        </div>
-
-        <!-- 倒數看板 -->
-        <div class="countdown-grid">
-            <div class="cd-card">
-                <div class="cd-title">📝 日本入境 VJW 預填</div>
-                <div class="cd-timer" id="timer-vjw">計算中...</div>
-            </div>
-            <div class="cd-card">
-                <div class="cd-title">✈️ 距離出發啟程</div>
-                <div class="cd-timer" id="timer-departure">計算中...</div>
-            </div>
-        </div>
-
-        <!-- 常用快捷按鈕列 -->
-        <div class="action-row" id="top-map-tools">
-            <button class="btn btn-secondary" id="expandBtn">📂 全部展開</button>
-            <button class="btn btn-secondary" id="collapseBtn">📁 全部收合</button>
-            <a href="https://www.anitabi.cn/map" target="_blank" class="btn btn-gradient">🗺️ 動漫地圖</a>
-            <button class="btn btn-blue" id="topRainBtn">🌧️ 雨天備案</button>
-        </div>
-
-        <!-- 每日行程列表 -->
-        <div id="day1"></div>
-        <details open id="details-day1">
-            <summary>📅 Day 1 - 9/16 (三) 抵達、一蘭、南藏院、福岡塔</summary>
-            <div class="day-body">
-                <div class="callout callout-warn">
-                    ⚠️ <strong>時間重點：</strong>南藏院 16:30 截止入內；福岡塔日落約 18:25，建議 18:00 前抵達！
-                </div>
-                <div class="timeline">
-                    <div class="tl-item">
-                        <div class="tl-time">11:20</div>
-                        <div class="tl-content">抵達福岡機場國際線，出關並領取行李 <a href="https://www.google.com/maps/search/?api=1&query=福岡空港国際線ターミナル" target="_blank" class="map-btn">📍</a></div>
-                    </div>
-                    <div class="tl-item">
-                        <div class="tl-time">12:15</div>
-                        <div class="tl-content">搭免費接駁公車至國內線 ➔ 轉地鐵機場線至「天神站」(11分) 直達飯店寄存行李</div>
-                    </div>
-                    <div class="tl-item">
-                        <div class="tl-time">13:30</div>
-                        <div class="tl-content">午餐：<strong>一蘭拉麵 本社總本店</strong> <a href="https://www.google.com/maps/search/?api=1&query=一蘭+本社総本店" target="_blank" class="map-btn">📍</a></div>
-                        <div class="tl-desc">天神本店週三公休，改至 24hr 營業的總本店</div>
-                    </div>
-                    <div class="tl-item">
-                        <div class="tl-time">15:00</div>
-                        <div class="tl-content"><strong>南藏院參拜</strong> <a href="https://www.google.com/maps/search/?api=1&query=南蔵院" target="_blank" class="map-btn">📍</a> <span class="badge badge-photo">📸 世界最大青銅涅槃佛</span></div>
-                        <div class="tl-desc">博多搭 JR 篠栗線 23 分至城戶南藏院前站</div>
-                    </div>
-                    <div class="tl-item">
-                        <div class="tl-time">18:00</div>
-                        <div class="tl-content"><strong>福岡塔夕陽與夜景</strong> <a href="https://www.google.com/maps/search/?api=1&query=福岡タワー" target="_blank" class="map-btn">📍</a></div>
-                        <div class="tl-desc">出示護照門票享 640 日圓外國人特惠</div>
-                    </div>
-                    <div class="tl-item">
-                        <div class="tl-time">20:30</div>
-                        <div class="tl-content">晚餐：<strong>中洲/天神 屋台體驗</strong> <a href="https://www.google.com/maps/search/?api=1&query=中洲屋台" target="_blank" class="map-btn">📍</a></div>
-                    </div>
-                </div>
-            </div>
-        </details>
-
-        <div id="day2"></div>
-        <details open id="details-day2">
-            <summary>📅 Day 2 - 9/17 (四) 由布院溫泉鄉 🚂 ＆ 貓頭鷹之森</summary>
-            <div class="day-body">
-                <div class="callout callout-success">
-                    🎫 <strong>車票與便當：</strong>去程 09:17 (博多月台6 / 2車7AB)；回程 17:17 (由布院 / 5車8AB)；便當發車後至 2 號車廂領取。
-                </div>
-                <div class="timeline">
-                    <div class="tl-item">
-                        <div class="tl-time">09:17</div>
-                        <div class="tl-content">搭乘<strong>由布院之森 1 號</strong>發車 ➔ 車上享用大分及牛便當🍱</div>
-                    </div>
-                    <div class="tl-item">
-                        <div class="tl-time">11:35</div>
-                        <div class="tl-content"><strong>先衝金鱗湖</strong> <a href="https://www.google.com/maps/search/?api=1&query=金鱗湖+由布院" target="_blank" class="map-btn">📍</a> <span class="badge badge-photo">📸 水中鳥居倒影</span></div>
-                    </div>
-                    <div class="tl-item">
-                        <div class="tl-time">12:30</div>
-                        <div class="tl-content">午餐：<strong>由布まぶし 心</strong> (豐後牛三吃釜飯) 或 街道小吃</div>
-                    </div>
-                    <div class="tl-item">
-                        <div class="tl-time">14:00</div>
-                        <div class="tl-content"><strong>湯之坪街道 ＆ 貓頭鷹之森 ＆ 甜點散步</strong> <a href="https://www.google.com/maps/search/?api=1&query=Yufuin+Floral+Village" target="_blank" class="map-btn">📍</a></div>
-                        <div class="tl-desc">必吃：花麹菊家布丁銅鑼燒、B-speak 蛋糕捲、Milch 起司</div>
-                    </div>
-                    <div class="tl-item">
-                        <div class="tl-time">17:17</div>
-                        <div class="tl-content">搭乘<strong>由布院之森 6 號</strong>返回博多 (19:27 抵達)</div>
-                    </div>
-                    <div class="tl-item">
-                        <div class="tl-time">22:00</div>
-                        <div class="tl-content">宵夜：<strong>博多拉麵 ShinShin 天神本店</strong> <a href="https://www.google.com/maps/search/?api=1&query=博多らーめん+ShinShin+天神本店" target="_blank" class="map-btn">📍</a></div>
-                    </div>
-                </div>
-            </div>
-        </details>
-
-        <div id="day3"></div>
-        <details open id="details-day3">
-            <summary>📅 Day 3 - 9/18 (五) 相島貓島 ＋ 放生會 ＋ 宮地嶽神社 ＋ 鋼彈</summary>
-            <div class="day-body">
-                <div class="callout callout-success">
-                    🌟 <strong>神級順路動線：</strong>利用 JR 鹿兒島本線空檔，下午快閃一年一度「筥崎宮放生會」秋季大祭！
-                </div>
-                <div class="timeline">
-                    <div class="tl-item">
-                        <div class="tl-time">10:00</div>
-                        <div class="tl-content">新宮港搭渡輪 ➔ <strong>相島貓島探索 (約 3 小時)</strong> <a href="https://www.google.com/maps/search/?api=1&query=相島+福岡" target="_blank" class="map-btn">📍</a> <span class="badge badge-photo">📸 眼鏡岩</span></div>
-                    </div>
-                    <div class="tl-item">
-                        <div class="tl-time">13:50</div>
-                        <div class="tl-content">搭渡輪返程 ➔ 回到 JR 福工大前站</div>
-                    </div>
-                    <div class="tl-item">
-                        <div class="tl-time">14:40</div>
-                        <div class="tl-content"><strong>⛩️ 筥崎宮放生會 (博多三大祭最後一日！)</strong> <a href="https://www.google.com/maps/search/?api=1&query=筥崎宮" target="_blank" class="map-link">📍</a></div>
-                        <div class="tl-desc">JR 箱崎站步行 8 分，體驗長達 1 公里、500 間熱鬧屋台</div>
-                    </div>
-                    <div class="tl-item">
-                        <div class="tl-time">17:30</div>
-                        <div class="tl-content"><strong>宮地嶽神社</strong> <a href="https://www.google.com/maps/search/?api=1&query=宮地嶽神社" target="_blank" class="map-btn">📍</a> <span class="badge badge-photo">📸 巨型注連繩 ＆ 夕陽光之道</span></div>
-                    </div>
-                    <div class="tl-item">
-                        <div class="tl-time">19:50</div>
-                        <div class="tl-content"><strong>LaLaport 福岡：實物大 ν 鋼彈</strong> <a href="https://www.google.com/maps/search/?api=1&query=Mitsui+Shopping+Park+LaLaport+福岡" target="_blank" class="map-btn">📍</a></div>
-                        <div class="tl-desc">欣賞 20:00 夜間燈光秀與牆面投影表演</div>
-                    </div>
-                </div>
-            </div>
-        </details>
-
-        <div id="day4"></div>
-        <details id="details-day4">
-            <summary>📅 Day 4 - 9/19 (六) 太宰府 (摸聰明牛) ＋ 柳川水鄉 ＋ Alpen</summary>
-            <div class="day-body">
-                <div class="timeline">
-                    <div class="tl-item">
-                        <div class="tl-time">09:00</div>
-                        <div class="tl-content">太宰府表參道星巴克 ➔ 09:30 一蘭抽合格號碼牌</div>
-                    </div>
-                    <div class="tl-item">
-                        <div class="tl-time">09:45</div>
-                        <div class="tl-content"><strong>太宰府天滿宮參拜 ＆ 摸御神牛求智慧</strong> <a href="https://www.google.com/maps/search/?api=1&query=太宰府天満宮+御神牛" target="_blank" class="map-btn">📍</a></div>
-                    </div>
-                    <div class="tl-item">
-                        <div class="tl-time">11:30</div>
-                        <div class="tl-content">午餐：<strong>一蘭合格拉麵</strong> (五角形碗、59cm長麵條)</div>
-                    </div>
-                    <div class="tl-item">
-                        <div class="tl-time">14:30</div>
-                        <div class="tl-content"><strong>柳川遊船 (70分鐘)</strong> <a href="https://www.google.com/maps/search/?api=1&query=柳川下り+乗船場" target="_blank" class="map-btn">📍</a> ➔ 享用元祖本吉屋鰻魚飯</div>
-                    </div>
-                    <div class="tl-item">
-                        <div class="tl-time">19:30</div>
-                        <div class="tl-content"><strong>Alpen FUKUOKA 旗艦店 (博多運河城南棟 1-3F)</strong> <a href="https://www.google.com/maps/search/?api=1&query=Alpen+FUKUOKA+キャナルシティ博多" target="_blank" class="map-btn">📍</a></div>
-                        <div class="tl-desc">營業至 21:00，建議 20:30 前完成免稅退稅手續！</div>
-                    </div>
-                </div>
-            </div>
-        </details>
-
-        <div id="day5"></div>
-        <details id="details-day5">
-            <summary>📅 Day 5 - 9/20 (日) 鋼彈白天秀 ➔ 告別午餐 ➔ 糸島海景</summary>
-            <div class="day-body">
-                <div class="timeline">
-                    <div class="tl-item">
-                        <div class="tl-time">10:00</div>
-                        <div class="tl-content">LaLaport 福岡：實物大 ν 鋼彈日間動態秀</div>
-                    </div>
-                    <div class="tl-item">
-                        <div class="tl-time">12:00</div>
-                        <div class="tl-content">博多站享用告別午餐</div>
-                    </div>
-                    <div class="tl-item">
-                        <div class="tl-time">13:30</div>
-                        <div class="tl-content"><strong>🅰 留福岡：糸島海景巡禮</strong> (櫻井二見浦白色鳥居 ＋ PALM BEACH 鞦韆夕陽) <a href="https://www.google.com/maps/search/?api=1&query=桜井二見ヶ浦+糸島" target="_blank" class="map-btn">📍</a></div>
-                        <div class="tl-desc">🅱 赴大阪：14:30 搭新幹線前往新大阪</div>
-                    </div>
-                </div>
-            </div>
-        </details>
-
-        <div id="day6"></div>
-        <details id="details-day6">
-            <summary>📅 Day 6 - 9/21 (一) 大濠公園 ＆ 機場返程指南</summary>
-            <div class="day-body">
-                <div class="timeline">
-                    <div class="tl-item">
-                        <div class="tl-time">09:00</div>
-                        <div class="tl-content">退房並將行李寄放天神飯店櫃檯</div>
-                    </div>
-                    <div class="tl-item">
-                        <div class="tl-time">09:30</div>
-                        <div class="tl-content"><strong>大濠公園・福岡城跡晨間漫步</strong> <a href="https://www.google.com/maps/search/?api=1&query=大濠公園" target="_blank" class="map-btn">📍</a></div>
-                    </div>
-                    <div class="tl-item">
-                        <div class="tl-time">11:30</div>
-                        <div class="tl-content">天神商圈免稅採買伴手禮 (八女茶、明太子) ＋ 午餐</div>
-                    </div>
-                    <div class="tl-item">
-                        <div class="tl-time">16:00</div>
-                        <div class="tl-content"><strong>飯店領取行李 ➔ 出發前往福岡機場國際線</strong></div>
-                        <div class="tl-desc">地鐵 11 分直達國內線 ➔ 轉免費接駁公車約 16:35 抵達</div>
-                    </div>
-                    <div class="tl-item">
-                        <div class="tl-time">19:20</div>
-                        <div class="tl-content">長榮航空 BR101 起飛 (20:45 抵達台北桃園)</div>
-                    </div>
-                </div>
-            </div>
-        </details>
-
-        <!-- 雨天備案專題 -->
-        <div id="rain-section"></div>
-        <details id="details-rain">
-            <summary>🌧️ 全天候雨天備案精選</summary>
-            <div class="day-body">
-                <div class="callout">
-                    ☔ <strong>雨天室內首選清單：</strong><br>
-                    • <strong>teamLab Forest Fukuoka</strong> (光影沉浸展) <a href="https://www.google.com/maps/search/?api=1&query=teamLab+Forest+Fukuoka" target="_blank" class="map-btn">📍</a><br>
-                    • <strong>博多運河城</strong> (室內水舞秀 ＋ 拉麵競技場) <a href="https://www.google.com/maps/search/?api=1&query=キャナルシティ博多" target="_blank" class="map-btn">📍</a><br>
-                    • <strong>九州國立博物館</strong> (太宰府室內步道直達) <a href="https://www.google.com/maps/search/?api=1&query=九州国立博物館" target="_blank" class="map-btn">📍</a><br>
-                    • <strong>Marine World 水族館</strong> (海之中道全天候室內) <a href="https://www.google.com/maps/search/?api=1&query=マリンワールド海の中道" target="_blank" class="map-btn">📍</a><br>
-                    • <strong>天神地下街</strong> (全長 600m 直通各大百貨，免撐傘)
-                </div>
-            </div>
-        </details>
-
-        <!-- 行前待辦清單 -->
-        <details>
-            <summary>✅ 行前待辦清單 (Checklist)</summary>
-            <div class="day-body">
-                <div style="line-height: 2.1;">
-                    <label class="todo-label"><input type="checkbox" class="todo-check" checked disabled> 🎫 由布院之森車票 ＆ 車上便當 (已完成)</label><br>
-                    <label class="todo-label"><input type="checkbox" class="todo-check" id="chk_vjw"> 📝 8/31 起填寫 Visit Japan Web 並截圖 QR Code</label><br>
-                    <label class="todo-label"><input type="checkbox" class="todo-check" id="chk_card"> 💳 Apple Wallet 綁定交通 IC 卡 (Suica/ICOCA)</label><br>
-                    <label class="todo-label"><input type="checkbox" class="todo-check" id="chk_res"> 🍽️ 8月中旬 預訂水炊雞鍋與燒肉名店</label><br>
-                    <label class="todo-label"><input type="checkbox" class="todo-check" id="chk_boat"> 🚢 9/18 出發前確認相島渡輪航行狀態</label>
-                </div>
-            </div>
-        </details>
-
-        <!-- 互動記帳本 -->
-        <div id="budget-section" class="budget-box">
-            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
-                <h3 style="font-size:1.05rem;">💰 旅費即時記帳</h3>
-                <div class="rate-wrapper">
-                    <span id="rate-status" class="rate-status">連線匯率中...</span>
-                    <button class="refresh-rate-btn" id="refreshRateBtn" title="更新最新匯率">
-                        <span class="spin-icon">🔄</span>
-                    </button>
-                </div>
-            </div>
-
-            <div class="form-grid">
-                <input type="date" id="expense-date">
-                <input type="number" id="expense-amount" placeholder="金額 (JPY)">
-            </div>
-            <div class="form-grid">
-                <input type="text" id="expense-name" placeholder="項目 (如: 放生會 屋台小吃)" style="grid-column: span 2;">
-            </div>
-            <input type="hidden" id="expense-rate" value="0.21">
-            <button class="btn-main" id="addExpenseBtn">＋ 新增一筆消費</button>
-
-            <ul id="expense-list" style="list-style:none; margin-top:14px;"></ul>
-
-            <div style="margin-top:14px; padding-top:10px; border-top:1px solid var(--border-color); display:flex; justify-content:space-between; font-weight:800; font-size:1rem;">
-                <span>日圓: <span id="total-jpy" style="color:var(--accent-red);">0</span> 円</span>
-                <span>台幣: 約 NT$ <span id="total-twd" style="color:var(--primary);">0</span></span>
-            </div>
-
-            <div class="action-row" style="margin-top:12px;">
-                <button class="btn btn-excel" id="exportCsvBtn">📊 匯出 CSV</button>
-                <button class="btn btn-secondary" id="exportTxtBtn">📄 匯出 TXT</button>
-                <button class="btn btn-secondary" id="importExpensesBtn">📥 匯入</button>
-                <input type="file" id="importFileInput" accept=".csv,.txt" style="display: none;">
-            </div>
-        </div>
-
-        <p style="text-align: center; margin-top: 30px; color: var(--text-secondary); font-size: 0.85rem;">
-            <strong>祝您在福岡有一段美好的旅程！🎌✨🐮🐱🦉🍮🍱📸🚂🛶💰🤖🏕️🚄</strong>
-        </p>
-
-    </div>
-
-    <!-- 底部固定快捷操作列 (原地跳轉，絕不另開新視窗) -->
-    <div class="bottom-bar">
-        <div class="nav-item" id="navBottomDay">
-            <span>📅</span>行程
-        </div>
-        <div class="nav-item" id="navBottomRain">
-            <span>🌧️</span>雨天
-        </div>
-        <div class="nav-item" id="navBottomBudget">
-            <span>💰</span>記帳
-        </div>
-        <div class="nav-item" id="navBottomMap">
-            <span>📍</span>地圖
-        </div>
-        <div class="nav-item" id="navBottomTop">
-            <span>⬆️</span>置頂
-        </div>
-    </div>
-
-    <div id="toast">已完成！</div>
-
-    <script>
-        // 匯率自動抓取 (含防快取與雙 API 容錯)
-        async function fetchExchangeRate(isManual = false) {
-            const rateInput = document.getElementById('expense-rate');
-            const rateStatus = document.getElementById('rate-status');
-            const refreshBtn = document.getElementById('refreshRateBtn');
-            
-            if (refreshBtn) refreshBtn.classList.add('spinning');
-            if (rateStatus) rateStatus.innerText = '更新中...';
-
-            let success = false;
-            let finalRate = null;
-
-            try {
-                const res1 = await fetch(`https://open.er-api.com/v6/latest/JPY?t=${Date.now()}`, { cache: 'no-store' });
-                const data1 = await res1.json();
-                if (data1?.rates?.TWD) {
-                    finalRate = parseFloat(data1.rates.TWD).toFixed(4);
-                    success = true;
-                }
-            } catch (e1) {}
-
-            if (!success) {
-                try {
-                    const res2 = await fetch(`https://api.frankfurter.dev/v1/latest?base=JPY&symbols=TWD&t=${Date.now()}`, { cache: 'no-store' });
-                    const data2 = await res2.json();
-                    if (data2?.rates?.TWD) {
-                        finalRate = parseFloat(data2.rates.TWD).toFixed(4);
-                        success = true;
-                    }
-                } catch (e2) {}
-            }
-
-            if (success && finalRate) {
-                if (rateInput) rateInput.value = finalRate;
-                if (rateStatus) rateStatus.innerText = `1 円 ≈ ${finalRate} NTD`;
-                if (isManual) showToast(`已更新匯率：${finalRate}`);
-            } else {
-                if (rateStatus) rateStatus.innerText = `預設匯率: 0.21`;
-                if (isManual) showToast('匯率更新失敗，維持預設');
-            }
-
-            if (refreshBtn) setTimeout(() => refreshBtn.classList.remove('spinning'), 600);
+            bottom: 20px;
+            right: 20px;
+            z-index: 99;
+            border: none;
+            background-color: var(--primary-color);
+            color: var(--text-light);
+            cursor: pointer;
+            padding: 12px;
+            border-radius: 50%;
+            font-size: 18px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.2);
         }
 
-        function showToast(msg) {
-            const toast = document.getElementById('toast');
-            toast.innerText = msg;
-            toast.classList.add('show');
-            setTimeout(() => toast.classList.remove('show'), 2200);
+        ul { margin-left: 20px; }
+        li { margin: 6px 0; }
+
+        /* =========================================================
+           📱 專用「手機易讀模式 (Mobile-View Active)」大字版樣式
+           ========================================================= */
+        body.mobile-view {
+            padding: 10px;
+            padding-bottom: 85px;
+            background: var(--bg-body);
         }
-
-        // 原地平滑滾動並展開指定區塊
-        function smoothScrollTo(elementId, openDetails = false) {
-            const el = document.getElementById(elementId);
-            if (el) {
-                if (openDetails && el.tagName === 'DETAILS') {
-                    el.open = true;
-                }
-                el.scrollIntoView({ behavior: 'smooth', block: 'start' });
-            }
+        body.mobile-view .container {
+            padding: 16px;
+            border-radius: 16px;
+            box-shadow: 0 1px 4px rgba(0,0,0,0.05);
         }
+        body.mobile-view h1 { 
+            font-size: 1.6rem; 
+            margin-bottom: 6px; 
+            padding-bottom: 10px; 
+        }
+        body.mobile-view .subtitle { 
+            font-size: 0.95rem; 
+            margin-bottom: 18px; 
+        }
+        body.mobile-view .day-nav-wrapper { display: flex; }
+        body.mobile-view .bottom-bar { display: flex; }
+        body.mobile-view #topBtn { display: none !important; }
+        body.mobile-view #toast { bottom: 80px; font-size: 0.95rem; }
 
-        document.addEventListener('DOMContentLoaded', () => {
-            // 0. 字體大小縮放控制 (A- / A+)
-            let currentScale = parseFloat(localStorage.getItem('fukuoka_mobile_font_scale')) || 1.0;
-            const setFontScale = (scale) => {
-                currentScale = Math.min(Math.max(scale, 0.8), 1.5); // 限制縮放範圍在 80% ~ 150%
-                document.documentElement.style.setProperty('--font-scale', currentScale);
-                localStorage.setItem('fukuoka_mobile_font_scale', currentScale);
-            };
-            setFontScale(currentScale);
-
-            document.getElementById('fontIncBtn').addEventListener('click', () => {
-                setFontScale(currentScale + 0.1);
-                showToast(`字體已放大 (${Math.round(currentScale * 100)}%)`);
-            });
-
-            document.getElementById('fontDecBtn').addEventListener('click', () => {
-                setFontScale(currentScale - 0.1);
-                showToast(`字體已縮小 (${Math.round(currentScale * 100)}%)`);
-            });
-
-            // 初始化日期與匯率
-            const dateInput = document.getElementById('expense-date');
-            if (dateInput) dateInput.value = new Date().toISOString().split('T')[0];
-            fetchExchangeRate();
-
-            // 主題切換 (深色 / 淺色)
-            const themeToggle = document.getElementById('themeToggle');
-            const applyTheme = (theme) => {
-                document.body.setAttribute('data-theme', theme);
-                themeToggle.innerText = theme === 'dark' ? '☀️' : '🌙';
-                localStorage.setItem('fukuoka_theme', theme);
-            };
-            applyTheme(localStorage.getItem('fukuoka_theme') || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'));
-            themeToggle.addEventListener('click', () => {
-                const isDark = document.body.getAttribute('data-theme') === 'dark';
-                applyTheme(isDark ? 'light' : 'dark');
-            });
-
-            // 重新整理與展開收合
-            document.getElementById('pageRefreshBtn').addEventListener('click', () => location.reload());
-            document.getElementById('refreshRateBtn').addEventListener('click', () => fetchExchangeRate(true));
-            document.getElementById('expandBtn').addEventListener('click', () => document.querySelectorAll('details').forEach(d => d.open = true));
-            document.getElementById('collapseBtn').addEventListener('click', () => document.querySelectorAll('details').forEach(d => d.removeAttribute('open')));
-
-            // 底部快捷列原地跳轉
-            document.getElementById('navBottomDay').addEventListener('click', () => smoothScrollTo('details-day1', true));
-            document.getElementById('navBottomRain').addEventListener('click', () => smoothScrollTo('details-rain', true));
-            document.getElementById('navBottomBudget').addEventListener('click', () => smoothScrollTo('budget-section'));
-            document.getElementById('navBottomMap').addEventListener('click', () => smoothScrollTo('top-map-tools'));
-            document.getElementById('navBottomTop').addEventListener('click', () => window.scrollTo({ top: 0, behavior: 'smooth' }));
-            document.getElementById('topRainBtn').addEventListener('click', () => smoothScrollTo('details-rain', true));
-
-            // 吸頂橫向滑動天數標籤 (D1～D6) 原地跳轉
-            document.querySelectorAll('.day-chip').forEach(chip => {
-                chip.addEventListener('click', () => {
-                    const dayKey = chip.getAttribute('data-jump');
-                    smoothScrollTo(`details-${dayKey}`, true);
-                });
-            });
-
-            // 一鍵複製
-            document.addEventListener('click', (e) => {
-                const target = e.target.closest('[data-copy]');
-                if (target) {
-                    const text = target.getAttribute('data-copy');
-                    navigator.clipboard.writeText(text).then(() => showToast(`已複製代號：${text}`));
-                }
-            });
-
-            // 倒數計時
-            const dates = {
-                'timer-vjw': new Date("2026-08-31T00:00:00+08:00").getTime(),
-                'timer-departure': new Date("2026-09-16T00:00:00+08:00").getTime()
-            };
-            function updateTimers() {
-                const now = Date.now();
-                Object.keys(dates).forEach(id => {
-                    const el = document.getElementById(id);
-                    if (!el) return;
-                    const diff = dates[id] - now;
-                    if (diff <= 0) {
-                        el.innerText = "已開放 / 已出發！";
-                    } else {
-                        const d = Math.floor(diff / 86400000);
-                        const h = String(Math.floor((diff % 86400000) / 3600000)).padStart(2, '0');
-                        el.innerText = `${d}天 ${h}小時`;
-                    }
-                });
-            }
-            setInterval(updateTimers, 1000);
-            updateTimers();
-
-            // 行前清單記憶
-            const checkboxes = ['chk_vjw', 'chk_card', 'chk_res', 'chk_boat'];
-            checkboxes.forEach(id => {
-                const el = document.getElementById(id);
-                if (!el) return;
-                if (localStorage.getItem('fukuoka_' + id) === 'true') el.checked = true;
-                el.addEventListener('change', () => localStorage.setItem('fukuoka_' + id, el.checked));
-            });
-
-            // 記帳本功能
-            let expenses = JSON.parse(localStorage.getItem('fukuoka_expenses_v2')) || [
-                { date: "2026-09-17", name: "由布院之森 車上便當2份", amount: 4800, rate: 0.21 }
-            ];
-            const expName = document.getElementById('expense-name');
-            const expAmount = document.getElementById('expense-amount');
-            const expRate = document.getElementById('expense-rate');
-            const listEl = document.getElementById('expense-list');
-            const totalJpyEl = document.getElementById('total-jpy');
-            const totalTwdEl = document.getElementById('total-twd');
-
-            function renderExpenses() {
-                listEl.innerHTML = '';
-                let totalJpy = 0;
-                let totalTwd = 0;
-                expenses.sort((a, b) => new Date(b.date) - new Date(a.date));
-
-                expenses.forEach((exp, i) => {
-                    const twd = Math.round(exp.amount * exp.rate);
-                    totalJpy += exp.amount;
-                    totalTwd += twd;
-
-                    const li = document.createElement('li');
-                    li.style.cssText = "display:flex; justify-content:space-between; align-items:center; padding:9px 0; border-bottom:1px dashed var(--border-color); font-size:0.95rem;";
-                    li.innerHTML = `
-                        <div>
-                            <strong>${exp.name}</strong>
-                            <div style="font-size:0.82rem; color:var(--text-secondary);">${exp.date}</div>
-                        </div>
-                        <div style="text-align:right;">
-                            <div>¥${exp.amount.toLocaleString()} <span style="font-size:0.82rem; color:var(--text-secondary);">(NT$${twd.toLocaleString()})</span>
-                            <button style="color:var(--accent-red);background:none;border:none;margin-left:6px;font-size:0.95rem;cursor:pointer;" data-idx="${i}">✕</button></div>
-                        </div>
-                    `;
-                    listEl.appendChild(li);
-                });
-
-                totalJpyEl.innerText = totalJpy.toLocaleString();
-                totalTwdEl.innerText = totalTwd.toLocaleString();
-                localStorage.setItem('fukuoka_expenses_v2', JSON.stringify(expenses));
-            }
-
-            document.getElementById('addExpenseBtn').addEventListener('click', () => {
-                const date = dateInput.value;
-                const name = expName.value.trim();
-                const amount = parseInt(expAmount.value);
-                const rate = parseFloat(expRate.value) || 0.21;
-
-                if (!date || !name || isNaN(amount) || amount <= 0) {
-                    alert('請填寫完整項目名稱與金額！');
-                    return;
-                }
-                expenses.push({ date, name, amount, rate });
-                expName.value = '';
-                expAmount.value = '';
-                renderExpenses();
-                showToast('已記錄消費');
-            });
-
-            listEl.addEventListener('click', (e) => {
-                if (e.target.tagName === 'BUTTON') {
-                    expenses.splice(e.target.dataset.idx, 1);
-                    renderExpenses();
-                }
-            });
-
-            // 匯出 CSV / TXT
-            document.getElementById('exportCsvBtn').addEventListener('click', () => {
-                if (expenses.length === 0) return alert('無記帳資料');
-                let csv = "\uFEFF日期,項目,日圓金額(JPY),匯率,台幣估算(TWD)\n";
-                expenses.forEach(e => csv += `${e.date},"${e.name.replace(/"/g, '""')}",${e.amount},${e.rate},${Math.round(e.amount * e.rate)}\n`);
-                const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-                const a = document.createElement('a');
-                a.href = URL.createObjectURL(blob);
-                a.download = `福岡記帳_${new Date().toISOString().split('T')[0]}.csv`;
-                a.click();
-            });
-
-            document.getElementById('exportTxtBtn').addEventListener('click', () => {
-                if (expenses.length === 0) return alert('無記帳資料');
-                let txt = `🗾 福岡旅費清單 (${new Date().toLocaleDateString()})\n\n`;
-                let total = 0;
-                expenses.forEach((e, idx) => {
-                    const twd = Math.round(e.amount * e.rate);
-                    total += twd;
-                    txt += `${idx+1}. [${e.date}] ${e.name} : ¥${e.amount.toLocaleString()} (NT$ ${twd.toLocaleString()})\n`;
-                });
-                txt += `\n台幣總計: NT$ ${total.toLocaleString()}`;
-                const blob = new Blob([txt], { type: 'text/plain;charset=utf-8;' });
-                const a = document.createElement('a');
-                a.href = URL.createObjectURL(blob);
-                a.download = `福岡記帳_${new Date().toISOString().split('T')[0]}.txt`;
-                a.click();
-            });
-
-            // 匯入檔案
-            const importFileInput = document.getElementById('importFileInput');
-            document.getElementById('importExpensesBtn').addEventListener('click', () => importFileInput.click());
-            importFileInput.addEventListener('change', (e) => {
-                const file = e.target.files[0];
-                if (!file) return;
-                const reader = new FileReader();
-                reader.onload = (evt) => {
-                    try {
-                        const content = evt.target.result;
-                        let parsed = [];
-                        if (file.name.toLowerCase().endsWith('.csv')) {
-                            const lines = content.split(/\r?\n/).filter(l => l.trim() !== '');
-                            for (let i = 1; i < lines.length; i++) {
-                                const cols = lines[i].split(',');
-                                if (cols.length >= 3) {
-                                    parsed.push({
-                                        date: cols[0].trim(),
-                                        name: cols[1].replace(/"/g, '').trim(),
-                                        amount: parseInt(cols[2]) || 0,
-                                        rate: parseFloat(cols[3]) || 0.21
-                                    });
-                                }
-                            }
-                        }
-                        if (parsed.length > 0) {
-                            if (confirm(`成功解析 ${parsed.length} 筆資料！點選「確定」合併資料`)) {
-                                expenses = expenses.concat(parsed);
-                                renderExpenses();
-                                showToast('已成功匯入記帳資料');
-                            }
-                        }
-                    } catch (err) {
-                        alert('匯入失敗，格式不相容');
-                    }
-                };
-                reader.readAsText(file, 'utf-8');
-            });
-
-            renderExpenses();
-        });
-    </script>
-</body>
-</html>
+        /
