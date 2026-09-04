@@ -223,6 +223,7 @@
             font-weight: bold;
             font-size: 1.15rem;
             list-style: none;
+            list-style-type: none; /* Firefox相容 */
             display: flex;
             justify-content: space-between;
             align-items: center;
@@ -346,8 +347,8 @@
             border-radius: 8px;
             padding: 15px;
         }
-        [data-theme="dark"] .split-plan .plan-a { background: #1e2c3a; color: var(--text-primary); }
-        [data-theme="dark"] .split-plan .plan-b { background: #2c1e3a; color: var(--text-primary); }
+        [data-theme="dark"] .split-plan .plan-a { background: rgba(33, 150, 243, 0.15); color: var(--text-primary); border-color: #1976d2; }
+        [data-theme="dark"] .split-plan .plan-b { background: rgba(142, 68, 173, 0.15); color: var(--text-primary); border-color: #7b1fa2; }
 
         .toggle-all { display: flex; justify-content: center; gap: 10px; margin: 20px 0; flex-wrap: wrap; }
         .btn {
@@ -701,16 +702,54 @@
         @media print {
             body { background: white; color: black; padding: 0; }
             .container { box-shadow: none; padding: 0; width: 100%; max-width: 100%; }
-            details { open: true; border: 1px solid #ccc; page-break-inside: avoid; }
+            details { border: 1px solid #ccc; page-break-inside: avoid; }
             summary { background: #eee !important; color: #000 !important; }
             .top-action-bar, .toggle-all, #topBtn, .countdown-container, .budget-tracker, .map-link, .copy-icon, .bottom-bar, .day-nav-wrapper { display: none !important; }
+            #lock-screen { display: none !important; }
         }
     
+        /* 密碼鎖定畫面 */
+        #lock-screen {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: var(--bg-body); z-index: 10000;
+            display: flex; align-items: center; justify-content: center; flex-direction: column;
+            transition: opacity 0.3s ease;
+        }
+        .lock-card {
+            background: var(--bg-container); padding: 30px; border-radius: var(--radius-lg);
+            box-shadow: var(--shadow-md); text-align: center; width: 90%; max-width: 320px;
+            border: 1px solid var(--border-color);
+        }
+        .lock-card h2 { margin-top: 0; margin-bottom: 10px; color: var(--primary-color); font-size: 1.5rem; }
+        .lock-input {
+            width: 100%; padding: 12px; font-size: 20px; text-align: center;
+            border: 2px solid var(--border-color); border-radius: var(--radius-sm);
+            margin-bottom: 15px; background: var(--bg-sub); color: var(--text-primary);
+            letter-spacing: 8px; font-family: monospace;
+        }
+        .lock-input:focus { outline: none; border-color: var(--primary-color); }
+        .lock-btn {
+            width: 100%; padding: 12px; background: var(--primary-color); color: white;
+            font-size: 16px; font-weight: bold; border: none; border-radius: var(--radius-sm); cursor: pointer;
+        }
+        .lock-btn:hover { background: var(--primary-hover); }
+        .lock-error { color: var(--accent-red); font-size: 14px; margin-bottom: 12px; display: none; font-weight: bold; }
     
 </style>
 </head>
 <body>
 
+    <!-- 密碼鎖定畫面 -->
+    <div id="lock-screen">
+        <div class="lock-card">
+            <h2>🔒 行程表已鎖定</h2>
+            <p style="font-size: 14px; color: var(--text-secondary); margin-bottom: 20px;">請輸入訪問密碼以查看行程</p>
+            <div class="lock-error" id="lockError">❌ 密碼錯誤，請重試</div>
+            <input type="password" id="lockInput" class="lock-input" placeholder="輸入密碼" inputmode="numeric" maxlength="4">
+            <button class="lock-btn" id="lockBtn">解鎖</button>
+        </div>
+    </div>
+    
     <div class="container" id="page-top">
         <!-- 頂部操作按鈕區：字級調整(A-/A+) ＋ 模式切換 ＋ 重新整理 ＋ 夜間模式 -->
         <div class="top-action-bar">
@@ -775,8 +814,8 @@
         </div>
 
         <div class="toggle-all" id="top-map-tools">
-            <button class="btn btn-secondary" id="expandBtn">📂 全部展開</button>
-            <button class="btn btn-secondary" id="collapseBtn">📁 全部收合</button>
+            <button class="btn btn-secondary" id="expandBtn" aria-label="展開所有行程">📂 全部展開</button>
+            <button class="btn btn-secondary" id="collapseBtn" aria-label="收合所有行程">📁 全部收合</button>
             <a href="https://www.anitabi.cn/map" target="_blank" class="btn btn-gradient">🗺️ 動漫地圖</a>
             <a href="https://www.google.com/maps/search/?api=1&query=福岡市" target="_blank" class="btn btn-gradient">📍 地圖地點</a>
             <a href="https://github.com/4CHI828/1/blob/main/ChatGPT%20Image%202026%E5%B9%B48%E6%9C%8818%E6%97%A5%20%E4%B8%8A%E5%8D%8810_34_49.png?raw=true" target="_blank" class="btn btn-gradient">🗺️ 地圖插畫</a>
@@ -902,7 +941,7 @@
 
         <div id="day5"></div>
         <details id="details-day5">
-            <summary>📅 Day 5 - 9/20（星期日）- 鋼彈白天秀 🤖 → 兼虎沾麵 🍜 → 完美分流 (糸島海景 🌊)</summary>
+            <summary>📅 Day 5 - 9/20（星期日）- 鋼彈白天啟動秀 ➔ 兼虎沾麵 ➔ 完美分流 (糸島海景)</summary>
             <div class="day-content">
                 <div class="time-item"><span class="time">09:15</span> <span class="location">博多站 <a href="https://www.google.com/maps/search/?api=1&query=JR博多駅" target="_blank" class="map-link">📍地圖</a> → JR 鹿兒島本線一站到<strong>竹下站</strong>（3 分） <a href="https://www.google.com/maps/search/?api=1&query=竹下駅" target="_blank" class="map-link">📍地圖</a> 步行即達 LaLaport</span></div>
                 <div class="time-item"><span class="time">09:30–11:30</span> <span class="location"><strong>【共同行程】LaLaport 福岡：實物大 ν 鋼彈</strong> <a href="https://www.google.com/maps/search/?api=1&query=Mitsui+Shopping+Park+LaLaport+福岡" target="_blank" class="map-link">📍地圖</a> <span class="photo-highlight">📸 24.8m 日本最高！10:00／11:00 白天頭部與手部動態啟動表演</span></span></div>
@@ -911,7 +950,7 @@
                 <div class="split-plan">
                     <div class="plan-b">
                         <h4 style="color: #6a1b9a;">🅱 案：赴大阪 (新幹線)</h4>
-                        <div class="time-item"><span class="time" style="color:#6a1b9a; width:auto; margin-right: 10px;">14:30</span> <span class="location"><strong>博多站搭乘新幹線</strong> 前往新大阪 <a href="https://www.google.com/maps/search/?api=1&query=新大阪駅" target="_blank" class="map-link">📍地圖</a><br><em>後續大阪行程與住宿自理</em></span></div>
+                        <div class="time-item"><span class="time" style="color:#6a1b9a; width:auto; margin-right: 10px;">12:00</span> <span class="location"><strong>博多站搭乘新幹線</strong> 前往新大阪 <a href="https://www.google.com/maps/search/?api=1&query=新大阪駅" target="_blank" class="map-link">📍地圖</a><br><em>(約11:30離開LaLaport，午餐可改於博多站購買新幹線便當，後續大阪行程與住宿自理)</em></span></div>
                     </div>
                     <div class="plan-a">
                         <h4 style="color: #1565c0;">🅰 案：留福岡 (糸島海岸線巡禮 🌊)</h4>
@@ -1083,7 +1122,7 @@
                         <li><strong>Day 2 由布院之森乘車細節：</strong>去程 09:17（博多站月台 6）準時發車。便當預訂於 <strong>2 號車廂</strong>，建議發車後儘速前往專屬櫃台領取兌換，避開中途排隊購買紀念品與蓋紀念章的人潮。</li>
                         <li><strong>Day 3 完美順路神動線：</strong>相島回來後於 14:10 抵達新宮港，搭乘 JR 前往南藏院非常順路（經吉塚站轉乘篠栗線），16:30 前完成南藏院參拜後，再搭 JR 北上至福間站，17:30 剛好趕上宮地嶽神社絕美的「光之道」夕陽。</li>
                         <li><strong>Day 4 Alpen 採買與退稅時間：</strong>柳川搭 18:00 特急回天神約 18:50，步行或搭公車至運河城約 19:20。Alpen FUKUOKA 位於博多運河城南館 1～3 樓，營業至 21:00，建議留 1.5 小時挑選，並於 <strong>20:30</strong> 前至專屬退稅櫃台辦理手續（實退約 8%），避免打烊前觀光客人潮排隊。</li>
-                        <li><strong>Day 5 麵屋兼虎用餐時間：</strong>兼虎天神本店為福岡超人氣沾麵，建議 12:15 左右抵達避開最尖峰排隊人潮，用餐完畢後前往天神高速巴士總站搭車前往糸島動線最順。</li>
+                        <li><strong>Day 5 分流與麵屋兼虎用餐：</strong>🅱 案（赴大阪）看完鋼彈後，約 11:30 即可前往博多站準備搭乘 12:00 左右的新幹線；🅰 案（留福岡）則前往兼虎天神本店吃沾麵，建議 12:15 左右抵達避開最尖峰排隊人潮，用餐後搭乘高速巴士前往糸島。</li>
                         <li><strong>Day 6 機場返程時間充裕：</strong>行李寄放飯店至 16:00，早上安排福岡塔看海景，下午天神補買伴手禮。搭地鐵轉乘航廈免費接駁巴士約 16:35 抵達國際線，距 19:20 起飛約 2 小時 45 分鐘，時間充裕且能從容逛免稅店。</li>
                     </ul>
                 </div>
@@ -1407,6 +1446,14 @@
     <div id="toast">已複製到剪貼簿！</div>
 
     <script>
+        function safeSetItem(key, val) {
+            try {
+                localStorage.setItem(key, typeof val === 'string' ? val : JSON.stringify(val));
+            } catch (e) {
+                console.warn(`LocalStorage 寫入失敗 [${key}]:`, e);
+            }
+        }
+
         async function fetchExchangeRate(isManual = false) {
             const rateInput = document.getElementById('expense-rate');
             const rateStatus = document.getElementById('rate-status');
@@ -1483,13 +1530,47 @@
         }
 
         document.addEventListener('DOMContentLoaded', () => {
+
+            // 密碼鎖定邏輯
+            const lockScreen = document.getElementById('lock-screen');
+            const lockInput = document.getElementById('lockInput');
+            const lockBtn = document.getElementById('lockBtn');
+            const lockError = document.getElementById('lockError');
+
+            try {
+                if (sessionStorage.getItem('fukuoka_unlocked') === 'true') {
+                    lockScreen.style.display = 'none';
+                } else {
+                    document.body.style.overflow = 'hidden';
+                }
+            } catch(e) {}
+
+            function checkPassword() {
+                if (lockInput.value === '8888') {
+                    try { sessionStorage.setItem('fukuoka_unlocked', 'true'); } catch(e){}
+                    lockScreen.style.opacity = '0';
+                    setTimeout(() => {
+                        lockScreen.style.display = 'none';
+                        document.body.style.overflow = '';
+                    }, 300);
+                } else {
+                    lockError.style.display = 'block';
+                    lockInput.value = '';
+                    lockInput.focus();
+                }
+            }
+
+            lockBtn.addEventListener('click', checkPassword);
+            lockInput.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') checkPassword();
+            });
     
             // 0. 字體大小縮放控制 (A- / A+)
             let currentScale = parseFloat(localStorage.getItem('fukuoka_font_scale')) || 1.0;
             const setFontScale = (scale) => {
                 currentScale = Math.min(Math.max(scale, 0.8), 1.5);
                 document.documentElement.style.setProperty('--font-scale', currentScale);
-                localStorage.setItem('fukuoka_font_scale', currentScale);
+                safeSetItem('fukuoka_font_scale', currentScale);
             };
             setFontScale(currentScale);
 
@@ -1518,7 +1599,7 @@
                     modeIcon.innerText = '📱';
                     modeText.innerText = '手機易讀版';
                 }
-                localStorage.setItem('fukuoka_view_mode', isMobile ? 'mobile' : 'desktop');
+                safeSetItem('fukuoka_view_mode', isMobile ? 'mobile' : 'desktop');
             };
 
             const savedMode = localStorage.getItem('fukuoka_view_mode');
@@ -1599,7 +1680,7 @@
             const applyTheme = (theme) => {
                 document.body.setAttribute('data-theme', theme);
                 themeToggle.innerText = theme === 'dark' ? '☀️' : '🌙';
-                localStorage.setItem('fukuoka_theme', theme);
+                safeSetItem('fukuoka_theme', theme);
             };
 
             const savedTheme = localStorage.getItem('fukuoka_theme') || 
@@ -1623,8 +1704,10 @@
                 'timer-departure': new Date("2026-09-16T00:00:00+08:00").getTime()
             };
 
+            let timerInterval;
             function updateTimer() {
                 const nowTime = Date.now();
+                let allDone = true;
                 Object.keys(dates).forEach(id => {
                     const el = document.getElementById(id);
                     if (!el) return;
@@ -1633,6 +1716,7 @@
                         el.innerText = "時間已到！";
                         el.style.color = "var(--accent-green)";
                     } else {
+                        allDone = false;
                         const d = Math.floor(diff / 86400000);
                         const h = String(Math.floor((diff % 86400000) / 3600000)).padStart(2, '0');
                         const m = String(Math.floor((diff % 3600000) / 60000)).padStart(2, '0');
@@ -1640,8 +1724,11 @@
                         el.innerText = `${d}天 ${h}:${m}:${s}`;
                     }
                 });
+                if (allDone && timerInterval) {
+                    clearInterval(timerInterval);
+                }
             }
-            setInterval(updateTimer, 1000);
+            timerInterval = setInterval(updateTimer, 1000);
             updateTimer();
 
             document.addEventListener('click', (e) => {
@@ -1661,14 +1748,20 @@
                     if(label) label.classList.add('checked');
                 }
                 check.addEventListener('change', () => {
-                    localStorage.setItem('fukuoka_' + id, check.checked);
+                    safeSetItem('fukuoka_' + id, check.checked);
                     if(label) label.classList.toggle('checked', check.checked);
                 });
             });
 
-            let expenses = JSON.parse(localStorage.getItem('fukuoka_expenses_v2')) || [
-                { date: "2026-09-17", name: "由布院之森 車上特製便當2份", amount: 4800, rate: 0.21 }
-            ];
+            let expenses = [];
+            try {
+                expenses = JSON.parse(localStorage.getItem('fukuoka_expenses_v2')) || [
+                    { date: "2026-09-17", name: "由布院之森 車上特製便當2份", amount: 4800, rate: 0.21 }
+                ];
+            } catch(e) {
+                expenses = [{ date: "2026-09-17", name: "由布院之森 車上特製便當2份", amount: 4800, rate: 0.21 }];
+            }
+
             const expName = document.getElementById('expense-name');
             const expAmount = document.getElementById('expense-amount');
             const expRate = document.getElementById('expense-rate');
@@ -1697,7 +1790,7 @@
                         </div>
                         <div style="text-align: right;">
                             <div>¥${exp.amount.toLocaleString()} <span style="font-size:12px; color:var(--text-secondary);">(NT$ ${twd.toLocaleString()})</span>
-                            <button style="color:var(--accent-red);background:none;border:none;cursor:pointer;font-weight:bold;margin-left:8px;" data-idx="${i}">✕</button></div>
+                            <button aria-label="刪除此筆記錄" style="color:var(--accent-red);background:none;border:none;cursor:pointer;font-weight:bold;margin-left:8px;" data-idx="${i}">✕</button></div>
                         </div>
                     `;
                     listEl.appendChild(li);
@@ -1705,7 +1798,7 @@
 
                 totalJpyEl.innerText = totalJpy.toLocaleString();
                 totalTwdEl.innerText = totalTwd.toLocaleString();
-                localStorage.setItem('fukuoka_expenses_v2', JSON.stringify(expenses));
+                safeSetItem('fukuoka_expenses_v2', JSON.stringify(expenses));
             }
 
             const addExpense = () => {
@@ -1783,6 +1876,30 @@
                 showToast('已匯出 TXT 文字檔！');
             });
 
+            function parseCSVLine(line) {
+                const row = [];
+                let insideQuote = false;
+                let entry = '';
+                for (let i = 0; i < line.length; i++) {
+                    const char = line[i];
+                    if (char === '"') {
+                        if (insideQuote && line[i + 1] === '"') {
+                            entry += '"';
+                            i++;
+                        } else {
+                            insideQuote = !insideQuote;
+                        }
+                    } else if (char === ',' && !insideQuote) {
+                        row.push(entry.trim());
+                        entry = '';
+                    } else {
+                        entry += char;
+                    }
+                }
+                row.push(entry.trim());
+                return row;
+            }
+
             const importFileInput = document.getElementById('importFileInput');
             document.getElementById('importExpensesBtn').addEventListener('click', () => {
                 importFileInput.click();
@@ -1804,15 +1921,11 @@
                             if (lines.length <= 1) throw new Error('CSV 檔案無資料');
 
                             for (let i = 1; i < lines.length; i++) {
-                                const line = lines[i];
-                                const match = line.match(/(?:^|,)("(?:[^"]|"")*"|[^,]*)/g);
-                                if (!match) continue;
-                                const cols = match.map(c => c.replace(/^,/, '').replace(/^"(.*)"$/, '$1').replace(/""/g, '"').trim());
-
+                                const cols = parseCSVLine(lines[i]);
                                 if (cols.length >= 3) {
                                     const date = cols[0];
                                     const name = cols[1];
-                                    const amount = parseInt(cols[2].replace(/,/g, ''));
+                                    const amount = parseInt(cols[2].replace(/,/g, ''), 10);
                                     const rate = parseFloat(cols[3]) || 0.21;
                                     if (date && name && !isNaN(amount)) {
                                         parsedData.push({ date, name, amount, rate });
@@ -1863,6 +1976,19 @@
                 }
             });
             topBtn.addEventListener('click', () => window.scrollTo({ top: 0, behavior: 'smooth' }));
+        });
+
+        // 確保列印模式下所有 details 皆會展開
+        window.addEventListener('beforeprint', () => {
+            document.querySelectorAll('details').forEach(d => {
+                d.setAttribute('data-was-open', d.open);
+                d.open = true;
+            });
+        });
+        window.addEventListener('afterprint', () => {
+            document.querySelectorAll('details').forEach(d => {
+                if (d.getAttribute('data-was-open') === 'false') d.removeAttribute('open');
+            });
         });
     </script>
 </body>
