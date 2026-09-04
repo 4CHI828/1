@@ -952,7 +952,6 @@
         ["鄧紫棋", "光年之外"],
         ["鄧紫棋", "後會無期"],
         ["鄧紫棋", "我的秘密"],
-        ["鄧紫棋", "你把我灌醉"],
         ["鄧紫棋", "多遠都要在一起"],
         ["鄧紫棋", "來自天堂的魔鬼"],
         ["鄧紫棋", "紅薔薇白玫瑰"],
@@ -1042,18 +1041,11 @@
         ["Vitas", "Opera #2"]
     ];
 
-    const uniqueMap = new Map();
-    musicList.forEach(item => {
-        const artist = (item[0] && item[0].trim() !== "") ? item[0].trim() : "其他";
-        const song = (item[1] && item[1].trim() !== "") ? item[1].trim() : "未知歌曲";
-        uniqueMap.set(`${artist}-${song}`, { artist, song });
-    });
-
-    const rawMusicData = Array.from(uniqueMap.values()).map((item, index) => ({ 
+    const rawMusicData = musicList.map((item, index) => ({ 
         id: index + 1, 
-        artist: item.artist, 
-        song: item.song,
-        favKey: `${item.artist}-${item.song}` 
+        artist: item[0], 
+        song: item[1],
+        favKey: `${item[0]}-${item[1]}` 
     }));
 
     const State = {
@@ -1303,6 +1295,7 @@
         }
     }
 
+    // 手動抽歌控制邏輯
     let drawInterval = null;
     let isDrawing = false;
 
@@ -1344,11 +1337,13 @@
             return;
         }
 
+        // 開始無限滾動動畫
         isDrawing = true;
         modalTitle.innerText = d.modalDrawing;
         modalBadge.style.display = 'none';
         modalMetaBox.style.display = 'none';
         
+        // 切換按鈕狀態：顯示「停！」，隱藏結果按鈕
         stopBtn.style.display = 'block';
         resultActions.style.display = 'none';
         
@@ -1361,6 +1356,7 @@
         }, 60); 
     }
 
+    // 點擊「停！」按鈕邏輯
     document.getElementById('stopBtn').addEventListener('click', () => {
         if (!isDrawing) return;
         isDrawing = false;
@@ -1369,6 +1365,7 @@
         const d = LANG_DICT[State.lang];
         const finalSong = rawMusicData[Math.floor(Math.random() * rawMusicData.length)];
         
+        // 紀錄與結算
         State.drawCount += 1;
         localStorage.setItem('drawCount', State.drawCount);
         const nowStr = formatDateTime(new Date());
@@ -1383,6 +1380,7 @@
         if(State.drawHistory.length > 50) State.drawHistory.pop(); 
         localStorage.setItem('drawHistory', JSON.stringify(State.drawHistory));
         
+        // 更新 UI 顯示最終結果
         document.getElementById('resSong').innerText = "✨ " + convertText(finalSong.song) + " ✨";
         document.getElementById('resArtist').innerText = "🎤 " + convertText(finalSong.artist);
         
@@ -1396,6 +1394,7 @@
 
         document.getElementById('modalTitle').innerText = d.modalWon;
         
+        // 切換按鈕狀態：隱藏「停！」，顯示結果按鈕
         document.getElementById('stopBtn').style.display = 'none';
         document.getElementById('resultActions').style.display = 'flex';
         
@@ -1407,6 +1406,7 @@
     document.getElementById('retryBtn').addEventListener('click', () => startRandomDraw(true));
     document.getElementById('historyBtn').addEventListener('click', () => startRandomDraw(false));
     document.getElementById('closeModal').addEventListener('click', () => {
+        // 如果還在抽獎中卻關閉，則重置狀態
         if (isDrawing) {
             clearInterval(drawInterval);
             isDrawing = false;
