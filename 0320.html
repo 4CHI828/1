@@ -5,9 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>静静在夏天🍔🎤⁰³²⁰的歌單</title>
     <style>
-        /* =========================================================================
-           1. 設計 Token & 變數
-           ========================================================================= */
         :root {
             --primary: #ff7675; 
             --primary-glow: rgba(255, 118, 117, 0.3);
@@ -31,9 +28,6 @@
             --primary-glow: rgba(255, 118, 117, 0.15);
         }
 
-        /* =========================================================================
-           2. 全局基礎樣式
-           ========================================================================= */
         body {
             font-family: 'PingFang TC', 'Microsoft JhengHei', system-ui, sans-serif;
             background-color: var(--bg-color);
@@ -50,12 +44,12 @@
             position: fixed; width: 300px; height: 300px;
             background: radial-gradient(circle, var(--primary-glow) 0%, transparent 70%);
             border-radius: 50%; pointer-events: none; z-index: 0;
-            transform: translate(-50%, -50%); will-change: top, left;
+            top: 0; left: 0;
+            transform: translate3d(-1000px, -1000px, 0); 
+            will-change: transform;
         }
 
-        @media (pointer: coarse) {
-            #cursor-glow { display: none !important; }
-        }
+        @media (pointer: coarse) { #cursor-glow { display: none !important; } }
 
         .blob {
             position: fixed; width: 300px; height: 300px;
@@ -82,9 +76,6 @@
             100% { transform: translateY(-110vh) rotate(360deg); opacity: 0; }
         }
 
-        /* =========================================================================
-           3. 容器與 UI 組件
-           ========================================================================= */
         .container {
             width: 100%; max-width: 850px;
             background: var(--card-bg); padding: 35px;
@@ -156,7 +147,6 @@
         .song-link:hover { color: var(--primary); transform: scale(1.05); }
         mark { background-color: rgba(255, 118, 117, 0.3); color: inherit; border-radius: 3px; }
 
-        /* 彈窗樣式 */
         .modal-overlay {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: rgba(0,0,0,0.7); display: none; align-items: center; justify-content: center;
@@ -189,7 +179,6 @@
         .close-btn { background: var(--accent-grad); color: white; border: none; padding: 12px 15px; border-radius: 30px; cursor: pointer; font-weight: 600; flex: 1; }
         .retry-btn { background: var(--card-bg); color: var(--primary); border: 2px solid var(--primary); padding: 10px 15px; border-radius: 30px; cursor: pointer; font-weight: 600; flex: 1; }
         
-        /* 手動停止按鈕的呼吸動畫 */
         .stop-btn {
             background: #ff4757 !important; color: white !important; font-size: 18px !important; width: 80% !important;
             animation: pulseStop 1.2s infinite cubic-bezier(0.66, 0, 0, 1); margin: 0 auto;
@@ -200,7 +189,6 @@
             100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(255, 71, 87, 0); }
         }
 
-        /* 歷史紀錄列表樣式 */
         .history-section { flex: 1; display: flex; flex-direction: column; overflow: hidden; border-top: 1px dashed var(--border-color); padding-top: 15px; }
         .history-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; flex-shrink: 0; }
         .history-list { flex: 1; overflow-y: auto; text-align: left; padding-right: 5px; margin: 0; max-height: 35vh; }
@@ -322,46 +310,32 @@
 <button id="langToggle" class="fab-btn" title="切換繁簡">文</button>
 <button id="backToTop" class="fab-btn">↑</button>
 
-<!-- 整合式抽歌與紀錄彈窗 -->
 <div class="modal-overlay" id="modalOverlay">
     <div class="modal-card" id="modalCard">
-        
-        <!-- 上半部：抽歌結果區 -->
         <div id="drawSection" style="flex-shrink: 0;">
             <div class="modal-badge" id="modalBadge" style="display: none;"></div>
             <h2 id="modalTitle" style="margin-top: 0; font-size: 20px;">✨ 正在抽獎... ✨</h2>
             <div class="random-song" id="resSong">...</div>
             <div class="random-artist" id="resArtist">...</div>
-            
             <div class="modal-meta-box" id="modalMetaBox" style="display: none;">
                 <div id="resDrawSeq"></div>
                 <div id="resDrawTime"></div>
             </div>
-
-            <!-- 操作按鈕區 -->
             <div class="modal-actions">
-                <!-- 手動停止按鈕 (抽獎進行時顯示) -->
                 <button class="close-btn stop-btn" id="stopBtn" style="display: none;">🛑 停！ (點擊停止)</button>
-                
-                <!-- 結果按鈕 (抽獎結束後顯示) -->
                 <div id="resultActions" style="display: flex; flex-direction: row; gap: 10px; justify-content: center; width: 100%;">
                     <button class="retry-btn" id="retryBtn">再抽一次 🎲</button>
                     <button class="close-btn" id="closeModal">太棒了！</button>
                 </div>
             </div>
         </div>
-
-        <!-- 下半部：抽歌歷史紀錄區 -->
         <div class="history-section">
             <div class="history-header">
                 <span id="historyTitle" style="font-weight: bold; font-size: 14px; color: var(--primary);">🕒 抽歌歷史紀錄</span>
                 <button id="clearHistoryBtn" style="background: none; border: none; color: #ff7675; cursor: pointer; font-size: 13px; font-weight: bold; padding: 4px;">🗑️ 清空</button>
             </div>
-            <div id="historyList" class="history-list">
-                <!-- JS 動態生成 -->
-            </div>
+            <div id="historyList" class="history-list"></div>
         </div>
-
     </div>
 </div>
 
@@ -384,12 +358,9 @@
             credits: "新竹奇奇828製作",
             modalClose: "太棒了！", modalRetry: "再抽一次 🎲", stopBtn: "🛑 停！ (點擊停止)",
             historyTitle: "🕒 抽歌歷史紀錄", historyEmpty: "尚無抽歌紀錄...", historyClear: "🗑️ 清空", confirmClear: "確定要清空所有抽歌紀錄嗎？",
-            langBtn: "簡",
-            mainTitle: "静静在夏天🍔🎤⁰³²⁰的歌單",
+            langBtn: "簡", mainTitle: "静静在夏天🍔🎤⁰³²⁰的歌單",
             linkDouyin: "🍔 靜靜的抖音", linkTwitch: "🍔 静静的圖奇", linkDC: "🍔 DC靜靜幫", linkYT: "🍔 静静的YT", linkIG: "🍔 静静的IG",
-            songSeqPrefix: "歌單序號 #",
-            drawSeqPrefix: "🎯 本次抽歌序號：第 ", drawSeqSuffix: " 次抽中",
-            drawTimePrefix: "🕒 抽取時間："
+            songSeqPrefix: "歌單序號 #", drawSeqPrefix: "🎯 本次抽歌序號：第 ", drawSeqSuffix: " 次抽中", drawTimePrefix: "🕒 抽取時間："
         },
         'zh-Hans': {
             greetingMorning: "早安，美好的音乐时光 ☀️",
@@ -408,640 +379,156 @@
             credits: "新竹奇奇828制作",
             modalClose: "太棒了！", modalRetry: "再抽一次 🎲", stopBtn: "🛑 停！ (点击停止)",
             historyTitle: "🕒 抽歌历史纪录", historyEmpty: "尚无抽歌纪录...", historyClear: "🗑️ 清空", confirmClear: "确定要清空所有抽歌纪录吗？",
-            langBtn: "繁",
-            mainTitle: "静静在夏天🍔🎤⁰³²⁰的歌单",
+            langBtn: "繁", mainTitle: "静静在夏天🍔🎤⁰³²⁰的歌单",
             linkDouyin: "🍔 静静的抖音", linkTwitch: "🍔 静静的图奇", linkDC: "🍔 DC静静帮", linkYT: "🍔 静静的YT", linkIG: "🍔 静静的IG",
-            songSeqPrefix: "歌单序号 #",
-            drawSeqPrefix: "🎯 本次抽歌序号：第 ", drawSeqSuffix: " 次抽中",
-            drawTimePrefix: "🕒 抽取时间："
+            songSeqPrefix: "歌单序号 #", drawSeqPrefix: "🎯 本次抽歌序号：第 ", drawSeqSuffix: " 次抽中", drawTimePrefix: "🕒 抽取时间："
         }
     };
 
+    const T2S_MAP = {'靜':'静','單':'单','環':'环','團':'团','龍':'龙','適':'适','麗':'丽','願':'愿','樂':'乐','個':'个','體':'体','於':'于','裡':'里','麼':'么','愛':'爱','會':'会','還':'还','萬':'万','當':'当','傑':'杰','聽':'听','說':'说','雲':'云','驚':'惊','與':'与','來':'来','為':'为','煙':'烟','菸':'烟'};
+    const S2T_MAP = {'静':'靜','单':'單','环':'環','团':'團','龙':'龍','适':'適','丽':'麗','愿':'願','乐':'樂','个':'個','体':'體','于':'於','里':'裡','么':'麼','爱':'愛','会':'會','还':'還','万':'萬','当':'當','杰':'傑','听':'聽','说':'說','云':'雲','惊':'驚','与':'與','来':'來','为':'為','烟':'煙'};
+    const T2S_REGEX = new RegExp(Object.keys(T2S_MAP).join('|'), 'g');
+    const S2T_REGEX = new RegExp(Object.keys(S2T_MAP).join('|'), 'g');
+
     const HIGH_PITCH_SONGS = ["煎熬", "離歌", "我的美麗", "左手指月", "離不開你", "給你一點顏色", "煙火裡的塵埃"];
 
-    // 嚴格依照提供的 1 到 616 首清單，無任何增減與自動過濾
-    const rawMusicData = [
-        {id: 1, artist: "一棵小蔥", song: "壁上觀"},
-        {id: 2, artist: "丁噹(Della)", song: "我愛他"},
-        {id: 3, artist: "于文文", song: "體面"},
-        {id: 4, artist: "于文文", song: "何必"},
-        {id: 5, artist: "于冬然", song: "聽說你"},
-        {id: 6, artist: "小時姑娘", song: "愛殤"},
-        {id: 7, artist: "小霞", song: "我的美麗"},
-        {id: 8, artist: "尹露晞", song: "我叫長安你叫故里"},
-        {id: 9, artist: "五月天", song: "突然好想你"},
-        {id: 10, artist: "五月天", song: "盛夏光年"},
-        {id: 11, artist: "五月天", song: "知足"},
-        {id: 12, artist: "五月天[鄧紫棋]", song: "你不是真正的快樂"},
-        {id: 13, artist: "井迪", song: "失控"},
-        {id: 14, artist: "井朧", song: "我走後"},
-        {id: 15, artist: "方大同", song: "特別的人"},
-        {id: 16, artist: "木頭", song: "复樂園"},
-        {id: 17, artist: "比莉", song: "Dear John"},
-        {id: 18, artist: "毛不易", song: "望"},
-        {id: 19, artist: "毛不易", song: "無名的人"},
-        {id: 20, artist: "牛奶咖啡", song: "咖喱咖喱"},
-        {id: 21, artist: "牛奶咖啡", song: "明天，你好"},
-        {id: 22, artist: "犬儒乐队", song: "皮囊"},
-        {id: 23, artist: "王力宏", song: "火力全開"},
-        {id: 24, artist: "王力宏", song: "你不知道的事"},
-        {id: 25, artist: "王力宏", song: "愛錯"},
-        {id: 26, artist: "王力宏", song: "緣分一道橋"},
-        {id: 27, artist: "王力宏", song: "我們的歌"},
-        {id: 28, artist: "王力宏", song: "落葉歸根"},
-        {id: 29, artist: "王子健", song: "循跡"},
-        {id: 30, artist: "王天戈", song: "心許百年"},
-        {id: 31, artist: "王心凌", song: "愛你"},
-        {id: 32, artist: "王心凌", song: "大眠"},
-        {id: 33, artist: "王心凌", song: "睫毛彎彎"},
-        {id: 34, artist: "王心凌", song: "Honey"},
-        {id: 35, artist: "王心凌", song: "不哭"},
-        {id: 36, artist: "王心凌", song: "黃昏曉"},
-        {id: 37, artist: "王以太", song: "危險派對"},
-        {id: 38, artist: "王北車", song: "陷阱"},
-        {id: 39, artist: "王欣宇", song: "告白"},
-        {id: 40, artist: "王俊凱", song: "樹讀"},
-        {id: 41, artist: "王俊凱", song: "小棉襖"},
-        {id: 42, artist: "王俊凱", song: "摩天輪的思念"},
-        {id: 43, artist: "王若琳", song: "有你的快樂"},
-        {id: 44, artist: "王唯旖", song: "捨得"},
-        {id: 45, artist: "王傑", song: "我是真的愛上你"},
-        {id: 46, artist: "王傑", song: "忘了你忘了我"},
-        {id: 47, artist: "王菲", song: "傳奇"},
-        {id: 48, artist: "王菲", song: "如願"},
-        {id: 49, artist: "王菲", song: "匆匆那年"},
-        {id: 50, artist: "王菲", song: "百年孤寂"},
-        {id: 51, artist: "王菲", song: "因為愛情"},
-        {id: 52, artist: "王菲", song: "世界贈予我的"},
-        {id: 53, artist: "王菲", song: "光之翼"},
-        {id: 54, artist: "王菲", song: "紅豆"},
-        {id: 55, artist: "王源", song: "雪崩"},
-        {id: 56, artist: "王源", song: "驕傲"},
-        {id: 57, artist: "王源", song: "世界上沒有真正的感同身受"},
-        {id: 58, artist: "王睿卓", song: "茶花開了"},
-        {id: 59, artist: "王藍茵", song: "惡作劇"},
-        {id: 60, artist: "王儷婷", song: "海枯石爛"},
-        {id: 61, artist: "王麟", song: "QQ愛"},
-        {id: 62, artist: "王麟", song: "要愛愛"},
-        {id: 63, artist: "王麟", song: "傷不起"},
-        {id: 64, artist: "王艷薇", song: "離開我的依賴"},
-        {id: 65, artist: "王OK、洪佩瑜", song: "這條小魚在乎"},
-        {id: 66, artist: "代詩琪", song: "揉碎夜的光"},
-        {id: 67, artist: "以冬", song: "我的一個道姑朋友"},
-        {id: 68, artist: "古巨基", song: "飄流教室"},
-        {id: 69, artist: "司南", song: "煙雨行舟"},
-        {id: 70, artist: "田馥甄", song: "不醉不會"},
-        {id: 71, artist: "田馥甄", song: "你就不要想起我"},
-        {id: 72, artist: "田馥甄", song: "魔鬼中的天使"},
-        {id: 73, artist: "田馥甄", song: "愛著愛著就永遠"},
-        {id: 74, artist: "田馥甄", song: "小幸運"},
-        {id: 75, artist: "任素汐", song: "胡廣生"},
-        {id: 76, artist: "任素汐", song: "我要你"},
-        {id: 77, artist: "任素汐", song: "親愛的你啊"},
-        {id: 78, artist: "任然", song: "後繼者"},
-        {id: 79, artist: "任然", song: "無人之島"},
-        {id: 80, artist: "伍佰", song: "淚橋"},
-        {id: 81, artist: "光澤", song: "空心"},
-        {id: 82, artist: "印子月", song: "衝動"},
-        {id: 83, artist: "向思思", song: "總會有人"},
-        {id: 84, artist: "回春丹", song: "鮮花"},
-        {id: 85, artist: "曲婉婷", song: "我的歌聲裡"},
-        {id: 86, artist: "曲婉婷", song: "最好的安排"},
-        {id: 87, artist: "曲婉婷", song: "沒有什麼不同"},
-        {id: 88, artist: "朱俐靜", song: "存在的力量"},
-        {id: 89, artist: "朴樹", song: "平凡之路"},
-        {id: 90, artist: "江美琪", song: "親愛的你怎麼不在身邊"},
-        {id: 91, artist: "江皓南", song: "之一而已"},
-        {id: 92, artist: "江皓南", song: "褪黑素"},
-        {id: 93, artist: "江語晨", song: "最後一頁"},
-        {id: 94, artist: "老王樂隊", song: "我還年輕我還年輕"},
-        {id: 95, artist: "艾辰", song: "錯位時空"},
-        {id: 96, artist: "艾薇", song: "絕美"},
-        {id: 97, artist: "何玉", song: "大東北我的家鄉"},
-        {id: 98, artist: "何佳樂", song: "如此"},
-        {id: 99, artist: "何野", song: "天亮以前說再見"},
-        {id: 100, artist: "何潔", song: "你是我的風景"},
-        {id: 101, artist: "吳克群", song: "為你寫詩"},
-        {id: 102, artist: "吳青峰", song: "如果聲音不記得"},
-        {id: 103, artist: "吳青峰/蘇打綠", song: "起風了"},
-        {id: 104, artist: "吳青峰/蘇打綠", song: "無與倫比的美麗"},
-        {id: 105, artist: "告五人", song: "唯一"},
-        {id: 106, artist: "告五人", song: "給你一瓶魔法藥水"},
-        {id: 107, artist: "告五人", song: "愛人錯過"},
-        {id: 108, artist: "告五人", song: "我想要佔據你"},
-        {id: 109, artist: "告五人", song: "好不容易"},
-        {id: 110, artist: "告五人", song: "披星戴月的想你"},
-        {id: 111, artist: "告五人", song: "帶我去找夜生活"},
-        {id: 112, artist: "宋冬野", song: "莉莉安"},
-        {id: 113, artist: "宋冬野", song: "斑馬，斑馬"},
-        {id: 114, artist: "宋冬野", song: "安和橋"},
-        {id: 115, artist: "宋冬野", song: "郭源潮"},
-        {id: 116, artist: "宋冬野", song: "董小姐"},
-        {id: 117, artist: "岑寧兒", song: "追光者"},
-        {id: 118, artist: "李玉剛", song: "萬疆"},
-        {id: 119, artist: "李谷一", song: "我和我的祖國"},
-        {id: 120, artist: "李佳薇", song: "煎熬"},
-        {id: 121, artist: "李佳薇", song: "甲乙丙丁"},
-        {id: 122, artist: "李宗盛", song: "山丘"},
-        {id: 123, artist: "李宗盛", song: "晚婚"},
-        {id: 124, artist: "李宗盛", song: "飄洋過海來看你"},
-        {id: 125, artist: "李幸倪", song: "明天"},
-        {id: 126, artist: "李昂星", song: "有譜"},
-        {id: 127, artist: "李林夕", song: "雪落在陌生的城"},
-        {id: 128, artist: "李秉成", song: "只為你著迷"},
-        {id: 129, artist: "李俊", song: "幕後者"},
-        {id: 130, artist: "李翊君", song: "風中的承諾"},
-        {id: 131, artist: "李翊君", song: "雨蝶"},
-        {id: 132, artist: "李榮浩", song: "模特"},
-        {id: 133, artist: "李榮浩", song: "李白"},
-        {id: 134, artist: "李榮浩", song: "戀人"},
-        {id: 135, artist: "李榮浩", song: "貝貝"},
-        {id: 136, artist: "李榮浩", song: "喜劇之王"},
-        {id: 137, artist: "李榮浩", song: "年少有為"},
-        {id: 138, artist: "李榮浩", song: "爸爸媽媽"},
-        {id: 139, artist: "李榮浩", song: "戒菸"},
-        {id: 140, artist: "汪蘇瀧", song: "有點甜"},
-        {id: 141, artist: "汪蘇瀧", song: "小星星"},
-        {id: 142, artist: "汪蘇瀧", song: "一笑傾城"},
-        {id: 143, artist: "汪蘇瀧", song: "忽而今夏"},
-        {id: 144, artist: "汪蘇瀧", song: "不分手的戀愛"},
-        {id: 145, artist: "沙寶亮", song: "最初的信仰"},
-        {id: 146, artist: "邢銘", song: "月光"},
-        {id: 147, artist: "那英", song: "默"},
-        {id: 148, artist: "那英", song: "夢一場"},
-        {id: 149, artist: "亞森", song: "荒漠上行走"},
-        {id: 150, artist: "单依纯", song: "在夜里跳舞"},
-        {id: 151, artist: "呦貓UNEKO", song: "夢迴還"},
-        {id: 152, artist: "周杰倫", song: "龍捲風"},
-        {id: 153, artist: "周杰倫", song: "楓"},
-        {id: 154, artist: "周杰倫", song: "不該"},
-        {id: 155, artist: "周杰倫", song: "退後"},
-        {id: 156, artist: "周杰倫", song: "晴天"},
-        {id: 157, artist: "周杰倫", song: "擱淺"},
-        {id: 158, artist: "周杰倫", song: "花海"},
-        {id: 159, artist: "周杰倫", song: "彩虹"},
-        {id: 160, artist: "周杰倫", song: "安靜"},
-        {id: 161, artist: "周杰倫", song: "軌跡"},
-        {id: 162, artist: "周杰倫", song: "我不配"},
-        {id: 163, artist: "周杰倫", song: "明明就"},
-        {id: 164, artist: "周杰倫", song: "七里香"},
-        {id: 165, artist: "周杰倫", song: "一點點"},
-        {id: 166, artist: "周杰倫", song: "可愛女人"},
-        {id: 167, artist: "周杰倫", song: "愛情廢柴"},
-        {id: 168, artist: "周杰倫", song: "等你下課"},
-        {id: 169, artist: "周杰倫", song: "一路向北"},
-        {id: 170, artist: "周杰倫", song: "告白氣球"},
-        {id: 171, artist: "周杰倫", song: "說了再見"},
-        {id: 172, artist: "周杰倫", song: "說好不哭"},
-        {id: 173, artist: "周杰倫", song: "紅塵客棧"},
-        {id: 174, artist: "周杰倫", song: "黑色毛衣"},
-        {id: 175, artist: "周杰倫", song: "最長的電影"},
-        {id: 176, artist: "周杰倫", song: "聽媽媽的話"},
-        {id: 177, artist: "周杰倫", song: "聽爸爸的話"},
-        {id: 178, artist: "周杰倫", song: "算什麼男人"},
-        {id: 179, artist: "周杰倫", song: "雨下一整晚"},
-        {id: 180, artist: "周杰倫", song: "我是如此相信"},
-        {id: 181, artist: "周杰倫", song: "說好的幸福呢"},
-        {id: 182, artist: "周杰倫", song: "蒲公英的約定"},
-        {id: 183, artist: "周杰倫", song: "不能說的秘密"},
-        {id: 184, artist: "周杰倫", song: "我落淚情緒零碎"},
-        {id: 185, artist: "周杰倫", song: "髮如雪"},
-        {id: 186, artist: "周杰倫", song: "暗號"},
-        {id: 187, artist: "周杰倫", song: "稻香"},
-        {id: 188, artist: "周杰倫", song: "甜甜的"},
-        {id: 189, artist: "周杰倫", song: "烏克麗麗"},
-        {id: 190, artist: "周杰倫", song: "反方向的鐘"},
-        {id: 191, artist: "周深", song: "若夢"},
-        {id: 192, artist: "周深", song: "大魚"},
-        {id: 193, artist: "周深", song: "光亮"},
-        {id: 194, artist: "周深", song: "冷冷"},
-        {id: 195, artist: "周深", song: "有我"},
-        {id: 196, artist: "周深", song: "小美滿"},
-        {id: 197, artist: "周深", song: "花開忘憂"},
-        {id: 198, artist: "周深", song: "雲裳羽衣曲"},
-        {id: 199, artist: "周傳雄", song: "青花"},
-        {id: 200, artist: "周興哲", song: "永不失聯的愛"},
-        {id: 201, artist: "周興哲", song: "怎麼了"},
-        {id: 202, artist: "承桓", song: "座位"},
-        {id: 203, artist: "林志炫", song: "沒離開過"},
-        {id: 204, artist: "林依晨", song: "你"},
-        {id: 205, artist: "林俊傑", song: "她說"},
-        {id: 206, artist: "林俊傑", song: "江南"},
-        {id: 207, artist: "林俊傑", song: "曹操"},
-        {id: 208, artist: "林俊傑", song: "當你"},
-        {id: 209, artist: "林俊傑", song: "學不會"},
-        {id: 210, artist: "林俊傑", song: "小酒窩"},
-        {id: 211, artist: "林俊傑", song: "關鍵詞"},
-        {id: 212, artist: "林俊傑", song: "美人魚"},
-        {id: 213, artist: "林俊傑", song: "願與愁"},
-        {id: 214, artist: "林俊傑", song: "茉莉雨"},
-        {id: 215, artist: "林俊傑", song: "修練愛情"},
-        {id: 216, artist: "林俊傑", song: "編號89757"},
-        {id: 217, artist: "林俊傑", song: "可惜沒如果"},
-        {id: 218, artist: "林俊傑", song: "背對背擁抱"},
-        {id: 219, artist: "林俊傑", song: "不為誰而作的歌"},
-        {id: 220, artist: "林俊傑", song: "Always Online"},
-        {id: 221, artist: "林俊傑", song: "交換餘生"},
-        {id: 222, artist: "林俊傑", song: "我還想她"},
-        {id: 223, artist: "林俊傑", song: "愛不會絕跡"},
-        {id: 224, artist: "林俊傑", song: "愛笑的眼睛"},
-        {id: 225, artist: "林俊傑", song: "不潮不用花錢"},
-        {id: 226, artist: "林俊傑", song: "那些你很冒險的夢"},
-        {id: 227, artist: "林俊傑[鄧紫棋]", song: "手心的薔薇"},
-        {id: 228, artist: "林宥嘉", song: "想自由"},
-        {id: 229, artist: "林宥嘉", song: "浪費"},
-        {id: 230, artist: "林宥嘉", song: "兜圈"},
-        {id: 231, artist: "林宥嘉", song: "說謊"},
-        {id: 232, artist: "林宥嘉", song: "殘酷月光"},
-        {id: 233, artist: "林倛玉", song: "同花順"},
-        {id: 234, artist: "林倛玉", song: "一點一滴"},
-        {id: 235, artist: "林憶蓮", song: "至少還有你"},
-        {id: 236, artist: "林憶蓮", song: "歸零"},
-        {id: 237, artist: "舍子", song: "若把你"},
-        {id: 238, artist: "花粥", song: "紙短情長"},
-        {id: 239, artist: "花粥、王勝娚", song: "出山"},
-        {id: 240, artist: "金志文", song: "流著淚說分手"},
-        {id: 241, artist: "金玟岐", song: "歲月神偷"},
-        {id: 242, artist: "阿桑", song: "一直很安靜"},
-        {id: 243, artist: "阿肆", song: "直到你降臨"},
-        {id: 244, artist: "阿YueYue", song: "雲與海"},
-        {id: 245, artist: "青鳥飛魚", song: "此生不換"},
-        {id: 246, artist: "信樂團", song: "離歌"},
-        {id: 247, artist: "後海大鯊魚", song: "心要野"},
-        {id: 248, artist: "枯野樂隊", song: "三行情書"},
-        {id: 249, artist: "柯柯柯啊", song: "姑娘別哭泣"},
-        {id: 250, artist: "柳爽", song: "漠河舞廳"},
-        {id: 251, artist: "洛天依、樂正綾", song: "霜雪千年"},
-        {id: 252, artist: "紀曉君", song: "流浪記"},
-        {id: 253, artist: "胡彥斌", song: "月光"},
-        {id: 254, artist: "胡莎莎", song: "九兒"},
-        {id: 255, artist: "范瑋琪", song: "到不了"},
-        {id: 256, artist: "范瑋琪", song: "如果的事"},
-        {id: 257, artist: "范瑋琪", song: "最初的夢想"},
-        {id: 258, artist: "范瑋琪", song: "一個像夏天一個像秋天"},
-        {id: 259, artist: "范曉萱", song: "我要我們在一起"},
-        {id: 260, artist: "郁可唯", song: "時間煮雨"},
-        {id: 261, artist: "郁可唯", song: "去有風的地方"},
-        {id: 262, artist: "郁可唯", song: "路過人間"},
-        {id: 263, artist: "韋禮安", song: "如果可以"},
-        {id: 264, artist: "韋禮安", song: "女孩"},
-        {id: 265, artist: "韋禮安", song: "狼"},
-        {id: 266, artist: "孫盛希", song: "眼淚記得你"},
-        {id: 267, artist: "孫楠", song: "拯救"},
-        {id: 268, artist: "孫燕姿", song: "逆光"},
-        {id: 269, artist: "孫燕姿", song: "雨天"},
-        {id: 270, artist: "孫燕姿", song: "安寧"},
-        {id: 271, artist: "孫燕姿", song: "遇見"},
-        {id: 272, artist: "孫燕姿", song: "綠光"},
-        {id: 273, artist: "孫燕姿", song: "克卜勒"},
-        {id: 274, artist: "孫燕姿", song: "天黑黑"},
-        {id: 275, artist: "孫燕姿", song: "第一天"},
-        {id: 276, artist: "孫燕姿", song: "半句再見"},
-        {id: 277, artist: "孫燕姿", song: "開始懂了"},
-        {id: 278, artist: "孫燕姿", song: "眼淚成詩"},
-        {id: 279, artist: "孫燕姿", song: "愛情證書"},
-        {id: 280, artist: "孫燕姿", song: "飛瀑而下"},
-        {id: 281, artist: "孫燕姿", song: "咕嘰咕嘰"},
-        {id: 282, artist: "孫燕姿", song: "我懷念的"},
-        {id: 283, artist: "孫燕姿", song: "我不難過"},
-        {id: 284, artist: "孫燕姿", song: "日落"},
-        {id: 285, artist: "孫燕姿", song: "神奇"},
-        {id: 286, artist: "孫燕姿", song: "逃亡"},
-        {id: 287, artist: "孫燕姿", song: "漩渦"},
-        {id: 288, artist: "孫燕姿(Beatles)", song: "Hey Jude"},
-        {id: 289, artist: "家家", song: "命運"},
-        {id: 290, artist: "家家", song: "塵埃"},
-        {id: 291, artist: "徐良", song: "壞女孩"},
-        {id: 292, artist: "徐良、小凌", song: "客官不可以"},
-        {id: 293, artist: "徐佳瑩", song: "不捨"},
-        {id: 294, artist: "徐佳瑩", song: "身騎白馬"},
-        {id: 295, artist: "徐佳瑩", song: "失落沙洲"},
-        {id: 296, artist: "徐佳瑩", song: "到此為止"},
-        {id: 297, artist: "徐佳瑩", song: "行走的魚"},
-        {id: 298, artist: "徐佳瑩", song: "一樣的月光"},
-        {id: 299, artist: "徐佳瑩", song: "大雨將至"},
-        {id: 300, artist: "時柏塵", song: "跳樓機"},
-        {id: 301, artist: "烏蘭圖雅", song: "站在草原望北京"},
-        {id: 302, artist: "祖海", song: "好運來"},
-        {id: 303, artist: "神馬樂團", song: "愛河"},
-        {id: 304, artist: "草東沒有派對", song: "山海"},
-        {id: 305, artist: "袁婭維", song: "阿楚姑娘"},
-        {id: 306, artist: "逃跑計畫", song: "夜空中最亮的星"},
-        {id: 307, artist: "逃跑計劃", song: "再見再見"},
-        {id: 308, artist: "馬也", song: "海嶼你"},
-        {id: 309, artist: "馬頔", song: "傲寒"},
-        {id: 310, artist: "馬頔", song: "南山南"},
-        {id: 311, artist: "動力火車", song: "當"},
-        {id: 312, artist: "崔洋", song: "公主殿下"},
-        {id: 313, artist: "崔健", song: "假行僧"},
-        {id: 314, artist: "庾澄慶", song: "春泥"},
-        {id: 315, artist: "張杰", song: "這就是愛"},
-        {id: 316, artist: "張杰", song: "天下"},
-        {id: 317, artist: "張杰", song: "着魔"},
-        {id: 318, artist: "張杰", song: "他不懂"},
-        {id: 319, artist: "張杰", song: "逆戰"},
-        {id: 320, artist: "張杰", song: "千萬次想像"},
-        {id: 321, artist: "張信哲", song: "用情"},
-        {id: 322, artist: "張信哲", song: "過火"},
-        {id: 323, artist: "張信哲", song: "愛如潮水"},
-        {id: 324, artist: "張惠妹", song: "人質"},
-        {id: 325, artist: "張惠妹", song: "連名帶姓"},
-        {id: 326, artist: "張惠妹", song: "原來你什麼都不想要"},
-        {id: 327, artist: "張惠妹", song: "血腥愛情故事"},
-        {id: 328, artist: "張惠妹", song: "聽海"},
-        {id: 329, artist: "張惠妹", song: "記得"},
-        {id: 330, artist: "張惠妹", song: "母系社會"},
-        {id: 331, artist: "張紫豪", song: "可不可以"},
-        {id: 332, artist: "張葉蕾", song: "還是分開"},
-        {id: 333, artist: "張碧晨", song: "籠"},
-        {id: 334, artist: "張碧晨", song: "如故"},
-        {id: 335, artist: "張碧晨", song: "年輪"},
-        {id: 336, artist: "張碧晨", song: "不要忘記我愛你"},
-        {id: 337, artist: "張碧晨", song: "光的方向"},
-        {id: 338, artist: "張碧晨", song: "下一步"},
-        {id: 339, artist: "張碧晨", song: "騙"},
-        {id: 340, artist: "張碧晨", song: "胡桃夾子"},
-        {id: 341, artist: "張碧晨", song: "開往早晨的午夜"},
-        {id: 342, artist: "張碧晨、楊宗緯", song: "涼涼"},
-        {id: 343, artist: "張韶涵", song: "阿刁"},
-        {id: 344, artist: "張韶涵", song: "歐若拉"},
-        {id: 345, artist: "張韶涵", song: "淋雨一直走"},
-        {id: 346, artist: "張韶涵", song: "追夢赤子心"},
-        {id: 347, artist: "張韶涵", song: "隱形的翅膀"},
-        {id: 348, artist: "張韶涵", song: "親愛的那不是愛情"},
-        {id: 349, artist: "張震嶽", song: "小宇"},
-        {id: 350, artist: "張靚穎", song: "畫心"},
-        {id: 351, artist: "張靚穎", song: "天下無雙"},
-        {id: 352, artist: "張靚穎", song: "只為你等候"},
-        {id: 353, artist: "張靚穎", song: "野心家"},
-        {id: 354, artist: "張靚穎", song: "巴拉莱卡"},
-        {id: 355, artist: "張學友", song: "一千個傷心的理由"},
-        {id: 356, artist: "張曉涵", song: "落筆"},
-        {id: 357, artist: "戚薇", song: "如果愛忘了"},
-        {id: 358, artist: "曹格", song: "寂寞先生"},
-        {id: 359, artist: "曹格&卓文萱", song: "梁山伯與茱麗葉"},
-        {id: 360, artist: "梁博", song: "男孩"},
-        {id: 361, artist: "梁博", song: "出現又離開"},
-        {id: 362, artist: "梁靜茹", song: "崇拜"},
-        {id: 363, artist: "梁靜茹", song: "慢冷"},
-        {id: 364, artist: "梁靜茹", song: "寧夏"},
-        {id: 365, artist: "梁靜茹", song: "大人"},
-        {id: 366, artist: "梁靜茹", song: "情歌"},
-        {id: 367, artist: "梁靜茹", song: "燕尾蝶"},
-        {id: 368, artist: "梁靜茹", song: "分手快樂"},
-        {id: 369, artist: "梁靜茹", song: "可惜不是你"},
-        {id: 370, artist: "梁靜茹", song: "會呼吸的痛"},
-        {id: 371, artist: "梁靜茹", song: "小手拉大手"},
-        {id: 372, artist: "梁靜茹", song: "給未來的自己"},
-        {id: 373, artist: "梁靜茹", song: "愛久見人心"},
-        {id: 374, artist: "梁靜茹", song: "勇氣"},
-        {id: 375, artist: "梁靜茹", song: "曖曖"},
-        {id: 376, artist: "莫文蔚", song: "這世界那麼多人"},
-        {id: 377, artist: "莫文蔚", song: "他不愛我"},
-        {id: 378, artist: "莫文蔚", song: "如果沒有你"},
-        {id: 379, artist: "莫文蔚", song: "陰天"},
-        {id: 380, artist: "莫文蔚", song: "電台情歌"},
-        {id: 381, artist: "莫文蔚", song: "慢慢喜歡你"},
-        {id: 382, artist: "許茹芸", song: "淚海"},
-        {id: 383, artist: "許茹芸", song: "騙自己"},
-        {id: 384, artist: "許嵩", song: "素顏"},
-        {id: 385, artist: "郭易", song: "星光下的夢想"},
-        {id: 386, artist: "郭采潔", song: "I NEED YOU"},
-        {id: 387, artist: "郭采潔", song: "愛人呢"},
-        {id: 388, artist: "郭采潔", song: "又圓了的月亮"},
-        {id: 389, artist: "郭采潔", song: "我的未來式"},
-        {id: 390, artist: "郭采潔、楊坤", song: "答案"},
-        {id: 391, artist: "郭頂", song: "保留"},
-        {id: 392, artist: "郭頂", song: "水星記"},
-        {id: 393, artist: "郭頂", song: "我們倆"},
-        {id: 394, artist: "郭頂", song: "淒美地"},
-        {id: 395, artist: "郭頂", song: "想著你"},
-        {id: 396, artist: "郭靜", song: "你在不在"},
-        {id: 397, artist: "郭靜", song: "下一個天亮"},
-        {id: 398, artist: "郭靜", song: "心牆"},
-        {id: 399, artist: "郭靜", song: "愛情訊息"},
-        {id: 400, artist: "陳忻玥", song: "炙愛"},
-        {id: 401, artist: "陳每文", song: "愛的回歸線"},
-        {id: 402, artist: "陳奕迅", song: "紅玫瑰"},
-        {id: 403, artist: "陳奕迅", song: "好久不見"},
-        {id: 404, artist: "陳奕迅", song: "孤獨患者"},
-        {id: 405, artist: "陳奕迅", song: "愛情轉移"},
-        {id: 406, artist: "陳奕迅", song: "不要說話"},
-        {id: 407, artist: "陳奕迅", song: "我們"},
-        {id: 408, artist: "陳奕迅", song: "淘汰"},
-        {id: 409, artist: "陳奕迅", song: "你給我聽好"},
-        {id: 410, artist: "陳姿彤", song: "我的世界"},
-        {id: 411, artist: "陳粒", song: "任朝暮"},
-        {id: 412, artist: "陳粒", song: "小半"},
-        {id: 413, artist: "陳粒", song: "果實"},
-        {id: 414, artist: "陳粒", song: "走馬"},
-        {id: 415, artist: "陳粒", song: "空空"},
-        {id: 416, artist: "陳粒", song: "不滅"},
-        {id: 417, artist: "陳粒", song: "虛擬"},
-        {id: 418, artist: "陳粒", song: "光"},
-        {id: 419, artist: "陳粒", song: "妙齡童"},
-        {id: 420, artist: "陳粒", song: "易燃易爆炸"},
-        {id: 421, artist: "陳粒", song: "歷歷萬鄉"},
-        {id: 422, artist: "陳粒", song: "奇妙能力歌"},
-        {id: 423, artist: "陳粒", song: "橋豆麻袋"},
-        {id: 424, artist: "陳粒", song: "戲台"},
-        {id: 425, artist: "陳雪凝", song: "綠色"},
-        {id: 426, artist: "陳雪凝", song: "你的酒館對我打了烊"},
-        {id: 427, artist: "陳詠桐", song: "說散就散"},
-        {id: 428, artist: "陳勢安", song: "天后"},
-        {id: 429, artist: "陳慧嫻", song: "千千闕歌"},
-        {id: 430, artist: "陶喆", song: "找自己"},
-        {id: 431, artist: "陶喆", song: "普通朋友"},
-        {id: 432, artist: "陶喆", song: "愛我還是他"},
-        {id: 433, artist: "陶喆", song: "Melody"},
-        {id: 434, artist: "陸虎", song: "雪落下的聲音"},
-        {id: 435, artist: "鹿晗", song: "致愛"},
-        {id: 436, artist: "鹿晗", song: "我們的明天"},
-        {id: 437, artist: "凱瑟喵", song: "撒野"},
-        {id: 438, artist: "單依純", song: "我表示理解"},
-        {id: 439, artist: "單依純", song: "想你時風起"},
-        {id: 440, artist: "單依純", song: "像煙火愛過"},
-        {id: 441, artist: "彭羚", song: "囚鳥"},
-        {id: 442, artist: "曾沛慈", song: "一個人想著一個人"},
-        {id: 443, artist: "温嵐", song: "祝我生日快樂"},
-        {id: 444, artist: "華晨宇", song: "野人"},
-        {id: 445, artist: "華晨宇", song: "煙火裡的塵埃"},
-        {id: 446, artist: "華晨宇", song: "好想愛這個世界啊"},
-        {id: 447, artist: "菲道爾", song: "阿拉斯加海灣"},
-        {id: 448, artist: "菲道爾", song: "在加納共和國離婚"},
-        {id: 449, artist: "貳佰", song: "玫瑰"},
-        {id: 450, artist: "項睿嫻", song: "Dear D"},
-        {id: 451, artist: "黃安", song: "新鴛鴦蝴蝶夢"},
-        {id: 452, artist: "黃詩扶", song: "夜奔"},
-        {id: 453, artist: "黃詩扶", song: "九萬字"},
-        {id: 454, artist: "黃綺珊", song: "離不開你"},
-        {id: 455, artist: "黃綺珊/希林娜依高", song: "是媽媽是女兒"},
-        {id: 456, artist: "黃霄雲", song: "星辰大海"},
-        {id: 457, artist: "黃霄雲", song: "要不然我們就這樣一萬年"},
-        {id: 458, artist: "黃齡", song: "星河嘆"},
-        {id: 459, artist: "新聲一班", song: "心願"},
-        {id: 460, artist: "楊乃文", song: "推開世界的門"},
-        {id: 461, artist: "楊丞琳", song: "雨愛"},
-        {id: 462, artist: "楊丞琳", song: "帶我走"},
-        {id: 463, artist: "楊丞琳", song: "不被祝福的幸福"},
-        {id: 464, artist: "楊沛宜", song: "別看我只是一隻羊"},
-        {id: 465, artist: "楊和蘇", song: "小丑女"},
-        {id: 466, artist: "楊宗緯", song: "洋蔥"},
-        {id: 467, artist: "楊宗緯", song: "其實都沒有"},
-        {id: 468, artist: "楊冪", song: "愛的供養"},
-        {id: 469, artist: "溫嵐", song: "夏天的風"},
-        {id: 470, artist: "萬妮達", song: "算了"},
-        {id: 471, artist: "萬能青年旅店", song: "殺死那個石家莊人"},
-        {id: 472, artist: "筷子兄弟", song: "老男孩"},
-        {id: 473, artist: "群星", song: "北京歡迎你"},
-        {id: 474, artist: "葉炫清", song: "九張機"},
-        {id: 475, artist: "虞書欣", song: "澎湃"},
-        {id: 476, artist: "詹雯婷", song: "訣愛"},
-        {id: 477, artist: "隔壁老樊", song: "姬和不和"},
-        {id: 478, artist: "雷雨心", song: "紀念"},
-        {id: 479, artist: "夢飛船", song: "不值得"},
-        {id: 480, artist: "廖俊濤", song: "誰"},
-        {id: 481, artist: "熊天平", song: "火柴天堂"},
-        {id: 482, artist: "福祿壽", song: "我用什麼把你留住"},
-        {id: 483, artist: "趙紫驊", song: "一滴淚的時間"},
-        {id: 484, artist: "趙傳", song: "給所有知道我名字的人"},
-        {id: 485, artist: "趙雷", song: "我記得"},
-        {id: 486, artist: "趙雷", song: "程艾影"},
-        {id: 487, artist: "趙露思", song: "好像掉進愛情海裡"},
-        {id: 488, artist: "鳳凰傳奇", song: "自由飛翔"},
-        {id: 489, artist: "齊秦", song: "外面的世界"},
-        {id: 490, artist: "劉心", song: "雨過之後"},
-        {id: 491, artist: "劉虎", song: "從前慢"},
-        {id: 492, artist: "劉洋", song: "銀河愛情故事"},
-        {id: 493, artist: "劉若英", song: "繼續，給15歲的自己"},
-        {id: 494, artist: "劉若英", song: "成全"},
-        {id: 495, artist: "劉若英", song: "後來"},
-        {id: 496, artist: "劉惜君", song: "我很快樂"},
-        {id: 497, artist: "劉惜君", song: "怎麼唱情歌"},
-        {id: 498, artist: "劉瑞琦", song: "房間"},
-        {id: 499, artist: "劉歡", song: "鳳凰于飛"},
-        {id: 500, artist: "歐得洋", song: "孤單北半球"},
-        {id: 501, artist: "蔡依林", song: "妥協"},
-        {id: 502, artist: "蔡依林", song: "玫瑰少年"},
-        {id: 503, artist: "蔡依林", song: "我"},
-        {id: 504, artist: "蔡依林", song: "Love Love Love"},
-        {id: 505, artist: "蔡依林", song: "倒帶"},
-        {id: 506, artist: "蔡依林", song: "說愛你"},
-        {id: 507, artist: "蔡依林", song: "日不落"},
-        {id: 508, artist: "蔡依林", song: "愛情36計"},
-        {id: 509, artist: "蔡依林", song: "我知道你很難過"},
-        {id: 510, artist: "蔡健雅", song: "紫"},
-        {id: 511, artist: "蔡健雅", song: "空白格"},
-        {id: 512, artist: "蔡健雅", song: "紅色高跟鞋"},
-        {id: 513, artist: "蔡健雅", song: "越來越不懂"},
-        {id: 514, artist: "蔡健雅", song: "達爾文"},
-        {id: 515, artist: "蔡健雅", song: "無底洞"},
-        {id: 516, artist: "蔡健雅", song: "Letting Go"},
-        {id: 517, artist: "蔡健雅", song: "紀念"},
-        {id: 518, artist: "蔡琴", song: "給電影人的情書"},
-        {id: 519, artist: "鄧紫棋", song: "倒數"},
-        {id: 520, artist: "鄧紫棋", song: "句號"},
-        {id: 521, artist: "鄧紫棋", song: "透明"},
-        {id: 522, artist: "鄧紫棋", song: "泡沫"},
-        {id: 523, artist: "鄧紫棋", song: "桃花諾"},
-        {id: 524, artist: "鄧紫棋", song: "A.I.N.Y."},
-        {id: 525, artist: "鄧紫棋", song: "海闊天空"},
-        {id: 526, artist: "鄧紫棋", song: "很久以後"},
-        {id: 527, artist: "鄧紫棋", song: "光年之外"},
-        {id: 528, artist: "鄧紫棋", song: "後會無期"},
-        {id: 529, artist: "鄧紫棋", song: "我的秘密"},
-        {id: 530, artist: "鄧紫棋", song: "多遠都要在一起"},
-        {id: 531, artist: "鄧紫棋", song: "來自天堂的魔鬼"},
-        {id: 532, artist: "鄧紫棋", song: "紅薔薇白玫瑰"},
-        {id: 533, artist: "鄧紫棋", song: "天空沒有極限"},
-        {id: 534, artist: "鄧紫棋", song: "Amazing Grace 奇異恩典"},
-        {id: 535, artist: "鄧紫棋", song: "於是"},
-        {id: 536, artist: "鄧紫棋", song: "畫"},
-        {id: 537, artist: "鄧紫棋 (黃大煒)", song: "你把我灌醉"},
-        {id: 538, artist: "鄧麗君", song: "我只在乎你"},
-        {id: 539, artist: "鄭秀文", song: "值得"},
-        {id: 540, artist: "鄭潤澤", song: "瞬"},
-        {id: 541, artist: "盧冠廷", song: "一生所愛"},
-        {id: 542, artist: "盧廣仲", song: "我愛你"},
-        {id: 543, artist: "盧廣仲", song: "刻在我心底的名字"},
-        {id: 544, artist: "盧盧快閉嘴", song: "字字句句"},
-        {id: 545, artist: "蕭亞軒", song: "錯的人"},
-        {id: 546, artist: "蕭敬騰", song: "皮囊"},
-        {id: 547, artist: "蕭敬騰", song: "怎麼說我不愛你"},
-        {id: 548, artist: "錘娜麗莎", song: "我太笨"},
-        {id: 549, artist: "靜靜在夏天", song: "靜靜的"},
-        {id: 550, artist: "龍猛寺寬度", song: "武家坡2021"},
-        {id: 551, artist: "應嘉俐", song: "那又如何"},
-        {id: 552, artist: "薛之謙", song: "平庸"},
-        {id: 553, artist: "薛之謙", song: "演員"},
-        {id: 554, artist: "薛之謙", song: "其實"},
-        {id: 555, artist: "薛之謙", song: "意外"},
-        {id: 556, artist: "薛之謙", song: "租購"},
-        {id: 557, artist: "薛之謙", song: "醜八怪"},
-        {id: 558, artist: "薛之謙", song: "剛剛好"},
-        {id: 559, artist: "薛之謙", song: "方圓幾里"},
-        {id: 560, artist: "薛之謙", song: "聊表心意"},
-        {id: 561, artist: "薛之謙", song: "像風一樣"},
-        {id: 562, artist: "薛之謙", song: "你還要我怎樣"},
-        {id: 563, artist: "薛之謙", song: "我好像在哪見過你"},
-        {id: 564, artist: "薛之謙", song: "天外來物"},
-        {id: 565, artist: "薛之謙、張靚穎", song: "霸王別姬"},
-        {id: 566, artist: "薛凱琪", song: "剩下的你聽懂我嗎"},
-        {id: 567, artist: "謝金燕", song: "月彎彎"},
-        {id: 568, artist: "鞠婧禕", song: "嘆雲兮"},
-        {id: 569, artist: "韓紅", song: "天亮了"},
-        {id: 570, artist: "薩頂頂", song: "左手指月"},
-        {id: 571, artist: "薩頂頂 (戴荃)", song: "悟空"},
-        {id: 572, artist: "藍又時", song: "孤單心事"},
-        {id: 573, artist: "顏人中", song: "夏夜最後的煙火"},
-        {id: 574, artist: "羅大佑", song: "鹿港小鎮"},
-        {id: 575, artist: "譚詠麟", song: "幸運星"},
-        {id: 576, artist: "譚維維", song: "如果有來生"},
-        {id: 577, artist: "譚維維", song: "給你一點顏色"},
-        {id: 578, artist: "譚維維", song: "烏蘭巴托的夜"},
-        {id: 579, artist: "關喆", song: "想你的夜"},
-        {id: 580, artist: "蘇打綠", song: "我好想你"},
-        {id: 581, artist: "蘇芮", song: "親愛的小孩"},
-        {id: 582, artist: "蘇運瑩", song: "野子"},
-        {id: 583, artist: "蘇運瑩", song: "時候"},
-        {id: 584, artist: "A-Lin", song: "失戀無罪"},
-        {id: 585, artist: "A-Lin", song: "寂寞不痛"},
-        {id: 586, artist: "A-Lin", song: "天若有情"},
-        {id: 587, artist: "A-Lin", song: "PS我愛你"},
-        {id: 588, artist: "A-Lin", song: "有一種悲傷"},
-        {id: 589, artist: "A-Lin", song: "拿走了什麼"},
-        {id: 590, artist: "A-Lin", song: "幸福了然後呢"},
-        {id: 591, artist: "A-Lin", song: "無人知曉的我"},
-        {id: 592, artist: "A-Lin", song: "給我一個理由忘記"},
-        {id: 593, artist: "A-Lin", song: "幸福在歌唱"},
-        {id: 594, artist: "Adele", song: "Rolling in the Deep"},
-        {id: 595, artist: "AGA", song: "Wonderful U"},
-        {id: 596, artist: "Bishop Briggs", song: "River"},
-        {id: 597, artist: "BOBO", song: "光榮"},
-        {id: 598, artist: "By2", song: "湊熱鬧"},
-        {id: 599, artist: "BY2", song: "愛丫愛丫"},
-        {id: 600, artist: "BY2", song: "我知道"},
-        {id: 601, artist: "EXO", song: "十二月的奇跡"},
-        {id: 602, artist: "F.I.R", song: "我們的愛"},
-        {id: 603, artist: "F.I.R", song: "Lydia"},
-        {id: 604, artist: "F.I.R", song: "心之火"},
-        {id: 605, artist: "Fine樂團", song: "呼吸決定"},
-        {id: 606, artist: "HUSH", song: "第三人稱"},
-        {id: 607, artist: "J.Sheon", song: "別問很可怕"},
-        {id: 608, artist: "Jessie J", song: "Flashlight"},
-        {id: 609, artist: "JS", song: "殺破狼"},
-        {id: 610, artist: "S.H.E", song: "Super Star"},
-        {id: 611, artist: "TFBOYS", song: "寵愛"},
-        {id: 612, artist: "TFBOYS", song: "魔法城堡"},
-        {id: 613, artist: "TFBOYS", song: "青春修煉手冊"},
-        {id: 614, artist: "TFBOYS", song: "快樂環島"},
-        {id: 615, artist: "TFBOYS", song: "不完美小孩"},
-        {id: 616, artist: "Vitas", song: "Opera #2"}
+    const inputList = [
+        ["一棵小蔥","壁上觀"],["丁噹(Della)","我愛他"],["于文文","體面"],["于文文","何必"],["于冬然","聽說你"],
+        ["小時姑娘","愛殤"],["小霞","我的美麗"],["尹露晞","我叫長安你叫故里"],["五月天","突然好想你"],["五月天","盛夏光年"],
+        ["五月天","知足"],["五月天[鄧紫棋]","你不是真正的快樂"],["井迪","失控"],["井朧","我走後"],["方大同","特別的人"],
+        ["木頭","复樂園"],["比莉","Dear John"],["毛不易","望"],["毛不易","無名的人"],["牛奶咖啡","咖喱咖喱"],
+        ["牛奶咖啡","明天，你好"],["犬儒乐队","皮囊"],["王力宏","火力全開"],["王力宏","你不知道的事"],["王力宏","愛錯"],
+        ["王力宏","緣分一道橋"],["王力宏","我們的歌"],["王力宏","落葉歸根"],["王子健","循跡"],["王天戈","心許百年"],
+        ["王心凌","愛你"],["王心凌","大眠"],["王心凌","睫毛彎彎"],["王心凌","Honey"],["王心凌","不哭"],
+        ["王心凌","黃昏曉"],["王以太","危險派對"],["王北車","陷阱"],["王欣宇","告白"],["王俊凱","樹讀"],
+        ["王俊凱","小棉襖"],["王俊凱","摩天輪的思念"],["王若琳","有你的快樂"],["王唯旖","捨得"],["王傑","我是真的愛上你"],
+        ["王傑","忘了你忘了我"],["王菲","傳奇"],["王菲","如願"],["王菲","匆匆那年"],["王菲","百年孤寂"],
+        ["王菲","因為愛情"],["王菲","世界贈予我的"],["王菲","光之翼"],["王菲","紅豆"],["王源","雪崩"],
+        ["王源","驕傲"],["王源","世界上沒有真正的感同身受"],["王睿卓","茶花開了"],["王藍茵","惡作劇"],["王儷婷","海枯石爛"],
+        ["王麟","QQ愛"],["王麟","要愛愛"],["王麟","傷不起"],["王艷薇","離開我的依賴"],["王OK、洪佩瑜","這條小魚在乎"],
+        ["代詩琪","揉碎夜的光"],["以冬","我的一個道姑朋友"],["古巨基","飄流教室"],["司南","煙雨行舟"],["田馥甄","不醉不會"],
+        ["田馥甄","你就不要想起我"],["田馥甄","魔鬼中的天使"],["田馥甄","愛著愛著就永遠"],["田馥甄","小幸運"],["任素汐","胡廣生"],
+        ["任素汐","我要你"],["任素汐","親愛的你啊"],["任然","後繼者"],["任然","無人之島"],["伍佰","淚橋"],
+        ["光澤","空心"],["印子月","衝動"],["向思思","總會有人"],["回春丹","鮮花"],["曲婉婷","我的歌聲裡"],
+        ["曲婉婷","最好的安排"],["曲婉婷","沒有什麼不同"],["朱俐靜","存在的力量"],["朴樹","平凡之路"],["江美琪","親愛的你怎麼不在身邊"],
+        ["江皓南","之一而已"],["江皓南","褪黑素"],["江語晨","最後一頁"],["老王樂隊","我還年輕我還年輕"],["艾辰","錯位時空"],
+        ["艾薇","絕美"],["何玉","大東北我的家鄉"],["何佳樂","如此"],["何野","天亮以前說再見"],["何潔","你是我的風景"],
+        ["吳克群","為你寫詩"],["吳青峰","如果聲音不記得"],["吳青峰/蘇打綠","起風了"],["吳青峰/蘇打綠","無與倫比的美麗"],["告五人","唯一"],
+        ["告五人","給你一瓶魔法藥水"],["告五人","愛人錯過"],["告五人","我想要佔據你"],["告五人","好不容易"],["告五人","披星戴月的想你"],
+        ["告五人","帶我去找夜生活"],["宋冬野","莉莉安"],["宋冬野","斑馬，斑馬"],["宋冬野","安和橋"],["宋冬野","郭源潮"],
+        ["宋冬野","董小姐"],["岑寧兒","追光者"],["李玉剛","萬疆"],["李谷一","我和我的祖國"],["李佳薇","煎熬"],
+        ["李佳薇","甲乙丙丁"],["李宗盛","山丘"],["李宗盛","晚婚"],["李宗盛","飄洋過海來看你"],["李幸倪","明天"],
+        ["李昂星","有譜"],["李林夕","雪落在陌生的城"],["李秉成","只為你著迷"],["李俊","幕後者"],["李翊君","風中的承諾"],
+        ["李翊君","雨蝶"],["李榮浩","模特"],["李榮浩","李白"],["李榮浩","戀人"],["李榮浩","貝貝"],
+        ["李榮浩","喜劇之王"],["李榮浩","年少有為"],["李榮浩","爸爸媽媽"],["李榮浩","戒菸"],["汪蘇瀧","有點甜"],
+        ["汪蘇瀧","小星星"],["汪蘇瀧","一笑傾城"],["汪蘇瀧","忽而今夏"],["汪蘇瀧","不分手的戀愛"],["汪蘇瀧","湊熱鬧"],
+        ["沙寶亮","最初的信仰"],["邢銘","月光"],["那英","默"],["那英","夢一場"],["亞森","荒漠上行走"],
+        ["单依纯","在夜里跳舞"],["呦貓UNEKO","夢迴還"],["周杰倫","龍捲風"],["周杰倫","楓"],["周杰倫","不該"],
+        ["周杰倫","退後"],["周杰倫","晴天"],["周杰倫","擱淺"],["周杰倫","花海"],["周杰倫","彩虹"],
+        ["周杰倫","安靜"],["周杰倫","軌跡"],["周杰倫","我不配"],["周杰倫","明明就"],["周杰倫","七里香"],
+        ["周杰倫","一點點"],["周杰倫","可愛女人"],["周杰倫","愛情廢柴"],["周杰倫","等你下課"],["周杰倫","一路向北"],
+        ["周杰倫","告白氣球"],["周杰倫","說了再見"],["周杰倫","說好不哭"],["周杰倫","紅塵客棧"],["周杰倫","黑色毛衣"],
+        ["周杰倫","最長的電影"],["周杰倫","聽媽媽的話"],["周杰倫","聽爸爸的話"],["周杰倫","算什麼男人"],["周杰倫","雨下一整晚"],
+        ["周杰倫","我是如此相信"],["周杰倫","說好的幸福呢"],["周杰倫","蒲公英的約定"],["周杰倫","不能說的秘密"],["周杰倫","我落淚情緒零碎"],
+        ["周杰倫","髮如雪"],["周杰倫","暗號"],["周杰倫","稻香"],["周杰倫","甜甜的"],["周杰倫","烏克麗麗"],
+        ["周杰倫","反方向的鐘"],["周深","若夢"],["周深","大魚"],["周深","光亮"],["周深","冷冷"],
+        ["周深","有我"],["周深","小美滿"],["周深","花開忘憂"],["周深","雲裳羽衣曲"],["周傳雄","青花"],
+        ["周興哲","永不失聯的愛"],["周興哲","怎麼了"],["房東的貓","何必"],["承桓","座位"],["林志炫","沒離開過"],
+        ["林依晨","你"],["林俊傑","她說"],["林俊傑","江南"],["林俊傑","曹操"],["林俊傑","當你"],
+        ["林俊傑","學不會"],["林俊傑","小酒窩"],["林俊傑","關鍵詞"],["林俊傑","美人魚"],["林俊傑","願與愁"],
+        ["林俊傑","茉莉雨"],["林俊傑","修練愛情"],["林俊傑","編號89757"],["林俊傑","可惜沒如果"],["林俊傑","背對背擁抱"],
+        ["林俊傑","不為誰而作的歌"],["林俊傑","手心的薔薇"],["林俊傑","Always Online"],["林俊傑","交換餘生"],["林俊傑","我還想她"],
+        ["林俊傑","愛不會絕跡"],["林俊傑","愛笑的眼睛"],["林俊傑","不潮不用花錢"],["林俊傑","那些你很冒險的夢"],["林俊傑[鄧紫棋]","手心的薔薇"],
+        ["林宥嘉","想自由"],["林宥嘉","浪費"],["林宥嘉","兜圈"],["林宥嘉","說謊"],["林宥嘉","殘酷月光"],
+        ["林倛玉","同花順"],["林倛玉","一點一滴"],["林憶蓮","至少還有你"],["林憶蓮","歸零"],["舍子","若把你"],
+        ["花粥","紙短情長"],["花粥、王勝娚","出山"],["金志文","流著淚說分手"],["金玟岐","歲月神偷"],["阿桑","一直很安靜"],
+        ["阿肆","直到你降臨"],["阿YueYue","雲與海"],["青鳥飛魚","此生不換"],["信樂團","離歌"],["後海大鯊魚","心要野"],
+        ["枯野樂隊","三行情書"],["柯柯柯啊","姑娘別哭泣"],["柳爽","漠河舞廳"],["洛天依、樂正綾","霜雪千年"],["紀曉君","流浪記"],
+        ["胡彥斌","月光"],["胡莎莎","九兒"],["范瑋琪","到不了"],["范瑋琪","如果的事"],["范瑋琪","最初的夢想"],
+        ["范瑋琪","一個像夏天一個像秋天"],["范曉萱","我要我們在一起"],["郁可唯","時間煮雨"],["郁可唯","去有風的地方"],["郁可唯","路過人間"],
+        ["韋禮安","如果可以"],["韋禮安","女孩"],["韋禮安","狼"],["孫盛希","眼淚記得你"],["孫楠","拯救"],
+        ["孫燕姿","逆光"],["孫燕姿","雨天"],["孫燕姿","安寧"],["孫燕姿","遇見"],["孫燕姿","綠光"],
+        ["孫燕姿","克卜勒"],["孫燕姿","天黑黑"],["孫燕姿","第一天"],["孫燕姿","半句再見"],["孫燕姿","開始懂了"],
+        ["孫燕姿","眼淚成詩"],["孫燕姿","愛情證書"],["孫燕姿","飛瀑而下"],["孫燕姿","咕嘰咕嘰"],["孫燕姿","我懷念的"],
+        ["孫燕姿","我不難過"],["孫燕姿","日落"],["孫燕姿","神奇"],["孫燕姿","逃亡"],["孫燕姿","漩渦"],
+        ["孫燕姿(Beatles)","Hey Jude"],["家家","命運"],["家家","塵埃"],["徐良","壞女孩"],["徐良、小凌","客官不可以"],
+        ["徐佳瑩","不捨"],["徐佳瑩","身騎白馬"],["徐佳瑩","失落沙洲"],["徐佳瑩","到此為止"],["徐佳瑩","行走的魚"],
+        ["徐佳瑩","一樣的月光"],["徐佳瑩","大雨將至"],["時柏塵","跳樓機"],["烏蘭圖雅","站在草原望北京"],["祖海","好運來"],
+        ["神馬樂團","愛河"],["草東沒有派對","山海"],["袁婭維","阿楚姑娘"],["逃跑計畫","夜空中最亮的星"],["逃跑計劃","再見再見"],
+        ["馬也","海嶼你"],["馬頔","傲寒"],["馬頔","南山南"],["動力火車","當"],["崔洋","公主殿下"],
+        ["崔健","假行僧"],["庾澄慶","春泥"],["張杰","這就是愛"],["張杰","天下"],["張杰","着魔"],
+        ["張杰","他不懂"],["張杰","逆戰"],["張杰","千萬次想像"],["張信哲","用情"],["張信哲","過火"],
+        ["張信哲","愛如潮水"],["張惠妹","人質"],["張惠妹","連名帶姓"],["張惠妹","原來你什麼都不想要"],["張惠妹","血腥愛情故事"],
+        ["張惠妹","聽海"],["張惠妹","記得"],["張惠妹","母系社會"],["張紫豪","可不可以"],["張葉蕾","還是分開"],
+        ["張碧晨","籠"],["張碧晨","如故"],["張碧晨","年輪"],["張碧晨","不要忘記我愛你"],["張碧晨","光的方向"],
+        ["張碧晨","下一步"],["張碧晨","騙"],["張碧晨","胡桃夾子"],["張碧晨","開往早晨的午夜"],["張碧晨、楊宗緯","涼涼"],
+        ["張韶涵","阿刁"],["張韶涵","歐若拉"],["張韶涵","淋雨一直走"],["張韶涵","追夢赤子心"],["張韶涵","隱形的翅膀"],
+        ["張韶涵","親愛的那不是愛情"],["張震嶽","小宇"],["張靚穎","畫心"],["張靚穎","天下無雙"],["張靚穎","只為你等候"],
+        ["張靚穎","野心家"],["張靚穎","巴拉莱卡"],["張學友","一千個傷心的理由"],["張曉涵","落筆"],["戚薇","如果愛忘了"],
+        ["曹格","寂寞先生"],["曹格&卓文萱","梁山伯與茱麗葉"],["梁博","男孩"],["梁博","出現又離開"],["梁靜茹","崇拜"],
+        ["梁靜茹","慢冷"],["梁靜茹","寧夏"],["梁靜茹","大人"],["梁靜茹","情歌"],["梁靜茹","燕尾蝶"],
+        ["梁靜茹","分手快樂"],["梁靜茹","可惜不是你"],["梁靜茹","會呼吸的痛"],["梁靜茹","小手拉大手"],["梁靜茹","給未來的自己"],
+        ["梁靜茹","愛久見人心"],["梁靜茹","勇氣"],["梁靜茹","曖曖"],["莫文蔚","這世界那麼多人"],["莫文蔚","他不愛我"],
+        ["莫文蔚","如果沒有你"],["莫文蔚","陰天"],["莫文蔚","電台情歌"],["莫文蔚","慢慢喜歡你"],["許茹芸","淚海"],
+        ["許茹芸","騙自己"],["許嵩","素顏"],["郭易","星光下的夢想"],["郭采潔","I NEED YOU"],["郭采潔","愛人呢"],
+        ["郭采潔","又圓了的月亮"],["郭采潔","我的未來式"],["郭采潔、楊坤","答案"],["郭頂","保留"],["郭頂","水星記"],
+        ["郭頂","我們倆"],["郭頂","淒美地"],["郭頂","想著你"],["郭靜","你在不在"],["郭靜","下一個天亮"],
+        ["郭靜","心牆"],["郭靜","愛情訊息"],["陳忻玥","炙愛"],["陳每文","愛的回歸線"],["陳奕迅","紅玫瑰"],
+        ["陳奕迅","好久不見"],["陳奕迅","孤獨患者"],["陳奕迅","愛情轉移"],["陳奕迅","不要說話"],["陳奕迅","我們"],
+        ["陳奕迅","淘汰"],["陳奕迅","你給我聽好"],["陳姿彤","我的世界"],["陳粒","任朝暮"],["陳粒","小半"],
+        ["陳粒","果實"],["陳粒","走馬"],["陳粒","空空"],["陳粒","不滅"],["陳粒","虛擬"],
+        ["陳粒","光"],["陳粒","妙齡童"],["陳粒","易燃易爆炸"],["陳粒","歷歷萬鄉"],["陳粒","奇妙能力歌"],
+        ["陳粒","橋豆麻袋"],["陳粒","戲台"],["陳雪凝","綠色"],["陳雪凝","你的酒館對我打了烊"],["陳詠桐","說散就散"],
+        ["陳勢安","天后"],["陳慧嫻","千千闕歌"],["陶喆","找自己"],["陶喆","普通朋友"],["陶喆","愛我還是他"],
+        ["陶喆","Melody"],["陸虎","雪落下的聲音"],["鹿含","致愛"],["鹿晗","我們的明天"],["凱瑟喵","撒野"],
+        ["單依純","我表示理解"],["單依純","想你時風起"],["單依純","像煙火愛過"],["单依纯","在夜里跳舞"],["彭羚","囚鳥"],
+        ["曾沛慈","一個人想著一個人"],["温嵐","祝我生日快樂"],["華晨宇","野人"],["華晨宇","煙火裡的塵埃"],["華晨宇","好想愛這個世界啊"],
+        ["菲道爾","阿拉斯加海灣"],["菲道爾","在加納共和國離婚"],["貳佰","玫瑰"],["項睿嫻","Dear D"],["黃安","新鴛鴦蝴蝶夢"],
+        ["黃詩扶","夜奔"],["黃詩扶","九萬字"],["黃綺珊","離不開你"],["黃綺珊/希林娜依高","是媽媽是女兒"],["黃霄雲","星辰大海"],
+        ["黃霄雲","要不然我們就這樣一萬年"],["黃齡","星河嘆"],["新聲一班","心願"],["楊乃文","推開世界的門"],["楊丞琳","雨愛"],
+        ["楊丞琳","帶我走"],["楊丞琳","不被祝福的幸福"],["楊沛宜","別看我只是一隻羊"],["楊和蘇","小丑女"],["楊宗緯","洋蔥"],
+        ["楊宗緯","其實都沒有"],["楊冪","愛的供養"],["溫嵐","夏天的風"],["萬妮達","算了"],["萬能青年旅店","殺死那個石家莊人"],
+        ["筷子兄弟","老男孩"],["群星","北京歡迎你"],["葉炫清","九張機"],["虞書欣","澎湃"],["詹雯婷","訣愛"],
+        ["隔壁老樊","姬和不和"],["雷雨心","紀念"],["夢飛船","不值得"],["廖俊濤","誰"],["熊天平","火柴天堂"],
+        ["福祿壽","我用什麼把你留住"],["趙紫驊","一滴淚的時間"],["趙傳","給所有知道我名字的人"],["趙雷","我記得"],["趙雷","程艾影"],
+        ["趙露思","好像掉進愛情海裡"],["鳳凰傳奇","自由飛翔"],["齊秦","外面的世界"],["劉心","雨過之後"],["劉虎","從前慢"],
+        ["劉洋","銀河愛情故事"],["劉若英","繼續，給15歲的自己"],["劉若英","成全"],["劉若英","後來"],["劉惜君","我很快樂"],
+        ["劉惜君","怎麼唱情歌"],["劉瑞琦","房間"],["劉歡","鳳凰于飛"],["歐得洋","孤單北半球"],["蔡依林","妥協"],
+        ["蔡依林","玫瑰少年"],["蔡依林","我"],["蔡依林","Love Love Love"],["蔡依林","倒帶"],["蔡依林","說愛你"],
+        ["蔡依林","日不落"],["蔡依林","愛情36計"],["蔡依林","我知道你很難過"],["蔡健雅","紫"],["蔡健雅","空白格"],
+        ["蔡健雅","紅色高跟鞋"],["蔡健雅","越來越不懂"],["蔡健雅","達爾文"],["蔡健雅","無底洞"],["蔡健雅","Letting Go"],
+        ["蔡健雅","紀念"],["蔡琴","給電影人的情書"],["鄧紫棋","倒數"],["鄧紫棋","句號"],["鄧紫棋","透明"],
+        ["鄧紫棋","泡沫"],["鄧紫棋","桃花諾"],["鄧紫棋","A.I.N.Y."],["鄧紫棋","海闊天空"],["鄧紫棋","很久以後"],
+        ["鄧紫棋","光年之外"],["鄧紫棋","後會無期"],["鄧紫棋","我的秘密"],["鄧紫棋","多遠都要在一起"],["鄧紫棋","來自天堂的魔鬼"],
+        ["鄧紫棋","紅薔薇白玫瑰"],["鄧紫棋","天空沒有極限"],["鄧紫棋","Amazing Grace 奇異恩典"],["鄧紫棋","於是"],["鄧紫棋","畫"],
+        ["鄧紫棋 (黃大煒)","你把我灌醉"],["鄧麗君","我只在乎你"],["鄭秀文","值得"],["鄭潤澤","瞬"],["盧冠廷","一生所愛"],
+        ["盧廣仲","我愛你"],["盧廣仲","刻在我心底的名字"],["盧盧快閉嘴","字字句句"],["蕭亞軒","錯的人"],["蕭敬騰","皮囊"],
+        ["蕭敬騰","怎麼說我不愛你"],["錘娜麗莎","我太笨"],["靜靜在夏天","靜靜的"],["龍猛寺寬度","武家坡2021"],["應嘉俐","那又如何"],
+        ["薛之謙","平庸"],["薛之謙","演員"],["薛之謙","其實"],["薛之謙","意外"],["薛之謙","租購"],
+        ["薛之謙","醜八怪"],["薛之謙","剛剛好"],["薛之謙","方圓幾里"],["薛之謙","聊表心意"],["薛之謙","像風一樣"],
+        ["薛之謙","你還要我怎樣"],["薛之謙","我好像在哪見過你"],["薛之謙","天外來物"],["薛之謙、張靚穎","霸王別姬"],["薛凱琪","剩下的你聽懂我嗎"],
+        ["謝金燕","月彎彎"],["鞠婧禕","嘆雲兮"],["韓紅","天亮了"],["薩頂頂","左手指月"],["薩頂頂 (戴荃)","悟空"],
+        ["藍又時","孤單心事"],["顏人中","夏夜最後的煙火"],["羅大佑","鹿港小鎮"],["譚詠麟","幸運星"],["譚維維","如果有來生"],
+        ["譚維維","給你一點顏色"],["譚維維","烏蘭巴托的夜"],["關喆","想你的夜"],["蘇打綠","我好想你"],["蘇芮","親愛的小孩"],
+        ["蘇運瑩","野子"],["蘇運瑩","時候"],["A-Lin","失戀無罪"],["A-Lin","寂寞不痛"],["A-Lin","天若有情"],
+        ["A-Lin","PS我愛你"],["A-Lin","有一種悲傷"],["A-Lin","拿走了什麼"],["A-Lin","幸福了然後呢"],["A-Lin","無人知曉的我"],
+        ["A-Lin","給我一個理由忘記"],["A-Lin","幸福在歌唱"],["Adele","Rolling in the Deep"],["AGA","Wonderful U"],["Bishop Briggs","River"],
+        ["BOBO","光榮"],["By2","湊熱鬧"],["BY2","愛丫愛丫"],["BY2","我知道"],["EXO","十二月的奇跡"],
+        ["F.I.R","我們的愛"],["F.I.R","Lydia"],["F.I.R","心之火"],["Fine樂團","呼吸決定"],["HUSH","第三人稱"],
+        ["J.Sheon","別問很可怕"],["Jessie J","Flashlight"],["JS","殺破狼"],["S.H.E","Super Star"],["TFBOYS","寵愛"],
+        ["TFBOYS","魔法城堡"],["TFBOYS","青春修煉手冊"],["TFBOYS","快樂環島"],["TFBOYS","不完美小孩"],["Vitas","Opera #2"]
     ];
 
-    // 為每首歌加入我的最愛專用 Key
-    rawMusicData.forEach(item => {
-        item.favKey = `${item.artist}-${item.song}`;
+    // 直接建立資料結構，絕對不過濾
+    const rawMusicData = inputList.map((item, index) => {
+        const artist = item[0] ? item[0].trim() : "其他";
+        const song = item[1] ? item[1].trim() : "未知歌曲";
+        return { 
+            id: index + 1, 
+            artist: artist, 
+            song: song,
+            favKey: `${artist}-${song}` 
+        };
     });
 
     const State = {
@@ -1068,9 +555,9 @@
     function convertText(text) {
         if (!text) return "";
         if (State.lang === 'zh-Hans') {
-            return text.replace(/靜/g, '静').replace(/單/g, '单').replace(/環/g, '环').replace(/團/g, '团').replace(/龍/g, '龙').replace(/適/g, '适').replace(/麗/g, '丽').replace(/願/g, '愿').replace(/樂/g, '乐').replace(/個/g, '个').replace(/體/g, '体');
+            return text.replace(T2S_REGEX, match => T2S_MAP[match] || match);
         } else {
-            return text.replace(/静/g, '靜').replace(/单/g, '單').replace(/环/g, '環').replace(/团/g, '團').replace(/龙/g, '龍').replace(/适/g, '適').replace(/丽/g, '麗').replace(/愿/g, '願').replace(/乐/g, '樂').replace(/个/g, '個').replace(/体/g, '體');
+            return text.replace(S2T_REGEX, match => S2T_MAP[match] || match);
         }
     }
 
@@ -1157,7 +644,9 @@
         tabsHTML += `<button class="tab ${State.currentArtist==='高音歌'?'active':''}" data-artist="高音歌">${d.highPitchTab}</button>`;
         
         topArtists.forEach(artist => {
-            tabsHTML += `<button class="tab ${State.currentArtist===artist?'active':''}" data-artist="${artist}">${convertText(artist)}</button>`;
+            if(artist !== "其他") {
+                tabsHTML += `<button class="tab ${State.currentArtist===artist?'active':''}" data-artist="${artist}">${convertText(artist)}</button>`;
+            }
         });
         categoryTabs.innerHTML = tabsHTML;
     }
@@ -1166,18 +655,16 @@
         return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); 
     }
 
-    function highlight(text, term) {
-        if (!term) return text;
-        const safeTerm = escapeRegExp(term);
-        const regex = new RegExp(`(${safeTerm})`, 'gi');
-        return text.replace(regex, `<mark>$1</mark>`);
-    }
-
     function renderTable() {
         const d = LANG_DICT[State.lang];
         const term = searchInput.value.toLowerCase();
         const sort = sortSelect.value;
         clearSearchBtn.style.display = term ? 'block' : 'none';
+
+        let searchRegex = null;
+        if (term) {
+            searchRegex = new RegExp(`(${escapeRegExp(term)})`, 'gi');
+        }
 
         let filtered = rawMusicData.filter(item => {
             const matchesSearch = item.artist.toLowerCase().includes(term) || item.song.toLowerCase().includes(term);
@@ -1211,10 +698,13 @@
                 const convArtist = convertText(item.artist);
                 const convSong = convertText(item.song);
 
+                const hlArtist = searchRegex ? convArtist.replace(searchRegex, `<mark>$1</mark>`) : convArtist;
+                const hlSong = searchRegex ? convSong.replace(searchRegex, `<mark>$1</mark>`) : convSong;
+
                 tr.innerHTML = `
                     <td class="col-fav"><button class="fav-btn ${isFav?'active':''}" data-key="${item.favKey}">❤</button></td>
-                    <td class="col-artist">${highlight(convArtist, term)}</td>
-                    <td class="col-song"><a href="${searchUrl}" target="_blank" class="song-link">🎵 ${highlight(convSong, term)}</a></td>
+                    <td class="col-artist">${hlArtist}</td>
+                    <td class="col-song"><a href="${searchUrl}" target="_blank" class="song-link">🎵 ${hlSong}</a></td>
                 `;
                 fragment.appendChild(tr);
             });
@@ -1223,14 +713,26 @@
         musicBody.appendChild(fragment);
     }
 
+    let cursorX = -1000;
+    let cursorY = -1000;
+    let isCursorMoving = false;
+
     window.addEventListener('mousemove', (e) => {
-        cursorGlow.style.top = `${e.clientY}px`;
-        cursorGlow.style.left = `${e.clientX}px`;
-    });
+        cursorX = e.clientX;
+        cursorY = e.clientY;
+        if (!isCursorMoving) {
+            isCursorMoving = true;
+            requestAnimationFrame(() => {
+                cursorGlow.style.transform = `translate3d(${cursorX - 150}px, ${cursorY - 150}px, 0)`;
+                isCursorMoving = false;
+            });
+        }
+    }, { passive: true });
 
     function initVisuals() {
         const interval = window.innerWidth < 600 ? 1200 : 600;
         setInterval(() => {
+            if (document.hidden) return; 
             const symbols = ['🎵', '🎶', '🎤', '🍔', '✨', '💿', '🎸'];
             const p = document.createElement('div');
             p.className = 'particle';
