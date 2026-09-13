@@ -145,7 +145,7 @@
           成員結餘 (TWD)
         </div>
         <button type="button" onclick="copyLineSettlement()" class="hidden sm:inline-flex items-center gap-1 bg-emerald-600 hover:bg-emerald-700 text-white px-2.5 py-1 rounded-xl text-[11px] font-bold shadow transition active:scale-95" id="lineShareBtn">
-          📋 複製 LINE 清單
+          📋 複製 LINE 清單 (含明細)
         </button>
       </div>
       
@@ -156,7 +156,7 @@
       
       <div class="sm:hidden pt-2">
         <button type="button" onclick="copyLineSettlement()" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white py-2 rounded-xl text-xs font-bold shadow transition active:scale-95 flex items-center justify-center gap-1">
-          📋 複製 LINE 催款結算清單
+          📋 複製 LINE 催款結算清單 (含明細)
         </button>
       </div>
     </div>
@@ -524,7 +524,6 @@
       }
     };
 
-    // 🔥 升級：成員更名連動雲端同步繼承
     window.editMemberName = async function(idx) {
       const oldName = members[idx];
       const newName = prompt(`修改「${oldName}」的名字為：`, oldName);
@@ -542,7 +541,6 @@
         return;
       }
 
-      // 1. 本地更新成員與快取
       members[idx] = cleanName;
       cachedRecords.forEach(item => {
         if (item.payer === oldName) item.payer = cleanName;
@@ -560,7 +558,6 @@
 
       showToast(`⏳ 正在同步更新雲端歷史紀錄「${oldName}」➔「${cleanName}」...`, "info");
 
-      // 2. 自動向後端發送全量資料庫批次置換
       const payload = {
         action: "rename_member",
         oldName: oldName,
@@ -583,7 +580,6 @@
           throw new Error(result.message);
         }
       } catch (err) {
-        // 離線佇列防護
         const queue = getOfflineQueue();
         queue.push(payload);
         saveOfflineQueue(queue);
@@ -609,7 +605,6 @@
       if (cachedRecords.length > 0) renderSettlement(cachedRecords);
     }
 
-    // 自訂類別管理邏輯
     function renderCategoryControls() {
       const catSelect = document.getElementById("category");
       const currentVal = catSelect.value;
@@ -858,21 +853,45 @@
       tEl.innerHTML = tInst.length ? `<div class="font-bold text-blue-900 dark:text-blue-300 mb-2">💡 最佳平帳轉帳路徑：</div><div class="space-y-1.5">${tInst.join("")}</div>` : `<div class="text-gray-400 text-center font-medium">🎉 帳務已完全打平</div>`;
     }
 
+    // 🌟 升級版：LINE 結算清單一鍵分享（含完整支出歷史明細）
     window.copyLineSettlement = function() {
-      if (lastTransferInstructions.length === 0) {
-        return showToast("目前沒有需要轉帳的結算資料！", "info");
+      if (cachedRecords.length === 0) {
+        return showToast("目前沒有任何記帳紀錄！", "info");
       }
+
       let text = `✈️ 【${currentSheet}】分帳結算清單\n`;
       text += `====================\n`;
       text += `💡 最佳平帳轉帳路徑：\n`;
-      lastTransferInstructions.forEach((t, idx) => {
-        text += `${idx + 1}. 👤 ${t.debtor} ➔ 👤 ${t.creditor}：💰 $${t.amount} TWD\n`;
-      });
+      
+      if (lastTransferInstructions.length > 0) {
+        lastTransferInstructions.forEach((t, idx) => {
+          text += `${idx + 1}. 👤 ${t.debtor} ➔ 👤 ${t.creditor}：💰 $${t.amount.toLocaleString()} TWD\n`;
+        });
+      } else {
+        text += `🎉 帳務已完全打平，無需轉帳！\n`;
+      }
+
       text += `====================\n`;
-      text += `請大家轉帳後截圖回傳，謝謝！`;
+      text += `📝 支出與消費歷史明細 (共 ${cachedRecords.length} 筆)：\n`;
+
+      // 依日期先後排列展示明細
+      const sortedRecords = [...cachedRecords].sort((a, b) => (a.date || "").localeCompare(b.date || ""));
+
+      sortedRecords.forEach(item => {
+        const isExp = item.type === "expense";
+        const origText = item.currency !== "TWD" ? `${item.currency} ${item.originalAmount.toLocaleString()} ` : "";
+        const twdText = `(NT$ ${(item.twdAmount || 0).toLocaleString()})`;
+        const payerText = isExp ? (item.payer ? ` - ${item.payer} 付` : "") : " (收入)";
+        
+        text += `・${item.date} | [${item.category || '其他'}] ${item.title}\n`;
+        text += `  ${origText}${twdText}${payerText}\n`;
+      });
+
+      text += `====================\n`;
+      text += `請大家核對明細並轉帳後截圖回傳，謝謝！`;
 
       navigator.clipboard.writeText(text).then(() => {
-        showToast("✅ 已成功複製 LINE 催款清單！");
+        showToast("✅ 已複製 LINE 結算清單 (含完整歷史明細)！");
       }).catch(() => {
         prompt("請手動複製以下結算清單：", text);
       });
