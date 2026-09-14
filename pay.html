@@ -66,7 +66,7 @@
       </div>
     </div>
 
-    <!-- 🌟 匯率橫幅 (已恢復點擊手動更新功能) -->
+    <!-- 匯率橫幅 -->
     <div class="bg-gradient-to-r from-blue-50/80 to-indigo-50/80 dark:from-slate-800/80 dark:to-gray-800/80 border border-blue-100/50 dark:border-gray-700 rounded-2xl p-3 shadow-sm">
       <div class="flex items-center justify-between text-[11px] font-bold text-gray-500 dark:text-gray-400 mb-2">
         <button type="button" onclick="fetchExchangeRates()" class="flex items-center gap-1 cursor-pointer hover:text-blue-600 dark:hover:text-blue-400 transition active:scale-95" title="點擊手動更新匯率">
@@ -199,12 +199,16 @@
 
       <div id="aiStatusNotice" class="hidden text-center text-xs text-blue-600 bg-blue-50 dark:bg-blue-900/30 dark:text-blue-300 font-bold py-1.5 rounded-lg animate-pulse"></div>
 
+      <!-- 🌟 全新帳目類型切換按鈕群組 -->
+      <div class="flex gap-1.5 mb-1 bg-gray-100/80 dark:bg-gray-800/80 p-1.5 rounded-xl shadow-inner">
+        <button type="button" onclick="setRecordType('expense')" id="btnTypeExpense" class="flex-1 text-xs font-bold py-1.5 rounded-lg bg-white dark:bg-gray-600 text-blue-600 dark:text-blue-300 shadow-sm transition">👥 群組分帳</button>
+        <button type="button" onclick="setRecordType('personal')" id="btnTypePersonal" class="flex-1 text-xs font-bold py-1.5 rounded-lg text-gray-500 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 transition">👤 個人支出</button>
+        <button type="button" onclick="setRecordType('income')" id="btnTypeIncome" class="flex-1 text-xs font-bold py-1.5 rounded-lg text-gray-500 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 transition">💰 收入</button>
+      </div>
+      <input type="hidden" id="type" value="expense">
+
       <!-- 欄位輸入區 -->
-      <div class="grid grid-cols-4 gap-2.5">
-        <select id="type" class="border border-gray-200 dark:border-gray-600 rounded-xl px-2 py-2 text-xs bg-gray-50/50 dark:bg-gray-700 dark:text-white font-medium focus:ring-2 focus:ring-blue-500 outline-none">
-          <option value="expense">支出</option>
-          <option value="income">收入</option>
-        </select>
+      <div class="grid grid-cols-3 gap-2.5">
         <select id="category" class="border border-gray-200 dark:border-gray-600 rounded-xl px-2 py-2 text-xs bg-gray-50/50 dark:bg-gray-700 dark:text-white font-medium focus:ring-2 focus:ring-blue-500 outline-none">
         </select>
         <input type="text" id="title" placeholder="項目名稱 (如: 居酒屋)" class="col-span-2 border border-gray-200 dark:border-gray-600 rounded-xl px-3 py-2 text-sm bg-white dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none font-medium shadow-inner">
@@ -504,6 +508,24 @@
       return { rate, twd: Math.round(amount * rate) };
     }
 
+    // 🌟 全新帳目類型切換邏輯
+    window.setRecordType = function(type) {
+      document.getElementById("type").value = type;
+      
+      const bExp = document.getElementById("btnTypeExpense");
+      const bPer = document.getElementById("btnTypePersonal");
+      const bInc = document.getElementById("btnTypeIncome");
+      
+      const normalClass = "flex-1 text-xs font-bold py-1.5 rounded-lg text-gray-500 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 transition";
+      bExp.className = normalClass; bPer.className = normalClass; bInc.className = normalClass;
+      
+      if(type === 'expense') bExp.className = "flex-1 text-xs font-bold py-1.5 rounded-lg bg-white dark:bg-gray-600 text-blue-600 dark:text-blue-300 shadow-sm transition";
+      if(type === 'personal') bPer.className = "flex-1 text-xs font-bold py-1.5 rounded-lg bg-white dark:bg-gray-600 text-purple-600 dark:text-purple-300 shadow-sm transition";
+      if(type === 'income') bInc.className = "flex-1 text-xs font-bold py-1.5 rounded-lg bg-white dark:bg-gray-600 text-emerald-600 dark:text-emerald-300 shadow-sm transition";
+
+      document.getElementById("splitSection").style.display = type === "expense" ? "block" : "none";
+    };
+
     document.getElementById("modeEqualBtn").addEventListener("click", () => setSplitMode("equal"));
     document.getElementById("modeCustomBtn").addEventListener("click", () => setSplitMode("custom"));
 
@@ -747,10 +769,7 @@
       document.getElementById("memberConfigPanel").classList.add("hidden");
     });
     document.getElementById("toggleDataBtn").addEventListener("click", () => document.getElementById("dataConfigPanel").classList.toggle("hidden"));
-    document.getElementById("type").addEventListener("change", (e) => document.getElementById("splitSection").style.display = e.target.value === "expense" ? "block" : "none");
-    document.getElementById("currency").addEventListener("change", updateTwdPreview);
-    document.getElementById("originalAmount").addEventListener("input", updateTwdPreview);
-
+    
     window.applyTemplate = function(title, category, amount, currency) {
       document.getElementById("title").value = title;
       if (categories.includes(category)) document.getElementById("category").value = category;
@@ -760,7 +779,6 @@
       showToast(`⚡ 已套用範本：${title}`, "info");
     };
 
-    // 🌟 已恢復的手動強制更新匯率功能
     window.fetchExchangeRates = async function() {
       document.getElementById("rateUpdateTime").textContent = "更新中...";
       try {
@@ -978,9 +996,15 @@
 
       sortedRecords.forEach(item => {
         const isExp = item.type === "expense";
+        const isPersonal = item.type === "personal";
+        const isIncome = item.type === "income";
         const origText = item.currency !== "TWD" ? `${item.currency} ${item.originalAmount.toLocaleString()} ` : "";
         const twdText = `(NT$ ${(item.twdAmount || 0).toLocaleString()})`;
-        const payerText = isExp ? (item.payer ? ` - ${item.payer} 付` : "") : " (收入)";
+        
+        let payerText = "";
+        if(isExp) payerText = item.payer ? ` - ${item.payer} 付` : "";
+        else if (isPersonal) payerText = " (個人支出)";
+        else if (isIncome) payerText = " (個人收入)";
         
         text += `・${item.date} | [${item.category || '其他'}] ${item.title}\n`;
         text += `  ${origText}${twdText}${payerText}\n`;
@@ -1005,7 +1029,9 @@
       document.getElementById("editModeBanner").classList.remove("hidden");
       document.getElementById("saveBtnText").textContent = "儲存修改";
 
-      document.getElementById("type").value = item.type || "expense";
+      // 🌟 自動切換至該紀錄對應的類型按鈕
+      setRecordType(item.type || "expense");
+      
       if (categories.includes(item.category)) {
         document.getElementById("category").value = item.category;
       }
@@ -1047,6 +1073,7 @@
       document.getElementById("title").value = "";
       document.getElementById("originalAmount").value = "";
       document.querySelectorAll(".custom-split-input").forEach(i => i.value = "");
+      setRecordType("expense");
       updateTwdPreview();
       showToast("已取消編輯", "info");
     };
@@ -1057,11 +1084,40 @@
       if(cachedRecords.length===0){ listEl.innerHTML = `<div class="text-gray-400 text-center py-8">尚無資料</div>`; return; }
       
       cachedRecords.forEach(item => {
-        const isExp = item.type === "expense"; const shares = parseShares(item);
+        const isSplit = item.type === "expense";
+        const isPersonal = item.type === "personal";
+        const isIncome = item.type === "income";
+        
+        const shares = parseShares(item);
         const st = Object.entries(shares).map(([n,a])=>`${n}($${Math.round(a)})`).join(", ");
+        
+        let badgeColor = isIncome ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/50 dark:text-emerald-400" : "bg-blue-100 text-blue-700 dark:bg-blue-900/50 dark:text-blue-300";
+        let amountColor = isIncome ? "text-emerald-600 dark:text-emerald-400" : "text-gray-900 dark:text-white";
+        let typeText = isIncome ? '收入' : (isPersonal ? '個人支出' : '分帳');
+        let displayCategory = item.category || typeText;
+
         const r = document.createElement("div");
-        r.className = `p-3.5 bg-white/80 dark:bg-gray-800/80 rounded-2xl shadow-sm border ${isExp?'border-gray-100 dark:border-gray-700':'border-emerald-100 dark:border-emerald-900/50'} text-xs flex justify-between items-start gap-2`;
-        r.innerHTML = `<div class="flex-1 space-y-1.5"><div class="flex items-center gap-2"><span class="px-2 py-0.5 rounded-lg text-[10px] font-bold ${isExp?'bg-blue-100 text-blue-700 dark:bg-blue-900/50':'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/50'}">${escapeHtml(item.category||(isExp?'支出':'收入'))}</span><span class="font-bold text-sm text-gray-900 dark:text-gray-100">${escapeHtml(item.title)}</span>${item.receiptImage?`<button onclick="openImageModal('${item.receiptImage}')" class="text-[10px] bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 rounded px-1.5 py-0.5 border border-gray-200 dark:border-gray-600">📷照</button>`:''}</div><div class="text-gray-500 dark:text-gray-400 font-mono">${escapeHtml(item.date)} · ${isExp?`<b>${escapeHtml(item.payer)}</b> 付`:'個人'}</div>${isExp&&st?`<div class="text-gray-400 dark:text-gray-500 truncate text-[11px]">${escapeHtml(st)}</div>`:''}</div><div class="text-right flex flex-col items-end gap-1.5"><div class="font-mono font-bold text-base ${isExp?'text-gray-900 dark:text-white':'text-emerald-600 dark:text-emerald-400'}">${item.currency!=='TWD'?`<span class="text-[10px] text-gray-400 font-normal block -mb-1">${escapeHtml(item.currency)}${item.originalAmount}</span>`:''}$${(item.twdAmount||0).toLocaleString()}</div><div class="flex items-center gap-1.5"><button onclick="startEditRecord('${escapeHtml(item.id)}')" class="text-[10px] font-bold text-blue-500 hover:text-blue-700 bg-blue-50 dark:bg-blue-900/20 px-2 py-1 rounded-lg active:scale-95">編輯</button><button onclick="deleteRecord('${escapeHtml(item.id)}')" class="text-[10px] font-bold text-red-400 hover:text-red-600 bg-red-50 dark:bg-red-900/20 px-2 py-1 rounded-lg active:scale-95">刪除</button></div></div>`;
+        r.className = `p-3.5 bg-white/80 dark:bg-gray-800/80 rounded-2xl shadow-sm border ${isIncome?'border-emerald-100 dark:border-emerald-900/50':'border-gray-100 dark:border-gray-700'} text-xs flex justify-between items-start gap-2`;
+        r.innerHTML = `<div class="flex-1 space-y-1.5">
+            <div class="flex items-center gap-2">
+              <span class="px-2 py-0.5 rounded-lg text-[10px] font-bold ${badgeColor}">${escapeHtml(displayCategory)}</span>
+              ${isPersonal ? `<span class="px-1.5 py-0.5 rounded text-[9px] font-bold bg-purple-100 text-purple-700 dark:bg-purple-900/50 dark:text-purple-300 border border-purple-200 dark:border-purple-800">👤 個人</span>` : ''}
+              <span class="font-bold text-sm text-gray-900 dark:text-gray-100">${escapeHtml(item.title)}</span>
+              ${item.receiptImage?`<button onclick="openImageModal('${item.receiptImage}')" class="text-[10px] bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 rounded px-1.5 py-0.5 border border-gray-200 dark:border-gray-600">📷照</button>`:''}
+            </div>
+            <div class="text-gray-500 dark:text-gray-400 font-mono">${escapeHtml(item.date)} · ${isSplit?`<b>${escapeHtml(item.payer)}</b> 付`:'個人'}</div>
+            ${isSplit&&st?`<div class="text-gray-400 dark:text-gray-500 truncate text-[11px]">${escapeHtml(st)}</div>`:''}
+          </div>
+          <div class="text-right flex flex-col items-end gap-1.5">
+            <div class="font-mono font-bold text-base ${amountColor}">
+              ${item.currency!=='TWD'?`<span class="text-[10px] text-gray-400 font-normal block -mb-1">${escapeHtml(item.currency)}${item.originalAmount}</span>`:''}
+              ${isIncome?'+':'-'}$${(item.twdAmount||0).toLocaleString()}
+            </div>
+            <div class="flex items-center gap-1.5">
+              <button onclick="startEditRecord('${escapeHtml(item.id)}')" class="text-[10px] font-bold text-blue-500 hover:text-blue-700 bg-blue-50 dark:bg-blue-900/20 px-2 py-1 rounded-lg active:scale-95">編輯</button>
+              <button onclick="deleteRecord('${escapeHtml(item.id)}')" class="text-[10px] font-bold text-red-400 hover:text-red-600 bg-red-50 dark:bg-red-900/20 px-2 py-1 rounded-lg active:scale-95">刪除</button>
+            </div>
+          </div>`;
         listEl.appendChild(r);
       });
     }
@@ -1174,7 +1230,7 @@
       if (cachedRecords.length === 0) return alert("目前沒有可匯出的資料或尚未解鎖！");
       const headers = ["日期", "類型", "類別", "項目", "原始金額", "幣別", "匯率", "折合台幣", "付款人", "分攤成員/金額"];
       const rows = cachedRecords.map(r => [
-        `"${r.date}"`, `"${r.type === 'expense' ? '支出' : '收入'}"`, `"${r.category || '其他'}"`, `"${(r.title || '').replace(/"/g, '""')}"`,
+        `"${r.date}"`, `"${r.type === 'expense' ? '分帳支出' : (r.type === 'personal' ? '個人支出' : '收入')}"`, `"${r.category || '其他'}"`, `"${(r.title || '').replace(/"/g, '""')}"`,
         r.originalAmount, `"${r.currency}"`, r.rate, r.twdAmount, `"${r.payer || ''}"`, `"${(r.splitMembers || []).join(';')}"`
       ]);
       const csvContent = "\uFEFF" + [headers.join(","), ...rows.map(e => e.join(","))].join("\n");
@@ -1185,7 +1241,8 @@
       if (cachedRecords.length === 0) return alert("目前沒有可匯出的資料或尚未解鎖！");
       let txtContent = `=== 記帳備份【${currentSheet}】(${getFormattedDate()}) ===\n\n`;
       cachedRecords.forEach((r, i) => {
-        txtContent += `【#${i + 1}】${r.date} | [${r.category || '其他'}] ${r.type === 'expense' ? '支出' : '收入'} - ${r.title}\n`;
+        let typeStr = r.type === 'expense' ? '分帳支出' : (r.type === 'personal' ? '個人支出' : '收入');
+        txtContent += `【#${i + 1}】${r.date} | [${r.category || '其他'}] ${typeStr} - ${r.title}\n`;
         txtContent += `  金額: ${r.currency} ${r.originalAmount} (折合 NT$ ${r.twdAmount})\n`;
         if (r.type === 'expense') {
           const shares = parseShares(r);
@@ -1223,8 +1280,12 @@
           for (let i = 1; i < lines.length; i++) {
             const cols = lines[i].split(",").map(c => c.replace(/^"|"$/g, "").trim());
             if (cols.length >= 8) {
+              let parsedType = "expense";
+              if (cols[1] === "收入") parsedType = "income";
+              else if (cols[1] === "個人支出") parsedType = "personal";
+
               itemsToImport.push({
-                date: cols[0], type: cols[1] === "收入" ? "income" : "expense", category: cols[2] || "其他", title: cols[3] || "未命名",
+                date: cols[0], type: parsedType, category: cols[2] || "其他", title: cols[3] || "未命名",
                 originalAmount: parseFloat(cols[4]) || 0, currency: cols[5] || "TWD", rate: parseFloat(cols[6]) || 1, twdAmount: parseFloat(cols[7]) || 0,
                 payer: cols[8] || "", splitMembers: cols[9] ? cols[9].split(";") : []
               });
@@ -1233,12 +1294,16 @@
         } else {
           const blocks = text.split("----------------------------------------");
           blocks.forEach(b => {
-            const titleMatch = b.match(/】(.+?)\s*\|\s*\[?(.*?)\]?\s*(支出|收入)\s*-\s*(.+)/);
+            const titleMatch = b.match(/】(.+?)\s*\|\s*\[?(.*?)\]?\s*(分帳支出|個人支出|收入)\s*-\s*(.+)/);
             const amountMatch = b.match(/金額:\s*([A-Z]+)\s*([\d.]+)\s*\(折合 NT\$\s*([\d.]+)\)/);
             const payerMatch = b.match(/付款人:\s*(.*?)\s*\|\s*分攤者:\s*(.*)/);
             if (titleMatch && amountMatch) {
+              let parsedType = "expense";
+              if (titleMatch[3].trim() === "收入") parsedType = "income";
+              else if (titleMatch[3].trim() === "個人支出") parsedType = "personal";
+
               itemsToImport.push({
-                date: titleMatch[1].trim(), category: titleMatch[2].trim() || "其他", type: titleMatch[3].trim() === "收入" ? "income" : "expense",
+                date: titleMatch[1].trim(), category: titleMatch[2].trim() || "其他", type: parsedType,
                 title: titleMatch[4].trim(), currency: amountMatch[1].trim(), originalAmount: parseFloat(amountMatch[2]) || 0,
                 twdAmount: parseFloat(amountMatch[3]) || 0, rate: (parseFloat(amountMatch[3]) / (parseFloat(amountMatch[2]) || 1)) || 1,
                 payer: payerMatch ? payerMatch[1].trim() : "", splitMembers: payerMatch && payerMatch[2] ? payerMatch[2].split(",").map(s => s.trim()) : []
@@ -1265,11 +1330,14 @@
     
     initTheme(); applyFontSize(localStorage.getItem("app_custom_font_size")||16);
     document.getElementById("date").value = getTodayString(); updateTimestampDisplay();
+    
+    // 初始化按鈕狀態為分帳支出
+    setRecordType('expense');
+
     if(localStorage.getItem("app_pwd")) document.getElementById("accessPassword").value = localStorage.getItem("app_pwd");
     renderMemberControls();
     renderCategoryControls();
     fetchExchangeRates().then(() => {
-      // 確保一開始就先掛載更新後的點擊事件
       document.getElementById("rateUpdateTime").parentNode.setAttribute("onclick", "fetchExchangeRates()");
       loadRecords();
     });
