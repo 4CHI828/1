@@ -17,7 +17,6 @@
   <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2"></script> <!-- 🌟 引入圖表數值標籤外掛 -->
 
   <style>
     .glass { backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); }
@@ -301,7 +300,8 @@
             <button type="button" id="chartTypeBarBtn" class="px-2 py-1 rounded-md text-gray-500 dark:text-gray-400 font-medium hover:text-gray-800 transition">趨勢</button>
           </div>
         </div>
-        <div class="relative w-full h-52 flex justify-center items-center">
+        <!-- 稍微加大容器高度以確保外部拉線不被裁切 -->
+        <div class="relative w-full h-64 flex justify-center items-center">
           <canvas id="expenseChart"></canvas>
           <div id="emptyChartMsg" class="hidden absolute inset-0 flex items-center justify-center text-gray-400 text-xs font-medium bg-gray-50/80 dark:bg-slate-800/80 rounded-xl border border-dashed border-gray-300 dark:border-gray-600">尚無支出資料可供分析</div>
         </div>
@@ -340,9 +340,6 @@
   </footer>
 
   <script>
-    // 註冊 ChartDataLabels 外掛
-    Chart.register(ChartDataLabels);
-
     const API_URL = "https://script.google.com/macros/s/AKfycbyLdzLuX2UzEpgD2fc-P_2l8L0yjfjsUgLaOTdn7tJWcRdhIG6ZY4lxFp5WAY7pFXxW/exec";
     
     let currentSheet = localStorage.getItem("app_active_sheet") || "預設帳本";
@@ -356,6 +353,64 @@
     
     let chartInstance = null;
     let currentChartMode = 'pie';
+
+    // 🌟 專屬 Canvas 插件：向外拉出指示線並標註金額
+    const pieOutlabelsPlugin = {
+      id: 'pieOutlabels',
+      afterDraw(chart) {
+        if (chart.config.type !== 'doughnut' && chart.config.type !== 'pie') return;
+        const ctx = chart.ctx;
+        const isDark = document.documentElement.classList.contains("dark");
+        const textColor = isDark ? '#f1f5f9' : '#1e293b';
+        const lineColor = isDark ? 'rgba(255,255,255,0.45)' : 'rgba(0,0,0,0.35)';
+
+        chart.data.datasets.forEach((dataset, i) => {
+          const meta = chart.getDatasetMeta(i);
+          const total = dataset.data.reduce((acc, curr) => acc + curr, 0);
+
+          meta.data.forEach((element, index) => {
+            const value = dataset.data[index];
+            if (value <= 0 || (total > 0 && (value / total) < 0.04)) return; // 太小的比例不拉線，保持清爽
+
+            const { startAngle, endAngle, outerRadius, x, y } = element;
+            const midAngle = (startAngle + endAngle) / 2;
+
+            // 圓弧邊緣的起始點
+            const startX = x + Math.cos(midAngle) * outerRadius;
+            const startY = y + Math.sin(midAngle) * outerRadius;
+
+            // 折線中繼點 (向外延伸)
+            const lineLen = 14;
+            const midX = x + Math.cos(midAngle) * (outerRadius + lineLen);
+            const midY = y + Math.sin(midAngle) * (outerRadius + lineLen);
+
+            // 折線水平延伸向左或向右
+            const isRight = Math.cos(midAngle) >= 0;
+            const endX = midX + (isRight ? 18 : -18);
+            const endY = midY;
+
+            // 繪製指示折線
+            ctx.save();
+            ctx.beginPath();
+            ctx.moveTo(startX, startY);
+            ctx.lineTo(midX, midY);
+            ctx.lineTo(endX, endY);
+            ctx.strokeStyle = lineColor;
+            ctx.lineWidth = 1.2;
+            ctx.stroke();
+
+            // 繪製標籤文字 (類別: $金額)
+            const labelText = `${chart.data.labels[index]} $${value.toLocaleString()}`;
+            ctx.font = 'bold 10px sans-serif';
+            ctx.fillStyle = textColor;
+            ctx.textAlign = isRight ? 'left' : 'right';
+            ctx.textBaseline = 'middle';
+            ctx.fillText(labelText, endX + (isRight ? 4 : -4), endY);
+            ctx.restore();
+          });
+        });
+      }
+    };
 
     function escapeHtml(str) {
       if (!str) return "";
@@ -923,7 +978,6 @@
       tEl.innerHTML = tInst.length ? `<div class="font-bold text-blue-900 dark:text-blue-300 mb-2">💡 最佳平帳轉帳路徑：</div><div class="space-y-1.5">${tInst.join("")}</div>` : `<div class="text-gray-400 text-center font-medium">🎉 帳務已完全打平</div>`;
     }
 
-    // 🌟 圖表繪製與控制邏輯 (直接在圓餅圖上顯示數字標籤)
     document.getElementById("chartTypePieBtn").addEventListener("click", () => setChartType("pie"));
     document.getElementById("chartTypeBarBtn").addEventListener("click", () => setChartType("bar"));
 
@@ -937,6 +991,7 @@
       drawChart();
     }
 
+    // 🌟 核心升級：繪製外折線與數值
     function drawChart() {
       const canvas = document.getElementById("expenseChart");
       const msg = document.getElementById("emptyChartMsg");
@@ -957,12 +1012,9 @@
 
       if (currentChartMode === 'pie') {
         const catData = {};
-        let totalExpense = 0;
         expenses.forEach(r => { 
           const cat = r.category || '其他'; 
-          const amt = r.twdAmount || 0;
-          catData[cat] = (catData[cat] || 0) + amt;
-          totalExpense += amt;
+          catData[cat] = (catData[cat] || 0) + (r.twdAmount || 0);
         });
 
         const labels = Object.keys(catData); 
@@ -980,27 +1032,19 @@
               borderColor: isDark ? '#1e293b' : '#ffffff' 
             }] 
           },
+          plugins: [pieOutlabelsPlugin], // 🌟 掛載向外拉線插件
           options: {
             responsive: true, 
             maintainAspectRatio: false,
+            layout: {
+              padding: 28 // 預留空間給拉出的折線與金額文字
+            },
             plugins: { 
               legend: { 
-                position: 'right', 
-                labels: { color: textColor, font: { size: 11, family: 'sans-serif' } } 
+                display: false // 隱藏圖例，因為外折線已經有清楚標註名稱與金額
               }, 
               tooltip: { 
                 callbacks: { label: (ctx) => ` ${ctx.label}: $${ctx.raw.toLocaleString()}` } 
-              },
-              // 🌟 核心升級：在扇形上直接繪製百分比數值
-              datalabels: {
-                color: '#ffffff',
-                font: { weight: 'bold', size: 11 },
-                textShadowColor: 'rgba(0, 0, 0, 0.5)',
-                textShadowBlur: 3,
-                formatter: (value) => {
-                  const percentage = totalExpense > 0 ? (value / totalExpense * 100).toFixed(0) : 0;
-                  return percentage >= 5 ? `${percentage}%` : ''; // 小於 5% 的項目隱藏避免重疊
-                }
               }
             }
           }
@@ -1018,8 +1062,7 @@
             scales: { x: { ticks: { color: textColor, font: { size: 10 } }, grid: { display: false } }, y: { ticks: { color: textColor, font: { size: 10 } }, grid: { color: gridColor }, beginAtZero: true } },
             plugins: { 
               legend: { display: false }, 
-              tooltip: { callbacks: { label: (ctx) => ` 支出: $${ctx.raw.toLocaleString()}` } },
-              datalabels: { display: false } // 長條圖不強加數字標籤，維持視覺簡潔
+              tooltip: { callbacks: { label: (ctx) => ` 支出: $${ctx.raw.toLocaleString()}` } }
             }
           }
         });
