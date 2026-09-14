@@ -66,10 +66,13 @@
       </div>
     </div>
 
-    <!-- 匯率橫幅 -->
+    <!-- 🌟 匯率橫幅 (已恢復點擊手動更新功能) -->
     <div class="bg-gradient-to-r from-blue-50/80 to-indigo-50/80 dark:from-slate-800/80 dark:to-gray-800/80 border border-blue-100/50 dark:border-gray-700 rounded-2xl p-3 shadow-sm">
       <div class="flex items-center justify-between text-[11px] font-bold text-gray-500 dark:text-gray-400 mb-2">
-        <span class="flex items-center gap-1">💱 <span>即時參考匯率 (自動更新)</span></span>
+        <button type="button" onclick="fetchExchangeRates()" class="flex items-center gap-1 cursor-pointer hover:text-blue-600 dark:hover:text-blue-400 transition active:scale-95" title="點擊手動更新匯率">
+          💱 <span>即時參考匯率 (點擊更新)</span>
+          <svg class="w-3 h-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
+        </button>
         <span id="rateUpdateTime" class="font-mono text-[10px] bg-white/50 dark:bg-black/20 px-2 py-0.5 rounded-full">連線中...</span>
       </div>
       <div id="rateChipsContainer" class="flex gap-2 overflow-x-auto pb-1 text-xs snap-x">
@@ -105,7 +108,7 @@
       </div>
     </div>
 
-    <!-- 🌟 成員管理面板 (雲端持久同步) -->
+    <!-- 成員管理設定面板 -->
     <div id="memberConfigPanel" class="hidden bg-white/60 dark:bg-slate-900/60 border border-gray-200/50 dark:border-gray-700/50 rounded-2xl p-4 space-y-3 shadow-inner">
       <div class="flex justify-between items-center text-xs font-bold text-gray-700 dark:text-gray-300 mb-1">
         <span>👥 管理與編輯分攤成員名單</span>
@@ -118,7 +121,7 @@
       <div id="memberTagList" class="flex flex-wrap gap-2 pt-1 text-xs"></div>
     </div>
 
-    <!-- 🌟 自訂類別管理面板 (雲端持久同步) -->
+    <!-- 自訂類別管理設定面板 -->
     <div id="categoryConfigPanel" class="hidden bg-white/60 dark:bg-slate-900/60 border border-gray-200/50 dark:border-gray-700/50 rounded-2xl p-4 space-y-3 shadow-inner">
       <div class="flex justify-between items-center text-xs font-bold text-gray-700 dark:text-gray-300 mb-1">
         <span>🏷️ 管理記帳類別</span>
@@ -240,7 +243,7 @@
           <div class="flex flex-wrap gap-2 text-xs pt-1" id="membersCheckboxes"></div>
         </div>
         
-        <!-- 🌟 多幣別自訂分攤優化介面 -->
+        <!-- 多幣別自訂分攤優化介面 -->
         <div id="splitModeCustomContainer" class="hidden space-y-2 pt-1">
           <div class="flex justify-between items-center text-[11px] font-medium text-gray-500">
             <div class="flex items-center gap-1.5">
@@ -461,7 +464,6 @@
       } catch (e) {}
     }
 
-    // 🌟 雲端自動同步成員與類別清單 (拉取)
     async function fetchCloudConfig() {
       const pwd = getPassword(); if (!pwd) return;
       try {
@@ -480,7 +482,6 @@
       } catch (e) {}
     }
 
-    // 🌟 儲存成員與類別設定至雲端
     async function syncConfigToCloud() {
       const pwd = getPassword(); if (!pwd) return;
       try {
@@ -527,7 +528,6 @@
       checkCustomSplitTotal(); return twd;
     }
 
-    // 🌟 多幣別自訂分攤即時折算與差額校驗
     function checkCustomSplitTotal() {
       const splitCurrency = document.getElementById("customSplitCurrency").value;
       const cur = document.getElementById("currency").value;
@@ -540,7 +540,6 @@
         const val = parseFloat(i.value) || 0;
         sum += val;
         
-        // 即時在外幣輸入框旁更新換算台幣提示
         const hintEl = document.getElementById(`hint_twd_${i.dataset.member}`);
         if (hintEl) {
           if (val > 0 && cur !== "TWD" && splitCurrency !== "TWD") {
@@ -638,6 +637,7 @@
         });
         const result = await res.json();
         if (result.status === "success") {
+          syncConfigToCloud();
           showToast(`✅ 雲端歷史紀錄已同步繼承 (更新了 ${result.updatedRows} 筆)`);
           await loadRecords();
         } else {
@@ -655,7 +655,6 @@
       document.getElementById("payer").innerHTML = members.map(m => `<option value="${escapeHtml(m)}">${escapeHtml(m)}</option>`).join("");
       document.getElementById("membersCheckboxes").innerHTML = members.map(m => `<label class="flex items-center gap-1.5 cursor-pointer bg-white dark:bg-gray-700 px-2.5 py-1.5 rounded-lg border border-gray-200 dark:border-gray-600 shadow-sm active:scale-95 transition"><input type="checkbox" value="${escapeHtml(m)}" checked class="member-cb text-blue-500 focus:ring-blue-500 h-4 w-4 rounded"> <span>${escapeHtml(m)}</span></label>`).join("");
       
-      // 🌟 自訂分攤欄位優化：加入原幣換算台幣的小標籤提示
       document.getElementById("customMembersList").innerHTML = members.map(m => `
         <div class="flex items-center gap-2 bg-white dark:bg-gray-700/80 p-2 rounded-xl border border-gray-100 dark:border-gray-600 shadow-sm">
           <span class="w-16 font-bold text-gray-700 dark:text-gray-200 truncate" title="${escapeHtml(m)}">${escapeHtml(m)}</span>
@@ -761,7 +760,9 @@
       showToast(`⚡ 已套用範本：${title}`, "info");
     };
 
-    async function fetchExchangeRates() {
+    // 🌟 已恢復的手動強制更新匯率功能
+    window.fetchExchangeRates = async function() {
+      document.getElementById("rateUpdateTime").textContent = "更新中...";
       try {
         const res = await fetch("https://open.er-api.com/v6/latest/TWD"); 
         const data = await res.json();
@@ -771,10 +772,18 @@
           if (data.rates.JPY) exchangeRates.JPY = 1 / data.rates.JPY;
           if (data.rates.CNY) exchangeRates.CNY = 1 / data.rates.CNY;
           if (data.rates.KRW) exchangeRates.KRW = 1 / data.rates.KRW;
-          document.getElementById("rateUpdateTime").textContent = "自動更新成功";
+          
+          document.getElementById("rateUpdateTime").textContent = "更新成功";
+          
+          if(document.getElementById("rateChipsContainer").innerHTML !== "載入中...") {
+            showToast("💱 匯率已取得最新報價", "info");
+          }
         }
       } catch(e) {
-        document.getElementById("rateUpdateTime").textContent = "使用離線預設匯率";
+        document.getElementById("rateUpdateTime").textContent = "離線預設匯率";
+        if(document.getElementById("rateChipsContainer").innerHTML !== "載入中...") {
+          showToast("❌ 匯率更新失敗", "error");
+        }
       }
       
       document.getElementById("rateChipsContainer").innerHTML = ["USD","EUR","JPY","CNY","KRW"].map(c => `
@@ -784,7 +793,7 @@
         </div>
       `).join("");
       updateTwdPreview();
-    }
+    };
 
     document.getElementById("receiptPhotoInput").addEventListener("change", e => {
       const f = e.target.files[0]; if(!f) return;
@@ -1072,7 +1081,6 @@
         renderRecordsList(); renderSettlement(cachedRecords);
         if(!document.getElementById("sheetSelector").options.length || document.getElementById("sheetSelector").options[0].value === "預設帳本") fetchSheetList();
         
-        // 自動拉取雲端成員與類別
         await fetchCloudConfig();
         showToast("✅ 同步完成");
       } catch(e) { showToast(`❌ 連線失敗: ${e.message}`, "error"); }
@@ -1260,7 +1268,11 @@
     if(localStorage.getItem("app_pwd")) document.getElementById("accessPassword").value = localStorage.getItem("app_pwd");
     renderMemberControls();
     renderCategoryControls();
-    fetchExchangeRates().then(() => loadRecords());
+    fetchExchangeRates().then(() => {
+      // 確保一開始就先掛載更新後的點擊事件
+      document.getElementById("rateUpdateTime").parentNode.setAttribute("onclick", "fetchExchangeRates()");
+      loadRecords();
+    });
   </script>
 </body>
 </html>
