@@ -16,6 +16,8 @@
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2"></script> <!-- 🌟 引入圖表數值標籤外掛 -->
 
   <style>
     .glass { backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); }
@@ -199,7 +201,7 @@
 
       <div id="aiStatusNotice" class="hidden text-center text-xs text-blue-600 bg-blue-50 dark:bg-blue-900/30 dark:text-blue-300 font-bold py-1.5 rounded-lg animate-pulse"></div>
 
-      <!-- 🌟 全新帳目類型切換按鈕群組 -->
+      <!-- 全新帳目類型切換按鈕群組 -->
       <div class="flex gap-1.5 mb-1 bg-gray-100/80 dark:bg-gray-800/80 p-1.5 rounded-xl shadow-inner">
         <button type="button" onclick="setRecordType('expense')" id="btnTypeExpense" class="flex-1 text-xs font-bold py-1.5 rounded-lg bg-white dark:bg-gray-600 text-blue-600 dark:text-blue-300 shadow-sm transition">👥 群組分帳</button>
         <button type="button" onclick="setRecordType('personal')" id="btnTypePersonal" class="flex-1 text-xs font-bold py-1.5 rounded-lg text-gray-500 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 transition">👤 個人支出</button>
@@ -281,11 +283,30 @@
       </div>
     </div>
 
-    <!-- 歷史明細清單 -->
+    <!-- 歷史明細清單與圖表展示區 -->
     <div class="pt-2">
       <div class="flex justify-between items-center mb-3 px-1">
         <h2 class="text-xs font-bold text-gray-500 dark:text-gray-400 flex items-center gap-1"><span class="text-sm">📝</span> 歷史紀錄 (<span id="recordCountDisplay">0</span>)</h2>
+        <button type="button" id="mainChartToggleBtn" class="text-[11px] bg-indigo-50 hover:bg-indigo-100 text-indigo-600 dark:bg-indigo-900/30 dark:hover:bg-indigo-900/50 dark:text-indigo-300 font-bold px-2.5 py-1 rounded-lg transition shadow-sm border border-indigo-100 dark:border-indigo-800/50">
+          📊 顯示圖表
+        </button>
       </div>
+
+      <!-- 獨立的圖表區塊 (預設隱藏) -->
+      <div id="mainChartContainer" class="hidden mb-4 bg-white/60 dark:bg-slate-900/60 border border-gray-200/50 dark:border-gray-700/50 rounded-2xl p-4 shadow-inner">
+        <div class="flex justify-between items-center text-xs font-bold text-gray-700 dark:text-gray-300 mb-2">
+          <span>📊 支出圖表分析 (TWD)</span>
+          <div class="flex bg-gray-200 dark:bg-gray-800 p-0.5 rounded-lg shadow-inner">
+            <button type="button" id="chartTypePieBtn" class="px-2 py-1 rounded-md bg-white dark:bg-gray-600 font-bold text-blue-600 shadow-sm transition">佔比</button>
+            <button type="button" id="chartTypeBarBtn" class="px-2 py-1 rounded-md text-gray-500 dark:text-gray-400 font-medium hover:text-gray-800 transition">趨勢</button>
+          </div>
+        </div>
+        <div class="relative w-full h-52 flex justify-center items-center">
+          <canvas id="expenseChart"></canvas>
+          <div id="emptyChartMsg" class="hidden absolute inset-0 flex items-center justify-center text-gray-400 text-xs font-medium bg-gray-50/80 dark:bg-slate-800/80 rounded-xl border border-dashed border-gray-300 dark:border-gray-600">尚無支出資料可供分析</div>
+        </div>
+      </div>
+
       <div id="recordList" class="space-y-2.5 max-h-[500px] overflow-y-auto pr-1 pb-4">
         <div class="text-gray-400 dark:text-gray-500 text-center py-8 bg-white/50 dark:bg-gray-800/50 rounded-2xl border border-dashed border-gray-300 dark:border-gray-600">請先解鎖以載入資料</div>
       </div>
@@ -319,6 +340,9 @@
   </footer>
 
   <script>
+    // 註冊 ChartDataLabels 外掛
+    Chart.register(ChartDataLabels);
+
     const API_URL = "https://script.google.com/macros/s/AKfycbyLdzLuX2UzEpgD2fc-P_2l8L0yjfjsUgLaOTdn7tJWcRdhIG6ZY4lxFp5WAY7pFXxW/exec";
     
     let currentSheet = localStorage.getItem("app_active_sheet") || "預設帳本";
@@ -329,6 +353,9 @@
     let currentSplitMode = "equal";
     let uploadedReceiptBase64 = "";
     let editingRecordId = null;
+    
+    let chartInstance = null;
+    let currentChartMode = 'pie';
 
     function escapeHtml(str) {
       if (!str) return "";
@@ -378,12 +405,8 @@
       showToast("目前處於離線狀態，動作將暫存於本機佇列", "info");
     });
 
-    function getOfflineQueue() {
-      return JSON.parse(localStorage.getItem("offline_mutation_queue")) || [];
-    }
-    function saveOfflineQueue(q) {
-      localStorage.setItem("offline_mutation_queue", JSON.stringify(q));
-    }
+    function getOfflineQueue() { return JSON.parse(localStorage.getItem("offline_mutation_queue")) || []; }
+    function saveOfflineQueue(q) { localStorage.setItem("offline_mutation_queue", JSON.stringify(q)); }
 
     async function syncOfflineQueue() {
       const queue = getOfflineQueue();
@@ -397,17 +420,11 @@
           if (result.status !== "success" && result.status !== "updated" && result.status !== "deleted") {
             remaining.push(req);
           }
-        } catch (e) {
-          remaining.push(req);
-        }
+        } catch (e) { remaining.push(req); }
       }
       saveOfflineQueue(remaining);
-      if (remaining.length === 0) {
-        showToast("✅ 離線佇列同步完成！");
-        loadRecords();
-      } else {
-        showToast(`⚠️ 尚有 ${remaining.length} 筆等待下次連線同步`, "info");
-      }
+      if (remaining.length === 0) { showToast("✅ 離線佇列同步完成！"); loadRecords(); } 
+      else { showToast(`⚠️ 尚有 ${remaining.length} 筆等待下次連線同步`, "info"); }
     }
 
     function applyFontSize(size) {
@@ -421,7 +438,30 @@
     document.getElementById("fontDecBtn").addEventListener("click", () => applyFontSize(parseInt(document.getElementById("fontSlider").value) - 1));
     document.getElementById("fontIncBtn").addEventListener("click", () => applyFontSize(parseInt(document.getElementById("fontSlider").value) + 1));
     document.getElementById("fontResetBtn").addEventListener("click", () => applyFontSize(16));
-    document.getElementById("toggleFontPanelBtn").addEventListener("click", () => document.getElementById("fontConfigPanel").classList.toggle("hidden"));
+    
+    function closeAllPanelsExcept(panelId) {
+      const panels = ["fontConfigPanel", "dataConfigPanel", "memberConfigPanel", "categoryConfigPanel"];
+      panels.forEach(p => { if (p !== panelId) document.getElementById(p).classList.add("hidden"); });
+    }
+    document.getElementById("toggleFontPanelBtn").addEventListener("click", () => { closeAllPanelsExcept("fontConfigPanel"); document.getElementById("fontConfigPanel").classList.toggle("hidden"); });
+    document.getElementById("toggleMemberBtn").addEventListener("click", () => { closeAllPanelsExcept("memberConfigPanel"); document.getElementById("memberConfigPanel").classList.toggle("hidden"); });
+    document.getElementById("toggleCategoryBtn").addEventListener("click", () => { closeAllPanelsExcept("categoryConfigPanel"); document.getElementById("categoryConfigPanel").classList.toggle("hidden"); });
+    document.getElementById("toggleDataBtn").addEventListener("click", () => { closeAllPanelsExcept("dataConfigPanel"); document.getElementById("dataConfigPanel").classList.toggle("hidden"); });
+
+    document.getElementById("mainChartToggleBtn").addEventListener("click", function() {
+      const container = document.getElementById("mainChartContainer");
+      const isHidden = container.classList.contains("hidden");
+      if (isHidden) {
+        container.classList.remove("hidden");
+        this.innerHTML = "📊 隱藏圖表";
+        this.classList.add("bg-indigo-100", "dark:bg-indigo-900/60");
+        drawChart();
+      } else {
+        container.classList.add("hidden");
+        this.innerHTML = "📊 顯示圖表";
+        this.classList.remove("bg-indigo-100", "dark:bg-indigo-900/60");
+      }
+    });
 
     function initTheme() {
       const isDark = localStorage.getItem("theme") === "dark" || (!localStorage.getItem("theme") && window.matchMedia("(prefers-color-scheme: dark)").matches);
@@ -431,6 +471,7 @@
       const isDark = document.documentElement.classList.toggle("dark");
       localStorage.setItem("theme", isDark ? "dark" : "light");
       themeToggleBtn.textContent = isDark ? "☀️" : "🌙";
+      if(!document.getElementById("mainChartContainer").classList.contains("hidden")) drawChart();
     });
 
     function getPassword() { return document.getElementById("accessPassword").value.trim() || localStorage.getItem("app_pwd") || ""; }
@@ -490,14 +531,8 @@
       const pwd = getPassword(); if (!pwd) return;
       try {
         await fetch(API_URL, {
-          method: "POST",
-          headers: { "Content-Type": "text/plain" },
-          body: JSON.stringify({
-            action: "save_config",
-            password: pwd,
-            members: members,
-            categories: categories
-          })
+          method: "POST", headers: { "Content-Type": "text/plain" },
+          body: JSON.stringify({ action: "save_config", password: pwd, members: members, categories: categories })
         });
       } catch (e) {}
     }
@@ -508,14 +543,9 @@
       return { rate, twd: Math.round(amount * rate) };
     }
 
-    // 🌟 全新帳目類型切換邏輯
     window.setRecordType = function(type) {
       document.getElementById("type").value = type;
-      
-      const bExp = document.getElementById("btnTypeExpense");
-      const bPer = document.getElementById("btnTypePersonal");
-      const bInc = document.getElementById("btnTypeIncome");
-      
+      const bExp = document.getElementById("btnTypeExpense"), bPer = document.getElementById("btnTypePersonal"), bInc = document.getElementById("btnTypeIncome");
       const normalClass = "flex-1 text-xs font-bold py-1.5 rounded-lg text-gray-500 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 transition";
       bExp.className = normalClass; bPer.className = normalClass; bInc.className = normalClass;
       
@@ -561,15 +591,12 @@
       document.querySelectorAll(".custom-split-input").forEach(i => {
         const val = parseFloat(i.value) || 0;
         sum += val;
-        
         const hintEl = document.getElementById(`hint_twd_${i.dataset.member}`);
         if (hintEl) {
           if (val > 0 && cur !== "TWD" && splitCurrency !== "TWD") {
             hintEl.textContent = `≈ NT$ ${Math.round(val * rate).toLocaleString()}`;
             hintEl.classList.remove("hidden");
-          } else {
-            hintEl.classList.add("hidden");
-          }
+          } else { hintEl.classList.add("hidden"); }
         }
       });
 
@@ -577,9 +604,8 @@
       const el = document.getElementById("customSumStatus");
       const unit = splitCurrency === "TWD" ? "NT$" : cur;
 
-      if (Math.abs(diff) < 0.01 && targetTotal > 0) {
-        el.innerHTML = `<span class="text-emerald-500 font-bold">✓ 吻合 (${targetTotal.toLocaleString()} ${unit})</span>`;
-      } else {
+      if (Math.abs(diff) < 0.01 && targetTotal > 0) { el.innerHTML = `<span class="text-emerald-500 font-bold">✓ 吻合 (${targetTotal.toLocaleString()} ${unit})</span>`; } 
+      else {
         const displaySum = splitCurrency === "TWD" ? Math.round(sum) : parseFloat(sum.toFixed(2));
         const displayDiff = splitCurrency === "TWD" ? Math.round(diff) : parseFloat(diff.toFixed(2));
         el.innerHTML = `<span class="text-red-500 font-medium">${displaySum} / ${targetTotal} (差 ${displayDiff} ${unit})</span>`;
@@ -587,8 +613,7 @@
     }
 
     document.getElementById("customSplitCurrency").addEventListener("change", () => {
-      document.querySelectorAll(".custom-split-input").forEach(i => i.value = "");
-      checkCustomSplitTotal();
+      document.querySelectorAll(".custom-split-input").forEach(i => i.value = ""); checkCustomSplitTotal();
     });
 
     window.autoFillDifference = function(memberName) {
@@ -612,17 +637,10 @@
       const newName = prompt(`修改「${oldName}」的名字為：`, oldName);
       if (!newName || !newName.trim() || newName.trim() === oldName) return;
       const cleanName = newName.trim();
-      
-      if (members.includes(cleanName)) { 
-        alert("此名字已存在！"); 
-        return; 
-      }
+      if (members.includes(cleanName)) { alert("此名字已存在！"); return; }
 
       const pwd = getPassword();
-      if (!pwd) {
-        alert("請先輸入密碼解鎖後再進行更名同步！");
-        return;
-      }
+      if (!pwd) { alert("請先輸入密碼解鎖後再進行更名同步！"); return; }
 
       members[idx] = cleanName;
       localStorage.setItem("split_members", JSON.stringify(members));
@@ -637,38 +655,20 @@
         }
       });
 
-      renderMemberControls();
-      renderRecordsList();
-      renderSettlement(cachedRecords);
-
+      renderMemberControls(); renderRecordsList(); renderSettlement(cachedRecords);
       showToast(`⏳ 正在同步更新雲端歷史紀錄「${oldName}」➔「${cleanName}」...`, "info");
 
-      const payload = {
-        action: "rename_member",
-        oldName: oldName,
-        newName: cleanName,
-        password: pwd,
-        sheetName: currentSheet
-      };
-
+      const payload = { action: "rename_member", oldName: oldName, newName: cleanName, password: pwd, sheetName: currentSheet };
       try {
-        const res = await fetch(API_URL, {
-          method: "POST",
-          headers: { "Content-Type": "text/plain" },
-          body: JSON.stringify(payload)
-        });
+        const res = await fetch(API_URL, { method: "POST", headers: { "Content-Type": "text/plain" }, body: JSON.stringify(payload) });
         const result = await res.json();
         if (result.status === "success") {
           syncConfigToCloud();
           showToast(`✅ 雲端歷史紀錄已同步繼承 (更新了 ${result.updatedRows} 筆)`);
           await loadRecords();
-        } else {
-          throw new Error(result.message);
-        }
+        } else throw new Error(result.message);
       } catch (err) {
-        const queue = getOfflineQueue();
-        queue.push(payload);
-        saveOfflineQueue(queue);
+        const queue = getOfflineQueue(); queue.push(payload); saveOfflineQueue(queue);
         showToast("⚠️ 網路暫時中斷，更名動作已加入離線佇列", "info");
       }
     };
@@ -721,55 +721,32 @@
     document.getElementById("addCategoryBtn").addEventListener("click", () => {
       const val = document.getElementById("newCategoryName").value.trim();
       if (val && !categories.includes(val)) {
-        categories.push(val);
-        document.getElementById("newCategoryName").value = "";
-        renderCategoryControls();
-        syncConfigToCloud();
-        showToast(`🏷️ 已新增類別：${val}`);
+        categories.push(val); document.getElementById("newCategoryName").value = "";
+        renderCategoryControls(); syncConfigToCloud(); showToast(`🏷️ 已新增類別：${val}`);
       }
     });
 
     window.removeCategory = function(idx) {
       if (categories.length > 1) {
         const removed = categories.splice(idx, 1);
-        renderCategoryControls();
-        syncConfigToCloud();
-        showToast(`已移除類別：${removed}`, "info");
+        renderCategoryControls(); syncConfigToCloud(); showToast(`已移除類別：${removed}`, "info");
       }
     };
 
     document.getElementById("addMemberBtn").addEventListener("click", () => {
       const val = document.getElementById("newMemberName").value.trim();
       if (val && !members.includes(val)) { 
-        members.push(val); 
-        document.getElementById("newMemberName").value = ""; 
-        renderMemberControls(); 
-        syncConfigToCloud();
-        showToast(`👥 已新增成員：${val}`); 
+        members.push(val); document.getElementById("newMemberName").value = ""; 
+        renderMemberControls(); syncConfigToCloud(); showToast(`👥 已新增成員：${val}`); 
       }
     });
     
     window.removeMember = function(idx) { 
       if (members.length > 1) { 
-        const removed = members.splice(idx, 1); 
-        renderMemberControls(); 
-        syncConfigToCloud();
-        showToast(`已移除成員：${removed}`, "info"); 
-      } else { 
-        alert("至少需保留一位成員！"); 
-      }
+        const removed = members.splice(idx, 1); renderMemberControls(); syncConfigToCloud(); showToast(`已移除成員：${removed}`, "info"); 
+      } else { alert("至少需保留一位成員！"); }
     };
 
-    document.getElementById("toggleMemberBtn").addEventListener("click", () => {
-      document.getElementById("memberConfigPanel").classList.toggle("hidden");
-      document.getElementById("categoryConfigPanel").classList.add("hidden");
-    });
-    document.getElementById("toggleCategoryBtn").addEventListener("click", () => {
-      document.getElementById("categoryConfigPanel").classList.toggle("hidden");
-      document.getElementById("memberConfigPanel").classList.add("hidden");
-    });
-    document.getElementById("toggleDataBtn").addEventListener("click", () => document.getElementById("dataConfigPanel").classList.toggle("hidden"));
-    
     window.applyTemplate = function(title, category, amount, currency) {
       document.getElementById("title").value = title;
       if (categories.includes(category)) document.getElementById("category").value = category;
@@ -799,9 +776,7 @@
         }
       } catch(e) {
         document.getElementById("rateUpdateTime").textContent = "離線預設匯率";
-        if(document.getElementById("rateChipsContainer").innerHTML !== "載入中...") {
-          showToast("❌ 匯率更新失敗", "error");
-        }
+        if(document.getElementById("rateChipsContainer").innerHTML !== "載入中...") { showToast("❌ 匯率更新失敗", "error"); }
       }
       
       document.getElementById("rateChipsContainer").innerHTML = ["USD","EUR","JPY","CNY","KRW"].map(c => `
@@ -851,13 +826,8 @@
 
       voiceBtn.addEventListener("click", () => {
         try {
-          aiStatus.textContent = "🎙️ 請說話..."; 
-          aiStatus.classList.remove("hidden"); 
-          rec.start();
-        } catch (err) {
-          aiStatus.classList.add("hidden");
-          showToast("❌ 語音啟動失敗，請確認麥克風權限", "error");
-        }
+          aiStatus.textContent = "🎙️ 請說話..."; aiStatus.classList.remove("hidden"); rec.start();
+        } catch (err) { aiStatus.classList.add("hidden"); showToast("❌ 語音啟動失敗，請確認麥克風權限", "error"); }
       });
 
       rec.onresult = e => {
@@ -877,8 +847,7 @@
       };
 
       rec.onerror = () => {
-        aiStatus.textContent = "❌ 語音辨識失敗或無聲";
-        setTimeout(() => aiStatus.classList.add("hidden"), 2000);
+        aiStatus.textContent = "❌ 語音辨識失敗或無聲"; setTimeout(() => aiStatus.classList.add("hidden"), 2000);
       };
     } else {
       voiceBtn.addEventListener("click", () => showToast("❌ 您的瀏覽器不支援語音辨識", "error"));
@@ -886,22 +855,15 @@
 
     document.getElementById("ocrReceiptInput").addEventListener("change", async e => {
       const f = e.target.files[0]; if(!f) return; 
-      aiStatus.textContent = "🔍 照片辨識中..."; 
-      aiStatus.classList.remove("hidden");
-      
+      aiStatus.textContent = "🔍 照片辨識中..."; aiStatus.classList.remove("hidden");
       processImageForUpload(f, async (compressedBase64) => {
         try {
           const { data: { text } } = await Tesseract.recognize(compressedBase64, 'eng+chi_tra');
           const nums = (text.match(/[0-9,.]+/g)||[]).map(n=>parseFloat(n.replace(/,/g,''))).filter(n=>n>0&&n<1000000);
           if (nums.length) document.getElementById("originalAmount").value = Math.max(...nums);
           document.getElementById("title").value = "收據截取"; 
-          updateTwdPreview();
-          showToast("✅ 收據辨識完成");
-        } catch(err) { 
-          showToast("❌ 收據辨識失敗", "error"); 
-        } finally {
-          aiStatus.classList.add("hidden");
-        }
+          updateTwdPreview(); showToast("✅ 收據辨識完成");
+        } catch(err) { showToast("❌ 收據辨識失敗", "error"); } finally { aiStatus.classList.add("hidden"); }
       }, 600);
     });
 
@@ -917,24 +879,16 @@
       return shares;
     }
 
-    window.setQuickQr = function(accText) {
-      document.getElementById("qrCodeInputText").value = accText;
-      generateQrCode(accText);
-    };
-
+    window.setQuickQr = function(accText) { document.getElementById("qrCodeInputText").value = accText; generateQrCode(accText); };
     window.showQrCodeModal = function(txt) {
       document.getElementById("qrCodePanel").classList.remove("hidden"); 
       document.getElementById("qrCodeInputText").value = txt||"";
-      generateQrCode(txt||"null");
-      document.getElementById("qrCodePanel").scrollIntoView({behavior:'smooth'});
+      generateQrCode(txt||"null"); document.getElementById("qrCodePanel").scrollIntoView({behavior:'smooth'});
     };
-    
     function generateQrCode(text) {
-      const canvas = document.getElementById("qrcodeCanvas");
-      canvas.innerHTML=""; 
+      const canvas = document.getElementById("qrcodeCanvas"); canvas.innerHTML=""; 
       new QRCode(canvas, { text: text, width: 140, height: 140, colorDark: "#064e3b", colorLight: "#ffffff", correctLevel: QRCode.CorrectLevel.M });
     }
-
     document.getElementById("generateQrBtn").addEventListener("click", () => generateQrCode(document.getElementById("qrCodeInputText").value.trim()));
     window.openImageModal = src => { document.getElementById("modalImg").src = src; document.getElementById("imageModal").classList.remove("hidden"); };
     window.closeImageModal = () => document.getElementById("imageModal").classList.add("hidden");
@@ -954,14 +908,11 @@
 
       const d=[], c=[]; Object.keys(bals).forEach(m=>{ const v=Math.round(bals[m]); if(v<-0.5)d.push({n:m,a:-v}); else if(v>0.5)c.push({n:m,a:v}); });
       d.sort((x,y)=>y.a-x.a); c.sort((x,y)=>y.a-x.a);
-      const tInst=[]; let i=0, j=0;
-      lastTransferInstructions = [];
+      const tInst=[]; let i=0, j=0; lastTransferInstructions = [];
       while(i<d.length && j<c.length) {
         const amt = Math.min(d[i].a, c[j].a);
         if(amt>0) {
-          const debtor = d[i].n;
-          const creditor = c[j].n;
-          const transAmt = Math.round(amt);
+          const debtor = d[i].n; const creditor = c[j].n; const transAmt = Math.round(amt);
           lastTransferInstructions.push({ debtor, creditor, amount: transAmt });
           const txt = `${debtor} 轉給 ${creditor} $${transAmt}`;
           tInst.push(`<div class="flex justify-between items-center bg-white/60 dark:bg-gray-800/60 px-3 py-2 rounded-xl shadow-sm border border-blue-100 dark:border-gray-700"><span><b class="text-gray-800 dark:text-gray-200">${escapeHtml(debtor)}</b> <span class="text-gray-400">➔</span> <b class="text-gray-800 dark:text-gray-200">${escapeHtml(creditor)}</b></span><div class="flex items-center gap-2"><span class="font-mono font-bold text-blue-600 dark:text-blue-400">$${transAmt}</span><button onclick="showQrCodeModal('${escapeHtml(txt)}')" class="bg-emerald-100 text-emerald-700 dark:bg-emerald-900/50 dark:text-emerald-300 px-2 py-1 rounded text-[10px] font-bold active:scale-90">QR</button></div></div>`);
@@ -972,52 +923,129 @@
       tEl.innerHTML = tInst.length ? `<div class="font-bold text-blue-900 dark:text-blue-300 mb-2">💡 最佳平帳轉帳路徑：</div><div class="space-y-1.5">${tInst.join("")}</div>` : `<div class="text-gray-400 text-center font-medium">🎉 帳務已完全打平</div>`;
     }
 
-    window.copyLineSettlement = function() {
-      if (cachedRecords.length === 0) {
-        return showToast("目前沒有任何記帳紀錄！", "info");
+    // 🌟 圖表繪製與控制邏輯 (直接在圓餅圖上顯示數字標籤)
+    document.getElementById("chartTypePieBtn").addEventListener("click", () => setChartType("pie"));
+    document.getElementById("chartTypeBarBtn").addEventListener("click", () => setChartType("bar"));
+
+    function setChartType(mode) {
+      currentChartMode = mode;
+      const pBtn = document.getElementById("chartTypePieBtn"), bBtn = document.getElementById("chartTypeBarBtn");
+      const activeCls = "px-2 py-1 rounded-md bg-white dark:bg-gray-600 font-bold text-blue-600 shadow-sm transition";
+      const inactiveCls = "px-2 py-1 rounded-md text-gray-500 dark:text-gray-400 font-medium hover:text-gray-800 transition";
+      if(mode === 'pie'){ pBtn.className = activeCls; bBtn.className = inactiveCls; } 
+      else { bBtn.className = activeCls; pBtn.className = inactiveCls; }
+      drawChart();
+    }
+
+    function drawChart() {
+      const canvas = document.getElementById("expenseChart");
+      const msg = document.getElementById("emptyChartMsg");
+      if (!canvas) return;
+
+      const expenses = cachedRecords.filter(r => r.type === 'expense' || r.type === 'personal');
+      if (chartInstance) chartInstance.destroy();
+
+      if (expenses.length === 0) {
+        msg.classList.remove("hidden"); canvas.style.display = "none"; return;
+      } else {
+        msg.classList.add("hidden"); canvas.style.display = "block";
       }
 
-      let text = `✈️ 【${currentSheet}】分帳結算清單\n`;
-      text += `====================\n`;
-      text += `💡 最佳平帳轉帳路徑：\n`;
-      
-      if (lastTransferInstructions.length > 0) {
-        lastTransferInstructions.forEach((t, idx) => {
-          text += `${idx + 1}. 👤 ${t.debtor} ➔ 👤 ${t.creditor}：💰 $${t.amount.toLocaleString()} TWD\n`;
+      const isDark = document.documentElement.classList.contains("dark");
+      const textColor = isDark ? '#cbd5e1' : '#475569';
+      const gridColor = isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.05)';
+
+      if (currentChartMode === 'pie') {
+        const catData = {};
+        let totalExpense = 0;
+        expenses.forEach(r => { 
+          const cat = r.category || '其他'; 
+          const amt = r.twdAmount || 0;
+          catData[cat] = (catData[cat] || 0) + amt;
+          totalExpense += amt;
+        });
+
+        const labels = Object.keys(catData); 
+        const data = Object.values(catData);
+        const colors = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#06b6d4', '#f97316', '#64748b', '#ec4899', '#14b8a6'];
+
+        chartInstance = new Chart(canvas, {
+          type: 'doughnut',
+          data: { 
+            labels: labels, 
+            datasets: [{ 
+              data: data, 
+              backgroundColor: colors.slice(0, labels.length), 
+              borderWidth: 2, 
+              borderColor: isDark ? '#1e293b' : '#ffffff' 
+            }] 
+          },
+          options: {
+            responsive: true, 
+            maintainAspectRatio: false,
+            plugins: { 
+              legend: { 
+                position: 'right', 
+                labels: { color: textColor, font: { size: 11, family: 'sans-serif' } } 
+              }, 
+              tooltip: { 
+                callbacks: { label: (ctx) => ` ${ctx.label}: $${ctx.raw.toLocaleString()}` } 
+              },
+              // 🌟 核心升級：在扇形上直接繪製百分比數值
+              datalabels: {
+                color: '#ffffff',
+                font: { weight: 'bold', size: 11 },
+                textShadowColor: 'rgba(0, 0, 0, 0.5)',
+                textShadowBlur: 3,
+                formatter: (value) => {
+                  const percentage = totalExpense > 0 ? (value / totalExpense * 100).toFixed(0) : 0;
+                  return percentage >= 5 ? `${percentage}%` : ''; // 小於 5% 的項目隱藏避免重疊
+                }
+              }
+            }
+          }
         });
       } else {
-        text += `🎉 帳務已完全打平，無需轉帳！\n`;
+        const dateData = {};
+        expenses.forEach(r => { const d = r.date || '未知日期'; dateData[d] = (dateData[d] || 0) + (r.twdAmount || 0); });
+        const labels = Object.keys(dateData).sort(); const data = labels.map(l => dateData[l]);
+
+        chartInstance = new Chart(canvas, {
+          type: 'bar',
+          data: { labels: labels, datasets: [{ label: '每日總支出 (TWD)', data: data, backgroundColor: '#3b82f6', borderRadius: 4 }] },
+          options: {
+            responsive: true, maintainAspectRatio: false,
+            scales: { x: { ticks: { color: textColor, font: { size: 10 } }, grid: { display: false } }, y: { ticks: { color: textColor, font: { size: 10 } }, grid: { color: gridColor }, beginAtZero: true } },
+            plugins: { 
+              legend: { display: false }, 
+              tooltip: { callbacks: { label: (ctx) => ` 支出: $${ctx.raw.toLocaleString()}` } },
+              datalabels: { display: false } // 長條圖不強加數字標籤，維持視覺簡潔
+            }
+          }
+        });
       }
+    }
 
-      text += `====================\n`;
-      text += `📝 支出與消費歷史明細 (共 ${cachedRecords.length} 筆)：\n`;
-
+    window.copyLineSettlement = function() {
+      if (cachedRecords.length === 0) { return showToast("目前沒有任何記帳紀錄！", "info"); }
+      let text = `✈️ 【${currentSheet}】分帳結算清單\n====================\n💡 最佳平帳轉帳路徑：\n`;
+      if (lastTransferInstructions.length > 0) {
+        lastTransferInstructions.forEach((t, idx) => { text += `${idx + 1}. 👤 ${t.debtor} ➔ 👤 ${t.creditor}：💰 $${t.amount.toLocaleString()} TWD\n`; });
+      } else { text += `🎉 帳務已完全打平，無需轉帳！\n`; }
+      text += `====================\n📝 支出與消費歷史明細 (共 ${cachedRecords.length} 筆)：\n`;
       const sortedRecords = [...cachedRecords].sort((a, b) => (a.date || "").localeCompare(b.date || ""));
-
       sortedRecords.forEach(item => {
-        const isExp = item.type === "expense";
-        const isPersonal = item.type === "personal";
-        const isIncome = item.type === "income";
+        const isExp = item.type === "expense", isPersonal = item.type === "personal", isIncome = item.type === "income";
         const origText = item.currency !== "TWD" ? `${item.currency} ${item.originalAmount.toLocaleString()} ` : "";
         const twdText = `(NT$ ${(item.twdAmount || 0).toLocaleString()})`;
-        
         let payerText = "";
         if(isExp) payerText = item.payer ? ` - ${item.payer} 付` : "";
-        else if (isPersonal) payerText = " (個人支出)";
-        else if (isIncome) payerText = " (個人收入)";
-        
-        text += `・${item.date} | [${item.category || '其他'}] ${item.title}\n`;
-        text += `  ${origText}${twdText}${payerText}\n`;
+        else if (isPersonal) payerText = " (個人支出)"; else if (isIncome) payerText = " (個人收入)";
+        text += `・${item.date} | [${item.category || '其他'}] ${item.title}\n  ${origText}${twdText}${payerText}\n`;
       });
-
-      text += `====================\n`;
-      text += `請大家核對明細並轉帳後截圖回傳，謝謝！`;
-
-      navigator.clipboard.writeText(text).then(() => {
-        showToast("✅ 已複製 LINE 結算清單 (含完整歷史明細)！");
-      }).catch(() => {
-        prompt("請手動複製以下結算清單：", text);
-      });
+      text += `====================\n請大家核對明細並轉帳後截圖回傳，謝謝！`;
+      navigator.clipboard.writeText(text).then(() => { showToast("✅ 已複製 LINE 結算清單 (含完整歷史明細)！"); })
+      .catch(() => { prompt("請手動複製以下結算清單：", text); });
     };
 
     window.startEditRecord = function(id) {
@@ -1029,12 +1057,9 @@
       document.getElementById("editModeBanner").classList.remove("hidden");
       document.getElementById("saveBtnText").textContent = "儲存修改";
 
-      // 🌟 自動切換至該紀錄對應的類型按鈕
       setRecordType(item.type || "expense");
       
-      if (categories.includes(item.category)) {
-        document.getElementById("category").value = item.category;
-      }
+      if (categories.includes(item.category)) { document.getElementById("category").value = item.category; }
       document.getElementById("title").value = item.title || "";
       document.getElementById("currency").value = item.currency || "TWD";
       document.getElementById("originalAmount").value = item.originalAmount || "";
@@ -1120,6 +1145,8 @@
           </div>`;
         listEl.appendChild(r);
       });
+      
+      if(!document.getElementById("mainChartContainer").classList.contains("hidden")) { drawChart(); }
     }
 
     async function loadRecords() {
@@ -1183,9 +1210,7 @@
       if (isEditing) {
         const idx = cachedRecords.findIndex(r => r.id === targetId);
         if (idx !== -1) cachedRecords[idx] = payloadRec;
-      } else {
-        cachedRecords.unshift(payloadRec);
-      }
+      } else { cachedRecords.unshift(payloadRec); }
 
       renderRecordsList(); renderSettlement(cachedRecords);
       cancelEdit(); updateTwdPreview();
@@ -1200,9 +1225,7 @@
           showToast(isEditing ? "✅ 修改已同步至雲端" : "✅ 已安全儲存至雲端");
         } else throw new Error(result.message);
       } catch(e) {
-        const queue = getOfflineQueue();
-        queue.push(requestBody);
-        saveOfflineQueue(queue);
+        const queue = getOfflineQueue(); queue.push(requestBody); saveOfflineQueue(queue);
         document.getElementById("networkStatusBadge").classList.remove("hidden");
         showToast("⚠️ 網路異常，已暫存至離線佇列", "error");
       }
@@ -1219,9 +1242,7 @@
         if((await res.json()).status!=="deleted") throw new Error();
         showToast("✅ 已從雲端刪除");
       } catch(e) {
-        const queue = getOfflineQueue();
-        queue.push(delPayload);
-        saveOfflineQueue(queue);
+        const queue = getOfflineQueue(); queue.push(delPayload); saveOfflineQueue(queue);
         showToast("⚠️ 離線刪除，已加入佇列", "info");
       }
     };
@@ -1331,7 +1352,6 @@
     initTheme(); applyFontSize(localStorage.getItem("app_custom_font_size")||16);
     document.getElementById("date").value = getTodayString(); updateTimestampDisplay();
     
-    // 初始化按鈕狀態為分帳支出
     setRecordType('expense');
 
     if(localStorage.getItem("app_pwd")) document.getElementById("accessPassword").value = localStorage.getItem("app_pwd");
