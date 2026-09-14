@@ -55,7 +55,7 @@
       </div>
 
       <div class="flex items-center gap-1.5 flex-wrap w-full sm:w-auto justify-end">
-        <span id="networkStatusBadge" class="hidden text-[10px] font-bold px-2 py-1 rounded-full bg-amber-100 text-amber-700 dark:bg-amber-900/50 dark:text-amber-300">離線模式 (已排隊)</span>
+        <span id="networkStatusBadge" class="hidden text-[10px] font-bold px-2 py-1 rounded-full bg-amber-100 text-amber-700 dark:bg-amber-900/50 dark:text-amber-300">離線排隊中</span>
         <button type="button" id="pwaInstallBtn" class="hidden text-xs bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white font-semibold px-2.5 py-1.5 rounded-xl shadow transition active:scale-95">📲 App</button>
         <button type="button" id="themeToggleBtn" class="p-1.5 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 rounded-xl transition active:scale-95 shadow-sm text-sm">🌙</button>
         <button type="button" id="toggleFontPanelBtn" class="text-xs bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 px-2.5 py-1.5 rounded-xl font-medium shadow-sm transition active:scale-95">🔤</button>
@@ -105,9 +105,12 @@
       </div>
     </div>
 
-    <!-- 成員管理設定面板 -->
+    <!-- 🌟 成員管理面板 (雲端持久同步) -->
     <div id="memberConfigPanel" class="hidden bg-white/60 dark:bg-slate-900/60 border border-gray-200/50 dark:border-gray-700/50 rounded-2xl p-4 space-y-3 shadow-inner">
-      <div class="text-xs font-bold text-gray-700 dark:text-gray-300 mb-1">👥 管理與編輯分攤成員名字</div>
+      <div class="flex justify-between items-center text-xs font-bold text-gray-700 dark:text-gray-300 mb-1">
+        <span>👥 管理與編輯分攤成員名單</span>
+        <span class="text-[10px] text-blue-500 bg-blue-50 dark:bg-blue-900/40 px-2 py-0.5 rounded-full">雲端自動同步</span>
+      </div>
       <div class="flex gap-2">
         <input type="text" id="newMemberName" placeholder="輸入新成員名字" class="flex-1 border border-gray-300 dark:border-gray-600 rounded-xl px-3 py-1.5 text-xs bg-white dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none transition">
         <button type="button" id="addMemberBtn" class="bg-gray-800 dark:bg-gray-700 hover:bg-black text-white px-4 py-1.5 rounded-xl text-xs font-medium shadow transition active:scale-95">加入</button>
@@ -115,9 +118,12 @@
       <div id="memberTagList" class="flex flex-wrap gap-2 pt-1 text-xs"></div>
     </div>
 
-    <!-- 自訂類別管理設定面板 -->
+    <!-- 🌟 自訂類別管理面板 (雲端持久同步) -->
     <div id="categoryConfigPanel" class="hidden bg-white/60 dark:bg-slate-900/60 border border-gray-200/50 dark:border-gray-700/50 rounded-2xl p-4 space-y-3 shadow-inner">
-      <div class="text-xs font-bold text-gray-700 dark:text-gray-300 mb-1">🏷️ 管理記帳類別</div>
+      <div class="flex justify-between items-center text-xs font-bold text-gray-700 dark:text-gray-300 mb-1">
+        <span>🏷️ 管理記帳類別</span>
+        <span class="text-[10px] text-blue-500 bg-blue-50 dark:bg-blue-900/40 px-2 py-0.5 rounded-full">雲端自動同步</span>
+      </div>
       <div class="flex gap-2">
         <input type="text" id="newCategoryName" placeholder="輸入新類別名稱 (如: 醫療)" class="flex-1 border border-gray-300 dark:border-gray-600 rounded-xl px-3 py-1.5 text-xs bg-white dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none transition">
         <button type="button" id="addCategoryBtn" class="bg-gray-800 dark:bg-gray-700 hover:bg-black text-white px-4 py-1.5 rounded-xl text-xs font-medium shadow transition active:scale-95">加入</button>
@@ -234,18 +240,19 @@
           <div class="flex flex-wrap gap-2 text-xs pt-1" id="membersCheckboxes"></div>
         </div>
         
+        <!-- 🌟 多幣別自訂分攤優化介面 -->
         <div id="splitModeCustomContainer" class="hidden space-y-2 pt-1">
           <div class="flex justify-between items-center text-[11px] font-medium text-gray-500">
             <div class="flex items-center gap-1.5">
-              <span>分攤金額：</span>
+              <span>分攤金額依據：</span>
               <select id="customSplitCurrency" class="bg-gray-100 dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded px-1.5 py-0.5 outline-none focus:ring-1 focus:ring-blue-500 text-gray-700 dark:text-gray-300 transition">
-                <option value="auto">依原幣別輸入</option>
-                <option value="TWD">依台幣輸入 (TWD)</option>
+                <option value="auto">原幣別輸入</option>
+                <option value="TWD">台幣輸入 (TWD)</option>
               </select>
             </div>
             <span id="customSumStatus" class="font-mono text-gray-400">0 / 0</span>
           </div>
-          <div id="customMembersList" class="space-y-1.5 max-h-40 overflow-y-auto pr-1"></div>
+          <div id="customMembersList" class="space-y-2 max-h-48 overflow-y-auto pr-1"></div>
         </div>
       </div>
 
@@ -273,7 +280,7 @@
         <h2 class="text-xs font-bold text-gray-500 dark:text-gray-400 flex items-center gap-1"><span class="text-sm">📝</span> 歷史紀錄 (<span id="recordCountDisplay">0</span>)</h2>
       </div>
       <div id="recordList" class="space-y-2.5 max-h-[500px] overflow-y-auto pr-1 pb-4">
-        <div class="text-gray-400 dark:text-gray-500 text-center text-sm py-8 bg-white/50 dark:bg-gray-800/50 rounded-2xl border border-dashed border-gray-300 dark:border-gray-600">請先解鎖以載入資料</div>
+        <div class="text-gray-400 dark:text-gray-500 text-center py-8 bg-white/50 dark:bg-gray-800/50 rounded-2xl border border-dashed border-gray-300 dark:border-gray-600">請先解鎖以載入資料</div>
       </div>
     </div>
 
@@ -308,7 +315,7 @@
     const API_URL = "https://script.google.com/macros/s/AKfycbyLdzLuX2UzEpgD2fc-P_2l8L0yjfjsUgLaOTdn7tJWcRdhIG6ZY4lxFp5WAY7pFXxW/exec";
     
     let currentSheet = localStorage.getItem("app_active_sheet") || "預設帳本";
-    let members = JSON.parse(localStorage.getItem("split_members")) || ["我", "小明", "小華"];
+    let members = JSON.parse(localStorage.getItem("split_members")) || ["奇奇", "鼻涕"];
     let categories = JSON.parse(localStorage.getItem("app_categories")) || ["餐飲", "交通", "住宿", "購物", "門票", "娛樂", "生活", "其他"];
     let exchangeRates = { TWD: 1, EUR: 35.0, JPY: 0.21, CNY: 4.45, USD: 32.5, KRW: 0.024 };
     let cachedRecords = [];
@@ -354,7 +361,6 @@
       } catch (e) { el.textContent = "無法讀取"; }
     }
 
-    // 離線狀態偵測與佇列同步
     window.addEventListener('online', () => {
       document.getElementById("networkStatusBadge").classList.add("hidden");
       showToast("網路已連線，正在自動同步離線佇列...", "info");
@@ -455,6 +461,42 @@
       } catch (e) {}
     }
 
+    // 🌟 雲端自動同步成員與類別清單 (拉取)
+    async function fetchCloudConfig() {
+      const pwd = getPassword(); if (!pwd) return;
+      try {
+        const res = await fetch(`${API_URL}?password=${encodeURIComponent(pwd)}&action=get_config`);
+        const data = await res.json();
+        if (data && Array.isArray(data.members) && data.members.length > 0) {
+          members = data.members;
+          localStorage.setItem("split_members", JSON.stringify(members));
+          renderMemberControls();
+        }
+        if (data && Array.isArray(data.categories) && data.categories.length > 0) {
+          categories = data.categories;
+          localStorage.setItem("app_categories", JSON.stringify(categories));
+          renderCategoryControls();
+        }
+      } catch (e) {}
+    }
+
+    // 🌟 儲存成員與類別設定至雲端
+    async function syncConfigToCloud() {
+      const pwd = getPassword(); if (!pwd) return;
+      try {
+        await fetch(API_URL, {
+          method: "POST",
+          headers: { "Content-Type": "text/plain" },
+          body: JSON.stringify({
+            action: "save_config",
+            password: pwd,
+            members: members,
+            categories: categories
+          })
+        });
+      } catch (e) {}
+    }
+
     function calculateTwd() {
       const amount = parseFloat(document.getElementById("originalAmount").value) || 0;
       const rate = exchangeRates[document.getElementById("currency").value] || 1;
@@ -485,21 +527,41 @@
       checkCustomSplitTotal(); return twd;
     }
 
+    // 🌟 多幣別自訂分攤即時折算與差額校驗
     function checkCustomSplitTotal() {
       const splitCurrency = document.getElementById("customSplitCurrency").value;
-      const { twd: totalTwd } = calculateTwd();
+      const cur = document.getElementById("currency").value;
+      const { rate, twd: totalTwd } = calculateTwd();
       const origAmt = parseFloat(document.getElementById("originalAmount").value) || 0;
       const targetTotal = splitCurrency === "TWD" ? totalTwd : origAmt;
+      
       let sum = 0;
-      document.querySelectorAll(".custom-split-input").forEach(i => sum += parseFloat(i.value) || 0);
+      document.querySelectorAll(".custom-split-input").forEach(i => {
+        const val = parseFloat(i.value) || 0;
+        sum += val;
+        
+        // 即時在外幣輸入框旁更新換算台幣提示
+        const hintEl = document.getElementById(`hint_twd_${i.dataset.member}`);
+        if (hintEl) {
+          if (val > 0 && cur !== "TWD" && splitCurrency !== "TWD") {
+            hintEl.textContent = `≈ NT$ ${Math.round(val * rate).toLocaleString()}`;
+            hintEl.classList.remove("hidden");
+          } else {
+            hintEl.classList.add("hidden");
+          }
+        }
+      });
+
       const diff = targetTotal - sum;
       const el = document.getElementById("customSumStatus");
+      const unit = splitCurrency === "TWD" ? "NT$" : cur;
+
       if (Math.abs(diff) < 0.01 && targetTotal > 0) {
-        el.innerHTML = `<span class="text-emerald-500 font-bold">✓ 吻合</span>`;
+        el.innerHTML = `<span class="text-emerald-500 font-bold">✓ 吻合 (${targetTotal.toLocaleString()} ${unit})</span>`;
       } else {
         const displaySum = splitCurrency === "TWD" ? Math.round(sum) : parseFloat(sum.toFixed(2));
         const displayDiff = splitCurrency === "TWD" ? Math.round(diff) : parseFloat(diff.toFixed(2));
-        el.innerHTML = `<span class="text-red-500 font-medium">${displaySum} / ${targetTotal} (差 ${displayDiff})</span>`;
+        el.innerHTML = `<span class="text-red-500 font-medium">${displaySum} / ${targetTotal} (差 ${displayDiff} ${unit})</span>`;
       }
     }
 
@@ -542,6 +604,8 @@
       }
 
       members[idx] = cleanName;
+      localStorage.setItem("split_members", JSON.stringify(members));
+
       cachedRecords.forEach(item => {
         if (item.payer === oldName) item.payer = cleanName;
         if (Array.isArray(item.splitMembers)) {
@@ -590,7 +654,20 @@
     function renderMemberControls() {
       document.getElementById("payer").innerHTML = members.map(m => `<option value="${escapeHtml(m)}">${escapeHtml(m)}</option>`).join("");
       document.getElementById("membersCheckboxes").innerHTML = members.map(m => `<label class="flex items-center gap-1.5 cursor-pointer bg-white dark:bg-gray-700 px-2.5 py-1.5 rounded-lg border border-gray-200 dark:border-gray-600 shadow-sm active:scale-95 transition"><input type="checkbox" value="${escapeHtml(m)}" checked class="member-cb text-blue-500 focus:ring-blue-500 h-4 w-4 rounded"> <span>${escapeHtml(m)}</span></label>`).join("");
-      document.getElementById("customMembersList").innerHTML = members.map(m => `<div class="flex items-center gap-2 bg-white dark:bg-gray-700/80 p-2 rounded-xl border border-gray-100 dark:border-gray-600 shadow-sm"><span class="w-16 font-bold text-gray-700 dark:text-gray-200 truncate" title="${escapeHtml(m)}">${escapeHtml(m)}</span><div class="relative flex-1"><span class="absolute left-2 top-1.5 text-gray-400 font-mono">$</span><input type="number" step="any" min="0" data-member="${escapeHtml(m)}" class="custom-split-input w-full pl-6 pr-2 py-1 border border-gray-200 dark:border-gray-600 rounded-lg bg-gray-50 dark:bg-gray-800 text-right font-mono focus:ring-2 focus:ring-blue-500 outline-none"></div><button type="button" onclick="autoFillDifference('${escapeHtml(m)}')" class="bg-blue-50 dark:bg-blue-900/50 text-blue-600 dark:text-blue-300 font-bold px-2 py-1 rounded-lg hover:bg-blue-100 active:scale-95 transition">補滿</button></div>`).join("");
+      
+      // 🌟 自訂分攤欄位優化：加入原幣換算台幣的小標籤提示
+      document.getElementById("customMembersList").innerHTML = members.map(m => `
+        <div class="flex items-center gap-2 bg-white dark:bg-gray-700/80 p-2 rounded-xl border border-gray-100 dark:border-gray-600 shadow-sm">
+          <span class="w-16 font-bold text-gray-700 dark:text-gray-200 truncate" title="${escapeHtml(m)}">${escapeHtml(m)}</span>
+          <div class="relative flex-1">
+            <span class="absolute left-2 top-1.5 text-gray-400 font-mono">$</span>
+            <input type="number" step="any" min="0" data-member="${escapeHtml(m)}" class="custom-split-input w-full pl-6 pr-2 py-1 border border-gray-200 dark:border-gray-600 rounded-lg bg-gray-50 dark:bg-gray-800 text-right font-mono focus:ring-2 focus:ring-blue-500 outline-none">
+            <span id="hint_twd_${escapeHtml(m)}" class="hidden absolute right-2 -bottom-3.5 text-[9px] font-mono text-blue-500 font-bold"></span>
+          </div>
+          <button type="button" onclick="autoFillDifference('${escapeHtml(m)}')" class="bg-blue-50 dark:bg-blue-900/50 text-blue-600 dark:text-blue-300 font-bold px-2 py-1 rounded-lg hover:bg-blue-100 active:scale-95 transition">補滿</button>
+        </div>
+      `).join("");
+      
       document.querySelectorAll(".custom-split-input").forEach(i => i.addEventListener("input", checkCustomSplitTotal));
       
       document.getElementById("memberTagList").innerHTML = members.map((m, idx) => `
@@ -626,6 +703,7 @@
         categories.push(val);
         document.getElementById("newCategoryName").value = "";
         renderCategoryControls();
+        syncConfigToCloud();
         showToast(`🏷️ 已新增類別：${val}`);
       }
     });
@@ -634,17 +712,31 @@
       if (categories.length > 1) {
         const removed = categories.splice(idx, 1);
         renderCategoryControls();
+        syncConfigToCloud();
         showToast(`已移除類別：${removed}`, "info");
       }
     };
 
     document.getElementById("addMemberBtn").addEventListener("click", () => {
       const val = document.getElementById("newMemberName").value.trim();
-      if (val && !members.includes(val)) { members.push(val); document.getElementById("newMemberName").value = ""; renderMemberControls(); showToast(`👥 已新增成員：${val}`); }
+      if (val && !members.includes(val)) { 
+        members.push(val); 
+        document.getElementById("newMemberName").value = ""; 
+        renderMemberControls(); 
+        syncConfigToCloud();
+        showToast(`👥 已新增成員：${val}`); 
+      }
     });
+    
     window.removeMember = function(idx) { 
-      if (members.length > 1) { const removed = members.splice(idx, 1); renderMemberControls(); showToast(`已移除成員：${removed}`, "info"); } 
-      else { alert("至少需保留一位成員！"); }
+      if (members.length > 1) { 
+        const removed = members.splice(idx, 1); 
+        renderMemberControls(); 
+        syncConfigToCloud();
+        showToast(`已移除成員：${removed}`, "info"); 
+      } else { 
+        alert("至少需保留一位成員！"); 
+      }
     };
 
     document.getElementById("toggleMemberBtn").addEventListener("click", () => {
@@ -853,7 +945,6 @@
       tEl.innerHTML = tInst.length ? `<div class="font-bold text-blue-900 dark:text-blue-300 mb-2">💡 最佳平帳轉帳路徑：</div><div class="space-y-1.5">${tInst.join("")}</div>` : `<div class="text-gray-400 text-center font-medium">🎉 帳務已完全打平</div>`;
     }
 
-    // 🌟 升級版：LINE 結算清單一鍵分享（含完整支出歷史明細）
     window.copyLineSettlement = function() {
       if (cachedRecords.length === 0) {
         return showToast("目前沒有任何記帳紀錄！", "info");
@@ -874,7 +965,6 @@
       text += `====================\n`;
       text += `📝 支出與消費歷史明細 (共 ${cachedRecords.length} 筆)：\n`;
 
-      // 依日期先後排列展示明細
       const sortedRecords = [...cachedRecords].sort((a, b) => (a.date || "").localeCompare(b.date || ""));
 
       sortedRecords.forEach(item => {
@@ -981,6 +1071,9 @@
         cachedRecords = Array.isArray(data) ? data : [];
         renderRecordsList(); renderSettlement(cachedRecords);
         if(!document.getElementById("sheetSelector").options.length || document.getElementById("sheetSelector").options[0].value === "預設帳本") fetchSheetList();
+        
+        // 自動拉取雲端成員與類別
+        await fetchCloudConfig();
         showToast("✅ 同步完成");
       } catch(e) { showToast(`❌ 連線失敗: ${e.message}`, "error"); }
     }
