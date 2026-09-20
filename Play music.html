@@ -1,511 +1,584 @@
 <!DOCTYPE html>
-<html lang="zh-Hant">
+<html lang="zh-TW">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>新竹奇奇828音樂播放器</title>
-  <style>
-    /* ============================================================
-       【視覺層：CSS 定義】
-       ============================================================ */
-    
-    /* 1. 霓虹主題配色方案：使用 CSS 變數方便統一修改 */
-    :root {
-      --neon-color: #00ffff;      /* 主色：青色 */
-      --neon-glow: rgba(0, 255, 255, 0.6); /* 發光效果 */
-      --neon-accent: #ff00ff;     /* 點綴色：品紅 */
-      --bg-dark: #0f0f0f;         /* 深色背景 */
-      --glass-bg: rgba(43, 45, 49, 0.7); /* 玻璃擬態背景 */
-      --glass-border: rgba(255, 255, 255, 0.1); /* 玻璃邊框 */
-    }
-
-    body {
-      background: linear-gradient(#1a1a1a, var(--bg-dark));
-      color: #ccc;
-      font-family: "Microsoft JhengHei", Arial, sans-serif;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      padding: 20px;
-      min-height: 100vh;
-      transition: all 0.3s ease;
-      margin: 0;
-    }
-
-    /* 拖放檔案時的背景視覺反饋 */
-    body.drag-over {
-      background: radial-gradient(circle, #252a30 0%, var(--bg-dark) 100%);
-      box-shadow: inset 0 0 100px var(--neon-glow);
-    }
-
-    h2 { 
-      color: var(--neon-color); 
-      text-shadow: 0 0 20px var(--neon-color); 
-      margin-bottom: 30px;
-    }
-    
-    /* 佈局容器：頂部工具列 */
-    .top-bar { 
-      display: flex; 
-      flex-direction: column; 
-      gap: 10px; 
-      align-items: center; 
-      margin-bottom: 20px; 
-      width: 100%; 
-    }
-    
-    /* 播放控制按鈕組 */
-    .controls { 
-      display: flex; 
-      gap: 12px; 
-      margin-bottom: 20px; 
-      flex-wrap: wrap; 
-      justify-content: center; 
-    }
-    
-    audio { 
-      width: 100%; 
-      max-width: 560px; 
-      margin: 10px 0 20px 0; 
-    }
-
-    /* 玻璃擬態面板：核心視覺風格 */
-    .glass-panel {
-      background: var(--glass-bg);
-      backdrop-filter: blur(12px); /* 毛玻璃模糊 */
-      -webkit-backdrop-filter: blur(12px);
-      border: 1px solid var(--glass-border);
-      border-radius: 16px;
-      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
-    }
-
-    /* 增益控制面板 */
-    .gain-panel {
-      display: flex;
-      gap: 20px;
-      padding: 15px 25px;
-      margin-bottom: 15px;
-      font-size: 14px;
-      align-items: center;
-      justify-content: center;
-    }
-    .adv-item { display: flex; align-items: center; gap: 8px; }
-    .adv-item input {
-      background: rgba(0,0,0,0.5);
-      color: var(--neon-color);
-      border: 1px solid var(--neon-color);
-      border-radius: 4px;
-    }
-
-    /* 按鈕通用樣式與霓虹懸停效果 */
-    button, input[type="file"] {
-      padding: 10px 16px;
-      border: none;
-      border-radius: 8px;
-      background: var(--glass-bg);
-      backdrop-filter: blur(10px);
-      color: var(--neon-color);
-      cursor: pointer;
-      transition: all 0.3s ease;
-      border: 1px solid var(--glass-border);
-      box-shadow: 0 0 12px var(--neon-glow);
-    }
-    button:hover {
-      background: rgba(58, 61, 65, 0.8);
-      box-shadow: 0 0 20px var(--neon-accent), 0 0 30px var(--neon-glow);
-      transform: translateY(-2px);
-    }
-    button.active {
-      background: var(--neon-color);
-      color: #000;
-      box-shadow: 0 0 20px var(--neon-color);
-    }
-
-    /* 動畫：歌單邊框呼吸燈 */
-    @keyframes borderGlow {
-      0% { box-shadow: 0 0 15px var(--neon-glow), 0 0 25px rgba(255,0,255,0.3); }
-      50% { box-shadow: 0 0 30px var(--neon-glow), 0 0 45px rgba(255,0,255,0.6); }
-      100% { box-shadow: 0 0 15px var(--neon-glow), 0 0 25px rgba(255,0,255,0.3); }
-    }
-
-    #playlist {
-      list-style: none;
-      padding: 0;
-      margin: 0 0 20px 0;
-      width: 100%;
-      max-width: 560px;
-      background: var(--glass-bg);
-      backdrop-filter: blur(12px);
-      border-radius: 16px;
-      max-height: 400px;
-      overflow-y: auto;
-      border: 1px solid var(--glass-border);
-      animation: borderGlow 4s infinite ease-in-out; /* 套用呼吸燈動畫 */
-    }
-    #playlist li {
-      padding: 12px 16px;
-      border-bottom: 1px solid rgba(255,255,255,0.05);
-      cursor: pointer;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      transition: background 0.2s;
-    }
-    #playlist li:hover { background: rgba(255, 255, 255, 0.05); }
-    .file-name { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; margin-right: 15px; }
-    .file-size { color: #00ffcc; font-size: 14px; font-weight: 600; }
-
-    /* 動畫：目前播放歌曲的發光跳動效果 */
-    @keyframes glowPulse {
-      0% { color: var(--neon-color); text-shadow: 0 0 10px var(--neon-color), 0 0 20px var(--neon-accent); }
-      50% { color: var(--neon-accent); text-shadow: 0 0 20px var(--neon-accent), 0 0 30px var(--neon-color); }
-      100% { color: var(--neon-color); text-shadow: 0 0 10px var(--neon-color), 0 0 20px var(--neon-accent); }
-    }
-    @keyframes playingGlow {
-      0% { border: 2px solid var(--neon-glow); box-shadow: 0 0 10px var(--neon-glow); }
-      50% { border: 2px solid var(--neon-accent); box-shadow: 0 0 20px var(--neon-accent), 0 0 30px var(--neon-glow); }
-      100% { border: 2px solid var(--neon-glow); box-shadow: 0 0 10px var(--neon-glow); }
-    }
-    #playlist li.playing {
-      font-weight: bold;
-      border-radius: 8px;
-      animation: glowPulse 2s infinite alternate, playingGlow 2.5s infinite ease-in-out;
-      margin: 4px;
-    }
-
-    .update-tag {
-      font-size: 12px;
-      color: #666;
-      margin-top: 20px;
-      text-align: center;
-      opacity: 0.7;
-    }
-  </style>
-</head>
-<body id="mainBody">
-  <!-- ============================================================
-       【結構層：HTML 佈局】
-       ============================================================ -->
-  
-  <h2>🎧 新竹奇奇828音樂播放器</h2>
-
-  <!-- 檔案輸入區 -->
-  <div class="top-bar">
-    <label style="text-align: center;">檔案：<input type="file" id="fileInput" accept="audio/*" multiple></label>
-    <label style="text-align: center;">目錄：<input type="file" id="folderInput" webkitdirectory multiple></label>
-  </div>
-
-  <!-- 播放控制按鈕區 -->
-  <div class="controls">
-    <button id="prevBtn">◀ 上</button>
-    <button id="loopPlaylistBtn">歌單循環</button>
-    <button id="loopSingleBtn">單曲循環</button>
-    <button id="shuffleBtn">隨機</button>
-    <button id="nextBtn">下 ▶</button>
-  </div>
-
-  <!-- 音訊增益（放大）控制面板 -->
-  <div class="gain-panel glass-panel">
-    <div class="adv-item">
-      <span style="color: var(--neon-color);">增益:</span>
-      <input type="range" id="gainSlider" min="1" max="10" step="0.1" value="1">
-      <span id="gainValue" style="color: var(--neon-color); min-width: 40px;">1.0x</span>
-    </div>
-  </div>
-
-  <!-- 核心播放器組件 -->
-  <audio id="player" controls></audio>
-
-  <!-- 動態生成歌單的容器 -->
-  <ul id="playlist"></ul>
-
-  <!-- 頁面更新標記 -->
-  <div class="update-tag" id="updateTag"></div>
-
-  <script>
-    /* ============================================================
-       【邏輯層：JavaScript 功能實現】
-       ============================================================ */
-
-    // --- 1. 元素選取 (DOM Selection) ---
-    const fileInput = document.getElementById('fileInput');
-    const folderInput = document.getElementById('folderInput');
-    const playlist = document.getElementById('playlist');
-    const player = document.getElementById('player');
-    const loopPlaylistBtn = document.getElementById('loopPlaylistBtn');
-    const loopSingleBtn = document.getElementById('loopSingleBtn');
-    const shuffleBtn = document.getElementById('shuffleBtn');
-    const prevBtn = document.getElementById('prevBtn');
-    const nextBtn = document.getElementById('nextBtn');
-    const mainBody = document.getElementById('mainBody');
-    const updateTag = document.getElementById('updateTag');
-    const gainSlider = document.getElementById('gainSlider');
-    const gainValueDisplay = document.getElementById('gainValue');
-
-    // --- 2. 全域狀態管理 (State Management) ---
-    let files = [];             // 儲存所有導入的音樂檔案
-    let currentIndex = 0;      // 目前播放的歌曲索引
-    let loopPlaylist = false;   // 是否開啟歌單循環
-    let loopSingle = false;     // 是否開啟單曲循環
-    let shuffleMode = false;    // 是否開啟隨機播放
-    let titleInterval = null;   // 標題跑馬燈的計時器
-
-    // Web Audio API 相關變數
-    let audioCtx, source, gainNode;
-
-    // 定義支援的音訊格式正則表達式
-    const AUDIO_EXTENSIONS = /\.(mp3|wav|ogg|m4a|flac|aac|opus|wma|aiff|aif|m4p|alac)$/i;
-
-    /**
-     * 初始化 Web Audio API
-     * 目的：建立音訊處理鏈路，實現超越 100% 的增益放大
-     */
-    function initAudioContext() {
-      if (audioCtx) return;
-      try {
-        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-        source = audioCtx.createMediaElementSource(player); // 將 audio 標籤作為音源
-        gainNode = audioCtx.createGain();                   // 建立增益節點
-        source.connect(gainNode);                           // 連接：音源 -> 增益
-        gainNode.connect(audioCtx.destination);             // 連接：增益 -> 輸出(喇叭)
-      } catch (e) {
-        console.error("AudioContext initialization failed:", e);
-      }
-    }
-
-    // 設定保存與讀取 (localStorage)
-    function saveSettings() {
-      localStorage.setItem('playerSettings', JSON.stringify({ gain: gainSlider.value }));
-    }
-
-    function loadSettings() {
-      const saved = localStorage.getItem('playerSettings');
-      if (saved) {
-        const s = JSON.parse(saved);
-        gainSlider.value = s.gain;
-        gainValueDisplay.textContent = parseFloat(s.gain).toFixed(1) + 'x';
-      }
-    }
-
-    function displayUpdateTime() {
-      updateTag.textContent = `頁面最後更新時間：${document.lastModified}`;
-    }
-    displayUpdateTime();
-
-    /**
-     * 渲染歌單
-     * 將 files 陣列轉換為 HTML 列表並顯示
-     */
-    function renderPlaylist() {
-      playlist.innerHTML = files.map((file, index) => {
-        const sizeMB = (file.size / (1024 * 1024)).toFixed(1) + ' MB';
-        return `<li data-index="${index}" class="${index === currentIndex ? 'playing' : ''}">
-                  <span class="file-name">${index + 1}. ${file.name}</span>
-                  <span class="file-size">${sizeMB}</span>
-                </li>`;
-      }).join('');
-    }
-
-    /**
-     * 標題跑馬燈效果
-     * 使瀏覽器分頁標題動態滾動
-     */
-    function startTitleScrolling(songName) {
-      if (titleInterval) clearInterval(titleInterval);
-      let text = ` 🎵 播放中: ${songName} 🎵 `;
-      titleInterval = setInterval(() => {
-        text = text.substring(1) + text[0];
-        document.title = text;
-      }, 300);
-    }
-
-    /**
-     * 播放指定索引的檔案
-     * @param {number} index 檔案陣列中的索引
-     */
-    function playFile(index) {
-      if (files.length === 0) return;
-      if (index < 0 || index >= files.length) return;
-      
-      initAudioContext(); // 確保音訊上下文已啟動
-      currentIndex = index;
-
-      // 記憶體管理：釋放舊的 Blob URL 防止記憶體洩漏
-      if (player.src && player.src.startsWith("blob:")) {
-        URL.revokeObjectURL(player.src);
-      }
-      
-      player.src = URL.createObjectURL(files[currentIndex]);
-      player.play().catch(e => console.log("Autoplay prevented"));
-      startTitleScrolling(files[currentIndex].name);
-
-      renderPlaylist();
-      // 自動滾動到目前播放的項目
-      const activeItem = document.querySelector(`#playlist li[data-index="${currentIndex}"]`);
-      if (activeItem) activeItem.scrollIntoView({ behavior: "smooth", block: "center" });
-    }
-
-    /**
-     * 切換至下一首
-     * 處理：隨機模式 -> 順序播放 -> 循環播放 -> 停止
-     */
-    function playNext() {
-      if (files.length === 0) return;
-      if (shuffleMode) {
-        playFile(Math.floor(Math.random() * files.length));
-      } else {
-        if (currentIndex + 1 < files.length) {
-          playFile(currentIndex + 1);
-        } else if (loopPlaylist) {
-          playFile(0); // 回到第一首
-        } else {
-          player.pause();
-          if (titleInterval) clearInterval(titleInterval);
-          document.title = "新竹奇奇828音樂播放器";
-        }
-      }
-    }
-
-    // 循環模式切換邏輯
-    function updateLoopMode(single, playlistLoop) {
-      loopSingle = single;
-      loopPlaylist = playlistLoop;
-      player.loop = loopSingle; // HTML5 原生單曲循環屬性
-      loopSingleBtn.textContent = loopSingle ? "單曲循環 ✅" : "單曲循環";
-      loopPlaylistBtn.textContent = loopPlaylist ? "歌單循環 ✅" : "歌單循環";
-    }
-
-    // 點擊歌單項目即播放
-    playlist.addEventListener('click', (e) => {
-      const li = e.target.closest('li');
-      if (li) playFile(parseInt(li.dataset.index));
-    });
-
-    // 檢查檔案是否為音訊格式
-    function isAudioFile(file) {
-      return file.type.startsWith('audio/') || AUDIO_EXTENSIONS.test(file.name);
-    }
-
-    /**
-     * 處理新加入的檔案
-     */
-    const handleFiles = (newFiles) => {
-      const filtered = Array.from(newFiles).filter(isAudioFile);
-      if (filtered.length === 0) return;
-      files = [...files, ...filtered];
-      renderPlaylist();
-      // 如果目前沒在播放且沒歌，自動播放剛加入的第一首歌
-      if (player.paused && (!player.src || player.src === "")) {
-        playFile(files.length - filtered.length);
-      }
-    };
-
-    fileInput.addEventListener('change', () => handleFiles(fileInput.files));
-    folderInput.addEventListener('change', () => handleFiles(folderInput.files));
-
-    // --- 3. 拖放功能實作 (Drag and Drop) ---
-    window.addEventListener('dragover', (e) => { 
-      e.preventDefault(); 
-      mainBody.classList.add('drag-over'); 
-    });
-
-    window.addEventListener('dragleave', () => mainBody.classList.remove('drag-over'));
-
-    window.addEventListener('drop', async (e) => {
-      e.preventDefault();
-      mainBody.classList.remove('drag-over');
-
-      const items = e.dataTransfer.items;
-      const droppedFiles = [];
-
-      // 遞迴掃描資料夾內容
-      if (items && items.length > 0) {
-        async function traverseFileTree(entry) {
-          if (!entry) return;
-          try {
-            if (entry.isFile) {
-              const file = await new Promise((resolve) => entry.file(resolve));
-              if (isAudioFile(file)) droppedFiles.push(file);
-            } else if (entry.isDirectory) {
-              const reader = entry.createReader();
-              const entries = await new Promise((resolve) => reader.readEntries(resolve));
-              for (const childEntry of entries) {
-                await traverseFileTree(childEntry);
-              }
-            }
-          } catch (err) {
-            console.error("Error reading entry:", err);
-          }
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>福岡6天5夜行程表 - 2026年9月 (雙模式大字整合版)</title>
+    <style>
+        :root {
+            --font-scale: 1;
+            --bg-body: #f5f5f5;
+            --bg-container: #ffffff;
+            --bg-card: #f8f9fa;
+            --bg-info: #ecf0f1;
+            --bg-sub: #f1f5f9;
+            --text-primary: #2c3e50;
+            --text-secondary: #7f8c8d;
+            --text-light: #ffffff;
+            --primary-color: #3498db;
+            --primary-light: #dbeafe;
+            --primary-hover: #2980b9;
+            --accent-red: #e74c3c;
+            --accent-green: #27ae60;
+            --accent-purple: #8e44ad;
+            --accent-amber: #f59e0b;
+            --border-color: #dee2e6;
+            --shadow: 0 4px 15px rgba(0,0,0,0.08);
+            --shadow-sm: 0 1px 3px rgba(0,0,0,0.05);
+            --radius-lg: 16px;
+            --radius-md: 10px;
+            --radius-sm: 6px;
         }
 
-        const promises = [];
-        for (let i = 0; i < items.length; i++) {
-          const entry = items[i].webkitGetAsEntry();
-          if (entry) promises.push(traverseFileTree(entry));
+        [data-theme="dark"] {
+            --bg-body: #121212;
+            --bg-container: #1e1e1e;
+            --bg-card: #2c2c2c;
+            --bg-info: #2a2a2a;
+            --bg-sub: #334155;
+            --text-primary: #e0e0e0;
+            --text-secondary: #aaa;
+            --primary-color: #64b5f6;
+            --primary-light: #1e3a8a;
+            --primary-hover: #42a5f5;
+            --border-color: #444;
+            --shadow: 0 4px 15px rgba(0,0,0,0.4);
         }
-        await Promise.all(promises);
-      }
 
-      // 處理單純的檔案拖入
-      if (droppedFiles.length === 0 && e.dataTransfer.files && e.dataTransfer.files.length > 0) {
-        const basicFiles = Array.from(e.dataTransfer.files).filter(isAudioFile);
-        droppedFiles.push(...basicFiles);
-      }
-
-      if (droppedFiles.length > 0) {
-        files = [...files, ...droppedFiles];
-        renderPlaylist();
-        if (player.paused && (!player.src || player.src === "")) {
-          playFile(files.length - droppedFiles.length);
+        * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        html { scroll-behavior: smooth; font-size: calc(16px * var(--font-scale)); }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Microsoft JhengHei", "PingFang TC", "Segoe UI", Roboto, sans-serif;
+            background: var(--bg-body);
+            color: var(--text-primary);
+            padding: 20px;
+            line-height: 1.6;
+            transition: background 0.3s, color 0.3s;
         }
-      }
-    });
 
-    // --- 4. 按鈕事件綁定 ---
-    prevBtn.addEventListener('click', () => {
-      if (files.length === 0) return;
-      currentIndex = (currentIndex - 1 + files.length) % files.length; // 循環索引
-      playFile(currentIndex);
-    });
+        .container {
+            max-width: 950px;
+            margin: 0 auto;
+            background: var(--bg-container);
+            padding: 40px;
+            border-radius: 12px;
+            box-shadow: var(--shadow);
+            position: relative;
+        }
 
-    nextBtn.addEventListener('click', playNext);
-    loopPlaylistBtn.addEventListener('click', () => updateLoopMode(false, !loopPlaylist));
-    loopSingleBtn.addEventListener('click', () => updateLoopMode(!loopSingle, false));
-    shuffleBtn.addEventListener('click', () => {
-      shuffleMode = !shuffleMode;
-      shuffleBtn.textContent = shuffleMode ? "隨機 ✅" : "隨機";
-    });
+        .top-action-bar {
+            display: flex;
+            justify-content: flex-end;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
 
-    // 歌曲結束時自動執行 playNext
-    player.addEventListener('ended', playNext);
+        .font-btn-group {
+            display: inline-flex;
+            border: 2px solid var(--primary-color);
+            border-radius: 20px;
+            overflow: hidden;
+            background: var(--bg-card);
+        }
+        .font-btn {
+            background: transparent;
+            border: none;
+            padding: 6px 10px;
+            font-size: 13px;
+            font-weight: bold;
+            color: var(--primary-color);
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .font-btn:hover {
+            background: var(--primary-color);
+            color: var(--text-light);
+        }
+        .font-btn:first-child {
+            border-right: 1px solid var(--border-color);
+        }
 
-    // 增益滑桿即時生效
-    gainSlider.addEventListener('input', () => {
-      const val = parseFloat(gainSlider.value);
-      gainValueDisplay.textContent = val.toFixed(1) + 'x';
-      if (gainNode) gainNode.gain.value = val;
-      saveSettings();
-    });
+        .mode-toggle-btn {
+            background: var(--bg-card);
+            border: 2px solid var(--primary-color);
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-size: 13px;
+            font-weight: bold;
+            color: var(--primary-color);
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            transition: all 0.2s;
+        }
+        .mode-toggle-btn:hover {
+            background: var(--primary-color);
+            color: var(--text-light);
+        }
 
-    // --- 5. 快捷鍵支援 ---
-    window.addEventListener('keydown', (e) => {
-      if (e.code === 'Space') {
-        e.preventDefault(); // 防止頁面跳轉
-        player.paused ? player.play() : player.pause();
-      } else if (e.code === 'ArrowLeft') {
-        prevBtn.click();
-      } else if (e.code === 'ArrowRight') {
-        nextBtn.click();
-      } else if (e.key.toLowerCase() === 'm') {
-        player.muted = !player.muted;
-      }
-    });
+        .round-icon-btn {
+            background: transparent;
+            border: 2px solid var(--primary-color);
+            border-radius: 50%;
+            width: 38px;
+            height: 38px;
+            font-size: 16px;
+            cursor: pointer;
+            color: var(--text-primary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+        }
+        .round-icon-btn:hover {
+            background: var(--primary-color);
+            color: var(--text-light);
+            transform: scale(1.05);
+        }
 
-    // 初始化設定
-    loadSettings();
-    player.onplay = () => {
-      if (gainNode) gainNode.gain.value = parseFloat(gainSlider.value);
-    };
-  </script>
-</body>
-</html>
+        h1 {
+            text-align: center;
+            color: var(--text-primary);
+            margin-bottom: 10px;
+            font-size: 2rem;
+            border-bottom: 3px solid var(--primary-color);
+            padding-bottom: 15px;
+        }
+        h2 {
+            color: var(--text-primary);
+            margin: 30px 0 15px;
+            padding-bottom: 8px;
+            border-bottom: 2px solid var(--primary-color);
+            font-size: 1.5rem;
+        }
+        h3 { color: var(--text-primary); margin-top: 20px; margin-bottom: 10px; font-size: 1.25rem; }
+        h4 { color: var(--text-primary); margin-top: 15px; margin-bottom: 8px; font-size: 1.1rem; }
+
+        .subtitle {
+            text-align: center;
+            color: var(--text-secondary);
+            margin-bottom: 30px;
+            font-size: 1.1rem;
+        }
+
+        .day-nav-wrapper {
+            display: none;
+            position: sticky;
+            top: 0;
+            z-index: 40;
+            background: var(--bg-body);
+            padding: 10px 0;
+            margin: -20px -16px 16px -16px;
+            padding-left: 16px;
+            overflow-x: auto;
+            scrollbar-width: none;
+            gap: 8px;
+            backdrop-filter: blur(10px);
+        }
+        .day-nav-wrapper::-webkit-scrollbar { display: none; }
+        .day-chip {
+            flex-shrink: 0;
+            background: var(--bg-container);
+            color: var(--text-primary);
+            border: 1px solid var(--border-color);
+            padding: 8px 15px;
+            border-radius: 20px;
+            font-size: 0.95rem;
+            font-weight: 700;
+            text-decoration: none;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+            cursor: pointer;
+        }
+        .day-chip:active { background: var(--primary-color); color: white; }
+
+        .info-box {
+            background: var(--bg-info);
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 30px;
+        }
+        .info-box p { margin: 8px 0; font-size: 1rem; }
+
+        details {
+            background: var(--bg-container);
+            border: 1px solid var(--border-color);
+            border-left: 5px solid var(--primary-color);
+            margin-bottom: 20px;
+            border-radius: 6px;
+            overflow: hidden;
+            transition: border-color 0.3s;
+        }
+        details:nth-child(odd) { border-left-color: var(--accent-red); }
+
+        summary {
+            background: var(--primary-color);
+            color: var(--text-light);
+            padding: 15px 20px;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 1.15rem;
+            list-style: none;
+            list-style-type: none;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        details:nth-child(odd) summary { background: var(--accent-red); }
+        summary::-webkit-details-marker { display: none; }
+        summary::after {
+            content: '▼';
+            font-size: 0.9rem;
+            transition: transform 0.3s;
+        }
+        details[open] summary::after { transform: rotate(180deg); }
+
+        .day-content { padding: 20px; }
+
+        .time-item {
+            margin: 12px 0;
+            display: flex;
+            align-items: flex-start;
+            flex-wrap: wrap;
+        }
+        .time {
+            font-weight: bold;
+            color: var(--primary-color);
+            width: 110px;
+            flex-shrink: 0;
+            font-family: monospace;
+            font-size: 1.05rem;
+        }
+        details:nth-child(odd) .time { color: var(--accent-red); }
+        .location { flex: 1; font-size: 1rem; }
+
+        .map-link {
+            display: inline-flex;
+            align-items: center;
+            margin-left: 8px;
+            color: var(--primary-color);
+            text-decoration: none;
+            font-size: 0.88rem;
+            padding: 2px 6px;
+            border-radius: 4px;
+            border: 1px solid var(--primary-color);
+            transition: all 0.2s;
+        }
+        .map-link:hover { background: var(--primary-color); color: var(--text-light); }
+
+        .highlight { background: #fff3cd; color: #856404; padding: 2px 6px; border-radius: 3px; font-weight: bold; }
+        .photo-highlight { background: #ffe0e6; color: #d63031; padding: 2px 6px; border-radius: 3px; font-weight: bold; font-size: 0.9rem; }
+        .ticket-badge { background: #e0f2fe; color: #0369a1; padding: 3px 8px; border-radius: 4px; font-weight: bold; font-size: 0.88rem; border: 1px solid #bae6fd; }
+        .rain-badge { background: #e0e7ff; color: #3730a3; padding: 2px 6px; border-radius: 3px; font-weight: bold; font-size: 0.85rem; margin-left: 6px; }
+
+        .box { padding: 15px; margin: 15px 0; border-radius: 6px; border-left: 5px solid; font-size: 0.95rem; }
+        .warning-box { background: #fff3cd; border-color: #ffc107; color: #856404; }
+        .success-box { background: #d4edda; border-color: #28a745; color: #155724; }
+        .ticket-box { background: #f0fdf4; border: 2px solid #86efac; padding: 15px; border-radius: 8px; margin: 12px 0; font-size: 0.95rem; }
+        .rain-box { background: #eef2ff; border: 2px solid #818cf8; padding: 15px; border-radius: 8px; margin: 15px 0; }
+        .tips-box { background: #d5f4e6; border: 2px solid var(--accent-green); padding: 20px; border-radius: 8px; margin-top: 30px; font-size: 0.95rem; }
+        
+        [data-theme="dark"] .warning-box { background: #3a321a; color: #ffe082; }
+        [data-theme="dark"] .success-box { background: #1c3323; color: #a5d6a7; }
+        [data-theme="dark"] .ticket-box { background: #162e20; border-color: #2e7d32; color: #e0e0e0; }
+        [data-theme="dark"] .rain-box { background: #1e1e38; border-color: #4f46e5; color: #e0e0e0; }
+        [data-theme="dark"] .tips-box { background: #1b382b; color: var(--text-primary); }
+
+        .info-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 15px 0;
+            font-size: 0.9rem;
+        }
+        .info-table th, .info-table td {
+            border: 1px solid var(--border-color);
+            padding: 10px;
+            text-align: left;
+        }
+        .info-table th { background: var(--primary-color); color: var(--text-light); }
+        .info-table tfoot td {
+            background: var(--bg-card);
+            font-weight: bold;
+            color: var(--accent-red);
+        }
+
+        .detail-section {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+        .sub-section {
+            background: var(--bg-container);
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            padding: 15px;
+            margin: 15px 0;
+        }
+        .yatai-card {
+            background: var(--bg-container);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 15px;
+        }
+        .yatai-card h4 { color: #e67e22; margin-bottom: 8px; font-size: 1.1rem; display: flex; justify-content: space-between; align-items: center; }
+
+        .split-plan {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-top: 15px;
+        }
+        .split-plan .plan-a {
+            background: #e3f2fd;
+            border: 2px solid #2196f3;
+            border-radius: 8px;
+            padding: 15px;
+        }
+        .split-plan .plan-b {
+            background: #f3e5f5;
+            border: 2px solid #9c27b0;
+            border-radius: 8px;
+            padding: 15px;
+        }
+        [data-theme="dark"] .split-plan .plan-a { background: rgba(33, 150, 243, 0.15); color: var(--text-primary); border-color: #1976d2; }
+        [data-theme="dark"] .split-plan .plan-b { background: rgba(142, 68, 173, 0.15); color: var(--text-primary); border-color: #7b1fa2; }
+
+        .toggle-all { display: flex; justify-content: center; gap: 10px; margin: 20px 0; flex-wrap: wrap; }
+        .btn {
+            background: var(--primary-color);
+            color: var(--text-light);
+            border: none;
+            padding: 8px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.95rem;
+            text-decoration: none;
+            transition: background 0.2s, transform 0.1s;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 4px;
+        }
+        .btn:hover { background: var(--primary-hover); transform: translateY(-1px); }
+        .btn-blue { background: var(--primary-color); color: white; }
+        .btn-green { background: var(--accent-green); color: white; }
+        .btn-secondary { background: #6c757d; }
+        .btn-secondary:hover { background: #5a6268; }
+        .btn-excel { background: #107c41; }
+        .btn-excel:hover { background: #0b5a2f; }
+        .btn-gradient { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); }
+
+        .countdown-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+        .countdown-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 15px;
+            text-align: center;
+        }
+        .countdown-card .timer {
+            font-size: 1.15rem;
+            font-weight: bold;
+            color: var(--accent-red);
+            margin: 8px 0;
+            font-family: monospace;
+        }
+
+        .copy-icon { cursor: pointer; margin-left: 5px; opacity: 0.7; }
+        .copy-icon:hover { opacity: 1; }
+
+        #toast {
+            visibility: hidden;
+            min-width: 200px;
+            background-color: rgba(15, 23, 42, 0.92);
+            color: #fff;
+            text-align: center;
+            border-radius: 20px;
+            padding: 10px 20px;
+            position: fixed;
+            z-index: 1000;
+            left: 50%;
+            bottom: 30px;
+            transform: translateX(-50%);
+            font-size: 0.95rem;
+            transition: opacity 0.3s;
+            opacity: 0;
+        }
+        #toast.show { visibility: visible; opacity: 1; }
+
+        .todo-check { transform: scale(1.2); margin-right: 8px; cursor: pointer; }
+        .todo-text.checked { text-decoration: line-through; opacity: 0.5; }
+
+        /* 記帳本專用樣式 */
+        .budget-tracker {
+            background: var(--bg-card);
+            border: 2px dashed var(--border-color);
+            padding: 20px;
+            border-radius: 8px;
+            margin-top: 20px;
+        }
+        .input-group { 
+            display: flex; 
+            gap: 10px; 
+            margin-bottom: 15px; 
+            flex-wrap: wrap; 
+            align-items: center;
+        }
+        .input-group input {
+            flex: 1;
+            min-width: 120px;
+            padding: 8px 12px;
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            background: var(--bg-container);
+            color: var(--text-primary);
+            font-size: 0.95rem;
+        }
+        .rate-wrapper {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .rate-status {
+            font-size: 0.85rem;
+            color: var(--accent-green);
+        }
+        .refresh-rate-btn {
+            background: var(--bg-container);
+            border: 1px solid var(--border-color);
+            border-radius: 50%;
+            width: 32px;
+            height: 32px;
+            cursor: pointer;
+            font-size: 14px;
+            color: var(--text-primary);
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+            flex-shrink: 0;
+        }
+        .refresh-rate-btn:hover {
+            background: var(--primary-color);
+            color: var(--text-light);
+            border-color: var(--primary-color);
+            transform: scale(1.1);
+        }
+        .refresh-rate-btn.spinning {
+            animation: spin 0.8s linear infinite;
+        }
+        @keyframes spin { 100% { transform: rotate(360deg); } }
+
+        .expense-meta {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            margin-top: 2px;
+        }
+        .backup-toolbar {
+            display: flex;
+            justify-content: flex-end;
+            gap: 8px;
+            margin-bottom: 12px;
+            flex-wrap: wrap;
+        }
+
+        .update-time {
+            text-align: center;
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 1px solid var(--border-color);
+            color: var(--text-secondary);
+            font-size: 0.85rem;
+        }
+
+        .bottom-bar {
+            display: none;
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 64px;
+            background: var(--bg-container);
+            border-top: 1px solid var(--border-color);
+            justify-content: space-around;
+            align-items: center;
+            z-index: 50;
+            padding-bottom: env(safe-area-inset-bottom);
+            box-shadow: 0 -4px 12px rgba(0,0,0,0.08);
+        }
+        .nav-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-size: 0.78rem;
+            font-weight: 700;
+            gap: 2px;
+            flex: 1;
+            height: 100%;
+            cursor: pointer;
+        }
+        .nav-item:active { color: var(--primary-color); }
+        .nav-item span { font-size: 1.25rem; }
+
+        #topBtn {
+            display: none;
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            z-index: 99;
+            border: none;
+            background-color: var(--primary-color);
+            color: var(--text-light);
+            cursor: pointer;
+            padding: 12px;
+            border-radius: 50%;
+            font-size: 18px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+        }
+
+        ul { margin-left: 20px; }
+        li { margin: 6px 0; }
+
+        body.mobile-view {
+            padding: 10px;
+            padding-bottom: 85px;
+            background: var(--bg-body);
+        }
+        body.mobile-view .container {
+            padding: 16px;
+            border-radius: 16px;
+            box-shadow: 0 1px 4px rgba(0,0,0,0.05);
+        }
+        body.mobile-view h1 { 
+            font-size: 1.6rem; 
+            margin-bottom: 6px; 
+            padding-bottom: 10px; 
+        }
+        body.mobile-view .subtitle { 
+            font-size: 0.95rem; 
+            margin-bottom: 18px; 
+        }
+        body.mobile-view .day-nav-wrapper { display: flex; }
+        body.mobile-view .bottom-bar { display: flex; }
+        body.mobile-view #topBtn { display: none !important; }
+        body.mobile-view #toast { bottom: 80px; font-size: 0.95rem; }
+
+        body.mobile-view .day-content {
+            padding: 14px 10px;
+            position: relative;
+        }
+        body.mobile-view .time-item {
+            posit
