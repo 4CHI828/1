@@ -154,8 +154,8 @@
           <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z"></path></svg>
           成員結餘 (TWD)
         </div>
-        <button type="button" onclick="copyLineSettlement()" class="hidden sm:inline-flex items-center gap-1 bg-emerald-600 hover:bg-emerald-700 text-white px-2.5 py-1 rounded-xl text-[11px] font-bold shadow transition active:scale-95" id="lineShareBtn">
-          📋 複製 LINE 清單 (含明細)
+        <button type="button" onclick="openLineShareModal()" class="hidden sm:inline-flex items-center gap-1 bg-emerald-600 hover:bg-emerald-700 text-white px-2.5 py-1 rounded-xl text-[11px] font-bold shadow transition active:scale-95" id="lineShareBtn">
+          📋 複製 LINE 清單
         </button>
       </div>
       
@@ -182,13 +182,13 @@
       <div id="settlementTransfers" class="mt-2 pt-2 border-t border-blue-200/60 dark:border-blue-800/50 text-xs empty:hidden"></div>
       
       <div class="sm:hidden pt-2">
-        <button type="button" onclick="copyLineSettlement()" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white py-2 rounded-xl text-xs font-bold shadow transition active:scale-95 flex items-center justify-center gap-1">
-          📋 複製 LINE 催款結算清單 (含明細)
+        <button type="button" onclick="openLineShareModal()" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white py-2 rounded-xl text-xs font-bold shadow transition active:scale-95 flex items-center justify-center gap-1">
+          📋 複製 LINE 清單
         </button>
       </div>
     </div>
 
-    <!-- 🌟 個人總計卡片 (各成員財務明細統計) -->
+    <!-- 個人總計卡片 (各成員財務明細統計) -->
     <div id="personalStatsCard" class="hidden bg-gradient-to-br from-purple-50/80 to-indigo-50/60 dark:from-slate-800/80 dark:to-purple-900/20 border border-purple-200/60 dark:border-purple-800/50 rounded-2xl p-4 shadow-sm space-y-3">
       <div class="flex items-center justify-between">
         <div class="text-[11px] font-bold text-purple-800 dark:text-purple-300 uppercase tracking-widest flex items-center gap-1">
@@ -333,11 +333,33 @@
 
     <!-- 歷史明細清單與圖表展示區 -->
     <div class="pt-2">
-      <div class="flex justify-between items-center mb-3 px-1">
+      <div class="flex justify-between items-center mb-2 px-1">
         <h2 class="text-xs font-bold text-gray-500 dark:text-gray-400 flex items-center gap-1"><span class="text-sm">📝</span> 歷史紀錄 (<span id="recordCountDisplay">0</span>)</h2>
         <button type="button" id="mainChartToggleBtn" class="text-[11px] bg-indigo-50 hover:bg-indigo-100 text-indigo-600 dark:bg-indigo-900/30 dark:hover:bg-indigo-900/50 dark:text-indigo-300 font-bold px-2.5 py-1 rounded-lg transition shadow-sm border border-indigo-100 dark:border-indigo-800/50">
           📊 顯示圖表
         </button>
+      </div>
+
+      <!-- 🌟 新增：搜尋與篩選控制列 -->
+      <div class="bg-gray-50/80 dark:bg-gray-700/30 p-2.5 rounded-2xl border border-gray-200/60 dark:border-gray-700/50 space-y-2 mb-3">
+        <div class="relative">
+          <span class="absolute left-3 top-2 text-gray-400 text-xs">🔍</span>
+          <input type="text" id="searchInput" placeholder="搜尋項目名稱、付款人或備註..." class="w-full pl-8 pr-8 py-1.5 text-xs bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-600 outline-none focus:ring-2 focus:ring-blue-500 text-gray-800 dark:text-gray-100 shadow-inner">
+          <button type="button" id="clearSearchBtn" class="hidden absolute right-2.5 top-1.5 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 text-sm font-bold">×</button>
+        </div>
+        <div class="flex items-center gap-1.5 text-[11px] overflow-x-auto pb-0.5">
+          <span class="text-gray-500 font-bold flex-shrink-0">篩選：</span>
+          <select id="filterTypeSelect" class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-lg px-2 py-1 outline-none text-gray-700 dark:text-gray-200">
+            <option value="all">全部類型</option>
+            <option value="expense">👥 分帳</option>
+            <option value="personal">👤 個人</option>
+            <option value="income">💰 收入</option>
+          </select>
+          <select id="filterCategorySelect" class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-lg px-2 py-1 outline-none text-gray-700 dark:text-gray-200">
+            <option value="all">全部類別</option>
+          </select>
+          <button type="button" id="resetFilterBtn" class="flex-shrink-0 text-blue-600 dark:text-blue-400 hover:underline px-1.5 py-0.5 font-bold">重設</button>
+        </div>
       </div>
 
       <!-- 獨立的圖表區塊 (預設隱藏) -->
@@ -373,6 +395,42 @@
       <button type="button" id="generateQrBtn" class="bg-emerald-500 hover:bg-emerald-600 text-white px-4 py-1.5 rounded-lg font-bold shadow active:scale-95 transition w-full">更新 QR Code</button>
     </div>
 
+  </div>
+
+  <!-- LINE 分享選擇彈窗 (Modal) -->
+  <div id="lineShareModal" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 transition-opacity">
+    <div class="bg-white dark:bg-gray-800 rounded-3xl p-5 max-w-sm w-full space-y-4 shadow-2xl border border-gray-100 dark:border-gray-700 text-left">
+      <div class="flex items-center justify-between border-b border-gray-200 dark:border-gray-700 pb-2">
+        <h3 class="font-bold text-sm text-gray-800 dark:text-gray-100 flex items-center gap-1.5">
+          <span>📋</span> 選擇複製 LINE 清單類型
+        </h3>
+        <button type="button" onclick="closeLineShareModal()" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 font-bold text-lg leading-none">×</button>
+      </div>
+      
+      <div class="space-y-2.5 text-xs">
+        <button type="button" onclick="executeLineShare('group')" class="w-full bg-blue-50 dark:bg-blue-900/30 hover:bg-blue-100 dark:hover:bg-blue-900/50 p-3 rounded-2xl text-left border border-blue-200/60 dark:border-blue-800/50 transition active:scale-95 flex flex-col gap-0.5">
+          <span class="font-bold text-blue-700 dark:text-blue-300 text-sm">👥 群組分帳清單 (推薦)</span>
+          <span class="text-[11px] text-gray-500 dark:text-gray-400">只含最佳平帳轉帳路徑與公帳分攤項目，過濾所有個人私帳。</span>
+        </button>
+
+        <div class="bg-purple-50 dark:bg-purple-900/30 p-3 rounded-2xl border border-purple-200/60 dark:border-purple-800/50 space-y-2">
+          <div class="font-bold text-purple-700 dark:text-purple-300 text-sm flex items-center justify-between">
+            <span>👤 個人帳務明細</span>
+            <select id="lineShareMemberSelect" class="bg-white dark:bg-gray-700 border border-purple-300 dark:border-purple-600 rounded-lg px-2 py-0.5 text-xs font-bold text-purple-700 dark:text-purple-200 outline-none">
+            </select>
+          </div>
+          <div class="text-[11px] text-gray-500 dark:text-gray-400">匯出該成員的自購私帳、應攤份額與個人總負擔。</div>
+          <button type="button" onclick="executeLineShare('personal')" class="w-full bg-purple-600 hover:bg-purple-700 text-white font-bold py-1.5 rounded-xl shadow transition active:scale-95 text-center block">
+            複製個人明細
+          </button>
+        </div>
+
+        <button type="button" onclick="executeLineShare('all')" class="w-full bg-gray-50 dark:bg-gray-700/40 hover:bg-gray-100 dark:hover:bg-gray-700/70 p-3 rounded-2xl text-left border border-gray-200 dark:border-gray-600 transition active:scale-95 flex flex-col gap-0.5">
+          <span class="font-bold text-gray-700 dark:text-gray-200 text-sm">📑 完整帳本匯總</span>
+          <span class="text-[11px] text-gray-500 dark:text-gray-400">包含全體分帳、個人私帳與收入的所有原始明細。</span>
+        </button>
+      </div>
+    </div>
   </div>
 
   <!-- 照片放大彈窗 -->
@@ -796,12 +854,14 @@
         </span>
       `).join("");
 
-      // 🌟 個人總計成員選單更新
       const pSelect = document.getElementById("personalStatsMemberSelect");
       const currentSelected = pSelect.value;
       pSelect.innerHTML = members.map(m => `<option value="${escapeHtml(m)}">${escapeHtml(m)}</option>`).join("");
       if (members.includes(currentSelected)) pSelect.value = currentSelected;
       pSelect.onchange = () => renderPersonalStats(cachedRecords);
+
+      const lineSelect = document.getElementById("lineShareMemberSelect");
+      lineSelect.innerHTML = members.map(m => `<option value="${escapeHtml(m)}">${escapeHtml(m)}</option>`).join("");
 
       localStorage.setItem("split_members", JSON.stringify(members));
       if (cachedRecords.length > 0) {
@@ -812,9 +872,18 @@
 
     function renderCategoryControls() {
       const catSelect = document.getElementById("category");
+      const filterCatSelect = document.getElementById("filterCategorySelect");
       const currentVal = catSelect.value;
+      const currentFilterVal = filterCatSelect.value;
+
       catSelect.innerHTML = categories.map(c => `<option value="${escapeHtml(c)}">${escapeHtml(c)}</option>`).join("");
       if (categories.includes(currentVal)) catSelect.value = currentVal;
+
+      // 🌟 同步更新篩選欄的類別選項
+      filterCatSelect.innerHTML = `<option value="all">全部類別</option>` + categories.map(c => `<option value="${escapeHtml(c)}">${escapeHtml(c)}</option>`).join("");
+      if (currentFilterVal && (currentFilterVal === 'all' || categories.includes(currentFilterVal))) {
+        filterCatSelect.value = currentFilterVal;
+      }
 
       document.getElementById("categoryTagList").innerHTML = categories.map((c, idx) => `
         <span class="inline-flex items-center gap-1 bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 px-2.5 py-1 rounded-lg shadow-sm font-medium text-gray-700 dark:text-gray-200">
@@ -1002,7 +1071,6 @@
 
     let lastTransferInstructions = [];
 
-    // 計算總計並渲染公帳結餘與全本摘要
     function renderSettlement(records) {
       const bals = {}; members.forEach(m => bals[m]=0);
       records.forEach(r => { if(r.type==="expense"){ if(r.payer && bals[r.payer]===undefined)bals[r.payer]=0; Object.keys(parseShares(r)).forEach(m=>{if(bals[m]===undefined)bals[m]=0;}); }});
@@ -1014,7 +1082,6 @@
         g.innerHTML += `<div class="bg-white/80 dark:bg-gray-800 p-2.5 rounded-xl shadow-sm border ${isZ?'border-gray-200 dark:border-gray-700':isP?'border-emerald-200 dark:border-emerald-800':'border-red-200 dark:border-red-800'}"><div class="font-bold text-gray-700 dark:text-gray-300 truncate">${escapeHtml(m)}</div><div class="font-mono font-bold mt-1 text-sm ${isZ?'text-gray-400':isP?'text-emerald-600 dark:text-emerald-400':'text-red-500 dark:text-red-400'}">${isZ?'$0':(isP?`+$${val}`:`-$${Math.abs(val)}`)}</div></div>`;
       });
 
-      // 計算全本總支出、總收入與淨支出
       let totalExpense = 0;
       let totalIncome = 0;
       records.forEach(r => {
@@ -1049,7 +1116,6 @@
       tEl.innerHTML = tInst.length ? `<div class="font-bold text-blue-900 dark:text-blue-300 mb-2">💡 最佳平帳轉帳路徑：</div><div class="space-y-1.5">${tInst.join("")}</div>` : `<div class="text-gray-400 text-center font-medium">🎉 帳務已完全打平</div>`;
     }
 
-    // 🌟 個人總計與財務明細統計核心
     function renderPersonalStats(records) {
       const card = document.getElementById("personalStatsCard");
       const targetMember = document.getElementById("personalStatsMemberSelect").value;
@@ -1059,24 +1125,18 @@
       }
       card.classList.remove("hidden");
 
-      let ownExpense = 0;   // 個人自購支出 (type === 'personal')
-      let splitShare = 0;   // 在分帳支出中的應攤額
-      let paidTotal = 0;    // 該成員代墊付款總額 (payer === targetMember)
+      let ownExpense = 0;
+      let splitShare = 0;
+      let paidTotal = 0;
 
       records.forEach(r => {
         const amt = Number(r.twdAmount) || 0;
-        
-        // 1. 個人自購支出
         if (r.type === 'personal' && (r.payer === targetMember || !r.payer)) {
           ownExpense += amt;
         }
-
-        // 2. 分帳支出中的代墊總額
         if (r.type === 'expense' && r.payer === targetMember) {
           paidTotal += amt;
         }
-
-        // 3. 分帳支出中的應攤份額
         if (r.type === 'expense') {
           const shares = parseShares(r);
           if (shares[targetMember] !== undefined) {
@@ -1176,26 +1236,114 @@
       }
     }
 
-    window.copyLineSettlement = function() {
+    window.openLineShareModal = function() {
       if (cachedRecords.length === 0) { return showToast("目前沒有任何記帳紀錄！", "info"); }
-      let text = `✈️ 【${currentSheet}】分帳結算清單\n====================\n💡 最佳平帳轉帳路徑：\n`;
-      if (lastTransferInstructions.length > 0) {
-        lastTransferInstructions.forEach((t, idx) => { text += `${idx + 1}. 👤 ${t.debtor} ➔ 👤 ${t.creditor}：💰 $${t.amount.toLocaleString()} TWD\n`; });
-      } else { text += `🎉 帳務已完全打平，無需轉帳！\n`; }
-      text += `====================\n📝 支出與消費歷史明細 (共 ${cachedRecords.length} 筆)：\n`;
-      const sortedRecords = [...cachedRecords].sort((a, b) => (a.date || "").localeCompare(b.date || ""));
-      sortedRecords.forEach(item => {
-        const isExp = item.type === "expense", isPersonal = item.type === "personal", isIncome = item.type === "income";
-        const origText = item.currency !== "TWD" ? `${item.currency} ${item.originalAmount.toLocaleString()} ` : "";
-        const twdText = `(NT$ ${(item.twdAmount || 0).toLocaleString()})`;
-        let payerText = "";
-        if(isExp) payerText = item.payer ? ` - ${item.payer} 付` : "";
-        else if (isPersonal) payerText = " (個人支出)"; else if (isIncome) payerText = " (個人收入)";
-        text += `・${item.date} | [${item.category || '其他'}] ${item.title}\n  ${origText}${twdText}${payerText}\n`;
+      document.getElementById("lineShareModal").classList.remove("hidden");
+    };
+
+    window.closeLineShareModal = function() {
+      document.getElementById("lineShareModal").classList.add("hidden");
+    };
+
+    window.executeLineShare = function(type) {
+      closeLineShareModal();
+      let text = "";
+
+      if (type === 'group') {
+        text = `✈️ 【${currentSheet}】群組分帳結算清單\n====================\n💡 最佳平帳轉帳路徑：\n`;
+        if (lastTransferInstructions.length > 0) {
+          lastTransferInstructions.forEach((t, idx) => {
+            text += `${idx + 1}. 👤 ${t.debtor} ➔ 👤 ${t.creditor}：💰 $${t.amount.toLocaleString()} TWD\n`;
+          });
+        } else {
+          text += `🎉 帳務已完全打平，無需轉帳！\n`;
+        }
+        text += `====================\n📝 公費/分帳消費明細：\n`;
+        const groupRecords = cachedRecords.filter(r => r.type === 'expense').sort((a, b) => (a.date || "").localeCompare(b.date || ""));
+        groupRecords.forEach(item => {
+          const origText = item.currency !== "TWD" ? `${item.currency} ${item.originalAmount.toLocaleString()} ` : "";
+          const twdText = `(NT$ ${(item.twdAmount || 0).toLocaleString()})`;
+          const payerText = item.payer ? ` - ${item.payer} 付` : "";
+          text += `・${item.date} | [${item.category || '其他'}] ${item.title}\n  ${origText}${twdText}${payerText}\n`;
+        });
+        text += `====================\n請大家核對明細並轉帳後截圖回傳，謝謝！`;
+
+      } else if (type === 'personal') {
+        const targetMember = document.getElementById("lineShareMemberSelect").value;
+        let ownExpense = 0;
+        let splitShare = 0;
+        const ownList = [];
+        const splitList = [];
+
+        cachedRecords.forEach(r => {
+          const amt = Number(r.twdAmount) || 0;
+          if (r.type === 'personal' && (r.payer === targetMember || !r.payer)) {
+            ownExpense += amt;
+            ownList.push(r);
+          } else if (r.type === 'expense') {
+            const shares = parseShares(r);
+            if (shares[targetMember] !== undefined) {
+              const shareVal = Number(shares[targetMember]) || 0;
+              splitShare += shareVal;
+              splitList.push({ ...r, myShare: Math.round(shareVal) });
+            }
+          }
+        });
+
+        const totalBurden = Math.round(ownExpense + splitShare);
+        text = `👤 【${currentSheet}】個人帳務明細 - ${targetMember}\n====================\n`;
+        text += `💰 個人應付總負擔：$${totalBurden.toLocaleString()} TWD\n`;
+        text += `(含個人自購 $${Math.round(ownExpense).toLocaleString()} + 分帳應攤 $${Math.round(splitShare).toLocaleString()})\n====================\n`;
+
+        text += `🛒 個人自購支出 (${ownList.length} 筆)：\n`;
+        if (ownList.length > 0) {
+          ownList.sort((a, b) => (a.date || "").localeCompare(b.date || "")).forEach(item => {
+            const origText = item.currency !== "TWD" ? `${item.currency} ${item.originalAmount.toLocaleString()} ` : "";
+            text += `・${item.date} | [${item.category || '其他'}] ${item.title}\n  ${origText}(NT$ ${(item.twdAmount || 0).toLocaleString()})\n`;
+          });
+        } else {
+          text += `  (無個人自購紀錄)\n`;
+        }
+
+        text += `\n👥 參與之分帳項目 (${splitList.length} 筆)：\n`;
+        if (splitList.length > 0) {
+          splitList.sort((a, b) => (a.date || "").localeCompare(b.date || "")).forEach(item => {
+            text += `・${item.date} | ${item.title} (應攤 NT$ ${item.myShare.toLocaleString()})\n`;
+          });
+        } else {
+          text += `  (無分帳分攤項目)\n`;
+        }
+        text += `====================`;
+
+      } else {
+        text = `✈️ 【${currentSheet}】完整記帳匯總清單\n====================\n💡 最佳平帳轉帳路徑：\n`;
+        if (lastTransferInstructions.length > 0) {
+          lastTransferInstructions.forEach((t, idx) => {
+            text += `${idx + 1}. 👤 ${t.debtor} ➔ 👤 ${t.creditor}：💰 $${t.amount.toLocaleString()} TWD\n`;
+          });
+        } else {
+          text += `🎉 帳務已完全打平，無需轉帳！\n`;
+        }
+        text += `====================\n📝 全本歷史明細 (共 ${cachedRecords.length} 筆)：\n`;
+        const sortedRecords = [...cachedRecords].sort((a, b) => (a.date || "").localeCompare(b.date || ""));
+        sortedRecords.forEach(item => {
+          const isExp = item.type === "expense", isPersonal = item.type === "personal", isIncome = item.type === "income";
+          const origText = item.currency !== "TWD" ? `${item.currency} ${item.originalAmount.toLocaleString()} ` : "";
+          const twdText = `(NT$ ${(item.twdAmount || 0).toLocaleString()})`;
+          let payerText = "";
+          if (isExp) payerText = item.payer ? ` - ${item.payer} 付` : "";
+          else if (isPersonal) payerText = " (個人支出)";
+          else if (isIncome) payerText = " (個人收入)";
+          text += `・${item.date} | [${item.category || '其他'}] ${item.title}\n  ${origText}${twdText}${payerText}\n`;
+        });
+        text += `====================`;
+      }
+
+      navigator.clipboard.writeText(text).then(() => {
+        showToast("✅ 已成功複製 LINE 清單！");
+      }).catch(() => {
+        prompt("請手動複製以下結算清單：", text);
       });
-      text += `====================\n請大家核對明細並轉帳後截圖回傳，謝謝！`;
-      navigator.clipboard.writeText(text).then(() => { showToast("✅ 已複製 LINE 結算清單 (含完整歷史明細)！"); })
-      .catch(() => { prompt("請手動複製以下結算清單：", text); });
     };
 
     window.startEditRecord = function(id) {
@@ -1253,12 +1401,51 @@
       showToast("已取消編輯", "info");
     };
 
+    // 🌟 核心：支援搜尋與篩選的歷史明細渲染
     function renderRecordsList() {
-      document.getElementById("recordCountDisplay").textContent = cachedRecords.length;
-      const listEl = document.getElementById("recordList"); listEl.innerHTML = "";
-      if(cachedRecords.length===0){ listEl.innerHTML = `<div class="text-gray-400 text-center py-8">尚無資料</div>`; return; }
+      const keyword = (document.getElementById("searchInput")?.value || "").trim().toLowerCase();
+      const filterType = document.getElementById("filterTypeSelect")?.value || "all";
+      const filterCategory = document.getElementById("filterCategorySelect")?.value || "all";
+
+      // 篩選符合條件的紀錄
+      const filteredRecords = cachedRecords.filter(item => {
+        // 1. 關鍵字比對 (標題、類別、付款人)
+        const matchTitle = (item.title || "").toLowerCase().includes(keyword);
+        const matchCategory = (item.category || "").toLowerCase().includes(keyword);
+        const matchPayer = (item.payer || "").toLowerCase().includes(keyword);
+        const matchKeyword = !keyword || matchTitle || matchCategory || matchPayer;
+
+        // 2. 類型比對
+        const matchType = (filterType === "all") || (item.type === filterType);
+
+        // 3. 類別比對
+        const matchCat = (filterCategory === "all") || ((item.category || "其他") === filterCategory);
+
+        return matchKeyword && matchType && matchCat;
+      });
+
+      // 顯示筆數 (有篩選時顯示 符合數/總數)
+      const countEl = document.getElementById("recordCountDisplay");
+      if (filteredRecords.length !== cachedRecords.length) {
+        countEl.textContent = `${filteredRecords.length}/${cachedRecords.length}`;
+      } else {
+        countEl.textContent = cachedRecords.length;
+      }
+
+      const listEl = document.getElementById("recordList"); 
+      listEl.innerHTML = "";
+
+      if (cachedRecords.length === 0) { 
+        listEl.innerHTML = `<div class="text-gray-400 text-center py-8">尚無資料</div>`; 
+        return; 
+      }
+
+      if (filteredRecords.length === 0) {
+        listEl.innerHTML = `<div class="text-gray-400 text-center py-8 text-xs bg-white/40 dark:bg-gray-800/40 rounded-2xl border border-dashed border-gray-300 dark:border-gray-600">無符合搜尋條件的明細</div>`;
+        return;
+      }
       
-      cachedRecords.forEach(item => {
+      filteredRecords.forEach(item => {
         const isSplit = item.type === "expense";
         const isPersonal = item.type === "personal";
         const isIncome = item.type === "income";
@@ -1298,6 +1485,31 @@
       
       if(!document.getElementById("mainChartContainer").classList.contains("hidden")) { drawChart(); }
     }
+
+    // 🌟 監聽搜尋與篩選事件
+    document.getElementById("searchInput").addEventListener("input", (e) => {
+      const clearBtn = document.getElementById("clearSearchBtn");
+      if (e.target.value) clearBtn.classList.remove("hidden");
+      else clearBtn.classList.add("hidden");
+      renderRecordsList();
+    });
+
+    document.getElementById("clearSearchBtn").addEventListener("click", () => {
+      document.getElementById("searchInput").value = "";
+      document.getElementById("clearSearchBtn").classList.add("hidden");
+      renderRecordsList();
+    });
+
+    document.getElementById("filterTypeSelect").addEventListener("change", renderRecordsList);
+    document.getElementById("filterCategorySelect").addEventListener("change", renderRecordsList);
+
+    document.getElementById("resetFilterBtn").addEventListener("click", () => {
+      document.getElementById("searchInput").value = "";
+      document.getElementById("clearSearchBtn").classList.add("hidden");
+      document.getElementById("filterTypeSelect").value = "all";
+      document.getElementById("filterCategorySelect").value = "all";
+      renderRecordsList();
+    });
 
     async function loadRecords() {
       const pwd = getPassword();
