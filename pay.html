@@ -340,11 +340,11 @@
         </button>
       </div>
 
-      <!-- 🌟 新增：搜尋與篩選控制列 -->
+      <!-- 🌟 升級版：支援「文字」與「金額」的搜尋與多維度篩選列 -->
       <div class="bg-gray-50/80 dark:bg-gray-700/30 p-2.5 rounded-2xl border border-gray-200/60 dark:border-gray-700/50 space-y-2 mb-3">
         <div class="relative">
           <span class="absolute left-3 top-2 text-gray-400 text-xs">🔍</span>
-          <input type="text" id="searchInput" placeholder="搜尋項目名稱、付款人或備註..." class="w-full pl-8 pr-8 py-1.5 text-xs bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-600 outline-none focus:ring-2 focus:ring-blue-500 text-gray-800 dark:text-gray-100 shadow-inner">
+          <input type="text" id="searchInput" placeholder="搜尋文字或金額 (例如: 150, >1000, 500-2000)..." class="w-full pl-8 pr-8 py-1.5 text-xs bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-600 outline-none focus:ring-2 focus:ring-blue-500 text-gray-800 dark:text-gray-100 shadow-inner">
           <button type="button" id="clearSearchBtn" class="hidden absolute right-2.5 top-1.5 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 text-sm font-bold">×</button>
         </div>
         <div class="flex items-center gap-1.5 text-[11px] overflow-x-auto pb-0.5">
@@ -460,6 +460,7 @@
     let chartInstance = null;
     let currentChartMode = 'pie';
 
+    // 專屬 Canvas 插件：向外拉出指示線並標註金額
     const pieOutlabelsPlugin = {
       id: 'pieOutlabels',
       afterDraw(chart) {
@@ -879,7 +880,6 @@
       catSelect.innerHTML = categories.map(c => `<option value="${escapeHtml(c)}">${escapeHtml(c)}</option>`).join("");
       if (categories.includes(currentVal)) catSelect.value = currentVal;
 
-      // 🌟 同步更新篩選欄的類別選項
       filterCatSelect.innerHTML = `<option value="all">全部類別</option>` + categories.map(c => `<option value="${escapeHtml(c)}">${escapeHtml(c)}</option>`).join("");
       if (currentFilterVal && (currentFilterVal === 'all' || categories.includes(currentFilterVal))) {
         filterCatSelect.value = currentFilterVal;
@@ -1401,30 +1401,68 @@
       showToast("已取消編輯", "info");
     };
 
-    // 🌟 核心：支援搜尋與篩選的歷史明細渲染
+    // 🌟 升級版：支援「文字名稱」與「金額條件」的搜尋與篩選
     function renderRecordsList() {
-      const keyword = (document.getElementById("searchInput")?.value || "").trim().toLowerCase();
+      const rawInput = (document.getElementById("searchInput")?.value || "").trim();
       const filterType = document.getElementById("filterTypeSelect")?.value || "all";
       const filterCategory = document.getElementById("filterCategorySelect")?.value || "all";
 
-      // 篩選符合條件的紀錄
+      let isAmountQuery = false;
+      let amountFilterFn = null;
+
+      // 1. 區間範圍：例如 "500-2000" 或 "500~2000"
+      const rangeMatch = rawInput.match(/^(\d+(?:\.\d+)?)\s*[-~]\s*(\d+(?:\.\d+)?)$/);
+      if (rangeMatch) {
+        isAmountQuery = true;
+        const min = parseFloat(rangeMatch[1]);
+        const max = parseFloat(rangeMatch[2]);
+        amountFilterFn = (twd) => twd >= min && twd <= max;
+      }
+
+      // 2. 大於等於 / 小於等於：例如 ">1000", ">=1000", "<500", "<=500"
+      const compMatch = rawInput.match(/^(>=|<=|>|<)\s*(\d+(?:\.\d+)?)$/);
+      if (!isAmountQuery && compMatch) {
+        isAmountQuery = true;
+        const op = compMatch[1];
+        const val = parseFloat(compMatch[2]);
+        if (op === '>') amountFilterFn = (twd) => twd > val;
+        else if (op === '>=') amountFilterFn = (twd) => twd >= val;
+        else if (op === '<') amountFilterFn = (twd) => twd < val;
+        else if (op === '<=') amountFilterFn = (twd) => twd <= val;
+      }
+
+      // 3. 純數字精確金額搜尋：例如 "150"
+      const exactNum = parseFloat(rawInput);
+      const isPureNumber = !isNaN(exactNum) && /^\d+(?:\.\d+)?$/.test(rawInput);
+
+      const keyword = rawInput.toLowerCase();
+
+      // 進行資料篩選
       const filteredRecords = cachedRecords.filter(item => {
-        // 1. 關鍵字比對 (標題、類別、付款人)
-        const matchTitle = (item.title || "").toLowerCase().includes(keyword);
-        const matchCategory = (item.category || "").toLowerCase().includes(keyword);
-        const matchPayer = (item.payer || "").toLowerCase().includes(keyword);
-        const matchKeyword = !keyword || matchTitle || matchCategory || matchPayer;
+        const twdAmt = Number(item.twdAmount) || 0;
+        const origAmt = Number(item.originalAmount) || 0;
 
-        // 2. 類型比對
+        let matchQuery = false;
+
+        if (isAmountQuery && amountFilterFn) {
+          matchQuery = amountFilterFn(twdAmt);
+        } else if (isPureNumber) {
+          const matchAmount = (twdAmt === exactNum || origAmt === exactNum);
+          const matchTitle = (item.title || "").includes(rawInput);
+          matchQuery = matchAmount || matchTitle;
+        } else {
+          const matchTitle = (item.title || "").toLowerCase().includes(keyword);
+          const matchCategory = (item.category || "").toLowerCase().includes(keyword);
+          const matchPayer = (item.payer || "").toLowerCase().includes(keyword);
+          matchQuery = !keyword || matchTitle || matchCategory || matchPayer;
+        }
+
         const matchType = (filterType === "all") || (item.type === filterType);
-
-        // 3. 類別比對
         const matchCat = (filterCategory === "all") || ((item.category || "其他") === filterCategory);
 
-        return matchKeyword && matchType && matchCat;
+        return matchQuery && matchType && matchCat;
       });
 
-      // 顯示筆數 (有篩選時顯示 符合數/總數)
       const countEl = document.getElementById("recordCountDisplay");
       if (filteredRecords.length !== cachedRecords.length) {
         countEl.textContent = `${filteredRecords.length}/${cachedRecords.length}`;
@@ -1486,7 +1524,6 @@
       if(!document.getElementById("mainChartContainer").classList.contains("hidden")) { drawChart(); }
     }
 
-    // 🌟 監聽搜尋與篩選事件
     document.getElementById("searchInput").addEventListener("input", (e) => {
       const clearBtn = document.getElementById("clearSearchBtn");
       if (e.target.value) clearBtn.classList.remove("hidden");
