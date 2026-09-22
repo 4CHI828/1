@@ -340,11 +340,11 @@
         </button>
       </div>
 
-      <!-- 🌟 升級版：支援「文字」與「金額」的搜尋與多維度篩選列 -->
+      <!-- 搜尋與多條件篩選控制列 -->
       <div class="bg-gray-50/80 dark:bg-gray-700/30 p-2.5 rounded-2xl border border-gray-200/60 dark:border-gray-700/50 space-y-2 mb-3">
         <div class="relative">
           <span class="absolute left-3 top-2 text-gray-400 text-xs">🔍</span>
-          <input type="text" id="searchInput" placeholder="搜尋文字或金額 (例如: 150, >1000, 500-2000)..." class="w-full pl-8 pr-8 py-1.5 text-xs bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-600 outline-none focus:ring-2 focus:ring-blue-500 text-gray-800 dark:text-gray-100 shadow-inner">
+          <input type="text" id="searchInput" placeholder="搜尋文字或金額 (例如: 咖啡, 150, >1000, 500-2000)..." class="w-full pl-8 pr-8 py-1.5 text-xs bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-600 outline-none focus:ring-2 focus:ring-blue-500 text-gray-800 dark:text-gray-100 shadow-inner">
           <button type="button" id="clearSearchBtn" class="hidden absolute right-2.5 top-1.5 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 text-sm font-bold">×</button>
         </div>
         <div class="flex items-center gap-1.5 text-[11px] overflow-x-auto pb-0.5">
@@ -460,7 +460,6 @@
     let chartInstance = null;
     let currentChartMode = 'pie';
 
-    // 專屬 Canvas 插件：向外拉出指示線並標註金額
     const pieOutlabelsPlugin = {
       id: 'pieOutlabels',
       afterDraw(chart) {
@@ -1245,6 +1244,7 @@
       document.getElementById("lineShareModal").classList.add("hidden");
     };
 
+    // 🌟 執行不同格式的 LINE 複製 (已去除結尾多餘文字)
     window.executeLineShare = function(type) {
       closeLineShareModal();
       let text = "";
@@ -1266,7 +1266,7 @@
           const payerText = item.payer ? ` - ${item.payer} 付` : "";
           text += `・${item.date} | [${item.category || '其他'}] ${item.title}\n  ${origText}${twdText}${payerText}\n`;
         });
-        text += `====================\n請大家核對明細並轉帳後截圖回傳，謝謝！`;
+        text += `====================`;
 
       } else if (type === 'personal') {
         const targetMember = document.getElementById("lineShareMemberSelect").value;
@@ -1401,7 +1401,7 @@
       showToast("已取消編輯", "info");
     };
 
-    // 🌟 升級版：支援「文字名稱」與「金額條件」的搜尋與篩選
+    // 🌟 核心：支援文字名稱與金額條件的搜尋與篩選渲染
     function renderRecordsList() {
       const rawInput = (document.getElementById("searchInput")?.value || "").trim();
       const filterType = document.getElementById("filterTypeSelect")?.value || "all";
@@ -1463,6 +1463,7 @@
         return matchQuery && matchType && matchCat;
       });
 
+      // 筆數顯示
       const countEl = document.getElementById("recordCountDisplay");
       if (filteredRecords.length !== cachedRecords.length) {
         countEl.textContent = `${filteredRecords.length}/${cachedRecords.length}`;
@@ -1524,6 +1525,7 @@
       if(!document.getElementById("mainChartContainer").classList.contains("hidden")) { drawChart(); }
     }
 
+    // 監聽搜尋與篩選事件
     document.getElementById("searchInput").addEventListener("input", (e) => {
       const clearBtn = document.getElementById("clearSearchBtn");
       if (e.target.value) clearBtn.classList.remove("hidden");
