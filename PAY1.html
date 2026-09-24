@@ -436,7 +436,8 @@
     let googleAccessToken = "", googleTokenClient = null, driveRootFolderId = null, driveReceiptFolderId = null, driveReady = false;
     
     let currentSheet = localStorage.getItem("app_active_sheet") || "預設帳本";
-    let members = JSON.parse(localStorage.getItem("split_members_cache")) || ["我", "他"];
+    // 預設成員改為空陣列，由使用者自行新增
+    let members = JSON.parse(localStorage.getItem("split_members_cache")) || [];
     let categories = JSON.parse(localStorage.getItem("app_categories_cache")) || ["餐飲", "交通", "住宿", "購物", "門票", "娛樂", "生活", "其他"];
     let exchangeRates = { TWD: 1, EUR: 35.0, JPY: 0.21, CNY: 4.45, USD: 32.5, KRW: 0.024 };
     let cachedRecords = [];
@@ -666,7 +667,24 @@
 
     async function initializeGoogleAuth() { if(!window.google?.accounts?.oauth2){setTimeout(initializeGoogleAuth,300);return;} googleTokenClient=google.accounts.oauth2.initTokenClient({client_id:GOOGLE_CLIENT_ID,scope:DRIVE_SCOPE,callback:async r=>{if(r.error){showToast(`❌ Google 登入失敗：${r.error_description||r.error}`,"error");return;} googleAccessToken=r.access_token; try{await initializeDrive();showToast("✅ Google Drive 已連線");await loadRecords();syncOfflineQueue();}catch(e){showToast(`❌ Drive 連線失敗：${e.message}`,"error");}}}); }
     async function googleLogin() { if(!googleTokenClient) await initializeGoogleAuth(); googleTokenClient?.requestAccessToken({prompt:"consent"}); }
-    async function initializeDrive() { driveRootFolderId=await ensureDriveFolder(DRIVE_APP_NAME); driveReceiptFolderId=await ensureDriveFolder("receipts",driveRootFolderId); const f=await findDriveFileByType("config"); if(!f) await createDriveJson("config.json",{version:1,members,categories},{type:"config",app:DRIVE_APP_NAME}); else {const c=await readDriveJson(f.id);if(Array.isArray(c.members)&&c.members.length)members=c.members;if(Array.isArray(c.categories)&&c.categories.length)categories=c.categories;} driveReady=true;renderMemberControls();renderCategoryControls();document.getElementById("googleUserName").textContent="Google Drive 已連線";document.getElementById("googleUserHint").textContent=`資料儲存在「${DRIVE_APP_NAME}」資料夾`;document.getElementById("googleLoginBtn").classList.add("hidden");document.getElementById("googleLogoutBtn").classList.remove("hidden"); }
+    async function initializeDrive() { 
+      driveRootFolderId=await ensureDriveFolder(DRIVE_APP_NAME); 
+      driveReceiptFolderId=await ensureDriveFolder("receipts",driveRootFolderId); 
+      const f=await findDriveFileByType("config"); 
+      if(!f) await createDriveJson("config.json",{version:1,members,categories},{type:"config",app:DRIVE_APP_NAME}); 
+      else {
+        const c=await readDriveJson(f.id);
+        if(Array.isArray(c.members)) members=c.members;
+        if(Array.isArray(c.categories)&&c.categories.length) categories=c.categories;
+      } 
+      driveReady=true;
+      renderMemberControls();
+      renderCategoryControls();
+      document.getElementById("googleUserName").textContent="Google Drive 已連線";
+      document.getElementById("googleUserHint").textContent=`資料儲存在「${DRIVE_APP_NAME}」資料夾`;
+      document.getElementById("googleLoginBtn").classList.add("hidden");
+      document.getElementById("googleLogoutBtn").classList.remove("hidden"); 
+    }
     
     async function fetchSheetList(){
       if(!requireGoogleLogin())return;
@@ -677,8 +695,23 @@
       selector.innerHTML=sheets.map(x=>`<option value="${escapeHtml(x)}" ${x===currentSheet?'selected':''}>${escapeHtml(x)}</option>`).join("");
     }
 
-    async function fetchCloudConfig(){if(!requireGoogleLogin())return;const f=await findDriveFileByType("config");if(!f)return;const c=await readDriveJson(f.id);if(Array.isArray(c.members)&&c.members.length)members=c.members;if(Array.isArray(c.categories)&&c.categories.length)categories=c.categories;renderMemberControls();renderCategoryControls();}
-    async function syncConfigToCloud(){if(!isGoogleLoggedIn())return;const data={version:1,members,categories,updatedAt:new Date().toISOString()};const f=await findDriveFileByType("config");if(f)await updateDriveJson(f.id,data);else await createDriveJson("config.json",data,{type:"config",app:DRIVE_APP_NAME});}
+    async function fetchCloudConfig(){
+      if(!requireGoogleLogin())return;
+      const f=await findDriveFileByType("config");
+      if(!f)return;
+      const c=await readDriveJson(f.id);
+      if(Array.isArray(c.members)) members=c.members;
+      if(Array.isArray(c.categories)&&c.categories.length) categories=c.categories;
+      renderMemberControls();
+      renderCategoryControls();
+    }
+    async function syncConfigToCloud(){
+      if(!isGoogleLoggedIn())return;
+      const data={version:1,members,categories,updatedAt:new Date().toISOString()};
+      const f=await findDriveFileByType("config");
+      if(f)await updateDriveJson(f.id,data);
+      else await createDriveJson("config.json",data,{type:"config",app:DRIVE_APP_NAME});
+    }
     
     document.getElementById("sheetSelector").addEventListener("change", async (e) => {
       const newSheet=e.target.value;
@@ -701,7 +734,6 @@
       }
     });
 
-    // 🌟 新增移除帳本功能
     document.getElementById("deleteSheetBtn").addEventListener("click", async () => {
       if (!requireGoogleLogin()) return;
       if (currentSheet === "預設帳本") {
@@ -835,8 +867,6 @@
       const cleanName = newName.trim();
       if (members.includes(cleanName)) { alert("此名字已存在！"); return; }
 
-      if (!requireGoogleLogin()) return;
-
       members[idx] = cleanName;
       localStorage.setItem("split_members_cache", JSON.stringify(members));
 
@@ -851,58 +881,87 @@
       });
 
       renderMemberControls(); renderRecordsList(); renderSettlement(cachedRecords);
-      showToast(`⏳ 正在同步更新 Drive 歷史紀錄「${oldName}」➔「${cleanName}」...`, "info");
-      try {
-        await syncConfigToCloud();
-        const bookFile = await getOrCreateBookFile(currentSheet);
-        await updateDriveJson(bookFile.id, cachedRecords);
-        showToast(`✅ Drive 歷史紀錄已同步更新「${oldName}」➔「${cleanName}」`);
-        await loadRecords();
-      } catch (err) {
-        showToast("⚠️ 網路暫時中斷，更名動作未完成", "error");
+      if (isGoogleLoggedIn()) {
+        showToast(`⏳ 正在同步更新 Drive 歷史紀錄「${oldName}」➔「${cleanName}」...`, "info");
+        try {
+          await syncConfigToCloud();
+          const bookFile = await getOrCreateBookFile(currentSheet);
+          await updateDriveJson(bookFile.id, cachedRecords);
+          showToast(`✅ Drive 歷史紀錄已同步更新「${oldName}」➔「${cleanName}」`);
+          await loadRecords();
+        } catch (err) {
+          showToast("⚠️ 網路暫時中斷，更名動作未完成", "error");
+        }
       }
     };
 
     function renderMemberControls() {
-      document.getElementById("payer").innerHTML = members.map(m => `<option value="${escapeHtml(m)}">${escapeHtml(m)}</option>`).join("");
-      document.getElementById("membersCheckboxes").innerHTML = members.map(m => `<label class="flex items-center gap-1.5 cursor-pointer bg-white dark:bg-gray-700 px-2.5 py-1.5 rounded-lg border border-gray-200 dark:border-gray-600 shadow-sm active:scale-95 transition"><input type="checkbox" value="${escapeHtml(m)}" checked class="member-cb text-blue-500 focus:ring-blue-500 h-4 w-4 rounded"> <span>${escapeHtml(m)}</span></label>`).join("");
+      const payerEl = document.getElementById("payer");
+      if (members.length === 0) {
+        payerEl.innerHTML = `<option value="">(尚未新增成員)</option>`;
+      } else {
+        payerEl.innerHTML = members.map(m => `<option value="${escapeHtml(m)}">${escapeHtml(m)}</option>`).join("");
+      }
+
+      const cbEl = document.getElementById("membersCheckboxes");
+      if (members.length === 0) {
+        cbEl.innerHTML = `<span class="text-gray-400 text-xs py-1">請先於上方「👥 成員」面板新增成員名單</span>`;
+      } else {
+        cbEl.innerHTML = members.map(m => `<label class="flex items-center gap-1.5 cursor-pointer bg-white dark:bg-gray-700 px-2.5 py-1.5 rounded-lg border border-gray-200 dark:border-gray-600 shadow-sm active:scale-95 transition"><input type="checkbox" value="${escapeHtml(m)}" checked class="member-cb text-blue-500 focus:ring-blue-500 h-4 w-4 rounded"> <span>${escapeHtml(m)}</span></label>`).join("");
+      }
       
-      document.getElementById("customMembersList").innerHTML = members.map(m => `
-        <div class="flex items-center gap-2 bg-white dark:bg-gray-700/80 p-2 rounded-xl border border-gray-100 dark:border-gray-600 shadow-sm">
-          <span class="w-16 font-bold text-gray-700 dark:text-gray-200 truncate" title="${escapeHtml(m)}">${escapeHtml(m)}</span>
-          <div class="relative flex-1">
-            <span class="absolute left-2 top-1.5 text-gray-400 font-mono">$</span>
-            <input type="number" step="any" min="0" data-member="${escapeHtml(m)}" class="custom-split-input w-full pl-6 pr-2 py-1 border border-gray-200 dark:border-gray-600 rounded-lg bg-gray-50 dark:bg-gray-800 text-right font-mono focus:ring-2 focus:ring-blue-500 outline-none">
-            <span id="hint_twd_${escapeHtml(m)}" class="hidden absolute right-2 -bottom-3.5 text-[9px] font-mono text-blue-500 font-bold"></span>
+      const customListEl = document.getElementById("customMembersList");
+      if (members.length === 0) {
+        customListEl.innerHTML = `<span class="text-gray-400 text-xs py-1">請先於上方「👥 成員」面板新增成員名單</span>`;
+      } else {
+        customListEl.innerHTML = members.map(m => `
+          <div class="flex items-center gap-2 bg-white dark:bg-gray-700/80 p-2 rounded-xl border border-gray-100 dark:border-gray-600 shadow-sm">
+            <span class="w-16 font-bold text-gray-700 dark:text-gray-200 truncate" title="${escapeHtml(m)}">${escapeHtml(m)}</span>
+            <div class="relative flex-1">
+              <span class="absolute left-2 top-1.5 text-gray-400 font-mono">$</span>
+              <input type="number" step="any" min="0" data-member="${escapeHtml(m)}" class="custom-split-input w-full pl-6 pr-2 py-1 border border-gray-200 dark:border-gray-600 rounded-lg bg-gray-50 dark:bg-gray-800 text-right font-mono focus:ring-2 focus:ring-blue-500 outline-none">
+              <span id="hint_twd_${escapeHtml(m)}" class="hidden absolute right-2 -bottom-3.5 text-[9px] font-mono text-blue-500 font-bold"></span>
+            </div>
+            <button type="button" onclick="autoFillDifference('${escapeHtml(m)}')" class="bg-blue-50 dark:bg-blue-900/50 text-blue-600 dark:text-blue-300 font-bold px-2 py-1 rounded-lg hover:bg-blue-100 active:scale-95 transition">補滿</button>
           </div>
-          <button type="button" onclick="autoFillDifference('${escapeHtml(m)}')" class="bg-blue-50 dark:bg-blue-900/50 text-blue-600 dark:text-blue-300 font-bold px-2 py-1 rounded-lg hover:bg-blue-100 active:scale-95 transition">補滿</button>
-        </div>
-      `).join("");
+        `).join("");
+      }
       
       document.querySelectorAll(".custom-split-input").forEach(i => i.addEventListener("input", checkCustomSplitTotal));
       
-      document.getElementById("memberTagList").innerHTML = members.map((m, idx) => `
-        <span class="inline-flex items-center gap-1 bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 px-2.5 py-1 rounded-lg shadow-sm font-medium text-gray-700 dark:text-gray-200">
-          ${escapeHtml(m)}
-          <button type="button" onclick="editMemberName(${idx})" class="text-blue-400 hover:text-blue-600 text-xs ml-1 font-bold" title="編輯名字">✏️</button>
-          <button type="button" onclick="removeMember(${idx})" class="text-red-400 hover:text-red-600 text-base ml-0.5 leading-none font-bold" title="刪除成員">×</button>
-        </span>
-      `).join("");
+      const tagListEl = document.getElementById("memberTagList");
+      if (members.length === 0) {
+        tagListEl.innerHTML = `<span class="text-gray-400 text-xs py-1">目前尚未新增任何成員，請在上方輸入名字並點擊「加入」</span>`;
+      } else {
+        tagListEl.innerHTML = members.map((m, idx) => `
+          <span class="inline-flex items-center gap-1 bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 px-2.5 py-1 rounded-lg shadow-sm font-medium text-gray-700 dark:text-gray-200">
+            ${escapeHtml(m)}
+            <button type="button" onclick="editMemberName(${idx})" class="text-blue-400 hover:text-blue-600 text-xs ml-1 font-bold" title="編輯名字">✏️</button>
+            <button type="button" onclick="removeMember(${idx})" class="text-red-400 hover:text-red-600 text-base ml-0.5 leading-none font-bold" title="刪除成員">×</button>
+          </span>
+        `).join("");
+      }
 
       const pSelect = document.getElementById("personalStatsMemberSelect");
       const currentSelected = pSelect.value;
-      pSelect.innerHTML = members.map(m => `<option value="${escapeHtml(m)}">${escapeHtml(m)}</option>`).join("");
-      if (members.includes(currentSelected)) pSelect.value = currentSelected;
+      if (members.length === 0) {
+        pSelect.innerHTML = `<option value="">無成員</option>`;
+      } else {
+        pSelect.innerHTML = members.map(m => `<option value="${escapeHtml(m)}">${escapeHtml(m)}</option>`).join("");
+        if (members.includes(currentSelected)) pSelect.value = currentSelected;
+      }
       pSelect.onchange = () => renderPersonalStats(cachedRecords);
 
       const lineSelect = document.getElementById("lineShareMemberSelect");
-      lineSelect.innerHTML = members.map(m => `<option value="${escapeHtml(m)}">${escapeHtml(m)}</option>`).join("");
+      if (members.length === 0) {
+        lineSelect.innerHTML = `<option value="">無成員</option>`;
+      } else {
+        lineSelect.innerHTML = members.map(m => `<option value="${escapeHtml(m)}">${escapeHtml(m)}</option>`).join("");
+      }
 
       localStorage.setItem("split_members_cache", JSON.stringify(members));
-      if (cachedRecords.length > 0) {
-        renderSettlement(cachedRecords);
-        renderPersonalStats(cachedRecords);
-      }
+      renderSettlement(cachedRecords);
+      renderPersonalStats(cachedRecords);
     }
 
     function renderCategoryControls() {
@@ -945,16 +1004,27 @@
 
     document.getElementById("addMemberBtn").addEventListener("click", () => {
       const val = document.getElementById("newMemberName").value.trim();
-      if (val && !members.includes(val)) { 
-        members.push(val); document.getElementById("newMemberName").value = ""; 
-        renderMemberControls(); syncConfigToCloud(); showToast(`👥 已新增成員：${val}`); 
+      if (!val) {
+        showToast("請輸入成員名字", "error");
+        return;
+      }
+      if (!members.includes(val)) { 
+        members.push(val); 
+        document.getElementById("newMemberName").value = ""; 
+        renderMemberControls(); 
+        syncConfigToCloud(); 
+        showToast(`👥 已新增成員：${val}`); 
+      } else {
+        showToast("該成員已存在！", "error");
       }
     });
     
+    // 移除成員限制：允許全部刪除
     window.removeMember = function(idx) { 
-      if (members.length > 1) { 
-        const removed = members.splice(idx, 1); renderMemberControls(); syncConfigToCloud(); showToast(`已移除成員：${removed}`, "info"); 
-      } else { alert("至少需保留一位成員！"); }
+      const removed = members.splice(idx, 1); 
+      renderMemberControls(); 
+      syncConfigToCloud(); 
+      showToast(`已移除成員：${removed}`, "info"); 
     };
 
     window.applyTemplate = function(title, category, amount, currency) {
@@ -1095,11 +1165,19 @@
     let lastTransferInstructions = [];
 
     function renderSettlement(records) {
+      const g = document.getElementById("settlementGrid");
+      if (members.length === 0) {
+        g.innerHTML = `<div class="col-span-full text-gray-400 py-2">請先點擊上方「👥 成員」新增名單</div>`;
+        document.getElementById("summaryStatsBar").classList.add("hidden");
+        document.getElementById("settlementTransfers").innerHTML = "";
+        return;
+      }
+
       const bals = {}; members.forEach(m => bals[m]=0);
       records.forEach(r => { if(r.type==="expense"){ if(r.payer && bals[r.payer]===undefined)bals[r.payer]=0; Object.keys(parseShares(r)).forEach(m=>{if(bals[m]===undefined)bals[m]=0;}); }});
       records.forEach(r => { if(r.type==="expense"){ const t=Number(r.twdAmount)||0; if(r.payer&&t>0)bals[r.payer]+=t; Object.entries(parseShares(r)).forEach(([m,a])=>bals[m]-=a); }});
       
-      const g = document.getElementById("settlementGrid"); g.innerHTML="";
+      g.innerHTML="";
       Object.keys(bals).forEach(m => {
         const val = Math.round(bals[m]); const isP = val>0; const isZ = val===0;
         g.innerHTML += `<div class="bg-white/80 dark:bg-gray-800 p-2.5 rounded-xl shadow-sm border ${isZ?'border-gray-200 dark:border-gray-700':isP?'border-emerald-200 dark:border-emerald-800':'border-red-200 dark:border-red-800'}"><div class="font-bold text-gray-700 dark:text-gray-300 truncate">${escapeHtml(m)}</div><div class="font-mono font-bold mt-1 text-sm ${isZ?'text-gray-400':isP?'text-emerald-600 dark:text-emerald-400':'text-red-500 dark:text-red-400'}">${isZ?'$0':(isP?`+$${val}`:`-$${Math.abs(val)}`)}</div></div>`;
@@ -1141,7 +1219,7 @@
     function renderPersonalStats(records) {
       const card = document.getElementById("personalStatsCard");
       const targetMember = document.getElementById("personalStatsMemberSelect").value;
-      if (!targetMember || records.length === 0) {
+      if (!targetMember || records.length === 0 || members.length === 0) {
         card.classList.add("hidden");
         return;
       }
@@ -1260,6 +1338,7 @@
 
     window.openLineShareModal = function() {
       if (cachedRecords.length === 0) { return showToast("目前沒有任何記帳紀錄！", "info"); }
+      if (members.length === 0) { return showToast("目前尚未新增任何成員！", "info"); }
       document.getElementById("lineShareModal").classList.remove("hidden");
     };
 
@@ -1387,7 +1466,9 @@
       
       if (item.type === "expense") {
         document.getElementById("splitSection").style.display = "block";
-        document.getElementById("payer").value = item.payer || members[0];
+        if (members.length > 0) {
+          document.getElementById("payer").value = item.payer || members[0];
+        }
         const rawList = item.splitMembers || [];
         const isCustom = rawList.some(s => String(s).includes(":"));
         if (isCustom) {
@@ -1522,7 +1603,7 @@
               <span class="font-bold text-sm text-gray-900 dark:text-gray-100">${escapeHtml(item.title)}</span>
               ${(item.receiptFileId||item.receiptImage)?`<button onclick="${item.receiptFileId?`openReceiptFile('${escapeHtml(item.receiptFileId)}')`:`openImageModal('${item.receiptImage}')`}" class="text-[10px] bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 rounded px-1.5 py-0.5 border border-gray-200 dark:border-gray-600">📷照</button>`:''}
             </div>
-            <div class="text-gray-500 dark:text-gray-400 font-mono">${escapeHtml(item.date)} · ${isSplit?`<b>${escapeHtml(item.payer)}</b> 付`:'個人'}</div>
+            <div class="text-gray-500 dark:text-gray-400 font-mono">${escapeHtml(item.date)} · ${isSplit?`<b>${escapeHtml(item.payer || '無')}</b> 付`:'個人'}</div>
             ${isSplit&&st?`<div class="text-gray-400 dark:text-gray-500 truncate text-[11px]">${escapeHtml(st)}</div>`:''}
           </div>
           <div class="text-right flex flex-col items-end gap-1.5">
@@ -1579,6 +1660,10 @@
       if(isNaN(origAmt)||origAmt<=0){showToast("請輸入有效金額","error");document.getElementById("originalAmount").focus();return;}
       const {rate,twd}=calculateTwd();let splitData=[];const type=document.getElementById("type").value;
       if(type==="expense"){
+        if (members.length === 0) {
+          showToast("請先點擊上方「👥 成員」新增成員！", "error");
+          return;
+        }
         if(currentSplitMode==="equal"){splitData=Array.from(document.querySelectorAll(".member-cb:checked")).map(c=>c.value);if(!splitData.length)return showToast("至少需勾選一位分攤成員","error");}
         else{const sc=document.getElementById("customSplitCurrency").value;let sum=0;document.querySelectorAll(".custom-split-input").forEach(i=>{const v=parseFloat(i.value)||0;if(v>0){splitData.push(`${i.dataset.member}:${sc==="TWD"?Math.round(v):Math.round(v*rate)}`);sum+=v;}});if(!splitData.length)return showToast("至少需輸入一位成員金額","error");const target=sc==="TWD"?twd:origAmt;if(Math.abs(sum-target)>0.01)return showToast("差額不符，請調整！","error");}
       }
