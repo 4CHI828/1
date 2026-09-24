@@ -73,6 +73,10 @@
         .link-card.is-pinned { border-left: 4px solid var(--warning); }
         .link-card.is-read { opacity: 0.6; }
 
+        /* ✅ 失效連結樣式 */
+        .link-card.is-dead { border-color: var(--danger) !important; border-style: dashed !important; opacity: 0.85; }
+        .dead-badge { position: absolute; bottom: 1rem; right: 1rem; background: var(--danger); color: white; padding: 0.2rem 0.6rem; border-radius: 6px; font-size: 0.7rem; font-weight: bold; display: flex; align-items: center; gap: 0.3rem; z-index: 5; box-shadow: 0 2px 5px rgba(239, 68, 68, 0.4); }
+
         .link-image-preview { height: 160px; width: calc(100% + 3rem); margin: -1.5rem -1.5rem 1rem -1.5rem; overflow: hidden; background-color: #000; position: relative; }
         .link-image-preview img { width: 100%; height: 100%; object-fit: cover; transition: transform 0.4s ease; }
         .link-card:hover .link-image-preview img { transform: scale(1.05); }
@@ -98,6 +102,20 @@
         .card-actions button { width: 32px; height: 32px; padding: 0; border-radius: 50%; background: rgba(15, 23, 42, 0.8); backdrop-filter: blur(4px); color: #fff; border: 1px solid rgba(255,255,255,0.2); }
         .card-actions button:hover { color: var(--primary); border-color: var(--primary); }
         .card-actions .btn-delete:hover { color: var(--danger); border-color: var(--danger); }
+
+        @media (hover: none) {
+            .card-actions { opacity: 1; }
+            .card-actions button { background: rgba(30, 41, 59, 0.9); border: 1px solid var(--border-color); }
+        }
+
+        /* ✅ 批次操作樣式 */
+        .batch-checkbox { position: absolute; top: 1rem; left: 1rem; z-index: 15; width: 24px; height: 24px; cursor: pointer; accent-color: var(--primary); display: none; }
+        body.batch-mode .batch-checkbox { display: block; }
+        body.batch-mode .folder-badge { left: 3.5rem; }
+        body.batch-mode .card-actions { opacity: 0; pointer-events: none; } /* 批次模式下隱藏單個操作按鈕 */
+        
+        .batch-toolbar { position: fixed; bottom: 2rem; left: 50%; transform: translateX(-50%) translateY(100px); background: var(--card-dark); border: 1px solid var(--primary); padding: 1rem 1.5rem; border-radius: 16px; display: flex; gap: 1rem; align-items: center; box-shadow: 0 10px 25px rgba(0,0,0,0.5); z-index: 900; transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); opacity: 0; pointer-events: none; }
+        .batch-toolbar.active { transform: translateX(-50%) translateY(0); opacity: 1; pointer-events: auto; }
 
         .kanban-board { display: flex; gap: 1.5rem; overflow-x: auto; padding-bottom: 1rem; min-height: 60vh; }
         .kanban-column { flex: 1; min-width: 320px; background: var(--bg-dark); border-radius: 16px; padding: 1rem; border: 1px solid var(--border-color); display: flex; flex-direction: column; }
@@ -132,9 +150,10 @@
         
         .loader { display: none; border: 3px solid var(--border-color); border-top: 3px solid var(--primary); border-radius: 50%; width: 18px; height: 18px; animation: spin 1s linear infinite; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        .rotating { animation: spin 1s linear infinite; }
         
-        /* ✅ 修復 1：補上重新整理按鈕的旋轉動畫 */
-        .rotating { animation: spin 1s linear infinite; } 
+        /* 快捷鍵提示 */
+        .kbd { background: var(--bg-dark); border: 1px solid var(--border-color); border-radius: 4px; padding: 2px 6px; font-size: 0.7rem; font-family: monospace; color: var(--text-muted); }
     </style>
 </head>
 <body class="flex flex-col min-h-screen">
@@ -147,6 +166,8 @@
         <div class="header-actions flex-wrap gap-2">
             <span id="user-info" style="display: none; color: var(--text-muted); font-size: 0.9rem; margin-right: 10px;"></span>
             <button class="btn-outline btn-icon-only" onclick="openFolderModal()" title="管理資料夾"><i class="fas fa-folder-plus"></i></button>
+            <button class="btn-outline btn-icon-only" onclick="toggleBatchMode()" title="批次管理 (B)"><i class="fas fa-check-square"></i></button>
+            <button class="btn-outline btn-icon-only" onclick="startDeadLinkCheck()" title="失效檢測"><i class="fas fa-heartbeat"></i></button>
             <button class="btn-outline btn-icon-only" onclick="exportAsMarkdown()" title="生成 Markdown"><i class="fab fa-markdown"></i></button>
             <button class="btn-outline btn-icon-only" onclick="toggleTheme()" title="深淺色切換"><i class="fas fa-sun"></i></button>
             <button class="btn-outline btn-icon-only" id="btn-refresh" onclick="handleRefresh()" title="重新整理"><i class="fas fa-sync-alt" id="refresh-icon"></i></button>
@@ -173,7 +194,7 @@
     <main id="app-screen">
         <div class="control-panel">
             <div class="input-section">
-                <input type="text" id="url-input" placeholder="貼上連結 (例如 IG, FB, YT, Threads 網址...)" onkeypress="handleEnter(event)">
+                <input type="text" id="url-input" placeholder="貼上連結 (例如 IG, FB, YT, Threads 網址...) [快捷鍵: N]" onkeypress="handleEnter(event)">
                 <button class="btn-primary" id="btn-add-url" onclick="processAndSaveUrl()">
                     <span class="btn-text">儲存</span>
                     <div class="loader" id="add-loader"></div>
@@ -187,7 +208,7 @@
                 <div class="filter-section">
                     <div class="search-box">
                         <i class="fas fa-search"></i>
-                        <input type="text" id="search-input" placeholder="搜尋標題或標籤..." oninput="filterLinks()">
+                        <input type="text" id="search-input" placeholder="搜尋標題、摘要、標籤或網址... [快捷鍵: /]" oninput="handleSearchInput()">
                     </div>
                     <div class="flex gap-2">
                         <button class="btn-outline btn-icon-only" onclick="toggleView()" title="切換視圖"><i class="fas fa-grip-vertical" id="view-icon"></i></button>
@@ -205,6 +226,14 @@
             <div class="kanban-column" data-status="done"><div class="kanban-header">✅ 已讀 <span class="kanban-count" id="count-done">0</span></div><div class="kanban-list" id="list-done"></div></div>
         </div>
     </main>
+
+    <!-- ✅ 批次操作浮動工具列 -->
+    <div class="batch-toolbar" id="batch-toolbar">
+        <span>已選取 <strong id="batch-count" style="color: var(--primary); font-size: 1.2rem;">0</strong> 項</span>
+        <button class="btn-outline" onclick="batchMoveFolder()"><i class="fas fa-folder"></i> 移動</button>
+        <button class="btn-outline" style="color: var(--danger); border-color: var(--danger);" onclick="batchDelete()"><i class="fas fa-trash"></i> 刪除</button>
+        <button class="btn-outline" onclick="toggleBatchMode()">取消 (Esc)</button>
+    </div>
 
     <footer style="text-align: center; color: var(--text-muted); font-size: 0.875rem; padding: 1.5rem 0; border-top: 1px solid var(--border-color); margin-top: auto; background-color: var(--card-dark);">
         <div style="display: flex; align-items: center; justify-content: center; gap: 0.8rem; flex-wrap: wrap;">
@@ -260,11 +289,17 @@
         let app, auth, db, currentUser = null, isLocalMode = false, unsubscribeSnapshot = null;
         let currentView = 'masonry', isKanbanMode = false, activeTag = 'all', activeFolder = 'all';
         let allLinksCache = [], allFoldersCache = [];
+        let searchTimeout;
+
+        // ✅ 批次操作與失效檢測狀態
+        let batchMode = false;
+        let selectedIds = new Set();
+        let isCheckingLinks = false;
 
         try { app = firebase.initializeApp(firebaseConfig); auth = firebase.auth(); db = firebase.firestore(); } catch(e) {}
 
         // ============================================================
-        // 🔐 登入 / 登出 狀態管理
+        // 🔐 登入 / 登出
         // ============================================================
         function showAppScreen(userInfoText) {
             document.getElementById('login-screen').style.display = 'none';
@@ -273,60 +308,28 @@
             document.getElementById('user-info').style.display = 'inline';
             document.getElementById('user-info').textContent = userInfoText;
         }
-
         function showLoginScreen() {
             document.getElementById('login-screen').style.display = 'flex';
             document.getElementById('app-screen').style.display = 'none';
             document.getElementById('btn-logout').style.display = 'none';
             document.getElementById('user-info').style.display = 'none';
         }
-
         if(auth) {
             auth.onAuthStateChanged(async user => {
-                if (user) {
-                    isLocalMode = false;
-                    currentUser = user;
-                    showAppScreen(user.email);
-                    await renderFolderChips();
-                    loadLinks();
-                } else {
-                    if (!isLocalMode) {
-                        currentUser = null;
-                        showLoginScreen();
-                    }
-                }
+                if (user) { isLocalMode = false; currentUser = user; showAppScreen(user.email); await renderFolderChips(); loadLinks(); } 
+                else { if (!isLocalMode) { currentUser = null; showLoginScreen(); } }
             });
         }
-
-        document.getElementById('btn-google-login').addEventListener('click', () => {
-            if(auth) auth.signInWithPopup(new firebase.auth.GoogleAuthProvider());
-        });
-
-        document.getElementById('btn-local-login').addEventListener('click', async () => {
-            isLocalMode = true;
-            currentUser = null;
-            showAppScreen("本機模式");
-            await renderFolderChips();
-            loadLinks();
-        });
-
+        document.getElementById('btn-google-login').addEventListener('click', () => { if(auth) auth.signInWithPopup(new firebase.auth.GoogleAuthProvider()); });
+        document.getElementById('btn-local-login').addEventListener('click', async () => { isLocalMode = true; currentUser = null; showAppScreen("本機模式"); await renderFolderChips(); loadLinks(); });
         async function handleLogout() {
-            if (isLocalMode) {
-                isLocalMode = false;
-                showLoginScreen();
-            } else if (auth) {
-                try {
-                    await auth.signOut();
-                } catch (e) {
-                    showLoginScreen();
-                }
-            } else {
-                showLoginScreen();
-            }
+            if (isLocalMode) { isLocalMode = false; showLoginScreen(); } 
+            else if (auth) { try { await auth.signOut(); } catch (e) { showLoginScreen(); } } 
+            else { showLoginScreen(); }
         }
 
         // ============================================================
-        // 📂 資料夾與標籤邏輯
+        // 📂 資料夾與標籤
         // ============================================================
         async function getFolders() {
             if (isLocalMode) {
@@ -336,237 +339,120 @@
             }
             const snap = await db.collection('users').doc(currentUser.uid).collection('folders').get();
             let f = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-            if (f.length === 0) { 
-                await db.collection('users').doc(currentUser.uid).collection('folders').add({ name: '未分類', icon: 'fa-inbox' });
-                return [{ id: 'default', name: '未分類', icon: 'fa-inbox' }]; 
-            }
+            if (f.length === 0) { await db.collection('users').doc(currentUser.uid).collection('folders').add({ name: '未分類', icon: 'fa-inbox' }); return [{ id: 'default', name: '未分類', icon: 'fa-inbox' }]; }
             return f;
         }
-
         async function renderFolderChips() {
             allFoldersCache = await getFolders();
             const container = document.getElementById('folder-chips');
             let html = `<div class="chip ${activeFolder === 'all' ? 'active' : ''}" onclick="setFolder('all')"><i class="fas fa-layer-group"></i> 全部</div>`;
-            allFoldersCache.forEach(f => {
-                html += `<div class="chip ${activeFolder === f.id ? 'active' : ''}" onclick="setFolder('${f.id}')"><i class="fas ${f.icon || 'fa-folder'}"></i> ${f.name}</div>`;
-            });
+            allFoldersCache.forEach(f => { html += `<div class="chip ${activeFolder === f.id ? 'active' : ''}" onclick="setFolder('${f.id}')"><i class="fas ${f.icon || 'fa-folder'}"></i> ${f.name}</div>`; });
             container.innerHTML = html;
         }
-
         function setFolder(id) { activeFolder = id; renderFolderChips(); filterLinks(); }
-
         function openFolderModal() {
             const list = document.getElementById('folder-list');
-            list.innerHTML = allFoldersCache.map(f => `
-                <div class="flex justify-between items-center p-2 border-b border-gray-700">
-                    <span><i class="fas ${f.icon || 'fa-folder'} mr-2 text-gray-400"></i> ${f.name}</span>
-                    ${f.id !== 'default' ? `<button class="text-red-500 hover:text-red-400" onclick="deleteFolder('${f.id}')"><i class="fas fa-trash"></i></button>` : ''}
-                </div>
-            `).join('');
+            list.innerHTML = allFoldersCache.map(f => `<div class="flex justify-between items-center p-2 border-b border-gray-700"><span><i class="fas ${f.icon || 'fa-folder'} mr-2 text-gray-400"></i> ${f.name}</span>${f.id !== 'default' ? `<button class="text-red-500 hover:text-red-400" onclick="deleteFolder('${f.id}')"><i class="fas fa-trash"></i></button>` : ''}</div>`).join('');
             openModal('folder-modal');
         }
-
         async function addFolder() {
-            const name = document.getElementById('new-folder-name').value.trim();
-            if (!name) return;
+            const name = document.getElementById('new-folder-name').value.trim(); if (!name) return;
             const icons = ['fa-briefcase', 'fa-graduation-cap', 'fa-gamepad', 'fa-heart', 'fa-code', 'fa-book'];
             const icon = icons[Math.floor(Math.random() * icons.length)];
-            
-            if (isLocalMode) {
-                const f = JSON.parse(localStorage.getItem('my_folders') || '[]');
-                f.push({ id: 'f_' + Date.now(), name, icon });
-                localStorage.setItem('my_folders', JSON.stringify(f));
-            } else {
-                await db.collection('users').doc(currentUser.uid).collection('folders').add({ name, icon });
-            }
-            document.getElementById('new-folder-name').value = '';
-            renderFolderChips();
-            openFolderModal();
-            showToast("資料夾已新增", "success");
+            if (isLocalMode) { const f = JSON.parse(localStorage.getItem('my_folders') || '[]'); f.push({ id: 'f_' + Date.now(), name, icon }); localStorage.setItem('my_folders', JSON.stringify(f)); } 
+            else { await db.collection('users').doc(currentUser.uid).collection('folders').add({ name, icon }); }
+            document.getElementById('new-folder-name').value = ''; renderFolderChips(); openFolderModal(); showToast("資料夾已新增", "success");
         }
-
         async function deleteFolder(id) {
             if (!confirm("刪除此資料夾？內含連結將移至「未分類」")) return;
-            if (isLocalMode) {
-                let f = JSON.parse(localStorage.getItem('my_folders') || '[]').filter(x => x.id !== id);
-                localStorage.setItem('my_folders', JSON.stringify(f));
-                let links = JSON.parse(localStorage.getItem('my_links') || '[]');
-                links.forEach(l => { if (l.folderId === id) l.folderId = 'default'; });
-                localStorage.setItem('my_links', JSON.stringify(links));
-            } else {
-                await db.collection('users').doc(currentUser.uid).collection('folders').doc(id).delete();
-                const batch = db.batch();
-                const snap = await db.collection('users').doc(currentUser.uid).collection('links').where('folderId', '==', id).get();
-                snap.docs.forEach(d => batch.update(d.ref, { folderId: 'default' }));
-                await batch.commit();
-            }
-            renderFolderChips();
-            openFolderModal();
-            loadLinks();
+            if (isLocalMode) { let f = JSON.parse(localStorage.getItem('my_folders') || '[]').filter(x => x.id !== id); localStorage.setItem('my_folders', JSON.stringify(f)); let links = JSON.parse(localStorage.getItem('my_links') || '[]'); links.forEach(l => { if (l.folderId === id) l.folderId = 'default'; }); localStorage.setItem('my_links', JSON.stringify(links)); } 
+            else { await db.collection('users').doc(currentUser.uid).collection('folders').doc(id).delete(); const batch = db.batch(); const snap = await db.collection('users').doc(currentUser.uid).collection('links').where('folderId', '==', id).get(); snap.docs.forEach(d => batch.update(d.ref, { folderId: 'default' })); await batch.commit(); }
+            renderFolderChips(); openFolderModal(); loadLinks();
         }
-
-        function stringToHslColor(str, s = 0.6, l = 0.5) {
-            let hash = 0;
-            for (let i = 0; i < str.length; i++) hash = str.charCodeAt(i) + ((hash << 5) - hash);
-            return `hsl(${hash % 360}, ${s*100}%, ${l*100}%)`;
-        }
-        function getTagStyles(tag) {
-            const bg = stringToHslColor(tag, 0.4, 0.85);
-            const text = stringToHslColor(tag, 0.7, 0.3);
-            const border = stringToHslColor(tag, 0.4, 0.7);
-            return `background: ${bg}; color: ${text}; border: 1px solid ${border};`;
-        }
+        function stringToHslColor(str, s = 0.6, l = 0.5) { let hash = 0; for (let i = 0; i < str.length; i++) hash = str.charCodeAt(i) + ((hash << 5) - hash); return `hsl(${hash % 360}, ${s*100}%, ${l*100}%)`; }
+        function getTagStyles(tag) { const bg = stringToHslColor(tag, 0.4, 0.85); const text = stringToHslColor(tag, 0.7, 0.3); const border = stringToHslColor(tag, 0.4, 0.7); return `background: ${bg}; color: ${text}; border: 1px solid ${border};`; }
 
         // ============================================================
-        // 🌐 網頁解析與自動標籤 (含 YouTube 修復)
+        // 🌐 網頁解析與自動標籤
         // ============================================================
         function updateLastArchiveTime(links) {
             const displayEl = document.getElementById('lastUpdatedDisplay');
-            if (!links || links.length === 0) {
-                if(displayEl) displayEl.textContent = '尚無存檔';
-                return;
-            }
-            let maxTime = 0;
-            links.forEach(l => { if (l.createdAt && l.createdAt > maxTime) maxTime = l.createdAt; });
-            
-            if (maxTime > 0 && displayEl) {
-                const date = new Date(maxTime);
-                const timeString = date.toLocaleString('zh-TW', { 
-                    year: 'numeric', month: '2-digit', day: '2-digit', 
-                    hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false 
-                });
-                displayEl.textContent = timeString;
-            } else if (displayEl) {
-                displayEl.textContent = '尚無存檔';
-            }
+            if (!links || links.length === 0) { if(displayEl) displayEl.textContent = '尚無存檔'; return; }
+            let maxTime = 0; links.forEach(l => { if (l.createdAt && l.createdAt > maxTime) maxTime = l.createdAt; });
+            if (maxTime > 0 && displayEl) { const date = new Date(maxTime); displayEl.textContent = date.toLocaleString('zh-TW', { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false }); } 
+            else if (displayEl) { displayEl.textContent = '尚無存檔'; }
         }
-
-        function getYouTubeVideoId(url) {
-            const regex = /(?:youtu\.be\/|youtube\.com\/(?:watch\?v=|embed\/|v\/|shorts\/))([a-zA-Z0-9_-]{11})/;
-            return url.match(regex)?.[1] || null;
-        }
-
+        function getYouTubeVideoId(url) { const regex = /(?:youtu\.be\/|youtube\.com\/(?:watch\?v=|embed\/|v\/|shorts\/))([a-zA-Z0-9_-]{11})/; return url.match(regex)?.[1] || null; }
         async function fetchYouTubeInfo(url) {
-            const videoId = getYouTubeVideoId(url);
-            if (!videoId) return null;
-            try {
-                const oembedUrl = `https://www.youtube.com/oembed?url=https://www.youtube.com/watch?v=${videoId}&format=json`;
-                const response = await fetch(oembedUrl);
-                if (!response.ok) throw new Error('oEmbed 請求失敗');
-                const data = await response.json();
-                return { title: data.title || 'YouTube 影片', summary: data.author_name || 'YouTube 頻道', author: data.author_name || '', image: data.thumbnail_url || `https://img.youtube.com/vi/${videoId}/hqdefault.jpg` };
-            } catch (error) {
-                return { title: 'YouTube 影片', summary: 'YouTube', author: '', image: `https://img.youtube.com/vi/${videoId}/hqdefault.jpg` };
-            }
+            const videoId = getYouTubeVideoId(url); if (!videoId) return null;
+            try { const oembedUrl = `https://www.youtube.com/oembed?url=https://www.youtube.com/watch?v=${videoId}&format=json`; const response = await fetch(oembedUrl); if (!response.ok) throw new Error('oEmbed 請求失敗'); const data = await response.json(); return { title: data.title || 'YouTube 影片', summary: data.author_name || 'YouTube 頻道', author: data.author_name || '', image: data.thumbnail_url || `https://img.youtube.com/vi/${videoId}/hqdefault.jpg` }; } 
+            catch (error) { return { title: 'YouTube 影片', summary: 'YouTube', author: '', image: `https://img.youtube.com/vi/${videoId}/hqdefault.jpg` }; }
         }
-
         async function fetchWebpageInfo(url) {
             let r = { title: "未命名連結", description: "點擊查看原始連結", categories: ["一般網站"], account: "", image: "" };
-            let detectedTags = ["一般網站"];
-            const lowerUrl = url.toLowerCase();
-            
+            let detectedTags = ["一般網站"]; const lowerUrl = url.toLowerCase();
             if (lowerUrl.includes('youtube.com') || lowerUrl.includes('youtu.be')) detectedTags = ["YouTube", "影片"];
             else if (lowerUrl.includes('facebook.com') || lowerUrl.includes('fb.watch') || lowerUrl.includes('fb.com')) detectedTags = ["Facebook", "社群"];
             else if (lowerUrl.includes('instagram.com')) detectedTags = ["Instagram", "社群"];
             else if (lowerUrl.includes('x.com') || lowerUrl.includes('twitter.com')) detectedTags = ["X", "Twitter", "社群"];
             else if (lowerUrl.includes('threads.net')) detectedTags = ["Threads", "社群"];
-
-            if (lowerUrl.includes('youtube.com') || lowerUrl.includes('youtu.be')) {
-                const ytData = await fetchYouTubeInfo(url);
-                if (ytData) return { title: ytData.title, description: ytData.summary, categories: detectedTags, account: ytData.author, image: ytData.image };
-            }
-
-            try {
-                if (!url.startsWith('http')) url = 'https://' + url;
-                const res = await fetch(`https://api.microlink.io/?url=${encodeURIComponent(url)}`);
-                const d = await res.json();
-                if (d.status === 'success') {
-                    r.title = d.data.title || r.title; r.description = d.data.description || r.description; r.image = d.data.image?.url || "";
-                    if (d.data.author) r.account = d.data.author;
-                }
-            } catch (e) {}
-            r.title = r.title.replace(/\s+/g, ' ').trim();
-            r.categories = detectedTags;
-            return r;
+            if (lowerUrl.includes('youtube.com') || lowerUrl.includes('youtu.be')) { const ytData = await fetchYouTubeInfo(url); if (ytData) return { title: ytData.title, description: ytData.summary, categories: detectedTags, account: ytData.author, image: ytData.image }; }
+            try { if (!url.startsWith('http')) url = 'https://' + url; const res = await fetch(`https://api.microlink.io/?url=${encodeURIComponent(url)}`); const d = await res.json(); if (d.status === 'success') { r.title = d.data.title || r.title; r.description = d.data.description || r.description; r.image = d.data.image?.url || ""; if (d.data.author) r.account = d.data.author; } } catch (e) {}
+            r.title = r.title.replace(/\s+/g, ' ').trim(); r.categories = detectedTags; return r;
         }
-
         async function processAndSaveUrl() {
             const input = document.getElementById('url-input'); let url = input.value.trim(); if (!url) return;
             const btn = document.getElementById('btn-add-url'), loader = document.getElementById('add-loader'), txt = btn.querySelector('.btn-text');
             btn.disabled = true; txt.style.display = 'none'; loader.style.display = 'block';
-            
             const info = await fetchWebpageInfo(url);
             let finalTitle = info.title; if (info.account && !finalTitle.includes(info.account)) finalTitle = `${info.account} - ${finalTitle}`;
-            
             const targetFolder = activeFolder !== 'all' ? activeFolder : 'default';
-            const data = { url, title: finalTitle, categories: info.categories, description: info.description, image: info.image || "", folderId: targetFolder, createdAt: Date.now(), pinned: false, isRead: false };
-
+            const data = { url, title: finalTitle, categories: info.categories, description: info.description, image: info.image || "", folderId: targetFolder, createdAt: Date.now(), pinned: false, isRead: false, isDead: false };
             try {
-                if (isLocalMode) { 
-                    const links = JSON.parse(localStorage.getItem('my_links') || '[]'); 
-                    data.id = 'loc_' + Date.now(); links.unshift(data); 
-                    localStorage.setItem('my_links', JSON.stringify(links)); 
-                } else { 
-                    await db.collection('users').doc(currentUser.uid).collection('links').add(data); 
-                }
+                if (isLocalMode) { const links = JSON.parse(localStorage.getItem('my_links') || '[]'); data.id = 'loc_' + Date.now(); links.unshift(data); localStorage.setItem('my_links', JSON.stringify(links)); } 
+                else { await db.collection('users').doc(currentUser.uid).collection('links').add(data); }
                 showToast("✅ 儲存成功", "success");
             } catch (e) { showToast("❌ " + e.message, "error"); }
-            
-            input.value = ''; btn.disabled = false; txt.style.display = 'inline'; loader.style.display = 'none';
-            loadLinks();
+            input.value = ''; btn.disabled = false; txt.style.display = 'inline'; loader.style.display = 'none'; loadLinks();
         }
 
         // ============================================================
         // 🔄 渲染與互動邏輯
         // ============================================================
-        async function getAllLinks() {
-            if (isLocalMode) return JSON.parse(localStorage.getItem('my_links') || '[]');
-            return (await db.collection('users').doc(currentUser.uid).collection('links').get()).docs.map(d => ({ id: d.id, ...d.data() }));
-        }
-
+        async function getAllLinks() { if (isLocalMode) return JSON.parse(localStorage.getItem('my_links') || '[]'); return (await db.collection('users').doc(currentUser.uid).collection('links').get()).docs.map(d => ({ id: d.id, ...d.data() })); }
         function loadLinks() {
-            if (isLocalMode) {
-                const allData = JSON.parse(localStorage.getItem('my_links') || '[]');
-                updateLastArchiveTime(allData);
-                renderCurrentView(allData);
-            } else if(currentUser && db) {
-                if(unsubscribeSnapshot) unsubscribeSnapshot();
-                unsubscribeSnapshot = db.collection('users').doc(currentUser.uid).collection('links').orderBy('createdAt', 'desc').onSnapshot(snap => {
-                    const allData = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-                    updateLastArchiveTime(allData);
-                    renderCurrentView(allData);
-                });
-            }
+            if (isLocalMode) { const allData = JSON.parse(localStorage.getItem('my_links') || '[]'); updateLastArchiveTime(allData); renderCurrentView(allData); } 
+            else if(currentUser && db) { if(unsubscribeSnapshot) unsubscribeSnapshot(); unsubscribeSnapshot = db.collection('users').doc(currentUser.uid).collection('links').orderBy('createdAt', 'desc').onSnapshot(snap => { const allData = snap.docs.map(d => ({ id: d.id, ...d.data() })); updateLastArchiveTime(allData); renderCurrentView(allData); }); }
         }
-
         function renderCurrentView(links) {
-            const search = document.getElementById('search-input').value.toLowerCase();
-            renderTagChips(links);
+            const search = document.getElementById('search-input').value.toLowerCase(); renderTagChips(links);
             const filtered = links.filter(l => {
-                const matchSearch = l.title.toLowerCase().includes(search) || l.url.toLowerCase().includes(search);
+                const matchSearch = l.title.toLowerCase().includes(search) || l.url.toLowerCase().includes(search) || (l.description && l.description.toLowerCase().includes(search)) || (Array.isArray(l.categories) && l.categories.some(t => t.toLowerCase().includes(search)));
                 const matchTag = activeTag === 'all' || (Array.isArray(l.categories) ? l.categories.includes(activeTag) : l.categories === activeTag);
                 const matchFolder = activeFolder === 'all' || l.folderId === activeFolder || (!l.folderId && activeFolder === 'default');
                 return matchSearch && matchTag && matchFolder;
             });
-            allLinksCache = filtered;
-            if (isKanbanMode) renderKanban(filtered); else renderLinks(filtered);
+            allLinksCache = filtered; if (isKanbanMode) renderKanban(filtered); else renderLinks(filtered);
         }
-
         function renderLinks(links) {
             const container = document.getElementById('links-container');
             if (links.length === 0) { container.innerHTML = `<div class="text-center py-20 text-gray-500 col-span-full">找不到連結</div>`; return; }
             container.innerHTML = links.map((link, index) => {
                 const titleHtml = link.title.includes('@') ? link.title.replace(/(@[^\s-]+)/, `<span class="account-handle">$1</span>`) : escapeHtml(link.title);
                 let sourceDisplay = ""; try { sourceDisplay = link.account || new URL(link.url).hostname; } catch(e) { sourceDisplay = "未知"; }
-                let imageHtml = link.image ? `<div class="link-image-preview"><img src="${link.image}" onerror="this.parentElement.style.display='none'"></div>` : "";
+                let imageHtml = link.image ? `<div class="link-image-preview"><img loading="lazy" src="${link.image}" onerror="this.parentElement.style.display='none'"></div>` : "";
                 const folder = allFoldersCache.find(f => f.id === link.folderId) || allFoldersCache.find(f => f.id === 'default');
                 const folderBadge = folder ? `<div class="folder-badge"><i class="fas ${folder.icon || 'fa-folder'}"></i> ${folder.name}</div>` : "";
                 const tagsHtml = (Array.isArray(link.categories) ? link.categories : (link.categories ? [link.categories] : [])).map(t => `<span class="tag-badge" style="${getTagStyles(t)}">${escapeHtml(t)}</span>`).join('');
                 
-                // ✅ 修復 2：使用更安全的 escapeHtml 防止破版
+                // ✅ 批次選擇框與失效徽章
+                const checkboxHtml = `<input type="checkbox" class="batch-checkbox" ${selectedIds.has(link.id) ? 'checked' : ''} onclick="event.stopPropagation(); toggleSelect('${link.id}', this)">`;
+                const deadBadgeHtml = link.isDead ? `<div class="dead-badge"><i class="fas fa-exclamation-triangle"></i> 失效</div>` : "";
+                const cardClass = `link-card card-enter ${link.pinned ? 'is-pinned' : ''} ${link.isRead ? 'is-read' : ''} ${link.isDead ? 'is-dead' : ''}`;
+
                 return `
-                <div class="link-card card-enter ${link.pinned ? 'is-pinned' : ''} ${link.isRead ? 'is-read' : ''}" style="animation-delay: ${index * 0.05}s;">
-                    ${folderBadge}${imageHtml}
+                <div class="${cardClass}" style="animation-delay: ${index * 0.05}s;">
+                    ${checkboxHtml}${folderBadge}${imageHtml}
                     <div class="card-actions">
                         <button class="btn-outline" onclick="togglePin('${link.id}')" title="釘選"><i class="fas fa-thumbtack"></i></button>
                         <button class="btn-outline" onclick="toggleRead('${link.id}')" title="已讀"><i class="fas ${link.isRead ? 'fa-check-circle' : 'fa-circle'}"></i></button>
@@ -577,39 +463,38 @@
                     <h3 class="link-title">${titleHtml}</h3>
                     <a href="${escapeHtml(link.url)}" target="_blank" class="link-url-display">${escapeHtml(link.url)}</a>
                     <div class="card-footer">
-                        <div class="source-info"><img class="favicon" src="https://www.google.com/s2/favicons?domain=${encodeURIComponent(link.url)}&sz=64"><div class="source-text"><span class="font-medium">${sourceDisplay}</span></div></div>
+                        <div class="source-info"><img loading="lazy" class="favicon" src="https://www.google.com/s2/favicons?domain=${encodeURIComponent(link.url)}&sz=64"><div class="source-text"><span class="font-medium">${sourceDisplay}</span></div></div>
                         <div class="tags-container">${tagsHtml}</div>
                     </div>
+                    ${deadBadgeHtml}
                 </div>`;
             }).join('');
         }
-
         function renderTagChips(links) {
             const container = document.getElementById('tag-chips'); const allTags = new Set();
             links.forEach(l => { if (l.categories) { if (Array.isArray(l.categories)) l.categories.forEach(t => allTags.add(t)); else allTags.add(l.categories); } });
             let html = `<div class="chip ${activeTag === 'all' ? 'active' : ''}" onclick="setTag('all')"><i class="fas fa-tags"></i> 全部標籤</div>`;
-            allTags.forEach(tag => {
-                const color = stringToHslColor(tag, 0.6, 0.5);
-                const isActive = activeTag === tag;
-                const style = isActive ? `background: ${color}; color: white; border-color: ${color};` : `border-color: ${color}40; color: ${color};`;
-                html += `<div class="chip ${isActive ? 'active' : ''}" style="${style}" onclick="setTag('${tag}')">${tag}</div>`;
-            });
+            allTags.forEach(tag => { const color = stringToHslColor(tag, 0.6, 0.5); const isActive = activeTag === tag; const style = isActive ? `background: ${color}; color: white; border-color: ${color};` : `border-color: ${color}40; color: ${color};`; html += `<div class="chip ${isActive ? 'active' : ''}" style="${style}" onclick="setTag('${tag}')">${tag}</div>`; });
             container.innerHTML = html;
         }
-
         function setTag(tag) { activeTag = tag; renderTagChips(allLinksCache); filterLinks(); }
+        function handleSearchInput() { clearTimeout(searchTimeout); searchTimeout = setTimeout(() => { filterLinks(); }, 300); }
         function filterLinks() { loadLinks(); }
 
         async function togglePin(id) { const l = (await getAllLinks()).find(x => x.id === id); if(!l) return; await updateLinkProp(id, 'pinned', !l.pinned); }
         async function toggleRead(id) { const l = (await getAllLinks()).find(x => x.id === id); if(!l) return; await updateLinkProp(id, 'isRead', !l.isRead); }
-        async function updateLinkProp(id, prop, val) {
-            if (isLocalMode) { const all = JSON.parse(localStorage.getItem('my_links') || '[]'); const i = all.findIndex(x => x.id === id); if(i>-1) { all[i][prop] = val; localStorage.setItem('my_links', JSON.stringify(all)); loadLinks(); } }
+        
+        async function updateLinkProp(id, prop, val, silent = false) {
+            if (isLocalMode) { const all = JSON.parse(localStorage.getItem('my_links') || '[]'); const i = all.findIndex(x => x.id === id); if(i>-1) { all[i][prop] = val; localStorage.setItem('my_links', JSON.stringify(all)); } }
             else { await db.collection('users').doc(currentUser.uid).collection('links').doc(id).update({ [prop]: val }); }
+            if (!silent) loadLinks();
         }
-        async function deleteLink(id) {
-            if (!confirm("確定刪除？")) return;
-            if (isLocalMode) { let l = JSON.parse(localStorage.getItem('my_links') || '[]'); localStorage.setItem('my_links', JSON.stringify(l.filter(i => i.id !== id))); loadLinks(); }
+        
+        async function deleteLink(id, showConfirm = true) {
+            if (showConfirm && !confirm("確定刪除？")) return;
+            if (isLocalMode) { let l = JSON.parse(localStorage.getItem('my_links') || '[]'); localStorage.setItem('my_links', JSON.stringify(l.filter(i => i.id !== id))); }
             else { await db.collection('users').doc(currentUser.uid).collection('links').doc(id).delete(); }
+            if (showConfirm) { showToast("已刪除", "success"); loadLinks(); }
         }
 
         async function openEdit(id) {
@@ -617,168 +502,121 @@
                 if (isLocalMode) link = JSON.parse(localStorage.getItem('my_links') || '[]').find(l => l.id === id);
                 else { const s = await db.collection('users').doc(currentUser.uid).collection('links').doc(id).get(); if(s.exists) { link = s.data(); link.id = s.id; } }
                 if (link) {
-                    document.getElementById('edit-id').value = link.id;
-                    document.getElementById('edit-title').value = link.title || "";
-                    document.getElementById('edit-url').value = link.url || "";
-                    document.getElementById('edit-categories').value = Array.isArray(link.categories) ? link.categories.join(', ') : (link.categories || "");
-                    document.getElementById('edit-desc').value = link.description || "";
-                    const select = document.getElementById('edit-folder');
-                    select.innerHTML = allFoldersCache.map(f => `<option value="${f.id}" ${link.folderId === f.id ? 'selected' : ''}>${f.name}</option>`).join('');
+                    document.getElementById('edit-id').value = link.id; document.getElementById('edit-title').value = link.title || ""; document.getElementById('edit-url').value = link.url || "";
+                    document.getElementById('edit-categories').value = Array.isArray(link.categories) ? link.categories.join(', ') : (link.categories || ""); document.getElementById('edit-desc').value = link.description || "";
+                    const select = document.getElementById('edit-folder'); select.innerHTML = allFoldersCache.map(f => `<option value="${f.id}" ${link.folderId === f.id ? 'selected' : ''}>${f.name}</option>`).join('');
                     openModal('edit-modal');
                 }
             } catch (e) { showToast("讀取失敗", "error"); }
         }
-
         async function saveEdit() {
-            const id = document.getElementById('edit-id').value;
-            // ✅ 修復 3：支援全形/半形逗號分割標籤
-            const categoriesRaw = document.getElementById('edit-categories').value;
-            const categories = categoriesRaw.split(/[,，]\s*/).map(t => t.trim()).filter(t => t);
-            
-            const updated = {
-                title: document.getElementById('edit-title').value, 
-                url: document.getElementById('edit-url').value,
-                categories: categories,
-                description: document.getElementById('edit-desc').value, 
-                folderId: document.getElementById('edit-folder').value
-            };
+            const id = document.getElementById('edit-id').value; const categoriesRaw = document.getElementById('edit-categories').value; const categories = categoriesRaw.split(/[,，]\s*/).map(t => t.trim()).filter(t => t);
+            const updated = { title: document.getElementById('edit-title').value, url: document.getElementById('edit-url').value, categories: categories, description: document.getElementById('edit-desc').value, folderId: document.getElementById('edit-folder').value };
             if (isLocalMode) { let l = JSON.parse(localStorage.getItem('my_links') || '[]'); const i = l.findIndex(x => x.id === id); if(i>-1) { l[i] = { ...l[i], ...updated }; localStorage.setItem('my_links', JSON.stringify(l)); loadLinks(); } }
-            else { await db.collection('users').doc(currentUser.uid).collection('links').doc(id).update(updated); }
+            else { await db.collection('users').doc(currentUser.uid).collection('links').doc(id).update(updated); loadLinks(); }
             closeModal('edit-modal'); showToast("已儲存", "success");
         }
-
-        function toggleView() {
-            currentView = currentView === 'masonry' ? 'list' : 'masonry';
-            const container = document.getElementById('links-container');
-            container.className = currentView === 'list' ? 'list-view' : 'masonry-grid';
-            document.getElementById('view-icon').className = currentView === 'list' ? 'fas fa-grip-vertical' : 'fas fa-list';
-            loadLinks();
-        }
-
-        function toggleKanbanView() {
-            isKanbanMode = !isKanbanMode;
-            document.getElementById('links-container').style.display = isKanbanMode ? 'none' : 'block';
-            document.getElementById('kanban-board').style.display = isKanbanMode ? 'flex' : 'none';
-            document.getElementById('btn-kanban').classList.toggle('btn-primary', isKanbanMode);
-            document.getElementById('btn-kanban').classList.toggle('btn-outline', !isKanbanMode);
-            if (isKanbanMode) renderKanban(allLinksCache);
-        }
-
+        function toggleView() { currentView = currentView === 'masonry' ? 'list' : 'masonry'; const container = document.getElementById('links-container'); container.className = currentView === 'list' ? 'list-view' : 'masonry-grid'; document.getElementById('view-icon').className = currentView === 'list' ? 'fas fa-grip-vertical' : 'fas fa-list'; loadLinks(); }
+        function toggleKanbanView() { isKanbanMode = !isKanbanMode; document.getElementById('links-container').style.display = isKanbanMode ? 'none' : 'block'; document.getElementById('kanban-board').style.display = isKanbanMode ? 'flex' : 'none'; document.getElementById('btn-kanban').classList.toggle('btn-primary', isKanbanMode); document.getElementById('btn-kanban').classList.toggle('btn-outline', !isKanbanMode); if (isKanbanMode) renderKanban(allLinksCache); }
         function renderKanban(links) {
-            const inbox = [], starred = [], done = [];
-            links.forEach(l => { if (l.pinned) starred.push(l); else if (l.isRead) done.push(l); else inbox.push(l); });
-            document.getElementById('count-inbox').innerText = inbox.length;
-            document.getElementById('count-starred').innerText = starred.length;
-            document.getElementById('count-done').innerText = done.length;
+            const inbox = [], starred = [], done = []; links.forEach(l => { if (l.pinned) starred.push(l); else if (l.isRead) done.push(l); else inbox.push(l); });
+            document.getElementById('count-inbox').innerText = inbox.length; document.getElementById('count-starred').innerText = starred.length; document.getElementById('count-done').innerText = done.length;
             const renderCard = (l) => `<div class="kanban-card" data-id="${l.id}"><div class="k-title">${escapeHtml(l.title)}</div><div class="k-desc">${escapeHtml(l.description)}</div></div>`;
-            document.getElementById('list-inbox').innerHTML = inbox.map(renderCard).join('');
-            document.getElementById('list-starred').innerHTML = starred.map(renderCard).join('');
-            document.getElementById('list-done').innerHTML = done.map(renderCard).join('');
+            document.getElementById('list-inbox').innerHTML = inbox.map(renderCard).join(''); document.getElementById('list-starred').innerHTML = starred.map(renderCard).join(''); document.getElementById('list-done').innerHTML = done.map(renderCard).join('');
             initSortable();
         }
-
         function initSortable() {
             ['list-inbox', 'list-starred', 'list-done'].forEach(id => {
                 const el = document.getElementById(id); if (el.sortable) el.sortable.destroy();
-                el.sortable = Sortable.create(el, {
-                    group: 'kanban', animation: 150, ghostClass: 'sortable-ghost',
-                    onEnd: async (evt) => {
-                        const itemId = evt.item.dataset.id, newColumnId = evt.to.id;
-                        let newStatus = { pinned: false, isRead: false };
-                        if (newColumnId === 'list-starred') newStatus = { pinned: true, isRead: false };
-                        else if (newColumnId === 'list-done') newStatus = { pinned: false, isRead: true };
-                        if (isLocalMode) { const all = JSON.parse(localStorage.getItem('my_links') || '[]'); const idx = all.findIndex(i => i.id === itemId); if (idx > -1) { all[idx].pinned = newStatus.pinned; all[idx].isRead = newStatus.isRead; localStorage.setItem('my_links', JSON.stringify(all)); } }
-                        else { await db.collection('users').doc(currentUser.uid).collection('links').doc(itemId).update(newStatus); }
-                    }
-                });
+                el.sortable = Sortable.create(el, { group: 'kanban', animation: 150, ghostClass: 'sortable-ghost', onEnd: async (evt) => { const itemId = evt.item.dataset.id, newColumnId = evt.to.id; let newStatus = { pinned: false, isRead: false }; if (newColumnId === 'list-starred') newStatus = { pinned: true, isRead: false }; else if (newColumnId === 'list-done') newStatus = { pinned: false, isRead: true }; if (isLocalMode) { const all = JSON.parse(localStorage.getItem('my_links') || '[]'); const idx = all.findIndex(i => i.id === itemId); if (idx > -1) { all[idx].pinned = newStatus.pinned; all[idx].isRead = newStatus.isRead; localStorage.setItem('my_links', JSON.stringify(all)); } } else { await db.collection('users').doc(currentUser.uid).collection('links').doc(itemId).update(newStatus); } loadLinks(); } });
             });
         }
-
         function toggleTheme() { document.body.classList.toggle('light-mode'); localStorage.setItem('theme', document.body.classList.contains('light-mode') ? 'light' : 'dark'); }
         function handleRefresh() { const i = document.getElementById('refresh-icon'); i.classList.add('rotating'); loadLinks(); setTimeout(() => i.classList.remove('rotating'), 600); }
-        function exportAsMarkdown() {
-            if (!allLinksCache.length) return;
-            let md = `# 智能連結清單\n\n`;
-            allLinksCache.forEach(l => { md += `- [${l.title}](${l.url})\n`; });
-            navigator.clipboard.writeText(md).then(() => showToast("✅ 已複製", "success"));
-        }
-        async function exportData() {
-            const links = await getAllLinks(); const folders = await getFolders();
-            const a = document.createElement('a');
-            a.href = URL.createObjectURL(new Blob([JSON.stringify({ links, folders }, null, 2)], { type: "application/json" }));
-            a.download = `slm_backup_${new Date().toISOString().slice(0,10)}.json`; a.click();
-        }
+        function exportAsMarkdown() { if (!allLinksCache.length) return; let md = `# 智能連結清單\n\n`; allLinksCache.forEach(l => { md += `- [${l.title}](${l.url})\n`; }); navigator.clipboard.writeText(md).then(() => showToast("✅ 已複製", "success")); }
+        async function exportData() { const links = await getAllLinks(); const folders = await getFolders(); const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([JSON.stringify({ links, folders }, null, 2)], { type: "application/json" })); a.download = `slm_backup_${new Date().toISOString().slice(0,10)}.json`; a.click(); }
         function importData(event) {
-            const file = event.target.files[0]; if (!file) return;
-            const reader = new FileReader();
-            reader.onload = async (e) => {
-                try {
-                    const data = JSON.parse(e.target.result);
-                    const links = data.links || data; const folders = data.folders || [];
-                    if (isLocalMode) { 
-                        localStorage.setItem('my_links', JSON.stringify(links)); 
-                        if(folders.length) localStorage.setItem('my_folders', JSON.stringify(folders));
-                        loadLinks(); renderFolderChips();
-                    } else { 
-                        const b = db.batch(); 
-                        links.forEach(l => b.set(db.collection('users').doc(currentUser.uid).collection('links').doc(l.id), l));
-                        folders.forEach(f => b.set(db.collection('users').doc(currentUser.uid).collection('folders').doc(f.id), f));
-                        await b.commit(); loadLinks(); renderFolderChips();
-                    }
-                    showToast("匯入成功", "success");
-                } catch (err) { showToast("匯入失敗", "error"); }
-                // ✅ 修復 4：重置 input 確保可以重複匯入同一個檔案
-                event.target.value = ''; 
-            };
+            const file = event.target.files[0]; if (!file) return; const reader = new FileReader();
+            reader.onload = async (e) => { try { const data = JSON.parse(e.target.result); const links = data.links || data; const folders = data.folders || []; if (isLocalMode) { localStorage.setItem('my_links', JSON.stringify(links)); if(folders.length) localStorage.setItem('my_folders', JSON.stringify(folders)); loadLinks(); renderFolderChips(); } else { const b = db.batch(); links.forEach(l => b.set(db.collection('users').doc(currentUser.uid).collection('links').doc(l.id), l)); folders.forEach(f => b.set(db.collection('users').doc(currentUser.uid).collection('folders').doc(f.id), f)); await b.commit(); loadLinks(); renderFolderChips(); } showToast("匯入成功", "success"); } catch (err) { showToast("匯入失敗", "error"); } event.target.value = ''; };
             reader.readAsText(file);
         }
-
-        function showToast(msg, type='info') {
-            const c = document.getElementById('toast-container'), t = document.createElement('div');
-            t.className = `toast ${type}`; t.innerHTML = msg; c.appendChild(t);
-            setTimeout(() => { t.style.animation = 'fadeOut 0.3s ease forwards'; setTimeout(() => t.remove(), 300); }, 3000);
-        }
+        function showToast(msg, type='info') { const c = document.getElementById('toast-container'), t = document.createElement('div'); t.className = `toast ${type}`; t.innerHTML = msg; c.appendChild(t); setTimeout(() => { t.style.animation = 'fadeOut 0.3s ease forwards'; setTimeout(() => t.remove(), 300); }, 3000); }
         function openModal(id) { document.getElementById(id).style.display = 'flex'; }
         function closeModal(id) { document.getElementById(id).style.display = 'none'; }
         function handleEnter(e) { if (e.key === "Enter") processAndSaveUrl(); }
+        function escapeHtml(u) { return String(u || '').replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;"); }
+
+        // ============================================================
+        // ✅ 批次操作邏輯
+        // ============================================================
+        function toggleBatchMode() {
+            batchMode = !batchMode; selectedIds.clear();
+            document.body.classList.toggle('batch-mode', batchMode);
+            document.getElementById('batch-toolbar').classList.toggle('active', batchMode);
+            updateBatchToolbar(); renderCurrentView(allLinksCache);
+        }
+        function toggleSelect(id, checkbox) {
+            if (checkbox.checked) selectedIds.add(id); else selectedIds.delete(id);
+            updateBatchToolbar();
+        }
+        function updateBatchToolbar() { document.getElementById('batch-count').textContent = selectedIds.size; }
         
-        // ✅ 修復 2：升級 escapeHtml，防止特殊字元破壞 HTML 結構
-        function escapeHtml(u) {
-            return String(u || '')
-                .replace(/&/g, "&amp;")
-                .replace(/</g, "&lt;")
-                .replace(/>/g, "&gt;")
-                .replace(/"/g, "&quot;")
-                .replace(/'/g, "&#039;");
+        async function batchDelete() {
+            if (selectedIds.size === 0) return;
+            if (!confirm(`確定要刪除選取的 ${selectedIds.size} 個連結嗎？`)) return;
+            for (const id of selectedIds) { await deleteLink(id, false); }
+            toggleBatchMode(); showToast(`已刪除 ${selectedIds.size} 個連結`, "success"); loadLinks();
+        }
+        async function batchMoveFolder() {
+            if (selectedIds.size === 0) return;
+            const folderOptions = allFoldersCache.map(f => `${f.id}: ${f.name}`).join('\n');
+            const choice = prompt(`請輸入要移動到的資料夾 ID 或名稱：\n${folderOptions}`);
+            if (!choice) return;
+            const targetFolder = allFoldersCache.find(f => f.id === choice || f.name === choice);
+            if (!targetFolder) { showToast("找不到該資料夾", "error"); return; }
+            for (const id of selectedIds) { await updateLinkProp(id, 'folderId', targetFolder.id, true); }
+            toggleBatchMode(); showToast(`已移動 ${selectedIds.size} 個連結`, "success"); loadLinks();
         }
 
-        if(auth) {
-            auth.onAuthStateChanged(async user => {
-                if (user) {
-                    isLocalMode = false;
-                    currentUser = user;
-                    showAppScreen(user.email);
-                    await renderFolderChips();
-                    loadLinks();
-                } else {
-                    if (!isLocalMode) {
-                        currentUser = null;
-                        showLoginScreen();
-                    }
-                }
-            });
+        // ============================================================
+        // ✅ 失效連結檢測
+        // ============================================================
+        async function startDeadLinkCheck() {
+            if (isCheckingLinks) return;
+            if (!confirm("將開始檢測所有連結的有效性，這可能需要一些時間。確定繼續？")) return;
+            isCheckingLinks = true; showToast("🔍 開始失效連結檢測...", "info");
+            const links = await getAllLinks(); let deadCount = 0;
+            for (const link of links) {
+                if (!link.url) continue;
+                try {
+                    const res = await fetch(`https://api.microlink.io/?url=${encodeURIComponent(link.url)}`);
+                    const d = await res.json();
+                    let isDead = false;
+                    if (d.status !== 'success') isDead = true;
+                    else if (d.data && d.data.status_code && d.data.status_code >= 400) isDead = true;
+                    if (isDead !== (link.isDead || false)) { await updateLinkProp(link.id, 'isDead', isDead, true); if (isDead) deadCount++; }
+                } catch (e) { if (!link.isDead) { await updateLinkProp(link.id, 'isDead', true, true); deadCount++; } }
+                await new Promise(r => setTimeout(r, 300)); // 避免 API 限制
+            }
+            isCheckingLinks = false; showToast(`✅ 檢測完成！發現 ${deadCount} 個失效連結`, deadCount > 0 ? "error" : "success"); loadLinks();
         }
-        document.getElementById('btn-google-login').addEventListener('click', () => {
-            if(auth) auth.signInWithPopup(new firebase.auth.GoogleAuthProvider());
+
+        // ============================================================
+        // ✅ 鍵盤快捷鍵
+        // ============================================================
+        document.addEventListener('keydown', (e) => {
+            const isInputFocused = ['INPUT', 'TEXTAREA', 'SELECT'].includes(document.activeElement.tagName);
+            if (e.key === 'Escape') { closeModal('folder-modal'); closeModal('edit-modal'); if (batchMode) toggleBatchMode(); }
+            if (!isInputFocused) {
+                if (e.key === '/') { e.preventDefault(); document.getElementById('search-input').focus(); } 
+                else if (e.key === 'n' || e.key === 'N') { e.preventDefault(); document.getElementById('url-input').focus(); } 
+                else if (e.key === 'b' || e.key === 'B') { e.preventDefault(); toggleBatchMode(); }
+            }
         });
-        document.getElementById('btn-local-login').addEventListener('click', async () => {
-            isLocalMode = true;
-            currentUser = null;
-            showAppScreen("本機模式");
-            await renderFolderChips();
-            loadLinks();
-        });
-        
+
+        // ============================================================
+        // 初始化
+        // ============================================================
         window.onload = async () => { 
             if (localStorage.getItem('theme') === 'light') document.body.classList.add('light-mode'); 
             const manifest = { name: "智能連結", short_name: "連結", start_url: ".", display: "standalone", background_color: "#0f172a", theme_color: "#6366f1", icons: [{ src: "data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🔗</text></svg>", sizes: "any", type: "image/svg+xml" }] };
