@@ -269,7 +269,7 @@
         <input type="text" id="title" placeholder="項目名稱 (如: 居酒屋)" class="col-span-2 border border-gray-200 dark:border-gray-600 rounded-xl px-3 py-2 text-sm bg-white dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none font-medium shadow-inner">
       </div>
 
-      <!-- 金額欄位 -->
+      <!-- 金額欄位：移除 inputmode="decimal" 以確保手機叫出含有算術符號的鍵盤 -->
       <div class="grid grid-cols-5 gap-2.5">
         <select id="currency" class="col-span-2 border border-gray-200 dark:border-gray-600 rounded-xl px-2 py-2 text-xs bg-blue-50/50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300 font-bold focus:ring-2 focus:ring-blue-500 outline-none">
           <option value="TWD">TWD 台幣</option>
@@ -279,7 +279,7 @@
           <option value="USD">USD 美元</option>
           <option value="KRW">KRW 韓元</option>
         </select>
-        <input type="text" inputmode="decimal" id="originalAmount" placeholder="金額 (可算式: 100+50*2)" class="col-span-3 border border-gray-200 dark:border-gray-600 rounded-xl px-3 py-2 text-base font-bold bg-white dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none shadow-inner text-right font-mono">
+        <input type="text" id="originalAmount" placeholder="金額 (可算式: 100+50*2)" class="col-span-3 border border-gray-200 dark:border-gray-600 rounded-xl px-3 py-2 text-base font-bold bg-white dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none shadow-inner text-right font-mono">
       </div>
       <div class="flex items-center justify-between text-xs text-gray-400 px-1">
         <span id="mathExprHint" class="font-mono text-[11px] text-blue-500"></span>
@@ -1135,7 +1135,6 @@
     };
 
     function renderMemberControls() {
-      // 🌟 保留重繪前已輸入的自訂數值
       const existingCustomValues = {};
       document.querySelectorAll(".custom-split-input").forEach(input => {
         if (input.dataset.member && input.value) {
@@ -2086,7 +2085,7 @@
       }
     }
 
-    // 🌟 修正後的儲存按鈕：修正自訂分帳台幣運算與防連點
+    // 儲存紀錄按鈕
     document.getElementById("saveRecordBtn").addEventListener("click", async function() {
       if (!requireGoogleLogin()) return;
       const saveBtn = this;
@@ -2124,7 +2123,6 @@
           document.querySelectorAll(".custom-split-input").forEach(i => {
             const v = parseFloat(i.value) || 0;
             if (v > 0) {
-              // 修正：統一轉為折合後之台幣整數儲存，避免重複換算
               const twdShare = (sc === "TWD") ? Math.round(v) : Math.round(v * rate);
               splitData.push(`${i.dataset.member}:${twdShare}`);
               sum += v;
@@ -2225,7 +2223,7 @@
       if (cachedRecords.length === 0) return alert("目前沒有可匯出的資料或尚未解鎖！");
       let txtContent = `=== 記帳備份【${currentSheet}】(${getFormattedDate()}) ===\n\n`;
       cachedRecords.forEach((r, i) => {
-        let typeStr = r.type === 'expense' ? '分帳支出' : (r.type === 'personal' ? '個人支出' : '收入');
+        const typeStr = r.type === 'expense' ? '分帳支出' : (r.type === 'personal' ? '個人支出' : '收入');
         txtContent += `【#${i + 1}】${r.date} | [${r.category || '其他'}] ${typeStr} - ${r.title}\n`;
         txtContent += `  金額: ${r.currency} ${r.originalAmount} (折合 NT$ ${r.twdAmount})\n`;
         if (r.type === 'expense') {
