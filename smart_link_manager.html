@@ -6,7 +6,6 @@
     <title>Smart Link Manager</title>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <style>
-        /* 預設深色主題變數 */
         :root {
             --primary: #6366f1;
             --primary-hover: #4f46e5;
@@ -17,9 +16,9 @@
             --border-color: #334155;
             --danger: #ef4444;
             --success: #10b981;
+            --warning: #f59e0b;
         }
 
-        /* 淺色主題變數 */
         body.light-mode {
             --bg-dark: #f8fafc;
             --card-dark: #ffffff;
@@ -44,7 +43,6 @@
             transition: background-color 0.3s, color 0.3s;
         }
 
-        /* 頂部導覽列 */
         header {
             background-color: var(--card-dark);
             padding: 1rem 2rem;
@@ -65,330 +63,134 @@
             gap: 0.5rem;
         }
 
-        .header-actions {
-            display: flex;
-            gap: 0.8rem;
-            align-items: center;
-        }
+        .header-actions { display: flex; gap: 0.8rem; align-items: center; }
 
-        /* 按鈕樣式 */
         button {
-            cursor: pointer;
-            border: none;
-            border-radius: 8px;
-            padding: 0.6rem 1.2rem;
-            font-size: 0.95rem;
-            font-weight: 500;
-            transition: all 0.2s;
-            display: inline-flex;
-            align-items: center;
-            gap: 0.5rem;
+            cursor: pointer; border: none; border-radius: 8px;
+            padding: 0.6rem 1.2rem; font-size: 0.95rem; font-weight: 500;
+            transition: all 0.2s; display: inline-flex; align-items: center; gap: 0.5rem;
         }
 
-        .btn-icon-only {
-            padding: 0.6rem;
-            border-radius: 50%;
-            width: 40px;
-            height: 40px;
-            justify-content: center;
-        }
+        .btn-icon-only { padding: 0.6rem; border-radius: 50%; width: 40px; height: 40px; justify-content: center; }
+        .btn-primary { background-color: var(--primary); color: white; }
+        .btn-primary:hover { background-color: var(--primary-hover); }
+        .btn-outline { background-color: transparent; color: var(--text-main); border: 1px solid var(--border-color); }
+        .btn-outline:hover { background-color: var(--border-color); }
+        .btn-danger { background-color: rgba(239, 68, 68, 0.1); color: var(--danger); border: 1px solid rgba(239, 68, 68, 0.2); }
+        .btn-danger:hover { background-color: var(--danger); color: white; }
 
-        .btn-primary {
-            background-color: var(--primary);
-            color: white;
-        }
-
-        .btn-primary:hover {
-            background-color: var(--primary-hover);
-        }
-
-        .btn-outline {
-            background-color: transparent;
-            color: var(--text-main);
-            border: 1px solid var(--border-color);
-        }
-
-        .btn-outline:hover {
-            background-color: var(--border-color);
-        }
-
-        .btn-danger {
-            background-color: rgba(239, 68, 68, 0.1);
-            color: var(--danger);
-            border: 1px solid rgba(239, 68, 68, 0.2);
-        }
-
-        .btn-danger:hover {
-            background-color: var(--danger);
-            color: white;
-        }
-
-        /* 登入畫面 */
         #login-screen {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            padding: 2rem;
+            flex: 1; display: flex; flex-direction: column;
+            justify-content: center; align-items: center; padding: 2rem;
         }
 
         .login-card {
-            background-color: var(--card-dark);
-            padding: 3rem;
-            border-radius: 16px;
-            text-align: center;
-            border: 1px solid var(--border-color);
-            max-width: 450px;
-            width: 100%;
-            transition: background-color 0.3s, border-color 0.3s;
+            background-color: var(--card-dark); padding: 3rem;
+            border-radius: 16px; text-align: center; border: 1px solid var(--border-color);
+            max-width: 450px; width: 100%; transition: background-color 0.3s, border-color 0.3s;
         }
-
         .login-card h2 { margin-bottom: 0.5rem; font-size: 1.8rem; }
         .login-card p { color: var(--text-muted); margin-bottom: 2rem; line-height: 1.5; }
         .login-buttons { display: flex; flex-direction: column; gap: 1rem; }
 
-        /* 主應用畫面 */
-        #app-screen {
-            display: none;
-            padding: 2rem;
-            max-width: 1200px;
-            margin: 0 auto;
-            width: 100%;
-        }
+        #app-screen { display: none; padding: 2rem; max-width: 1200px; margin: 0 auto; width: 100%; }
 
         .input-section {
-            background-color: var(--card-dark);
-            padding: 1.5rem;
-            border-radius: 12px;
-            margin-bottom: 2rem;
-            border: 1px solid var(--border-color);
-            display: flex;
-            gap: 1rem;
-            transition: background-color 0.3s, border-color 0.3s;
+            background-color: var(--card-dark); padding: 1.5rem; border-radius: 12px;
+            margin-bottom: 2rem; border: 1px solid var(--border-color);
+            display: flex; gap: 1rem; transition: background-color 0.3s, border-color 0.3s;
         }
 
         .input-section input {
-            flex: 1;
-            padding: 0.8rem 1rem;
-            border-radius: 8px;
-            border: 1px solid var(--border-color);
-            background-color: var(--bg-dark);
-            color: var(--text-main);
-            font-size: 1rem;
-            transition: background-color 0.3s, color 0.3s, border-color 0.3s;
+            flex: 1; padding: 0.8rem 1rem; border-radius: 8px;
+            border: 1px solid var(--border-color); background-color: var(--bg-dark);
+            color: var(--text-main); font-size: 1rem; transition: background-color 0.3s, color 0.3s, border-color 0.3s;
         }
+        .input-section input:focus { outline: none; border-color: var(--primary); }
 
-        .input-section input:focus {
-            outline: none;
-            border-color: var(--primary);
-        }
-
-        /* 連結卡片網格 */
-        .links-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-            gap: 1.5rem;
-        }
+        .links-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 1.5rem; }
 
         .link-card {
-            background-color: var(--card-dark);
-            border-radius: 12px;
-            padding: 1.5rem;
-            border: 1px solid var(--border-color);
-            position: relative;
+            background-color: var(--card-dark); border-radius: 12px; padding: 1.5rem;
+            border: 1px solid var(--border-color); position: relative;
             transition: transform 0.2s, box-shadow 0.2s, background-color 0.3s, border-color 0.3s;
-            display: flex;
-            flex-direction: column;
+            display: flex; flex-direction: column;
         }
-
-        .link-card:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
-            border-color: var(--primary);
-        }
-
-        .badge {
-            position: absolute;
-            top: 1rem;
-            right: 1rem;
-            background-color: rgba(99, 102, 241, 0.1);
-            color: var(--primary);
-            padding: 0.3rem 0.6rem;
-            border-radius: 20px;
-            font-size: 0.75rem;
-            font-weight: 600;
-        }
-
-        .link-title {
-            font-size: 1.1rem;
-            font-weight: 600;
-            margin-bottom: 0.5rem;
-            margin-right: 3rem;
-            display: -webkit-box;
-            -webkit-line-clamp: 2;
-            -webkit-box-orient: vertical;
-            overflow: hidden;
-        }
-
-        .link-url {
-            color: var(--primary);
-            text-decoration: none;
-            font-size: 0.9rem;
-            margin-bottom: 1rem;
-            word-break: break-all;
-            display: -webkit-box;
-            -webkit-line-clamp: 1;
-            -webkit-box-orient: vertical;
-            overflow: hidden;
-        }
-
-        .link-url:hover { text-decoration: underline; }
+        .link-card:hover { transform: translateY(-2px); box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1); border-color: var(--primary); }
         
-        .link-desc {
-            color: var(--text-muted);
-            font-size: 0.9rem;
-            flex: 1;
-            margin-bottom: 1.5rem;
-            line-height: 1.5;
+        .badge {
+            position: absolute; top: 1rem; right: 1rem;
+            background-color: rgba(99, 102, 241, 0.1); color: var(--primary);
+            padding: 0.3rem 0.6rem; border-radius: 20px; font-size: 0.75rem; font-weight: 600;
         }
+        .link-title { font-size: 1.1rem; font-weight: 600; margin-bottom: 0.5rem; margin-right: 3rem; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+        .link-url { color: var(--primary); text-decoration: none; font-size: 0.9rem; margin-bottom: 1rem; word-break: break-all; display: -webkit-box; -webkit-line-clamp: 1; -webkit-box-orient: vertical; overflow: hidden; }
+        .link-url:hover { text-decoration: underline; }
+        .link-desc { color: var(--text-muted); font-size: 0.9rem; flex: 1; margin-bottom: 1.5rem; line-height: 1.5; }
+        
+        .card-actions { display: flex; justify-content: space-between; gap: 0.5rem; border-top: 1px solid var(--border-color); padding-top: 1rem; }
+        .card-actions button { flex: 1; justify-content: center; }
 
-        .card-actions {
-            display: flex;
-            justify-content: space-between;
-            gap: 0.5rem;
-            border-top: 1px solid var(--border-color);
-            padding-top: 1rem;
-        }
-
-        .card-actions button {
-            flex: 1;
-            justify-content: center;
-        }
-
-        /* 模態框 (Modal) */
         .modal-overlay {
-            display: none;
-            position: fixed;
-            top: 0; left: 0; width: 100%; height: 100%;
-            background-color: rgba(0, 0, 0, 0.7);
-            z-index: 1000;
-            justify-content: center;
-            align-items: center;
+            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background-color: rgba(0, 0, 0, 0.7); z-index: 1000; justify-content: center; align-items: center;
         }
-
         .modal {
-            background-color: var(--card-dark);
-            padding: 2rem;
-            border-radius: 12px;
-            width: 90%;
-            max-width: 500px;
-            border: 1px solid var(--border-color);
-            transition: background-color 0.3s, border-color 0.3s;
+            background-color: var(--card-dark); padding: 2rem; border-radius: 12px;
+            width: 90%; max-width: 500px; border: 1px solid var(--border-color); transition: background-color 0.3s, border-color 0.3s;
         }
-
         .modal h3 { margin-bottom: 1.5rem; }
         .form-group { margin-bottom: 1rem; }
-        .form-group label {
-            display: block; margin-bottom: 0.5rem;
-            color: var(--text-muted); font-size: 0.9rem;
-        }
-
+        .form-group label { display: block; margin-bottom: 0.5rem; color: var(--text-muted); font-size: 0.9rem; }
         .form-group input, .form-group textarea {
-            width: 100%; padding: 0.8rem;
-            border-radius: 8px;
-            border: 1px solid var(--border-color);
-            background-color: var(--bg-dark);
-            color: var(--text-main);
-            transition: background-color 0.3s, color 0.3s, border-color 0.3s;
+            width: 100%; padding: 0.8rem; border-radius: 8px; border: 1px solid var(--border-color);
+            background-color: var(--bg-dark); color: var(--text-main); transition: background-color 0.3s, color 0.3s, border-color 0.3s;
         }
-
         .form-group textarea { resize: vertical; min-height: 80px; }
-        .modal-actions {
-            display: flex; justify-content: flex-end;
-            gap: 1rem; margin-top: 1.5rem;
-        }
+        .modal-actions { display: flex; justify-content: flex-end; gap: 1rem; margin-top: 1.5rem; }
 
-        /* Toast 提示 */
-        #toast-container {
-            position: fixed; bottom: 2rem; right: 2rem;
-            display: flex; flex-direction: column; gap: 0.5rem; z-index: 9999;
-        }
-
+        #toast-container { position: fixed; bottom: 2rem; right: 2rem; display: flex; flex-direction: column; gap: 0.5rem; z-index: 9999; }
         .toast {
-            background-color: var(--card-dark);
-            color: var(--text-main);
-            padding: 1rem 1.5rem;
-            border-radius: 8px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
-            border-left: 4px solid var(--primary);
-            display: flex; align-items: center; gap: 0.5rem;
-            animation: slideIn 0.3s ease forwards;
+            background-color: var(--card-dark); color: var(--text-main); padding: 1rem 1.5rem;
+            border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.2); border-left: 4px solid var(--primary);
+            display: flex; align-items: center; gap: 0.5rem; animation: slideIn 0.3s ease forwards;
             opacity: 0; transform: translateX(100%);
         }
-
         .toast.error { border-left-color: var(--danger); }
         .toast.success { border-left-color: var(--success); }
+        .toast.warning { border-left-color: var(--warning); }
 
         @keyframes slideIn { to { opacity: 1; transform: translateX(0); } }
         @keyframes fadeOut { to { opacity: 0; transform: translateY(10px); } }
-
-        /* 載入動畫 */
-        .loader {
-            display: none;
-            border: 3px solid var(--border-color);
-            border-top: 3px solid var(--primary);
-            border-radius: 50%;
-            width: 20px; height: 20px;
-            animation: spin 1s linear infinite;
-        }
-
-        .spin-anim { animation: spin 1s linear; }
-
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+        .loader {
+            display: none; border: 3px solid var(--border-color); border-top: 3px solid var(--primary);
+            border-radius: 50%; width: 20px; height: 20px; animation: spin 1s linear infinite;
+        }
+        .spin-anim { animation: spin 1s linear; }
     </style>
 </head>
 <body>
 
-    <!-- 頂部導覽列 -->
     <header>
-        <div class="logo">
-            <i class="fas fa-link"></i> Smart Link Manager
-        </div>
+        <div class="logo"><i class="fas fa-link"></i> Smart Link Manager</div>
         <div class="header-actions">
             <span id="user-info" style="display: none; color: var(--text-muted); font-size: 0.9rem;"></span>
-            
-            <!-- 重新整理按鈕 -->
-            <button class="btn-outline btn-icon-only" id="btn-refresh" onclick="refreshData()" title="重新整理資料">
-                <i class="fas fa-sync-alt"></i>
-            </button>
-
-            <!-- 深淺色切換按鈕 -->
-            <button class="btn-outline btn-icon-only" id="btn-theme" onclick="toggleTheme()" title="切換深/淺色模式">
-                <i class="fas fa-sun"></i>
-            </button>
-
-            <!-- API 設定按鈕 -->
-            <button class="btn-outline btn-icon-only" onclick="openApiSettings()" title="API 設定">
-                <i class="fas fa-cog"></i>
-            </button>
-
-            <!-- 登出按鈕 -->
-            <button class="btn-outline btn-icon-only" id="btn-logout" style="display: none;" onclick="handleLogout()" title="登出">
-                <i class="fas fa-sign-out-alt"></i>
-            </button>
+            <button class="btn-outline btn-icon-only" id="btn-refresh" onclick="window.refreshData()" title="重新整理資料"><i class="fas fa-sync-alt"></i></button>
+            <button class="btn-outline btn-icon-only" id="btn-theme" onclick="window.toggleTheme()" title="切換深/淺色模式"><i class="fas fa-sun"></i></button>
+            <button class="btn-outline btn-icon-only" onclick="window.openApiSettings()" title="API 設定"><i class="fas fa-cog"></i></button>
+            <button class="btn-outline btn-icon-only" id="btn-logout" style="display: none;" onclick="window.handleLogout()" title="登出"><i class="fas fa-sign-out-alt"></i></button>
         </div>
     </header>
 
-    <!-- 登入畫面 -->
     <main id="login-screen">
         <div class="login-card">
-            <h2>歡迎回來</h2>
-            <p>使用 Gemini AI 自動解析您的連結內容、分類與地點資訊。</p>
-            
+            <h2>雙引擎連結管理器</h2>
+            <p>優先使用 Gemini AI，當 AI 無法使用時自動切換至 Microlink 免費解析引擎，確保資料完整。</p>
             <div class="login-buttons">
                 <button class="btn-outline" id="btn-google-login">
-                    <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" style="width: 18px; height: 18px;">
+                    <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" style="width: 18px; height: 18px;" alt="Google">
                     Google 登入 (雲端模式)
                 </button>
                 <button class="btn-primary" id="btn-local-login" style="margin-top: 10px;">
@@ -398,102 +200,55 @@
         </div>
     </main>
 
-    <!-- 主應用畫面 -->
     <main id="app-screen">
         <div class="input-section">
-            <input type="text" id="url-input" placeholder="貼上任何連結 (支援 FB, YT, IG, Threads, Google Maps)..." onkeypress="handleEnter(event)">
-            <button class="btn-primary" id="btn-add-url" onclick="processAndSaveUrl()">
+            <input type="text" id="url-input" placeholder="貼上任何連結 (支援 FB, YT, IG, Threads, Google Maps 等自動分類)..." onkeypress="window.handleEnter(event)">
+            <button class="btn-primary" id="btn-add-url" onclick="window.processAndSaveUrl()">
                 <span class="btn-text">解析並儲存</span>
                 <div class="loader" id="add-loader"></div>
             </button>
         </div>
-        
-        <div class="links-grid" id="links-container">
-            <!-- 連結卡片會動態生成在這裡 -->
-        </div>
+        <div class="links-grid" id="links-container"></div>
     </main>
 
-    <!-- API 設定 Modal -->
     <div class="modal-overlay" id="api-modal">
         <div class="modal">
             <h3>⚙️ 系統設定</h3>
             <div class="form-group">
-                <label>Gemini API Key</label>
+                <label>Gemini API Key (選填)</label>
                 <input type="password" id="api-key-input" placeholder="AIzaSy...">
-                <p style="font-size: 0.8rem; color: var(--text-muted); margin-top: 0.5rem;">金鑰將安全地儲存在您的瀏覽器中。若未設定將以預設值儲存網址。</p>
+                <p style="font-size: 0.8rem; color: var(--text-muted); margin-top: 0.5rem;">若不填寫或金鑰失效(如402錯誤)，系統將自動切換使用免費備用解析引擎。</p>
             </div>
             <div class="modal-actions">
-                <button class="btn-outline" onclick="closeModal('api-modal')">取消</button>
-                <button class="btn-primary" onclick="saveApiKey()">儲存設定</button>
+                <button class="btn-outline" onclick="window.closeModal('api-modal')">取消</button>
+                <button class="btn-primary" onclick="window.saveApiKey()">儲存設定</button>
             </div>
         </div>
     </div>
 
-    <!-- 編輯連結 Modal -->
     <div class="modal-overlay" id="edit-modal">
         <div class="modal">
             <h3>✏️ 編輯連結</h3>
             <input type="hidden" id="edit-id">
-            <div class="form-group">
-                <label>標題</label>
-                <input type="text" id="edit-title">
-            </div>
-            <div class="form-group">
-                <label>網址</label>
-                <input type="text" id="edit-url">
-            </div>
-            <div class="form-group">
-                <label>分類 (如: 美食、景點、影片)</label>
-                <input type="text" id="edit-category">
-            </div>
-            <div class="form-group">
-                <label>摘要說明</label>
-                <textarea id="edit-desc"></textarea>
-            </div>
+            <div class="form-group"><label>標題</label><input type="text" id="edit-title"></div>
+            <div class="form-group"><label>網址</label><input type="text" id="edit-url"></div>
+            <div class="form-group"><label>分類</label><input type="text" id="edit-category"></div>
+            <div class="form-group"><label>摘要</label><textarea id="edit-desc"></textarea></div>
             <div class="modal-actions">
-                <button class="btn-outline" onclick="closeModal('edit-modal')">取消</button>
-                <button class="btn-primary" onclick="saveEdit()">儲存變更</button>
+                <button class="btn-outline" onclick="window.closeModal('edit-modal')">取消</button>
+                <button class="btn-primary" onclick="window.saveEdit()">儲存變更</button>
             </div>
         </div>
     </div>
 
-    <!-- Toast 容器 -->
     <div id="toast-container"></div>
 
-    <!-- Firebase SDK (v9 compat) -->
-    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-auth-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore-compat.js"></script>
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInWithPopup, GoogleAuthProvider, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, collection, addDoc, onSnapshot, query, deleteDoc, doc, updateDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-    <script>
-        // ==========================================
-        // 1. 初始化與主題設定
-        // ==========================================
-        
-        // 載入主題偏好
-        function initTheme() {
-            const savedTheme = localStorage.getItem('theme');
-            const btnIcon = document.querySelector('#btn-theme i');
-            if (savedTheme === 'light') {
-                document.body.classList.add('light-mode');
-                btnIcon.className = 'fas fa-moon';
-            } else {
-                btnIcon.className = 'fas fa-sun';
-            }
-        }
-        initTheme();
-
-        // 切換主題
-        function toggleTheme() {
-            document.body.classList.toggle('light-mode');
-            const isLight = document.body.classList.contains('light-mode');
-            localStorage.setItem('theme', isLight ? 'light' : 'dark');
-            
-            const btnIcon = document.querySelector('#btn-theme i');
-            btnIcon.className = isLight ? 'fas fa-moon' : 'fas fa-sun';
-        }
-
-        // Firebase 專屬設定
+        // 使用您專屬的 Firebase 設定
         const firebaseConfig = {
             apiKey: "AIzaSyAt0YAxzPbFZHyLKQLN1me3N9DQKnCrylg",
             authDomain: "link-1b206.firebaseapp.com",
@@ -503,250 +258,230 @@
             appId: "1:123456789:web:abcdef"
         };
 
-        let app, auth, db;
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+
         let currentUser = null;
         let isLocalMode = false;
+        let unsubscribeSnapshot = null;
+        const appId = 'smart-link-manager'; 
 
-        try {
-            app = firebase.initializeApp(firebaseConfig);
-            auth = firebase.auth();
-            db = firebase.firestore();
-        } catch (e) {
-            console.error("Firebase 初始化失敗:", e);
-        }
+        // 主題控制
+        window.initTheme = () => {
+            if (localStorage.getItem('theme') === 'light') {
+                document.body.classList.add('light-mode');
+                document.querySelector('#btn-theme i').className = 'fas fa-moon';
+            }
+        };
+        window.initTheme();
 
-        // ==========================================
-        // 2. UI 工具函數
-        // ==========================================
-        function showToast(message, type = 'info') {
+        window.toggleTheme = () => {
+            document.body.classList.toggle('light-mode');
+            const isLight = document.body.classList.contains('light-mode');
+            localStorage.setItem('theme', isLight ? 'light' : 'dark');
+            document.querySelector('#btn-theme i').className = isLight ? 'fas fa-moon' : 'fas fa-sun';
+        };
+
+        // Toast 系統
+        window.showToast = (message, type = 'info') => {
             const container = document.getElementById('toast-container');
             const toast = document.createElement('div');
             toast.className = `toast ${type}`;
-            
-            let icon = 'info-circle';
-            if (type === 'error') icon = 'exclamation-circle';
-            if (type === 'success') icon = 'check-circle';
-            
+            const icon = type === 'error' ? 'exclamation-circle' : type === 'success' ? 'check-circle' : type === 'warning' ? 'exclamation-triangle' : 'info-circle';
             toast.innerHTML = `<i class="fas fa-${icon}"></i> ${message}`;
             container.appendChild(toast);
+            setTimeout(() => { toast.style.animation = 'fadeOut 0.3s ease forwards'; setTimeout(() => toast.remove(), 300); }, 3500);
+        };
 
-            setTimeout(() => {
-                toast.style.animation = 'fadeOut 0.3s ease forwards';
-                setTimeout(() => toast.remove(), 300);
-            }, 3000);
-        }
+        window.openModal = (id) => document.getElementById(id).style.display = 'flex';
+        window.closeModal = (id) => document.getElementById(id).style.display = 'none';
+        window.handleEnter = (event) => { if (event.key === "Enter") window.processAndSaveUrl(); };
 
-        function openModal(id) { document.getElementById(id).style.display = 'flex'; }
-        function closeModal(id) { document.getElementById(id).style.display = 'none'; }
-        
-        function handleEnter(event) {
-            if (event.key === "Enter") processAndSaveUrl();
-        }
+        onAuthStateChanged(auth, (user) => {
+            if (user) {
+                currentUser = user;
+                isLocalMode = false;
+                showAppScreen(`已登入: ${user.email || 'Google 用戶'}`);
+                loadLinks();
+            }
+        });
 
-        // 重新整理資料
-        async function refreshData() {
-            const icon = document.querySelector('#btn-refresh i');
-            icon.classList.add('spin-anim'); // 加入旋轉動畫
-            
-            showToast("正在重新整理資料...");
-            await loadLinks();
-            
-            setTimeout(() => { icon.classList.remove('spin-anim'); }, 1000);
-        }
-
-        // ==========================================
-        // 3. 認證與模式切換
-        // ==========================================
-        if(auth) {
-            auth.onAuthStateChanged(user => {
-                if (user) {
-                    currentUser = user;
-                    isLocalMode = false;
-                    showAppScreen(`已登入: ${user.email || 'Google 用戶'}`);
-                    loadLinks();
-                }
-            });
-        }
-
-        document.getElementById('btn-google-login').addEventListener('click', () => {
-            const provider = new firebase.auth.GoogleAuthProvider();
-            auth.signInWithPopup(provider).catch(error => {
-                showToast("登入失敗: " + error.message, 'error');
-            });
+        document.getElementById('btn-google-login').addEventListener('click', async () => {
+            try { await signInWithPopup(auth, new GoogleAuthProvider()); } 
+            catch (error) { window.showToast("登入失敗: " + error.message, 'error'); }
         });
 
         document.getElementById('btn-local-login').addEventListener('click', () => {
-            isLocalMode = true;
-            currentUser = null;
+            isLocalMode = true; currentUser = null;
             showAppScreen("模式: 本機測試 (資料將儲存於瀏覽器)");
             loadLinks();
-            showToast("已進入本機模式", "success");
+            window.showToast("已進入本機模式", "success");
         });
 
         function showAppScreen(userInfoText) {
             document.getElementById('login-screen').style.display = 'none';
             document.getElementById('app-screen').style.display = 'block';
             document.getElementById('btn-logout').style.display = 'inline-flex';
-            const userInfo = document.getElementById('user-info');
-            userInfo.style.display = 'inline';
-            userInfo.textContent = userInfoText;
+            document.getElementById('user-info').style.display = 'inline';
+            document.getElementById('user-info').textContent = userInfoText;
         }
 
-        function handleLogout() {
-            if (isLocalMode) {
-                location.reload();
-            } else {
-                auth.signOut().then(() => location.reload());
-            }
-        }
+        window.handleLogout = async () => {
+            if (isLocalMode) location.reload();
+            else { if(unsubscribeSnapshot) unsubscribeSnapshot(); await signOut(auth); location.reload(); }
+        };
 
-        // ==========================================
-        // 4. API 金鑰管理
-        // ==========================================
-        function openApiSettings() {
-            const savedKey = localStorage.getItem('gemini_api_key') || '';
-            document.getElementById('api-key-input').value = savedKey;
-            openModal('api-modal');
-        }
-
-        function saveApiKey() {
+        window.openApiSettings = () => { document.getElementById('api-key-input').value = localStorage.getItem('gemini_api_key') || ''; window.openModal('api-modal'); };
+        window.saveApiKey = () => {
             const key = document.getElementById('api-key-input').value.trim();
-            if (key) {
-                localStorage.setItem('gemini_api_key', key);
-                showToast("API 金鑰已儲存", "success");
-            } else {
-                localStorage.removeItem('gemini_api_key');
-                showToast("API 金鑰已清除");
-            }
-            closeModal('api-modal');
-        }
+            if (key) { localStorage.setItem('gemini_api_key', key); window.showToast("API 金鑰已儲存", "success"); } 
+            else { localStorage.removeItem('gemini_api_key'); window.showToast("API 金鑰已清除"); }
+            window.closeModal('api-modal');
+        };
 
-        // ==========================================
-        // 5. Gemini 網址解析核心 (修復為最穩定的 1.5 Flash 版)
-        // ==========================================
-        async function analyzeUrlWithGemini(url) {
-            const apiKey = localStorage.getItem('gemini_api_key');
-            if (!apiKey) return null;
-
-            // 確保使用 100% 正確的 gemini-1.5-flash 端點，避免 404 錯誤
-            const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
-            
-            const prompt = `
-            請分析以下網址並萃取資訊。如果遇到權限阻擋無法訪問該網頁，請直接從「網址字串」本身的結構(如帳號、經緯度、地點名稱)進行推敲。
-            網址：${url}
-            
-            請嚴格以 JSON 格式回傳，不要包含 markdown 標記 (如 \`\`\`json)，只需回傳純 JSON 字串：
-            {
-                "title": "網頁標題或地點名稱或帳號名稱",
-                "category": "分類名稱(如：美食、景點、影音、社群)",
-                "description": "簡短摘要或說明"
-            }
-            `;
+        
+        // 引擎 A：Gemini AI 解析
+        async function analyzeUrlWithGemini(url, apiKey) {
+            const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash:generateContent?key=${apiKey}`;
+            const prompt = `分析網址並以純 JSON 回傳 {"title": "名稱", "category": "分類名稱", "description": "摘要"}。網址：${url}`;
 
             try {
                 const response = await fetch(endpoint, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        contents: [{ parts: [{ text: prompt }] }],
-                        generationConfig: { temperature: 0.2 }
-                    })
+                    body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }], generationConfig: { temperature: 0.2 } })
                 });
 
-                if (!response.ok) throw new Error(`API 錯誤: ${response.status}`);
-
+                if (!response.ok) throw new Error(`Status: ${response.status}`);
                 const data = await response.json();
-                let textResult = data.candidates[0].content.parts[0].text;
-                
-                textResult = textResult.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
-                return JSON.parse(textResult);
-
+                const match = data.candidates[0].content.parts[0].text.match(/\{[\s\S]*\}/);
+                return JSON.parse(match[0]);
             } catch (error) {
-                console.warn("Gemini 解析失敗:", error);
-                return null;
+                console.warn("Gemini Engine Failed:", error.message);
+                return null; // Return null to trigger fallback
             }
         }
 
-        // ==========================================
-        // 6. 新增與儲存流程
-        // ==========================================
-        async function processAndSaveUrl() {
+        // 引擎 B：本地規則匹配 + Microlink 免費 API
+        async function analyzeUrlWithFallback(url) {
+            const lower = url.toLowerCase();
+            let category = "未分類";
+
+            // 1. 本地智慧規則匹配 (支援九大平台)
+            if (lower.includes("youtube.") || lower.includes("youtu.be")) category = "YouTube 影片";
+            else if (lower.includes("facebook.") || lower.includes("fb.me") || lower.includes("fb.watch")) category = "Facebook";
+            else if (lower.includes("instagram.") || lower.includes("instagr.am")) category = "Instagram";
+            else if (lower.includes("threads.net")) category = "Threads";
+            else if (lower.includes("google.") && lower.includes("/maps") || lower.includes("maps.app.goo.gl")) category = "Google Maps 地點";
+            else if (lower.includes("twitch.tv")) category = "Twitch 直播";
+            else if (lower.includes("github.com")) category = "GitHub 開發";
+            else if (lower.includes("foodpanda.")) category = "Foodpanda 美食";
+            else if (lower.includes("ubereats.")) category = "Uber Eats 美食";
+
+            let title = "新連結 (備用引擎解析)";
+            let description = "成功使用備用引擎進行本機分類，請點擊編輯修改詳細資訊。";
+
+            // 2. Microlink 免費 API 抓取標題與摘要 (無需金鑰)
+            try {
+                const res = await fetch(`https://api.microlink.io/?url=${encodeURIComponent(url)}`);
+                if (res.ok) {
+                    const data = await res.json();
+                    if (data.status === "success" && data.data) {
+                        if (data.data.title) title = data.data.title;
+                        if (data.data.description) description = data.data.description;
+                    }
+                }
+            } catch (e) { console.warn("Microlink Fallback Fetch Failed:", e); }
+
+            return { title, category, description };
+        }
+
+        window.processAndSaveUrl = async () => {
             const input = document.getElementById('url-input');
             const url = input.value.trim();
-            if (!url) return showToast("請輸入網址", "error");
+            if (!url) return window.showToast("請輸入網址", "error");
 
             const btn = document.getElementById('btn-add-url');
             const loader = document.getElementById('add-loader');
             const btnText = btn.querySelector('.btn-text');
-            btn.disabled = true;
-            btnText.style.display = 'none';
-            loader.style.display = 'block';
+            btn.disabled = true; btnText.style.display = 'none'; loader.style.display = 'block';
+            window.showToast("正在解析網址...");
 
-            showToast("正在解析網址...");
+            // 雙引擎切換邏輯
+            let aiData = null;
+            const apiKey = localStorage.getItem('gemini_api_key');
+            
+            if (apiKey) {
+                aiData = await analyzeUrlWithGemini(url, apiKey);
+            }
 
-            const aiData = await analyzeUrlWithGemini(url);
+            if (!aiData) {
+                window.showToast("AI 解析略過或失敗 (如 402)，已啟動免費備用解析引擎", "warning");
+                aiData = await analyzeUrlWithFallback(url);
+            } else {
+                window.showToast("Gemini AI 智能解析成功", "success");
+            }
             
             const linkData = {
                 url: url,
-                title: aiData?.title || "新連結 (未命名)",
-                category: aiData?.category || "未分類",
-                description: aiData?.description || "無摘要 (系統無法自動解析，請點擊編輯手動修改)",
-                createdAt: new Date().toISOString()
+                title: aiData.title,
+                category: aiData.category,
+                description: aiData.description,
+                createdAt: Date.now() 
             };
 
-            if (isLocalMode) {
-                saveToLocal(linkData);
-            } else {
-                await saveToCloud(linkData);
+            // 寫入儲存空間
+            try {
+                if (isLocalMode) {
+                    const links = JSON.parse(localStorage.getItem('my_links') || '[]');
+                    linkData.id = 'local_' + Date.now(); 
+                    links.push(linkData);
+                    localStorage.setItem('my_links', JSON.stringify(links));
+                    loadLinks();
+                } else {
+                    if(currentUser) {
+                        // 嚴格遵守路徑規範
+                        const collRef = collection(db, 'artifacts', appId, 'users', currentUser.uid, 'links');
+                        await addDoc(collRef, linkData);
+                    }
+                }
+            } catch (err) {
+                window.showToast("儲存失敗: " + err.message, "error");
             }
 
             input.value = '';
-            btn.disabled = false;
-            btnText.style.display = 'inline';
-            loader.style.display = 'none';
-            
-            showToast(aiData ? "儲存成功！已自動分類" : "儲存成功 (使用預設值)", "success");
-            loadLinks();
-        }
+            btn.disabled = false; btnText.style.display = 'inline'; loader.style.display = 'none';
+        };
 
-        // ==========================================
-        // 7. 資料 CRUD 操作
-        // ==========================================
-        function saveToLocal(data) {
-            const links = JSON.parse(localStorage.getItem('my_links') || '[]');
-            data.id = 'local_' + Date.now(); 
-            links.unshift(data);
-            localStorage.setItem('my_links', JSON.stringify(links));
-        }
-
-        async function saveToCloud(data) {
-            if(!currentUser) return;
-            await db.collection('users').doc(currentUser.uid).collection('links').add(data);
-        }
-
-        async function loadLinks() {
-            const container = document.getElementById('links-container');
-            container.innerHTML = '';
-            
-            let links = [];
-            
+        function loadLinks() {
             if (isLocalMode) {
-                links = JSON.parse(localStorage.getItem('my_links') || '[]');
+                const links = JSON.parse(localStorage.getItem('my_links') || '[]');
+                links.sort((a, b) => b.createdAt - a.createdAt);
                 renderLinks(links);
             } else {
                 if(!currentUser) return;
-                // 由於 Firebase onSnapshot 是即時監聽，第一次載入或手動刷新時重新綁定即可
-                db.collection('users').doc(currentUser.uid).collection('links')
-                  .orderBy('createdAt', 'desc')
-                  .onSnapshot(snapshot => {
-                      links = [];
-                      snapshot.forEach(doc => {
-                          links.push({ id: doc.id, ...doc.data() });
-                      });
-                      renderLinks(links);
-                  });
+                const collRef = collection(db, 'artifacts', appId, 'users', currentUser.uid, 'links');
+                const q = query(collRef);
+                
+                if(unsubscribeSnapshot) unsubscribeSnapshot();
+                
+                unsubscribeSnapshot = onSnapshot(q, (snapshot) => {
+                    const links = [];
+                    snapshot.forEach(doc => links.push({ id: doc.id, ...doc.data() }));
+                    links.sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
+                    renderLinks(links);
+                }, (error) => { window.showToast("讀取資料失敗", "error"); });
             }
         }
+
+        window.refreshData = async () => {
+            const icon = document.querySelector('#btn-refresh i');
+            icon.classList.add('spin-anim');
+            window.showToast("資料已重新整理");
+            loadLinks();
+            setTimeout(() => { icon.classList.remove('spin-anim'); }, 1000);
+        };
 
         function renderLinks(links) {
             const container = document.getElementById('links-container');
@@ -757,41 +492,38 @@
                     <a href="${escapeHtml(link.url)}" target="_blank" class="link-url"><i class="fas fa-external-link-alt"></i> ${escapeHtml(link.url)}</a>
                     <p class="link-desc">${escapeHtml(link.description)}</p>
                     <div class="card-actions">
-                        <button class="btn-outline" onclick="openEdit('${link.id}')"><i class="fas fa-edit"></i> 編輯</button>
-                        <button class="btn-danger" onclick="deleteLink('${link.id}')"><i class="fas fa-trash"></i> 刪除</button>
+                        <button class="btn-outline" onclick="window.openEdit('${link.id}')"><i class="fas fa-edit"></i> 編輯</button>
+                        <button class="btn-danger" onclick="window.deleteLink('${link.id}')"><i class="fas fa-trash"></i> 刪除</button>
                     </div>
                 </div>
             `).join('');
             
-            if(links.length === 0) {
-                container.innerHTML = `<p style="color:var(--text-muted); text-align:center; grid-column: 1/-1; padding: 2rem;">目前還沒有儲存任何連結。</p>`;
-            }
+            if(links.length === 0) container.innerHTML = `<p style="color:var(--text-muted); text-align:center; grid-column: 1/-1; padding: 2rem;">目前還沒有儲存任何連結。</p>`;
         }
 
-        async function deleteLink(id) {
+        window.deleteLink = async (id) => {
             if (isLocalMode) {
                 let links = JSON.parse(localStorage.getItem('my_links') || '[]');
                 links = links.filter(l => l.id !== id);
                 localStorage.setItem('my_links', JSON.stringify(links));
                 loadLinks();
             } else {
-                await db.collection('users').doc(currentUser.uid).collection('links').doc(id).delete();
+                if(!currentUser) return;
+                const docRef = doc(db, 'artifacts', appId, 'users', currentUser.uid, 'links', id);
+                await deleteDoc(docRef);
             }
-            showToast("連結已刪除", "success");
-        }
+            window.showToast("連結已刪除", "success");
+        };
 
-        function openEdit(id) {
+        window.openEdit = (id) => {
             let targetLink = null;
             if (isLocalMode) {
-                const links = JSON.parse(localStorage.getItem('my_links') || '[]');
-                targetLink = links.find(l => l.id === id);
+                targetLink = JSON.parse(localStorage.getItem('my_links') || '[]').find(l => l.id === id);
             } else {
                 const card = document.getElementById(`card-${id}`);
                 targetLink = {
-                    id: id,
-                    title: card.querySelector('.link-title').innerText,
-                    url: card.querySelector('.link-url').href,
-                    category: card.querySelector('.badge').innerText,
+                    id: id, title: card.querySelector('.link-title').innerText,
+                    url: card.querySelector('.link-url').href, category: card.querySelector('.badge').innerText,
                     description: card.querySelector('.link-desc').innerText
                 };
             }
@@ -802,44 +534,31 @@
                 document.getElementById('edit-url').value = targetLink.url;
                 document.getElementById('edit-category').value = targetLink.category;
                 document.getElementById('edit-desc').value = targetLink.description;
-                openModal('edit-modal');
+                window.openModal('edit-modal');
             }
-        }
+        };
 
-        async function saveEdit() {
+        window.saveEdit = async () => {
             const id = document.getElementById('edit-id').value;
             const updatedData = {
-                title: document.getElementById('edit-title').value.trim(),
-                url: document.getElementById('edit-url').value.trim(),
-                category: document.getElementById('edit-category').value.trim(),
-                description: document.getElementById('edit-desc').value.trim()
+                title: document.getElementById('edit-title').value.trim(), url: document.getElementById('edit-url').value.trim(),
+                category: document.getElementById('edit-category').value.trim(), description: document.getElementById('edit-desc').value.trim()
             };
 
             if (isLocalMode) {
                 let links = JSON.parse(localStorage.getItem('my_links') || '[]');
                 const index = links.findIndex(l => l.id === id);
-                if(index > -1) {
-                    links[index] = { ...links[index], ...updatedData };
-                    localStorage.setItem('my_links', JSON.stringify(links));
-                }
+                if(index > -1) { links[index] = { ...links[index], ...updatedData }; localStorage.setItem('my_links', JSON.stringify(links)); }
                 loadLinks();
             } else {
-                await db.collection('users').doc(currentUser.uid).collection('links').doc(id).update(updatedData);
+                if(!currentUser) return;
+                const docRef = doc(db, 'artifacts', appId, 'users', currentUser.uid, 'links', id);
+                await updateDoc(docRef, updatedData);
             }
-            
-            closeModal('edit-modal');
-            showToast("已儲存變更", "success");
-        }
+            window.closeModal('edit-modal'); window.showToast("已儲存變更", "success");
+        };
 
-        function escapeHtml(unsafe) {
-            if(!unsafe) return '';
-            return unsafe
-                 .replace(/&/g, "&amp;")
-                 .replace(/</g, "&lt;")
-                 .replace(/>/g, "&gt;")
-                 .replace(/"/g, "&quot;")
-                 .replace(/'/g, "&#039;");
-        }
+        function escapeHtml(unsafe) { return String(unsafe || '').replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;"); }
     </script>
 </body>
 </html>
