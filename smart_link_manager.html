@@ -35,6 +35,7 @@
 
         button { cursor: pointer; border: none; border-radius: 10px; padding: 0.6rem 1.2rem; font-size: 0.9rem; font-weight: 500; transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1); display: inline-flex; align-items: center; gap: 0.5rem; }
         button:active { transform: scale(0.95); }
+        button:disabled { opacity: 0.5; cursor: not-allowed; }
         .btn-primary { background-color: var(--primary); color: white; box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3); }
         .btn-primary:hover { background-color: var(--primary-hover); transform: translateY(-1px); }
         .btn-outline { background-color: transparent; color: var(--text-main); border: 1px solid var(--border-color); }
@@ -112,7 +113,7 @@
         .batch-checkbox { position: absolute; top: 1rem; left: 1rem; z-index: 15; width: 24px; height: 24px; cursor: pointer; accent-color: var(--primary); display: none; }
         body.batch-mode .batch-checkbox { display: block; }
         body.batch-mode .folder-badge { left: 3.5rem; }
-        body.batch-mode .card-actions { opacity: 0; pointer-events: none; } /* 批次模式下隱藏單個操作按鈕 */
+        body.batch-mode .card-actions { opacity: 0; pointer-events: none; }
         
         .batch-toolbar { position: fixed; bottom: 2rem; left: 50%; transform: translateX(-50%) translateY(100px); background: var(--card-dark); border: 1px solid var(--primary); padding: 1rem 1.5rem; border-radius: 16px; display: flex; gap: 1rem; align-items: center; box-shadow: 0 10px 25px rgba(0,0,0,0.5); z-index: 900; transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); opacity: 0; pointer-events: none; }
         .batch-toolbar.active { transform: translateX(-50%) translateY(0); opacity: 1; pointer-events: auto; }
@@ -151,9 +152,6 @@
         .loader { display: none; border: 3px solid var(--border-color); border-top: 3px solid var(--primary); border-radius: 50%; width: 18px; height: 18px; animation: spin 1s linear infinite; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
         .rotating { animation: spin 1s linear infinite; }
-        
-        /* 快捷鍵提示 */
-        .kbd { background: var(--bg-dark); border: 1px solid var(--border-color); border-radius: 4px; padding: 2px 6px; font-size: 0.7rem; font-family: monospace; color: var(--text-muted); }
     </style>
 </head>
 <body class="flex flex-col min-h-screen">
@@ -167,7 +165,8 @@
             <span id="user-info" style="display: none; color: var(--text-muted); font-size: 0.9rem; margin-right: 10px;"></span>
             <button class="btn-outline btn-icon-only" onclick="openFolderModal()" title="管理資料夾"><i class="fas fa-folder-plus"></i></button>
             <button class="btn-outline btn-icon-only" onclick="toggleBatchMode()" title="批次管理 (B)"><i class="fas fa-check-square"></i></button>
-            <button class="btn-outline btn-icon-only" onclick="startDeadLinkCheck()" title="失效檢測"><i class="fas fa-heartbeat"></i></button>
+            <!-- ✅ 加上 ID 與旋轉圖示 -->
+            <button class="btn-outline btn-icon-only" id="btn-dead-check" onclick="startDeadLinkCheck()" title="失效檢測"><i class="fas fa-heartbeat" id="dead-check-icon"></i></button>
             <button class="btn-outline btn-icon-only" onclick="exportAsMarkdown()" title="生成 Markdown"><i class="fab fa-markdown"></i></button>
             <button class="btn-outline btn-icon-only" onclick="toggleTheme()" title="深淺色切換"><i class="fas fa-sun"></i></button>
             <button class="btn-outline btn-icon-only" id="btn-refresh" onclick="handleRefresh()" title="重新整理"><i class="fas fa-sync-alt" id="refresh-icon"></i></button>
@@ -227,7 +226,6 @@
         </div>
     </main>
 
-    <!-- ✅ 批次操作浮動工具列 -->
     <div class="batch-toolbar" id="batch-toolbar">
         <span>已選取 <strong id="batch-count" style="color: var(--primary); font-size: 1.2rem;">0</strong> 項</span>
         <button class="btn-outline" onclick="batchMoveFolder()"><i class="fas fa-folder"></i> 移動</button>
@@ -249,7 +247,6 @@
         </div>
     </footer>
 
-    <!-- Modals -->
     <div class="modal-overlay" id="folder-modal">
         <div class="modal">
             <h3 class="text-xl font-bold mb-4">📂 管理資料夾</h3>
@@ -290,8 +287,6 @@
         let currentView = 'masonry', isKanbanMode = false, activeTag = 'all', activeFolder = 'all';
         let allLinksCache = [], allFoldersCache = [];
         let searchTimeout;
-
-        // ✅ 批次操作與失效檢測狀態
         let batchMode = false;
         let selectedIds = new Set();
         let isCheckingLinks = false;
@@ -445,7 +440,6 @@
                 const folderBadge = folder ? `<div class="folder-badge"><i class="fas ${folder.icon || 'fa-folder'}"></i> ${folder.name}</div>` : "";
                 const tagsHtml = (Array.isArray(link.categories) ? link.categories : (link.categories ? [link.categories] : [])).map(t => `<span class="tag-badge" style="${getTagStyles(t)}">${escapeHtml(t)}</span>`).join('');
                 
-                // ✅ 批次選擇框與失效徽章
                 const checkboxHtml = `<input type="checkbox" class="batch-checkbox" ${selectedIds.has(link.id) ? 'checked' : ''} onclick="event.stopPropagation(); toggleSelect('${link.id}', this)">`;
                 const deadBadgeHtml = link.isDead ? `<div class="dead-badge"><i class="fas fa-exclamation-triangle"></i> 失效</div>` : "";
                 const cardClass = `link-card card-enter ${link.pinned ? 'is-pinned' : ''} ${link.isRead ? 'is-read' : ''} ${link.isDead ? 'is-dead' : ''}`;
@@ -547,7 +541,7 @@
         function escapeHtml(u) { return String(u || '').replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;"); }
 
         // ============================================================
-        // ✅ 批次操作邏輯
+        // ✅ 批次操作邏輯 (已優化：使用 Batch 批次寫入)
         // ============================================================
         function toggleBatchMode() {
             batchMode = !batchMode; selectedIds.clear();
@@ -564,7 +558,19 @@
         async function batchDelete() {
             if (selectedIds.size === 0) return;
             if (!confirm(`確定要刪除選取的 ${selectedIds.size} 個連結嗎？`)) return;
-            for (const id of selectedIds) { await deleteLink(id, false); }
+            
+            // ✅ 優化：一次性批次刪除
+            if (isLocalMode) {
+                let all = JSON.parse(localStorage.getItem('my_links') || '[]');
+                all = all.filter(i => !selectedIds.has(i.id));
+                localStorage.setItem('my_links', JSON.stringify(all));
+            } else {
+                const batch = db.batch();
+                selectedIds.forEach(id => {
+                    batch.delete(db.collection('users').doc(currentUser.uid).collection('links').doc(id));
+                });
+                await batch.commit();
+            }
             toggleBatchMode(); showToast(`已刪除 ${selectedIds.size} 個連結`, "success"); loadLinks();
         }
         async function batchMoveFolder() {
@@ -574,31 +580,104 @@
             if (!choice) return;
             const targetFolder = allFoldersCache.find(f => f.id === choice || f.name === choice);
             if (!targetFolder) { showToast("找不到該資料夾", "error"); return; }
-            for (const id of selectedIds) { await updateLinkProp(id, 'folderId', targetFolder.id, true); }
+            
+            // ✅ 優化：一次性批次移動
+            if (isLocalMode) {
+                const all = JSON.parse(localStorage.getItem('my_links') || '[]');
+                selectedIds.forEach(id => {
+                    const idx = all.findIndex(x => x.id === id);
+                    if (idx > -1) all[idx].folderId = targetFolder.id;
+                });
+                localStorage.setItem('my_links', JSON.stringify(all));
+            } else {
+                const batch = db.batch();
+                selectedIds.forEach(id => {
+                    batch.update(db.collection('users').doc(currentUser.uid).collection('links').doc(id), { folderId: targetFolder.id });
+                });
+                await batch.commit();
+            }
             toggleBatchMode(); showToast(`已移動 ${selectedIds.size} 個連結`, "success"); loadLinks();
         }
 
         // ============================================================
-        // ✅ 失效連結檢測
+        // ✅ 失效連結檢測 (已優化：排除社群平台、修正 API 欄位、批次寫入)
         // ============================================================
         async function startDeadLinkCheck() {
             if (isCheckingLinks) return;
-            if (!confirm("將開始檢測所有連結的有效性，這可能需要一些時間。確定繼續？")) return;
-            isCheckingLinks = true; showToast("🔍 開始失效連結檢測...", "info");
-            const links = await getAllLinks(); let deadCount = 0;
+            if (!confirm("將開始檢測所有連結的有效性，這可能需要一些時間。\n(註：系統會自動跳過 FB/IG/X 等需要登入的社群平台以避免誤判)\n確定繼續？")) return;
+
+            isCheckingLinks = true;
+            const btn = document.getElementById('btn-dead-check');
+            const icon = document.getElementById('dead-check-icon');
+            btn.disabled = true;
+            icon.classList.add('rotating');
+            showToast("🔍 開始失效連結檢測...", "info");
+
+            const links = await getAllLinks();
+            let deadCount = 0;
+            let checkedCount = 0;
+            const updates = []; // 收集需要更新的資料
+
             for (const link of links) {
                 if (!link.url) continue;
+                const lowerUrl = link.url.toLowerCase();
+
+                // ✅ 修正 1：跳過容易誤判的社群平台
+                if (lowerUrl.includes('facebook.com') || lowerUrl.includes('instagram.com') ||
+                    lowerUrl.includes('x.com') || lowerUrl.includes('twitter.com') ||
+                    lowerUrl.includes('threads.net')) {
+                    continue;
+                }
+
                 try {
                     const res = await fetch(`https://api.microlink.io/?url=${encodeURIComponent(link.url)}`);
                     const d = await res.json();
                     let isDead = false;
-                    if (d.status !== 'success') isDead = true;
-                    else if (d.data && d.data.status_code && d.data.status_code >= 400) isDead = true;
-                    if (isDead !== (link.isDead || false)) { await updateLinkProp(link.id, 'isDead', isDead, true); if (isDead) deadCount++; }
-                } catch (e) { if (!link.isDead) { await updateLinkProp(link.id, 'isDead', true, true); deadCount++; } }
+                    if (d.status !== 'success') {
+                        isDead = true;
+                    } else {
+                        // ✅ 修正 2：正確的欄位名稱是 statusCode
+                        if (d.data && d.data.statusCode && d.data.statusCode >= 400) isDead = true;
+                    }
+
+                    if (isDead !== (link.isDead || false)) {
+                        updates.push({ id: link.id, isDead: isDead });
+                        if (isDead) deadCount++;
+                    }
+                } catch (e) {
+                    if (!link.isDead) {
+                        updates.push({ id: link.id, isDead: true });
+                        deadCount++;
+                    }
+                }
+                checkedCount++;
                 await new Promise(r => setTimeout(r, 300)); // 避免 API 限制
             }
-            isCheckingLinks = false; showToast(`✅ 檢測完成！發現 ${deadCount} 個失效連結`, deadCount > 0 ? "error" : "success"); loadLinks();
+
+            // ✅ 修正 3：批次寫入，避免 Firestore 寫入風暴
+            if (updates.length > 0) {
+                if (isLocalMode) {
+                    const all = JSON.parse(localStorage.getItem('my_links') || '[]');
+                    updates.forEach(u => {
+                        const idx = all.findIndex(x => x.id === u.id);
+                        if (idx > -1) all[idx].isDead = u.isDead;
+                    });
+                    localStorage.setItem('my_links', JSON.stringify(all));
+                } else {
+                    const batch = db.batch();
+                    updates.forEach(u => {
+                        const ref = db.collection('users').doc(currentUser.uid).collection('links').doc(u.id);
+                        batch.update(ref, { isDead: u.isDead });
+                    });
+                    await batch.commit();
+                }
+            }
+
+            isCheckingLinks = false;
+            btn.disabled = false;
+            icon.classList.remove('rotating');
+            showToast(`✅ 檢測完成！共檢查 ${checkedCount} 個連結，發現 ${deadCount} 個失效`, deadCount > 0 ? "error" : "success");
+            loadLinks();
         }
 
         // ============================================================
