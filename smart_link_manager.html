@@ -1,104 +1,118 @@
 <!DOCTYPE html>
-<html lang="zh-TW">
+<html lang="zh-TW" class="dark">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>智能連結管理器</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        gray: {
+                            850: '#1f2937',
+                            900: '#111827',
+                            950: '#030712',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
         
         body {
             font-family: 'Inter', sans-serif;
-            background-color: #f3f4f6;
-            padding-bottom: 25vh; /* 預留空間給下方的 Debug Log */
+            background-color: #030712; /* Tailwind gray-950 */
+            color: #e5e7eb; /* Tailwind gray-200 */
+            padding-bottom: 25vh; /* Space for debug log */
         }
 
         .glass-panel {
-            background: rgba(255, 255, 255, 0.95);
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.2);
+            background: rgba(17, 24, 39, 0.85); /* gray-900 */
+            backdrop-filter: blur(12px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
         }
 
         .card-hover { transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
         .card-hover:hover {
             transform: translateY(-4px);
-            box-shadow: 0 12px 20px -8px rgba(0, 0, 0, 0.1), 0 4px 6px -4px rgba(0, 0, 0, 0.05);
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.5), 0 8px 10px -6px rgba(0, 0, 0, 0.3);
+            border-color: #6366f1; /* indigo-500 */
         }
 
-        /* 讀取動畫 */
+        /* Spinner */
         .spinner {
-            border: 3px solid rgba(255, 255, 255, 0.3);
+            border: 3px solid rgba(255, 255, 255, 0.1);
             border-radius: 50%;
-            border-top: 3px solid #ffffff;
+            border-top: 3px solid #818cf8; /* indigo-400 */
             width: 20px;
             height: 20px;
             animation: spin 1s linear infinite;
         }
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
 
-        /* Debug Log 樣式 */
+        /* Debug Panel */
         #debug-panel {
-            position: fixed;
-            bottom: 0; left: 0;
-            width: 100%; height: 25vh;
-            background-color: #0c0c0c; color: #0f0;
-            font-family: monospace; z-index: 9999;
-            overflow-y: auto; padding: 10px; font-size: 12px;
-            border-top: 2px solid #333;
-            box-shadow: 0 -4px 6px -1px rgba(0, 0, 0, 0.1);
+            position: fixed; bottom: 0; left: 0; width: 100%; height: 25vh;
+            background-color: #000000; color: #10b981; /* emerald-500 */
+            font-family: 'Courier New', Courier, monospace; z-index: 40;
+            overflow-y: auto; padding: 12px; font-size: 13px;
+            border-top: 1px solid #374151; /* gray-700 */
         }
-        #debug-panel .log-error { color: #ff5555; }
-        #debug-panel .log-warn { color: #ffaa00; }
-        #debug-panel .log-info { color: #55ffff; }
+        #debug-panel .log-error { color: #ef4444; } /* red-500 */
+        #debug-panel .log-warn { color: #f59e0b; } /* amber-500 */
+        #debug-panel .log-info { color: #3b82f6; } /* blue-500 */
         #debug-panel::-webkit-scrollbar { width: 8px; }
         #debug-panel::-webkit-scrollbar-track { background: #111; }
-        #debug-panel::-webkit-scrollbar-thumb { background: #333; border-radius: 4px; }
+        #debug-panel::-webkit-scrollbar-thumb { background: #374151; border-radius: 4px; }
 
-        /* Toast 動畫 */
-        @keyframes slideInRight {
-            from { transform: translateX(100%); opacity: 0; }
-            to { transform: translateX(0); opacity: 1; }
-        }
-        @keyframes fadeOut {
-            from { opacity: 1; }
-            to { opacity: 0; }
-        }
-        .toast-enter { animation: slideInRight 0.3s cubic-bezier(0.4, 0, 0.2, 1) forwards; }
+        /* Toast Animations */
+        @keyframes slideIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+        @keyframes fadeOut { from { opacity: 1; } to { opacity: 0; } }
+        .toast-enter { animation: slideIn 0.3s cubic-bezier(0.4, 0, 0.2, 1) forwards; }
         .toast-exit { animation: fadeOut 0.3s forwards; }
+
+        /* Modal Backdrop Fade */
+        .modal-backdrop { background: rgba(0, 0, 0, 0.75); backdrop-filter: blur(4px); }
     </style>
 </head>
-<body class="text-gray-800 min-h-screen flex flex-col antialiased selection:bg-indigo-100 selection:text-indigo-900">
+<body class="antialiased selection:bg-indigo-500 selection:text-white">
 
     <!-- 登入畫面 -->
-    <div id="auth-overlay" class="fixed inset-0 z-50 flex items-center justify-center bg-gray-900/60 backdrop-blur-sm transition-opacity duration-300" style="bottom: 25vh;">
-        <div class="bg-white rounded-2xl shadow-2xl p-8 max-w-md w-full mx-4">
-            <div class="text-center mb-8">
-                <div class="inline-flex items-center justify-center w-16 h-16 rounded-full bg-indigo-100 text-indigo-600 mb-4">
+    <div id="auth-overlay" class="fixed inset-0 z-50 flex items-center justify-center modal-backdrop transition-opacity duration-300" style="bottom: 25vh;">
+        <div class="bg-gray-900 border border-gray-800 rounded-2xl shadow-2xl p-8 max-w-md w-full mx-4 relative overflow-hidden">
+            <!-- Decorative gradient -->
+            <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500"></div>
+            
+            <div class="text-center mb-8 mt-2">
+                <div class="inline-flex items-center justify-center w-16 h-16 rounded-full bg-gray-800 text-indigo-400 mb-4 border border-gray-700 shadow-inner">
                     <i class="fa-solid fa-link text-2xl"></i>
                 </div>
-                <h2 class="text-3xl font-bold text-gray-900 mb-2">智能連結</h2>
-                <p class="text-gray-500 text-sm">自動解析與整理您的收藏連結</p>
+                <h2 class="text-3xl font-bold text-white mb-2">智能連結</h2>
+                <p class="text-gray-400 text-sm">自動解析與整理您的收藏連結 (深色模式)</p>
             </div>
             
-            <div class="space-y-3">
-                <button id="btn-anon-login" class="w-full flex items-center justify-center gap-3 bg-white border-2 border-indigo-100 hover:bg-indigo-50 text-indigo-700 rounded-xl px-4 py-3.5 font-medium transition-all duration-200">
-                    <i class="fa-solid fa-cloud"></i>
-                    <span>訪客登入 (雲端模式)</span>
+            <div class="space-y-4">
+                <!-- 高亮主要按鈕 (本機模式) -->
+                <button id="btn-local-login" class="w-full flex items-center justify-center gap-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl px-4 py-3.5 font-medium transition-all duration-200 shadow-[0_0_15px_rgba(79,70,229,0.3)] hover:shadow-[0_0_20px_rgba(79,70,229,0.5)]">
+                    <i class="fa-solid fa-hard-drive"></i>
+                    <span>直接進入 (本機測試模式)</span>
                 </button>
 
                 <div class="relative py-2">
-                    <div class="absolute inset-0 flex items-center"><div class="w-full border-t border-gray-200"></div></div>
-                    <div class="relative flex justify-center"><span class="bg-white px-4 text-xs text-gray-400">或</span></div>
+                    <div class="absolute inset-0 flex items-center"><div class="w-full border-t border-gray-800"></div></div>
+                    <div class="relative flex justify-center"><span class="bg-gray-900 px-4 text-xs text-gray-500">或</span></div>
                 </div>
 
-                <button id="btn-local-login" class="w-full flex items-center justify-center gap-3 bg-gray-800 hover:bg-gray-900 text-white rounded-xl px-4 py-3.5 font-medium transition-all duration-200">
-                    <i class="fa-solid fa-hard-drive"></i>
-                    <span>直接進入 (本機模式)</span>
+                <!-- 次要按鈕 (雲端模式) -->
+                <button id="btn-google-login" class="w-full flex items-center justify-center gap-3 bg-gray-800 border border-gray-700 hover:bg-gray-700 text-gray-200 rounded-xl px-4 py-3.5 font-medium transition-all duration-200">
+                    <i class="fa-brands fa-google text-red-400"></i>
+                    <span>Google 登入 (雲端模式)</span>
                 </button>
             </div>
         </div>
@@ -107,46 +121,48 @@
     <!-- 主應用 -->
     <div id="app-container" class="hidden flex-col flex-grow">
         <!-- Header -->
-        <header class="glass-panel sticky top-0 z-40 shadow-sm">
+        <header class="glass-panel sticky top-0 z-40">
             <div class="container mx-auto px-4 max-w-7xl h-16 flex items-center justify-between">
-                <div class="flex items-center gap-2">
-                    <div class="w-8 h-8 rounded-lg bg-indigo-600 flex items-center justify-center text-white shadow-md">
-                        <i class="fa-solid fa-link text-sm"></i>
+                <div class="flex items-center gap-3">
+                    <div class="w-9 h-9 rounded-lg bg-indigo-600 flex items-center justify-center text-white shadow-[0_0_10px_rgba(79,70,229,0.4)]">
+                        <i class="fa-solid fa-bolt text-sm"></i>
                     </div>
-                    <h1 class="text-xl font-bold text-gray-900 hidden sm:block">智能連結</h1>
-                    <span id="mode-badge" class="ml-2 text-[10px] bg-gray-200 text-gray-600 px-2 py-0.5 rounded-full font-semibold">模式</span>
+                    <h1 class="text-xl font-bold text-white hidden sm:block tracking-wide">SmartLinks</h1>
+                    <span id="mode-badge" class="ml-2 text-[10px] bg-gray-800 border border-gray-700 text-gray-300 px-2.5 py-1 rounded-full font-semibold">本機模式</span>
                 </div>
                 
                 <div class="flex items-center gap-2 sm:gap-4">
-                    <button id="btn-open-settings" class="text-gray-500 hover:text-indigo-600 p-2 rounded-lg hover:bg-indigo-50 transition-colors" title="API 設定">
-                        <i class="fa-solid fa-gear"></i>
+                    <button id="btn-open-settings" class="text-gray-400 hover:text-indigo-400 p-2 rounded-lg hover:bg-gray-800 transition-colors" title="API 設定">
+                        <i class="fa-solid fa-gear text-lg"></i>
                     </button>
-                    <div class="hidden sm:flex items-center gap-2 text-sm text-gray-600 bg-gray-100 px-3 py-1.5 rounded-full">
-                        <i class="fa-regular fa-user text-gray-400"></i>
-                        <span id="user-name">使用者</span>
+                    <div class="hidden sm:flex items-center gap-2 text-sm text-gray-300 bg-gray-800 border border-gray-700 px-3 py-1.5 rounded-full">
+                        <i class="fa-regular fa-face-smile-beam text-indigo-400"></i>
+                        <span id="user-name">測試人員</span>
                     </div>
-                    <button id="btn-logout" class="text-gray-500 hover:text-red-600 p-2 rounded-lg hover:bg-red-50 transition-colors" title="登出">
-                        <i class="fa-solid fa-sign-out-alt"></i>
+                    <button id="btn-logout" class="text-gray-400 hover:text-red-400 p-2 rounded-lg hover:bg-gray-800 transition-colors" title="登出">
+                        <i class="fa-solid fa-sign-out-alt text-lg"></i>
                     </button>
                 </div>
             </div>
         </header>
 
         <!-- Main Content -->
-        <main class="flex-grow container mx-auto px-4 max-w-7xl py-6">
+        <main class="flex-grow container mx-auto px-4 max-w-7xl py-8">
             <!-- 新增連結 -->
-            <div class="bg-white rounded-2xl shadow-sm border border-gray-200 p-5 mb-8">
+            <div class="bg-gray-900 rounded-2xl shadow-lg border border-gray-800 p-6 mb-10 relative overflow-hidden">
+                <div class="absolute -right-10 -top-10 w-40 h-40 bg-indigo-600 opacity-5 blur-3xl rounded-full"></div>
+                <h3 class="text-gray-100 font-semibold mb-4 flex items-center gap-2"><i class="fa-solid fa-wand-magic-sparkles text-indigo-400"></i> AI 智能解析</h3>
                 <form id="add-link-form">
                     <div class="flex flex-col sm:flex-row gap-3">
                         <div class="relative flex-grow">
-                            <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-gray-400">
-                                <i class="fa-solid fa-globe"></i>
+                            <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-gray-500">
+                                <i class="fa-solid fa-link"></i>
                             </div>
-                            <input type="url" id="url-input" required placeholder="貼上網址交給 AI 分析..." 
-                                class="w-full pl-11 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-indigo-500 focus:outline-none transition-all">
+                            <input type="url" id="url-input" required placeholder="貼上 YouTube, FB, IG, Maps 或任何網址..." 
+                                class="w-full pl-11 pr-4 py-3.5 bg-gray-950 border border-gray-700 rounded-xl text-gray-100 placeholder-gray-500 focus:bg-gray-900 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 focus:outline-none transition-all">
                         </div>
-                        <button type="submit" id="btn-submit-link" class="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-3 rounded-xl font-medium transition-all flex items-center justify-center gap-2 min-w-[130px]">
-                            <span id="btn-text">解析並儲存</span>
+                        <button type="submit" id="btn-submit-link" class="bg-indigo-600 hover:bg-indigo-500 text-white px-8 py-3.5 rounded-xl font-medium transition-all flex items-center justify-center gap-2 min-w-[150px] shadow-[0_4px_14px_0_rgba(79,70,229,0.39)] hover:shadow-[0_6px_20px_rgba(79,70,229,0.23)]">
+                            <span id="btn-text">自動解析並儲存</span>
                             <div id="btn-spinner" class="spinner hidden"></div>
                         </button>
                     </div>
@@ -155,102 +171,142 @@
 
             <!-- 列表 -->
             <div>
-                <div class="flex items-center justify-between mb-4">
-                    <h2 class="text-lg font-bold text-gray-900">我的收藏</h2>
-                    <span id="link-count" class="bg-indigo-100 text-indigo-800 text-xs font-semibold px-2.5 py-0.5 rounded-full">0</span>
+                <div class="flex items-center justify-between mb-6">
+                    <h2 class="text-xl font-bold text-white flex items-center gap-2">
+                        <i class="fa-regular fa-folder-open text-gray-500"></i> 我的收藏
+                    </h2>
+                    <span id="link-count" class="bg-gray-800 border border-gray-700 text-indigo-400 text-xs font-semibold px-3 py-1 rounded-full shadow-inner">0</span>
                 </div>
                 
-                <div id="empty-state" class="hidden flex-col items-center justify-center py-16 text-center bg-white rounded-2xl border border-dashed border-gray-300">
-                    <i class="fa-regular fa-folder-open text-4xl text-gray-300 mb-3"></i>
-                    <h3 class="text-gray-900 font-medium">尚無連結</h3>
-                    <p class="text-gray-500 text-sm mt-1">請在上方貼上網址來開始收藏</p>
+                <div id="empty-state" class="hidden flex-col items-center justify-center py-20 text-center bg-gray-900/50 rounded-2xl border border-dashed border-gray-700">
+                    <div class="w-16 h-16 bg-gray-800 rounded-full flex items-center justify-center mb-4">
+                        <i class="fa-solid fa-inbox text-2xl text-gray-500"></i>
+                    </div>
+                    <h3 class="text-gray-300 font-medium text-lg">目前尚無任何連結</h3>
+                    <p class="text-gray-500 text-sm mt-2 max-w-xs">將網址貼到上方的輸入框，交由 AI 幫您自動解析與分類吧！</p>
                 </div>
 
-                <div id="links-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+                <div id="links-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                     <!-- Cards injected by JS -->
                 </div>
             </div>
         </main>
     </div>
 
+    <!-- Firebase 警告 Modal -->
+    <div id="firebase-modal" class="hidden fixed inset-0 z-[70] flex items-center justify-center modal-backdrop" style="bottom: 25vh;">
+        <div class="bg-gray-900 border border-gray-700 rounded-2xl shadow-2xl w-full max-w-sm mx-4 overflow-hidden transform transition-all">
+            <div class="p-6 text-center">
+                <div class="w-16 h-16 bg-red-500/10 rounded-full flex items-center justify-center mx-auto mb-4 border border-red-500/20">
+                    <i class="fa-solid fa-triangle-exclamation text-3xl text-red-500"></i>
+                </div>
+                <h3 class="text-xl font-bold text-white mb-2">需要設定 Firebase</h3>
+                <p class="text-sm text-gray-400 mb-6">目前系統使用的是預設的假金鑰 (YOUR_API_KEY)。<br>若要啟用雲端功能，請下載原始碼並填入您自己的 Firebase 設定。</p>
+                <button id="btn-close-firebase-modal" class="w-full bg-gray-800 hover:bg-gray-700 text-white font-medium py-2.5 rounded-lg border border-gray-600 transition-colors">
+                    了解
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 刪除確認 Modal -->
+    <div id="delete-modal" class="hidden fixed inset-0 z-[70] flex items-center justify-center modal-backdrop" style="bottom: 25vh;">
+        <div class="bg-gray-900 border border-gray-700 rounded-2xl shadow-2xl w-full max-w-sm mx-4 overflow-hidden">
+            <div class="p-6">
+                <h3 class="text-lg font-bold text-white mb-2"><i class="fa-solid fa-trash-can text-red-500 mr-2"></i>確認刪除</h3>
+                <p class="text-sm text-gray-400 mb-6">您確定要刪除這個連結嗎？此操作無法復原。</p>
+                <div class="flex justify-end gap-3">
+                    <button id="btn-cancel-delete" class="px-4 py-2 text-gray-300 hover:bg-gray-800 rounded-lg font-medium transition-colors">取消</button>
+                    <button id="btn-confirm-delete" class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg font-medium transition-colors shadow-lg shadow-red-600/20">
+                        確定刪除
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- API 設定 Modal -->
-    <div id="settings-modal" class="hidden fixed inset-0 z-[60] flex items-center justify-center bg-gray-900/60 backdrop-blur-sm" style="bottom: 25vh;">
-        <div class="bg-white rounded-2xl shadow-xl w-full max-w-md mx-4 overflow-hidden">
-            <div class="px-6 py-4 border-b border-gray-100 flex justify-between items-center bg-gray-50">
-                <h3 class="font-bold text-gray-800"><i class="fa-solid fa-key text-indigo-500 mr-2"></i>API 金鑰設定</h3>
-                <button id="btn-close-settings" class="text-gray-400 hover:text-gray-600"><i class="fa-solid fa-times"></i></button>
+    <div id="settings-modal" class="hidden fixed inset-0 z-[60] flex items-center justify-center modal-backdrop" style="bottom: 25vh;">
+        <div class="bg-gray-900 border border-gray-700 rounded-2xl shadow-2xl w-full max-w-md mx-4 overflow-hidden">
+            <div class="px-6 py-4 border-b border-gray-800 flex justify-between items-center bg-gray-850">
+                <h3 class="font-bold text-white"><i class="fa-solid fa-key text-indigo-400 mr-2"></i>API 金鑰設定</h3>
+                <button id="btn-close-settings" class="text-gray-500 hover:text-white transition-colors"><i class="fa-solid fa-times"></i></button>
             </div>
             <div class="p-6">
-                <label class="block text-sm font-medium text-gray-700 mb-2">Gemini API Key</label>
-                <input type="password" id="api-key-input" placeholder="AIzaSy..." class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:outline-none mb-2">
-                <p class="text-xs text-gray-500 mb-4">留空將使用系統預設，若遇到 403 錯誤請填入您個人的金鑰。</p>
-                <div class="flex justify-end gap-3 mt-6">
-                    <button id="btn-save-settings" class="bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-2 rounded-lg font-medium">儲存設定</button>
+                <label class="block text-sm font-medium text-gray-300 mb-2">Gemini API Key (2.5 Flash)</label>
+                <input type="password" id="api-key-input" placeholder="AIzaSy..." class="w-full px-4 py-3 bg-gray-950 border border-gray-700 text-white rounded-xl focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 focus:outline-none mb-3">
+                <p class="text-xs text-gray-500 mb-6 bg-gray-800/50 p-3 rounded-lg border border-gray-800">
+                    <i class="fa-solid fa-circle-info mr-1"></i> 金鑰將僅儲存在您的瀏覽器中 (localStorage)。若遇到 403 錯誤，請填入有效的金鑰。
+                </p>
+                <div class="flex justify-end gap-3">
+                    <button id="btn-save-settings" class="bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-2.5 rounded-xl font-medium shadow-lg shadow-indigo-500/20 transition-colors">儲存設定</button>
                 </div>
             </div>
         </div>
     </div>
 
     <!-- 編輯連結 Modal -->
-    <div id="edit-modal" class="hidden fixed inset-0 z-[60] flex items-center justify-center bg-gray-900/60 backdrop-blur-sm" style="bottom: 25vh;">
-        <div class="bg-white rounded-2xl shadow-xl w-full max-w-lg mx-4 overflow-hidden flex flex-col max-h-[70vh]">
-            <div class="px-6 py-4 border-b border-gray-100 flex justify-between items-center bg-gray-50">
-                <h3 class="font-bold text-gray-800"><i class="fa-solid fa-pen-to-square text-indigo-500 mr-2"></i>編輯連結</h3>
-                <button id="btn-close-edit" class="text-gray-400 hover:text-gray-600"><i class="fa-solid fa-times"></i></button>
+    <div id="edit-modal" class="hidden fixed inset-0 z-[60] flex items-center justify-center modal-backdrop" style="bottom: 25vh;">
+        <div class="bg-gray-900 border border-gray-700 rounded-2xl shadow-2xl w-full max-w-lg mx-4 overflow-hidden flex flex-col max-h-[70vh]">
+            <div class="px-6 py-4 border-b border-gray-800 flex justify-between items-center bg-gray-850">
+                <h3 class="font-bold text-white"><i class="fa-solid fa-pen-to-square text-indigo-400 mr-2"></i>編輯連結資訊</h3>
+                <button id="btn-close-edit" class="text-gray-500 hover:text-white transition-colors"><i class="fa-solid fa-times"></i></button>
             </div>
-            <div class="p-6 overflow-y-auto space-y-4">
+            <div class="p-6 overflow-y-auto space-y-4 custom-scrollbar">
                 <input type="hidden" id="edit-id">
                 <div>
-                    <label class="block text-xs font-medium text-gray-500 mb-1">標題</label>
-                    <input type="text" id="edit-title" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:outline-none">
+                    <label class="block text-xs font-medium text-gray-400 mb-1.5">標題</label>
+                    <input type="text" id="edit-title" class="w-full px-3 py-2.5 bg-gray-950 border border-gray-700 text-white rounded-lg focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 focus:outline-none">
                 </div>
                 <div>
-                    <label class="block text-xs font-medium text-gray-500 mb-1">網址</label>
-                    <input type="url" id="edit-url" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:outline-none bg-gray-50">
+                    <label class="block text-xs font-medium text-gray-400 mb-1.5">網址</label>
+                    <input type="url" id="edit-url" class="w-full px-3 py-2.5 bg-gray-800 border border-gray-700 text-gray-300 rounded-lg outline-none cursor-not-allowed opacity-70" readonly>
                 </div>
                 <div class="grid grid-cols-2 gap-4">
                     <div>
-                        <label class="block text-xs font-medium text-gray-500 mb-1">分類標籤</label>
-                        <input type="text" id="edit-category" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:outline-none">
+                        <label class="block text-xs font-medium text-gray-400 mb-1.5">分類標籤</label>
+                        <input type="text" id="edit-category" class="w-full px-3 py-2.5 bg-gray-950 border border-gray-700 text-white rounded-lg focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 focus:outline-none">
                     </div>
                     <div>
-                        <label class="block text-xs font-medium text-gray-500 mb-1">地點名稱 (選填)</label>
-                        <input type="text" id="edit-location" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:outline-none">
+                        <label class="block text-xs font-medium text-gray-400 mb-1.5">地點名稱 (選填)</label>
+                        <input type="text" id="edit-location" class="w-full px-3 py-2.5 bg-gray-950 border border-gray-700 text-white rounded-lg focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 focus:outline-none">
                     </div>
                 </div>
                 <div>
-                    <label class="block text-xs font-medium text-gray-500 mb-1">摘要描述</label>
-                    <textarea id="edit-summary" rows="3" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:outline-none resize-none"></textarea>
+                    <label class="block text-xs font-medium text-gray-400 mb-1.5">摘要描述</label>
+                    <textarea id="edit-summary" rows="3" class="w-full px-3 py-2.5 bg-gray-950 border border-gray-700 text-white rounded-lg focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 focus:outline-none resize-none"></textarea>
                 </div>
             </div>
-            <div class="px-6 py-4 border-t border-gray-100 bg-gray-50 flex justify-end gap-3">
-                <button id="btn-cancel-edit" class="px-5 py-2 text-gray-600 hover:bg-gray-200 rounded-lg font-medium">取消</button>
-                <button id="btn-save-edit" class="bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-2 rounded-lg font-medium flex items-center gap-2">
-                    <span id="edit-spinner" class="spinner hidden w-4 h-4 border-2"></span> 儲存變更
+            <div class="px-6 py-4 border-t border-gray-800 bg-gray-850 flex justify-end gap-3">
+                <button id="btn-cancel-edit" class="px-5 py-2.5 text-gray-300 hover:bg-gray-800 rounded-xl font-medium transition-colors">取消</button>
+                <button id="btn-save-edit" class="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-2.5 rounded-xl font-medium flex items-center gap-2 shadow-lg shadow-indigo-500/20 transition-colors">
+                    儲存變更
                 </button>
             </div>
         </div>
     </div>
 
     <!-- Toast 通知容器 -->
-    <div id="toast-container" class="fixed top-5 right-5 z-[100] flex flex-col gap-2 pointer-events-none"></div>
+    <div id="toast-container" class="fixed top-5 right-5 z-[100] flex flex-col gap-3 pointer-events-none"></div>
 
     <!-- Debug Log Panel -->
     <div id="debug-panel">
-        <div class="flex justify-between items-center mb-2 border-b border-gray-700 pb-1">
-            <span class="font-bold text-gray-300">系統日誌 (Debug Log)</span>
-            <button onclick="document.getElementById('debug-content').innerHTML=''" class="text-xs bg-gray-800 hover:bg-gray-700 px-2 py-1 rounded text-gray-300 border border-gray-600">清除</button>
+        <div class="flex justify-between items-center mb-3 border-b border-gray-700 pb-2 sticky top-0 bg-black">
+            <span class="font-bold text-gray-300 flex items-center gap-2">
+                <i class="fa-solid fa-terminal"></i> 系統日誌 (Debug Log)
+            </span>
+            <button onclick="document.getElementById('debug-content').innerHTML=''" class="text-xs bg-gray-800 hover:bg-gray-700 px-3 py-1.5 rounded-md text-gray-300 border border-gray-600 transition-colors">清除日誌</button>
         </div>
-        <div id="debug-content" class="space-y-1 pb-4"></div>
+        <div id="debug-content" class="space-y-1.5 pb-4"></div>
     </div>
 
-    <script type="module">
-        // 1. 攔截 Console 輸出到 UI
+    <script>
+        // --- 1. 攔截 Console 輸出到 UI ---
         const debugContent = document.getElementById('debug-content');
         function appendLog(type, args) {
             const msg = Array.from(args).map(arg => typeof arg === 'object' ? JSON.stringify(arg) : arg).join(' ');
             const div = document.createElement('div');
-            div.className = type === 'error' ? 'log-error' : type === 'warn' ? 'log-warn' : 'log-info';
+            div.className = type === 'error' ? 'log-error font-bold' : type === 'warn' ? 'log-warn' : 'log-info';
             div.textContent = `[${new Date().toLocaleTimeString('zh-TW', { hour12: false })}] ${msg}`;
             debugContent.appendChild(div);
             const panel = document.getElementById('debug-panel');
@@ -260,42 +316,46 @@
             const original = console[method];
             console[method] = function() { appendLog(method, arguments); original.apply(console, arguments); };
         });
-        console.log("系統啟動，日誌就緒。");
+        console.log("🚀 系統啟動，深色模式初始化完成。");
 
-        // 2. 自訂 Toast 通知
+        // --- 2. 自訂 Toast 通知系統 (取代 alert) ---
         window.showToast = (message, type = 'info') => {
             const container = document.getElementById('toast-container');
             const toast = document.createElement('div');
-            const bgColor = type === 'error' ? 'bg-red-500' : type === 'success' ? 'bg-emerald-500' : 'bg-gray-800';
-            const icon = type === 'error' ? 'fa-triangle-exclamation' : type === 'success' ? 'fa-check' : 'fa-info-circle';
             
-            toast.className = `toast-enter ${bgColor} text-white px-4 py-3 rounded-lg shadow-lg flex items-center gap-3 text-sm font-medium pointer-events-auto`;
-            toast.innerHTML = `<i class="fa-solid ${icon}"></i> <span>${message}</span>`;
+            let bgColor = 'bg-gray-800 border-gray-700';
+            let iconColor = 'text-blue-400';
+            let icon = 'fa-info-circle';
+
+            if (type === 'error') { bgColor = 'bg-red-900/90 border-red-800'; iconColor = 'text-red-400'; icon = 'fa-triangle-exclamation'; }
+            else if (type === 'success') { bgColor = 'bg-emerald-900/90 border-emerald-800'; iconColor = 'text-emerald-400'; icon = 'fa-check-circle'; }
+            else if (type === 'warn') { bgColor = 'bg-amber-900/90 border-amber-800'; iconColor = 'text-amber-400'; icon = 'fa-exclamation-circle'; }
+            
+            toast.className = `toast-enter ${bgColor} border text-gray-100 px-4 py-3.5 rounded-xl shadow-[0_8px_30px_rgb(0,0,0,0.5)] flex items-center gap-3 text-sm font-medium pointer-events-auto backdrop-blur-md`;
+            toast.innerHTML = `<i class="fa-solid ${icon} ${iconColor} text-lg"></i> <span>${message}</span>`;
             
             container.appendChild(toast);
             setTimeout(() => {
                 toast.classList.replace('toast-enter', 'toast-exit');
                 setTimeout(() => toast.remove(), 300);
-            }, 3000);
+            }, 3500);
         };
 
-        // 3. 全域狀態
-        let currentMode = null; // 'firebase' or 'local'
-        let currentUser = null; 
+        // --- 3. 全域狀態與假 Firebase 設定 ---
         let linksData = []; 
-        let unsubscribe = null;
-        let db, auth, appId;
+        let itemToDeleteId = null;
+        
+        // 模擬的 Firebase Config，用來觸發 Modal 警告
+        const dummyFirebaseConfig = { apiKey: 'YOUR_API_KEY' };
 
-        document.addEventListener('DOMContentLoaded', async () => {
-            // UI 綁定
+        document.addEventListener('DOMContentLoaded', () => {
+            // UI 元素綁定
             const ui = {
                 authOverlay: document.getElementById('auth-overlay'),
                 appContainer: document.getElementById('app-container'),
-                btnAnon: document.getElementById('btn-anon-login'),
                 btnLocal: document.getElementById('btn-local-login'),
+                btnGoogle: document.getElementById('btn-google-login'),
                 btnLogout: document.getElementById('btn-logout'),
-                userName: document.getElementById('user-name'),
-                modeBadge: document.getElementById('mode-badge'),
                 form: document.getElementById('add-link-form'),
                 urlInput: document.getElementById('url-input'),
                 btnSubmit: document.getElementById('btn-submit-link'),
@@ -303,15 +363,22 @@
                 emptyState: document.getElementById('empty-state'),
                 linkCount: document.getElementById('link-count'),
                 
-                // Settings UI
+                // Modals
                 settingsModal: document.getElementById('settings-modal'),
+                firebaseModal: document.getElementById('firebase-modal'),
+                deleteModal: document.getElementById('delete-modal'),
+                editModal: document.getElementById('edit-modal'),
+                
+                // Modal Buttons
                 btnOpenSettings: document.getElementById('btn-open-settings'),
                 btnCloseSettings: document.getElementById('btn-close-settings'),
                 btnSaveSettings: document.getElementById('btn-save-settings'),
                 apiKeyInput: document.getElementById('api-key-input'),
-
-                // Edit UI
-                editModal: document.getElementById('edit-modal'),
+                btnCloseFirebase: document.getElementById('btn-close-firebase-modal'),
+                btnCancelDelete: document.getElementById('btn-cancel-delete'),
+                btnConfirmDelete: document.getElementById('btn-confirm-delete'),
+                
+                // Edit Inputs
                 btnCloseEdit: document.getElementById('btn-close-edit'),
                 btnCancelEdit: document.getElementById('btn-cancel-edit'),
                 btnSaveEdit: document.getElementById('btn-save-edit'),
@@ -325,8 +392,36 @@
                 }
             };
 
-            // 4. API 金鑰管理
-            function getApiKey() { return localStorage.getItem('geminiApiKey') || ''; }
+            // --- 4. 登入邏輯 ---
+            
+            // Google 登入 (阻擋並顯示 Modal)
+            ui.btnGoogle.addEventListener('click', () => {
+                if (dummyFirebaseConfig.apiKey === 'YOUR_API_KEY') {
+                    console.warn("偵測到無效的 Firebase API Key");
+                    ui.firebaseModal.classList.remove('hidden');
+                }
+            });
+            ui.btnCloseFirebase.addEventListener('click', () => ui.firebaseModal.classList.add('hidden'));
+
+            // 本機登入 (主要流程)
+            ui.btnLocal.addEventListener('click', () => {
+                console.log("切換至本機測試模式...");
+                ui.authOverlay.classList.add('hidden');
+                ui.appContainer.classList.remove('hidden');
+                ui.appContainer.classList.add('flex');
+                loadLocalData();
+                window.showToast("已進入本機模式，資料將儲存於瀏覽器", "success");
+            });
+
+            // 登出
+            ui.btnLogout.addEventListener('click', () => {
+                ui.appContainer.classList.add('hidden');
+                ui.appContainer.classList.remove('flex');
+                ui.authOverlay.classList.remove('hidden');
+            });
+
+            // --- 5. API 設定邏輯 ---
+            const getApiKey = () => localStorage.getItem('geminiApiKey_v2') || '';
             
             ui.btnOpenSettings.addEventListener('click', () => {
                 ui.apiKeyInput.value = getApiKey();
@@ -336,231 +431,136 @@
             ui.btnCloseSettings.addEventListener('click', closeSettings);
             ui.btnSaveSettings.addEventListener('click', () => {
                 const val = ui.apiKeyInput.value.trim();
-                localStorage.setItem('geminiApiKey', val);
+                localStorage.setItem('geminiApiKey_v2', val);
                 closeSettings();
-                window.showToast("API 金鑰已儲存", "success");
-                console.log(val ? "已設定自訂 API Key" : "已清除自訂 API Key，將使用系統預設");
+                window.showToast("API 金鑰已更新", "success");
+                console.log("API Key 設定已儲存");
             });
 
-            // 5. Firebase 初始化
-            try {
-                const { initializeApp } = await import("https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js");
-                const { getAuth, signInAnonymously, signOut, onAuthStateChanged, signInWithCustomToken } = await import("https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js");
-                const { getFirestore, collection, addDoc, deleteDoc, updateDoc, doc, onSnapshot, query, serverTimestamp } = await import("https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js");
-                
-                // 為了讓全域編輯/刪除能存取
-                window.dbModules = { updateDoc, deleteDoc, doc };
-
-                appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app';
-                const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : null;
-                const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
-
-                if (firebaseConfig && Object.keys(firebaseConfig).length > 0) {
-                    const app = initializeApp(firebaseConfig);
-                    auth = getAuth(app);
-                    db = getFirestore(app);
-                    window.appDb = db;
-                    console.log("Firebase 初始化成功");
-
-                    if (initialAuthToken) {
-                        try { await signInWithCustomToken(auth, initialAuthToken); } 
-                        catch (e) { console.error("Token登入失敗", e); }
-                    }
-
-                    onAuthStateChanged(auth, (user) => {
-                        if (user) {
-                            currentUser = user;
-                            showMainApp('firebase', '訪客 (雲端)');
-                        } else {
-                            handleLogoutUI();
-                        }
-                    });
-
-                    ui.btnAnon.addEventListener('click', async () => {
-                        try { await signInAnonymously(auth); } 
-                        catch (e) { console.error("訪客登入失敗", e); window.showToast("登入失敗", "error"); }
-                    });
-                } else {
-                    console.warn("未偵測到 Firebase Config，僅支援本機模式。");
-                    ui.btnAnon.disabled = true;
-                    ui.btnAnon.classList.add('opacity-50', 'cursor-not-allowed');
-                }
-            } catch (err) {
-                console.error("載入 Firebase 模組失敗", err);
-            }
-
-            // 本機登入
-            ui.btnLocal.addEventListener('click', () => {
-                currentUser = { uid: 'local_user' };
-                showMainApp('local', '測試人員 (本機)');
-            });
-
-            // 登出
-            ui.btnLogout.addEventListener('click', async () => {
-                if (currentMode === 'firebase' && auth) {
-                    await signOut(auth);
-                } else {
-                    handleLogoutUI();
-                }
-            });
-
-            function showMainApp(mode, name) {
-                currentMode = mode;
-                ui.authOverlay.classList.add('hidden');
-                ui.appContainer.classList.remove('hidden');
-                ui.appContainer.classList.add('flex');
-                ui.userName.textContent = name;
-                
-                if (mode === 'local') {
-                    ui.modeBadge.textContent = '本機模式';
-                    ui.modeBadge.className = 'ml-2 text-[10px] bg-orange-100 text-orange-700 px-2 py-0.5 rounded-full font-semibold';
-                    loadLocalData();
-                } else {
-                    ui.modeBadge.textContent = '雲端同步';
-                    ui.modeBadge.className = 'ml-2 text-[10px] bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded-full font-semibold';
-                    setupFirestoreListener();
-                }
-            }
-
-            function handleLogoutUI() {
-                currentUser = null; currentMode = null;
-                ui.authOverlay.classList.remove('hidden');
-                ui.appContainer.classList.add('hidden');
-                ui.appContainer.classList.remove('flex');
-                if (unsubscribe) { unsubscribe(); unsubscribe = null; }
-            }
-
-            // 6. Gemini API 處理
+            // --- 6. 核心功能：Gemini 2.5 Flash 解析網址 ---
             async function parseUrlWithGemini(url) {
-                console.log("開始呼叫 Gemini 解析網址:", url);
-                const customKey = getApiKey();
-                const apiKeyToUse = customKey || ""; 
+                console.log(`開始使用 Gemini 解析網址: ${url}`);
+                const apiKeyToUse = getApiKey();
                 
-                // 使用 Canvas 預設模型
-                const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent?key=${apiKeyToUse}`;
+                // 使用最新的 2.5 Flash 模型
+                const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKeyToUse}`;
                 
-                const prompt = `分析這個網址: ${url}
-請以繁體中文回傳純 JSON 格式，不要包含 Markdown 語法。
-必填欄位:
-- platform: "YouTube", "Facebook", "Instagram", "Threads", "Google Maps", 或 "Other"
-- title: 根據網址推測的標題
-- location: 若為地圖則填地點名稱，否則填空字串
-- category: 分類 (如: 影音、社群、餐廳、地標、文章、未分類)
-- summary: 一句簡短的繁體中文摘要描述`;
+                const prompt = `你是一個智能網址分析助理。請分析以下網址: "${url}"。
+特別注意：如果網址屬於 Facebook, YouTube, Instagram, Threads 或 Google Maps，請嘗試從網址字串本身的結構、路徑或參數來推測內容(例如從 Maps 網址中擷取經緯度或地點名稱，從 IG 擷取帳號名稱)。
+
+請務必只回傳純 JSON 格式的物件，不要包含 markdown 標籤(如 \`\`\`json)，也不要加上任何額外文字。
+JSON 必須嚴格包含以下欄位：
+{
+  "title": "根據網址推測的標題(繁體中文)",
+  "url": "${url}",
+  "category": "分類(如: 影音、社群、餐廳、地標、文章，若無法判斷請填 '未分類')",
+  "location": "若為地圖或有地理資訊則填入地點，否則填空字串",
+  "summary": "一句簡短的繁體中文摘要描述"
+}`;
 
                 try {
+                    if(!apiKeyToUse) {
+                        throw new Error("API_KEY_MISSING");
+                    }
+
                     const response = await fetch(apiUrl, {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })
+                        body: JSON.stringify({
+                            contents: [{ parts: [{ text: prompt }] }],
+                            generationConfig: { temperature: 0.2 } // 低溫度確保 JSON 穩定性
+                        })
                     });
 
-                    if (response.status === 403) {
-                        console.error("Gemini API 權限不足 (403)。");
-                        window.showToast("API Key 無效或權限不足，請點擊右上角設定金鑰。", "error");
-                        throw new Error("403 Forbidden");
-                    }
-
-                    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+                    if (response.status === 403) throw new Error("403_FORBIDDEN");
+                    if (!response.ok) throw new Error(`HTTP_${response.status}`);
                     
                     const data = await response.json();
                     let text = data.candidates?.[0]?.content?.parts?.[0]?.text || "";
-                    text = text.replace(/```json/gi, '').replace(/```/g, '').trim();
-                    const parsed = JSON.parse(text);
+                    
+                    // 嚴格擷取 JSON 區塊，過濾掉 AI 可能多嘴的文字或 Markdown
+                    const jsonMatch = text.match(/\{[\s\S]*\}/);
+                    if (!jsonMatch) throw new Error("JSON_PARSE_ERROR");
+                    
+                    const parsed = JSON.parse(jsonMatch[0]);
                     console.log("Gemini 解析成功:", parsed);
                     return parsed;
 
                 } catch (error) {
-                    console.error("Gemini 解析失敗:", error.message);
-                    if (!customKey && error.message.includes('403')) {
-                        console.info("提示: 在 Canvas 中若遇到 403，通常需要使用者填寫自己的 API Key。");
-                    }
+                    console.error("Gemini 解析發生例外狀況:", error.message);
                     
-                    // Fallback
-                    console.log("使用本地規則進行基本解析...");
-                    let platform = 'Other', title = '未知連結', loc = '', cat = '未分類', desc = '無摘要資訊';
+                    // Fallback 容錯機制 (不會中斷系統)
+                    let errToastMsg = "AI 解析失敗，已套用預設值。";
+                    if(error.message === "API_KEY_MISSING") errToastMsg = "未設定 API Key，套用基本解析。請至右上角設定。";
+                    if(error.message === "403_FORBIDDEN") errToastMsg = "API Key 權限不足(403)，套用基本解析。";
+                    
+                    window.showToast(errToastMsg, "warn");
+                    
+                    console.log("執行本地 Fallback 解析規則...");
+                    let title = '未知連結', loc = '', cat = '未分類', summary = '無詳細資訊';
                     const lowerUrl = url.toLowerCase();
-                    if (lowerUrl.includes('youtu')) { platform = 'YouTube'; title = 'YouTube 影片'; cat = '影音'; }
-                    else if (lowerUrl.includes('facebook')) { platform = 'Facebook'; title = 'Facebook 貼文'; cat = '社群'; }
-                    else if (lowerUrl.includes('instagram')) { platform = 'Instagram'; title = 'Instagram 貼文'; cat = '社群'; }
-                    else if (lowerUrl.includes('map') && lowerUrl.includes('google')) { platform = 'Google Maps'; title = 'Google 地圖'; cat = '地標'; loc = '地點'; }
-                    return { platform, title, location: loc, category: cat, summary: desc };
+                    if (lowerUrl.includes('youtu')) { title = 'YouTube 影片'; cat = '影音'; }
+                    else if (lowerUrl.includes('facebook') || lowerUrl.includes('fb.com')) { title = 'Facebook 連結'; cat = '社群'; }
+                    else if (lowerUrl.includes('instagram')) { title = 'Instagram 連結'; cat = '社群'; }
+                    else if (lowerUrl.includes('map') && lowerUrl.includes('google')) { title = 'Google 地圖'; cat = '地標'; loc = '地圖位置'; }
+                    
+                    return { title, url, category: cat, location: loc, summary };
                 }
             }
 
-            // 新增連結
+            // 新增連結 Event
             ui.form.addEventListener('submit', async (e) => {
                 e.preventDefault();
                 const url = ui.urlInput.value.trim();
                 if (!url) return;
 
+                // UI 讀取狀態
                 ui.btnSubmit.disabled = true; ui.urlInput.disabled = true;
                 document.getElementById('btn-text').classList.add('hidden');
                 document.getElementById('btn-spinner').classList.remove('hidden');
 
                 try {
-                    const aiData = await parseUrlWithGemini(url);
+                    const parsedData = await parseUrlWithGemini(url);
                     const newDoc = {
+                        id: 'link_' + Date.now(),
                         originalUrl: url,
-                        platform: aiData.platform || 'Other',
-                        title: aiData.title || '無標題',
-                        location: aiData.location || '',
-                        category: aiData.category || '',
-                        summary: aiData.summary || '',
+                        title: parsedData.title || '無標題',
+                        location: parsedData.location || '',
+                        category: parsedData.category || '未分類',
+                        summary: parsedData.summary || '',
                         createdAt: Date.now()
                     };
 
-                    if (currentMode === 'local') {
-                        newDoc.id = 'loc_' + Date.now();
-                        linksData.unshift(newDoc);
-                        localStorage.setItem('smart_links', JSON.stringify(linksData));
-                        renderLinks();
-                        window.showToast("已儲存至本機", "success");
-                    } else if (currentMode === 'firebase' && db) {
-                        const { collection, addDoc, serverTimestamp } = await import("https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js");
-                        const ref = collection(db, 'artifacts', appId, 'users', currentUser.uid, 'links');
-                        newDoc.createdAt = serverTimestamp();
-                        await addDoc(ref, newDoc);
-                        window.showToast("已儲存至雲端", "success");
-                    }
+                    linksData.unshift(newDoc);
+                    saveLocalData();
+                    renderLinks();
+                    window.showToast("連結儲存成功", "success");
                     ui.urlInput.value = '';
                 } catch (e) {
-                    console.error("儲存失敗:", e);
+                    console.error("儲存流程發生重大錯誤:", e);
+                    window.showToast("系統發生錯誤，無法儲存", "error");
                 } finally {
+                    // 恢復 UI 狀態
                     ui.btnSubmit.disabled = false; ui.urlInput.disabled = false;
                     document.getElementById('btn-text').classList.remove('hidden');
                     document.getElementById('btn-spinner').classList.add('hidden');
+                    ui.urlInput.focus();
                 }
             });
 
-            // Firestore 監聽
-            function setupFirestoreListener() {
-                const ref = window.dbModules ? null : null; // Ensure modules are loaded
-                import("https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js").then(module => {
-                    const { collection, query, onSnapshot } = module;
-                    const q = query(collection(db, 'artifacts', appId, 'users', currentUser.uid, 'links'));
-                    unsubscribe = onSnapshot(q, (snapshot) => {
-                        linksData = [];
-                        snapshot.forEach(doc => linksData.push({ id: doc.id, ...doc.data() }));
-                        linksData.sort((a, b) => {
-                            const timeA = a.createdAt?.toMillis ? a.createdAt.toMillis() : (a.createdAt || 0);
-                            const timeB = b.createdAt?.toMillis ? b.createdAt.toMillis() : (b.createdAt || 0);
-                            return timeB - timeA;
-                        });
-                        renderLinks();
-                    }, (err) => console.error("監聽失敗", err));
-                });
-            }
-
-            // LocalStorage 讀取
+            // --- 7. 資料管理 (CRUD) ---
             function loadLocalData() {
                 try {
-                    linksData = JSON.parse(localStorage.getItem('smart_links')) || [];
-                } catch(e) { linksData = []; }
+                    const data = localStorage.getItem('smart_links_dark');
+                    linksData = data ? JSON.parse(data) : [];
+                } catch(e) { linksData = []; console.error("讀取 localStorage 失敗"); }
                 renderLinks();
             }
 
-            // 渲染列表
+            function saveLocalData() {
+                localStorage.setItem('smart_links_dark', JSON.stringify(linksData));
+            }
+
             function renderLinks() {
                 ui.linkCount.textContent = linksData.length;
                 if (linksData.length === 0) {
@@ -571,42 +571,47 @@
                 ui.emptyState.classList.add('hidden'); ui.emptyState.classList.remove('flex');
                 
                 ui.grid.innerHTML = linksData.map(link => {
-                    let p = (link.platform || '').toLowerCase();
-                    let icon = 'fa-link', color = 'text-gray-500', bg = 'bg-gray-100', border = 'border-gray-200';
-                    if (p.includes('youtube')) { icon = 'fa-youtube'; color = 'text-red-500'; bg = 'bg-red-50'; border = 'border-red-100'; }
-                    else if (p.includes('facebook')) { icon = 'fa-facebook'; color = 'text-blue-600'; bg = 'bg-blue-50'; border = 'border-blue-100'; }
-                    else if (p.includes('instagram')) { icon = 'fa-instagram'; color = 'text-pink-600'; bg = 'bg-pink-50'; border = 'border-pink-100'; }
-                    else if (p.includes('map')) { icon = 'fa-map-location-dot'; color = 'text-emerald-600'; bg = 'bg-emerald-50'; border = 'border-emerald-100'; }
+                    let cat = link.category || '未分類';
+                    // Determine icon based on URL or Title
+                    let icon = 'fa-link', iconColor = 'text-gray-400', badgeColor = 'bg-gray-800 text-gray-300 border-gray-700';
+                    const lowerStr = (link.originalUrl + link.title).toLowerCase();
+                    
+                    if (lowerStr.includes('youtu')) { icon = 'fa-youtube'; iconColor = 'text-red-500'; badgeColor = 'bg-red-950 text-red-400 border-red-900'; }
+                    else if (lowerStr.includes('facebook') || lowerStr.includes('fb.')) { icon = 'fa-facebook'; iconColor = 'text-blue-500'; badgeColor = 'bg-blue-950 text-blue-400 border-blue-900'; }
+                    else if (lowerStr.includes('instagram')) { icon = 'fa-instagram'; iconColor = 'text-pink-500'; badgeColor = 'bg-pink-950 text-pink-400 border-pink-900'; }
+                    else if (lowerStr.includes('threads')) { icon = 'fa-at'; iconColor = 'text-white'; badgeColor = 'bg-gray-800 text-white border-gray-600'; }
+                    else if (lowerStr.includes('map')) { icon = 'fa-map-location-dot'; iconColor = 'text-emerald-500'; badgeColor = 'bg-emerald-950 text-emerald-400 border-emerald-900'; }
 
-                    // 將資料 JSON 轉義以供點擊事件使用
+                    // Escape data for inline handler
                     const safeData = encodeURIComponent(JSON.stringify(link));
 
                     return `
-                        <div class="bg-white rounded-2xl p-5 border border-gray-100 shadow-sm card-hover relative flex flex-col group">
+                        <div class="bg-gray-900 rounded-2xl p-5 border border-gray-800 shadow-sm card-hover relative flex flex-col group">
                             <div class="absolute top-4 right-4 flex gap-2">
-                                <span class="${bg} ${color} ${border} border text-[10px] font-bold px-2 py-1 rounded-md flex items-center gap-1">
-                                    <i class="fa-brands ${icon}"></i> ${link.platform || 'Other'}
+                                <span class="${badgeColor} border text-[10px] font-bold px-2.5 py-1 rounded-md flex items-center gap-1.5 shadow-sm">
+                                    <i class="${icon.includes('fa-') && !icon.includes('link') && !icon.includes('map') && !icon.includes('at') ? 'fa-brands' : 'fa-solid'} ${icon}"></i> 
+                                    ${cat}
                                 </span>
                             </div>
                             
-                            <div class="absolute -top-3 -right-3 flex gap-1 opacity-0 group-hover:opacity-100 transition-all z-10">
-                                <button onclick="window.editItem('${safeData}')" class="w-8 h-8 bg-white border border-gray-200 rounded-full text-indigo-500 hover:bg-indigo-50 shadow-sm flex items-center justify-center" title="編輯">
+                            <!-- Hover Actions -->
+                            <div class="absolute -top-3 -right-3 flex gap-1.5 opacity-0 group-hover:opacity-100 transition-all duration-200 z-10">
+                                <button onclick="window.openEditModal('${safeData}')" class="w-9 h-9 bg-gray-800 border border-gray-700 rounded-full text-indigo-400 hover:bg-gray-700 hover:text-indigo-300 shadow-lg flex items-center justify-center transition-colors" title="編輯">
                                     <i class="fa-solid fa-pen text-xs"></i>
                                 </button>
-                                <button onclick="window.deleteItem('${link.id}')" class="w-8 h-8 bg-white border border-gray-200 rounded-full text-red-500 hover:bg-red-50 shadow-sm flex items-center justify-center" title="刪除">
-                                    <i class="fa-solid fa-trash text-xs"></i>
+                                <button onclick="window.openDeleteModal('${link.id}')" class="w-9 h-9 bg-gray-800 border border-gray-700 rounded-full text-red-400 hover:bg-red-900/50 hover:text-red-300 shadow-lg flex items-center justify-center transition-colors" title="刪除">
+                                    <i class="fa-solid fa-trash-can text-xs"></i>
                                 </button>
                             </div>
 
-                            <div class="mt-4 flex-grow">
-                                <h3 class="text-base font-semibold text-gray-800 line-clamp-2 mb-2 pr-12">${link.title}</h3>
-                                ${link.location ? `<p class="text-sm text-emerald-600 mb-1 font-medium"><i class="fa-solid fa-location-dot"></i> ${link.location}</p>` : ''}
-                                ${link.category ? `<span class="inline-block bg-indigo-50 text-indigo-600 text-xs px-2 py-0.5 rounded border border-indigo-100 mb-2">${link.category}</span>` : ''}
-                                <p class="text-xs text-gray-500 line-clamp-2 mt-1">${link.summary || link.description || ''}</p>
+                            <div class="mt-5 flex-grow">
+                                <h3 class="text-base font-semibold text-gray-100 line-clamp-2 mb-2.5 pr-14 leading-snug">${link.title}</h3>
+                                ${link.location ? `<p class="text-sm text-emerald-400 mb-2 font-medium flex items-center gap-1.5"><i class="fa-solid fa-location-dot text-xs"></i> ${link.location}</p>` : ''}
+                                <p class="text-sm text-gray-400 line-clamp-3 mt-1 leading-relaxed">${link.summary}</p>
                             </div>
 
-                            <div class="mt-4 pt-4 border-t border-gray-50">
-                                <a href="${link.originalUrl}" target="_blank" rel="noopener noreferrer" class="w-full flex items-center justify-center gap-2 text-sm text-indigo-600 bg-indigo-50 hover:bg-indigo-100 py-2 rounded-lg transition-colors">
+                            <div class="mt-5 pt-4 border-t border-gray-800">
+                                <a href="${link.originalUrl}" target="_blank" rel="noopener noreferrer" class="w-full flex items-center justify-center gap-2 text-sm text-indigo-400 bg-gray-800/50 hover:bg-gray-800 border border-transparent hover:border-gray-700 py-2.5 rounded-xl transition-all font-medium">
                                     開啟連結 <i class="fa-solid fa-arrow-up-right-from-square text-xs"></i>
                                 </a>
                             </div>
@@ -615,79 +620,67 @@
                 }).join('');
             }
 
-            // 編輯 Modal 控制
-            window.editItem = (encodedData) => {
+            // --- 8. Modal 處理 (取代 confirm) ---
+            
+            // 開啟刪除確認框
+            window.openDeleteModal = (id) => {
+                itemToDeleteId = id;
+                ui.deleteModal.classList.remove('hidden');
+            };
+            
+            // 取消刪除
+            ui.btnCancelDelete.addEventListener('click', () => {
+                itemToDeleteId = null;
+                ui.deleteModal.classList.add('hidden');
+            });
+
+            // 確認刪除
+            ui.btnConfirmDelete.addEventListener('click', () => {
+                if (itemToDeleteId) {
+                    linksData = linksData.filter(item => item.id !== itemToDeleteId);
+                    saveLocalData();
+                    renderLinks();
+                    window.showToast("已成功刪除連結", "success");
+                }
+                itemToDeleteId = null;
+                ui.deleteModal.classList.add('hidden');
+            });
+
+            // 開啟編輯框
+            window.openEditModal = (encodedData) => {
                 const data = JSON.parse(decodeURIComponent(encodedData));
                 ui.editInputs.id.value = data.id;
                 ui.editInputs.title.value = data.title || '';
                 ui.editInputs.url.value = data.originalUrl || '';
                 ui.editInputs.category.value = data.category || '';
                 ui.editInputs.location.value = data.location || '';
-                ui.editInputs.summary.value = data.summary || data.description || '';
+                ui.editInputs.summary.value = data.summary || '';
                 ui.editModal.classList.remove('hidden');
             };
 
-            const closeEdit = () => { ui.editModal.classList.add('hidden'); };
+            const closeEdit = () => ui.editModal.classList.add('hidden');
             ui.btnCloseEdit.addEventListener('click', closeEdit);
             ui.btnCancelEdit.addEventListener('click', closeEdit);
 
-            // 儲存編輯
-            ui.btnSaveEdit.addEventListener('click', async () => {
+            // 儲存編輯結果
+            ui.btnSaveEdit.addEventListener('click', () => {
                 const id = ui.editInputs.id.value;
-                const updateData = {
-                    title: ui.editInputs.title.value.trim(),
-                    originalUrl: ui.editInputs.url.value.trim(),
-                    category: ui.editInputs.category.value.trim(),
-                    location: ui.editInputs.location.value.trim(),
-                    summary: ui.editInputs.summary.value.trim()
-                };
-
-                const btn = ui.btnSaveEdit; const spinner = document.getElementById('edit-spinner');
-                btn.disabled = true; spinner.classList.remove('hidden');
-
-                try {
-                    if (currentMode === 'local') {
-                        const index = linksData.findIndex(item => item.id === id);
-                        if (index !== -1) {
-                            linksData[index] = { ...linksData[index], ...updateData };
-                            localStorage.setItem('smart_links', JSON.stringify(linksData));
-                            renderLinks();
-                            window.showToast("更新成功", "success");
-                        }
-                    } else if (currentMode === 'firebase' && window.dbModules) {
-                        const docRef = window.dbModules.doc(window.appDb, 'artifacts', appId, 'users', currentUser.uid, 'links', id);
-                        await window.dbModules.updateDoc(docRef, updateData);
-                        window.showToast("雲端更新成功", "success");
-                    }
-                    closeEdit();
-                } catch (e) {
-                    console.error("更新失敗:", e);
-                    window.showToast("更新失敗，請查看日誌", "error");
-                } finally {
-                    btn.disabled = false; spinner.classList.add('hidden');
-                }
-            });
-
-            // 刪除邏輯
-            window.deleteItem = async (id) => {
-                if (!confirm('確定要刪除這個連結嗎？\n(提示: 因 iframe 限制這裡暫用原生確認框，實際環境可換成自訂 Modal)')) return;
+                const index = linksData.findIndex(item => item.id === id);
                 
-                try {
-                    if (currentMode === 'local') {
-                        linksData = linksData.filter(item => item.id !== id);
-                        localStorage.setItem('smart_links', JSON.stringify(linksData));
-                        renderLinks();
-                        window.showToast("已刪除", "info");
-                    } else if (currentMode === 'firebase' && window.dbModules) {
-                        const docRef = window.dbModules.doc(window.appDb, 'artifacts', appId, 'users', currentUser.uid, 'links', id);
-                        await window.dbModules.deleteDoc(docRef);
-                        window.showToast("已刪除", "info");
-                    }
-                } catch (e) {
-                    console.error("刪除失敗", e);
+                if (index !== -1) {
+                    linksData[index] = {
+                        ...linksData[index],
+                        title: ui.editInputs.title.value.trim(),
+                        category: ui.editInputs.category.value.trim(),
+                        location: ui.editInputs.location.value.trim(),
+                        summary: ui.editInputs.summary.value.trim()
+                    };
+                    saveLocalData();
+                    renderLinks();
+                    window.showToast("資料已更新", "success");
                 }
-            };
-
+                closeEdit();
+            });
         });
     </script>
 </body>
