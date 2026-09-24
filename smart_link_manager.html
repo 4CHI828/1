@@ -63,7 +63,7 @@
 
         .category-chips { display: flex; flex-wrap: wrap; gap: 0.7rem; margin-bottom: 0.8rem; }
         .chip {
-            padding:, 0.4rem 1.2rem; border-radius: 20px; background: var(--card-dark);
+            padding: 0.4rem 1.2rem; border-radius: 20px; background: var(--card-dark);
             border: 1px solid var(--border-color); color: var(--text-main);
             font-size: 0.85rem; cursor: pointer; transition: all 0.2s;
         }
@@ -77,12 +77,7 @@
             border: 1px solid var(--border-color); background-color: var(--card-dark); color: var(--text-main);
         }
 
-        /* --- [核心] 極簡策展佈局 --- */
-        .links-grid { 
-            display: grid; 
-            grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); 
-            gap: 1.5rem; 
-        }
+        .links-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); gap: 1.5rem; }
         .list-view { display: flex; flex-direction: column; gap: 1rem; }
         .list-view .link-card { width: 100%; max-width: 100%; }
 
@@ -95,6 +90,16 @@
         .link-card:hover { border-color: var(--primary); box-shadow: 0 10px 20px rgba(0,0,0,0.2); transform: translateY(-2px); }
         .link-card.is-pinned { border-left: 4px solid var(--warning); }
         .link-card.is-read { opacity: 0.6; }
+
+        /* 圖片預覽區域樣式 */
+        .link-image-preview {
+            height: 160px; width: calc(100% + 3rem); margin: -1.5rem -1.5rem 1rem -1.5rem;
+            overflow: hidden; background-color: #000; position: relative;
+        }
+        .link-image-preview img {
+            width: 100%; height: 100%; object-fit: cover; transition: transform 0.4s ease;
+        }
+        .link-card:hover .link-image-preview img { transform: scale(1.05); }
 
         .link-desc { 
             color: var(--text-muted); font-size: 0.9rem; 
@@ -129,22 +134,25 @@
         }
 
         .card-actions {
-            position: absolute; top: 1rem; right: 1rem;
+            position: absolute; top: 1rem; right: 1rem; z-index: 10;
             display: flex; gap: 0.5rem; opacity: 0; transition: opacity 0.2s;
         }
+        /* 如果有圖片，按鈕需要加個陰影以免看不清 */
+        .link-image-preview ~ .card-actions { top: 1rem; }
+        
         .link-card:hover .card-actions { opacity: 1; }
         .card-actions button { 
             width: 32px; height: 32px; padding: 0; border-radius: 50%; 
-            background: var(--bg-dark); color: var(--text-muted); border: 1px solid var(--border-color);
+            background: rgba(15, 23, 42, 0.8); backdrop-filter: blur(4px); color: #fff; border: 1px solid rgba(255,255,255,0.2);
         }
-        .card-actions button:hover { color: var(--primary); border-color: var(--primary); }
+        .card-actions button:hover { color: var(--primary); border-color: var(--primary); background: rgba(15, 23, 42, 1); }
         .card-actions .btn-delete:hover { color: var(--danger); border-color: var(--danger); }
 
         .modal-overlay {
             display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: rgba(15, 23, 42, 0.8); z-index: 1000; justify-content: center; align-items: center; backdrop-filter: blur(8px);
         }
-        .modal { background: var(--card-dark); padding: 2.5rem; border-radius: 24px; width: 90%; max-width: 500px; border: 1px solid var(--border-color); }
+        .modal { background: var(--card-dark); padding: 2.5rem; border-radius: 24px; width: 90%; max-width: 500px; border: 1px solid var(--border-color); max-height: 90vh; overflow-y: auto; }
         .form-group { margin-bottom: 1.2rem; }
         .form-group label { display: block; margin-bottom: 0.5rem; color: var(--text-muted); font-size: 0.9rem; }
         .form-group input, .form-group textarea { width: 100%; padding: 0.8rem; border-radius: 12px; border: 1px solid var(--border-color); background: var(--bg-dark); color: var(--text-main); outline: none; }
@@ -152,6 +160,7 @@
         #toast-container { position: fixed; bottom: 2rem; right: 2rem; z-index: 9999; display: flex; flex-direction: column; gap: 0.5rem; }
         .toast { background: var(--card-dark); color: var(--text-main); padding: 1rem 1.5rem; border-radius: 12px; border-left: 4px solid var(--primary); box-shadow: 0 10px 15px -3px rgba(0,0,0,0.4); animation: slideIn 0.3s ease forwards; }
         @keyframes slideIn { from { opacity: 0; transform: translateX(100%); } to { opacity: 1; transform: translateX(0); } }
+        @keyframes fadeOut { from { opacity: 1; transform: translateX(0); } to { opacity: 0; transform: translateX(100%); } }
         .loader { display: none; border: 3px solid var(--border-color); border-top: 3px solid var(--primary); border-radius: 50%; width: 18px; height: 18px; animation: spin 1s linear infinite; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
     </style>
@@ -255,6 +264,9 @@
     <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore-compat.js"></script>
 
     <script>
+        /* ============================================================
+           1. 配置與初始化
+           ============================================================ */
         const firebaseConfig = {
             apiKey: "AIzaSyAt0YAxzPbFZHyLKQLN1me3N9DQKnCrylg",
             authDomain: "link-1b206.firebaseapp.com",
@@ -270,7 +282,7 @@
             app = firebase.initializeApp(firebaseConfig);
             auth = firebase.auth();
             db = firebase.firestore();
-        } catch(e) { console.error(e); }
+        } catch(e) { console.error("Firebase Init Error:", e); }
 
         function initFileSaveTime() {
             try {
@@ -296,115 +308,174 @@
         }
 
         /* ============================================================
-           智能解析引擎：針對 Threads 深度優化
+           2. 終極智能解析引擎 (整合 Microlink API + Fallback)
            ============================================================ */
+        
+        // 輔助函數 1: Microlink API (專業級元數據解析，支援 JS 渲染)
+        async function fetchWithMicrolink(url) {
+            const apiUrl = `https://api.microlink.io/?url=${encodeURIComponent(url)}`;
+            try {
+                const res = await fetch(apiUrl);
+                if (!res.ok) throw new Error("Microlink API request failed");
+                const data = await res.json();
+                
+                if (data.status === 'success' && data.data) {
+                    return {
+                        title: data.data.title || "",
+                        description: data.data.description || "",
+                        image: data.data.image?.url || "",
+                        author: data.data.author || "",
+                        publisher: data.data.publisher || ""
+                    };
+                }
+            } catch (e) {
+                console.warn("Microlink failed, falling back to proxy...");
+            }
+            return null;
+        }
+
+        // 輔助函數 2: 傳統 CORS 代理備援 (當 Microlink 額度用完或失敗時使用)
+        async function fetchWithProxy(url) {
+            const proxies = [
+                `https://api.allorigins.win/get?url=${encodeURIComponent(url)}`,
+                `https://corsproxy.io/?${encodeURIComponent(url)}`
+            ];
+            for (let proxy of proxies) {
+                try {
+                    const res = await fetch(proxy);
+                    if (!res.ok) continue;
+                    if (proxy.includes('allorigins')) {
+                        const data = await res.json();
+                        return data.contents;
+                    } else {
+                        return await res.text();
+                    }
+                } catch (e) { continue; }
+            }
+            throw new Error("All proxies failed");
+        }
+
+        // 核心解析函數
         async function fetchWebpageInfo(url) {
-            let result = { title: "", description: "請編輯詳細資訊", categories: ["一般網站"], account: "" };
+            let result = { title: "未命名連結", description: "點擊查看原始連結", categories: ["一般網站"], account: "", image: "" };
+            
             try {
                 if (!url.startsWith('http')) url = 'https://' + url;
                 const urlObj = new URL(url);
                 const lowerUrl = url.toLowerCase();
                 const path = urlObj.pathname.split('/').filter(p => p);
 
-                // --- Threads 解析 (優先順序最高) ---
-                if (lowerUrl.includes('threads.net')) {
-                    result.categories = ["社群媒體", "Threads"];
+                // --- 策略 1: 呼叫 Microlink API (最強大) ---
+                const microlinkData = await fetchWithMicrolink(url);
+                
+                if (microlinkData) {
+                    result.title = microlinkData.title || result.title;
+                    result.description = microlinkData.description || result.description;
+                    result.image = microlinkData.image || "";
                     
-                    // 1. 嘗試從路徑提取帳號 (@username)
-                    const accountMatch = url.match(/@([a-zA-Z0-9._]+)/);
-                    result.account = accountMatch ? `@${accountMatch[1]}` : "";
+                    if (microlinkData.author) result.account = microlinkData.author;
                     
-                    // 2. 嘗試抓取 OG 標籤 (避開登入牆)
-                    const proxyUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(url)}`;
-                    const res = await fetch(proxyUrl);
-                    const data = await res.json();
-                    if (data.contents) {
-                        const doc = new DOMParser().parseFromString(data.contents, "text/html");
-                        const ogTitle = doc.querySelector('meta[property="og:title"]')?.content;
-                        const ogDesc = doc.querySelector('meta[property="og:description"]')?.content;
-                        if (ogTitle) result.title = ogTitle;
-                        if (ogDesc) result.description = ogDesc;
-                    }
-                    
-                    // 3. Fallback：若抓不到標題，則使用 @帳號 命名
-                    if (!result.title) {
-                        result.title = result.account ? `${result.account} 的 Threads 貼文` : "Threads 內容";
+                    // 自動分類優化
+                    if (microlinkData.publisher) {
+                        const pub = microlinkData.publisher.toLowerCase();
+                        if (pub.includes('youtube')) result.categories = ["影音娛樂", "YouTube"];
+                        else if (pub.includes('instagram')) result.categories = ["社群媒體", "Instagram"];
+                        else if (pub.includes('facebook')) result.categories = ["社群媒體", "Facebook"];
+                        else if (pub.includes('threads')) result.categories = ["社群媒體", "Threads"];
+                        else if (pub.includes('tiktok') || pub.includes('douyin')) result.categories = ["短影音", "TikTok/抖音"];
+                        else result.categories = ["一般網站", microlinkData.publisher];
                     }
                 } 
-                // --- Instagram 解析 ---
-                else if (lowerUrl.includes('instagram.com')) {
-                    result.categories = ["社群媒體", "Instagram"];
-                    const accountMatch = url.match(/@([a-zA-Z0-9._]+)/);
-                    result.account = accountMatch ? `@${accountMatch[1]}` : "";
-                    
-                    const proxyUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(url)}`;
-                    const res = await fetch(proxyUrl);
-                    const data = await res.json();
-                    if (data.contents) {
-                        const doc = new DOMParser().parseFromString(data.contents, "text/html");
-                        const ogTitle = doc.querySelector('meta[property="og:title"]')?.content;
-                        const ogDesc = doc.querySelector('meta[property="og:description"]')?.content;
-                        if (ogTitle) result.title = ogTitle;
-                        if (ogDesc) result.description = ogDesc;
-                    }
-                    if (!result.title) result.title = result.account ? `${result.account} 的 IG 貼文` : "Instagram 內容";
-                }
-                // --- YouTube 解析 ---
-                else if (lowerUrl.includes('youtube.com') || lowerUrl.includes('youtu.be')) {
-                    result.categories = ["影音娛樂", "YouTube"];
-                    const ytUser = path.find(p => p.startsWith('@'));
-                    if (ytUser) result.account = ytUser;
-                    const res = await fetch(`https://noembed.com/embed?url=${encodeURIComponent(url)}`);
-                    const data = await res.json();
-                    if (data.title) result.title = data.title;
-                } 
-                // --- Facebook 解析 ---
-                else if (lowerUrl.includes('facebook.com')) {
-                    result.categories = ["社群媒體", "Facebook"];
-                    result.title = "Facebook 內容";
-                    result.account = path[0] ? `@${path[0]}` : "";
-                } 
-                // --- 一般網站解析 ---
+                
+                // --- 策略 2: 如果 Microlink 失敗，針對特定社群做 URL 解析與 Proxy 備援 ---
                 else {
-                    result.categories = ["一般網站"];
-                    const proxy = `https://api.allorigins.win/get?url=${encodeURIComponent(url)}`;
-                    const res = await fetch(proxy);
-                    const data = await res.json();
-                    if (data.contents) {
-                        const doc = new DOMParser().parseFromString(data.contents, "text/html");
-                        result.title = doc.querySelector('title')?.innerText || "";
+                    if (lowerUrl.includes('instagram.com') || lowerUrl.includes('threads.net')) {
+                        result.categories = ["社群媒體", lowerUrl.includes('threads.net') ? "Threads" : "Instagram"];
+                        const accountMatch = url.match(/@([a-zA-Z0-9._]+)/);
+                        if (accountMatch) result.account = `@${accountMatch[1]}`;
+                        else if (lowerUrl.includes('instagram.com') && !urlObj.pathname.includes('/p/') && !urlObj.pathname.includes('/reel/')) {
+                            result.account = `@${path[0]}`;
+                        }
+                        if (!result.title) result.title = result.account ? `${result.account} 的貼文` : "社群媒體內容";
+                    } 
+                    else if (lowerUrl.includes('youtube.com') || lowerUrl.includes('youtu.be')) {
+                        result.categories = ["影音娛樂", "YouTube"];
+                        const ytUser = path.find(p => p.startsWith('@'));
+                        if (ytUser) result.account = ytUser;
+                        try {
+                            const res = await fetch(`https://noembed.com/embed?url=${encodeURIComponent(url)}`);
+                            const data = await res.json();
+                            if (data.title) result.title = data.title;
+                            if (data.author_name) result.account = data.author_name;
+                            if (data.thumbnail_url) result.image = data.thumbnail_url;
+                        } catch (e) {}
+                    } 
+                    else if (lowerUrl.includes('douyin.com') || lowerUrl.includes('tiktok.com')) {
+                        result.categories = ["短影音", lowerUrl.includes('douyin.com') ? "抖音" : "TikTok"];
+                        result.title = "短影片內容";
+                    }
+                    // 最後的備援：使用傳統 CORS 代理
+                    else {
+                        result.categories = ["一般網站"];
+                        try {
+                            const html = await fetchWithProxy(url);
+                            const doc = new DOMParser().parseFromString(html, "text/html");
+                            result.title = doc.querySelector('meta[property="og:title"]')?.content || doc.querySelector('title')?.innerText || "無標題網頁";
+                            result.description = doc.querySelector('meta[property="og:description"]')?.content || doc.querySelector('meta[name="description"]')?.content || "無摘要資訊";
+                            result.image = doc.querySelector('meta[property="og:image"]')?.content;
+                        } catch (e) {}
                     }
                 }
-            } catch (e) { console.warn("解析失敗:", e); }
+            } catch (e) { console.error("Critical Error in fetchWebpageInfo:", e); }
+            
+            // 清理標題
+            result.title = result.title.replace(/\s+/g, ' ').trim();
             if (!result.title) result.title = "未命名連結";
             return result;
         }
 
+        /* ============================================================
+           3. 資料操作
+           ============================================================ */
         async function processAndSaveUrl() {
             const input = document.getElementById('url-input');
             let url = input.value.trim();
             if (!url) return;
+            
+            const currentLinks = isLocalMode ? JSON.parse(localStorage.getItem('my_links') || '[]') : await getAllLinks();
+            if (currentLinks.some(l => l.url === url)) {
+                if (!confirm("此連結已存在於庫中，是否仍要再次儲存？")) return;
+            }
+
             const btn = document.getElementById('btn-add-url');
             const loader = document.getElementById('add-loader');
             const btnText = btn.querySelector('.btn-text');
             btn.disabled = true; btnText.style.display = 'none'; loader.style.display = 'block';
 
             const info = await fetchWebpageInfo(url);
-            const finalTitle = info.account ? `${info.account} - ${info.title}` : info.title;
-            const data = { url, title: finalTitle, categories: info.categories, description: info.description, createdAt: Date.now(), pinned: false, isRead: false, account: info.account };
+            let finalTitle = info.title;
+            if (info.account && !finalTitle.includes(info.account)) {
+                finalTitle = `${info.account} - ${finalTitle}`;
+            }
+
+            const data = { 
+                url, title: finalTitle, categories: info.categories, 
+                description: info.description, image: info.image || "", 
+                createdAt: Date.now(), pinned: false, isRead: false, account: info.account 
+            };
 
             try {
                 if (isLocalMode) {
                     const links = JSON.parse(localStorage.getItem('my_links') || '[]');
                     data.id = 'loc_' + Date.now();
-                    links.push(data);
+                    links.unshift(data);
                     localStorage.setItem('my_links', JSON.stringify(links));
                     loadLinks();
                 } else {
                     await db.collection('users').doc(currentUser.uid).collection('links').add(data);
                 }
-                showToast("儲存成功", "success");
-            } catch (e) { showToast("錯誤: " + e.message, "error"); }
+                showToast("✅ 儲存成功", "success");
+            } catch (e) { showToast("❌ 儲存錯誤: " + e.message, "error"); }
 
             input.value = '';
             btn.disabled = false; btnText.style.display = 'inline'; loader.style.display = 'none';
@@ -419,21 +490,31 @@
             btn.disabled = true; btn.innerText = "解析中...";
 
             let count = 0;
-            for (let url of urls) {
-                const cleanedUrl = url.trim().startsWith('http') ? url.trim() : 'https://' + url.trim();
-                const info = await fetchWebpageInfo(cleanedUrl);
-                const finalTitle = info.account ? `${info.account} - ${info.title}` : info.title;
-                const data = { url: cleanedUrl, title: finalTitle, categories: info.categories, description: info.description, createdAt: Date.now(), pinned: false, isRead: false, account: info.account };
-                
-                if (isLocalMode) {
-                    const links = JSON.parse(localStorage.getItem('my_links') || '[]');
-                    data.id = 'loc_' + Math.random();
-                    links.push(data);
-                    localStorage.setItem('my_links', JSON.stringify(links));
-                } else {
-                    await db.collection('users').doc(currentUser.uid).collection('links').add(data);
+            if (isLocalMode) {
+                const links = JSON.parse(localStorage.getItem('my_links') || '[]');
+                for (let url of urls) {
+                    const cleanedUrl = url.trim().startsWith('http') ? url.trim() : 'https://' + url.trim();
+                    try {
+                        const info = await fetchWebpageInfo(cleanedUrl);
+                        const finalTitle = info.account ? `${info.account} - ${info.title}` : info.title;
+                        links.unshift({ id: 'loc_' + Math.random(), url: cleanedUrl, title: finalTitle, categories: info.categories, description: info.description, image: info.image, createdAt: Date.now(), pinned: false, isRead: false, account: info.account });
+                        count++;
+                    } catch(e) { console.error(e); }
                 }
-                count++;
+                localStorage.setItem('my_links', JSON.stringify(links));
+            } else {
+                const batch = db.batch();
+                for (let url of urls) {
+                    const cleanedUrl = url.trim().startsWith('http') ? url.trim() : 'https://' + url.trim();
+                    try {
+                        const info = await fetchWebpageInfo(cleanedUrl);
+                        const finalTitle = info.account ? `${info.account} - ${info.title}` : info.title;
+                        const ref = db.collection('users').doc(currentUser.uid).collection('links').doc();
+                        batch.set(ref, { url: cleanedUrl, title: finalTitle, categories: info.categories, description: info.description, image: info.image, createdAt: Date.now(), pinned: false, isRead: false, account: info.account });
+                        count++;
+                    } catch(e) { console.error(e); }
+                }
+                await batch.commit();
             }
             showToast(`成功匯入 ${count} 個連結`, "success");
             btn.disabled = false; btn.innerText = "開始匯入";
@@ -441,13 +522,14 @@
             loadLinks();
         }
 
+        async function getAllLinks() {
+            if (isLocalMode) return JSON.parse(localStorage.getItem('my_links') || '[]');
+            const snap = await db.collection('users').doc(currentUser.uid).collection('links').get();
+            return snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        }
+
         async function exportData() {
-            let links = [];
-            if (isLocalMode) links = JSON.parse(localStorage.getItem('my_links') || '[]');
-            else {
-                const snap = await db.collection('users').doc(currentUser.uid).collection('links').get();
-                links = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-            }
+            const links = await getAllLinks();
             const blob = new Blob([JSON.stringify(links, null, 2)], { type: "application/json" });
             const url = URL.createObjectURL(blob);
             const a = document.createElement('a');
@@ -482,6 +564,9 @@
             reader.readAsText(file);
         }
 
+        /* ============================================================
+           4. 渲染與過濾
+           ============================================================ */
         function loadLinks() {
             if (isLocalMode) {
                 const links = JSON.parse(localStorage.getItem('my_links') || '[]');
@@ -521,8 +606,31 @@
                     ? link.title.replace(/(@[^\s-]+)/, `<span class="account-handle">$1</span>`) 
                     : escapeHtml(link.title);
 
+                let sourceDisplay = "";
+                try {
+                    if (link.account) sourceDisplay = link.account;
+                    else {
+                        const urlObj = new URL(link.url);
+                        sourceDisplay = urlObj.hostname;
+                    }
+                } catch(e) { sourceDisplay = "未知來源"; }
+
+                let imageHtml = "";
+                if (link.image) {
+                    imageHtml = `<div class="link-image-preview">
+                        <img src="${link.image}" onerror="this.parentElement.style.display='none'">
+                    </div>`;
+                }
+
                 return `
                 <div class="link-card ${link.pinned ? 'is-pinned' : ''} ${link.isRead ? 'is-read' : ''}">
+                    ${imageHtml}
+                    <div class="card-actions">
+                        <button class="btn-outline" onclick="togglePin('${link.id}')" title="釘選"><i class="fas ${link.pinned ? 'fa-thumbtack' : 'fa-thumbtack'}"></i></button>
+                        <button class="btn-outline" onclick="toggleRead('${link.id}')" title="標記已讀"><i class="fas ${link.isRead ? 'fa-check-circle' : 'fa-circle'}"></i></button>
+                        <button class="btn-outline" onclick="openEdit('${link.id}')" title="編輯"><i class="fas fa-edit"></i></button>
+                        <button class="btn-outline btn-delete" onclick="deleteLink('${link.id}')" title="刪除"><i class="fas fa-trash"></i></button>
+                    </div>
                     <p class="link-desc">${escapeHtml(link.description)}</p>
                     <h3 class="link-title">${titleHtml}</h3>
                     <a href="${link.url}" target="_blank" class="link-url-display">${escapeHtml(link.url)}</a>
@@ -530,19 +638,13 @@
                         <div class="source-info">
                             <img class="favicon" src="https://www.google.com/s2/favicons?domain=${link.url}&sz=64">
                             <div class="source-text">
-                                <span class="font-medium">${link.account || new URL(link.url).hostname}</span>
+                                <span class="font-medium">${sourceDisplay}</span>
                                 <span>${formatTime(link.createdAt)}</span>
                             </div>
                         </div>
                         <div class="tags-container">
                             ${(Array.isArray(link.categories) ? link.categories : (link.categories ? [link.categories] : [])).map(t => `<span class="tag-badge">${escapeHtml(t)}</span>`).join('')}
                         </div>
-                    </div>
-                    <div class="card-actions">
-                        <button class="btn-outline" onclick="togglePin('${link.id}')" title="釘選"><i class="fas ${link.pinned ? 'fa-thumbtack' : 'fa-thumbtack-empty'}"></i></button>
-                        <button class="btn-outline" onclick="toggleRead('${link.id}')" title="標記已讀"><i class="fas ${link.isRead ? 'fa-check-circle' : 'fa-circle'}"></i></button>
-                        <button class="btn-outline" onclick="openEdit('${link.id}')" title="編輯"><i class="fas fa-edit"></i></button>
-                        <button class="btn-outline btn-delete" onclick="deleteLink('${link.id}')" title="刪除"><i class="fas fa-trash"></i></button>
                     </div>
                 </div>
             `}).join('');
@@ -695,7 +797,7 @@
                     document.getElementById('app-screen').style.display = 'block';
                     document.getElementById('btn-logout').style.display = 'inline-flex';
                     document.getElementById('user-info').style.display = 'inline';
-                    document,getElementById('user-info').textContent = user.email;
+                    document.getElementById('user-info').textContent = user.email;
                     loadLinks();
                 }
             });
