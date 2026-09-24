@@ -34,7 +34,7 @@
     .toast-anim { animation: slideDown 3.5s ease-in-out forwards; }
   </style>
   <script>
-    tailwind.config = { darkMode: 'class' }
+    tailwind.config = { darkMode: 'class' };
   </script>
 </head>
 <body class="bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-slate-900 dark:to-gray-900 min-h-screen p-2 sm:p-4 text-gray-800 dark:text-gray-100 transition-colors duration-300 font-sans">
@@ -139,8 +139,17 @@
 
     <!-- Google 登入區 -->
     <div class="bg-blue-50/80 dark:bg-blue-900/20 border border-blue-200/60 dark:border-blue-700/40 rounded-2xl p-3.5 flex flex-wrap items-center justify-between gap-3 shadow-sm">
-      <div class="flex items-center gap-2 flex-1 min-w-[220px]"><span class="text-lg">☁️</span><div><div id="googleUserName" class="text-sm font-bold">尚未登入 Google</div><div id="googleUserHint" class="text-[10px] text-gray-500">登入後，帳本、成員、類別與收據會儲存在你的 Google Drive</div></div></div>
-      <div class="flex items-center gap-2"><button type="button" id="googleLoginBtn" class="bg-white hover:bg-gray-50 text-gray-800 border border-gray-300 px-4 py-2 rounded-xl text-xs font-bold shadow-sm transition active:scale-95">🔐 Google 登入</button><button type="button" id="googleLogoutBtn" class="hidden text-xs text-gray-500 hover:text-red-500 font-medium px-1">登出</button></div>
+      <div class="flex items-center gap-2 flex-1 min-w-[220px]">
+        <span class="text-lg">☁️</span>
+        <div>
+          <div id="googleUserName" class="text-sm font-bold">尚未登入 Google</div>
+          <div id="googleUserHint" class="text-[10px] text-gray-500">登入後，帳本、成員、類別與收據會儲存在你的 Google Drive</div>
+        </div>
+      </div>
+      <div class="flex items-center gap-2">
+        <button type="button" id="googleLoginBtn" class="bg-white hover:bg-gray-50 text-gray-800 border border-gray-300 px-4 py-2 rounded-xl text-xs font-bold shadow-sm transition active:scale-95">🔐 Google 登入</button>
+        <button type="button" id="googleLogoutBtn" class="hidden text-xs text-gray-500 hover:text-red-500 font-medium px-1">登出</button>
+      </div>
     </div>
 
     <!-- 分帳結算卡片 (含公帳總計與 LINE 一鍵分享按鈕) -->
@@ -303,7 +312,7 @@
           <div class="flex flex-wrap gap-2 text-xs pt-1" id="membersCheckboxes"></div>
         </div>
         
-        <!-- 多幣別自訂分攤優化介面 -->
+        <!-- 多幣別自訂分攤介面 -->
         <div id="splitModeCustomContainer" class="hidden space-y-2 pt-1">
           <div class="flex justify-between items-center text-[11px] font-medium text-gray-500">
             <div class="flex items-center gap-1.5">
@@ -375,7 +384,7 @@
         </div>
       </div>
 
-      <!-- 圖表區塊 (支援：類別佔比 / 趨勢 / 成員花費佔比) -->
+      <!-- 圖表區塊 (支援：類別佔比 / 成員佔比 / 趨勢) -->
       <div id="mainChartContainer" class="hidden mb-4 bg-white/60 dark:bg-slate-900/60 border border-gray-200/50 dark:border-gray-700/50 rounded-2xl p-4 shadow-inner">
         <div class="flex justify-between items-center text-xs font-bold text-gray-700 dark:text-gray-300 mb-2">
           <span>📊 支出圖表分析 (TWD)</span>
@@ -452,8 +461,8 @@
     const DRIVE_API = "https://www.googleapis.com/drive/v3";
     const DRIVE_UPLOAD_API = "https://www.googleapis.com/upload/drive/v3";
     const DRIVE_APP_NAME = "雲端記帳";
-    let googleAccessToken = "", googleTokenClient = null, driveRootFolderId = null, driveReceiptFolderId = null, driveReady = false;
     
+    let googleAccessToken = "", googleTokenClient = null, driveRootFolderId = null, driveReceiptFolderId = null, driveReady = false;
     let currentSheet = localStorage.getItem("app_active_sheet") || "預設帳本";
     let members = JSON.parse(localStorage.getItem("split_members_cache")) || [];
     let categories = JSON.parse(localStorage.getItem("app_categories_cache")) || ["餐飲", "交通", "住宿", "購物", "門票", "娛樂", "生活", "其他"];
@@ -467,91 +476,26 @@
     let chartInstance = null;
     let currentChartMode = 'pie'; // 'pie' | 'member' | 'bar'
 
-    // 🌟 簡易內嵌 Service Worker 註冊支援離線存取
-    if ('serviceWorker' in navigator) {
-      window.addEventListener('load', () => {
-        const swBlob = new Blob([`
-          const CACHE_NAME = 'cloud-ledger-v1';
-          self.addEventListener('install', e => self.skipWaiting());
-          self.addEventListener('activate', e => e.waitUntil(clients.claim()));
-          self.addEventListener('fetch', e => {
-            if(e.request.url.startsWith('http') && e.request.method === 'GET' && !e.request.url.includes('googleapis.com')) {
-              e.respondWith(
-                caches.match(e.request).then(cached => cached || fetch(e.request).then(res => {
-                  return caches.open(CACHE_NAME).then(cache => {
-                    cache.put(e.request, res.clone());
-                    return res;
-                  });
-                }).catch(() => cached))
-              );
-            }
-          });
-        `], { type: 'application/javascript' });
-        navigator.serviceWorker.register(URL.createObjectURL(swBlob)).catch(()=>{});
-      });
+    // 工具防抖函數
+    function debounce(fn, delay = 250) {
+      let timer = null;
+      return function(...args) {
+        clearTimeout(timer);
+        timer = setTimeout(() => fn.apply(this, args), delay);
+      };
     }
-
-    const pieOutlabelsPlugin = {
-      id: 'pieOutlabels',
-      afterDraw(chart) {
-        if (chart.config.type !== 'doughnut' && chart.config.type !== 'pie') return;
-        const ctx = chart.ctx;
-        const isDark = document.documentElement.classList.contains("dark");
-        const textColor = isDark ? '#f1f5f9' : '#1e293b';
-        const lineColor = isDark ? 'rgba(255,255,255,0.45)' : 'rgba(0,0,0,0.35)';
-
-        chart.data.datasets.forEach((dataset, i) => {
-          const meta = chart.getDatasetMeta(i);
-          const total = dataset.data.reduce((acc, curr) => acc + curr, 0);
-
-          meta.data.forEach((element, index) => {
-            const value = dataset.data[index];
-            if (value <= 0 || (total > 0 && (value / total) < 0.04)) return;
-
-            const { startAngle, endAngle, outerRadius, x, y } = element;
-            const midAngle = (startAngle + endAngle) / 2;
-
-            const startX = x + Math.cos(midAngle) * outerRadius;
-            const startY = y + Math.sin(midAngle) * outerRadius;
-
-            const lineLen = 14;
-            const midX = x + Math.cos(midAngle) * (outerRadius + lineLen);
-            const midY = y + Math.sin(midAngle) * (outerRadius + lineLen);
-
-            const isRight = Math.cos(midAngle) >= 0;
-            const endX = midX + (isRight ? 18 : -18);
-            const endY = midY;
-
-            ctx.save();
-            ctx.beginPath();
-            ctx.moveTo(startX, startY);
-            ctx.lineTo(midX, midY);
-            ctx.lineTo(endX, endY);
-            ctx.strokeStyle = lineColor;
-            ctx.lineWidth = 1.2;
-            ctx.stroke();
-
-            const labelText = `${chart.data.labels[index]} $${value.toLocaleString()}`;
-            ctx.font = 'bold 10px sans-serif';
-            ctx.fillStyle = textColor;
-            ctx.textAlign = isRight ? 'left' : 'right';
-            ctx.textBaseline = 'middle';
-            ctx.fillText(labelText, endX + (isRight ? 4 : -4), endY);
-            ctx.restore();
-          });
-        });
-      }
-    };
 
     function escapeHtml(str) {
       if (!str) return "";
       return String(str).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
     }
+
     function getTodayString() {
       const d = new Date();
       const pad = (n) => String(n).padStart(2, '0');
       return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
     }
+
     function generateUUID() {
       return 'xxxx-xxxx-4xxx-yxxx'.replace(/[xy]/g, c => {
         const r = Math.random() * 16 | 0, v = c === 'x' ? r : (r & 0x3 | 0x8);
@@ -559,7 +503,7 @@
       });
     }
 
-    // 🌟 安全數學算式解析函數 (支援 + - * / ( ) 小數)
+    // 🌟 安全數學算式解析函數 (防禦非算式字元)
     function evaluateMathExpression(str) {
       if (!str) return 0;
       const clean = String(str).replace(/,/g, '').trim();
@@ -578,12 +522,12 @@
       const container = document.getElementById("toastContainer");
       const toast = document.createElement("div");
       const isErr = type === 'error', isInfo = type === 'info';
-      let bgClass = isErr ? "bg-red-50 text-red-700 border-red-200" : isInfo ? "bg-blue-50 text-blue-700 border-blue-200" : "bg-emerald-50 text-emerald-700 border-emerald-200";
-      let darkBgClass = isErr ? "dark:bg-red-900/80 dark:text-red-200 dark:border-red-800" : isInfo ? "dark:bg-blue-900/80 dark:text-blue-200 dark:border-blue-800" : "dark:bg-emerald-900/80 dark:text-emerald-200 dark:border-emerald-800";
+      const bgClass = isErr ? "bg-red-50 text-red-700 border-red-200" : isInfo ? "bg-blue-50 text-blue-700 border-blue-200" : "bg-emerald-50 text-emerald-700 border-emerald-200";
+      const darkBgClass = isErr ? "dark:bg-red-900/80 dark:text-red-200 dark:border-red-800" : isInfo ? "dark:bg-blue-900/80 dark:text-blue-200 dark:border-blue-800" : "dark:bg-emerald-900/80 dark:text-emerald-200 dark:border-emerald-800";
       toast.className = `toast-anim flex items-center justify-center p-3 text-sm font-bold rounded-2xl shadow-lg border ${bgClass} ${darkBgClass} glass`;
       toast.innerHTML = message;
       container.appendChild(toast);
-      setTimeout(() => { if(container.contains(toast)) container.removeChild(toast); }, 3500);
+      setTimeout(() => { if (container.contains(toast)) container.removeChild(toast); }, 3500);
     }
 
     function updateTimestampDisplay() {
@@ -610,11 +554,12 @@
     function saveOfflineQueue(q) { localStorage.setItem("offline_mutation_queue", JSON.stringify(q)); }
 
     async function syncOfflineQueue() {
-      if(!isGoogleLoggedIn()) return;
-      const q=getOfflineQueue(); if(!q.length)return;
+      if (!isGoogleLoggedIn()) return;
+      const q = getOfflineQueue(); 
+      if (!q.length) return;
       try {
-        for(const item of q) {
-          if(item.driveAction === "saveBook") {
+        for (const item of q) {
+          if (item.driveAction === "saveBook") {
             const records = await uploadPendingReceipts(item.records || []);
             const f = await getOrCreateBookFile(item.sheetName);
             await updateDriveJson(f.id, records);
@@ -624,7 +569,9 @@
         document.getElementById("networkStatusBadge").classList.add("hidden");
         showToast("✅ 離線佇列同步完成！");
         await loadRecords();
-      } catch(e) { showToast("⚠️ 離線佇列尚有資料待同步", "info"); }
+      } catch (e) { 
+        showToast("⚠️ 離線佇列尚有資料待同步", "info"); 
+      }
     }
 
     function applyFontSize(size) {
@@ -670,58 +617,112 @@
     document.getElementById("themeToggleBtn").addEventListener("click", () => {
       const isDark = document.documentElement.classList.toggle("dark");
       localStorage.setItem("theme", isDark ? "dark" : "light");
-      themeToggleBtn.textContent = isDark ? "☀️" : "🌙";
-      if(!document.getElementById("mainChartContainer").classList.contains("hidden")) drawChart();
+      document.getElementById("themeToggleBtn").textContent = isDark ? "☀️" : "🌙";
+      if (!document.getElementById("mainChartContainer").classList.contains("hidden")) drawChart();
     });
 
     function isGoogleLoggedIn() { return Boolean(googleAccessToken && driveReady); }
     function requireGoogleLogin() { if (!isGoogleLoggedIn()) { showToast("請先使用 Google 登入", "error"); return false; } return true; }
-    function driveHeaders(json=false) { const h={"Authorization":`Bearer ${googleAccessToken}`}; if(json) h["Content-Type"]="application/json"; return h; }
-    async function driveRequest(url, options={}) { const res=await fetch(url,{...options,headers:{...driveHeaders(),...(options.headers||{})}}); if(res.status===401) throw new Error("Google 登入權杖已過期，請重新登入"); if(!res.ok) throw new Error(await res.text()||`Google Drive HTTP ${res.status}`); return res; }
-    async function driveList(q, fields="files(id,name,mimeType,modifiedTime,appProperties,webViewLink)") { const p=new URLSearchParams({q,spaces:"drive",fields,pageSize:"1000"}); return (await (await driveRequest(`${DRIVE_API}/files?${p}`)).json()).files||[]; }
-    async function ensureDriveFolder(name,parentId="root") { const q=`'${parentId}' in parents and name = '${name.replace(/'/g,"\\'")}' and mimeType = 'application/vnd.google-apps.folder' and trashed = false`; const f=await driveList(q); if(f[0]) return f[0].id; const r=await driveRequest(`${DRIVE_API}/files`,{method:"POST",headers:driveHeaders(true),body:JSON.stringify({name,mimeType:"application/vnd.google-apps.folder",parents:[parentId]})}); return (await r.json()).id; }
-    async function findDriveFileByType(type, sheetName=null) { const files=await driveList(`'${driveRootFolderId}' in parents and trashed = false`); return files.find(f=>f.appProperties&&f.appProperties.type===type&&(sheetName===null||f.appProperties.sheetName===sheetName))||null; }
+    function driveHeaders(json = false) { 
+      const h = { "Authorization": `Bearer ${googleAccessToken}` }; 
+      if (json) h["Content-Type"] = "application/json"; 
+      return h; 
+    }
+    
+    // 🌟 增強 Drive 請求處理：支援自動 Refresh 與過期攔截
+    async function driveRequest(url, options = {}) { 
+      const res = await fetch(url, { ...options, headers: { ...driveHeaders(), ...(options.headers || {}) } }); 
+      if (res.status === 401) {
+        if (googleTokenClient) {
+          googleTokenClient.requestAccessToken({ prompt: "" });
+        }
+        throw new Error("Google 授權已更新，請再試一次");
+      }
+      if (!res.ok) throw new Error(await res.text() || `Google Drive HTTP ${res.status}`); 
+      return res; 
+    }
+    
+    async function driveList(q, fields = "files(id,name,mimeType,modifiedTime,appProperties,webViewLink)") { 
+      const p = new URLSearchParams({ q, spaces: "drive", fields, pageSize: "1000" }); 
+      return (await (await driveRequest(`${DRIVE_API}/files?${p}`)).json()).files || []; 
+    }
+    async function ensureDriveFolder(name, parentId = "root") { 
+      const q = `'${parentId}' in parents and name = '${name.replace(/'/g, "\\'")}' and mimeType = 'application/vnd.google-apps.folder' and trashed = false`; 
+      const f = await driveList(q); 
+      if (f[0]) return f[0].id; 
+      const r = await driveRequest(`${DRIVE_API}/files`, { method: "POST", headers: driveHeaders(true), body: JSON.stringify({ name, mimeType: "application/vnd.google-apps.folder", parents: [parentId] }) }); 
+      return (await r.json()).id; 
+    }
+    async function findDriveFileByType(type, sheetName = null) { 
+      const files = await driveList(`'${driveRootFolderId}' in parents and trashed = false`); 
+      return files.find(f => f.appProperties && f.appProperties.type === type && (sheetName === null || f.appProperties.sheetName === sheetName)) || null; 
+    }
     async function readDriveJson(id) { return await (await driveRequest(`${DRIVE_API}/files/${id}?alt=media`)).json(); }
-    async function createDriveJson(name,data,props) { const r=await driveRequest(`${DRIVE_API}/files`,{method:"POST",headers:driveHeaders(true),body:JSON.stringify({name,mimeType:"application/json",parents:[driveRootFolderId],appProperties:props})}); const f=await r.json(); await updateDriveJson(f.id,data); return f.id; }
-    async function updateDriveJson(id,data) { await driveRequest(`${DRIVE_UPLOAD_API}/files/${id}?uploadType=media`,{method:"PATCH",headers:driveHeaders(true),body:JSON.stringify(data)}); }
-    async function getOrCreateBookFile(sheetName) { let f=await findDriveFileByType("book",sheetName); if(f) return f; const name=`帳本_${sheetName.replace(/[\\/:*?"<>|]/g,"_")}.json`; const id=await createDriveJson(name,[],{type:"book",sheetName,app:DRIVE_APP_NAME}); return {id,name,appProperties:{type:"book",sheetName}}; }
+    async function createDriveJson(name, data, props) { 
+      const r = await driveRequest(`${DRIVE_API}/files`, { method: "POST", headers: driveHeaders(true), body: JSON.stringify({ name, mimeType: "application/json", parents: [driveRootFolderId], appProperties: props }) }); 
+      const f = await r.json(); 
+      await updateDriveJson(f.id, data); 
+      return f.id; 
+    }
+    async function updateDriveJson(id, data) { 
+      await driveRequest(`${DRIVE_UPLOAD_API}/files/${id}?uploadType=media`, { method: "PATCH", headers: driveHeaders(true), body: JSON.stringify(data) }); 
+    }
+    async function getOrCreateBookFile(sheetName) { 
+      let f = await findDriveFileByType("book", sheetName); 
+      if (f) return f; 
+      const name = `帳本_${sheetName.replace(/[\\/:*?"<>|]/g, "_")}.json`; 
+      const id = await createDriveJson(name, [], { type: "book", sheetName, app: DRIVE_APP_NAME }); 
+      return { id, name, appProperties: { type: "book", sheetName } }; 
+    }
 
     async function uploadDriveReceipt(dataUrl, recordId) {
-      if(!dataUrl || !isGoogleLoggedIn()) return null;
-      if(!driveReceiptFolderId) driveReceiptFolderId = await ensureDriveFolder("receipts", driveRootFolderId);
+      if (!dataUrl || !isGoogleLoggedIn()) return null;
+      if (!driveReceiptFolderId) driveReceiptFolderId = await ensureDriveFolder("receipts", driveRootFolderId);
       const blob = await (await fetch(dataUrl)).blob();
-      const metadata = {name:`收據_${recordId}.jpg`, mimeType:"image/jpeg", parents:[driveReceiptFolderId], appProperties:{type:"receipt",recordId,app:DRIVE_APP_NAME}};
+      const metadata = { name: `收據_${recordId}.jpg`, mimeType: "image/jpeg", parents: [driveReceiptFolderId], appProperties: { type: "receipt", recordId, app: DRIVE_APP_NAME } };
       const boundary = "-------314159265358979323846";
-      const body = new Blob([`--${boundary}\\r\\nContent-Type: application/json; charset=UTF-8\\r\\n\\r\\n${JSON.stringify(metadata)}\\r\\n--${boundary}\\r\\nContent-Type: image/jpeg\\r\\n\\r\\n`, blob, `\\r\\n--${boundary}--`]);
-      const res = await fetch(`${DRIVE_UPLOAD_API}/files?uploadType=multipart&fields=id,name,mimeType`, {method:"POST", headers:{"Authorization":`Bearer ${googleAccessToken}`,"Content-Type":`multipart/related; boundary=${boundary}`}, body});
-      if(!res.ok) throw new Error(await res.text() || "收據上傳失敗");
+      const body = new Blob([`--${boundary}\r\nContent-Type: application/json; charset=UTF-8\r\n\r\n${JSON.stringify(metadata)}\r\n--${boundary}\r\nContent-Type: image/jpeg\r\n\r\n`, blob, `\r\n--${boundary}--`]);
+      const res = await fetch(`${DRIVE_UPLOAD_API}/files?uploadType=multipart&fields=id,name,mimeType`, { method: "POST", headers: { "Authorization": `Bearer ${googleAccessToken}`, "Content-Type": `multipart/related; boundary=${boundary}` }, body });
+      if (!res.ok) throw new Error(await res.text() || "收據上傳失敗");
       return await res.json();
     }
+
     async function uploadPendingReceipts(records) {
-      const out=[];
-      for(const r of (records||[])) {
-        const copy={...r};
-        if(copy.receiptImage && !copy.receiptFileId) {
-          const f=await uploadDriveReceipt(copy.receiptImage, copy.id);
-          copy.receiptFileId=f.id;
+      const out = [];
+      for (const r of (records || [])) {
+        const copy = { ...r };
+        if (copy.receiptImage && !copy.receiptFileId) {
+          const f = await uploadDriveReceipt(copy.receiptImage, copy.id);
+          copy.receiptFileId = f.id;
           delete copy.receiptImage;
         }
         out.push(copy);
       }
       return out;
     }
+
+    // 🌟 收據檢視防記憶體洩漏 (Revoke Object URL)
     async function openReceiptFile(fileId) {
-      if(!requireGoogleLogin() || !fileId) return;
+      if (!requireGoogleLogin() || !fileId) return;
       try {
-        const res=await driveRequest(`${DRIVE_API}/files/${encodeURIComponent(fileId)}?alt=media`);
-        const blob=await res.blob();
-        const url=URL.createObjectURL(blob);
-        document.getElementById("modalImg").src=url;
-        document.getElementById("imageModal").classList.remove("hidden");
-        document.getElementById("imageModal").dataset.objectUrl=url;
-      } catch(e) { showToast(`❌ 收據讀取失敗：${e.message}`,"error"); }
+        const res = await driveRequest(`${DRIVE_API}/files/${encodeURIComponent(fileId)}?alt=media`);
+        const blob = await res.blob();
+        
+        // 釋放舊的 Object URL
+        const modal = document.getElementById("imageModal");
+        if (modal.dataset.objectUrl) {
+          URL.revokeObjectURL(modal.dataset.objectUrl);
+        }
+
+        const url = URL.createObjectURL(blob);
+        document.getElementById("modalImg").src = url;
+        modal.classList.remove("hidden");
+        modal.dataset.objectUrl = url;
+      } catch (e) { 
+        showToast(`❌ 收據讀取失敗：${e.message}`, "error"); 
+      }
     }
-    window.openReceiptFile=openReceiptFile;
+    window.openReceiptFile = openReceiptFile;
 
     async function initializeGoogleAuth() {
       if (!window.google?.accounts?.oauth2) {
@@ -796,55 +797,61 @@
       document.getElementById("googleLogoutBtn").classList.remove("hidden"); 
     }
     
-    async function fetchSheetList(){
-      if(!requireGoogleLogin())return;
-      const fs=await driveList(`'${driveRootFolderId}' in parents and trashed = false`);
-      const sheets=fs.filter(f=>f.appProperties?.type==="book").map(f=>f.appProperties.sheetName);
-      if(!sheets.includes("預設帳本"))sheets.unshift("預設帳本");
+    async function fetchSheetList() {
+      if (!requireGoogleLogin()) return;
+      const fs = await driveList(`'${driveRootFolderId}' in parents and trashed = false`);
+      const sheets = fs.filter(f => f.appProperties?.type === "book").map(f => f.appProperties.sheetName);
+      if (!sheets.includes("預設帳本")) sheets.unshift("預設帳本");
       const selector = document.getElementById("sheetSelector");
-      selector.innerHTML=sheets.map(x=>`<option value="${escapeHtml(x)}" ${x===currentSheet?'selected':''}>${escapeHtml(x)}</option>`).join("");
+      selector.innerHTML = sheets.map(x => `<option value="${escapeHtml(x)}" ${x === currentSheet ? 'selected' : ''}>${escapeHtml(x)}</option>`).join("");
     }
 
-    async function fetchCloudConfig(){
-      if(!requireGoogleLogin())return;
-      const f=await findDriveFileByType("config");
-      if(!f)return;
-      const c=await readDriveJson(f.id);
-      if(Array.isArray(c.members)) members=c.members;
-      if(Array.isArray(c.categories)&&c.categories.length) categories=c.categories;
+    async function fetchCloudConfig() {
+      if (!requireGoogleLogin()) return;
+      const f = await findDriveFileByType("config");
+      if (!f) return;
+      const c = await readDriveJson(f.id);
+      if (Array.isArray(c.members)) members = c.members;
+      if (Array.isArray(c.categories) && c.categories.length) categories = c.categories;
       renderMemberControls();
       renderCategoryControls();
     }
-    async function syncConfigToCloud(){
-      if(!isGoogleLoggedIn())return;
-      const data={version:1,members,categories,updatedAt:new Date().toISOString()};
-      const f=await findDriveFileByType("config");
-      if(f)await updateDriveJson(f.id,data);
-      else await createDriveJson("config.json",data,{type:"config",app:DRIVE_APP_NAME});
+
+    async function syncConfigToCloud() {
+      if (!isGoogleLoggedIn()) return;
+      const data = { version: 1, members, categories, updatedAt: new Date().toISOString() };
+      const f = await findDriveFileByType("config");
+      if (f) await updateDriveJson(f.id, data);
+      else await createDriveJson("config.json", data, { type: "config", app: DRIVE_APP_NAME });
     }
     
     document.getElementById("sheetSelector").addEventListener("change", async (e) => {
-      const newSheet=e.target.value;
-      if(newSheet===currentSheet)return;
-      if(editingRecordId&&!confirm("目前正在編輯紀錄，切換帳本將會取消編輯，是否繼續？")){e.target.value=currentSheet;return;}
-      currentSheet=newSheet;localStorage.setItem("app_active_sheet",currentSheet);if(typeof cancelEdit==="function")cancelEdit();await loadRecords();
+      const newSheet = e.target.value;
+      if (newSheet === currentSheet) return;
+      if (editingRecordId && !confirm("目前正在編輯紀錄，切換帳本將會取消編輯，是否繼續？")) {
+        e.target.value = currentSheet;
+        return;
+      }
+      currentSheet = newSheet;
+      localStorage.setItem("app_active_sheet", currentSheet);
+      if (typeof cancelEdit === "function") cancelEdit();
+      await loadRecords();
     });
 
     document.getElementById("addSheetBtn").addEventListener("click", async () => {
-      if(!requireGoogleLogin())return;
-      const name=prompt("新增帳本名稱（例：2026日本行）：");
-      if(name&&name.trim()){
-        const cleanName=name.trim();
-        currentSheet=cleanName;
-        localStorage.setItem("app_active_sheet",currentSheet);
+      if (!requireGoogleLogin()) return;
+      const name = prompt("新增帳本名稱（例：2026日本行）：");
+      if (name && name.trim()) {
+        const cleanName = name.trim();
+        currentSheet = cleanName;
+        localStorage.setItem("app_active_sheet", currentSheet);
         await getOrCreateBookFile(currentSheet);
         await fetchSheetList();
-        document.getElementById("sheetSelector").value=currentSheet;
+        document.getElementById("sheetSelector").value = currentSheet;
         await loadRecords();
       }
     });
 
-    // 🌟 新增：帳本重新命名功能
     document.getElementById("renameSheetBtn").addEventListener("click", async () => {
       if (!requireGoogleLogin()) return;
       if (currentSheet === "預設帳本") {
@@ -916,7 +923,6 @@
       return { rate, twd: Math.round(amount * rate), calculatedAmount: amount };
     }
 
-    // 🌟 平分模式下一鍵全選/全取消
     window.toggleAllEqualMembers = function(check) {
       document.querySelectorAll(".member-cb").forEach(cb => { cb.checked = Boolean(check); });
     };
@@ -927,9 +933,9 @@
       const normalClass = "flex-1 text-xs font-bold py-1.5 rounded-lg text-gray-500 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 transition";
       bExp.className = normalClass; bPer.className = normalClass; bInc.className = normalClass;
       
-      if(type === 'expense') bExp.className = "flex-1 text-xs font-bold py-1.5 rounded-lg bg-white dark:bg-gray-600 text-blue-600 dark:text-blue-300 shadow-sm transition";
-      if(type === 'personal') bPer.className = "flex-1 text-xs font-bold py-1.5 rounded-lg bg-white dark:bg-gray-600 text-purple-600 dark:text-purple-300 shadow-sm transition";
-      if(type === 'income') bInc.className = "flex-1 text-xs font-bold py-1.5 rounded-lg bg-white dark:bg-gray-600 text-emerald-600 dark:text-emerald-300 shadow-sm transition";
+      if (type === 'expense') bExp.className = "flex-1 text-xs font-bold py-1.5 rounded-lg bg-white dark:bg-gray-600 text-blue-600 dark:text-blue-300 shadow-sm transition";
+      if (type === 'personal') bPer.className = "flex-1 text-xs font-bold py-1.5 rounded-lg bg-white dark:bg-gray-600 text-purple-600 dark:text-purple-300 shadow-sm transition";
+      if (type === 'income') bInc.className = "flex-1 text-xs font-bold py-1.5 rounded-lg bg-white dark:bg-gray-600 text-emerald-600 dark:text-emerald-300 shadow-sm transition";
 
       document.getElementById("splitSection").style.display = type === "expense" ? "block" : "none";
     };
@@ -967,10 +973,9 @@
       return twd;
     }
 
-    document.getElementById("originalAmount").addEventListener("input", updateTwdPreview);
+    document.getElementById("originalAmount").addEventListener("input", debounce(updateTwdPreview, 150));
     document.getElementById("currency").addEventListener("change", updateTwdPreview);
     
-    // 失焦時自動將計算算式轉成算出的純數字
     document.getElementById("originalAmount").addEventListener("blur", (e) => {
       const val = e.target.value;
       if (val && /[\+\-\*\/]/.test(val)) {
@@ -997,7 +1002,9 @@
           if (val > 0 && cur !== "TWD" && splitCurrency !== "TWD") {
             hintEl.textContent = `≈ NT$ ${Math.round(val * rate).toLocaleString()}`;
             hintEl.classList.remove("hidden");
-          } else { hintEl.classList.add("hidden"); }
+          } else { 
+            hintEl.classList.add("hidden"); 
+          }
         }
       });
 
@@ -1005,8 +1012,9 @@
       const el = document.getElementById("customSumStatus");
       const unit = splitCurrency === "TWD" ? "NT$" : cur;
 
-      if (Math.abs(diff) < 0.01 && targetTotal > 0) { el.innerHTML = `<span class="text-emerald-500 font-bold">✓ 吻合 (${targetTotal.toLocaleString()} ${unit})</span>`; } 
-      else {
+      if (Math.abs(diff) < 0.01 && targetTotal > 0) { 
+        el.innerHTML = `<span class="text-emerald-500 font-bold">✓ 吻合 (${targetTotal.toLocaleString()} ${unit})</span>`; 
+      } else {
         const displaySum = splitCurrency === "TWD" ? Math.round(sum) : parseFloat(sum.toFixed(2));
         const displayDiff = splitCurrency === "TWD" ? Math.round(diff) : parseFloat(diff.toFixed(2));
         el.innerHTML = `<span class="text-red-500 font-medium">${displaySum} / ${targetTotal} (差 ${displayDiff} ${unit})</span>`;
@@ -1014,19 +1022,22 @@
     }
 
     document.getElementById("customSplitCurrency").addEventListener("change", () => {
-      document.querySelectorAll(".custom-split-input").forEach(i => i.value = ""); checkCustomSplitTotal();
+      document.querySelectorAll(".custom-split-input").forEach(i => i.value = ""); 
+      checkCustomSplitTotal();
     });
 
     window.autoFillDifference = function(memberName) {
       const splitCurrency = document.getElementById("customSplitCurrency").value;
       const { twd: totalTwd, calculatedAmount: origAmt } = calculateTwd();
       const targetTotal = splitCurrency === "TWD" ? totalTwd : origAmt;
-      let sumOther = 0; let targetInput = null;
+      let sumOther = 0; 
+      let targetInput = null;
       document.querySelectorAll(".custom-split-input").forEach(i => {
-        if (i.dataset.member === memberName) targetInput = i; else sumOther += parseFloat(i.value) || 0;
+        if (i.dataset.member === memberName) targetInput = i; 
+        else sumOther += parseFloat(i.value) || 0;
       });
       if (targetInput) { 
-        let diff = Math.max(0, targetTotal - sumOther);
+        const diff = Math.max(0, targetTotal - sumOther);
         targetInput.value = splitCurrency === "TWD" ? Math.round(diff) : parseFloat(diff.toFixed(2)); 
         checkCustomSplitTotal(); 
       }
@@ -1052,7 +1063,10 @@
         }
       });
 
-      renderMemberControls(); renderRecordsList(); renderSettlement(cachedRecords);
+      renderMemberControls(); 
+      renderRecordsList(); 
+      renderSettlement(cachedRecords);
+      
       if (isGoogleLoggedIn()) {
         showToast(`⏳ 正在同步更新 Drive 歷史紀錄「${oldName}」➔「${cleanName}」...`, "info");
         try {
@@ -1069,24 +1083,19 @@
 
     function renderMemberControls() {
       const payerEl = document.getElementById("payer");
-      if (members.length === 0) {
-        payerEl.innerHTML = `<option value="">(尚未新增成員)</option>`;
-      } else {
-        payerEl.innerHTML = members.map(m => `<option value="${escapeHtml(m)}">${escapeHtml(m)}</option>`).join("");
-      }
+      payerEl.innerHTML = members.length === 0 
+        ? `<option value="">(尚未新增成員)</option>` 
+        : members.map(m => `<option value="${escapeHtml(m)}">${escapeHtml(m)}</option>`).join("");
 
       const cbEl = document.getElementById("membersCheckboxes");
-      if (members.length === 0) {
-        cbEl.innerHTML = `<span class="text-gray-400 text-xs py-1">請先於上方「👥 成員」面板新增成員名單</span>`;
-      } else {
-        cbEl.innerHTML = members.map(m => `<label class="flex items-center gap-1.5 cursor-pointer bg-white dark:bg-gray-700 px-2.5 py-1.5 rounded-lg border border-gray-200 dark:border-gray-600 shadow-sm active:scale-95 transition"><input type="checkbox" value="${escapeHtml(m)}" checked class="member-cb text-blue-500 focus:ring-blue-500 h-4 w-4 rounded"> <span>${escapeHtml(m)}</span></label>`).join("");
-      }
+      cbEl.innerHTML = members.length === 0 
+        ? `<span class="text-gray-400 text-xs py-1">請先於上方「👥 成員」面板新增成員名單</span>` 
+        : members.map(m => `<label class="flex items-center gap-1.5 cursor-pointer bg-white dark:bg-gray-700 px-2.5 py-1.5 rounded-lg border border-gray-200 dark:border-gray-600 shadow-sm active:scale-95 transition"><input type="checkbox" value="${escapeHtml(m)}" checked class="member-cb text-blue-500 focus:ring-blue-500 h-4 w-4 rounded"> <span>${escapeHtml(m)}</span></label>`).join("");
       
       const customListEl = document.getElementById("customMembersList");
-      if (members.length === 0) {
-        customListEl.innerHTML = `<span class="text-gray-400 text-xs py-1">請先於上方「👥 成員」面板新增成員名單</span>`;
-      } else {
-        customListEl.innerHTML = members.map(m => `
+      customListEl.innerHTML = members.length === 0 
+        ? `<span class="text-gray-400 text-xs py-1">請先於上方「👥 成員」面板新增成員名單</span>` 
+        : members.map(m => `
           <div class="flex items-center gap-2 bg-white dark:bg-gray-700/80 p-2 rounded-xl border border-gray-100 dark:border-gray-600 shadow-sm">
             <span class="w-16 font-bold text-gray-700 dark:text-gray-200 truncate" title="${escapeHtml(m)}">${escapeHtml(m)}</span>
             <div class="relative flex-1">
@@ -1097,39 +1106,32 @@
             <button type="button" onclick="autoFillDifference('${escapeHtml(m)}')" class="bg-blue-50 dark:bg-blue-900/50 text-blue-600 dark:text-blue-300 font-bold px-2 py-1 rounded-lg hover:bg-blue-100 active:scale-95 transition">補滿</button>
           </div>
         `).join("");
-      }
       
       document.querySelectorAll(".custom-split-input").forEach(i => i.addEventListener("input", checkCustomSplitTotal));
       
       const tagListEl = document.getElementById("memberTagList");
-      if (members.length === 0) {
-        tagListEl.innerHTML = `<span class="text-gray-400 text-xs py-1">目前尚未新增任何成員，請在上方輸入名字並點擊「加入」</span>`;
-      } else {
-        tagListEl.innerHTML = members.map((m, idx) => `
+      tagListEl.innerHTML = members.length === 0 
+        ? `<span class="text-gray-400 text-xs py-1">目前尚未新增任何成員，請在上方輸入名字並點擊「加入」</span>` 
+        : members.map((m, idx) => `
           <span class="inline-flex items-center gap-1 bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 px-2.5 py-1 rounded-lg shadow-sm font-medium text-gray-700 dark:text-gray-200">
             ${escapeHtml(m)}
             <button type="button" onclick="editMemberName(${idx})" class="text-blue-400 hover:text-blue-600 text-xs ml-1 font-bold" title="編輯名字">✏️</button>
             <button type="button" onclick="removeMember(${idx})" class="text-red-400 hover:text-red-600 text-base ml-0.5 leading-none font-bold" title="刪除成員">×</button>
           </span>
         `).join("");
-      }
 
       const pSelect = document.getElementById("personalStatsMemberSelect");
       const currentSelected = pSelect.value;
-      if (members.length === 0) {
-        pSelect.innerHTML = `<option value="">無成員</option>`;
-      } else {
-        pSelect.innerHTML = members.map(m => `<option value="${escapeHtml(m)}">${escapeHtml(m)}</option>`).join("");
-        if (members.includes(currentSelected)) pSelect.value = currentSelected;
-      }
+      pSelect.innerHTML = members.length === 0 
+        ? `<option value="">無成員</option>` 
+        : members.map(m => `<option value="${escapeHtml(m)}">${escapeHtml(m)}</option>`).join("");
+      if (members.includes(currentSelected)) pSelect.value = currentSelected;
       pSelect.onchange = () => renderPersonalStats(cachedRecords);
 
       const lineSelect = document.getElementById("lineShareMemberSelect");
-      if (members.length === 0) {
-        lineSelect.innerHTML = `<option value="">無成員</option>`;
-      } else {
-        lineSelect.innerHTML = members.map(m => `<option value="${escapeHtml(m)}">${escapeHtml(m)}</option>`).join("");
-      }
+      lineSelect.innerHTML = members.length === 0 
+        ? `<option value="">無成員</option>` 
+        : members.map(m => `<option value="${escapeHtml(m)}">${escapeHtml(m)}</option>`).join("");
 
       localStorage.setItem("split_members_cache", JSON.stringify(members));
       renderSettlement(cachedRecords);
@@ -1162,15 +1164,20 @@
     document.getElementById("addCategoryBtn").addEventListener("click", () => {
       const val = document.getElementById("newCategoryName").value.trim();
       if (val && !categories.includes(val)) {
-        categories.push(val); document.getElementById("newCategoryName").value = "";
-        renderCategoryControls(); syncConfigToCloud(); showToast(`🏷️ 已新增類別：${val}`);
+        categories.push(val); 
+        document.getElementById("newCategoryName").value = "";
+        renderCategoryControls(); 
+        syncConfigToCloud(); 
+        showToast(`🏷️ 已新增類別：${val}`);
       }
     });
 
     window.removeCategory = function(idx) {
       if (categories.length > 1) {
         const removed = categories.splice(idx, 1);
-        renderCategoryControls(); syncConfigToCloud(); showToast(`已移除類別：${removed}`, "info");
+        renderCategoryControls(); 
+        syncConfigToCloud(); 
+        showToast(`已移除類別：${removed}`, "info");
       }
     };
 
@@ -1191,7 +1198,6 @@
       }
     });
     
-    // 🌟 刪除成員安全防護：檢查該成員是否仍存在於既有帳目中
     window.removeMember = function(idx) { 
       const targetMember = members[idx];
       const relatedCount = cachedRecords.filter(r => {
@@ -1234,14 +1240,15 @@
           if (data.rates.KRW) exchangeRates.KRW = 1 / data.rates.KRW;
           
           document.getElementById("rateUpdateTime").textContent = "更新成功";
-          
-          if(document.getElementById("rateChipsContainer").innerHTML !== "載入中...") {
+          if (document.getElementById("rateChipsContainer").innerHTML !== "載入中...") {
             showToast("💱 匯率已取得最新報價", "info");
           }
         }
-      } catch(e) {
+      } catch (e) {
         document.getElementById("rateUpdateTime").textContent = "離線預設匯率";
-        if(document.getElementById("rateChipsContainer").innerHTML !== "載入中...") { showToast("❌ 匯率更新失敗", "error"); }
+        if (document.getElementById("rateChipsContainer").innerHTML !== "載入中...") { 
+          showToast("❌ 匯率更新失敗", "error"); 
+        }
       }
       
       document.getElementById("rateChipsContainer").innerHTML = ["USD","EUR","JPY","CNY","KRW"].map(c => `
@@ -1254,7 +1261,8 @@
     };
 
     document.getElementById("receiptPhotoInput").addEventListener("change", e => {
-      const f = e.target.files[0]; if(!f) return;
+      const f = e.target.files[0]; 
+      if (!f) return;
       processImageForUpload(f, (base64) => {
         uploadedReceiptBase64 = base64;
         document.getElementById("receiptPreviewThumb").style.backgroundImage = `url(${uploadedReceiptBase64})`;
@@ -1292,7 +1300,10 @@
       voiceBtn.addEventListener("click", () => {
         try {
           aiStatus.textContent = "🎙️ 請說話..."; aiStatus.classList.remove("hidden"); rec.start();
-        } catch (err) { aiStatus.classList.add("hidden"); showToast("❌ 語音啟動失敗，請確認麥克風權限", "error"); }
+        } catch (err) { 
+          aiStatus.classList.add("hidden"); 
+          showToast("❌ 語音啟動失敗，請確認麥克風權限", "error"); 
+        }
       });
 
       rec.onresult = e => {
@@ -1304,7 +1315,7 @@
         else document.getElementById("currency").value = "TWD";
         
         const nums = txt.match(/\d+/g); 
-        if (nums) document.getElementById("originalAmount").value = nums[nums.length-1];
+        if (nums) document.getElementById("originalAmount").value = nums[nums.length - 1];
         
         document.getElementById("title").value = txt.replace(/\d+|元|塊|台幣|日幣|美金|歐元/g, '').trim() || "語音記帳";
         updateTwdPreview(); 
@@ -1312,40 +1323,68 @@
       };
 
       rec.onerror = () => {
-        aiStatus.textContent = "❌ 語音辨識失敗或無聲"; setTimeout(() => aiStatus.classList.add("hidden"), 2000);
+        aiStatus.textContent = "❌ 語音辨識失敗或無聲"; 
+        setTimeout(() => aiStatus.classList.add("hidden"), 2000);
       };
     } else {
       voiceBtn.addEventListener("click", () => showToast("❌ 您的瀏覽器不支援語音辨識", "error"));
     }
 
     document.getElementById("ocrReceiptInput").addEventListener("change", async e => {
-      const f = e.target.files[0]; if(!f) return; 
-      aiStatus.textContent = "🔍 照片辨識中..."; aiStatus.classList.remove("hidden");
+      const f = e.target.files[0]; 
+      if (!f) return; 
+      aiStatus.textContent = "🔍 照片辨識中..."; 
+      aiStatus.classList.remove("hidden");
       processImageForUpload(f, async (compressedBase64) => {
         try {
           const { data: { text } } = await Tesseract.recognize(compressedBase64, 'eng+chi_tra');
-          const nums = (text.match(/[0-9,.]+/g)||[]).map(n=>parseFloat(n.replace(/,/g,''))).filter(n=>n>0&&n<1000000);
+          const nums = (text.match(/[0-9,.]+/g) || []).map(n => parseFloat(n.replace(/,/g, ''))).filter(n => n > 0 && n < 1000000);
           if (nums.length) document.getElementById("originalAmount").value = Math.max(...nums);
           document.getElementById("title").value = "收據截取"; 
-          updateTwdPreview(); showToast("✅ 收據辨識完成");
-        } catch(err) { showToast("❌ 收據辨識失敗", "error"); } finally { aiStatus.classList.add("hidden"); }
+          updateTwdPreview(); 
+          showToast("✅ 收據辨識完成");
+        } catch (err) { 
+          showToast("❌ 收據辨識失敗", "error"); 
+        } finally { 
+          aiStatus.classList.add("hidden"); 
+        }
       }, 600);
     });
 
     function parseShares(item) {
-      const shares = {}; const twd = Number(item.twdAmount)||0; const list = item.splitMembers||[];
-      if(!list.length) return shares;
-      if(list.some(s => String(s).includes(":"))) {
-        list.forEach(s => { const p=String(s).split(":"); if(p[0]) shares[p[0].trim()] = parseFloat(p[1])||0; });
+      const shares = {}; 
+      const twd = Number(item.twdAmount) || 0; 
+      const list = item.splitMembers || [];
+      if (!list.length) return shares;
+      if (list.some(s => String(s).includes(":"))) {
+        list.forEach(s => { 
+          const p = String(s).split(":"); 
+          if (p[0]) shares[p[0].trim()] = parseFloat(p[1]) || 0; 
+        });
       } else {
-        const v = list.map(s=>String(s).trim()).filter(s=>s!=="");
-        if(v.length && twd>0) { const p = twd/v.length; v.forEach(m => shares[m] = p); }
+        const v = list.map(s => String(s).trim()).filter(s => s !== "");
+        if (v.length && twd > 0) { 
+          const p = twd / v.length; 
+          v.forEach(m => shares[m] = p); 
+        }
       }
       return shares;
     }
 
-    window.openImageModal = src => { document.getElementById("modalImg").src = src; document.getElementById("imageModal").classList.remove("hidden"); };
-    window.closeImageModal = () => document.getElementById("imageModal").classList.add("hidden");
+    window.openImageModal = src => { 
+      document.getElementById("modalImg").src = src; 
+      document.getElementById("imageModal").classList.remove("hidden"); 
+    };
+    
+    // 🌟 關閉彈窗釋放 ObjectURL 避免記憶體洩漏
+    window.closeImageModal = () => {
+      const modal = document.getElementById("imageModal");
+      modal.classList.add("hidden");
+      if (modal.dataset.objectUrl) {
+        URL.revokeObjectURL(modal.dataset.objectUrl);
+        delete modal.dataset.objectUrl;
+      }
+    };
 
     let lastTransferInstructions = [];
 
@@ -1358,15 +1397,29 @@
         return;
       }
 
-      const bals = {}; members.forEach(m => bals[m]=0);
-      records.forEach(r => { if(r.type==="expense"){ if(r.payer && bals[r.payer]===undefined)bals[r.payer]=0; Object.keys(parseShares(r)).forEach(m=>{if(bals[m]===undefined)bals[m]=0;}); }});
-      records.forEach(r => { if(r.type==="expense"){ const t=Number(r.twdAmount)||0; if(r.payer&&t>0)bals[r.payer]+=t; Object.entries(parseShares(r)).forEach(([m,a])=>bals[m]-=a); }});
-      
-      g.innerHTML="";
-      Object.keys(bals).forEach(m => {
-        const val = Math.round(bals[m]); const isP = val>0; const isZ = val===0;
-        g.innerHTML += `<div class="bg-white/80 dark:bg-gray-800 p-2.5 rounded-xl shadow-sm border ${isZ?'border-gray-200 dark:border-gray-700':isP?'border-emerald-200 dark:border-emerald-800':'border-red-200 dark:border-red-800'}"><div class="font-bold text-gray-700 dark:text-gray-300 truncate">${escapeHtml(m)}</div><div class="font-mono font-bold mt-1 text-sm ${isZ?'text-gray-400':isP?'text-emerald-600 dark:text-emerald-400':'text-red-500 dark:text-red-400'}">${isZ?'$0':(isP?`+$${val}`:`-$${Math.abs(val)}`)}</div></div>`;
+      const bals = {}; 
+      members.forEach(m => bals[m] = 0);
+      records.forEach(r => { 
+        if (r.type === "expense") { 
+          if (r.payer && bals[r.payer] === undefined) bals[r.payer] = 0; 
+          Object.keys(parseShares(r)).forEach(m => { if (bals[m] === undefined) bals[m] = 0; }); 
+        }
       });
+      records.forEach(r => { 
+        if (r.type === "expense") { 
+          const t = Number(r.twdAmount) || 0; 
+          if (r.payer && t > 0) bals[r.payer] += t; 
+          Object.entries(parseShares(r)).forEach(([m, a]) => bals[m] -= a); 
+        }
+      });
+      
+      // 一次性渲染 Grid
+      g.innerHTML = Object.keys(bals).map(m => {
+        const val = Math.round(bals[m]); 
+        const isP = val > 0; 
+        const isZ = val === 0;
+        return `<div class="bg-white/80 dark:bg-gray-800 p-2.5 rounded-xl shadow-sm border ${isZ ? 'border-gray-200 dark:border-gray-700' : isP ? 'border-emerald-200 dark:border-emerald-800' : 'border-red-200 dark:border-red-800'}"><div class="font-bold text-gray-700 dark:text-gray-300 truncate">${escapeHtml(m)}</div><div class="font-mono font-bold mt-1 text-sm ${isZ ? 'text-gray-400' : isP ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-500 dark:text-red-400'}">${isZ ? '$0' : (isP ? `+$${val}` : `-$${Math.abs(val)}`)}</div></div>`;
+      }).join("");
 
       let totalExpense = 0;
       let totalIncome = 0;
@@ -1385,20 +1438,37 @@
       document.getElementById("statNetExpense").textContent = `$${netExpense.toLocaleString()}`;
       document.getElementById("summaryStatsBar").classList.remove("hidden");
 
-      const d=[], c=[]; Object.keys(bals).forEach(m=>{ const v=Math.round(bals[m]); if(v<-0.5)d.push({n:m,a:-v}); else if(v>0.5)c.push({n:m,a:v}); });
-      d.sort((x,y)=>y.a-x.a); c.sort((x,y)=>y.a-x.a);
-      const tInst=[]; let i=0, j=0; lastTransferInstructions = [];
-      while(i<d.length && j<c.length) {
+      const d = [], c = []; 
+      Object.keys(bals).forEach(m => { 
+        const v = Math.round(bals[m]); 
+        if (v < -0.5) d.push({ n: m, a: -v }); 
+        else if (v > 0.5) c.push({ n: m, a: v }); 
+      });
+      d.sort((x, y) => y.a - x.a); 
+      c.sort((x, y) => y.a - x.a);
+      
+      const tInst = []; 
+      let i = 0, j = 0; 
+      lastTransferInstructions = [];
+      while (i < d.length && j < c.length) {
         const amt = Math.min(d[i].a, c[j].a);
-        if(amt>0) {
-          const debtor = d[i].n; const creditor = c[j].n; const transAmt = Math.round(amt);
+        if (amt > 0) {
+          const debtor = d[i].n; 
+          const creditor = c[j].n; 
+          const transAmt = Math.round(amt);
           lastTransferInstructions.push({ debtor, creditor, amount: transAmt });
           tInst.push(`<div class="flex justify-between items-center bg-white/60 dark:bg-gray-800/60 px-3 py-2 rounded-xl shadow-sm border border-blue-100 dark:border-gray-700"><span><b class="text-gray-800 dark:text-gray-200">${escapeHtml(debtor)}</b> <span class="text-gray-400">➔</span> <b class="text-gray-800 dark:text-gray-200">${escapeHtml(creditor)}</b></span><span class="font-mono font-bold text-blue-600 dark:text-blue-400">$${transAmt}</span></div>`);
         }
-        d[i].a-=amt; c[j].a-=amt; if(d[i].a<0.5)i++; if(c[j].a<0.5)j++;
+        d[i].a -= amt; 
+        c[j].a -= amt; 
+        if (d[i].a < 0.5) i++; 
+        if (c[j].a < 0.5) j++;
       }
+      
       const tEl = document.getElementById("settlementTransfers");
-      tEl.innerHTML = tInst.length ? `<div class="font-bold text-blue-900 dark:text-blue-300 mb-2">💡 最佳平帳轉帳路徑：</div><div class="space-y-1.5">${tInst.join("")}</div>` : `<div class="text-gray-400 text-center font-medium">🎉 帳務已完全打平</div>`;
+      tEl.innerHTML = tInst.length 
+        ? `<div class="font-bold text-blue-900 dark:text-blue-300 mb-2">💡 最佳平帳轉帳路徑：</div><div class="space-y-1.5">${tInst.join("")}</div>` 
+        : `<div class="text-gray-400 text-center font-medium">🎉 帳務已完全打平</div>`;
     }
 
     function renderPersonalStats(records) {
@@ -1437,7 +1507,7 @@
       document.getElementById("statPersonalPaidTotal").textContent = `$${Math.round(paidTotal).toLocaleString()}`;
     }
 
-    // 🌟 圖表模式切換 (類別 / 成員 / 趨勢)
+    // 圖表模式切換
     document.getElementById("chartTypePieBtn").addEventListener("click", () => setChartType("pie"));
     document.getElementById("chartTypeMemberBtn").addEventListener("click", () => setChartType("member"));
     document.getElementById("chartTypeBarBtn").addEventListener("click", () => setChartType("bar"));
@@ -1465,9 +1535,12 @@
       if (chartInstance) chartInstance.destroy();
 
       if (expenses.length === 0) {
-        msg.classList.remove("hidden"); canvas.style.display = "none"; return;
+        msg.classList.remove("hidden"); 
+        canvas.style.display = "none"; 
+        return;
       } else {
-        msg.classList.add("hidden"); canvas.style.display = "block";
+        msg.classList.add("hidden"); 
+        canvas.style.display = "block";
       }
 
       const isDark = document.documentElement.classList.contains("dark");
@@ -1488,9 +1561,9 @@
         chartInstance = new Chart(canvas, {
           type: 'doughnut',
           data: { 
-            labels: labels, 
+            labels, 
             datasets: [{ 
-              data: data, 
+              data, 
               backgroundColor: colors.slice(0, labels.length), 
               borderWidth: 2, 
               borderColor: isDark ? '#1e293b' : '#ffffff' 
@@ -1528,9 +1601,9 @@
         chartInstance = new Chart(canvas, {
           type: 'doughnut',
           data: { 
-            labels: labels, 
+            labels, 
             datasets: [{ 
-              data: data, 
+              data, 
               backgroundColor: colors.slice(0, labels.length), 
               borderWidth: 2, 
               borderColor: isDark ? '#1e293b' : '#ffffff' 
@@ -1549,15 +1622,26 @@
         });
       } else {
         const dateData = {};
-        expenses.forEach(r => { const d = r.date || '未知日期'; dateData[d] = (dateData[d] || 0) + (r.twdAmount || 0); });
-        const labels = Object.keys(dateData).sort(); const data = labels.map(l => dateData[l]);
+        expenses.forEach(r => { 
+          const d = r.date || '未知日期'; 
+          dateData[d] = (dateData[d] || 0) + (r.twdAmount || 0); 
+        });
+        const labels = Object.keys(dateData).sort(); 
+        const data = labels.map(l => dateData[l]);
 
         chartInstance = new Chart(canvas, {
           type: 'bar',
-          data: { labels: labels, datasets: [{ label: '每日總支出 (TWD)', data: data, backgroundColor: '#3b82f6', borderRadius: 4 }] },
+          data: { 
+            labels, 
+            datasets: [{ label: '每日總支出 (TWD)', data, backgroundColor: '#3b82f6', borderRadius: 4 }] 
+          },
           options: {
-            responsive: true, maintainAspectRatio: false,
-            scales: { x: { ticks: { color: textColor, font: { size: 10 } }, grid: { display: false } }, y: { ticks: { color: textColor, font: { size: 10 } }, grid: { color: gridColor }, beginAtZero: true } },
+            responsive: true, 
+            maintainAspectRatio: false,
+            scales: { 
+              x: { ticks: { color: textColor, font: { size: 10 } }, grid: { display: false } }, 
+              y: { ticks: { color: textColor, font: { size: 10 } }, grid: { color: gridColor }, beginAtZero: true } 
+            },
             plugins: { 
               legend: { display: false }, 
               tooltip: { callbacks: { label: (ctx) => ` 支出: $${ctx.raw.toLocaleString()}` } }
@@ -1567,10 +1651,8 @@
       }
     }
 
-    // 🌟 日期快捷篩選切換
     window.setDateFilter = function(filter) {
       currentDateFilter = filter;
-      const ids = ['dfAll', 'dfToday', 'dfWeek', 'dfMonth'];
       const activeCls = "px-2 py-0.5 rounded-md font-bold bg-white dark:bg-gray-600 text-blue-600 dark:text-blue-300 shadow-sm transition";
       const normalCls = "px-2 py-0.5 rounded-md text-gray-500 hover:text-gray-800 transition";
 
@@ -1583,8 +1665,8 @@
     };
 
     window.openLineShareModal = function() {
-      if (cachedRecords.length === 0) { return showToast("目前沒有任何記帳紀錄！", "info"); }
-      if (members.length === 0) { return showToast("目前尚未新增任何成員！", "info"); }
+      if (cachedRecords.length === 0) return showToast("目前沒有任何記帳紀錄！", "info");
+      if (members.length === 0) return showToast("目前尚未新增任何成員！", "info");
       document.getElementById("lineShareModal").classList.remove("hidden");
     };
 
@@ -1674,13 +1756,13 @@
         text += `====================\n📝 全本歷史明細 (共 ${cachedRecords.length} 筆)：\n`;
         const sortedRecords = [...cachedRecords].sort((a, b) => (a.date || "").localeCompare(b.date || ""));
         sortedRecords.forEach(item => {
-          const isExp = item.type === "expense", isPersonal = item.type === "personal", isIncome = item.type === "income";
+          const isExp = item.type === "expense", isPersonal = item.type === "personal";
           const origText = item.currency !== "TWD" ? `${item.currency} ${item.originalAmount.toLocaleString()} ` : "";
           const twdText = `(NT$ ${(item.twdAmount || 0).toLocaleString()})`;
           let payerText = "";
           if (isExp) payerText = item.payer ? ` - ${item.payer} 付` : "";
           else if (isPersonal) payerText = " (個人支出)";
-          else if (isIncome) payerText = " (個人收入)";
+          else payerText = " (個人收入)";
           text += `・${item.date} | [${item.category || '其他'}] ${item.title}\n  ${origText}${twdText}${payerText}\n`;
         });
         text += `====================`;
@@ -1751,6 +1833,7 @@
       showToast("已取消編輯", "info");
     };
 
+    // 🌟 高效批次渲染列表
     function renderRecordsList() {
       const rawInput = (document.getElementById("searchInput")?.value || "").trim();
       const filterType = document.getElementById("filterTypeSelect")?.value || "all";
@@ -1782,11 +1865,10 @@
       const isPureNumber = !isNaN(exactNum) && /^\d+(?:\.\d+)?$/.test(rawInput);
       const keyword = rawInput.toLowerCase();
 
-      // 計算時間區間篩選
       const todayStr = getTodayString();
       const now = new Date();
       const oneWeekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
-      const monthPrefix = todayStr.slice(0, 7); // YYYY-MM
+      const monthPrefix = todayStr.slice(0, 7);
 
       const filteredRecords = cachedRecords.filter(item => {
         const twdAmt = Number(item.twdAmount) || 0;
@@ -1809,7 +1891,6 @@
         const matchType = (filterType === "all") || (item.type === filterType);
         const matchCat = (filterCategory === "all") || ((item.category || "其他") === filterCategory);
 
-        // 時間過濾
         let matchDate = true;
         const d = item.date || "";
         if (currentDateFilter === 'today') matchDate = (d === todayStr);
@@ -1820,14 +1901,11 @@
       });
 
       const countEl = document.getElementById("recordCountDisplay");
-      if (filteredRecords.length !== cachedRecords.length) {
-        countEl.textContent = `${filteredRecords.length}/${cachedRecords.length}`;
-      } else {
-        countEl.textContent = cachedRecords.length;
-      }
+      countEl.textContent = (filteredRecords.length !== cachedRecords.length) 
+        ? `${filteredRecords.length}/${cachedRecords.length}` 
+        : cachedRecords.length;
 
       const listEl = document.getElementById("recordList"); 
-      listEl.innerHTML = "";
 
       if (cachedRecords.length === 0) { 
         listEl.innerHTML = `<div class="text-gray-400 text-center py-8">尚無資料</div>`; 
@@ -1839,52 +1917,59 @@
         return;
       }
       
-      filteredRecords.forEach(item => {
+      listEl.innerHTML = filteredRecords.map(item => {
         const isSplit = item.type === "expense";
         const isPersonal = item.type === "personal";
         const isIncome = item.type === "income";
         
         const shares = parseShares(item);
-        const st = Object.entries(shares).map(([n,a])=>`${n}($${Math.round(a)})`).join(", ");
+        const st = Object.entries(shares).map(([n, a]) => `${n}($${Math.round(a)})`).join(", ");
         
-        let badgeColor = isIncome ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/50 dark:text-emerald-400" : "bg-blue-100 text-blue-700 dark:bg-blue-900/50 dark:text-blue-300";
-        let amountColor = isIncome ? "text-emerald-600 dark:text-emerald-400" : "text-gray-900 dark:text-white";
-        let typeText = isIncome ? '收入' : (isPersonal ? '個人支出' : '分帳');
-        let displayCategory = item.category || typeText;
+        const badgeColor = isIncome 
+          ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/50 dark:text-emerald-400" 
+          : "bg-blue-100 text-blue-700 dark:bg-blue-900/50 dark:text-blue-300";
+        const amountColor = isIncome ? "text-emerald-600 dark:text-emerald-400" : "text-gray-900 dark:text-white";
+        const typeText = isIncome ? '收入' : (isPersonal ? '個人支出' : '分帳');
+        const displayCategory = item.category || typeText;
 
-        const r = document.createElement("div");
-        r.className = `p-3.5 bg-white/80 dark:bg-gray-800/80 rounded-2xl shadow-sm border ${isIncome?'border-emerald-100 dark:border-emerald-900/50':'border-gray-100 dark:border-gray-700'} text-xs flex justify-between items-start gap-2`;
-        r.innerHTML = `<div class="flex-1 space-y-1.5">
-            <div class="flex items-center gap-2">
-              <span class="px-2 py-0.5 rounded-lg text-[10px] font-bold ${badgeColor}">${escapeHtml(displayCategory)}</span>
-              ${isPersonal ? `<span class="px-1.5 py-0.5 rounded text-[9px] font-bold bg-purple-100 text-purple-700 dark:bg-purple-900/50 dark:text-purple-300 border border-purple-200 dark:border-purple-800">👤 個人</span>` : ''}
-              <span class="font-bold text-sm text-gray-900 dark:text-gray-100">${escapeHtml(item.title)}</span>
-              ${(item.receiptFileId||item.receiptImage)?`<button onclick="${item.receiptFileId?`openReceiptFile('${escapeHtml(item.receiptFileId)}')`:`openImageModal('${item.receiptImage}')`}" class="text-[10px] bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 rounded px-1.5 py-0.5 border border-gray-200 dark:border-gray-600">📷照</button>`:''}
+        return `
+          <div class="p-3.5 bg-white/80 dark:bg-gray-800/80 rounded-2xl shadow-sm border ${isIncome ? 'border-emerald-100 dark:border-emerald-900/50' : 'border-gray-100 dark:border-gray-700'} text-xs flex justify-between items-start gap-2">
+            <div class="flex-1 space-y-1.5">
+              <div class="flex items-center gap-2">
+                <span class="px-2 py-0.5 rounded-lg text-[10px] font-bold ${badgeColor}">${escapeHtml(displayCategory)}</span>
+                ${isPersonal ? `<span class="px-1.5 py-0.5 rounded text-[9px] font-bold bg-purple-100 text-purple-700 dark:bg-purple-900/50 dark:text-purple-300 border border-purple-200 dark:border-purple-800">👤 個人</span>` : ''}
+                <span class="font-bold text-sm text-gray-900 dark:text-gray-100">${escapeHtml(item.title)}</span>
+                ${(item.receiptFileId || item.receiptImage) ? `<button onclick="${item.receiptFileId ? `openReceiptFile('${escapeHtml(item.receiptFileId)}')` : `openImageModal('${item.receiptImage}')`}" class="text-[10px] bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 rounded px-1.5 py-0.5 border border-gray-200 dark:border-gray-600">📷照</button>` : ''}
+              </div>
+              <div class="text-gray-500 dark:text-gray-400 font-mono">${escapeHtml(item.date)} · ${isSplit ? `<b>${escapeHtml(item.payer || '無')}</b> 付` : '個人'}</div>
+              ${isSplit && st ? `<div class="text-gray-400 dark:text-gray-500 truncate text-[11px]">${escapeHtml(st)}</div>` : ''}
             </div>
-            <div class="text-gray-500 dark:text-gray-400 font-mono">${escapeHtml(item.date)} · ${isSplit?`<b>${escapeHtml(item.payer || '無')}</b> 付`:'個人'}</div>
-            ${isSplit&&st?`<div class="text-gray-400 dark:text-gray-500 truncate text-[11px]">${escapeHtml(st)}</div>`:''}
+            <div class="text-right flex flex-col items-end gap-1.5">
+              <div class="font-mono font-bold text-base ${amountColor}">
+                ${item.currency !== 'TWD' ? `<span class="text-[10px] text-gray-400 font-normal block -mb-1">${escapeHtml(item.currency)}${item.originalAmount}</span>` : ''}
+                ${isIncome ? '+' : '-'}$${(item.twdAmount || 0).toLocaleString()}
+              </div>
+              <div class="flex items-center gap-1.5">
+                <button onclick="startEditRecord('${escapeHtml(item.id)}')" class="text-[10px] font-bold text-blue-500 hover:text-blue-700 bg-blue-50 dark:bg-blue-900/20 px-2 py-1 rounded-lg active:scale-95">編輯</button>
+                <button onclick="deleteRecord('${escapeHtml(item.id)}')" class="text-[10px] font-bold text-red-400 hover:text-red-600 bg-red-50 dark:bg-red-900/20 px-2 py-1 rounded-lg active:scale-95">刪除</button>
+              </div>
+            </div>
           </div>
-          <div class="text-right flex flex-col items-end gap-1.5">
-            <div class="font-mono font-bold text-base ${amountColor}">
-              ${item.currency!=='TWD'?`<span class="text-[10px] text-gray-400 font-normal block -mb-1">${escapeHtml(item.currency)}${item.originalAmount}</span>`:''}
-              ${isIncome?'+':'-'}$${(item.twdAmount||0).toLocaleString()}
-            </div>
-            <div class="flex items-center gap-1.5">
-              <button onclick="startEditRecord('${escapeHtml(item.id)}')" class="text-[10px] font-bold text-blue-500 hover:text-blue-700 bg-blue-50 dark:bg-blue-900/20 px-2 py-1 rounded-lg active:scale-95">編輯</button>
-              <button onclick="deleteRecord('${escapeHtml(item.id)}')" class="text-[10px] font-bold text-red-400 hover:text-red-600 bg-red-50 dark:bg-red-900/20 px-2 py-1 rounded-lg active:scale-95">刪除</button>
-            </div>
-          </div>`;
-        listEl.appendChild(r);
-      });
+        `;
+      }).join("");
       
-      if(!document.getElementById("mainChartContainer").classList.contains("hidden")) { drawChart(); }
+      if (!document.getElementById("mainChartContainer").classList.contains("hidden")) { 
+        drawChart(); 
+      }
     }
+
+    const debouncedRenderRecordsList = debounce(renderRecordsList, 200);
 
     document.getElementById("searchInput").addEventListener("input", (e) => {
       const clearBtn = document.getElementById("clearSearchBtn");
       if (e.target.value) clearBtn.classList.remove("hidden");
       else clearBtn.classList.add("hidden");
-      renderRecordsList();
+      debouncedRenderRecordsList();
     });
 
     document.getElementById("clearSearchBtn").addEventListener("click", () => {
@@ -1905,13 +1990,27 @@
     });
 
     async function loadRecords() {
-      if (!requireGoogleLogin()) { document.getElementById("recordList").innerHTML=`<div class="text-blue-500 text-center py-6 font-bold">☁️ 請先使用 Google 登入以載入 Drive 資料</div>`; return; }
+      if (!requireGoogleLogin()) { 
+        document.getElementById("recordList").innerHTML = `<div class="text-blue-500 text-center py-6 font-bold">☁️ 請先使用 Google 登入以載入 Drive 資料</div>`; 
+        return; 
+      }
       showToast("🔄 從 Google Drive 同步資料中...", "info");
-      try { const f=await getOrCreateBookFile(currentSheet); const d=await readDriveJson(f.id); cachedRecords=Array.isArray(d)?d:[]; renderRecordsList();renderSettlement(cachedRecords);renderPersonalStats(cachedRecords);await fetchSheetList();await fetchCloudConfig();showToast("✅ Drive 同步完成"); }
-      catch(e){showToast(`❌ Drive 讀取失敗: ${e.message}`,"error");}
+      try { 
+        const f = await getOrCreateBookFile(currentSheet); 
+        const d = await readDriveJson(f.id); 
+        cachedRecords = Array.isArray(d) ? d : []; 
+        renderRecordsList();
+        renderSettlement(cachedRecords);
+        renderPersonalStats(cachedRecords);
+        await fetchSheetList();
+        await fetchCloudConfig();
+        showToast("✅ Drive 同步完成"); 
+      } catch (e) {
+        showToast(`❌ Drive 讀取失敗: ${e.message}`, "error");
+      }
     }
 
-    // 🌟 儲存防連點保護 (Debounce & Loading) 與自動聚焦
+    // 儲存按鈕 (防連點與狀態保護)
     document.getElementById("saveRecordBtn").addEventListener("click", async function() {
       if (!requireGoogleLogin()) return;
       const saveBtn = this;
@@ -1960,7 +2059,6 @@
         }
       }
 
-      // 鎖定按鈕避免快速重複點擊
       saveBtn.disabled = true;
       document.getElementById("saveBtnText").textContent = "正在儲存...";
 
@@ -2013,7 +2111,6 @@
       } finally {
         saveBtn.disabled = false;
         document.getElementById("saveBtnText").textContent = "儲存紀錄";
-        // 自動聚焦回項目欄位方便連續記帳
         document.getElementById("title").focus();
       }
     });
@@ -2051,7 +2148,7 @@
       if (cachedRecords.length === 0) return alert("目前沒有可匯出的資料或尚未解鎖！");
       let txtContent = `=== 記帳備份【${currentSheet}】(${getFormattedDate()}) ===\n\n`;
       cachedRecords.forEach((r, i) => {
-        let typeStr = r.type === 'expense' ? '分帳支出' : (r.type === 'personal' ? '個人支出' : '收入');
+        const typeStr = r.type === 'expense' ? '分帳支出' : (r.type === 'personal' ? '個人支出' : '收入');
         txtContent += `【#${i + 1}】${r.date} | [${r.category || '其他'}] ${typeStr} - ${r.title}\n`;
         txtContent += `  金額: ${r.currency} ${r.originalAmount} (折合 NT$ ${r.twdAmount})\n`;
         if (r.type === 'expense') {
@@ -2067,8 +2164,13 @@
     function downloadBlob(content, filename, mimeType) {
       const blob = new Blob([content], { type: mimeType });
       const url = URL.createObjectURL(blob);
-      const a = document.createElement("a"); a.href = url; a.download = filename;
-      document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(url);
+      const a = document.createElement("a"); 
+      a.href = url; 
+      a.download = filename;
+      document.body.appendChild(a); 
+      a.click(); 
+      document.body.removeChild(a); 
+      URL.revokeObjectURL(url);
     }
 
     function getFormattedDate() { return new Date().toISOString().split("T")[0]; }
@@ -2080,7 +2182,7 @@
 
       const file = fileInput.files[0];
       const text = await file.text();
-      let itemsToImport = [];
+      const itemsToImport = [];
 
       try {
         if (file.name.endsWith(".csv")) {
@@ -2125,12 +2227,16 @@
         if (!confirm(`已成功解析 ${itemsToImport.length} 筆紀錄，確定要全部匯入到【${currentSheet}】嗎？`)) return;
 
         showToast("⏳ 匯入中...", "info");
-        const f=await getOrCreateBookFile(currentSheet);
-        const existing=await readDriveJson(f.id);
-        const merged=[...(Array.isArray(existing)?existing:[]),...itemsToImport.map(x=>({...x,id:generateUUID()}))];
-        await updateDriveJson(f.id,merged);
-        showToast(`✅ 成功匯入 ${itemsToImport.length} 筆資料`); fileInput.value=""; await loadRecords();
-      } catch (err) { showToast("❌ 檔案解析錯誤", "error"); }
+        const f = await getOrCreateBookFile(currentSheet);
+        const existing = await readDriveJson(f.id);
+        const merged = [...(Array.isArray(existing) ? existing : []), ...itemsToImport.map(x => ({ ...x, id: generateUUID() }))];
+        await updateDriveJson(f.id, merged);
+        showToast(`✅ 成功匯入 ${itemsToImport.length} 筆資料`); 
+        fileInput.value = ""; 
+        await loadRecords();
+      } catch (err) { 
+        showToast("❌ 檔案解析錯誤", "error"); 
+      }
     });
 
     document.getElementById("googleLoginBtn").addEventListener("click", googleLogin);
@@ -2155,13 +2261,15 @@
 
     document.getElementById("refreshBtn").addEventListener("click", loadRecords);
     initializeGoogleAuth();
-    initTheme(); applyFontSize(localStorage.getItem("app_custom_font_size") || 16);
-    document.getElementById("date").value = getTodayString(); updateTimestampDisplay();
+    initTheme(); 
+    applyFontSize(localStorage.getItem("app_custom_font_size") || 16);
+    document.getElementById("date").value = getTodayString(); 
+    updateTimestampDisplay();
     
     setRecordType('expense');
-
     renderMemberControls();
     renderCategoryControls();
+    
     fetchExchangeRates().then(() => {
       document.getElementById("rateUpdateTime").parentNode.setAttribute("onclick", "fetchExchangeRates()");
     });
