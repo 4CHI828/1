@@ -15,7 +15,7 @@
             --warning: #f59e0b; --accent: #ec4899;
         }
         body.light-mode {
-            --bg-dark: #f8fafc; --card-dark: #ffffff; --text-main: #0f172a;
+            --bg-dark: #f1f5f9; --card-dark: #ffffff; --text-main: #0f172a;
             --text-muted: #64748b; --border-color: #e2e8f0;
         }
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Inter', 'Segoe UI', Roboto, sans-serif; }
@@ -60,11 +60,10 @@
             flex: 1; padding: 0.8rem 1.2rem; border-radius: 12px; border: 1px solid var(--border-color);
             background-color: var(--bg-dark); color: var(--text-main); font-size: 1rem; outline: none;
         }
-        .input-section input:focus { border-color: var(--primary); box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.2); }
 
         .category-chips { display: flex; flex-wrap: wrap; gap: 0.7rem; margin-bottom: 0.8rem; }
         .chip {
-            padding: 0.4rem 1.2rem; border-radius: 20px; background: var(--card-dark);
+            padding:, 0.4rem 1.2rem; border-radius: 20px; background: var(--card-dark);
             border: 1px solid var(--border-color); color: var(--text-main);
             font-size: 0.85rem; cursor: pointer; transition: all 0.2s;
         }
@@ -78,69 +77,81 @@
             border: 1px solid var(--border-color); background-color: var(--card-dark); color: var(--text-main);
         }
 
-        .links-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 2rem; }
+        /* --- [核心] 極簡策展佈局 --- */
+        .links-grid { 
+            display: grid; 
+            grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); 
+            gap: 1.5rem; 
+        }
         .list-view { display: flex; flex-direction: column; gap: 1rem; }
-        .list-view .link-card { flex-direction: row; align-items: center; padding: 1.2rem 1.5rem; }
+        .list-view .link-card { width: 100%; max-width: 100%; }
 
         .link-card {
-            background-color: var(--card-dark); border-radius: 20px; padding: 1.8rem;
-            border: 1px solid var(--border-color); position: relative; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            display: flex; flex-direction: column;
+            background-color: var(--card-dark); border-radius: 16px; padding: 1.5rem;
+            border: 1px solid var(--border-color); transition: all 0.3s ease;
+            display: flex; flex-direction: column; position: relative;
+            overflow: hidden;
         }
-        .link-card:hover { 
-            transform: translateY(-5px); border-color: var(--primary); 
-            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.2), 0 0 15px rgba(99, 102, 241, 0.1); 
+        .link-card:hover { border-color: var(--primary); box-shadow: 0 10px 20px rgba(0,0,0,0.2); transform: translateY(-2px); }
+        .link-card.is-pinned { border-left: 4px solid var(--warning); }
+        .link-card.is-read { opacity: 0.6; }
+
+        .link-desc { 
+            color: var(--text-muted); font-size: 0.9rem; 
+            margin-bottom: 1.2rem; line-height: 1.6;
+            display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical;
+            overflow: hidden;
         }
-        .favicon { width: 28px; height: 28px; border-radius: 6px; margin-right: 12px; }
+
+        .link-title { font-size: 1.1rem; font-weight: 700; margin-bottom: 0.5rem; color: var(--text-main); line-height: 1.4; }
+        .account-handle { color: var(--primary); font-weight: 800; }
+
+        .link-url-display {
+            font-family: 'JetBrains Mono', 'Courier New', monospace;
+            font-size: 0.75rem; color: var(--primary); opacity: 0.6;
+            margin-bottom: 1.2rem; display: block; overflow: hidden;
+            text-overflow: ellipsis; white-space: nowrap; text-decoration: none;
+        }
+        .link-url-display:hover { opacity: 1; text-decoration: underline; }
+
+        .card-footer {
+            display: flex; align-items: center; justify-content: space-between;
+            margin-top: auto; padding-top: 1rem; border-top: 1px solid var(--border-color);
+        }
+        .source-info { display: flex; align-items: center; gap: 0.6rem; }
+        .favicon { width: 16px; height: 16px; border-radius: 3px; }
+        .source-text { font-size: 0.75rem; color: var(--text-muted); display: flex; align-items: center; gap: 0.4rem; }
         
-        .tags-container { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-bottom: 1.2rem; }
+        .tags-container { display: flex; flex-wrap: wrap; gap: 0.4rem; justify-content: flex-end; }
         .tag-badge { 
             background: rgba(99, 102, 241, 0.1); color: var(--primary); 
-            padding: 0.3rem 0.7rem; border-radius: 8px; font-size: 0.7rem; font-weight: 600;
+            padding: 0.2rem 0.5rem; border-radius: 6px; font-size: 0.65rem; font-weight: 600;
         }
 
-        .account-handle { color: var(--primary); font-weight: 700; }
-        .link-title { 
-            font-size: 1.25rem; font-weight: 700; margin-bottom: 0.4rem; display: block; 
-            line-height: 1.3; color: var(--text-main); letter-spacing: -0.02em;
+        .card-actions {
+            position: absolute; top: 1rem; right: 1rem;
+            display: flex; gap: 0.5rem; opacity: 0; transition: opacity 0.2s;
         }
-        .link-time { 
-            font-size: 0.75rem; color: var(--text-muted); margin-bottom: 1rem; 
-            display: flex; align-items: center; gap: 0.4rem; opacity: 0.8;
+        .link-card:hover .card-actions { opacity: 1; }
+        .card-actions button { 
+            width: 32px; height: 32px; padding: 0; border-radius: 50%; 
+            background: var(--bg-dark); color: var(--text-muted); border: 1px solid var(--border-color);
         }
-        .link-url { 
-            font-family: 'JetBrains Mono', 'Courier New', monospace; 
-            color: var(--primary); text-decoration: none; font-size: 0.8rem; 
-            word-break: break-all; display: block; margin-bottom: 1rem; 
-            opacity: 0.7; transition: opacity 0.2s;
-        }
-        .link-url:hover { opacity: 1; text-decoration: underline; }
-        .link-desc { 
-            color: var(--text-muted); font-size: 0.95rem; flex: 1; 
-            margin-bottom: 1.8rem; line-height: 1.6;
-        }
-        .card-actions { display: flex; gap: 0.8rem; border-top: 1px solid var(--border-color); padding-top: 1.2rem; }
-        .card-actions button { flex: 1; padding: 0.5rem; font-size: 0.85rem; justify-content: center; }
-
-        /* 狀態樣式 */
-        .is-pinned { border-left: 4px solid var(--warning) !important; }
-        .is-read { opacity: 0.6; }
-        .read-badge { color: var(--success); font-size: 0.7rem; margin-left: 5px; }
+        .card-actions button:hover { color: var(--primary); border-color: var(--primary); }
+        .card-actions .btn-delete:hover { color: var(--danger); border-color: var(--danger); }
 
         .modal-overlay {
             display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: rgba(15, 23, 42, 0.8); z-index: 1000; justify-content: center; align-items: center; backdrop-filter: blur(8px);
         }
-        .modal { background: var(--card-dark); padding: 2.5rem; border-radius: 24px; width: 90%; max-width: 500px; border: 1px solid var(--border-color); box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5); }
+        .modal { background: var(--card-dark); padding: 2.5rem; border-radius: 24px; width: 90%; max-width: 500px; border: 1px solid var(--border-color); }
         .form-group { margin-bottom: 1.2rem; }
         .form-group label { display: block; margin-bottom: 0.5rem; color: var(--text-muted); font-size: 0.9rem; }
         .form-group input, .form-group textarea { width: 100%; padding: 0.8rem; border-radius: 12px; border: 1px solid var(--border-color); background: var(--bg-dark); color: var(--text-main); outline: none; }
-        .form-group input:focus { border-color: var(--primary); }
 
         #toast-container { position: fixed; bottom: 2rem; right: 2rem; z-index: 9999; display: flex; flex-direction: column; gap: 0.5rem; }
         .toast { background: var(--card-dark); color: var(--text-main); padding: 1rem 1.5rem; border-radius: 12px; border-left: 4px solid var(--primary); box-shadow: 0 10px 15px -3px rgba(0,0,0,0.4); animation: slideIn 0.3s ease forwards; }
         @keyframes slideIn { from { opacity: 0; transform: translateX(100%); } to { opacity: 1; transform: translateX(0); } }
-
         .loader { display: none; border: 3px solid var(--border-color); border-top: 3px solid var(--primary); border-radius: 50%; width: 18px; height: 18px; animation: spin 1s linear infinite; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
     </style>
@@ -179,12 +190,11 @@
     <main id="app-screen">
         <div class="control-panel">
             <div class="input-section">
-                <input type="text" id="url-input" placeholder="貼上連結 (例如 IG, FB, YT 網址...)" onkeypress="handleEnter(event)">
+                <input type="text" id="url-input" placeholder="貼上連結 (例如 IG, FB, YT, Threads 網址...)" onkeypress="handleEnter(event)">
                 <button class="btn-primary" id="btn-add-url" onclick="processAndSaveUrl()">
                     <span class="btn-text">儲存</span>
                     <div class="loader" id="add-loader"></div>
                 </button>
-                <!-- 新增：批量匯入按鈕 -->
                 <button class="btn-outline btn-icon-only" onclick="openBulkModal()" title="批量匯入"><i class="fas fa-list-ul"></i></button>
             </div>
 
@@ -208,7 +218,6 @@
         <a href="https://v.douyin.com/XmUkpVat8Lg/" target="_blank" class="font-bold text-blue-500 hover:text-blue-600 transition flex items-center gap-0.5">奇奇828 <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path></svg></a>
     </footer>
 
-    <!-- [Modal] 編輯彈窗 -->
     <div class="modal-overlay" id="edit-modal">
         <div class="modal">
             <h3 class="text-xl font-bold mb-4">✏️ 編輯連結</h3>
@@ -227,7 +236,6 @@
         </div>
     </div>
 
-    <!-- [Modal] 批量匯入彈窗 -->
     <div class="modal-overlay" id="bulk-modal">
         <div class="modal">
             <h3 class="text-xl font-bold mb-2">📦 批量匯入連結</h3>
@@ -247,9 +255,6 @@
     <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore-compat.js"></script>
 
     <script>
-        /* ============================================================
-           1. 配置與初始化
-           ============================================================ */
         const firebaseConfig = {
             apiKey: "AIzaSyAt0YAxzPbFZHyLKQLN1me3N9DQKnCrylg",
             authDomain: "link-1b206.firebaseapp.com",
@@ -291,7 +296,7 @@
         }
 
         /* ============================================================
-           2. 智能解析引擎 (包含帳號提取)
+           智能解析引擎：針對 Threads 深度優化
            ============================================================ */
         async function fetchWebpageInfo(url) {
             let result = { title: "", description: "請編輯詳細資訊", categories: ["一般網站"], account: "" };
@@ -301,31 +306,66 @@
                 const lowerUrl = url.toLowerCase();
                 const path = urlObj.pathname.split('/').filter(p => p);
 
-                if (lowerUrl.includes('instagram.com')) {
-                    result.categories = ["社群媒體", "Instagram"];
-                    if (urlObj.pathname.includes('/p/') || urlObj.pathname.includes('/reel/')) {
-                        result.title = `IG 內容`;
-                    } else {
-                        result.title = `IG 個人檔案`;
-                        result.account = `@${path[0]}`;
-                    }
-                } else if (lowerUrl.includes('threads.net')) {
+                // --- Threads 解析 (優先順序最高) ---
+                if (lowerUrl.includes('threads.net')) {
                     result.categories = ["社群媒體", "Threads"];
-                    const threadUser = path.find(p => p.startsWith('@'));
-                    result.title = `Threads 內容`;
-                    result.account = threadUser || "";
-                } else if (lowerUrl.includes('youtube.com') || lowerUrl.includes('youtu.be')) {
+                    
+                    // 1. 嘗試從路徑提取帳號 (@username)
+                    const accountMatch = url.match(/@([a-zA-Z0-9._]+)/);
+                    result.account = accountMatch ? `@${accountMatch[1]}` : "";
+                    
+                    // 2. 嘗試抓取 OG 標籤 (避開登入牆)
+                    const proxyUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(url)}`;
+                    const res = await fetch(proxyUrl);
+                    const data = await res.json();
+                    if (data.contents) {
+                        const doc = new DOMParser().parseFromString(data.contents, "text/html");
+                        const ogTitle = doc.querySelector('meta[property="og:title"]')?.content;
+                        const ogDesc = doc.querySelector('meta[property="og:description"]')?.content;
+                        if (ogTitle) result.title = ogTitle;
+                        if (ogDesc) result.description = ogDesc;
+                    }
+                    
+                    // 3. Fallback：若抓不到標題，則使用 @帳號 命名
+                    if (!result.title) {
+                        result.title = result.account ? `${result.account} 的 Threads 貼文` : "Threads 內容";
+                    }
+                } 
+                // --- Instagram 解析 ---
+                else if (lowerUrl.includes('instagram.com')) {
+                    result.categories = ["社群媒體", "Instagram"];
+                    const accountMatch = url.match(/@([a-zA-Z0-9._]+)/);
+                    result.account = accountMatch ? `@${accountMatch[1]}` : "";
+                    
+                    const proxyUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(url)}`;
+                    const res = await fetch(proxyUrl);
+                    const data = await res.json();
+                    if (data.contents) {
+                        const doc = new DOMParser().parseFromString(data.contents, "text/html");
+                        const ogTitle = doc.querySelector('meta[property="og:title"]')?.content;
+                        const ogDesc = doc.querySelector('meta[property="og:description"]')?.content;
+                        if (ogTitle) result.title = ogTitle;
+                        if (ogDesc) result.description = ogDesc;
+                    }
+                    if (!result.title) result.title = result.account ? `${result.account} 的 IG 貼文` : "Instagram 內容";
+                }
+                // --- YouTube 解析 ---
+                else if (lowerUrl.includes('youtube.com') || lowerUrl.includes('youtu.be')) {
                     result.categories = ["影音娛樂", "YouTube"];
                     const ytUser = path.find(p => p.startsWith('@'));
                     if (ytUser) result.account = ytUser;
                     const res = await fetch(`https://noembed.com/embed?url=${encodeURIComponent(url)}`);
                     const data = await res.json();
                     if (data.title) result.title = data.title;
-                } else if (lowerUrl.includes('facebook.com')) {
+                } 
+                // --- Facebook 解析 ---
+                else if (lowerUrl.includes('facebook.com')) {
                     result.categories = ["社群媒體", "Facebook"];
                     result.title = "Facebook 內容";
                     result.account = path[0] ? `@${path[0]}` : "";
-                } else {
+                } 
+                // --- 一般網站解析 ---
+                else {
                     result.categories = ["一般網站"];
                     const proxy = `https://api.allorigins.win/get?url=${encodeURIComponent(url)}`;
                     const res = await fetch(proxy);
@@ -335,25 +375,15 @@
                         result.title = doc.querySelector('title')?.innerText || "";
                     }
                 }
-            } catch (e) { console.warn(e); }
+            } catch (e) { console.warn("解析失敗:", e); }
             if (!result.title) result.title = "未命名連結";
             return result;
         }
 
-        /* ============================================================
-           3. 資料管理 (含重複偵測、批量匯入)
-           ============================================================ */
         async function processAndSaveUrl() {
             const input = document.getElementById('url-input');
             let url = input.value.trim();
             if (!url) return;
-            
-            // --- 重複連結偵測 ---
-            const currentLinks = isLocalMode ? JSON.parse(localStorage.getItem('my_links') || '[]') : await getAllLinks();
-            if (currentLinks.some(l => l.url === url)) {
-                if (!confirm("此連結已儲存，是否仍要再次儲存？")) return;
-            }
-
             const btn = document.getElementById('btn-add-url');
             const loader = document.getElementById('add-loader');
             const btnText = btn.querySelector('.btn-text');
@@ -361,7 +391,7 @@
 
             const info = await fetchWebpageInfo(url);
             const finalTitle = info.account ? `${info.account} - ${info.title}` : info.title;
-            const data = { url, title: finalTitle, categories: info.categories, description: info.description, createdAt: Date.now(), pinned: false, isRead: false };
+            const data = { url, title: finalTitle, categories: info.categories, description: info.description, createdAt: Date.now(), pinned: false, isRead: false, account: info.account };
 
             try {
                 if (isLocalMode) {
@@ -393,7 +423,7 @@
                 const cleanedUrl = url.trim().startsWith('http') ? url.trim() : 'https://' + url.trim();
                 const info = await fetchWebpageInfo(cleanedUrl);
                 const finalTitle = info.account ? `${info.account} - ${info.title}` : info.title;
-                const data = { url: cleanedUrl, title: finalTitle, categories: info.categories, description: info.description, createdAt: Date.now(), pinned: false, isRead: false };
+                const data = { url: cleanedUrl, title: finalTitle, categories: info.categories, description: info.description, createdAt: Date.now(), pinned: false, isRead: false, account: info.account };
                 
                 if (isLocalMode) {
                     const links = JSON.parse(localStorage.getItem('my_links') || '[]');
@@ -411,14 +441,13 @@
             loadLinks();
         }
 
-        async function getAllLinks() {
-            if (isLocalMode) return JSON.parse(localStorage.getItem('my_links') || '[]');
-            const snap = await db.collection('users').doc(currentUser.uid).collection('links').get();
-            return snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-        }
-
         async function exportData() {
-            const links = await getAllLinks();
+            let links = [];
+            if (isLocalMode) links = JSON.parse(localStorage.getItem('my_links') || '[]');
+            else {
+                const snap = await db.collection('users').doc(currentUser.uid).collection('links').get();
+                links = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+            }
             const blob = new Blob([JSON.stringify(links, null, 2)], { type: "application/json" });
             const url = URL.createObjectURL(blob);
             const a = document.createElement('a');
@@ -453,9 +482,6 @@
             reader.readAsText(file);
         }
 
-        /* ============================================================
-           4. 渲染與過濾 (含釘選與已讀邏輯)
-           ============================================================ */
         function loadLinks() {
             if (isLocalMode) {
                 const links = JSON.parse(localStorage.getItem('my_links') || '[]');
@@ -473,10 +499,6 @@
             const container = document.getElementById('links-container');
             const search = document.getElementById('search-input').value.toLowerCase();
             renderTagsCloud(links);
-
-            // 排序：釘選優先，然後按時間降序
-            links.sort((a, b) => (b.pinned ? 1 : 0) - (a.pinned ? 1 : 0) || b.createdAt - a.createdAt);
-
             const filtered = links.filter(l => {
                 const matchSearch = l.title.toLowerCase().includes(search) || l.url.toLowerCase().includes(search);
                 let hasTag = (activeTag === 'all');
@@ -501,24 +523,26 @@
 
                 return `
                 <div class="link-card ${link.pinned ? 'is-pinned' : ''} ${link.isRead ? 'is-read' : ''}">
-                    <div class="tags-container">
-                        ${(Array.isArray(link.categories) ? link.categories : (link.categories ? [link.categories] : [])).map(t => `<span class="tag-badge">${escapeHtml(t)}</span>`).join('')}
-                    </div>
-                    <div style="display:flex; align-items:center; margin-bottom:0.2rem;">
-                        <img class="favicon" src="https://www.google.com/s2/favicons?domain=${link.url}&sz=64">
-                        <h3 class="link-title">${titleHtml}</h3>
-                    </div>
-                    <div class="link-time">
-                        <i class="far fa-clock"></i> ${formatTime(link.createdAt)}
-                        ${link.isRead ? '<span class="read-badge"><i class="fas fa-check-circle"></i> 已讀</span>' : ''}
-                    </div>
-                    <a href="${link.url}" target="_blank" class="link-url">${escapeHtml(link.url)}</a>
                     <p class="link-desc">${escapeHtml(link.description)}</p>
+                    <h3 class="link-title">${titleHtml}</h3>
+                    <a href="${link.url}" target="_blank" class="link-url-display">${escapeHtml(link.url)}</a>
+                    <div class="card-footer">
+                        <div class="source-info">
+                            <img class="favicon" src="https://www.google.com/s2/favicons?domain=${link.url}&sz=64">
+                            <div class="source-text">
+                                <span class="font-medium">${link.account || new URL(link.url).hostname}</span>
+                                <span>${formatTime(link.createdAt)}</span>
+                            </div>
+                        </div>
+                        <div class="tags-container">
+                            ${(Array.isArray(link.categories) ? link.categories : (link.categories ? [link.categories] : [])).map(t => `<span class="tag-badge">${escapeHtml(t)}</span>`).join('')}
+                        </div>
+                    </div>
                     <div class="card-actions">
                         <button class="btn-outline" onclick="togglePin('${link.id}')" title="釘選"><i class="fas ${link.pinned ? 'fa-thumbtack' : 'fa-thumbtack-empty'}"></i></button>
-                        <button class="btn-outline" onclick="toggleRead('${link.id}')" title="標記已讀"><i class="fas fa-check"></i></button>
-                        <button class="btn-outline" onclick="openEdit('${link.id}')"><i class="fas fa-edit"></i></button>
-                        <button class="btn-danger" onclick="deleteLink('${link.id}')"><i class="fas fa-trash"></i></button>
+                        <button class="btn-outline" onclick="toggleRead('${link.id}')" title="標記已讀"><i class="fas ${link.isRead ? 'fa-check-circle' : 'fa-circle'}"></i></button>
+                        <button class="btn-outline" onclick="openEdit('${link.id}')" title="編輯"><i class="fas fa-edit"></i></button>
+                        <button class="btn-outline btn-delete" onclick="deleteLink('${link.id}')" title="刪除"><i class="fas fa-trash"></i></button>
                     </div>
                 </div>
             `}).join('');
@@ -643,9 +667,6 @@
             filterLinks();
         }
 
-        /* ============================================================
-           5. 系統基礎
-           ============================================================ */
         function toggleTheme() {
             document.body.classList.toggle('light-mode');
             localStorage.setItem('theme', document.body.classList.contains('light-mode') ? 'light' : 'dark');
@@ -674,7 +695,7 @@
                     document.getElementById('app-screen').style.display = 'block';
                     document.getElementById('btn-logout').style.display = 'inline-flex';
                     document.getElementById('user-info').style.display = 'inline';
-                    document.getElementById('user-info').textContent = user.email;
+                    document,getElementById('user-info').textContent = user.email;
                     loadLinks();
                 }
             });
