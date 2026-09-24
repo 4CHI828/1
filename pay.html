@@ -279,7 +279,7 @@
           <option value="USD">USD 美元</option>
           <option value="KRW">KRW 韓元</option>
         </select>
-        <input type="text" id="originalAmount" placeholder="金額 (可算式: 100+50*2)" class="col-span-3 border border-gray-200 dark:border-gray-600 rounded-xl px-3 py-2 text-base font-bold bg-white dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none shadow-inner text-right font-mono">
+        <input type="text" id="originalAmount" placeholder="金額 (可算式: 100+50*2)" class="col-span-3 border border-gray-200 dark:border-gray-600 rounded-xl px-3 py-2 text-base font-bold bg-white dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none shadow-inner text-right font-mono transition-colors">
       </div>
       <div class="flex items-center justify-between text-xs text-gray-400 px-1">
         <span id="mathExprHint" class="font-mono text-[11px] text-blue-500"></span>
@@ -322,7 +322,7 @@
                 <option value="TWD">台幣輸入 (TWD)</option>
               </select>
             </div>
-            <span id="customSumStatus" class="font-mono text-gray-400">0 / 0</span>
+            <span id="customSumStatus" class="font-mono text-gray-400 transition-all">0 / 0</span>
           </div>
           <div id="customMembersList" class="space-y-2 max-h-48 overflow-y-auto pr-1"></div>
         </div>
@@ -475,6 +475,7 @@
     
     let chartInstance = null;
     let currentChartMode = 'pie';
+    let currentRenderedChartType = null; // 紀錄當下繪製的圖表核心類型，判斷是否需要銷毀重建
 
     const pieOutlabelsPlugin = {
       id: 'pieOutlabels',
@@ -1040,6 +1041,7 @@
       }
     });
 
+    // 🌟 防呆：差額提示閃爍特效
     function checkCustomSplitTotal() {
       const splitCurrency = document.getElementById("customSplitCurrency").value;
       const cur = document.getElementById("currency").value;
@@ -1390,14 +1392,21 @@
       voiceBtn.addEventListener("click", () => showToast("❌ 您的瀏覽器不支援語音辨識", "error"));
     }
 
+    // 🌟 OCR 進度回饋優化
     document.getElementById("ocrReceiptInput").addEventListener("change", async e => {
       const f = e.target.files[0]; 
       if (!f) return; 
-      aiStatus.textContent = "🔍 照片辨識中..."; 
+      aiStatus.textContent = "🔍 照片解析準備中..."; 
       aiStatus.classList.remove("hidden");
       processImageForUpload(f, async (compressedBase64) => {
         try {
-          const { data: { text } } = await Tesseract.recognize(compressedBase64, 'eng+chi_tra');
+          const { data: { text } } = await Tesseract.recognize(compressedBase64, 'eng+chi_tra', {
+            logger: m => {
+              if (m.status === 'recognizing text') {
+                aiStatus.textContent = `🔍 正在辨識收據... ${Math.round(m.progress * 100)}%`;
+              }
+            }
+          });
           const nums = (text.match(/[0-9,.]+/g) || []).map(n => parseFloat(n.replace(/,/g, ''))).filter(n => n > 0 && n < 1000000);
           if (nums.length) document.getElementById("originalAmount").value = Math.max(...nums);
           document.getElementById("title").value = "收據截取"; 
@@ -1588,6 +1597,7 @@
     document.getElementById("chartTypeMemberBtn").addEventListener("click", () => setChartType("member"));
     document.getElementById("chartTypeBarBtn").addEventListener("click", () => setChartType("bar"));
 
+    // 🌟 圖表效能最佳化：能 update 就不 destroy，讓動畫流暢
     function setChartType(mode) {
       currentChartMode = mode;
       const pBtn = document.getElementById("chartTypePieBtn");
@@ -1608,9 +1618,9 @@
       if (!canvas) return;
 
       const expenses = cachedRecords.filter(r => r.type === 'expense' || r.type === 'personal');
-      if (chartInstance) chartInstance.destroy();
-
       if (expenses.length === 0) {
+        if (chartInstance) chartInstance.destroy();
+        currentRenderedChartType = null;
         msg.classList.remove("hidden"); 
         canvas.style.display = "none"; 
         return;
@@ -1624,38 +1634,17 @@
       const gridColor = isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.05)';
       const colors = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#06b6d4', '#f97316', '#64748b', '#ec4899', '#14b8a6'];
 
+      const targetChartType = (currentChartMode === 'bar') ? 'bar' : 'doughnut';
+      let labels = [], data = [];
+
       if (currentChartMode === 'pie') {
         const catData = {};
         expenses.forEach(r => { 
           const cat = r.category || '其他'; 
           catData[cat] = (catData[cat] || 0) + (r.twdAmount || 0);
         });
-
-        const labels = Object.keys(catData); 
-        const data = Object.values(catData);
-
-        chartInstance = new Chart(canvas, {
-          type: 'doughnut',
-          data: { 
-            labels, 
-            datasets: [{ 
-              data, 
-              backgroundColor: colors.slice(0, labels.length), 
-              borderWidth: 2, 
-              borderColor: isDark ? '#1e293b' : '#ffffff' 
-            }] 
-          },
-          plugins: [pieOutlabelsPlugin],
-          options: {
-            responsive: true, 
-            maintainAspectRatio: false,
-            layout: { padding: 28 },
-            plugins: { 
-              legend: { display: false }, 
-              tooltip: { callbacks: { label: (ctx) => ` ${ctx.label}: $${ctx.raw.toLocaleString()}` } }
-            }
-          }
-        });
+        labels = Object.keys(catData); 
+        data = Object.values(catData);
       } else if (currentChartMode === 'member') {
         const memberData = {};
         members.forEach(m => memberData[m] = 0);
@@ -1670,60 +1659,55 @@
             });
           }
         });
-
-        const labels = Object.keys(memberData).filter(m => memberData[m] > 0);
-        const data = labels.map(m => Math.round(memberData[m]));
-
-        chartInstance = new Chart(canvas, {
-          type: 'doughnut',
-          data: { 
-            labels, 
-            datasets: [{ 
-              data, 
-              backgroundColor: colors.slice(0, labels.length), 
-              borderWidth: 2, 
-              borderColor: isDark ? '#1e293b' : '#ffffff' 
-            }] 
-          },
-          plugins: [pieOutlabelsPlugin],
-          options: {
-            responsive: true, 
-            maintainAspectRatio: false,
-            layout: { padding: 28 },
-            plugins: { 
-              legend: { display: false }, 
-              tooltip: { callbacks: { label: (ctx) => ` 應攤負擔: $${ctx.raw.toLocaleString()}` } }
-            }
-          }
-        });
+        labels = Object.keys(memberData).filter(m => memberData[m] > 0);
+        data = labels.map(m => Math.round(memberData[m]));
       } else {
         const dateData = {};
         expenses.forEach(r => { 
           const d = r.date || '未知日期'; 
           dateData[d] = (dateData[d] || 0) + (r.twdAmount || 0); 
         });
-        const labels = Object.keys(dateData).sort(); 
-        const data = labels.map(l => dateData[l]);
+        labels = Object.keys(dateData).sort(); 
+        data = labels.map(l => dateData[l]);
+      }
 
-        chartInstance = new Chart(canvas, {
-          type: 'bar',
-          data: { 
-            labels, 
-            datasets: [{ label: '每日總支出 (TWD)', data, backgroundColor: '#3b82f6', borderRadius: 4 }] 
-          },
-          options: {
-            responsive: true, 
-            maintainAspectRatio: false,
-            scales: { 
-              x: { ticks: { color: textColor, font: { size: 10 } }, grid: { display: false } }, 
-              y: { ticks: { color: textColor, font: { size: 10 } }, grid: { color: gridColor }, beginAtZero: true } 
-            },
-            plugins: { 
-              legend: { display: false }, 
-              tooltip: { callbacks: { label: (ctx) => ` 支出: $${ctx.raw.toLocaleString()}` } }
+      // 如果核心圖表類型一樣，只需更新資料讓過場滑順
+      if (chartInstance && currentRenderedChartType === targetChartType) {
+        chartInstance.data.labels = labels;
+        chartInstance.data.datasets[0].data = data;
+        if (targetChartType === 'doughnut') {
+          chartInstance.data.datasets[0].backgroundColor = colors.slice(0, labels.length);
+          chartInstance.data.datasets[0].borderColor = isDark ? '#1e293b' : '#ffffff';
+        }
+        chartInstance.update();
+      } else {
+        if (chartInstance) chartInstance.destroy();
+        currentRenderedChartType = targetChartType;
+
+        if (targetChartType === 'doughnut') {
+          chartInstance = new Chart(canvas, {
+            type: 'doughnut',
+            data: { labels, datasets: [{ data, backgroundColor: colors.slice(0, labels.length), borderWidth: 2, borderColor: isDark ? '#1e293b' : '#ffffff' }] },
+            plugins: [pieOutlabelsPlugin],
+            options: {
+              responsive: true, maintainAspectRatio: false, layout: { padding: 28 },
+              plugins: { legend: { display: false }, tooltip: { callbacks: { label: (ctx) => ` ${ctx.label}: $${ctx.raw.toLocaleString()}` } } }
             }
-          }
-        });
+          });
+        } else {
+          chartInstance = new Chart(canvas, {
+            type: 'bar',
+            data: { labels, datasets: [{ label: '每日總支出 (TWD)', data, backgroundColor: '#3b82f6', borderRadius: 4 }] },
+            options: {
+              responsive: true, maintainAspectRatio: false,
+              scales: { 
+                x: { ticks: { color: textColor, font: { size: 10 } }, grid: { display: false } }, 
+                y: { ticks: { color: textColor, font: { size: 10 } }, grid: { color: gridColor }, beginAtZero: true } 
+              },
+              plugins: { legend: { display: false }, tooltip: { callbacks: { label: (ctx) => ` 支出: $${ctx.raw.toLocaleString()}` } } }
+            }
+          });
+        }
       }
     }
 
@@ -1851,6 +1835,7 @@
       });
     };
 
+    // 🌟 編輯模式 UX 優化：自動全選金額
     window.startEditRecord = function(id) {
       const item = cachedRecords.find(r => r.id === id);
       if (!item) return;
@@ -1892,7 +1877,15 @@
       }
 
       updateTwdPreview();
-      document.getElementById("recordFormBox").scrollIntoView({ behavior: 'smooth' });
+      
+      // 自動滑動並選取欄位
+      document.getElementById("recordFormBox").scrollIntoView({ behavior: 'smooth', block: 'center' });
+      setTimeout(() => {
+        const amtInput = document.getElementById("originalAmount");
+        amtInput.focus();
+        amtInput.select();
+      }, 350);
+      
       showToast("✏️ 已載入紀錄至表單進行編輯", "info");
     };
 
@@ -2085,7 +2078,7 @@
       }
     }
 
-    // 儲存紀錄按鈕
+    // 🌟 儲存按鈕：加入防呆動態提示
     document.getElementById("saveRecordBtn").addEventListener("click", async function() {
       if (!requireGoogleLogin()) return;
       const saveBtn = this;
@@ -2130,7 +2123,12 @@
           });
           if (!splitData.length) return showToast("至少需輸入一位成員金額", "error");
           const target = sc === "TWD" ? twd : origAmt;
-          if (Math.abs(sum - target) > 0.01) return showToast("差額不符，請調整！", "error");
+          if (Math.abs(sum - target) > 0.01) {
+            const statusEl = document.getElementById("customSumStatus");
+            statusEl.classList.add("animate-bounce", "text-red-500");
+            setTimeout(() => statusEl.classList.remove("animate-bounce", "text-red-500"), 1000);
+            return showToast("差額不符，請調整！", "error");
+          }
         }
       }
 
@@ -2186,7 +2184,6 @@
       } finally {
         saveBtn.disabled = false;
         document.getElementById("saveBtnText").textContent = "儲存紀錄";
-        document.getElementById("title").focus();
       }
     });
 
