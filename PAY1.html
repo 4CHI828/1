@@ -15,7 +15,6 @@
   <!-- 第三方函式庫 -->
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script src="https://accounts.google.com/gsi/client" async defer></script>
 
@@ -46,14 +45,15 @@
     
     <!-- 頂部控制列 -->
     <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center border-b border-gray-200/60 dark:border-gray-700/60 pb-4 gap-3">
-      <div class="flex items-center gap-2.5 w-full sm:w-auto">
+      <div class="flex items-center gap-2 w-full sm:w-auto">
         <div class="bg-blue-600 text-white p-2 rounded-xl shadow-md">
           <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
         </div>
         <select id="sheetSelector" class="flex-1 sm:flex-none border border-gray-300/50 dark:border-gray-600/50 rounded-xl px-3 py-1.5 text-sm bg-white/50 dark:bg-gray-700/50 dark:text-white font-bold text-gray-800 focus:ring-2 focus:ring-blue-500 focus:outline-none transition">
           <option value="預設帳本">預設帳本</option>
         </select>
-        <button type="button" id="addSheetBtn" class="bg-blue-100 text-blue-600 dark:bg-blue-900/50 dark:text-blue-300 hover:bg-blue-200 dark:hover:bg-blue-800 px-3 py-1.5 rounded-xl font-bold transition active:scale-95">＋</button>
+        <button type="button" id="addSheetBtn" title="新增帳本" class="bg-blue-100 text-blue-600 dark:bg-blue-900/50 dark:text-blue-300 hover:bg-blue-200 dark:hover:bg-blue-800 px-3 py-1.5 rounded-xl font-bold transition active:scale-95">＋</button>
+        <button type="button" id="deleteSheetBtn" title="刪除目前帳本" class="bg-red-100 text-red-600 dark:bg-red-900/50 dark:text-red-300 hover:bg-red-200 dark:hover:bg-red-800 px-2.5 py-1.5 rounded-xl font-bold transition active:scale-95 text-xs">🗑️</button>
       </div>
 
       <div class="flex items-center gap-1.5 flex-wrap w-full sm:w-auto justify-end">
@@ -377,19 +377,6 @@
       </div>
     </div>
 
-    <!-- QR Code 彈窗面板 -->
-    <div id="qrCodePanel" class="hidden bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800/50 rounded-2xl p-4 space-y-3 text-xs text-center shadow-inner">
-      <div class="font-bold text-emerald-800 dark:text-emerald-300 text-sm mb-2">📱 掃碼收款</div>
-      <div class="flex flex-wrap justify-center gap-2 mb-2">
-        <button type="button" onclick="setQuickQr('822 901560055429')" class="bg-emerald-100/80 hover:bg-emerald-200 dark:bg-emerald-800/40 dark:hover:bg-emerald-800/60 text-emerald-700 dark:text-emerald-300 px-3 py-1.5 rounded-xl font-bold shadow-sm transition active:scale-95">🏦 中信(822)</button>
-        <button type="button" onclick="setQuickQr('808 0495968118226')" class="bg-emerald-100/80 hover:bg-emerald-200 dark:bg-emerald-800/40 dark:hover:bg-emerald-800/60 text-emerald-700 dark:text-emerald-300 px-3 py-1.5 rounded-xl font-bold shadow-sm transition active:scale-95">🏦 玉山(808)</button>
-        <button type="button" onclick="setQuickQr('700 00610042077578')" class="bg-emerald-100/80 hover:bg-emerald-200 dark:bg-emerald-800/40 dark:hover:bg-emerald-800/60 text-emerald-700 dark:text-emerald-300 px-3 py-1.5 rounded-xl font-bold shadow-sm transition active:scale-95">🏣 郵局(700)</button>
-      </div>
-      <div class="flex justify-center p-2.5 bg-white rounded-xl inline-block mx-auto shadow-sm" id="qrcodeCanvas"></div>
-      <input type="text" id="qrCodeInputText" placeholder="銀行帳號或轉帳網址" class="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-1.5 text-xs bg-white dark:bg-gray-700 outline-none focus:ring-2 focus:ring-emerald-500 text-center font-mono">
-      <button type="button" id="generateQrBtn" class="bg-emerald-500 hover:bg-emerald-600 text-white px-4 py-1.5 rounded-lg font-bold shadow active:scale-95 transition w-full">更新 QR Code</button>
-    </div>
-
   </div>
 
   <!-- LINE 分享選擇彈窗 (Modal) -->
@@ -449,7 +436,7 @@
     let googleAccessToken = "", googleTokenClient = null, driveRootFolderId = null, driveReceiptFolderId = null, driveReady = false;
     
     let currentSheet = localStorage.getItem("app_active_sheet") || "預設帳本";
-    let members = JSON.parse(localStorage.getItem("split_members_cache")) || ["奇奇", "鼻涕"];
+    let members = JSON.parse(localStorage.getItem("split_members_cache")) || ["我", "他"];
     let categories = JSON.parse(localStorage.getItem("app_categories_cache")) || ["餐飲", "交通", "住宿", "購物", "門票", "娛樂", "生活", "其他"];
     let exchangeRates = { TWD: 1, EUR: 35.0, JPY: 0.21, CNY: 4.45, USD: 32.5, KRW: 0.024 };
     let cachedRecords = [];
@@ -680,19 +667,70 @@
     async function initializeGoogleAuth() { if(!window.google?.accounts?.oauth2){setTimeout(initializeGoogleAuth,300);return;} googleTokenClient=google.accounts.oauth2.initTokenClient({client_id:GOOGLE_CLIENT_ID,scope:DRIVE_SCOPE,callback:async r=>{if(r.error){showToast(`❌ Google 登入失敗：${r.error_description||r.error}`,"error");return;} googleAccessToken=r.access_token; try{await initializeDrive();showToast("✅ Google Drive 已連線");await loadRecords();syncOfflineQueue();}catch(e){showToast(`❌ Drive 連線失敗：${e.message}`,"error");}}}); }
     async function googleLogin() { if(!googleTokenClient) await initializeGoogleAuth(); googleTokenClient?.requestAccessToken({prompt:"consent"}); }
     async function initializeDrive() { driveRootFolderId=await ensureDriveFolder(DRIVE_APP_NAME); driveReceiptFolderId=await ensureDriveFolder("receipts",driveRootFolderId); const f=await findDriveFileByType("config"); if(!f) await createDriveJson("config.json",{version:1,members,categories},{type:"config",app:DRIVE_APP_NAME}); else {const c=await readDriveJson(f.id);if(Array.isArray(c.members)&&c.members.length)members=c.members;if(Array.isArray(c.categories)&&c.categories.length)categories=c.categories;} driveReady=true;renderMemberControls();renderCategoryControls();document.getElementById("googleUserName").textContent="Google Drive 已連線";document.getElementById("googleUserHint").textContent=`資料儲存在「${DRIVE_APP_NAME}」資料夾`;document.getElementById("googleLoginBtn").classList.add("hidden");document.getElementById("googleLogoutBtn").classList.remove("hidden"); }
-    async function fetchSheetList(){if(!requireGoogleLogin())return;const fs=await driveList(`'${driveRootFolderId}' in parents and trashed = false`);const sheets=fs.filter(f=>f.appProperties?.type==="book").map(f=>f.appProperties.sheetName);if(!sheets.includes("預設帳本"))sheets.unshift("預設帳本");sheetSelector.innerHTML=sheets.map(x=>`<option value="${escapeHtml(x)}" ${x===currentSheet?'selected':''}>${escapeHtml(x)}</option>`).join("");}
+    
+    async function fetchSheetList(){
+      if(!requireGoogleLogin())return;
+      const fs=await driveList(`'${driveRootFolderId}' in parents and trashed = false`);
+      const sheets=fs.filter(f=>f.appProperties?.type==="book").map(f=>f.appProperties.sheetName);
+      if(!sheets.includes("預設帳本"))sheets.unshift("預設帳本");
+      const selector = document.getElementById("sheetSelector");
+      selector.innerHTML=sheets.map(x=>`<option value="${escapeHtml(x)}" ${x===currentSheet?'selected':''}>${escapeHtml(x)}</option>`).join("");
+    }
+
     async function fetchCloudConfig(){if(!requireGoogleLogin())return;const f=await findDriveFileByType("config");if(!f)return;const c=await readDriveJson(f.id);if(Array.isArray(c.members)&&c.members.length)members=c.members;if(Array.isArray(c.categories)&&c.categories.length)categories=c.categories;renderMemberControls();renderCategoryControls();}
     async function syncConfigToCloud(){if(!isGoogleLoggedIn())return;const data={version:1,members,categories,updatedAt:new Date().toISOString()};const f=await findDriveFileByType("config");if(f)await updateDriveJson(f.id,data);else await createDriveJson("config.json",data,{type:"config",app:DRIVE_APP_NAME});}
+    
     document.getElementById("sheetSelector").addEventListener("change", async (e) => {
       const newSheet=e.target.value;
       if(newSheet===currentSheet)return;
       if(editingRecordId&&!confirm("目前正在編輯紀錄，切換帳本將會取消編輯，是否繼續？")){e.target.value=currentSheet;return;}
       currentSheet=newSheet;localStorage.setItem("app_active_sheet",currentSheet);if(typeof cancelEdit==="function")cancelEdit();await loadRecords();
     });
+
     document.getElementById("addSheetBtn").addEventListener("click", async () => {
       if(!requireGoogleLogin())return;
       const name=prompt("新增帳本名稱（例：2026日本行）：");
-      if(name&&name.trim()){const cleanName=name.trim();currentSheet=cleanName;localStorage.setItem("app_active_sheet",currentSheet);await getOrCreateBookFile(currentSheet);await fetchSheetList();document.getElementById("sheetSelector").value=currentSheet;await loadRecords();}
+      if(name&&name.trim()){
+        const cleanName=name.trim();
+        currentSheet=cleanName;
+        localStorage.setItem("app_active_sheet",currentSheet);
+        await getOrCreateBookFile(currentSheet);
+        await fetchSheetList();
+        document.getElementById("sheetSelector").value=currentSheet;
+        await loadRecords();
+      }
+    });
+
+    // 🌟 新增移除帳本功能
+    document.getElementById("deleteSheetBtn").addEventListener("click", async () => {
+      if (!requireGoogleLogin()) return;
+      if (currentSheet === "預設帳本") {
+        alert("「預設帳本」為系統預設，無法刪除！");
+        return;
+      }
+      if (!confirm(`確定要刪除帳本【${currentSheet}】及其所有記帳紀錄嗎？此動作將把該檔案移至 Google Drive 垃圾桶。`)) {
+        return;
+      }
+
+      showToast(`⏳ 正在刪除帳本【${currentSheet}】...`, "info");
+      try {
+        const file = await findDriveFileByType("book", currentSheet);
+        if (file && file.id) {
+          await driveRequest(`${DRIVE_API}/files/${file.id}`, {
+            method: "PATCH",
+            headers: driveHeaders(true),
+            body: JSON.stringify({ trashed: true })
+          });
+        }
+        showToast(`✅ 帳本【${currentSheet}】已成功刪除`);
+        currentSheet = "預設帳本";
+        localStorage.setItem("app_active_sheet", currentSheet);
+        await fetchSheetList();
+        document.getElementById("sheetSelector").value = currentSheet;
+        await loadRecords();
+      } catch (err) {
+        showToast(`❌ 刪除帳本失敗：${err.message}`, "error");
+      }
     });
 
     function calculateTwd() {
@@ -1051,17 +1089,6 @@
       return shares;
     }
 
-    window.setQuickQr = function(accText) { document.getElementById("qrCodeInputText").value = accText; generateQrCode(accText); };
-    window.showQrCodeModal = function(txt) {
-      document.getElementById("qrCodePanel").classList.remove("hidden"); 
-      document.getElementById("qrCodeInputText").value = txt||"";
-      generateQrCode(txt||"null"); document.getElementById("qrCodePanel").scrollIntoView({behavior:'smooth'});
-    };
-    function generateQrCode(text) {
-      const canvas = document.getElementById("qrcodeCanvas"); canvas.innerHTML=""; 
-      new QRCode(canvas, { text: text, width: 140, height: 140, colorDark: "#064e3b", colorLight: "#ffffff", correctLevel: QRCode.CorrectLevel.M });
-    }
-    document.getElementById("generateQrBtn").addEventListener("click", () => generateQrCode(document.getElementById("qrCodeInputText").value.trim()));
     window.openImageModal = src => { document.getElementById("modalImg").src = src; document.getElementById("imageModal").classList.remove("hidden"); };
     window.closeImageModal = () => document.getElementById("imageModal").classList.add("hidden");
 
@@ -1103,8 +1130,7 @@
         if(amt>0) {
           const debtor = d[i].n; const creditor = c[j].n; const transAmt = Math.round(amt);
           lastTransferInstructions.push({ debtor, creditor, amount: transAmt });
-          const txt = `${debtor} 轉給 ${creditor} $${transAmt}`;
-          tInst.push(`<div class="flex justify-between items-center bg-white/60 dark:bg-gray-800/60 px-3 py-2 rounded-xl shadow-sm border border-blue-100 dark:border-gray-700"><span><b class="text-gray-800 dark:text-gray-200">${escapeHtml(debtor)}</b> <span class="text-gray-400">➔</span> <b class="text-gray-800 dark:text-gray-200">${escapeHtml(creditor)}</b></span><div class="flex items-center gap-2"><span class="font-mono font-bold text-blue-600 dark:text-blue-400">$${transAmt}</span><button onclick="showQrCodeModal('${escapeHtml(txt)}')" class="bg-emerald-100 text-emerald-700 dark:bg-emerald-900/50 dark:text-emerald-300 px-2 py-1 rounded text-[10px] font-bold active:scale-90">QR</button></div></div>`);
+          tInst.push(`<div class="flex justify-between items-center bg-white/60 dark:bg-gray-800/60 px-3 py-2 rounded-xl shadow-sm border border-blue-100 dark:border-gray-700"><span><b class="text-gray-800 dark:text-gray-200">${escapeHtml(debtor)}</b> <span class="text-gray-400">➔</span> <b class="text-gray-800 dark:text-gray-200">${escapeHtml(creditor)}</b></span><span class="font-mono font-bold text-blue-600 dark:text-blue-400">$${transAmt}</span></div>`);
         }
         d[i].a-=amt; c[j].a-=amt; if(d[i].a<0.5)i++; if(c[j].a<0.5)j++;
       }
@@ -1241,7 +1267,6 @@
       document.getElementById("lineShareModal").classList.add("hidden");
     };
 
-    // 🌟 執行不同格式的 LINE 複製 (已去除結尾多餘文字)
     window.executeLineShare = function(type) {
       closeLineShareModal();
       let text = "";
@@ -1398,7 +1423,6 @@
       showToast("已取消編輯", "info");
     };
 
-    // 🌟 核心：支援文字名稱與金額條件的搜尋與篩選渲染
     function renderRecordsList() {
       const rawInput = (document.getElementById("searchInput")?.value || "").trim();
       const filterType = document.getElementById("filterTypeSelect")?.value || "all";
@@ -1407,7 +1431,6 @@
       let isAmountQuery = false;
       let amountFilterFn = null;
 
-      // 1. 區間範圍：例如 "500-2000" 或 "500~2000"
       const rangeMatch = rawInput.match(/^(\d+(?:\.\d+)?)\s*[-~]\s*(\d+(?:\.\d+)?)$/);
       if (rangeMatch) {
         isAmountQuery = true;
@@ -1416,7 +1439,6 @@
         amountFilterFn = (twd) => twd >= min && twd <= max;
       }
 
-      // 2. 大於等於 / 小於等於：例如 ">1000", ">=1000", "<500", "<=500"
       const compMatch = rawInput.match(/^(>=|<=|>|<)\s*(\d+(?:\.\d+)?)$/);
       if (!isAmountQuery && compMatch) {
         isAmountQuery = true;
@@ -1428,13 +1450,11 @@
         else if (op === '<=') amountFilterFn = (twd) => twd <= val;
       }
 
-      // 3. 純數字精確金額搜尋：例如 "150"
       const exactNum = parseFloat(rawInput);
       const isPureNumber = !isNaN(exactNum) && /^\d+(?:\.\d+)?$/.test(rawInput);
 
       const keyword = rawInput.toLowerCase();
 
-      // 進行資料篩選
       const filteredRecords = cachedRecords.filter(item => {
         const twdAmt = Number(item.twdAmount) || 0;
         const origAmt = Number(item.originalAmount) || 0;
@@ -1460,7 +1480,6 @@
         return matchQuery && matchType && matchCat;
       });
 
-      // 筆數顯示
       const countEl = document.getElementById("recordCountDisplay");
       if (filteredRecords.length !== cachedRecords.length) {
         countEl.textContent = `${filteredRecords.length}/${cachedRecords.length}`;
@@ -1522,7 +1541,6 @@
       if(!document.getElementById("mainChartContainer").classList.contains("hidden")) { drawChart(); }
     }
 
-    // 監聽搜尋與篩選事件
     document.getElementById("searchInput").addEventListener("input", (e) => {
       const clearBtn = document.getElementById("clearSearchBtn");
       if (e.target.value) clearBtn.classList.remove("hidden");
