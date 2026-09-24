@@ -45,14 +45,15 @@
     
     <!-- 頂部控制列 -->
     <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center border-b border-gray-200/60 dark:border-gray-700/60 pb-4 gap-3">
-      <div class="flex items-center gap-2 w-full sm:w-auto">
-        <div class="bg-blue-600 text-white p-2 rounded-xl shadow-md">
+      <div class="flex items-center gap-1.5 w-full sm:w-auto flex-wrap sm:flex-nowrap">
+        <div class="bg-blue-600 text-white p-2 rounded-xl shadow-md flex-shrink-0">
           <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
         </div>
-        <select id="sheetSelector" class="flex-1 sm:flex-none border border-gray-300/50 dark:border-gray-600/50 rounded-xl px-3 py-1.5 text-sm bg-white/50 dark:bg-gray-700/50 dark:text-white font-bold text-gray-800 focus:ring-2 focus:ring-blue-500 focus:outline-none transition">
+        <select id="sheetSelector" class="flex-1 sm:flex-none border border-gray-300/50 dark:border-gray-600/50 rounded-xl px-3 py-1.5 text-sm bg-white/50 dark:bg-gray-700/50 dark:text-white font-bold text-gray-800 focus:ring-2 focus:ring-blue-500 focus:outline-none transition min-w-[120px]">
           <option value="預設帳本">預設帳本</option>
         </select>
-        <button type="button" id="addSheetBtn" title="新增帳本" class="bg-blue-100 text-blue-600 dark:bg-blue-900/50 dark:text-blue-300 hover:bg-blue-200 dark:hover:bg-blue-800 px-3 py-1.5 rounded-xl font-bold transition active:scale-95">＋</button>
+        <button type="button" id="addSheetBtn" title="新增帳本" class="bg-blue-100 text-blue-600 dark:bg-blue-900/50 dark:text-blue-300 hover:bg-blue-200 dark:hover:bg-blue-800 px-2.5 py-1.5 rounded-xl font-bold transition active:scale-95 text-xs">＋</button>
+        <button type="button" id="renameSheetBtn" title="重新命名目前帳本" class="bg-amber-100 text-amber-700 dark:bg-amber-900/50 dark:text-amber-300 hover:bg-amber-200 dark:hover:bg-amber-800 px-2.5 py-1.5 rounded-xl font-bold transition active:scale-95 text-xs">✏️</button>
         <button type="button" id="deleteSheetBtn" title="刪除目前帳本" class="bg-red-100 text-red-600 dark:bg-red-900/50 dark:text-red-300 hover:bg-red-200 dark:hover:bg-red-800 px-2.5 py-1.5 rounded-xl font-bold transition active:scale-95 text-xs">🗑️</button>
       </div>
 
@@ -244,7 +245,7 @@
 
       <div id="aiStatusNotice" class="hidden text-center text-xs text-blue-600 bg-blue-50 dark:bg-blue-900/30 dark:text-blue-300 font-bold py-1.5 rounded-lg animate-pulse"></div>
 
-      <!-- 全新帳目類型切換按鈕群組 -->
+      <!-- 帳目類型切換按鈕群組 -->
       <div class="flex gap-1.5 mb-1 bg-gray-100/80 dark:bg-gray-800/80 p-1.5 rounded-xl shadow-inner">
         <button type="button" onclick="setRecordType('expense')" id="btnTypeExpense" class="flex-1 text-xs font-bold py-1.5 rounded-lg bg-white dark:bg-gray-600 text-blue-600 dark:text-blue-300 shadow-sm transition">👥 群組分帳</button>
         <button type="button" onclick="setRecordType('personal')" id="btnTypePersonal" class="flex-1 text-xs font-bold py-1.5 rounded-lg text-gray-500 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 transition">👤 個人支出</button>
@@ -259,6 +260,7 @@
         <input type="text" id="title" placeholder="項目名稱 (如: 居酒屋)" class="col-span-2 border border-gray-200 dark:border-gray-600 rounded-xl px-3 py-2 text-sm bg-white dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none font-medium shadow-inner">
       </div>
 
+      <!-- 金額欄位：支援算式輸入與即時計算 -->
       <div class="grid grid-cols-5 gap-2.5">
         <select id="currency" class="col-span-2 border border-gray-200 dark:border-gray-600 rounded-xl px-2 py-2 text-xs bg-blue-50/50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300 font-bold focus:ring-2 focus:ring-blue-500 outline-none">
           <option value="TWD">TWD 台幣</option>
@@ -268,10 +270,11 @@
           <option value="USD">USD 美元</option>
           <option value="KRW">KRW 韓元</option>
         </select>
-        <input type="number" id="originalAmount" placeholder="輸入金額" step="any" class="col-span-3 border border-gray-200 dark:border-gray-600 rounded-xl px-3 py-2 text-base font-bold bg-white dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none shadow-inner text-right">
+        <input type="text" inputmode="decimal" id="originalAmount" placeholder="金額 (可算式: 100+50*2)" class="col-span-3 border border-gray-200 dark:border-gray-600 rounded-xl px-3 py-2 text-base font-bold bg-white dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none shadow-inner text-right font-mono">
       </div>
-      <div class="flex items-center justify-end text-xs text-gray-400 pr-1">
-        折合台幣 <span id="previewTwd" class="font-bold text-blue-600 dark:text-blue-400 text-sm ml-1.5">0</span>
+      <div class="flex items-center justify-between text-xs text-gray-400 px-1">
+        <span id="mathExprHint" class="font-mono text-[11px] text-blue-500"></span>
+        <div>折合台幣 <span id="previewTwd" class="font-bold text-blue-600 dark:text-blue-400 text-sm ml-1.5">0</span></div>
       </div>
 
       <!-- 分帳設定 -->
@@ -288,7 +291,15 @@
           </div>
         </div>
 
-        <div id="splitModeEqualContainer">
+        <div id="splitModeEqualContainer" class="space-y-1.5">
+          <div class="flex justify-between items-center text-[11px] text-gray-400">
+            <span>選擇分攤成員：</span>
+            <div class="flex gap-1.5">
+              <button type="button" onclick="toggleAllEqualMembers(true)" class="text-blue-600 dark:text-blue-400 hover:underline">全選</button>
+              <span>|</span>
+              <button type="button" onclick="toggleAllEqualMembers(false)" class="text-gray-500 hover:underline">全取消</button>
+            </div>
+          </div>
           <div class="flex flex-wrap gap-2 text-xs pt-1" id="membersCheckboxes"></div>
         </div>
         
@@ -319,7 +330,7 @@
 
       <div class="flex gap-2.5 pt-1">
         <input type="date" id="date" class="w-[40%] border border-gray-200 dark:border-gray-600 rounded-xl px-2.5 text-xs font-mono font-medium bg-white dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none shadow-inner">
-        <button type="button" id="saveRecordBtn" class="w-[60%] bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-bold py-2.5 rounded-xl text-sm shadow-md transition active:scale-95 flex justify-center items-center gap-1.5">
+        <button type="button" id="saveRecordBtn" class="w-[60%] bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed text-white font-bold py-2.5 rounded-xl text-sm shadow-md transition active:scale-95 flex justify-center items-center gap-1.5">
           <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path></svg>
           <span id="saveBtnText">儲存紀錄</span>
         </button>
@@ -335,15 +346,22 @@
         </button>
       </div>
 
-      <!-- 搜尋與多條件篩選控制列 -->
+      <!-- 搜尋與快捷多條件篩選控制列 -->
       <div class="bg-gray-50/80 dark:bg-gray-700/30 p-2.5 rounded-2xl border border-gray-200/60 dark:border-gray-700/50 space-y-2 mb-3">
         <div class="relative">
           <span class="absolute left-3 top-2 text-gray-400 text-xs">🔍</span>
-          <input type="text" id="searchInput" placeholder="搜尋文字或金額 (例如: 咖啡, 150, >1000, 500-2000)..." class="w-full pl-8 pr-8 py-1.5 text-xs bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-600 outline-none focus:ring-2 focus:ring-blue-500 text-gray-800 dark:text-gray-100 shadow-inner">
+          <input type="text" id="searchInput" placeholder="搜尋項目、分類、付款人或金額 (如: 咖啡, 150, >1000)..." class="w-full pl-8 pr-8 py-1.5 text-xs bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-600 outline-none focus:ring-2 focus:ring-blue-500 text-gray-800 dark:text-gray-100 shadow-inner">
           <button type="button" id="clearSearchBtn" class="hidden absolute right-2.5 top-1.5 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 text-sm font-bold">×</button>
         </div>
+        
         <div class="flex items-center gap-1.5 text-[11px] overflow-x-auto pb-0.5">
-          <span class="text-gray-500 font-bold flex-shrink-0">篩選：</span>
+          <span class="text-gray-500 font-bold flex-shrink-0">時間：</span>
+          <div class="flex gap-1 bg-gray-200/80 dark:bg-gray-800/80 p-0.5 rounded-lg flex-shrink-0">
+            <button type="button" onclick="setDateFilter('all')" id="dfAll" class="px-2 py-0.5 rounded-md font-bold bg-white dark:bg-gray-600 text-blue-600 dark:text-blue-300 shadow-sm transition">全部</button>
+            <button type="button" onclick="setDateFilter('today')" id="dfToday" class="px-2 py-0.5 rounded-md text-gray-500 hover:text-gray-800 transition">今天</button>
+            <button type="button" onclick="setDateFilter('week')" id="dfWeek" class="px-2 py-0.5 rounded-md text-gray-500 hover:text-gray-800 transition">本週</button>
+            <button type="button" onclick="setDateFilter('month')" id="dfMonth" class="px-2 py-0.5 rounded-md text-gray-500 hover:text-gray-800 transition">本月</button>
+          </div>
           <select id="filterTypeSelect" class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-lg px-2 py-1 outline-none text-gray-700 dark:text-gray-200">
             <option value="all">全部類型</option>
             <option value="expense">👥 分帳</option>
@@ -357,12 +375,13 @@
         </div>
       </div>
 
-      <!-- 獨立的圖表區塊 (預設隱藏) -->
+      <!-- 圖表區塊 (支援：類別佔比 / 趨勢 / 成員花費佔比) -->
       <div id="mainChartContainer" class="hidden mb-4 bg-white/60 dark:bg-slate-900/60 border border-gray-200/50 dark:border-gray-700/50 rounded-2xl p-4 shadow-inner">
         <div class="flex justify-between items-center text-xs font-bold text-gray-700 dark:text-gray-300 mb-2">
           <span>📊 支出圖表分析 (TWD)</span>
           <div class="flex bg-gray-200 dark:bg-gray-800 p-0.5 rounded-lg shadow-inner">
-            <button type="button" id="chartTypePieBtn" class="px-2 py-1 rounded-md bg-white dark:bg-gray-600 font-bold text-blue-600 shadow-sm transition">佔比</button>
+            <button type="button" id="chartTypePieBtn" class="px-2 py-1 rounded-md bg-white dark:bg-gray-600 font-bold text-blue-600 shadow-sm transition">類別</button>
+            <button type="button" id="chartTypeMemberBtn" class="px-2 py-1 rounded-md text-gray-500 dark:text-gray-400 font-medium hover:text-gray-800 transition">成員</button>
             <button type="button" id="chartTypeBarBtn" class="px-2 py-1 rounded-md text-gray-500 dark:text-gray-400 font-medium hover:text-gray-800 transition">趨勢</button>
           </div>
         </div>
@@ -443,9 +462,34 @@
     let currentSplitMode = "equal";
     let uploadedReceiptBase64 = "";
     let editingRecordId = null;
+    let currentDateFilter = 'all';
     
     let chartInstance = null;
-    let currentChartMode = 'pie';
+    let currentChartMode = 'pie'; // 'pie' | 'member' | 'bar'
+
+    // 🌟 簡易內嵌 Service Worker 註冊支援離線存取
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        const swBlob = new Blob([`
+          const CACHE_NAME = 'cloud-ledger-v1';
+          self.addEventListener('install', e => self.skipWaiting());
+          self.addEventListener('activate', e => e.waitUntil(clients.claim()));
+          self.addEventListener('fetch', e => {
+            if(e.request.url.startsWith('http') && e.request.method === 'GET' && !e.request.url.includes('googleapis.com')) {
+              e.respondWith(
+                caches.match(e.request).then(cached => cached || fetch(e.request).then(res => {
+                  return caches.open(CACHE_NAME).then(cache => {
+                    cache.put(e.request, res.clone());
+                    return res;
+                  });
+                }).catch(() => cached))
+              );
+            }
+          });
+        `], { type: 'application/javascript' });
+        navigator.serviceWorker.register(URL.createObjectURL(swBlob)).catch(()=>{});
+      });
+    }
 
     const pieOutlabelsPlugin = {
       id: 'pieOutlabels',
@@ -513,6 +557,21 @@
         const r = Math.random() * 16 | 0, v = c === 'x' ? r : (r & 0x3 | 0x8);
         return v.toString(16);
       });
+    }
+
+    // 🌟 安全數學算式解析函數 (支援 + - * / ( ) 小數)
+    function evaluateMathExpression(str) {
+      if (!str) return 0;
+      const clean = String(str).replace(/,/g, '').trim();
+      if (/^[0-9.]+$/.test(clean)) return parseFloat(clean) || 0;
+      if (!/^[\d\.\+\-\*\/\(\)\s]+$/.test(clean)) return 0;
+      try {
+        const fn = new Function(`"use strict"; return (${clean});`);
+        const res = fn();
+        return (typeof res === 'number' && isFinite(res) && res >= 0) ? res : 0;
+      } catch (e) {
+        return 0;
+      }
     }
 
     function showToast(message, type = 'success') {
@@ -664,23 +723,75 @@
     }
     window.openReceiptFile=openReceiptFile;
 
-    async function initializeGoogleAuth() { if(!window.google?.accounts?.oauth2){setTimeout(initializeGoogleAuth,300);return;} googleTokenClient=google.accounts.oauth2.initTokenClient({client_id:GOOGLE_CLIENT_ID,scope:DRIVE_SCOPE,callback:async r=>{if(r.error){showToast(`❌ Google 登入失敗：${r.error_description||r.error}`,"error");return;} googleAccessToken=r.access_token; try{await initializeDrive();showToast("✅ Google Drive 已連線");await loadRecords();syncOfflineQueue();}catch(e){showToast(`❌ Drive 連線失敗：${e.message}`,"error");}}}); }
-    async function googleLogin() { if(!googleTokenClient) await initializeGoogleAuth(); googleTokenClient?.requestAccessToken({prompt:"consent"}); }
+    async function initializeGoogleAuth() {
+      if (!window.google?.accounts?.oauth2) {
+        setTimeout(initializeGoogleAuth, 300);
+        return;
+      }
+      googleTokenClient = google.accounts.oauth2.initTokenClient({
+        client_id: GOOGLE_CLIENT_ID,
+        scope: DRIVE_SCOPE,
+        callback: async (r) => {
+          if (r.error) {
+            localStorage.removeItem("g_access_token");
+            localStorage.removeItem("g_token_expires_at");
+            return;
+          }
+          googleAccessToken = r.access_token;
+          const expiresIn = Number(r.expires_in) || 3600;
+          const expiresAt = Date.now() + (expiresIn - 120) * 1000;
+          localStorage.setItem("g_access_token", googleAccessToken);
+          localStorage.setItem("g_token_expires_at", expiresAt);
+
+          try {
+            await initializeDrive();
+            showToast("✅ Google Drive 已連線");
+            await loadRecords();
+            syncOfflineQueue();
+          } catch (e) {
+            showToast(`❌ Drive 連線失敗：${e.message}`, "error");
+          }
+        }
+      });
+
+      const savedToken = localStorage.getItem("g_access_token");
+      const expiresAt = Number(localStorage.getItem("g_token_expires_at")) || 0;
+
+      if (savedToken && Date.now() < expiresAt) {
+        googleAccessToken = savedToken;
+        try {
+          await initializeDrive();
+          await loadRecords();
+          syncOfflineQueue();
+        } catch (e) {
+          googleTokenClient.requestAccessToken({ prompt: "" });
+        }
+      } else if (localStorage.getItem("g_was_logged_in") === "true") {
+        googleTokenClient.requestAccessToken({ prompt: "" });
+      }
+    }
+
+    async function googleLogin() {
+      if (!googleTokenClient) await initializeGoogleAuth();
+      localStorage.setItem("g_was_logged_in", "true");
+      googleTokenClient?.requestAccessToken({ prompt: "consent" });
+    }
+
     async function initializeDrive() { 
-      driveRootFolderId=await ensureDriveFolder(DRIVE_APP_NAME); 
-      driveReceiptFolderId=await ensureDriveFolder("receipts",driveRootFolderId); 
-      const f=await findDriveFileByType("config"); 
-      if(!f) await createDriveJson("config.json",{version:1,members,categories},{type:"config",app:DRIVE_APP_NAME}); 
+      driveRootFolderId = await ensureDriveFolder(DRIVE_APP_NAME); 
+      driveReceiptFolderId = await ensureDriveFolder("receipts", driveRootFolderId); 
+      const f = await findDriveFileByType("config"); 
+      if (!f) await createDriveJson("config.json", { version: 1, members, categories }, { type: "config", app: DRIVE_APP_NAME }); 
       else {
-        const c=await readDriveJson(f.id);
-        if(Array.isArray(c.members)) members=c.members;
-        if(Array.isArray(c.categories)&&c.categories.length) categories=c.categories;
+        const c = await readDriveJson(f.id);
+        if (Array.isArray(c.members)) members = c.members;
+        if (Array.isArray(c.categories) && c.categories.length) categories = c.categories;
       } 
-      driveReady=true;
+      driveReady = true;
       renderMemberControls();
       renderCategoryControls();
-      document.getElementById("googleUserName").textContent="Google Drive 已連線";
-      document.getElementById("googleUserHint").textContent=`資料儲存在「${DRIVE_APP_NAME}」資料夾`;
+      document.getElementById("googleUserName").textContent = "Google Drive 已連線";
+      document.getElementById("googleUserHint").textContent = `資料儲存在「${DRIVE_APP_NAME}」資料夾`;
       document.getElementById("googleLoginBtn").classList.add("hidden");
       document.getElementById("googleLogoutBtn").classList.remove("hidden"); 
     }
@@ -733,6 +844,40 @@
       }
     });
 
+    // 🌟 新增：帳本重新命名功能
+    document.getElementById("renameSheetBtn").addEventListener("click", async () => {
+      if (!requireGoogleLogin()) return;
+      if (currentSheet === "預設帳本") {
+        alert("「預設帳本」為系統預設名稱，不建議更名！");
+        return;
+      }
+      const newName = prompt(`請輸入帳本【${currentSheet}】的新名稱：`, currentSheet);
+      if (!newName || !newName.trim() || newName.trim() === currentSheet) return;
+      const cleanName = newName.trim();
+
+      showToast(`⏳ 正在重新命名為【${cleanName}】...`, "info");
+      try {
+        const file = await findDriveFileByType("book", currentSheet);
+        if (file && file.id) {
+          await driveRequest(`${DRIVE_API}/files/${file.id}`, {
+            method: "PATCH",
+            headers: driveHeaders(true),
+            body: JSON.stringify({
+              name: `帳本_${cleanName.replace(/[\\/:*?"<>|]/g, "_")}.json`,
+              appProperties: { sheetName: cleanName }
+            })
+          });
+        }
+        currentSheet = cleanName;
+        localStorage.setItem("app_active_sheet", currentSheet);
+        await fetchSheetList();
+        document.getElementById("sheetSelector").value = currentSheet;
+        showToast(`✅ 帳本已成功更名為【${cleanName}】`);
+      } catch (err) {
+        showToast(`❌ 更名失敗：${err.message}`, "error");
+      }
+    });
+
     document.getElementById("deleteSheetBtn").addEventListener("click", async () => {
       if (!requireGoogleLogin()) return;
       if (currentSheet === "預設帳本") {
@@ -765,10 +910,16 @@
     });
 
     function calculateTwd() {
-      const amount = parseFloat(document.getElementById("originalAmount").value) || 0;
+      const rawVal = document.getElementById("originalAmount").value;
+      const amount = evaluateMathExpression(rawVal);
       const rate = exchangeRates[document.getElementById("currency").value] || 1;
-      return { rate, twd: Math.round(amount * rate) };
+      return { rate, twd: Math.round(amount * rate), calculatedAmount: amount };
     }
+
+    // 🌟 平分模式下一鍵全選/全取消
+    window.toggleAllEqualMembers = function(check) {
+      document.querySelectorAll(".member-cb").forEach(cb => { cb.checked = Boolean(check); });
+    };
 
     window.setRecordType = function(type) {
       document.getElementById("type").value = type;
@@ -802,16 +953,39 @@
     }
 
     function updateTwdPreview() {
-      const { twd } = calculateTwd();
+      const rawVal = document.getElementById("originalAmount").value;
+      const { twd, calculatedAmount } = calculateTwd();
       document.getElementById("previewTwd").textContent = twd.toLocaleString();
-      checkCustomSplitTotal(); return twd;
+      
+      const mathHint = document.getElementById("mathExprHint");
+      if (rawVal && /[\+\-\*\/]/.test(rawVal) && calculatedAmount > 0) {
+        mathHint.textContent = `= ${calculatedAmount}`;
+      } else {
+        mathHint.textContent = "";
+      }
+      checkCustomSplitTotal(); 
+      return twd;
     }
+
+    document.getElementById("originalAmount").addEventListener("input", updateTwdPreview);
+    document.getElementById("currency").addEventListener("change", updateTwdPreview);
+    
+    // 失焦時自動將計算算式轉成算出的純數字
+    document.getElementById("originalAmount").addEventListener("blur", (e) => {
+      const val = e.target.value;
+      if (val && /[\+\-\*\/]/.test(val)) {
+        const res = evaluateMathExpression(val);
+        if (res > 0) {
+          e.target.value = res;
+          updateTwdPreview();
+        }
+      }
+    });
 
     function checkCustomSplitTotal() {
       const splitCurrency = document.getElementById("customSplitCurrency").value;
       const cur = document.getElementById("currency").value;
-      const { rate, twd: totalTwd } = calculateTwd();
-      const origAmt = parseFloat(document.getElementById("originalAmount").value) || 0;
+      const { rate, twd: totalTwd, calculatedAmount: origAmt } = calculateTwd();
       const targetTotal = splitCurrency === "TWD" ? totalTwd : origAmt;
       
       let sum = 0;
@@ -845,8 +1019,7 @@
 
     window.autoFillDifference = function(memberName) {
       const splitCurrency = document.getElementById("customSplitCurrency").value;
-      const { twd: totalTwd } = calculateTwd();
-      const origAmt = parseFloat(document.getElementById("originalAmount").value) || 0;
+      const { twd: totalTwd, calculatedAmount: origAmt } = calculateTwd();
       const targetTotal = splitCurrency === "TWD" ? totalTwd : origAmt;
       let sumOther = 0; let targetInput = null;
       document.querySelectorAll(".custom-split-input").forEach(i => {
@@ -1018,7 +1191,21 @@
       }
     });
     
+    // 🌟 刪除成員安全防護：檢查該成員是否仍存在於既有帳目中
     window.removeMember = function(idx) { 
+      const targetMember = members[idx];
+      const relatedCount = cachedRecords.filter(r => {
+        const isPayer = r.payer === targetMember;
+        const shares = parseShares(r);
+        return isPayer || shares[targetMember] !== undefined;
+      }).length;
+
+      if (relatedCount > 0) {
+        if (!confirm(`成員「${targetMember}」在目前帳本尚有 ${relatedCount} 筆相關支出或分帳紀錄，刪除可能導致帳目統計不準確。確定要移除嗎？`)) {
+          return;
+        }
+      }
+
       const removed = members.splice(idx, 1); 
       renderMemberControls(); 
       syncConfigToCloud(); 
@@ -1250,16 +1437,22 @@
       document.getElementById("statPersonalPaidTotal").textContent = `$${Math.round(paidTotal).toLocaleString()}`;
     }
 
+    // 🌟 圖表模式切換 (類別 / 成員 / 趨勢)
     document.getElementById("chartTypePieBtn").addEventListener("click", () => setChartType("pie"));
+    document.getElementById("chartTypeMemberBtn").addEventListener("click", () => setChartType("member"));
     document.getElementById("chartTypeBarBtn").addEventListener("click", () => setChartType("bar"));
 
     function setChartType(mode) {
       currentChartMode = mode;
-      const pBtn = document.getElementById("chartTypePieBtn"), bBtn = document.getElementById("chartTypeBarBtn");
+      const pBtn = document.getElementById("chartTypePieBtn");
+      const mBtn = document.getElementById("chartTypeMemberBtn");
+      const bBtn = document.getElementById("chartTypeBarBtn");
       const activeCls = "px-2 py-1 rounded-md bg-white dark:bg-gray-600 font-bold text-blue-600 shadow-sm transition";
       const inactiveCls = "px-2 py-1 rounded-md text-gray-500 dark:text-gray-400 font-medium hover:text-gray-800 transition";
-      if(mode === 'pie'){ pBtn.className = activeCls; bBtn.className = inactiveCls; } 
-      else { bBtn.className = activeCls; pBtn.className = inactiveCls; }
+      
+      pBtn.className = (mode === 'pie') ? activeCls : inactiveCls;
+      mBtn.className = (mode === 'member') ? activeCls : inactiveCls;
+      bBtn.className = (mode === 'bar') ? activeCls : inactiveCls;
       drawChart();
     }
 
@@ -1280,6 +1473,7 @@
       const isDark = document.documentElement.classList.contains("dark");
       const textColor = isDark ? '#cbd5e1' : '#475569';
       const gridColor = isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.05)';
+      const colors = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#06b6d4', '#f97316', '#64748b', '#ec4899', '#14b8a6'];
 
       if (currentChartMode === 'pie') {
         const catData = {};
@@ -1290,7 +1484,6 @@
 
         const labels = Object.keys(catData); 
         const data = Object.values(catData);
-        const colors = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#06b6d4', '#f97316', '#64748b', '#ec4899', '#14b8a6'];
 
         chartInstance = new Chart(canvas, {
           type: 'doughnut',
@@ -1314,6 +1507,46 @@
             }
           }
         });
+      } else if (currentChartMode === 'member') {
+        const memberData = {};
+        members.forEach(m => memberData[m] = 0);
+        expenses.forEach(r => {
+          if (r.type === 'personal') {
+            const payer = r.payer || members[0] || '個人';
+            memberData[payer] = (memberData[payer] || 0) + (r.twdAmount || 0);
+          } else if (r.type === 'expense') {
+            const shares = parseShares(r);
+            Object.entries(shares).forEach(([m, amt]) => {
+              memberData[m] = (memberData[m] || 0) + amt;
+            });
+          }
+        });
+
+        const labels = Object.keys(memberData).filter(m => memberData[m] > 0);
+        const data = labels.map(m => Math.round(memberData[m]));
+
+        chartInstance = new Chart(canvas, {
+          type: 'doughnut',
+          data: { 
+            labels: labels, 
+            datasets: [{ 
+              data: data, 
+              backgroundColor: colors.slice(0, labels.length), 
+              borderWidth: 2, 
+              borderColor: isDark ? '#1e293b' : '#ffffff' 
+            }] 
+          },
+          plugins: [pieOutlabelsPlugin],
+          options: {
+            responsive: true, 
+            maintainAspectRatio: false,
+            layout: { padding: 28 },
+            plugins: { 
+              legend: { display: false }, 
+              tooltip: { callbacks: { label: (ctx) => ` 應攤負擔: $${ctx.raw.toLocaleString()}` } }
+            }
+          }
+        });
       } else {
         const dateData = {};
         expenses.forEach(r => { const d = r.date || '未知日期'; dateData[d] = (dateData[d] || 0) + (r.twdAmount || 0); });
@@ -1333,6 +1566,21 @@
         });
       }
     }
+
+    // 🌟 日期快捷篩選切換
+    window.setDateFilter = function(filter) {
+      currentDateFilter = filter;
+      const ids = ['dfAll', 'dfToday', 'dfWeek', 'dfMonth'];
+      const activeCls = "px-2 py-0.5 rounded-md font-bold bg-white dark:bg-gray-600 text-blue-600 dark:text-blue-300 shadow-sm transition";
+      const normalCls = "px-2 py-0.5 rounded-md text-gray-500 hover:text-gray-800 transition";
+
+      document.getElementById('dfAll').className = (filter === 'all') ? activeCls : normalCls;
+      document.getElementById('dfToday').className = (filter === 'today') ? activeCls : normalCls;
+      document.getElementById('dfWeek').className = (filter === 'week') ? activeCls : normalCls;
+      document.getElementById('dfMonth').className = (filter === 'month') ? activeCls : normalCls;
+
+      renderRecordsList();
+    };
 
     window.openLineShareModal = function() {
       if (cachedRecords.length === 0) { return showToast("目前沒有任何記帳紀錄！", "info"); }
@@ -1496,6 +1744,7 @@
       document.getElementById("saveBtnText").textContent = "儲存紀錄";
       document.getElementById("title").value = "";
       document.getElementById("originalAmount").value = "";
+      document.getElementById("mathExprHint").textContent = "";
       document.querySelectorAll(".custom-split-input").forEach(i => i.value = "");
       setRecordType("expense");
       updateTwdPreview();
@@ -1531,15 +1780,19 @@
 
       const exactNum = parseFloat(rawInput);
       const isPureNumber = !isNaN(exactNum) && /^\d+(?:\.\d+)?$/.test(rawInput);
-
       const keyword = rawInput.toLowerCase();
+
+      // 計算時間區間篩選
+      const todayStr = getTodayString();
+      const now = new Date();
+      const oneWeekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+      const monthPrefix = todayStr.slice(0, 7); // YYYY-MM
 
       const filteredRecords = cachedRecords.filter(item => {
         const twdAmt = Number(item.twdAmount) || 0;
         const origAmt = Number(item.originalAmount) || 0;
 
         let matchQuery = false;
-
         if (isAmountQuery && amountFilterFn) {
           matchQuery = amountFilterFn(twdAmt);
         } else if (isPureNumber) {
@@ -1556,7 +1809,14 @@
         const matchType = (filterType === "all") || (item.type === filterType);
         const matchCat = (filterCategory === "all") || ((item.category || "其他") === filterCategory);
 
-        return matchQuery && matchType && matchCat;
+        // 時間過濾
+        let matchDate = true;
+        const d = item.date || "";
+        if (currentDateFilter === 'today') matchDate = (d === todayStr);
+        else if (currentDateFilter === 'week') matchDate = (d >= oneWeekAgo && d <= todayStr);
+        else if (currentDateFilter === 'month') matchDate = d.startsWith(monthPrefix);
+
+        return matchQuery && matchType && matchCat && matchDate;
       });
 
       const countEl = document.getElementById("recordCountDisplay");
@@ -1641,7 +1901,7 @@
       document.getElementById("clearSearchBtn").classList.add("hidden");
       document.getElementById("filterTypeSelect").value = "all";
       document.getElementById("filterCategorySelect").value = "all";
-      renderRecordsList();
+      setDateFilter('all');
     });
 
     async function loadRecords() {
@@ -1651,29 +1911,130 @@
       catch(e){showToast(`❌ Drive 讀取失敗: ${e.message}`,"error");}
     }
 
-    document.getElementById("saveRecordBtn").addEventListener("click", async () => {
-      if(!requireGoogleLogin()) return;
-      const title=document.getElementById("title").value.trim(), origAmt=parseFloat(document.getElementById("originalAmount").value);
-      if(!title){showToast("請填寫名稱","error");document.getElementById("title").focus();return;}
-      if(isNaN(origAmt)||origAmt<=0){showToast("請輸入有效金額","error");document.getElementById("originalAmount").focus();return;}
-      const {rate,twd}=calculateTwd();let splitData=[];const type=document.getElementById("type").value;
-      if(type==="expense"){
+    // 🌟 儲存防連點保護 (Debounce & Loading) 與自動聚焦
+    document.getElementById("saveRecordBtn").addEventListener("click", async function() {
+      if (!requireGoogleLogin()) return;
+      const saveBtn = this;
+      const originalBtnText = document.getElementById("saveBtnText").textContent;
+
+      const title = document.getElementById("title").value.trim();
+      const rawAmt = document.getElementById("originalAmount").value;
+      const origAmt = evaluateMathExpression(rawAmt);
+
+      if (!title) {
+        showToast("請填寫項目名稱", "error");
+        document.getElementById("title").focus();
+        return;
+      }
+      if (isNaN(origAmt) || origAmt <= 0) {
+        showToast("請輸入有效金額 (或算式)", "error");
+        document.getElementById("originalAmount").focus();
+        return;
+      }
+
+      const { rate, twd } = calculateTwd();
+      let splitData = [];
+      const type = document.getElementById("type").value;
+
+      if (type === "expense") {
         if (members.length === 0) {
           showToast("請先點擊上方「👥 成員」新增成員！", "error");
           return;
         }
-        if(currentSplitMode==="equal"){splitData=Array.from(document.querySelectorAll(".member-cb:checked")).map(c=>c.value);if(!splitData.length)return showToast("至少需勾選一位分攤成員","error");}
-        else{const sc=document.getElementById("customSplitCurrency").value;let sum=0;document.querySelectorAll(".custom-split-input").forEach(i=>{const v=parseFloat(i.value)||0;if(v>0){splitData.push(`${i.dataset.member}:${sc==="TWD"?Math.round(v):Math.round(v*rate)}`);sum+=v;}});if(!splitData.length)return showToast("至少需輸入一位成員金額","error");const target=sc==="TWD"?twd:origAmt;if(Math.abs(sum-target)>0.01)return showToast("差額不符，請調整！","error");}
+        if (currentSplitMode === "equal") {
+          splitData = Array.from(document.querySelectorAll(".member-cb:checked")).map(c => c.value);
+          if (!splitData.length) return showToast("至少需勾選一位分攤成員", "error");
+        } else {
+          const sc = document.getElementById("customSplitCurrency").value;
+          let sum = 0;
+          document.querySelectorAll(".custom-split-input").forEach(i => {
+            const v = parseFloat(i.value) || 0;
+            if (v > 0) {
+              splitData.push(`${i.dataset.member}:${sc === "TWD" ? Math.round(v) : Math.round(v * rate)}`);
+              sum += v;
+            }
+          });
+          if (!splitData.length) return showToast("至少需輸入一位成員金額", "error");
+          const target = sc === "TWD" ? twd : origAmt;
+          if (Math.abs(sum - target) > 0.01) return showToast("差額不符，請調整！", "error");
+        }
       }
-      const isEditing=Boolean(editingRecordId),targetId=isEditing?editingRecordId:generateUUID(),old=isEditing?cachedRecords.find(r=>r.id===targetId):null;
-      const rec={id:targetId,type,category:document.getElementById("category").value,title,originalAmount:origAmt,currency:document.getElementById("currency").value,rate,twdAmount:twd,payer:(type==="expense"||type==="personal")?document.getElementById("payer").value:"",splitMembers:splitData,receiptFileId:old?.receiptFileId||"",receiptImage:uploadedReceiptBase64||"",date:document.getElementById("date").value||getTodayString()};
-      if(isEditing){const i=cachedRecords.findIndex(r=>r.id===targetId);if(i!==-1)cachedRecords[i]=rec;}else cachedRecords.unshift(rec);
-      renderRecordsList();renderSettlement(cachedRecords);renderPersonalStats(cachedRecords);cancelEdit();updateTwdPreview();showToast("⏳ 儲存到 Google Drive 中...","info");
-      try{const recordsForDrive=await uploadPendingReceipts(cachedRecords);cachedRecords=recordsForDrive;const f=await getOrCreateBookFile(currentSheet);await updateDriveJson(f.id,cachedRecords);showToast(isEditing?"✅ 修改已同步至 Google Drive":"✅ 已儲存至 Google Drive");renderRecordsList();}
-      catch(e){const q=getOfflineQueue();q.push({driveAction:"saveBook",sheetName:currentSheet,records:cachedRecords});saveOfflineQueue(q);document.getElementById("networkStatusBadge").classList.remove("hidden");showToast("⚠️ 網路異常，已暫存至離線佇列","error");}
+
+      // 鎖定按鈕避免快速重複點擊
+      saveBtn.disabled = true;
+      document.getElementById("saveBtnText").textContent = "正在儲存...";
+
+      const isEditing = Boolean(editingRecordId);
+      const targetId = isEditing ? editingRecordId : generateUUID();
+      const old = isEditing ? cachedRecords.find(r => r.id === targetId) : null;
+      
+      const rec = {
+        id: targetId,
+        type,
+        category: document.getElementById("category").value,
+        title,
+        originalAmount: origAmt,
+        currency: document.getElementById("currency").value,
+        rate,
+        twdAmount: twd,
+        payer: (type === "expense" || type === "personal") ? document.getElementById("payer").value : "",
+        splitMembers: splitData,
+        receiptFileId: old?.receiptFileId || "",
+        receiptImage: uploadedReceiptBase64 || "",
+        date: document.getElementById("date").value || getTodayString()
+      };
+
+      if (isEditing) {
+        const i = cachedRecords.findIndex(r => r.id === targetId);
+        if (i !== -1) cachedRecords[i] = rec;
+      } else {
+        cachedRecords.unshift(rec);
+      }
+
+      renderRecordsList();
+      renderSettlement(cachedRecords);
+      renderPersonalStats(cachedRecords);
+      cancelEdit();
+      updateTwdPreview();
+
+      try {
+        const recordsForDrive = await uploadPendingReceipts(cachedRecords);
+        cachedRecords = recordsForDrive;
+        const f = await getOrCreateBookFile(currentSheet);
+        await updateDriveJson(f.id, cachedRecords);
+        showToast(isEditing ? "✅ 修改已同步至 Google Drive" : "✅ 已儲存至 Google Drive");
+        renderRecordsList();
+      } catch (e) {
+        const q = getOfflineQueue();
+        q.push({ driveAction: "saveBook", sheetName: currentSheet, records: cachedRecords });
+        saveOfflineQueue(q);
+        document.getElementById("networkStatusBadge").classList.remove("hidden");
+        showToast("⚠️ 網路異常，已暫存至離線佇列", "error");
+      } finally {
+        saveBtn.disabled = false;
+        document.getElementById("saveBtnText").textContent = "儲存紀錄";
+        // 自動聚焦回項目欄位方便連續記帳
+        document.getElementById("title").focus();
+      }
     });
 
-    window.deleteRecord=async function(id){if(!requireGoogleLogin()||!confirm("確定刪除此紀錄？"))return;cachedRecords=cachedRecords.filter(r=>r.id!==id);renderRecordsList();renderSettlement(cachedRecords);renderPersonalStats(cachedRecords);try{const f=await getOrCreateBookFile(currentSheet);await updateDriveJson(f.id,cachedRecords);showToast("✅ 已從 Google Drive 刪除");}catch(e){const q=getOfflineQueue();q.push({driveAction:"saveBook",sheetName:currentSheet,records:cachedRecords});saveOfflineQueue(q);showToast("⚠️ 離線刪除，已加入佇列","info");}};
+    window.deleteRecord = async function(id) {
+      if (!requireGoogleLogin() || !confirm("確定刪除此紀錄？")) return;
+      cachedRecords = cachedRecords.filter(r => r.id !== id);
+      renderRecordsList();
+      renderSettlement(cachedRecords);
+      renderPersonalStats(cachedRecords);
+      try {
+        const f = await getOrCreateBookFile(currentSheet);
+        await updateDriveJson(f.id, cachedRecords);
+        showToast("✅ 已從 Google Drive 刪除");
+      } catch (e) {
+        const q = getOfflineQueue();
+        q.push({ driveAction: "saveBook", sheetName: currentSheet, records: cachedRecords });
+        saveOfflineQueue(q);
+        showToast("⚠️ 離線刪除，已加入佇列", "info");
+      }
+    };
 
     document.getElementById("exportCsvBtn").addEventListener("click", () => {
       if (cachedRecords.length === 0) return alert("目前沒有可匯出的資料或尚未解鎖！");
@@ -1772,11 +2133,29 @@
       } catch (err) { showToast("❌ 檔案解析錯誤", "error"); }
     });
 
-    document.getElementById("googleLoginBtn").addEventListener("click",googleLogin);
-    document.getElementById("googleLogoutBtn").addEventListener("click",()=>{if(googleAccessToken&&window.google?.accounts?.oauth2)google.accounts.oauth2.revoke(googleAccessToken,()=>{});googleAccessToken="";driveReady=false;driveRootFolderId=null;driveReceiptFolderId=null;cachedRecords=[];document.getElementById("googleLoginBtn").classList.remove("hidden");document.getElementById("googleLogoutBtn").classList.add("hidden");document.getElementById("googleUserName").textContent="尚未登入 Google";document.getElementById("googleUserHint").textContent="登入後，帳本、成員、類別與收據會儲存在你的 Google Drive";renderRecordsList();});
-    document.getElementById("refreshBtn").addEventListener("click",loadRecords);
+    document.getElementById("googleLoginBtn").addEventListener("click", googleLogin);
+    document.getElementById("googleLogoutBtn").addEventListener("click", () => {
+      if (googleAccessToken && window.google?.accounts?.oauth2) {
+        google.accounts.oauth2.revoke(googleAccessToken, () => {});
+      }
+      googleAccessToken = "";
+      driveReady = false;
+      driveRootFolderId = null;
+      driveReceiptFolderId = null;
+      cachedRecords = [];
+      localStorage.removeItem("g_access_token");
+      localStorage.removeItem("g_token_expires_at");
+      localStorage.removeItem("g_was_logged_in");
+      document.getElementById("googleLoginBtn").classList.remove("hidden");
+      document.getElementById("googleLogoutBtn").classList.add("hidden");
+      document.getElementById("googleUserName").textContent = "尚未登入 Google";
+      document.getElementById("googleUserHint").textContent = "登入後，帳本、成員、類別與收據會儲存在你的 Google Drive";
+      renderRecordsList();
+    });
+
+    document.getElementById("refreshBtn").addEventListener("click", loadRecords);
     initializeGoogleAuth();
-    initTheme(); applyFontSize(localStorage.getItem("app_custom_font_size")||16);
+    initTheme(); applyFontSize(localStorage.getItem("app_custom_font_size") || 16);
     document.getElementById("date").value = getTodayString(); updateTimestampDisplay();
     
     setRecordType('expense');
