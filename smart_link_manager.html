@@ -203,7 +203,7 @@
         </div>
     </main>
 
-    <!-- ================= 底部 Footer (排版調整：同一行顯示) ================= -->
+    <!-- ================= 底部 Footer ================= -->
     <footer style="text-align: center; color: var(--text-muted); font-size: 0.875rem; padding: 1.5rem 0; border-top: 1px solid var(--border-color); margin-top: auto; background-color: var(--card-dark);">
         <div style="display: flex; align-items: center; justify-content: center; gap: 0.8rem; flex-wrap: wrap;">
             <span>更新時間</span>
@@ -410,31 +410,50 @@
         async function fetchWebpageInfo(url) {
             let r = { title: "未命名連結", description: "點擊查看原始連結", categories: ["一般網站"], account: "", image: "" };
             
-            // ✅ 優先處理 YouTube
-            if (url.includes('youtube.com') || url.includes('youtu.be')) {
+            // ✅ 1. 自動辨識平台並設定預設標籤 (Tags)
+            let detectedTags = ["一般網站"];
+            const lowerUrl = url.toLowerCase();
+            if (lowerUrl.includes('youtube.com') || lowerUrl.includes('youtu.be')) {
+                detectedTags = ["YouTube", "影片"];
+            } else if (lowerUrl.includes('facebook.com') || lowerUrl.includes('fb.watch') || lowerUrl.includes('fb.com')) {
+                detectedTags = ["Facebook", "社群"];
+            } else if (lowerUrl.includes('instagram.com')) {
+                detectedTags = ["Instagram", "社群"];
+            } else if (lowerUrl.includes('x.com') || lowerUrl.includes('twitter.com')) {
+                detectedTags = ["X", "Twitter", "社群"];
+            } else if (lowerUrl.includes('threads.net')) {
+                detectedTags = ["Threads", "社群"];
+            }
+
+            // ✅ 2. 優先處理 YouTube (解決 CORS 讀不到的問題)
+            if (lowerUrl.includes('youtube.com') || lowerUrl.includes('youtu.be')) {
                 const ytData = await fetchYouTubeInfo(url);
                 if (ytData) {
                     return {
                         title: ytData.title,
                         description: ytData.summary,
-                        categories: ["YouTube", "影片"],
+                        categories: detectedTags, // 使用辨識到的標籤
                         account: ytData.author,
                         image: ytData.image
                     };
                 }
             }
 
-            // ▼▼▼ 以下保留您原本處理 FB, IG, X 等網站的 Microlink 邏輯 (完全不動) ▼▼▼
+            // ✅ 3. 其他網站使用 Microlink API (保留您原本的 FB, IG, X 邏輯)
             try {
                 if (!url.startsWith('http')) url = 'https://' + url;
                 const res = await fetch(`https://api.microlink.io/?url=${encodeURIComponent(url)}`);
                 const d = await res.json();
                 if (d.status === 'success') {
-                    r.title = d.data.title || r.title; r.description = d.data.description || r.description; r.image = d.data.image?.url || "";
+                    r.title = d.data.title || r.title; 
+                    r.description = d.data.description || r.description; 
+                    r.image = d.data.image?.url || "";
                     if (d.data.author) r.account = d.data.author;
                 }
             } catch (e) {}
+            
             r.title = r.title.replace(/\s+/g, ' ').trim();
+            r.categories = detectedTags; // ✅ 將辨識到的標籤賦值給返回結果
             return r;
         }
 
