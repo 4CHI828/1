@@ -3,204 +3,182 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>智能連結管理器</title>
+    <title>智能連結 Pro Max - 檔案版本版</title>
+    <!-- 引入 Tailwind CSS 以支援 Footer 的工具類 -->
+    <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <style>
         :root {
-            --primary: #6366f1;
-            --primary-hover: #4f46e5;
-            --bg-dark: #0f172a;
-            --card-dark: #1e293b;
-            --text-main: #f8fafc;
-            --text-muted: #94a3b8;
-            --border-color: #334155;
-            --danger: #ef4444;
-            --success: #10b981;
-            --warning: #f59e0b;
+            --primary: #6366f1; --primary-hover: #4f46e5; --bg-dark: #0f172a;
+            --card-dark: #1e293b; --text-main: #f8fafc; --text-muted: #94a3b8;
+            --border-color: #334155; --danger: #ef4444; --success: #10b981;
+            --warning: #f59e0b; --accent: #ec4899;
         }
-
         body.light-mode {
-            --bg-dark: #f8fafc;
-            --card-dark: #ffffff;
-            --text-main: #0f172a;
-            --text-muted: #64748b;
-            --border-color: #e2e8f0;
+            --bg-dark: #f1f5f9; --card-dark: #ffffff; --text-main: #0f172a;
+            --text-muted: #64748b; --border-color: #e2e8f0;
         }
-
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-        }
-
-        body {
-            background-color: var(--bg-dark);
-            color: var(--text-main);
-            min-height: 100vh;
-            display: flex;
-            flex-direction: column;
-            transition: background-color 0.3s, color 0.3s;
-        }
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Roboto, Arial, sans-serif; }
+        body { background-color: var(--bg-dark); color: var(--text-main); min-height: 100vh; transition: background-color 0.3s; }
 
         header {
-            background-color: var(--card-dark);
-            padding: 1rem 2rem;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            border-bottom: 1px solid var(--border-color);
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-            transition: background-color 0.3s, border-color 0.3s;
+            background-color: var(--card-dark); padding: 1rem 2rem; display: flex;
+            justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-color);
+            position: sticky; top: 0; z-index: 100;
         }
-
         .logo { font-size: 1.5rem; font-weight: bold; color: var(--primary); display: flex; align-items: center; gap: 0.5rem; }
         .header-actions { display: flex; gap: 0.8rem; align-items: center; }
 
         button {
-            cursor: pointer; border: none; border-radius: 8px;
-            padding: 0.6rem 1.2rem; font-size: 0.95rem; font-weight: 500;
-            transition: all 0.2s; display: inline-flex; align-items: center; gap: 0.5rem;
+            cursor: pointer; border: none; border-radius: 8px; padding: 0.6rem 1.2rem;
+            font-size: 0.9rem; font-weight: 500; transition: all 0.2s; display: inline-flex; align-items: center; gap: 0.5rem;
         }
-
-        .btn-icon-only { padding: 0.6rem; border-radius: 50%; width: 40px; height: 40px; justify-content: center; }
         .btn-primary { background-color: var(--primary); color: white; }
-        .btn-primary:hover { background-color: var(--primary-hover); }
         .btn-outline { background-color: transparent; color: var(--text-main); border: 1px solid var(--border-color); }
-        .btn-outline:hover { background-color: var(--border-color); }
         .btn-danger { background-color: rgba(239, 68, 68, 0.1); color: var(--danger); border: 1px solid rgba(239, 68, 68, 0.2); }
-        .btn-danger:hover { background-color: var(--danger); color: white; }
+        .btn-icon-only { padding: 0.6rem; border-radius: 50%; width: 40px; height: 40px; justify-content: center; }
 
-        #login-screen { flex: 1; display: flex; flex-direction: column; justify-content: center; align-items: center; padding: 2rem; }
-        .login-card {
-            background-color: var(--card-dark); padding: 3rem; border-radius: 16px;
-            text-align: center; border: 1px solid var(--border-color); max-width: 450px; width: 100%;
-        }
-        .login-card h2 { margin-bottom: 0.5rem; font-size: 1.8rem; }
-        .login-card p { color: var(--text-muted); margin-bottom: 2rem; line-height: 1.5; }
-        .login-buttons { display: flex; flex-direction: column; gap: 1rem; }
+        #login-screen { display: flex; flex-direction: column; justify-content: center; align-items: center; min-height: 80vh; padding: 2rem; }
+        .login-card { background-color: var(--card-dark); padding: 3rem; border-radius: 16px; text-align: center; border: 1px solid var(--border-color); max-width: 450px; width: 100%; }
+        .login-buttons { display: flex; flex-direction: column; gap: 1rem; margin-top: 2rem; }
 
         #app-screen { display: none; padding: 2rem; max-width: 1200px; margin: 0 auto; width: 100%; }
 
+        .control-panel { display: flex; flex-direction: column; gap: 1.2rem; margin-bottom: 2rem; }
         .input-section {
-            background-color: var(--card-dark); padding: 1.5rem; border-radius: 12px;
-            margin-bottom: 2rem; border: 1px solid var(--border-color); display: flex; gap: 1rem;
+            background-color: var(--card-dark); padding: 1.2rem; border-radius: 12px;
+            border: 1px solid var(--border-color); display: flex; gap: 1rem;
         }
         .input-section input {
             flex: 1; padding: 0.8rem 1rem; border-radius: 8px; border: 1px solid var(--border-color);
-            background-color: var(--bg-dark); color: var(--text-main); font-size: 1rem;
+            background-color: var(--bg-dark); color: var(--text-main);
         }
-        .input-section input:focus { outline: none; border-color: var(--primary); }
+        
+        .category-chips { display: flex; flex-wrap: wrap; gap: 0.6rem; margin-bottom: 0.5rem; }
+        .chip {
+            padding: 0.4rem 1rem; border-radius: 20px; background: var(--card-dark);
+            border: 1px solid var(--border-color); color: var(--text-main);
+            font-size: 0.85rem; cursor: pointer; transition: all 0.2s;
+        }
+        .chip.active { background: var(--primary); color: white; border-color: var(--primary); }
+        .chip:hover:not(.active) { border-color: var(--primary); }
 
-        .links-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 1.5rem; }
+        .filter-section { display: flex; flex-wrap: wrap; gap: 1rem; align-items: center; justify-content: space-between; }
+        .search-box { flex: 1; min-width: 300px; position: relative; }
+        .search-box i { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: var(--text-muted); }
+        .search-box input {
+            width: 100%; padding: 0.6rem 1rem 0.6rem 2.5rem; border-radius: 8px; 
+            border: 1px solid var(--border-color); background-color: var(--card-dark); color: var(--text-main);
+        }
+
+        .links-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 1.5rem; }
+        .list-view { display: flex; flex-direction: column; gap: 0.8rem; }
+        .list-view .link-card { flex-direction: row; align-items: center; padding: 0.8rem 1.5rem; }
+
         .link-card {
             background-color: var(--card-dark); border-radius: 12px; padding: 1.5rem;
-            border: 1px solid var(--border-color); position: relative;
-            transition: transform 0.2s, box-shadow 0.2s; display: flex; flex-direction: column;
+            border: 1px solid var(--border-color); position: relative; transition: all 0.2s;
+            display: flex; flex-direction: column;
         }
-        .link-card:hover { transform: translateY(-2px); box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3); border-color: var(--primary); }
+        .link-card:hover { transform: translateY(-3px); border-color: var(--primary); }
+        .favicon { width: 24px; height: 24px; border-radius: 4px; margin-right: 10px; }
         
-        .badge {
-            position: absolute; top: 1rem; right: 1rem; background-color: rgba(99, 102, 241, 0.1);
-            color: var(--primary); padding: 0.3rem 0.6rem; border-radius: 20px; font-size: 0.75rem; font-weight: 600;
-        }
-        .link-title { font-size: 1.1rem; font-weight: 600; margin-bottom: 0.5rem; margin-right: 3rem; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
-        .link-url { color: var(--primary); text-decoration: none; font-size: 0.9rem; margin-bottom: 0.5rem; word-break: break-all; display: -webkit-box; -webkit-line-clamp: 1; -webkit-box-orient: vertical; overflow: hidden; }
-        .link-url:hover { text-decoration: underline; }
-        
-        .link-time {
-            font-size: 0.8rem; color: var(--text-muted); margin-bottom: 1rem;
-            display: flex; align-items: center; gap: 0.3rem;
+        .tags-container { display: flex; flex-wrap: wrap; gap: 0.4rem; margin-bottom: 1rem; }
+        .tag-badge { 
+            background: rgba(99, 102, 241, 0.15); color: var(--primary); 
+            padding: 0.2rem 0.6rem; border-radius: 12px; font-size: 0.7rem; font-weight: 600;
         }
 
-        .link-desc { color: var(--text-muted); font-size: 0.9rem; flex: 1; margin-bottom: 1.5rem; line-height: 1.5; }
-        
-        .card-actions { display: flex; justify-content: space-between; gap: 0.5rem; border-top: 1px solid var(--border-color); padding-top: 1rem; }
-        .card-actions button { flex: 1; justify-content: center; }
+        .link-title { font-size: 1.1rem; font-weight: 600; margin-bottom: 0.2rem; display: block; }
+        .link-time { font-size: 0.75rem; color: var(--text-muted); margin-bottom: 0.8rem; display: flex; align-items: center; gap: 0.3rem; }
+        .link-url { color: var(--primary); text-decoration: none; font-size: 0.85rem; word-break: break-all; display: block; margin-bottom: 0.5rem; }
+        .link-desc { color: var(--text-muted); font-size: 0.9rem; flex: 1; margin-bottom: 1.5rem; }
+        .card-actions { display: flex; gap: 0.5rem; border-top: 1px solid var(--border-color); padding-top: 1rem; }
+        .card-actions button { flex: 1; padding: 0.4rem; font-size: 0.8rem; justify-content: center; }
 
         .modal-overlay {
             display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background-color: rgba(0, 0, 0, 0.7); z-index: 1000; justify-content: center; align-items: center;
+            background: rgba(0,0,0,0.7); z-index: 1000; justify-content: center; align-items: center; backdrop-filter: blur(4px);
         }
-        .modal {
-            background-color: var(--card-dark); padding: 2rem; border-radius: 12px;
-            width: 90%; max-width: 500px; border: 1px solid var(--border-color);
-        }
+        .modal { background: var(--card-dark); padding: 2rem; border-radius: 16px; width: 90%; max-width: 500px; border: 1px solid var(--border-color); }
         .form-group { margin-bottom: 1rem; }
-        .form-group label { display: block; margin-bottom: 0.5rem; color: var(--text-muted); font-size: 0.9rem; }
-        .form-group input, .form-group textarea {
-            width: 100%; padding: 0.8rem; border-radius: 8px; border: 1px solid var(--border-color);
-            background-color: var(--bg-dark); color: var(--text-main);
-        }
-        .form-group textarea { resize: vertical; min-height: 80px; }
-        .modal-actions { display: flex; justify-content: flex-end; gap: 1rem; margin-top: 1.5rem; }
+        .form-group label { display: block; margin-bottom: 0.4rem; color: var(--text-muted); font-size: 0.85rem; }
+        .form-group input, .form-group textarea { width: 100%; padding: 0.7rem; border-radius: 8px; border: 1px solid var(--border-color); background: var(--bg-dark); color: var(--text-main); }
 
-        #toast-container { position: fixed; bottom: 2rem; right: 2rem; display: flex; flex-direction: column; gap: 0.5rem; z-index: 9999; }
-        .toast {
-            background-color: var(--card-dark); color: var(--text-main); padding: 1rem 1.5rem; border-radius: 8px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.5); border-left: 4px solid var(--primary); display: flex; align-items: center; gap: 0.5rem;
-            animation: slideIn 0.3s ease forwards; opacity: 0; transform: translateX(100%);
-        }
-        .toast.error { border-left-color: var(--danger); }
-        .toast.success { border-left-color: var(--success); }
+        #toast-container { position: fixed; bottom: 2rem; right: 2rem; z-index: 9999; display: flex; flex-direction: column; gap: 0.5rem; }
+        .toast { background: var(--card-dark); color: var(--text-main); padding: 1rem 1.5rem; border-radius: 8px; border-left: 4px solid var(--primary); box-shadow: 0 4px 12px rgba(0,0,0,0.5); animation: slideIn 0.3s ease forwards; }
+        @keyframes slideIn { from { opacity: 0; transform: translateX(100%); } to { opacity: 1; transform: translateX(0); } }
 
-        @keyframes slideIn { to { opacity: 1; transform: translateX(0); } }
-        @keyframes fadeOut { to { opacity: 0; transform: translateY(10px); } }
-        
-        .loader {
-            display: none; border: 3px solid var(--border-color); border-top: 3px solid var(--primary);
-            border-radius: 50%; width: 20px; height: 20px; animation: spin 1s linear infinite;
-        }
+        .loader { display: none; border: 3px solid var(--border-color); border-top: 3px solid var(--primary); border-radius: 50%; width: 18px; height: 18px; animation: spin 1s linear infinite; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
     </style>
 </head>
-<body>
+<body class="flex flex-col min-h-screen">
 
     <header>
-        <div class="logo"><i class="fas fa-link"></i> 智能連結管理器</div>
+        <div class="logo"><i class="fas fa-link"></i> 智能連結 Pro Max</div>
         <div class="header-actions">
-            <span id="user-info" style="display: none; color: var(--text-muted); font-size: 0.9rem;"></span>
-            <button class="btn-outline btn-icon-only" id="btn-theme" onclick="toggleTheme()" title="切換深/淺色模式"><i class="fas fa-sun"></i></button>
-            <button class="btn-outline btn-icon-only" id="btn-logout" style="display: none;" onclick="handleLogout()" title="登出"><i class="fas fa-sign-out-alt"></i></button>
+            <span id="user-info" style="display: none; color: var(--text-muted); font-size: 0.9rem; margin-right: 10px;"></span>
+            <button class="btn-outline btn-icon-only" onclick="toggleTheme()" title="深淺色切換"><i class="fas fa-sun"></i></button>
+            <button class="btn-outline btn-icon-only" id="btn-logout" style="display: none;" onclick="handleLogout()"><i class="fas fa-sign-out-alt"></i></button>
         </div>
     </header>
 
     <main id="login-screen">
         <div class="login-card">
             <h2>歡迎回來</h2>
-            <p>混合解析引擎：免 API 金鑰，瞬間從網址中擷取影片標題、地點名稱與社群資訊。</p>
+            <p style="color: var(--text-muted); margin: 10px 0 20px;">支持多分類標籤的 AI 知識庫</p>
             <div class="login-buttons">
-                <button class="btn-outline" id="btn-google-login">
-                    <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" style="width: 18px; height: 18px;" alt="Google">
-                    Google 登入 (雲端同步)
-                </button>
-                <button class="btn-primary" id="btn-local-login" style="margin-top: 10px;">
-                    <i class="fas fa-laptop"></i> 直接進入 (本機測試模式)
-                </button>
+                <button class="btn-outline" id="btn-google-login"><img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" style="width:18px"> Google 登入</button>
+                <button class="btn-primary" id="btn-local-login">本機測試模式</button>
             </div>
         </div>
     </main>
 
     <main id="app-screen">
-        <div class="input-section">
-            <input type="text" id="url-input" placeholder="貼上任何連結 (支援 YouTube, Google Maps, IG, Threads 或一般網站)..." onkeypress="handleEnter(event)">
-            <button class="btn-primary" id="btn-add-url" onclick="processAndSaveUrl()">
-                <span class="btn-text">解析並儲存</span>
-                <div class="loader" id="add-loader"></div>
-            </button>
+        <div class="control-panel">
+            <div class="input-section">
+                <input type="text" id="url-input" placeholder="貼上連結 (IG, FB, YT...)" onkeypress="handleEnter(event)">
+                <button class="btn-primary" id="btn-add-url" onclick="processAndSaveUrl()">
+                    <span class="btn-text">儲存</span>
+                    <div class="loader" id="add-loader"></div>
+                </button>
+            </div>
+
+            <div>
+                <div class="category-chips" id="category-chips"></div>
+                <div class="filter-section">
+                    <div class="search-box">
+                        <i class="fas fa-search"></i>
+                        <input type="text" id="search-input" placeholder="快速搜尋標題或標籤..." oninput="filterLinks()">
+                    </div>
+                    <button class="btn-outline btn-icon-only" onclick="toggleView()"><i class="fas fa-grip-vertical" id="view-icon"></i></button>
+                </div>
+            </div>
         </div>
         <div class="links-grid" id="links-container"></div>
     </main>
 
+    <!-- 底部 Footer -->
+    <footer class="max-w-2xl mx-auto w-full mt-6 py-4 text-center text-[11px] text-gray-400 dark:text-gray-500 flex flex-wrap items-center justify-center gap-2">
+        <div>更新時間 <span id="lastUpdatedDisplay" class="font-mono">讀取中...</span></div>
+        <span>|</span>
+        <a href="https://v.douyin.com/XmUkpVat8Lg/" target="_blank" class="font-bold text-blue-500 hover:text-blue-600 transition flex items-center gap-0.5">奇奇828 <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path></svg></a>
+    </footer>
+
+    <!-- Edit Modal -->
     <div class="modal-overlay" id="edit-modal">
         <div class="modal">
-            <h3>✏️ 編輯連結</h3>
+            <h3 style="margin-bottom:1rem">✏️ 編輯連結</h3>
             <input type="hidden" id="edit-id">
             <div class="form-group"><label>標題</label><input type="text" id="edit-title"></div>
             <div class="form-group"><label>網址</label><input type="text" id="edit-url"></div>
-            <div class="form-group"><label>分類 (如: 影音、社群、地點)</label><input type="text" id="edit-category"></div>
-            <div class="form-group"><label>摘要說明</label><textarea id="edit-desc"></textarea></div>
-            <div class="modal-actions">
+            <div class="form-group">
+                <label>標籤 (用逗號分隔，例如: 社群, 美食, 必看)</label>
+                <input type="text" id="edit-categories">
+            </div>
+            <div class="form-group"><label>摘要說明</label><textarea id="edit-desc" style="width:100%; height:80px; padding:0.7rem; border-radius:8px; border:1px solid var(--border-color); background:var(--bg-dark); color:var(--text-main);"></textarea></div>
+            <div class="modal-actions" style="display:flex; justify-content:flex-end; gap:1rem; margin-top:1rem;">
                 <button class="btn-outline" onclick="closeModal('edit-modal')">取消</button>
                 <button class="btn-primary" onclick="saveEdit()">儲存變更</button>
             </div>
@@ -221,347 +199,313 @@
             storageBucket: "link-1b206.appspot.com"
         };
 
-        let app, auth, db;
-        let currentUser = null;
-        let isLocalMode = false;
-        let unsubscribeSnapshot = null;
+        let app, auth, db, currentUser = null, isLocalMode = false, unsubscribeSnapshot = null;
+        let currentView = 'grid';
+        let activeTag = 'all';
 
         try {
             app = firebase.initializeApp(firebaseConfig);
             auth = firebase.auth();
             db = firebase.firestore();
-        } catch(e) {
-            console.error("Firebase 初始化失敗:", e);
+        } catch(e) { console.error(e); }
+
+        // --- 讀取檔案存檔時間邏輯 ---
+        function initFileSaveTime() {
+            try {
+                // document.lastModified 是瀏覽器提供的屬性，讀取檔案最後修改時間
+                const lastMod = new Date(document.lastModified);
+                const timeStr = `${lastMod.getFullYear()}/${String(lastMod.getMonth()+1).padStart(2,'0')}/${String(lastMod.getDate()).padStart(2,'0')} ${String(lastMod.getHours()).padStart(2,'0')}:${String(lastMod.getMinutes()).padStart(2,'0')}`;
+                document.getElementById('lastUpdatedDisplay').innerText = timeStr;
+            } catch (e) {
+                document.getElementById('lastUpdatedDisplay').innerText = '無法讀取';
+            }
         }
 
-        function initTheme() {
-            if (localStorage.getItem('theme') === 'light') { document.body.classList.add('light-mode'); document.querySelector('#btn-theme i').className = 'fas fa-moon'; }
+        // --- 工具函數 ---
+        function formatTime(timestamp) {
+            if (!timestamp) return '';
+            const d = new Date(timestamp);
+            return `${d.getFullYear()}/${String(d.getMonth()+1).padStart(2,'0')}/${String(d.getDate()).padStart(2,'0')} ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;
         }
-        initTheme();
 
         function toggleTheme() {
             document.body.classList.toggle('light-mode');
-            const isLight = document.body.classList.contains('light-mode');
-            localStorage.setItem('theme', isLight ? 'light' : 'dark');
-            document.querySelector('#btn-theme i').className = isLight ? 'fas fa-moon' : 'fas fa-sun';
+            localStorage.setItem('theme', document.body.classList.contains('light-mode') ? 'light' : 'dark');
         }
 
-        function showToast(message, type = 'info') {
+        function showToast(msg, type='info') {
             const container = document.getElementById('toast-container');
-            const toast = document.createElement('div');
-            toast.className = `toast ${type}`;
-            const icon = type === 'error' ? 'exclamation-circle' : type === 'success' ? 'check-circle' : 'info-circle';
-            toast.innerHTML = `<i class="fas fa-${icon}"></i> ${message}`;
-            container.appendChild(toast);
-            setTimeout(() => { toast.style.animation = 'fadeOut 0.3s ease forwards'; setTimeout(() => toast.remove(), 300); }, 3500);
+            const t = document.createElement('div');
+            t.className = `toast ${type}`;
+            t.innerHTML = msg;
+            container.appendChild(t);
+            setTimeout(() => { t.style.animation = 'fadeOut 0.3s ease forwards'; setTimeout(() => t.remove(), 300); }, 3000);
         }
 
         function openModal(id) { document.getElementById(id).style.display = 'flex'; }
         function closeModal(id) { document.getElementById(id).style.display = 'none'; }
-        function handleEnter(event) { if (event.key === "Enter") processAndSaveUrl(); }
-        function escapeHtml(unsafe) { return String(unsafe || '').replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;"); }
-
-        function formatTime(timestamp) {
-            if (!timestamp) return '';
-            const d = new Date(timestamp);
-            const yyyy = d.getFullYear();
-            const mm = String(d.getMonth() + 1).padStart(2, '0');
-            const dd = String(d.getDate()).padStart(2, '0');
-            const hh = String(d.getHours()).padStart(2, '0');
-            const min = String(d.getMinutes()).padStart(2, '0');
-            return `${yyyy}/${mm}/${dd} ${hh}:${min}`;
-        }
-
-        if(auth) {
-            auth.onAuthStateChanged((user) => {
-                if (user) {
-                    currentUser = user; isLocalMode = false;
-                    document.getElementById('login-screen').style.display = 'none';
-                    document.getElementById('app-screen').style.display = 'block';
-                    document.getElementById('btn-logout').style.display = 'inline-flex';
-                    document.getElementById('user-info').style.display = 'inline';
-                    document.getElementById('user-info').textContent = `${user.email || '已登入'}`;
-                    loadLinks();
-                }
-            });
-        }
-
-        document.getElementById('btn-google-login').addEventListener('click', () => {
-            const provider = new firebase.auth.GoogleAuthProvider();
-            auth.signInWithPopup(provider).then(() => showToast("登入成功", "success")).catch(error => showToast("登入失敗或被阻擋: " + error.message, 'error'));
-        });
-
-        document.getElementById('btn-local-login').addEventListener('click', () => {
-            isLocalMode = true; currentUser = null;
-            document.getElementById('login-screen').style.display = 'none';
-            document.getElementById('app-screen').style.display = 'block';
-            document.getElementById('user-info').style.display = 'inline';
-            document.getElementById('user-info').textContent = "本機測試模式";
-            loadLinks();
-            showToast("已啟動本機模式", "success");
-        });
-
-        function handleLogout() {
-            if (isLocalMode) location.reload();
-            else { if(unsubscribeSnapshot) unsubscribeSnapshot(); auth.signOut().then(() => location.reload()); }
-        }
+        function handleEnter(e) { if (e.key === "Enter") processAndSaveUrl(); }
+        function escapeHtml(u) { return String(u || '').replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;"); }
 
         async function fetchWebpageInfo(url) {
-            let result = {
-                title: "新連結 (未成功解析)",
-                description: "連結已儲存。請點擊編輯按鈕手動輸入詳細資訊。",
-                category: "一般網站"
-            };
-
+            let result = { title: "", description: "請編輯詳細資訊", categories: ["一般網站"] };
             try {
-                if (!url.startsWith('http://') && !url.startsWith('https://')) { url = 'https://' + url; }
+                if (!url.startsWith('http')) url = 'https://' + url;
                 const urlObj = new URL(url);
                 const lowerUrl = url.toLowerCase();
 
-                // 1. YouTube 解析
-                if (lowerUrl.includes('youtube.com') || lowerUrl.includes('youtu.be')) {
-                    result.category = "影音娛樂";
-                    try {
-                        const noembedRes = await fetch(`https://noembed.com/embed?url=${encodeURIComponent(url)}`);
-                        if (noembedRes.ok) {
-                            const data = await noembedRes.json();
-                            if (data.title) {
-                                result.title = data.title;
-                                result.description = `YouTube 影片，作者：${data.author_name || '未知'}`;
-                                return result; 
-                            }
-                        }
-                    } catch (e) { console.warn("Noembed 失敗", e); }
-                }
-
-                // 2. Instagram 網址智能拆解 (因隱私無法讀取內容，改用判斷式)
                 if (lowerUrl.includes('instagram.com')) {
-                    result.category = "社群媒體";
-                    // 判斷是否為 Reels
-                    if (urlObj.pathname.includes('/reel/')) {
-                        result.title = "Instagram 連續短片 (Reel)";
-                        result.description = "Instagram 影音內容 (受隱私保護)";
-                        return result;
-                    }
-                    // 判斷是否為一般貼文
-                    if (urlObj.pathname.includes('/p/')) {
-                        result.title = "Instagram 貼文";
-                        result.description = "Instagram 圖文內容 (受隱私保護)";
-                        return result;
-                    }
-                    // 判斷是否為個人檔案
-                    const match = urlObj.pathname.match(/\/([^/?#]+)/);
-                    if (match && match[1]) {
-                        result.title = `Instagram - @${match[1]}`;
-                        result.description = "Instagram 個人檔案頁面";
-                    }
-                    return result;
-                }
-
-                // 3. Threads 網址拆解
-                if (lowerUrl.includes('threads.net')) {
-                    result.category = "社群媒體";
-                    const match = urlObj.pathname.match(/\/@([^/?#]+)/);
-                    if (match) {
-                        result.title = `Threads - @${match[1]}`;
-                        result.description = "Threads 個人檔案或串文";
+                    result.categories = ["社群媒體", "Instagram"];
+                    const pathParts = urlObj.pathname.split('/');
+                    const user = pathParts[1];
+                    if (urlObj.pathname.includes('/p/') || urlObj.pathname.includes('/reel/')) {
+                        result.title = `IG 貼文 (@${user || '未知'})`;
                     } else {
-                        result.title = "Threads 貼文";
+                        result.title = `IG 個人檔案 @${user || '未知'}`;
                     }
-                    return result;
-                }
-
-                // 4. Google Maps 網址拆解
-                if (lowerUrl.includes('google.com/maps') || lowerUrl.includes('maps.app.goo.gl')) {
-                    result.category = "地點導航";
-                    const match = urlObj.pathname.match(/\/place\/([^/?#]+)/);
-                    if (match) {
-                        result.title = `📍 地點：${decodeURIComponent(match[1]).replace(/\+/g, ' ')}`;
-                        result.description = "Google Maps 地點資訊";
-                    } else {
-                        result.title = "Google Maps 導航連結";
+                } else if (lowerUrl.includes('facebook.com')) {
+                    result.categories = ["社群媒體", "Facebook"];
+                    result.title = "Facebook 內容";
+                } else if (lowerUrl.includes('youtube.com') || lowerUrl.includes('youtu.be')) {
+                    result.categories = ["影音娛樂", "YouTube"];
+                    const res = await fetch(`https://noembed.com/embed?url=${encodeURIComponent(url)}`);
+                    const data = await res.json();
+                    if (data.title) result.title = data.title;
+                } else {
+                    result.categories = ["一般網站"];
+                    const proxy = `https://api.allorigins.win/get?url=${encodeURIComponent(url)}`;
+                    const res = await fetch(proxy);
+                    const data = await res.json();
+                    if (data.contents) {
+                        const doc = new DOMParser().parseFromString(data.contents, "text/html");
+                        result.title = doc.querySelector('title')?.innerText || "";
                     }
-                    return result;
                 }
+            } catch (e) { console.warn(e); }
 
-                // 5. Facebook 基礎辨識
-                if (lowerUrl.includes('facebook.com') || lowerUrl.includes('fb.watch')) {
-                    result.category = "社群媒體";
-                    result.title = "Facebook 連結";
-                    result.description = "Facebook 個人檔案、粉絲專頁或貼文";
-                    return result;
-                }
-
-                // 6. 一般網站解析 (使用 AllOrigins Proxy)
-                try {
-                    const proxyUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(url)}`;
-                    const response = await fetch(proxyUrl);
-                    if (response.ok) {
-                        const data = await response.json();
-                        if (data.contents) {
-                            const parser = new DOMParser();
-                            const doc = parser.parseFromString(data.contents, "text/html");
-                            
-                            const parsedTitle = doc.querySelector('title')?.innerText || doc.querySelector('meta[property="og:title"]')?.content;
-                            if (parsedTitle) result.title = parsedTitle.trim();
-                            
-                            const desc = doc.querySelector('meta[name="description"]')?.content || doc.querySelector('meta[property="og:description"]')?.content;
-                            if (desc) result.description = desc.trim();
-                        }
-                    }
-                } catch (err) {
-                    console.warn("HTML 代理獲取失敗，使用預設值:", err);
-                }
-
-            } catch (err) {
-                console.error("網址格式錯誤或解析失敗", err);
-            }
-
+            if (!result.title) result.title = "未命名連結";
             return result;
         }
 
         async function processAndSaveUrl() {
             const input = document.getElementById('url-input');
             let url = input.value.trim();
-            if (!url) return showToast("請輸入網址", "error");
+            if (!url) return;
             
-            if (!url.startsWith('http://') && !url.startsWith('https://')) { url = 'https://' + url; }
-
             const btn = document.getElementById('btn-add-url');
             const loader = document.getElementById('add-loader');
             const btnText = btn.querySelector('.btn-text');
             btn.disabled = true; btnText.style.display = 'none'; loader.style.display = 'block';
-            showToast("正在解析網址資訊...");
 
-            const parsedInfo = await fetchWebpageInfo(url);
-            
-            // 新增 createdAt 時間戳記
-            const linkData = {
-                url: url,
-                title: parsedInfo.title,
-                category: parsedInfo.category,
-                description: parsedInfo.description,
-                createdAt: Date.now() 
+            const info = await fetchWebpageInfo(url);
+            const data = { 
+                url, 
+                title: info.title, 
+                categories: info.categories, 
+                description: info.description, 
+                createdAt: Date.now(), 
+                pinned: false 
             };
 
             try {
                 if (isLocalMode) {
                     const links = JSON.parse(localStorage.getItem('my_links') || '[]');
-                    linkData.id = 'local_' + Date.now() + Math.random().toString(16).slice(2);
-                    links.push(linkData);
+                    data.id = 'loc_' + Date.now();
+                    links.push(data);
                     localStorage.setItem('my_links', JSON.stringify(links));
                     loadLinks();
-                    showToast("解析成功，已儲存於本機！", "success");
-                } else if(currentUser && db) {
-                    await db.collection('users').doc(currentUser.uid).collection('links').add(linkData);
-                    showToast("解析成功，已同步至雲端！", "success");
+                } else {
+                    await db.collection('users').doc(currentUser.uid).collection('links').add(data);
                 }
-            } catch (err) {
-                showToast("儲存失敗: " + err.message, "error");
-            }
+                showToast("儲存成功", "success");
+            } catch (e) { showToast("錯誤: " + e.message, "error"); }
 
             input.value = '';
             btn.disabled = false; btnText.style.display = 'inline'; loader.style.display = 'none';
         }
 
+        function setTag(tag) {
+            activeTag = tag;
+            renderTagsCloud();
+            filterLinks();
+        }
+
+        function renderTagsCloud(links = []) {
+            const container = document.getElementById('category-chips');
+            const allTags = new Set();
+            links.forEach(l => {
+                if (l.categories) {
+                    if (Array.isArray(l.categories)) {
+                        l.categories.forEach(t => allTags.add(t));
+                    } else if (typeof l.categories === 'string') {
+                        allTags.add(l.categories);
+                    }
+                }
+            });
+
+            let html = `<div class="chip ${activeTag === 'all' ? 'active' : ''}" onclick="setTag('all')">全部</div>`;
+            allTags.forEach(tag => {
+                html += `<div class="chip ${activeTag === tag ? 'active' : ''}" onclick="setTag('${tag}')">${tag}</div>`;
+            });
+            container.innerHTML = html;
+        }
+
         function loadLinks() {
             if (isLocalMode) {
                 const links = JSON.parse(localStorage.getItem('my_links') || '[]');
-                links.sort((a, b) => b.createdAt - a.createdAt);
                 renderLinks(links);
             } else if(currentUser && db) {
                 if(unsubscribeSnapshot) unsubscribeSnapshot();
-                
-                unsubscribeSnapshot = db.collection('users').doc(currentUser.uid).collection('links')
-                    .orderBy('createdAt', 'desc')
-                    .onSnapshot((snapshot) => {
-                        const links = [];
-                        snapshot.forEach(doc => links.push({ id: doc.id, ...doc.data() }));
-                        renderLinks(links);
-                    }, (error) => { showToast("讀取雲端資料失敗", "error"); });
+                unsubscribeSnapshot = db.collection('users').doc(currentUser.uid).collection('links').orderBy('createdAt', 'desc').onSnapshot(snap => {
+                    const links = []; snap.forEach(doc => links.push({ id: doc.id, ...doc.data() }));
+                    renderLinks(links);
+                });
             }
         }
 
         function renderLinks(links) {
             const container = document.getElementById('links-container');
-            container.innerHTML = links.map(link => `
-                <div class="link-card" id="card-${link.id}">
-                    <div class="badge">${escapeHtml(link.category)}</div>
-                    <h3 class="link-title" title="${escapeHtml(link.title)}">${escapeHtml(link.title)}</h3>
-                    <a href="${escapeHtml(link.url)}" target="_blank" class="link-url"><i class="fas fa-external-link-alt"></i> ${escapeHtml(link.url)}</a>
-                    
-                    <!-- 新增：顯示格式化的時間 -->
+            const search = document.getElementById('search-input').value.toLowerCase();
+            
+            renderTagsCloud(links);
+
+            const filtered = links.filter(l => {
+                const matchSearch = l.title.toLowerCase().includes(search) || l.url.toLowerCase().includes(search);
+                let hasTag = false;
+                if (activeTag === 'all') hasTag = true;
+                else if (Array.isArray(l.categories)) hasTag = l.categories.includes(activeTag);
+                else if (typeof l.categories === 'string') hasTag = (l.categories === activeTag);
+                return matchSearch && hasTag;
+            });
+
+            container.innerHTML = filtered.map(link => `
+                <div class="link-card ${link.pinned ? 'pinned' : ''}">
+                    <div class="tags-container">
+                        ${(Array.isArray(link.categories) ? link.categories : (link.categories ? [link.categories] : [])).map(t => `<span class="tag-badge">${escapeHtml(t)}</span>`).join('')}
+                    </div>
+                    <div style="display:flex; align-items:center; margin-bottom:0.2rem;">
+                        <img class="favicon" src="https://www.google.com/s2/favicons?domain=${link.url}&sz=64">
+                        <h3 class="link-title">${escapeHtml(link.title)}</h3>
+                    </div>
                     <div class="link-time">
                         <i class="far fa-clock"></i> ${formatTime(link.createdAt)}
                     </div>
-
+                    <a href="${link.url}" target="_blank" class="link-url">${escapeHtml(link.url)}</a>
                     <p class="link-desc">${escapeHtml(link.description)}</p>
                     <div class="card-actions">
-                        <button class="btn-outline" onclick="openEdit('${link.id}')"><i class="fas fa-edit"></i> 編輯</button>
-                        <button class="btn-danger" onclick="deleteLink('${link.id}')"><i class="fas fa-trash"></i> 刪除</button>
+                        <button class="btn-outline" onclick="deleteLink('${link.id}')"><i class="fas fa-trash"></i></button>
+                        <button class="btn-outline" onclick="openEdit('${link.id}')"><i class="fas fa-edit"></i></button>
                     </div>
                 </div>
             `).join('');
-            
-            if(links.length === 0) container.innerHTML = `<p style="color:var(--text-muted); text-align:center; grid-column: 1/-1; padding: 2rem;">目前還沒有儲存任何連結。</p>`;
         }
+
+        function filterLinks() { loadLinks(); }
 
         async function deleteLink(id) {
+            if (!confirm("刪除？")) return;
             if (isLocalMode) {
-                let links = JSON.parse(localStorage.getItem('my_links') || '[]');
-                links = links.filter(l => l.id !== id);
-                localStorage.setItem('my_links', JSON.stringify(links));
+                let l = JSON.parse(localStorage.getItem('my_links') || '[]');
+                localStorage.setItem('my_links', JSON.stringify(l.filter(i => i.id !== id)));
                 loadLinks();
-            } else if(currentUser && db) {
+            } else {
                 await db.collection('users').doc(currentUser.uid).collection('links').doc(id).delete();
             }
-            showToast("連結已刪除", "success");
         }
 
-        function openEdit(id) {
-            let targetLink = null;
-            if (isLocalMode) {
-                targetLink = JSON.parse(localStorage.getItem('my_links') || '[]').find(l => l.id === id);
-            } else {
-                const card = document.getElementById(`card-${id}`);
-                targetLink = {
-                    id: id, 
-                    title: card.querySelector('.link-title').innerText,
-                    url: card.querySelector('.link-url').href, 
-                    category: card.querySelector('.badge').innerText,
-                    description: card.querySelector('.link-desc').innerText
-                };
-            }
+        async function openEdit(id) {
+            let link;
+            try {
+                if (isLocalMode) {
+                    link = JSON.parse(localStorage.getItem('my_links') || '[]').find(l => l.id === id);
+                } else {
+                    const snap = await db.collection('users').doc(currentUser.uid).collection('links').doc(id).get();
+                    if (snap.exists) {
+                        link = snap.data();
+                        link.id = snap.id;
+                    }
+                }
 
-            if(targetLink) {
-                document.getElementById('edit-id').value = targetLink.id;
-                document.getElementById('edit-title').value = targetLink.title;
-                document.getElementById('edit-url').value = targetLink.url;
-                document.getElementById('edit-category').value = targetLink.category;
-                document.getElementById('edit-desc').value = targetLink.description;
-                openModal('edit-modal');
+                if (link) {
+                    document.getElementById('edit-id').value = link.id;
+                    document.getElementById('edit-title').value = link.title || "";
+                    document.getElementById('edit-url').value = link.url || "";
+                    if (Array.isArray(link.categories)) {
+                        document.getElementById('edit-categories').value = link.categories.join(', ');
+                    } else if (typeof link.categories === 'string') {
+                        document.getElementById('edit-categories').value = link.categories;
+                    } else {
+                        document.getElementById('edit-categories').value = "";
+                    }
+                    document.getElementById('edit-desc').value = link.description || "";
+                    openModal('edit-modal');
+                }
+            } catch (e) {
+                console.error(e);
+                showToast("讀取失敗", "error");
             }
         }
 
         async function saveEdit() {
             const id = document.getElementById('edit-id').value;
-            const updatedData = {
-                title: document.getElementById('edit-title').value.trim(), 
-                url: document.getElementById('edit-url').value.trim(),
-                category: document.getElementById('edit-category').value.trim(), 
-                description: document.getElementById('edit-desc').value.trim()
+            const updated = {
+                title: document.getElementById('edit-title').value,
+                url: document.getElementById('edit-url').value,
+                categories: document.getElementById('edit-categories').value.split(',').map(t => t.trim()).filter(t => t),
+                description: document.getElementById('edit-desc').value
             };
 
             if (isLocalMode) {
-                let links = JSON.parse(localStorage.getItem('my_links') || '[]');
-                const index = links.findIndex(l => l.id === id);
-                if(index > -1) { links[index] = { ...links[index], ...updatedData }; localStorage.setItem('my_links', JSON.stringify(links)); }
+                let l = JSON.parse(localStorage.getItem('my_links') || '[]');
+                const idx = l.findIndex(i => i.id === id);
+                if (idx > -1) l[idx] = { ...l[idx], ...updated };
+                localStorage.setItem('my_links', JSON.stringify(l));
                 loadLinks();
-            } else if(currentUser && db) {
-                await db.collection('users').doc(currentUser.uid).collection('links').doc(id).update(updatedData);
+            } else {
+                await db.collection('users').doc(currentUser.uid).collection('links').doc(id).update(updated);
             }
-            closeModal('edit-modal'); showToast("變更已儲存", "success");
+            closeModal('edit-modal');
+            showToast("已儲存變更", "success");
         }
+
+        function toggleView() {
+            currentView = currentView === 'grid' ? 'list' : 'grid';
+            document.getElementById('links-container').className = currentView === 'list' ? 'links-grid list-view' : 'links-grid';
+            document.getElementById('view-icon').className = currentView === 'list' ? 'fas fa-th-large' : 'fas fa-grip-vertical';
+            filterLinks();
+        }
+
+        if(auth) {
+            auth.onAuthStateChanged(user => {
+                if (user) {
+                    currentUser = user;
+                    document.getElementById('login-screen').style.display = 'none';
+                    document.getElementById('app-screen').style.display = 'block';
+                    document.getElementById('btn-logout').style.display = 'inline-flex';
+                    document.getElementById('user-info').style.display = 'inline';
+                    document.getElementById('user-info').textContent = user.email;
+                    loadLinks();
+                }
+            });
+        }
+
+        document.getElementById('btn-google-login').addEventListener('click', () => {
+            auth.signInWithPopup(new firebase.auth.GoogleAuthProvider());
+        });
+        document.getElementById('btn-local-login').addEventListener('click', () => {
+            isLocalMode = true;
+            document.getElementById('login-screen').style.display = 'none';
+            document.getElementById('app-screen').style.display = 'block';
+            document.getElementById('user-info').style.display = 'inline';
+            document.getElementById('user-info').textContent = "本機模式";
+            loadLinks();
+        });
+        function handleLogout() { location.reload(); }
+        
+        // 初始化
+        window.onload = () => {
+            initFileSaveTime();
+        };
     </script>
 </body>
 </html>
