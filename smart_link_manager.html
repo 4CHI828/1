@@ -1,687 +1,831 @@
 <!DOCTYPE html>
-<html lang="zh-TW" class="dark">
+<html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>智能連結管理器</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
-    <script>
-        tailwind.config = {
-            darkMode: 'class',
-            theme: {
-                extend: {
-                    colors: {
-                        gray: {
-                            850: '#1f2937',
-                            900: '#111827',
-                            950: '#030712',
-                        }
-                    }
-                }
-            }
-        }
-    </script>
+    <title>Smart Link Manager</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
-        
+        :root {
+            --primary: #6366f1;
+            --primary-hover: #4f46e5;
+            --bg-dark: #0f172a;
+            --card-dark: #1e293b;
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --border-color: #334155;
+            --danger: #ef4444;
+            --success: #10b981;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
         body {
-            font-family: 'Inter', sans-serif;
-            background-color: #030712; /* Tailwind gray-950 */
-            color: #e5e7eb; /* Tailwind gray-200 */
-            padding-bottom: 25vh; /* Space for debug log */
+            background-color: var(--bg-dark);
+            color: var(--text-main);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
         }
 
-        .glass-panel {
-            background: rgba(17, 24, 39, 0.85); /* gray-900 */
-            backdrop-filter: blur(12px);
-            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        /* 頂部導覽列 */
+        header {
+            background-color: var(--card-dark);
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid var(--border-color);
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
         }
 
-        .card-hover { transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
-        .card-hover:hover {
-            transform: translateY(-4px);
-            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.5), 0 8px 10px -6px rgba(0, 0, 0, 0.3);
-            border-color: #6366f1; /* indigo-500 */
+        .logo {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: var(--primary);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
         }
 
-        /* Spinner */
-        .spinner {
-            border: 3px solid rgba(255, 255, 255, 0.1);
+        .header-actions {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+        }
+
+        /* 按鈕樣式 */
+        button {
+            cursor: pointer;
+            border: none;
+            border-radius: 8px;
+            padding: 0.6rem 1.2rem;
+            font-size: 0.95rem;
+            font-weight: 500;
+            transition: all 0.2s;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .btn-primary {
+            background-color: var(--primary);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background-color: var(--primary-hover);
+        }
+
+        .btn-outline {
+            background-color: transparent;
+            color: var(--text-main);
+            border: 1px solid var(--border-color);
+        }
+
+        .btn-outline:hover {
+            background-color: var(--border-color);
+        }
+
+        .btn-danger {
+            background-color: rgba(239, 68, 68, 0.1);
+            color: var(--danger);
+            border: 1px solid rgba(239, 68, 68, 0.2);
+        }
+
+        .btn-danger:hover {
+            background-color: var(--danger);
+            color: white;
+        }
+
+        /* 登入畫面 */
+        #login-screen {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 2rem;
+        }
+
+        .login-card {
+            background-color: var(--card-dark);
+            padding: 3rem;
+            border-radius: 16px;
+            text-align: center;
+            border: 1px solid var(--border-color);
+            max-width: 450px;
+            width: 100%;
+        }
+
+        .login-card h2 {
+            margin-bottom: 0.5rem;
+            font-size: 1.8rem;
+        }
+
+        .login-card p {
+            color: var(--text-muted);
+            margin-bottom: 2rem;
+            line-height: 1.5;
+        }
+
+        .login-buttons {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        /* 主應用畫面 */
+        #app-screen {
+            display: none;
+            padding: 2rem;
+            max-width: 1200px;
+            margin: 0 auto;
+            width: 100%;
+        }
+
+        .input-section {
+            background-color: var(--card-dark);
+            padding: 1.5rem;
+            border-radius: 12px;
+            margin-bottom: 2rem;
+            border: 1px solid var(--border-color);
+            display: flex;
+            gap: 1rem;
+        }
+
+        .input-section input {
+            flex: 1;
+            padding: 0.8rem 1rem;
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+            background-color: var(--bg-dark);
+            color: var(--text-main);
+            font-size: 1rem;
+        }
+
+        .input-section input:focus {
+            outline: none;
+            border-color: var(--primary);
+        }
+
+        /* 連結卡片網格 */
+        .links-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .link-card {
+            background-color: var(--card-dark);
+            border-radius: 12px;
+            padding: 1.5rem;
+            border: 1px solid var(--border-color);
+            position: relative;
+            transition: transform 0.2s, box-shadow 0.2s;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .link-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3);
+            border-color: var(--primary);
+        }
+
+        .badge {
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+            background-color: rgba(99, 102, 241, 0.1);
+            color: var(--primary);
+            padding: 0.3rem 0.6rem;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+
+        .link-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            margin-right: 3rem;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+
+        .link-url {
+            color: var(--primary);
+            text-decoration: none;
+            font-size: 0.9rem;
+            margin-bottom: 1rem;
+            word-break: break-all;
+            display: -webkit-box;
+            -webkit-line-clamp: 1;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+
+        .link-url:hover {
+            text-decoration: underline;
+        }
+
+        .link-desc {
+            color: var(--text-muted);
+            font-size: 0.9rem;
+            flex: 1;
+            margin-bottom: 1.5rem;
+            line-height: 1.5;
+        }
+
+        .card-actions {
+            display: flex;
+            justify-content: space-between;
+            gap: 0.5rem;
+            border-top: 1px solid var(--border-color);
+            padding-top: 1rem;
+        }
+
+        .card-actions button {
+            flex: 1;
+            justify-content: center;
+        }
+
+        /* 模態框 (Modal) 樣式 */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.7);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal {
+            background-color: var(--card-dark);
+            padding: 2rem;
+            border-radius: 12px;
+            width: 90%;
+            max-width: 500px;
+            border: 1px solid var(--border-color);
+        }
+
+        .modal h3 {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-group {
+            margin-bottom: 1rem;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            color: var(--text-muted);
+            font-size: 0.9rem;
+        }
+
+        .form-group input, .form-group textarea {
+            width: 100%;
+            padding: 0.8rem;
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+            background-color: var(--bg-dark);
+            color: var(--text-main);
+        }
+
+        .form-group textarea {
+            resize: vertical;
+            min-height: 80px;
+        }
+
+        .modal-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 1rem;
+            margin-top: 1.5rem;
+        }
+
+        /* Toast 提示 */
+        #toast-container {
+            position: fixed;
+            bottom: 2rem;
+            right: 2rem;
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+            z-index: 9999;
+        }
+
+        .toast {
+            background-color: var(--card-dark);
+            color: var(--text-main);
+            padding: 1rem 1.5rem;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+            border-left: 4px solid var(--primary);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            animation: slideIn 0.3s ease forwards;
+            opacity: 0;
+            transform: translateX(100%);
+        }
+
+        .toast.error { border-left-color: var(--danger); }
+        .toast.success { border-left-color: var(--success); }
+
+        @keyframes slideIn {
+            to { opacity: 1; transform: translateX(0); }
+        }
+        @keyframes fadeOut {
+            to { opacity: 0; transform: translateY(10px); }
+        }
+
+        /* 載入動畫 */
+        .loader {
+            display: none;
+            border: 3px solid var(--border-color);
+            border-top: 3px solid var(--primary);
             border-radius: 50%;
-            border-top: 3px solid #818cf8; /* indigo-400 */
             width: 20px;
             height: 20px;
             animation: spin 1s linear infinite;
         }
+
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-
-        /* Debug Panel */
-        #debug-panel {
-            position: fixed; bottom: 0; left: 0; width: 100%; height: 25vh;
-            background-color: #000000; color: #10b981; /* emerald-500 */
-            font-family: 'Courier New', Courier, monospace; z-index: 40;
-            overflow-y: auto; padding: 12px; font-size: 13px;
-            border-top: 1px solid #374151; /* gray-700 */
-        }
-        #debug-panel .log-error { color: #ef4444; } /* red-500 */
-        #debug-panel .log-warn { color: #f59e0b; } /* amber-500 */
-        #debug-panel .log-info { color: #3b82f6; } /* blue-500 */
-        #debug-panel::-webkit-scrollbar { width: 8px; }
-        #debug-panel::-webkit-scrollbar-track { background: #111; }
-        #debug-panel::-webkit-scrollbar-thumb { background: #374151; border-radius: 4px; }
-
-        /* Toast Animations */
-        @keyframes slideIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
-        @keyframes fadeOut { from { opacity: 1; } to { opacity: 0; } }
-        .toast-enter { animation: slideIn 0.3s cubic-bezier(0.4, 0, 0.2, 1) forwards; }
-        .toast-exit { animation: fadeOut 0.3s forwards; }
-
-        /* Modal Backdrop Fade */
-        .modal-backdrop { background: rgba(0, 0, 0, 0.75); backdrop-filter: blur(4px); }
     </style>
 </head>
-<body class="antialiased selection:bg-indigo-500 selection:text-white">
+<body>
+
+    <!-- 頂部導覽列 -->
+    <header>
+        <div class="logo">
+            <i class="fas fa-link"></i> Smart Link Manager
+        </div>
+        <div class="header-actions">
+            <span id="user-info" style="display: none; color: var(--text-muted); font-size: 0.9rem;"></span>
+            <button class="btn-outline" onclick="openApiSettings()"><i class="fas fa-cog"></i> API 設定</button>
+            <button class="btn-outline" id="btn-logout" style="display: none;" onclick="handleLogout()"><i class="fas fa-sign-out-alt"></i> 登出</button>
+        </div>
+    </header>
 
     <!-- 登入畫面 -->
-    <div id="auth-overlay" class="fixed inset-0 z-50 flex items-center justify-center modal-backdrop transition-opacity duration-300" style="bottom: 25vh;">
-        <div class="bg-gray-900 border border-gray-800 rounded-2xl shadow-2xl p-8 max-w-md w-full mx-4 relative overflow-hidden">
-            <!-- Decorative gradient -->
-            <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500"></div>
+    <main id="login-screen">
+        <div class="login-card">
+            <h2>歡迎回來</h2>
+            <p>使用 Gemini AI 自動解析您的連結內容、分類與地點資訊。</p>
             
-            <div class="text-center mb-8 mt-2">
-                <div class="inline-flex items-center justify-center w-16 h-16 rounded-full bg-gray-800 text-indigo-400 mb-4 border border-gray-700 shadow-inner">
-                    <i class="fa-solid fa-link text-2xl"></i>
-                </div>
-                <h2 class="text-3xl font-bold text-white mb-2">智能連結</h2>
-                <p class="text-gray-400 text-sm">自動解析與整理您的收藏連結 (深色模式)</p>
-            </div>
-            
-            <div class="space-y-4">
-                <!-- 高亮主要按鈕 (本機模式) -->
-                <button id="btn-local-login" class="w-full flex items-center justify-center gap-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl px-4 py-3.5 font-medium transition-all duration-200 shadow-[0_0_15px_rgba(79,70,229,0.3)] hover:shadow-[0_0_20px_rgba(79,70,229,0.5)]">
-                    <i class="fa-solid fa-hard-drive"></i>
-                    <span>直接進入 (本機測試模式)</span>
+            <div class="login-buttons">
+                <button class="btn-outline" id="btn-google-login">
+                    <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" style="width: 18px; height: 18px;">
+                    Google 登入 (雲端模式)
                 </button>
-
-                <div class="relative py-2">
-                    <div class="absolute inset-0 flex items-center"><div class="w-full border-t border-gray-800"></div></div>
-                    <div class="relative flex justify-center"><span class="bg-gray-900 px-4 text-xs text-gray-500">或</span></div>
-                </div>
-
-                <!-- 次要按鈕 (雲端模式) -->
-                <button id="btn-google-login" class="w-full flex items-center justify-center gap-3 bg-gray-800 border border-gray-700 hover:bg-gray-700 text-gray-200 rounded-xl px-4 py-3.5 font-medium transition-all duration-200">
-                    <i class="fa-brands fa-google text-red-400"></i>
-                    <span>Google 登入 (雲端模式)</span>
+                <button class="btn-primary" id="btn-local-login" style="margin-top: 10px;">
+                    <i class="fas fa-laptop"></i> 直接進入 (本機測試模式)
                 </button>
             </div>
         </div>
-    </div>
+    </main>
 
-    <!-- 主應用 -->
-    <div id="app-container" class="hidden flex-col flex-grow">
-        <!-- Header -->
-        <header class="glass-panel sticky top-0 z-40">
-            <div class="container mx-auto px-4 max-w-7xl h-16 flex items-center justify-between">
-                <div class="flex items-center gap-3">
-                    <div class="w-9 h-9 rounded-lg bg-indigo-600 flex items-center justify-center text-white shadow-[0_0_10px_rgba(79,70,229,0.4)]">
-                        <i class="fa-solid fa-bolt text-sm"></i>
-                    </div>
-                    <h1 class="text-xl font-bold text-white hidden sm:block tracking-wide">SmartLinks</h1>
-                    <span id="mode-badge" class="ml-2 text-[10px] bg-gray-800 border border-gray-700 text-gray-300 px-2.5 py-1 rounded-full font-semibold">本機模式</span>
-                </div>
-                
-                <div class="flex items-center gap-2 sm:gap-4">
-                    <button id="btn-open-settings" class="text-gray-400 hover:text-indigo-400 p-2 rounded-lg hover:bg-gray-800 transition-colors" title="API 設定">
-                        <i class="fa-solid fa-gear text-lg"></i>
-                    </button>
-                    <div class="hidden sm:flex items-center gap-2 text-sm text-gray-300 bg-gray-800 border border-gray-700 px-3 py-1.5 rounded-full">
-                        <i class="fa-regular fa-face-smile-beam text-indigo-400"></i>
-                        <span id="user-name">測試人員</span>
-                    </div>
-                    <button id="btn-logout" class="text-gray-400 hover:text-red-400 p-2 rounded-lg hover:bg-gray-800 transition-colors" title="登出">
-                        <i class="fa-solid fa-sign-out-alt text-lg"></i>
-                    </button>
-                </div>
-            </div>
-        </header>
-
-        <!-- Main Content -->
-        <main class="flex-grow container mx-auto px-4 max-w-7xl py-8">
-            <!-- 新增連結 -->
-            <div class="bg-gray-900 rounded-2xl shadow-lg border border-gray-800 p-6 mb-10 relative overflow-hidden">
-                <div class="absolute -right-10 -top-10 w-40 h-40 bg-indigo-600 opacity-5 blur-3xl rounded-full"></div>
-                <h3 class="text-gray-100 font-semibold mb-4 flex items-center gap-2"><i class="fa-solid fa-wand-magic-sparkles text-indigo-400"></i> AI 智能解析</h3>
-                <form id="add-link-form">
-                    <div class="flex flex-col sm:flex-row gap-3">
-                        <div class="relative flex-grow">
-                            <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-gray-500">
-                                <i class="fa-solid fa-link"></i>
-                            </div>
-                            <input type="url" id="url-input" required placeholder="貼上 YouTube, FB, IG, Maps 或任何網址..." 
-                                class="w-full pl-11 pr-4 py-3.5 bg-gray-950 border border-gray-700 rounded-xl text-gray-100 placeholder-gray-500 focus:bg-gray-900 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 focus:outline-none transition-all">
-                        </div>
-                        <button type="submit" id="btn-submit-link" class="bg-indigo-600 hover:bg-indigo-500 text-white px-8 py-3.5 rounded-xl font-medium transition-all flex items-center justify-center gap-2 min-w-[150px] shadow-[0_4px_14px_0_rgba(79,70,229,0.39)] hover:shadow-[0_6px_20px_rgba(79,70,229,0.23)]">
-                            <span id="btn-text">自動解析並儲存</span>
-                            <div id="btn-spinner" class="spinner hidden"></div>
-                        </button>
-                    </div>
-                </form>
-            </div>
-
-            <!-- 列表 -->
-            <div>
-                <div class="flex items-center justify-between mb-6">
-                    <h2 class="text-xl font-bold text-white flex items-center gap-2">
-                        <i class="fa-regular fa-folder-open text-gray-500"></i> 我的收藏
-                    </h2>
-                    <span id="link-count" class="bg-gray-800 border border-gray-700 text-indigo-400 text-xs font-semibold px-3 py-1 rounded-full shadow-inner">0</span>
-                </div>
-                
-                <div id="empty-state" class="hidden flex-col items-center justify-center py-20 text-center bg-gray-900/50 rounded-2xl border border-dashed border-gray-700">
-                    <div class="w-16 h-16 bg-gray-800 rounded-full flex items-center justify-center mb-4">
-                        <i class="fa-solid fa-inbox text-2xl text-gray-500"></i>
-                    </div>
-                    <h3 class="text-gray-300 font-medium text-lg">目前尚無任何連結</h3>
-                    <p class="text-gray-500 text-sm mt-2 max-w-xs">將網址貼到上方的輸入框，交由 AI 幫您自動解析與分類吧！</p>
-                </div>
-
-                <div id="links-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    <!-- Cards injected by JS -->
-                </div>
-            </div>
-        </main>
-    </div>
-
-    <!-- Firebase 警告 Modal -->
-    <div id="firebase-modal" class="hidden fixed inset-0 z-[70] flex items-center justify-center modal-backdrop" style="bottom: 25vh;">
-        <div class="bg-gray-900 border border-gray-700 rounded-2xl shadow-2xl w-full max-w-sm mx-4 overflow-hidden transform transition-all">
-            <div class="p-6 text-center">
-                <div class="w-16 h-16 bg-red-500/10 rounded-full flex items-center justify-center mx-auto mb-4 border border-red-500/20">
-                    <i class="fa-solid fa-triangle-exclamation text-3xl text-red-500"></i>
-                </div>
-                <h3 class="text-xl font-bold text-white mb-2">需要設定 Firebase</h3>
-                <p class="text-sm text-gray-400 mb-6">目前系統使用的是預設的假金鑰 (YOUR_API_KEY)。<br>若要啟用雲端功能，請下載原始碼並填入您自己的 Firebase 設定。</p>
-                <button id="btn-close-firebase-modal" class="w-full bg-gray-800 hover:bg-gray-700 text-white font-medium py-2.5 rounded-lg border border-gray-600 transition-colors">
-                    了解
-                </button>
-            </div>
+    <!-- 主應用畫面 -->
+    <main id="app-screen">
+        <div class="input-section">
+            <input type="text" id="url-input" placeholder="貼上任何連結 (支援 FB, YT, IG, Threads, Google Maps)...">
+            <button class="btn-primary" id="btn-add-url" onclick="processAndSaveUrl()">
+                <span class="btn-text">解析並儲存</span>
+                <div class="loader" id="add-loader"></div>
+            </button>
         </div>
-    </div>
-
-    <!-- 刪除確認 Modal -->
-    <div id="delete-modal" class="hidden fixed inset-0 z-[70] flex items-center justify-center modal-backdrop" style="bottom: 25vh;">
-        <div class="bg-gray-900 border border-gray-700 rounded-2xl shadow-2xl w-full max-w-sm mx-4 overflow-hidden">
-            <div class="p-6">
-                <h3 class="text-lg font-bold text-white mb-2"><i class="fa-solid fa-trash-can text-red-500 mr-2"></i>確認刪除</h3>
-                <p class="text-sm text-gray-400 mb-6">您確定要刪除這個連結嗎？此操作無法復原。</p>
-                <div class="flex justify-end gap-3">
-                    <button id="btn-cancel-delete" class="px-4 py-2 text-gray-300 hover:bg-gray-800 rounded-lg font-medium transition-colors">取消</button>
-                    <button id="btn-confirm-delete" class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg font-medium transition-colors shadow-lg shadow-red-600/20">
-                        確定刪除
-                    </button>
-                </div>
-            </div>
+        
+        <div class="links-grid" id="links-container">
+            <!-- 連結卡片會動態生成在這裡 -->
         </div>
-    </div>
+    </main>
 
     <!-- API 設定 Modal -->
-    <div id="settings-modal" class="hidden fixed inset-0 z-[60] flex items-center justify-center modal-backdrop" style="bottom: 25vh;">
-        <div class="bg-gray-900 border border-gray-700 rounded-2xl shadow-2xl w-full max-w-md mx-4 overflow-hidden">
-            <div class="px-6 py-4 border-b border-gray-800 flex justify-between items-center bg-gray-850">
-                <h3 class="font-bold text-white"><i class="fa-solid fa-key text-indigo-400 mr-2"></i>API 金鑰設定</h3>
-                <button id="btn-close-settings" class="text-gray-500 hover:text-white transition-colors"><i class="fa-solid fa-times"></i></button>
+    <div class="modal-overlay" id="api-modal">
+        <div class="modal">
+            <h3>⚙️ 系統設定</h3>
+            <div class="form-group">
+                <label>Gemini API Key</label>
+                <input type="password" id="api-key-input" placeholder="AIzaSy...">
+                <p style="font-size: 0.8rem; color: var(--text-muted); margin-top: 0.5rem;">金鑰將安全地儲存在您的瀏覽器中。沒有金鑰也能使用，但無法自動解析網址。</p>
             </div>
-            <div class="p-6">
-                <label class="block text-sm font-medium text-gray-300 mb-2">Gemini API Key (2.5 Flash)</label>
-                <input type="password" id="api-key-input" placeholder="AIzaSy..." class="w-full px-4 py-3 bg-gray-950 border border-gray-700 text-white rounded-xl focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 focus:outline-none mb-3">
-                <p class="text-xs text-gray-500 mb-6 bg-gray-800/50 p-3 rounded-lg border border-gray-800">
-                    <i class="fa-solid fa-circle-info mr-1"></i> 金鑰將僅儲存在您的瀏覽器中 (localStorage)。若遇到 403 錯誤，請填入有效的金鑰。
-                </p>
-                <div class="flex justify-end gap-3">
-                    <button id="btn-save-settings" class="bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-2.5 rounded-xl font-medium shadow-lg shadow-indigo-500/20 transition-colors">儲存設定</button>
-                </div>
+            <div class="modal-actions">
+                <button class="btn-outline" onclick="closeModal('api-modal')">取消</button>
+                <button class="btn-primary" onclick="saveApiKey()">儲存設定</button>
             </div>
         </div>
     </div>
 
     <!-- 編輯連結 Modal -->
-    <div id="edit-modal" class="hidden fixed inset-0 z-[60] flex items-center justify-center modal-backdrop" style="bottom: 25vh;">
-        <div class="bg-gray-900 border border-gray-700 rounded-2xl shadow-2xl w-full max-w-lg mx-4 overflow-hidden flex flex-col max-h-[70vh]">
-            <div class="px-6 py-4 border-b border-gray-800 flex justify-between items-center bg-gray-850">
-                <h3 class="font-bold text-white"><i class="fa-solid fa-pen-to-square text-indigo-400 mr-2"></i>編輯連結資訊</h3>
-                <button id="btn-close-edit" class="text-gray-500 hover:text-white transition-colors"><i class="fa-solid fa-times"></i></button>
+    <div class="modal-overlay" id="edit-modal">
+        <div class="modal">
+            <h3>✏️ 編輯連結</h3>
+            <input type="hidden" id="edit-id">
+            <div class="form-group">
+                <label>標題</label>
+                <input type="text" id="edit-title">
             </div>
-            <div class="p-6 overflow-y-auto space-y-4 custom-scrollbar">
-                <input type="hidden" id="edit-id">
-                <div>
-                    <label class="block text-xs font-medium text-gray-400 mb-1.5">標題</label>
-                    <input type="text" id="edit-title" class="w-full px-3 py-2.5 bg-gray-950 border border-gray-700 text-white rounded-lg focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 focus:outline-none">
-                </div>
-                <div>
-                    <label class="block text-xs font-medium text-gray-400 mb-1.5">網址</label>
-                    <input type="url" id="edit-url" class="w-full px-3 py-2.5 bg-gray-800 border border-gray-700 text-gray-300 rounded-lg outline-none cursor-not-allowed opacity-70" readonly>
-                </div>
-                <div class="grid grid-cols-2 gap-4">
-                    <div>
-                        <label class="block text-xs font-medium text-gray-400 mb-1.5">分類標籤</label>
-                        <input type="text" id="edit-category" class="w-full px-3 py-2.5 bg-gray-950 border border-gray-700 text-white rounded-lg focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 focus:outline-none">
-                    </div>
-                    <div>
-                        <label class="block text-xs font-medium text-gray-400 mb-1.5">地點名稱 (選填)</label>
-                        <input type="text" id="edit-location" class="w-full px-3 py-2.5 bg-gray-950 border border-gray-700 text-white rounded-lg focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 focus:outline-none">
-                    </div>
-                </div>
-                <div>
-                    <label class="block text-xs font-medium text-gray-400 mb-1.5">摘要描述</label>
-                    <textarea id="edit-summary" rows="3" class="w-full px-3 py-2.5 bg-gray-950 border border-gray-700 text-white rounded-lg focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 focus:outline-none resize-none"></textarea>
-                </div>
+            <div class="form-group">
+                <label>網址</label>
+                <input type="text" id="edit-url">
             </div>
-            <div class="px-6 py-4 border-t border-gray-800 bg-gray-850 flex justify-end gap-3">
-                <button id="btn-cancel-edit" class="px-5 py-2.5 text-gray-300 hover:bg-gray-800 rounded-xl font-medium transition-colors">取消</button>
-                <button id="btn-save-edit" class="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-2.5 rounded-xl font-medium flex items-center gap-2 shadow-lg shadow-indigo-500/20 transition-colors">
-                    儲存變更
-                </button>
+            <div class="form-group">
+                <label>分類 (如: 美食、景點、影片)</label>
+                <input type="text" id="edit-category">
+            </div>
+            <div class="form-group">
+                <label>摘要說明</label>
+                <textarea id="edit-desc"></textarea>
+            </div>
+            <div class="modal-actions">
+                <button class="btn-outline" onclick="closeModal('edit-modal')">取消</button>
+                <button class="btn-primary" onclick="saveEdit()">儲存變更</button>
             </div>
         </div>
     </div>
 
-    <!-- Toast 通知容器 -->
-    <div id="toast-container" class="fixed top-5 right-5 z-[100] flex flex-col gap-3 pointer-events-none"></div>
+    <!-- Toast 容器 -->
+    <div id="toast-container"></div>
 
-    <!-- Debug Log Panel -->
-    <div id="debug-panel">
-        <div class="flex justify-between items-center mb-3 border-b border-gray-700 pb-2 sticky top-0 bg-black">
-            <span class="font-bold text-gray-300 flex items-center gap-2">
-                <i class="fa-solid fa-terminal"></i> 系統日誌 (Debug Log)
-            </span>
-            <button onclick="document.getElementById('debug-content').innerHTML=''" class="text-xs bg-gray-800 hover:bg-gray-700 px-3 py-1.5 rounded-md text-gray-300 border border-gray-600 transition-colors">清除日誌</button>
-        </div>
-        <div id="debug-content" class="space-y-1.5 pb-4"></div>
-    </div>
+    <!-- Firebase SDK (v9 compat) -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore-compat.js"></script>
 
     <script>
-        // --- 1. 攔截 Console 輸出到 UI ---
-        const debugContent = document.getElementById('debug-content');
-        function appendLog(type, args) {
-            const msg = Array.from(args).map(arg => typeof arg === 'object' ? JSON.stringify(arg) : arg).join(' ');
-            const div = document.createElement('div');
-            div.className = type === 'error' ? 'log-error font-bold' : type === 'warn' ? 'log-warn' : 'log-info';
-            div.textContent = `[${new Date().toLocaleTimeString('zh-TW', { hour12: false })}] ${msg}`;
-            debugContent.appendChild(div);
-            const panel = document.getElementById('debug-panel');
-            panel.scrollTop = panel.scrollHeight;
-        }
-        ['log', 'error', 'warn', 'info'].forEach(method => {
-            const original = console[method];
-            console[method] = function() { appendLog(method, arguments); original.apply(console, arguments); };
-        });
-        console.log("🚀 系統啟動，深色模式初始化完成。");
-
-        // --- 2. 自訂 Toast 通知系統 (取代 alert) ---
-        window.showToast = (message, type = 'info') => {
-            const container = document.getElementById('toast-container');
-            const toast = document.createElement('div');
-            
-            let bgColor = 'bg-gray-800 border-gray-700';
-            let iconColor = 'text-blue-400';
-            let icon = 'fa-info-circle';
-
-            if (type === 'error') { bgColor = 'bg-red-900/90 border-red-800'; iconColor = 'text-red-400'; icon = 'fa-triangle-exclamation'; }
-            else if (type === 'success') { bgColor = 'bg-emerald-900/90 border-emerald-800'; iconColor = 'text-emerald-400'; icon = 'fa-check-circle'; }
-            else if (type === 'warn') { bgColor = 'bg-amber-900/90 border-amber-800'; iconColor = 'text-amber-400'; icon = 'fa-exclamation-circle'; }
-            
-            toast.className = `toast-enter ${bgColor} border text-gray-100 px-4 py-3.5 rounded-xl shadow-[0_8px_30px_rgb(0,0,0,0.5)] flex items-center gap-3 text-sm font-medium pointer-events-auto backdrop-blur-md`;
-            toast.innerHTML = `<i class="fa-solid ${icon} ${iconColor} text-lg"></i> <span>${message}</span>`;
-            
-            container.appendChild(toast);
-            setTimeout(() => {
-                toast.classList.replace('toast-enter', 'toast-exit');
-                setTimeout(() => toast.remove(), 300);
-            }, 3500);
+        // ==========================================
+        // 1. 系統狀態與設定
+        // ==========================================
+        
+        // ★ 已經為您填入專屬的 Firebase 金鑰 ★
+        const firebaseConfig = {
+            apiKey: "AIzaSyAt0YAxzPbFZHyLKQLN1me3N9DQKnCrylg",
+            authDomain: "link-1b206.firebaseapp.com",
+            projectId: "link-1b206",
+            // 下方為推算的安全預設值，不影響 Auth/Firestore 核心功能
+            storageBucket: "link-1b206.appspot.com", 
+            messagingSenderId: "123456789",
+            appId: "1:123456789:web:abcdef"
         };
 
-        // --- 3. 全域狀態與假 Firebase 設定 ---
-        let linksData = []; 
-        let itemToDeleteId = null;
+        let app, auth, db;
+        let currentUser = null;
+        let isLocalMode = false;
+
+        // 初始化 Firebase (如果金鑰有效)
+        try {
+            app = firebase.initializeApp(firebaseConfig);
+            auth = firebase.auth();
+            db = firebase.firestore();
+        } catch (e) {
+            console.error("Firebase 初始化失敗:", e);
+        }
+
+        // ==========================================
+        // 2. UI 工具函數 (Toast & Modal)
+        // ==========================================
+        function showToast(message, type = 'info') {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            toast.className = `toast ${type}`;
+            
+            let icon = 'info-circle';
+            if (type === 'error') icon = 'exclamation-circle';
+            if (type === 'success') icon = 'check-circle';
+            
+            toast.innerHTML = `<i class="fas fa-${icon}"></i> ${message}`;
+            container.appendChild(toast);
+
+            setTimeout(() => {
+                toast.style.animation = 'fadeOut 0.3s ease forwards';
+                setTimeout(() => toast.remove(), 300);
+            }, 3000);
+        }
+
+        function openModal(id) { document.getElementById(id).style.display = 'flex'; }
+        function closeModal(id) { document.getElementById(id).style.display = 'none'; }
+
+        // ==========================================
+        // 3. 認證與模式切換
+        // ==========================================
         
-        // 模擬的 Firebase Config，用來觸發 Modal 警告
-        const dummyFirebaseConfig = { apiKey: 'YOUR_API_KEY' };
-
-        document.addEventListener('DOMContentLoaded', () => {
-            // UI 元素綁定
-            const ui = {
-                authOverlay: document.getElementById('auth-overlay'),
-                appContainer: document.getElementById('app-container'),
-                btnLocal: document.getElementById('btn-local-login'),
-                btnGoogle: document.getElementById('btn-google-login'),
-                btnLogout: document.getElementById('btn-logout'),
-                form: document.getElementById('add-link-form'),
-                urlInput: document.getElementById('url-input'),
-                btnSubmit: document.getElementById('btn-submit-link'),
-                grid: document.getElementById('links-grid'),
-                emptyState: document.getElementById('empty-state'),
-                linkCount: document.getElementById('link-count'),
-                
-                // Modals
-                settingsModal: document.getElementById('settings-modal'),
-                firebaseModal: document.getElementById('firebase-modal'),
-                deleteModal: document.getElementById('delete-modal'),
-                editModal: document.getElementById('edit-modal'),
-                
-                // Modal Buttons
-                btnOpenSettings: document.getElementById('btn-open-settings'),
-                btnCloseSettings: document.getElementById('btn-close-settings'),
-                btnSaveSettings: document.getElementById('btn-save-settings'),
-                apiKeyInput: document.getElementById('api-key-input'),
-                btnCloseFirebase: document.getElementById('btn-close-firebase-modal'),
-                btnCancelDelete: document.getElementById('btn-cancel-delete'),
-                btnConfirmDelete: document.getElementById('btn-confirm-delete'),
-                
-                // Edit Inputs
-                btnCloseEdit: document.getElementById('btn-close-edit'),
-                btnCancelEdit: document.getElementById('btn-cancel-edit'),
-                btnSaveEdit: document.getElementById('btn-save-edit'),
-                editInputs: {
-                    id: document.getElementById('edit-id'),
-                    title: document.getElementById('edit-title'),
-                    url: document.getElementById('edit-url'),
-                    category: document.getElementById('edit-category'),
-                    location: document.getElementById('edit-location'),
-                    summary: document.getElementById('edit-summary')
-                }
-            };
-
-            // --- 4. 登入邏輯 ---
-            
-            // Google 登入 (阻擋並顯示 Modal)
-            ui.btnGoogle.addEventListener('click', () => {
-                if (dummyFirebaseConfig.apiKey === 'YOUR_API_KEY') {
-                    console.warn("偵測到無效的 Firebase API Key");
-                    ui.firebaseModal.classList.remove('hidden');
+        // 監聽 Firebase 登入狀態
+        if(auth) {
+            auth.onAuthStateChanged(user => {
+                if (user) {
+                    currentUser = user;
+                    isLocalMode = false;
+                    showAppScreen(`已登入: ${user.email || 'Google 用戶'}`);
+                    loadLinks();
                 }
             });
-            ui.btnCloseFirebase.addEventListener('click', () => ui.firebaseModal.classList.add('hidden'));
+        }
 
-            // 本機登入 (主要流程)
-            ui.btnLocal.addEventListener('click', () => {
-                console.log("切換至本機測試模式...");
-                ui.authOverlay.classList.add('hidden');
-                ui.appContainer.classList.remove('hidden');
-                ui.appContainer.classList.add('flex');
-                loadLocalData();
-                window.showToast("已進入本機模式，資料將儲存於瀏覽器", "success");
-            });
-
-            // 登出
-            ui.btnLogout.addEventListener('click', () => {
-                ui.appContainer.classList.add('hidden');
-                ui.appContainer.classList.remove('flex');
-                ui.authOverlay.classList.remove('hidden');
-            });
-
-            // --- 5. API 設定邏輯 ---
-            const getApiKey = () => localStorage.getItem('geminiApiKey_v2') || '';
-            
-            ui.btnOpenSettings.addEventListener('click', () => {
-                ui.apiKeyInput.value = getApiKey();
-                ui.settingsModal.classList.remove('hidden');
-            });
-            const closeSettings = () => ui.settingsModal.classList.add('hidden');
-            ui.btnCloseSettings.addEventListener('click', closeSettings);
-            ui.btnSaveSettings.addEventListener('click', () => {
-                const val = ui.apiKeyInput.value.trim();
-                localStorage.setItem('geminiApiKey_v2', val);
-                closeSettings();
-                window.showToast("API 金鑰已更新", "success");
-                console.log("API Key 設定已儲存");
-            });
-
-            // --- 6. 核心功能：Gemini 2.5 Flash 解析網址 ---
-            async function parseUrlWithGemini(url) {
-                console.log(`開始使用 Gemini 解析網址: ${url}`);
-                const apiKeyToUse = getApiKey();
-                
-                // 使用最新的 2.5 Flash 模型
-                const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKeyToUse}`;
-                
-                const prompt = `你是一個智能網址分析助理。請分析以下網址: "${url}"。
-特別注意：如果網址屬於 Facebook, YouTube, Instagram, Threads 或 Google Maps，請嘗試從網址字串本身的結構、路徑或參數來推測內容(例如從 Maps 網址中擷取經緯度或地點名稱，從 IG 擷取帳號名稱)。
-
-請務必只回傳純 JSON 格式的物件，不要包含 markdown 標籤(如 \`\`\`json)，也不要加上任何額外文字。
-JSON 必須嚴格包含以下欄位：
-{
-  "title": "根據網址推測的標題(繁體中文)",
-  "url": "${url}",
-  "category": "分類(如: 影音、社群、餐廳、地標、文章，若無法判斷請填 '未分類')",
-  "location": "若為地圖或有地理資訊則填入地點，否則填空字串",
-  "summary": "一句簡短的繁體中文摘要描述"
-}`;
-
-                try {
-                    if(!apiKeyToUse) {
-                        throw new Error("API_KEY_MISSING");
-                    }
-
-                    const response = await fetch(apiUrl, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({
-                            contents: [{ parts: [{ text: prompt }] }],
-                            generationConfig: { temperature: 0.2 } // 低溫度確保 JSON 穩定性
-                        })
-                    });
-
-                    if (response.status === 403) throw new Error("403_FORBIDDEN");
-                    if (!response.ok) throw new Error(`HTTP_${response.status}`);
-                    
-                    const data = await response.json();
-                    let text = data.candidates?.[0]?.content?.parts?.[0]?.text || "";
-                    
-                    // 嚴格擷取 JSON 區塊，過濾掉 AI 可能多嘴的文字或 Markdown
-                    const jsonMatch = text.match(/\{[\s\S]*\}/);
-                    if (!jsonMatch) throw new Error("JSON_PARSE_ERROR");
-                    
-                    const parsed = JSON.parse(jsonMatch[0]);
-                    console.log("Gemini 解析成功:", parsed);
-                    return parsed;
-
-                } catch (error) {
-                    console.error("Gemini 解析發生例外狀況:", error.message);
-                    
-                    // Fallback 容錯機制 (不會中斷系統)
-                    let errToastMsg = "AI 解析失敗，已套用預設值。";
-                    if(error.message === "API_KEY_MISSING") errToastMsg = "未設定 API Key，套用基本解析。請至右上角設定。";
-                    if(error.message === "403_FORBIDDEN") errToastMsg = "API Key 權限不足(403)，套用基本解析。";
-                    
-                    window.showToast(errToastMsg, "warn");
-                    
-                    console.log("執行本地 Fallback 解析規則...");
-                    let title = '未知連結', loc = '', cat = '未分類', summary = '無詳細資訊';
-                    const lowerUrl = url.toLowerCase();
-                    if (lowerUrl.includes('youtu')) { title = 'YouTube 影片'; cat = '影音'; }
-                    else if (lowerUrl.includes('facebook') || lowerUrl.includes('fb.com')) { title = 'Facebook 連結'; cat = '社群'; }
-                    else if (lowerUrl.includes('instagram')) { title = 'Instagram 連結'; cat = '社群'; }
-                    else if (lowerUrl.includes('map') && lowerUrl.includes('google')) { title = 'Google 地圖'; cat = '地標'; loc = '地圖位置'; }
-                    
-                    return { title, url, category: cat, location: loc, summary };
-                }
-            }
-
-            // 新增連結 Event
-            ui.form.addEventListener('submit', async (e) => {
-                e.preventDefault();
-                const url = ui.urlInput.value.trim();
-                if (!url) return;
-
-                // UI 讀取狀態
-                ui.btnSubmit.disabled = true; ui.urlInput.disabled = true;
-                document.getElementById('btn-text').classList.add('hidden');
-                document.getElementById('btn-spinner').classList.remove('hidden');
-
-                try {
-                    const parsedData = await parseUrlWithGemini(url);
-                    const newDoc = {
-                        id: 'link_' + Date.now(),
-                        originalUrl: url,
-                        title: parsedData.title || '無標題',
-                        location: parsedData.location || '',
-                        category: parsedData.category || '未分類',
-                        summary: parsedData.summary || '',
-                        createdAt: Date.now()
-                    };
-
-                    linksData.unshift(newDoc);
-                    saveLocalData();
-                    renderLinks();
-                    window.showToast("連結儲存成功", "success");
-                    ui.urlInput.value = '';
-                } catch (e) {
-                    console.error("儲存流程發生重大錯誤:", e);
-                    window.showToast("系統發生錯誤，無法儲存", "error");
-                } finally {
-                    // 恢復 UI 狀態
-                    ui.btnSubmit.disabled = false; ui.urlInput.disabled = false;
-                    document.getElementById('btn-text').classList.remove('hidden');
-                    document.getElementById('btn-spinner').classList.add('hidden');
-                    ui.urlInput.focus();
-                }
-            });
-
-            // --- 7. 資料管理 (CRUD) ---
-            function loadLocalData() {
-                try {
-                    const data = localStorage.getItem('smart_links_dark');
-                    linksData = data ? JSON.parse(data) : [];
-                } catch(e) { linksData = []; console.error("讀取 localStorage 失敗"); }
-                renderLinks();
-            }
-
-            function saveLocalData() {
-                localStorage.setItem('smart_links_dark', JSON.stringify(linksData));
-            }
-
-            function renderLinks() {
-                ui.linkCount.textContent = linksData.length;
-                if (linksData.length === 0) {
-                    ui.grid.innerHTML = '';
-                    ui.emptyState.classList.remove('hidden'); ui.emptyState.classList.add('flex');
-                    return;
-                }
-                ui.emptyState.classList.add('hidden'); ui.emptyState.classList.remove('flex');
-                
-                ui.grid.innerHTML = linksData.map(link => {
-                    let cat = link.category || '未分類';
-                    // Determine icon based on URL or Title
-                    let icon = 'fa-link', iconColor = 'text-gray-400', badgeColor = 'bg-gray-800 text-gray-300 border-gray-700';
-                    const lowerStr = (link.originalUrl + link.title).toLowerCase();
-                    
-                    if (lowerStr.includes('youtu')) { icon = 'fa-youtube'; iconColor = 'text-red-500'; badgeColor = 'bg-red-950 text-red-400 border-red-900'; }
-                    else if (lowerStr.includes('facebook') || lowerStr.includes('fb.')) { icon = 'fa-facebook'; iconColor = 'text-blue-500'; badgeColor = 'bg-blue-950 text-blue-400 border-blue-900'; }
-                    else if (lowerStr.includes('instagram')) { icon = 'fa-instagram'; iconColor = 'text-pink-500'; badgeColor = 'bg-pink-950 text-pink-400 border-pink-900'; }
-                    else if (lowerStr.includes('threads')) { icon = 'fa-at'; iconColor = 'text-white'; badgeColor = 'bg-gray-800 text-white border-gray-600'; }
-                    else if (lowerStr.includes('map')) { icon = 'fa-map-location-dot'; iconColor = 'text-emerald-500'; badgeColor = 'bg-emerald-950 text-emerald-400 border-emerald-900'; }
-
-                    // Escape data for inline handler
-                    const safeData = encodeURIComponent(JSON.stringify(link));
-
-                    return `
-                        <div class="bg-gray-900 rounded-2xl p-5 border border-gray-800 shadow-sm card-hover relative flex flex-col group">
-                            <div class="absolute top-4 right-4 flex gap-2">
-                                <span class="${badgeColor} border text-[10px] font-bold px-2.5 py-1 rounded-md flex items-center gap-1.5 shadow-sm">
-                                    <i class="${icon.includes('fa-') && !icon.includes('link') && !icon.includes('map') && !icon.includes('at') ? 'fa-brands' : 'fa-solid'} ${icon}"></i> 
-                                    ${cat}
-                                </span>
-                            </div>
-                            
-                            <!-- Hover Actions -->
-                            <div class="absolute -top-3 -right-3 flex gap-1.5 opacity-0 group-hover:opacity-100 transition-all duration-200 z-10">
-                                <button onclick="window.openEditModal('${safeData}')" class="w-9 h-9 bg-gray-800 border border-gray-700 rounded-full text-indigo-400 hover:bg-gray-700 hover:text-indigo-300 shadow-lg flex items-center justify-center transition-colors" title="編輯">
-                                    <i class="fa-solid fa-pen text-xs"></i>
-                                </button>
-                                <button onclick="window.openDeleteModal('${link.id}')" class="w-9 h-9 bg-gray-800 border border-gray-700 rounded-full text-red-400 hover:bg-red-900/50 hover:text-red-300 shadow-lg flex items-center justify-center transition-colors" title="刪除">
-                                    <i class="fa-solid fa-trash-can text-xs"></i>
-                                </button>
-                            </div>
-
-                            <div class="mt-5 flex-grow">
-                                <h3 class="text-base font-semibold text-gray-100 line-clamp-2 mb-2.5 pr-14 leading-snug">${link.title}</h3>
-                                ${link.location ? `<p class="text-sm text-emerald-400 mb-2 font-medium flex items-center gap-1.5"><i class="fa-solid fa-location-dot text-xs"></i> ${link.location}</p>` : ''}
-                                <p class="text-sm text-gray-400 line-clamp-3 mt-1 leading-relaxed">${link.summary}</p>
-                            </div>
-
-                            <div class="mt-5 pt-4 border-t border-gray-800">
-                                <a href="${link.originalUrl}" target="_blank" rel="noopener noreferrer" class="w-full flex items-center justify-center gap-2 text-sm text-indigo-400 bg-gray-800/50 hover:bg-gray-800 border border-transparent hover:border-gray-700 py-2.5 rounded-xl transition-all font-medium">
-                                    開啟連結 <i class="fa-solid fa-arrow-up-right-from-square text-xs"></i>
-                                </a>
-                            </div>
-                        </div>
-                    `;
-                }).join('');
-            }
-
-            // --- 8. Modal 處理 (取代 confirm) ---
-            
-            // 開啟刪除確認框
-            window.openDeleteModal = (id) => {
-                itemToDeleteId = id;
-                ui.deleteModal.classList.remove('hidden');
-            };
-            
-            // 取消刪除
-            ui.btnCancelDelete.addEventListener('click', () => {
-                itemToDeleteId = null;
-                ui.deleteModal.classList.add('hidden');
-            });
-
-            // 確認刪除
-            ui.btnConfirmDelete.addEventListener('click', () => {
-                if (itemToDeleteId) {
-                    linksData = linksData.filter(item => item.id !== itemToDeleteId);
-                    saveLocalData();
-                    renderLinks();
-                    window.showToast("已成功刪除連結", "success");
-                }
-                itemToDeleteId = null;
-                ui.deleteModal.classList.add('hidden');
-            });
-
-            // 開啟編輯框
-            window.openEditModal = (encodedData) => {
-                const data = JSON.parse(decodeURIComponent(encodedData));
-                ui.editInputs.id.value = data.id;
-                ui.editInputs.title.value = data.title || '';
-                ui.editInputs.url.value = data.originalUrl || '';
-                ui.editInputs.category.value = data.category || '';
-                ui.editInputs.location.value = data.location || '';
-                ui.editInputs.summary.value = data.summary || '';
-                ui.editModal.classList.remove('hidden');
-            };
-
-            const closeEdit = () => ui.editModal.classList.add('hidden');
-            ui.btnCloseEdit.addEventListener('click', closeEdit);
-            ui.btnCancelEdit.addEventListener('click', closeEdit);
-
-            // 儲存編輯結果
-            ui.btnSaveEdit.addEventListener('click', () => {
-                const id = ui.editInputs.id.value;
-                const index = linksData.findIndex(item => item.id === id);
-                
-                if (index !== -1) {
-                    linksData[index] = {
-                        ...linksData[index],
-                        title: ui.editInputs.title.value.trim(),
-                        category: ui.editInputs.category.value.trim(),
-                        location: ui.editInputs.location.value.trim(),
-                        summary: ui.editInputs.summary.value.trim()
-                    };
-                    saveLocalData();
-                    renderLinks();
-                    window.showToast("資料已更新", "success");
-                }
-                closeEdit();
+        // Google 雲端登入
+        document.getElementById('btn-google-login').addEventListener('click', () => {
+            const provider = new firebase.auth.GoogleAuthProvider();
+            auth.signInWithPopup(provider).catch(error => {
+                showToast("登入失敗或被瀏覽器阻擋: " + error.message, 'error');
             });
         });
+
+        // 本機測試模式
+        document.getElementById('btn-local-login').addEventListener('click', () => {
+            isLocalMode = true;
+            currentUser = null;
+            showAppScreen("模式: 本機測試 (資料將儲存於瀏覽器)");
+            loadLinks();
+            showToast("已進入本機模式", "success");
+        });
+
+        function showAppScreen(userInfoText) {
+            document.getElementById('login-screen').style.display = 'none';
+            document.getElementById('app-screen').style.display = 'block';
+            document.getElementById('btn-logout').style.display = 'inline-flex';
+            const userInfo = document.getElementById('user-info');
+            userInfo.style.display = 'inline';
+            userInfo.textContent = userInfoText;
+        }
+
+        function handleLogout() {
+            if (isLocalMode) {
+                location.reload();
+            } else {
+                auth.signOut().then(() => location.reload());
+            }
+        }
+
+        // ==========================================
+        // 4. API 金鑰管理
+        // ==========================================
+        function openApiSettings() {
+            const savedKey = localStorage.getItem('gemini_api_key') || '';
+            document.getElementById('api-key-input').value = savedKey;
+            openModal('api-modal');
+        }
+
+        function saveApiKey() {
+            const key = document.getElementById('api-key-input').value.trim();
+            if (key) {
+                localStorage.setItem('gemini_api_key', key);
+                showToast("API 金鑰已儲存", "success");
+            } else {
+                localStorage.removeItem('gemini_api_key');
+                showToast("API 金鑰已清除");
+            }
+            closeModal('api-modal');
+        }
+
+        // ==========================================
+        // 5. Gemini 網址解析核心
+        // ==========================================
+        async function analyzeUrlWithGemini(url) {
+            const apiKey = localStorage.getItem('gemini_api_key');
+            if (!apiKey) {
+                return null; // 沒有金鑰，回傳 null 以觸發容錯機制
+            }
+
+            const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`;
+            
+            const prompt = `
+            請分析以下網址並萃取資訊。如果遇到權限阻擋無法訪問該網頁，請直接從「網址字串」本身的結構(如帳號、經緯度、地點名稱)進行推敲。
+            網址：${url}
+            
+            請嚴格以 JSON 格式回傳，不要包含 markdown 標記 (如 \`\`\`json)，只需回傳純 JSON 字串：
+            {
+                "title": "網頁標題或地點名稱或帳號名稱",
+                "category": "分類名稱(如：美食、景點、影音、社群)",
+                "description": "簡短摘要或說明"
+            }
+            `;
+
+            try {
+                const response = await fetch(endpoint, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        contents: [{ parts: [{ text: prompt }] }],
+                        generationConfig: { temperature: 0.2 } // 降低隨機性，確保 JSON 格式穩定
+                    })
+                });
+
+                if (!response.ok) throw new Error(`API 錯誤: ${response.status}`);
+
+                const data = await response.json();
+                let textResult = data.candidates[0].content.parts[0].text;
+                
+                // 正則清理：移除可能存在的 markdown ```json 標籤
+                textResult = textResult.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
+                
+                return JSON.parse(textResult);
+
+            } catch (error) {
+                console.warn("Gemini 解析失敗，將使用預設值:", error);
+                return null; // 發生任何錯誤都回傳 null，交給主流程處理
+            }
+        }
+
+        // ==========================================
+        // 6. 新增與儲存流程
+        // ==========================================
+        async function processAndSaveUrl() {
+            const input = document.getElementById('url-input');
+            const url = input.value.trim();
+            if (!url) return showToast("請輸入網址", "error");
+
+            // UI 狀態切換
+            const btn = document.getElementById('btn-add-url');
+            const loader = document.getElementById('add-loader');
+            const btnText = btn.querySelector('.btn-text');
+            btn.disabled = true;
+            btnText.style.display = 'none';
+            loader.style.display = 'block';
+
+            showToast("正在解析網址...");
+
+            // 嘗試透過 Gemini 解析
+            const aiData = await analyzeUrlWithGemini(url);
+            
+            // 準備儲存的資料物件 (加入 Fallback 容錯預設值)
+            const linkData = {
+                url: url,
+                title: aiData?.title || "新連結 (未命名)",
+                category: aiData?.category || "未分類",
+                description: aiData?.description || "無摘要 (系統無法自動解析，請點擊編輯手動修改)",
+                createdAt: new Date().toISOString()
+            };
+
+            // 寫入資料庫或本機
+            if (isLocalMode) {
+                saveToLocal(linkData);
+            } else {
+                await saveToCloud(linkData);
+            }
+
+            // 恢復 UI 狀態
+            input.value = '';
+            btn.disabled = false;
+            btnText.style.display = 'inline';
+            loader.style.display = 'none';
+            
+            showToast(aiData ? "儲存成功！已自動分類" : "儲存成功 (使用預設值)", "success");
+            loadLinks();
+        }
+
+        // ==========================================
+        // 7. 資料 CRUD 操作 (Local / Cloud 雙模式)
+        // ==========================================
+        
+        // --- 儲存 ---
+        function saveToLocal(data) {
+            const links = JSON.parse(localStorage.getItem('my_links') || '[]');
+            data.id = 'local_' + Date.now(); // 產生假 ID
+            links.unshift(data);
+            localStorage.setItem('my_links', JSON.stringify(links));
+        }
+
+        async function saveToCloud(data) {
+            if(!currentUser) return;
+            await db.collection('users').doc(currentUser.uid).collection('links').add(data);
+        }
+
+        // --- 讀取 ---
+        async function loadLinks() {
+            const container = document.getElementById('links-container');
+            container.innerHTML = '';
+            
+            let links = [];
+            
+            if (isLocalMode) {
+                links = JSON.parse(localStorage.getItem('my_links') || '[]');
+                renderLinks(links);
+            } else {
+                if(!currentUser) return;
+                db.collection('users').doc(currentUser.uid).collection('links')
+                  .orderBy('createdAt', 'desc')
+                  .onSnapshot(snapshot => {
+                      links = [];
+                      snapshot.forEach(doc => {
+                          links.push({ id: doc.id, ...doc.data() });
+                      });
+                      renderLinks(links);
+                  });
+            }
+        }
+
+        function renderLinks(links) {
+            const container = document.getElementById('links-container');
+            container.innerHTML = links.map(link => `
+                <div class="link-card" id="card-${link.id}">
+                    <div class="badge">${escapeHtml(link.category)}</div>
+                    <h3 class="link-title">${escapeHtml(link.title)}</h3>
+                    <a href="${escapeHtml(link.url)}" target="_blank" class="link-url"><i class="fas fa-external-link-alt"></i> ${escapeHtml(link.url)}</a>
+                    <p class="link-desc">${escapeHtml(link.description)}</p>
+                    <div class="card-actions">
+                        <button class="btn-outline" onclick="openEdit('${link.id}')"><i class="fas fa-edit"></i> 編輯</button>
+                        <button class="btn-danger" onclick="deleteLink('${link.id}')"><i class="fas fa-trash"></i> 刪除</button>
+                    </div>
+                </div>
+            `).join('');
+            
+            if(links.length === 0) {
+                container.innerHTML = `<p style="color:var(--text-muted); text-align:center; grid-column: 1/-1; padding: 2rem;">目前還沒有儲存任何連結。</p>`;
+            }
+        }
+
+        // --- 刪除 ---
+        async function deleteLink(id) {
+            // 這裡不再使用 confirm()，直接執行刪除並給予 Toast (您可依需求實作 Modal 確認框)
+            if (isLocalMode) {
+                let links = JSON.parse(localStorage.getItem('my_links') || '[]');
+                links = links.filter(l => l.id !== id);
+                localStorage.setItem('my_links', JSON.stringify(links));
+                loadLinks();
+            } else {
+                await db.collection('users').doc(currentUser.uid).collection('links').doc(id).delete();
+            }
+            showToast("連結已刪除", "success");
+        }
+
+        // --- 編輯 (彈出 Modal 與儲存) ---
+        let currentLinksForEdit = []; // 暫存資料供比對用
+
+        function openEdit(id) {
+            let targetLink = null;
+            if (isLocalMode) {
+                const links = JSON.parse(localStorage.getItem('my_links') || '[]');
+                targetLink = links.find(l => l.id === id);
+            } else {
+                // 雲端模式：從畫面的 DOM 中抓取資料比較快，或者您可以全域快取
+                const card = document.getElementById(`card-${id}`);
+                targetLink = {
+                    id: id,
+                    title: card.querySelector('.link-title').innerText,
+                    url: card.querySelector('.link-url').href,
+                    category: card.querySelector('.badge').innerText,
+                    description: card.querySelector('.link-desc').innerText
+                };
+            }
+
+            if(targetLink) {
+                document.getElementById('edit-id').value = targetLink.id;
+                document.getElementById('edit-title').value = targetLink.title;
+                document.getElementById('edit-url').value = targetLink.url;
+                document.getElementById('edit-category').value = targetLink.category;
+                document.getElementById('edit-desc').value = targetLink.description;
+                openModal('edit-modal');
+            }
+        }
+
+        async function saveEdit() {
+            const id = document.getElementById('edit-id').value;
+            const updatedData = {
+                title: document.getElementById('edit-title').value.trim(),
+                url: document.getElementById('edit-url').value.trim(),
+                category: document.getElementById('edit-category').value.trim(),
+                description: document.getElementById('edit-desc').value.trim()
+            };
+
+            if (isLocalMode) {
+                let links = JSON.parse(localStorage.getItem('my_links') || '[]');
+                const index = links.findIndex(l => l.id === id);
+                if(index > -1) {
+                    links[index] = { ...links[index], ...updatedData };
+                    localStorage.setItem('my_links', JSON.stringify(links));
+                }
+                loadLinks();
+            } else {
+                await db.collection('users').doc(currentUser.uid).collection('links').doc(id).update(updatedData);
+            }
+            
+            closeModal('edit-modal');
+            showToast("已儲存變更", "success");
+        }
+
+        // 防止 XSS 攻擊的工具函數
+        function escapeHtml(unsafe) {
+            if(!unsafe) return '';
+            return unsafe
+                 .replace(/&/g, "&amp;")
+                 .replace(/</g, "&lt;")
+                 .replace(/>/g, "&gt;")
+                 .replace(/"/g, "&quot;")
+                 .replace(/'/g, "&#039;");
+        }
     </script>
 </body>
 </html>
