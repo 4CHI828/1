@@ -152,7 +152,7 @@
       </div>
     </div>
 
-    <!-- 分帳結算卡片 (含公帳總計與 LINE 一鍵分享按鈕) -->
+    <!-- 分帳結算卡片 -->
     <div class="bg-gradient-to-br from-blue-50 to-blue-100/50 dark:from-slate-800/80 dark:to-blue-900/20 border border-blue-200/60 dark:border-blue-800/50 rounded-2xl p-4 shadow-sm space-y-3">
       <div class="flex items-center justify-between">
         <div class="text-[11px] font-bold text-blue-800 dark:text-blue-300 uppercase tracking-widest flex items-center gap-1">
@@ -193,7 +193,7 @@
       </div>
     </div>
 
-    <!-- 個人總計卡片 (各成員財務明細統計) -->
+    <!-- 個人總計卡片 -->
     <div id="personalStatsCard" class="hidden bg-gradient-to-br from-purple-50/80 to-indigo-50/60 dark:from-slate-800/80 dark:to-purple-900/20 border border-purple-200/60 dark:border-purple-800/50 rounded-2xl p-4 shadow-sm space-y-3">
       <div class="flex items-center justify-between">
         <div class="text-[11px] font-bold text-purple-800 dark:text-purple-300 uppercase tracking-widest flex items-center gap-1">
@@ -269,7 +269,7 @@
         <input type="text" id="title" placeholder="項目名稱 (如: 居酒屋)" class="col-span-2 border border-gray-200 dark:border-gray-600 rounded-xl px-3 py-2 text-sm bg-white dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none font-medium shadow-inner">
       </div>
 
-      <!-- 金額欄位：支援算式輸入與即時計算 -->
+      <!-- 金額欄位 -->
       <div class="grid grid-cols-5 gap-2.5">
         <select id="currency" class="col-span-2 border border-gray-200 dark:border-gray-600 rounded-xl px-2 py-2 text-xs bg-blue-50/50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300 font-bold focus:ring-2 focus:ring-blue-500 outline-none">
           <option value="TWD">TWD 台幣</option>
@@ -384,7 +384,7 @@
         </div>
       </div>
 
-      <!-- 圖表區塊 (支援：類別佔比 / 成員佔比 / 趨勢) -->
+      <!-- 圖表區塊 -->
       <div id="mainChartContainer" class="hidden mb-4 bg-white/60 dark:bg-slate-900/60 border border-gray-200/50 dark:border-gray-700/50 rounded-2xl p-4 shadow-inner">
         <div class="flex justify-between items-center text-xs font-bold text-gray-700 dark:text-gray-300 mb-2">
           <span>📊 支出圖表分析 (TWD)</span>
@@ -407,7 +407,7 @@
 
   </div>
 
-  <!-- LINE 分享選擇彈窗 (Modal) -->
+  <!-- LINE 分享選擇彈窗 -->
   <div id="lineShareModal" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 transition-opacity">
     <div class="bg-white dark:bg-gray-800 rounded-3xl p-5 max-w-sm w-full space-y-4 shadow-2xl border border-gray-100 dark:border-gray-700 text-left">
       <div class="flex items-center justify-between border-b border-gray-200 dark:border-gray-700 pb-2">
@@ -475,30 +475,6 @@
     
     let chartInstance = null;
     let currentChartMode = 'pie';
-
-    // 內嵌 Service Worker 離線快取
-    if ('serviceWorker' in navigator) {
-      window.addEventListener('load', () => {
-        const swBlob = new Blob([`
-          const CACHE_NAME = 'cloud-ledger-v2';
-          self.addEventListener('install', e => self.skipWaiting());
-          self.addEventListener('activate', e => e.waitUntil(clients.claim()));
-          self.addEventListener('fetch', e => {
-            if(e.request.url.startsWith('http') && e.request.method === 'GET' && !e.request.url.includes('googleapis.com')) {
-              e.respondWith(
-                caches.match(e.request).then(cached => cached || fetch(e.request).then(res => {
-                  return caches.open(CACHE_NAME).then(cache => {
-                    cache.put(e.request, res.clone());
-                    return res;
-                  });
-                }).catch(() => cached))
-              );
-            }
-          });
-        `], { type: 'application/javascript' });
-        navigator.serviceWorker.register(URL.createObjectURL(swBlob)).catch(()=>{});
-      });
-    }
 
     const pieOutlabelsPlugin = {
       id: 'pieOutlabels',
@@ -625,7 +601,13 @@
     });
 
     function getOfflineQueue() { return JSON.parse(localStorage.getItem("offline_mutation_queue")) || []; }
-    function saveOfflineQueue(q) { localStorage.setItem("offline_mutation_queue", JSON.stringify(q)); }
+    function saveOfflineQueue(q) { 
+      try {
+        localStorage.setItem("offline_mutation_queue", JSON.stringify(q)); 
+      } catch(e) {
+        showToast("⚠️ 本機儲存空間不足，部分離線收據已被略過", "error");
+      }
+    }
 
     async function syncOfflineQueue() {
       if (!isGoogleLoggedIn()) return;
@@ -1153,6 +1135,14 @@
     };
 
     function renderMemberControls() {
+      // 🌟 保留重繪前已輸入的自訂數值
+      const existingCustomValues = {};
+      document.querySelectorAll(".custom-split-input").forEach(input => {
+        if (input.dataset.member && input.value) {
+          existingCustomValues[input.dataset.member] = input.value;
+        }
+      });
+
       const payerEl = document.getElementById("payer");
       payerEl.innerHTML = members.length === 0 
         ? `<option value="">(尚未新增成員)</option>` 
@@ -1171,7 +1161,7 @@
             <span class="w-16 font-bold text-gray-700 dark:text-gray-200 truncate" title="${escapeHtml(m)}">${escapeHtml(m)}</span>
             <div class="relative flex-1">
               <span class="absolute left-2 top-1.5 text-gray-400 font-mono">$</span>
-              <input type="number" step="any" min="0" data-member="${escapeHtml(m)}" class="custom-split-input w-full pl-6 pr-2 py-1 border border-gray-200 dark:border-gray-600 rounded-lg bg-gray-50 dark:bg-gray-800 text-right font-mono focus:ring-2 focus:ring-blue-500 outline-none">
+              <input type="number" step="any" min="0" data-member="${escapeHtml(m)}" value="${existingCustomValues[m] || ''}" class="custom-split-input w-full pl-6 pr-2 py-1 border border-gray-200 dark:border-gray-600 rounded-lg bg-gray-50 dark:bg-gray-800 text-right font-mono focus:ring-2 focus:ring-blue-500 outline-none">
               <span id="hint_twd_${escapeHtml(m)}" class="hidden absolute right-2 -bottom-3.5 text-[9px] font-mono text-blue-500 font-bold"></span>
             </div>
             <button type="button" onclick="autoFillDifference('${escapeHtml(m)}')" class="bg-blue-50 dark:bg-blue-900/50 text-blue-600 dark:text-blue-300 font-bold px-2 py-1 rounded-lg hover:bg-blue-100 active:scale-95 transition">補滿</button>
@@ -1422,7 +1412,6 @@
       }, 600);
     });
 
-    // 🌟 修正後的 parseShares：過濾掉歷史殘留的 ($金額) 字尾，徹底避免卡片重複
     function parseShares(item) {
       const shares = {};
       const twd = Number(item.twdAmount) || 0;
@@ -2097,6 +2086,7 @@
       }
     }
 
+    // 🌟 修正後的儲存按鈕：修正自訂分帳台幣運算與防連點
     document.getElementById("saveRecordBtn").addEventListener("click", async function() {
       if (!requireGoogleLogin()) return;
       const saveBtn = this;
@@ -2134,7 +2124,9 @@
           document.querySelectorAll(".custom-split-input").forEach(i => {
             const v = parseFloat(i.value) || 0;
             if (v > 0) {
-              splitData.push(`${i.dataset.member}:${sc === "TWD" ? Math.round(v) : Math.round(v * rate)}`);
+              // 修正：統一轉為折合後之台幣整數儲存，避免重複換算
+              const twdShare = (sc === "TWD") ? Math.round(v) : Math.round(v * rate);
+              splitData.push(`${i.dataset.member}:${twdShare}`);
               sum += v;
             }
           });
@@ -2233,7 +2225,7 @@
       if (cachedRecords.length === 0) return alert("目前沒有可匯出的資料或尚未解鎖！");
       let txtContent = `=== 記帳備份【${currentSheet}】(${getFormattedDate()}) ===\n\n`;
       cachedRecords.forEach((r, i) => {
-        const typeStr = r.type === 'expense' ? '分帳支出' : (r.type === 'personal' ? '個人支出' : '收入');
+        let typeStr = r.type === 'expense' ? '分帳支出' : (r.type === 'personal' ? '個人支出' : '收入');
         txtContent += `【#${i + 1}】${r.date} | [${r.category || '其他'}] ${typeStr} - ${r.title}\n`;
         txtContent += `  金額: ${r.currency} ${r.originalAmount} (折合 NT$ ${r.twdAmount})\n`;
         if (r.type === 'expense') {
