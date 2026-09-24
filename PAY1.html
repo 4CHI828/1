@@ -474,9 +474,84 @@
     let currentDateFilter = 'all';
     
     let chartInstance = null;
-    let currentChartMode = 'pie'; // 'pie' | 'member' | 'bar'
+    let currentChartMode = 'pie';
 
-    // 工具防抖函數
+    // 內嵌 Service Worker 離線快取
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        const swBlob = new Blob([`
+          const CACHE_NAME = 'cloud-ledger-v2';
+          self.addEventListener('install', e => self.skipWaiting());
+          self.addEventListener('activate', e => e.waitUntil(clients.claim()));
+          self.addEventListener('fetch', e => {
+            if(e.request.url.startsWith('http') && e.request.method === 'GET' && !e.request.url.includes('googleapis.com')) {
+              e.respondWith(
+                caches.match(e.request).then(cached => cached || fetch(e.request).then(res => {
+                  return caches.open(CACHE_NAME).then(cache => {
+                    cache.put(e.request, res.clone());
+                    return res;
+                  });
+                }).catch(() => cached))
+              );
+            }
+          });
+        `], { type: 'application/javascript' });
+        navigator.serviceWorker.register(URL.createObjectURL(swBlob)).catch(()=>{});
+      });
+    }
+
+    const pieOutlabelsPlugin = {
+      id: 'pieOutlabels',
+      afterDraw(chart) {
+        if (chart.config.type !== 'doughnut' && chart.config.type !== 'pie') return;
+        const ctx = chart.ctx;
+        const isDark = document.documentElement.classList.contains("dark");
+        const textColor = isDark ? '#f1f5f9' : '#1e293b';
+        const lineColor = isDark ? 'rgba(255,255,255,0.45)' : 'rgba(0,0,0,0.35)';
+
+        chart.data.datasets.forEach((dataset, i) => {
+          const meta = chart.getDatasetMeta(i);
+          const total = dataset.data.reduce((acc, curr) => acc + curr, 0);
+
+          meta.data.forEach((element, index) => {
+            const value = dataset.data[index];
+            if (value <= 0 || (total > 0 && (value / total) < 0.04)) return;
+
+            const { startAngle, endAngle, outerRadius, x, y } = element;
+            const midAngle = (startAngle + endAngle) / 2;
+
+            const startX = x + Math.cos(midAngle) * outerRadius;
+            const startY = y + Math.sin(midAngle) * outerRadius;
+
+            const lineLen = 14;
+            const midX = x + Math.cos(midAngle) * (outerRadius + lineLen);
+            const midY = y + Math.sin(midAngle) * (outerRadius + lineLen);
+
+            const isRight = Math.cos(midAngle) >= 0;
+            const endX = midX + (isRight ? 18 : -18);
+            const endY = midY;
+
+            ctx.save();
+            ctx.beginPath();
+            ctx.moveTo(startX, startY);
+            ctx.lineTo(midX, midY);
+            ctx.lineTo(endX, endY);
+            ctx.strokeStyle = lineColor;
+            ctx.lineWidth = 1.2;
+            ctx.stroke();
+
+            const labelText = `${chart.data.labels[index]} $${value.toLocaleString()}`;
+            ctx.font = 'bold 10px sans-serif';
+            ctx.fillStyle = textColor;
+            ctx.textAlign = isRight ? 'left' : 'right';
+            ctx.textBaseline = 'middle';
+            ctx.fillText(labelText, endX + (isRight ? 4 : -4), endY);
+            ctx.restore();
+          });
+        });
+      }
+    };
+
     function debounce(fn, delay = 250) {
       let timer = null;
       return function(...args) {
@@ -503,7 +578,6 @@
       });
     }
 
-    // 🌟 安全數學算式解析函數 (防禦非算式字元)
     function evaluateMathExpression(str) {
       if (!str) return 0;
       const clean = String(str).replace(/,/g, '').trim();
@@ -629,7 +703,6 @@
       return h; 
     }
     
-    // 🌟 增強 Drive 請求處理：支援自動 Refresh 與過期攔截
     async function driveRequest(url, options = {}) { 
       const res = await fetch(url, { ...options, headers: { ...driveHeaders(), ...(options.headers || {}) } }); 
       if (res.status === 401) {
@@ -701,14 +774,12 @@
       return out;
     }
 
-    // 🌟 收據檢視防記憶體洩漏 (Revoke Object URL)
     async function openReceiptFile(fileId) {
       if (!requireGoogleLogin() || !fileId) return;
       try {
         const res = await driveRequest(`${DRIVE_API}/files/${encodeURIComponent(fileId)}?alt=media`);
         const blob = await res.blob();
         
-        // 釋放舊的 Object URL
         const modal = document.getElementById("imageModal");
         if (modal.dataset.objectUrl) {
           URL.revokeObjectURL(modal.dataset.objectUrl);
@@ -1351,21 +1422,41 @@
       }, 600);
     });
 
+    // 🌟 修正後的 parseShares：過濾掉歷史殘留的 ($金額) 字尾，徹底避免卡片重複
     function parseShares(item) {
-      const shares = {}; 
-      const twd = Number(item.twdAmount) || 0; 
+      const shares = {};
+      const twd = Number(item.twdAmount) || 0;
       const list = item.splitMembers || [];
       if (!list.length) return shares;
+
       if (list.some(s => String(s).includes(":"))) {
-        list.forEach(s => { 
-          const p = String(s).split(":"); 
-          if (p[0]) shares[p[0].trim()] = parseFloat(p[1]) || 0; 
+        list.forEach(s => {
+          const p = String(s).split(":");
+          const cleanName = p[0] ? p[0].replace(/\(\$?\d+\)/g, '').trim() : "";
+          if (cleanName) {
+            shares[cleanName] = (shares[cleanName] || 0) + (parseFloat(p[1]) || 0);
+          }
         });
       } else {
-        const v = list.map(s => String(s).trim()).filter(s => s !== "");
-        if (v.length && twd > 0) { 
-          const p = twd / v.length; 
-          v.forEach(m => shares[m] = p); 
+        const parsedList = list.map(s => {
+          const str = String(s).trim();
+          const match = str.match(/^(.*?)\s*\((\$?\d+(?:\.\d+)?)\)$/);
+          if (match) {
+            return { name: match[1].trim(), amount: parseFloat(match[2].replace('$', '')) || 0 };
+          }
+          return { name: str, amount: null };
+        }).filter(x => x.name !== "");
+
+        const hasSpecificAmounts = parsedList.some(x => x.amount !== null && x.amount > 0);
+        if (hasSpecificAmounts) {
+          parsedList.forEach(x => {
+            shares[x.name] = (shares[x.name] || 0) + (x.amount || 0);
+          });
+        } else if (parsedList.length && twd > 0) {
+          const p = twd / parsedList.length;
+          parsedList.forEach(x => {
+            shares[x.name] = (shares[x.name] || 0) + p;
+          });
         }
       }
       return shares;
@@ -1376,7 +1467,6 @@
       document.getElementById("imageModal").classList.remove("hidden"); 
     };
     
-    // 🌟 關閉彈窗釋放 ObjectURL 避免記憶體洩漏
     window.closeImageModal = () => {
       const modal = document.getElementById("imageModal");
       modal.classList.add("hidden");
@@ -1413,7 +1503,6 @@
         }
       });
       
-      // 一次性渲染 Grid
       g.innerHTML = Object.keys(bals).map(m => {
         const val = Math.round(bals[m]); 
         const isP = val > 0; 
@@ -1507,7 +1596,6 @@
       document.getElementById("statPersonalPaidTotal").textContent = `$${Math.round(paidTotal).toLocaleString()}`;
     }
 
-    // 圖表模式切換
     document.getElementById("chartTypePieBtn").addEventListener("click", () => setChartType("pie"));
     document.getElementById("chartTypeMemberBtn").addEventListener("click", () => setChartType("member"));
     document.getElementById("chartTypeBarBtn").addEventListener("click", () => setChartType("bar"));
@@ -1833,7 +1921,6 @@
       showToast("已取消編輯", "info");
     };
 
-    // 🌟 高效批次渲染列表
     function renderRecordsList() {
       const rawInput = (document.getElementById("searchInput")?.value || "").trim();
       const filterType = document.getElementById("filterTypeSelect")?.value || "all";
@@ -2010,11 +2097,9 @@
       }
     }
 
-    // 儲存按鈕 (防連點與狀態保護)
     document.getElementById("saveRecordBtn").addEventListener("click", async function() {
       if (!requireGoogleLogin()) return;
       const saveBtn = this;
-      const originalBtnText = document.getElementById("saveBtnText").textContent;
 
       const title = document.getElementById("title").value.trim();
       const rawAmt = document.getElementById("originalAmount").value;
