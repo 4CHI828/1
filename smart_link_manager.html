@@ -7,6 +7,12 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <link rel="manifest" id="pwa-manifest">
+    <meta name="theme-color" content="#0f172a">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🔗</text></svg>">
+
     <style>
         :root {
             --primary: #6366f1; --primary-hover: #4f46e5; --bg-dark: #0f172a;
@@ -19,156 +25,126 @@
             --text-muted: #64748b; --border-color: #e2e8f0;
         }
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Inter', 'Segoe UI', Roboto, sans-serif; }
-        body { background-color: var(--bg-dark); color: var(--text-main); min-height: 100vh; transition: all 0.3s ease; }
+        body { background-color: var(--bg-dark); color: var(--text-main); min-height: 100vh; transition: background-color 0.3s, color 0.3s; }
 
-        header {
-            background-color: var(--card-dark); padding: 1rem 2rem; display: flex;
-            justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-color);
-            position: sticky; top: 0; z-index: 100; backdrop-filter: blur(10px);
-        }
-        .logo { font-size: 1.3rem; font-weight: 600; color: var(--text-main); display: flex; align-items: center; gap: 0.6rem; }
+        /* Header & Buttons */
+        header { background-color: var(--card-dark); padding: 1rem 2rem; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-color); position: sticky; top: 0; z-index: 100; backdrop-filter: blur(10px); }
+        .logo { font-size: 1.3rem; font-weight: 600; display: flex; align-items: center; gap: 0.6rem; }
         .logo i { color: var(--primary); font-size: 1.6rem; }
         .highlight-letter { color: var(--primary); font-weight: 800; font-size: 1.4rem; }
         .logo-en { color: var(--text-muted); font-weight: 400; margin-left: 0.4rem; }
 
-        button {
-            cursor: pointer; border: none; border-radius: 10px;
-            padding: 0.6rem 1.2rem; font-size: 0.9rem; font-weight: 500;
-            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1); display: inline-flex; align-items: center; gap: 0.5rem;
-        }
+        button { cursor: pointer; border: none; border-radius: 10px; padding: 0.6rem 1.2rem; font-size: 0.9rem; font-weight: 500; transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1); display: inline-flex; align-items: center; gap: 0.5rem; }
+        button:active { transform: scale(0.95); } /* E4: 按鈕點擊微互動 */
         .btn-primary { background-color: var(--primary); color: white; box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3); }
         .btn-primary:hover { background-color: var(--primary-hover); transform: translateY(-1px); }
         .btn-outline { background-color: transparent; color: var(--text-main); border: 1px solid var(--border-color); }
         .btn-outline:hover { background-color: var(--border-color); }
         .btn-icon-only { padding: 0.6rem; border-radius: 50%; width: 40px; height: 40px; justify-content: center; }
 
-        @keyframes spin-icon { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
-        .rotating { animation: spin-icon 0.6s linear; }
-
+        /* Layouts */
         #login-screen { display: flex; flex-direction: column; justify-content: center; align-items: center; min-height: 80vh; padding: 2rem; }
         .login-card { background-color: var(--card-dark); padding: 3rem; border-radius: 24px; text-align: center; border: 1px solid var(--border-color); max-width: 450px; width: 100%; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.3); }
+        #app-screen { display: none; padding: 2rem; max-width: 1400px; margin: 0 auto; width: 100%; }
+        .control-panel { display: flex; flex-direction: column; gap: 1.5rem; margin-bottom: 2rem; }
+        .input-section { background-color: var(--card-dark); padding: 1rem; border-radius: 16px; border: 1px solid var(--border-color); display: flex; gap: 1rem; box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1); }
+        .input-section input { flex: 1; padding: 0.8rem 1.2rem; border-radius: 12px; border: 1px solid var(--border-color); background-color: var(--bg-dark); color: var(--text-main); font-size: 1rem; outline: none; transition: border 0.2s; }
+        .input-section input:focus { border-color: var(--primary); }
 
-        #app-screen { display: none; padding: 2rem; max-width: 1200px; margin: 0 auto; width: 100%; }
-        .control-panel { display: flex; flex-direction: column; gap: 1.5rem; margin-bottom: 3rem; }
-        
-        .input-section {
-            background-color: var(--card-dark); padding: 1rem; border-radius: 16px;
-            border: 1px solid var(--border-color); display: flex; gap: 1rem;
-            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
-        }
-        .input-section input {
-            flex: 1; padding: 0.8rem 1.2rem; border-radius: 12px; border: 1px solid var(--border-color);
-            background-color: var(--bg-dark); color: var(--text-main); font-size: 1rem; outline: none;
-        }
-
-        .category-chips { display: flex; flex-wrap: wrap; gap: 0.7rem; margin-bottom: 0.8rem; }
-        .chip {
-            padding: 0.4rem 1.2rem; border-radius: 20px; background: var(--card-dark);
-            border: 1px solid var(--border-color); color: var(--text-main);
-            font-size: 0.85rem; cursor: pointer; transition: all 0.2s;
-        }
+        /* Chips (Tags & Folders) */
+        .chips-container { display: flex; flex-wrap: wrap; gap: 0.7rem; margin-bottom: 0.8rem; }
+        .chip { padding: 0.4rem 1.2rem; border-radius: 20px; background: var(--card-dark); border: 1px solid var(--border-color); color: var(--text-main); font-size: 0.85rem; cursor: pointer; transition: all 0.2s; display: flex; align-items: center; gap: 0.4rem; }
+        .chip:hover { border-color: var(--primary); }
         .chip.active { background: var(--primary); color: white; border-color: var(--primary); box-shadow: 0 4px 10px rgba(99, 102, 241, 0.3); }
+        .chip i { font-size: 0.8rem; }
 
         .filter-section { display: flex; flex-wrap: wrap; gap: 1rem; align-items: center; justify-content: space-between; }
         .search-box { flex: 1; min-width: 300px; position: relative; }
         .search-box i { position: absolute; left: 14px; top: 50%; transform: translateY(-50%); color: var(--text-muted); }
-        .search-box input {
-            width: 100%; padding: 0.7rem 1rem 0.7rem 2.8rem; border-radius: 12px; 
-            border: 1px solid var(--border-color); background-color: var(--card-dark); color: var(--text-main);
-        }
+        .search-box input { width: 100%; padding: 0.7rem 1rem 0.7rem 2.8rem; border-radius: 12px; border: 1px solid var(--border-color); background-color: var(--card-dark); color: var(--text-main); outline: none; }
 
-        .links-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); gap: 1.5rem; }
+        /* E3: 瀑布流佈局 (Masonry) */
+        .masonry-grid { column-count: 3; column-gap: 1.5rem; }
+        .masonry-grid .link-card { break-inside: avoid; margin-bottom: 1.5rem; display: block; width: 100%; }
+        @media (max-width: 1024px) { .masonry-grid { column-count: 2; } }
+        @media (max-width: 640px) { .masonry-grid { column-count: 1; } }
+        
         .list-view { display: flex; flex-direction: column; gap: 1rem; }
         .list-view .link-card { width: 100%; max-width: 100%; }
 
-        .link-card {
-            background-color: var(--card-dark); border-radius: 16px; padding: 1.5rem;
-            border: 1px solid var(--border-color); transition: all 0.3s ease;
-            display: flex; flex-direction: column; position: relative;
-            overflow: hidden;
-        }
-        .link-card:hover { border-color: var(--primary); box-shadow: 0 10px 20px rgba(0,0,0,0.2); transform: translateY(-2px); }
+        /* Cards */
+        .link-card { background-color: var(--card-dark); border-radius: 16px; padding: 1.5rem; border: 1px solid var(--border-color); transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); display: flex; flex-direction: column; position: relative; overflow: hidden; }
+        .link-card:hover { border-color: var(--primary); box-shadow: 0 10px 20px rgba(0,0,0,0.2); transform: translateY(-4px); }
         .link-card.is-pinned { border-left: 4px solid var(--warning); }
         .link-card.is-read { opacity: 0.6; }
-        /* 新增：失效連結視覺提示 */
-        .link-card.is-dead { border-color: var(--danger); background: rgba(239, 68, 68, 0.05); }
-        .link-card.is-dead .link-title::after { content: " (失效)"; color: var(--danger); font-size: 0.8rem; }
 
-        .link-image-preview {
-            height: 160px; width: calc(100% + 3rem); margin: -1.5rem -1.5rem 1rem -1.5rem;
-            overflow: hidden; background-color: #000; position: relative;
-        }
-        .link-image-preview img {
-            width: 100%; height: 100%; object-fit: cover; transition: transform 0.4s ease;
-        }
+        .link-image-preview { height: 160px; width: calc(100% + 3rem); margin: -1.5rem -1.5rem 1rem -1.5rem; overflow: hidden; background-color: #000; position: relative; }
+        .link-image-preview img { width: 100%; height: 100%; object-fit: cover; transition: transform 0.4s ease; }
         .link-card:hover .link-image-preview img { transform: scale(1.05); }
 
-        .link-desc { 
-            color: var(--text-muted); font-size: 0.9rem; 
-            margin-bottom: 1.2rem; line-height: 1.6;
-            display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical;
-            overflow: hidden;
-        }
-
-        .link-title { font-size: 1.1rem; font-weight: 700; margin-bottom: 0.5rem; color: var(--text-main); line-height: 1.4; }
+        .link-desc { color: var(--text-muted); font-size: 0.9rem; margin-bottom: 1.2rem; line-height: 1.6; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+        .link-title { font-size: 1.1rem; font-weight: 700; margin-bottom: 0.5rem; line-height: 1.4; }
         .account-handle { color: var(--primary); font-weight: 800; }
-
-        .link-url-display {
-            font-family: 'JetBrains Mono', 'Courier New', monospace;
-            font-size: 0.75rem; color: var(--primary); opacity: 0.6;
-            margin-bottom: 1.2rem; display: block; overflow: hidden;
-            text-overflow: ellipsis; white-space: nowrap; text-decoration: none;
-        }
-        .link-url-display:hover { opacity: 1; text-decoration: underline; }
-
-        .card-footer {
-            display: flex; align-items: center; justify-content: space-between;
-            margin-top: auto; padding-top: 1rem; border-top: 1px solid var(--border-color);
-        }
+        .link-url-display { font-family: monospace; font-size: 0.75rem; color: var(--primary); opacity: 0.6; margin-bottom: 1.2rem; display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; text-decoration: none; }
+        
+        .card-footer { display: flex; align-items: center; justify-content: space-between; margin-top: auto; padding-top: 1rem; border-top: 1px solid var(--border-color); }
         .source-info { display: flex; align-items: center; gap: 0.6rem; }
         .favicon { width: 16px; height: 16px; border-radius: 3px; }
         .source-text { font-size: 0.75rem; color: var(--text-muted); display: flex; align-items: center; gap: 0.4rem; }
         
+        /* E2: 彩色標籤樣式 (由 JS 動態生成 inline style) */
         .tags-container { display: flex; flex-wrap: wrap; gap: 0.4rem; justify-content: flex-end; }
-        .tag-badge { 
-            background: rgba(99, 102, 241, 0.1); color: var(--primary); 
-            padding: 0.2rem 0.5rem; border-radius: 6px; font-size: 0.65rem; font-weight: 600;
-        }
+        .tag-badge { padding: 0.2rem 0.6rem; border-radius: 6px; font-size: 0.65rem; font-weight: 600; transition: transform 0.2s; }
+        .tag-badge:hover { transform: scale(1.05); }
 
-        .card-actions {
-            position: absolute; top: 1rem; right: 1rem; z-index: 10;
-            display: flex; gap: 0.5rem; opacity: 0; transition: opacity 0.2s;
-        }
+        .folder-badge { position: absolute; top: 1rem; left: 1rem; z-index: 5; background: rgba(15, 23, 42, 0.8); backdrop-filter: blur(4px); color: #fff; padding: 0.3rem 0.6rem; border-radius: 8px; font-size: 0.7rem; display: flex; align-items: center; gap: 0.3rem; border: 1px solid rgba(255,255,255,0.1); }
+
+        .card-actions { position: absolute; top: 1rem; right: 1rem; z-index: 10; display: flex; gap: 0.5rem; opacity: 0; transition: opacity 0.2s; }
         .link-card:hover .card-actions { opacity: 1; }
-        .card-actions button { 
-            width: 32px; height: 32px; padding: 0; border-radius: 50%; 
-            background: rgba(15, 23, 42, 0.8); backdrop-filter: blur(4px); color: #fff; border: 1px solid rgba(255,255,255,0.2);
-        }
-        .card-actions button:hover { color: var(--primary); border-color: var(--primary); background: rgba(15, 23, 42, 1); }
+        .card-actions button { width: 32px; height: 32px; padding: 0; border-radius: 50%; background: rgba(15, 23, 42, 0.8); backdrop-filter: blur(4px); color: #fff; border: 1px solid rgba(255,255,255,0.2); }
+        .card-actions button:hover { color: var(--primary); border-color: var(--primary); }
         .card-actions .btn-delete:hover { color: var(--danger); border-color: var(--danger); }
+        .card-actions .btn-ai { background: linear-gradient(135deg, #8b5cf6, #ec4899); border: none; }
+        .card-actions .btn-read { background: linear-gradient(135deg, #10b981, #059669); border: none; }
 
-        .modal-overlay {
-            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(15, 23, 42, 0.8); z-index: 1000; justify-content: center; align-items: center; backdrop-filter: blur(8px);
-        }
-        .modal { background: var(--card-dark); padding: 2.5rem; border-radius: 24px; width: 90%; max-width: 500px; border: 1px solid var(--border-color); max-height: 90vh; overflow-y: auto; }
+        /* Kanban */
+        .kanban-board { display: flex; gap: 1.5rem; overflow-x: auto; padding-bottom: 1rem; min-height: 60vh; }
+        .kanban-column { flex: 1; min-width: 320px; background: var(--bg-dark); border-radius: 16px; padding: 1rem; border: 1px solid var(--border-color); display: flex; flex-direction: column; }
+        .kanban-header { font-size: 1rem; font-weight: 700; margin-bottom: 1rem; padding-bottom: 0.5rem; border-bottom: 2px solid var(--border-color); display: flex; justify-content: space-between; align-items: center; }
+        .kanban-count { background: var(--card-dark); padding: 0.2rem 0.6rem; border-radius: 12px; font-size: 0.8rem; color: var(--text-muted); }
+        .kanban-list { flex: 1; min-height: 100px; }
+        .kanban-card { background: var(--card-dark); padding: 1rem; border-radius: 12px; margin-bottom: 0.8rem; border: 1px solid var(--border-color); cursor: grab; transition: all 0.2s; }
+        .kanban-card:hover { border-color: var(--primary); transform: translateY(-2px); box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+        .kanban-card:active { cursor: grabbing; opacity: 0.8; transform: scale(1.02); box-shadow: 0 10px 15px rgba(0,0,0,0.2); } /* E4: 拖曳放大 */
+        .kanban-card .k-title { font-size: 0.95rem; font-weight: 600; margin-bottom: 0.4rem; }
+        .kanban-card .k-desc { font-size: 0.8rem; color: var(--text-muted); margin-bottom: 0.6rem; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+        .kanban-card .k-footer { display: flex; justify-content: space-between; align-items: center; font-size: 0.7rem; color: var(--text-muted); }
+        .sortable-ghost { opacity: 0.4; background: var(--primary); }
+
+        /* Modals & Animations */
+        .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15, 23, 42, 0.8); z-index: 1000; justify-content: center; align-items: center; backdrop-filter: blur(8px); }
+        .modal { background: var(--card-dark); padding: 2.5rem; border-radius: 24px; width: 90%; max-width: 500px; border: 1px solid var(--border-color); max-height: 90vh; overflow-y: auto; animation: zoomIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); } /* E4: Modal 彈出動畫 */
         .form-group { margin-bottom: 1.2rem; }
         .form-group label { display: block; margin-bottom: 0.5rem; color: var(--text-muted); font-size: 0.9rem; }
-        .form-group input, .form-group textarea { width: 100%; padding: 0.8rem; border-radius: 12px; border: 1px solid var(--border-color); background: var(--bg-dark); color: var(--text-main); outline: none; }
+        .form-group input, .form-group textarea, .form-group select { width: 100%; padding: 0.8rem; border-radius: 12px; border: 1px solid var(--border-color); background: var(--bg-dark); color: var(--text-main); outline: none; }
+        .form-group select { cursor: pointer; }
 
         #toast-container { position: fixed; bottom: 2rem; right: 2rem; z-index: 9999; display: flex; flex-direction: column; gap: 0.5rem; }
         .toast { background: var(--card-dark); color: var(--text-main); padding: 1rem 1.5rem; border-radius: 12px; border-left: 4px solid var(--primary); box-shadow: 0 10px 15px -3px rgba(0,0,0,0.4); animation: slideIn 0.3s ease forwards; }
         .toast.success { border-left-color: var(--success); }
         .toast.error { border-left-color: var(--danger); }
-        .toast.warning { border-left-color: var(--warning); }
         
+        /* E4: 核心動畫定義 */
         @keyframes slideIn { from { opacity: 0; transform: translateX(100%); } to { opacity: 1; transform: translateX(0); } }
         @keyframes fadeOut { from { opacity: 1; transform: translateX(0); } to { opacity: 0; transform: translateX(100%); } }
+        @keyframes zoomIn { from { opacity: 0; transform: scale(0.9); } to { opacity: 1; transform: scale(1); } }
+        @keyframes fadeInUp { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
+        
+        .card-enter { animation: fadeInUp 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards; opacity: 0; } /* E4: 卡片進場動畫 */
+        
         .loader { display: none; border: 3px solid var(--border-color); border-top: 3px solid var(--primary); border-radius: 50%; width: 18px; height: 18px; animation: spin 1s linear infinite; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-        
-        /* 快捷鍵提示 */
-        .kbd { background: var(--bg-dark); border: 1px solid var(--border-color); border-radius: 4px; padding: 2px 6px; font-size: 0.7rem; font-family: monospace; color: var(--text-muted); }
+        .kbd { background: var(--bg-dark); border: 1px solid var(--border-color); border-radius: 4px; padding: 2px 6px; font-size: 0.7rem; font-family: monospace; }
     </style>
 </head>
 <body class="flex flex-col min-h-screen">
@@ -180,15 +156,12 @@
         </div>
         <div class="header-actions flex-wrap gap-2">
             <span id="user-info" style="display: none; color: var(--text-muted); font-size: 0.9rem; margin-right: 10px;"></span>
-            
-            <!-- 新增功能按鈕 -->
-            <button class="btn-outline btn-icon-only" onclick="exportAsMarkdown()" title="一鍵生成 Markdown 清單"><i class="fab fa-markdown"></i></button>
-            <button class="btn-outline btn-icon-only" onclick="checkDeadLinks()" title="失效連結體檢"><i class="fas fa-stethoscope"></i></button>
-            
+            <button class="btn-outline btn-icon-only" onclick="openFolderModal()" title="管理資料夾"><i class="fas fa-folder-plus"></i></button>
+            <button class="btn-outline btn-icon-only" onclick="exportAsMarkdown()" title="生成 Markdown"><i class="fab fa-markdown"></i></button>
             <button class="btn-outline btn-icon-only" onclick="toggleTheme()" title="深淺色切換"><i class="fas fa-sun"></i></button>
             <button class="btn-outline btn-icon-only" id="btn-refresh" onclick="handleRefresh()" title="重新整理"><i class="fas fa-sync-alt" id="refresh-icon"></i></button>
-            <button class="btn-outline btn-icon-only" onclick="exportData()" title="匯出 JSON 備份"><i class="fas fa-download"></i></button>
-            <button class="btn-outline btn-icon-only" onclick="document.getElementById('import-file').click()" title="匯入 JSON 備份"><i class="fas fa-upload"></i></button>
+            <button class="btn-outline btn-icon-only" onclick="exportData()" title="匯出 JSON"><i class="fas fa-download"></i></button>
+            <button class="btn-outline btn-icon-only" onclick="document.getElementById('import-file').click()" title="匯入 JSON"><i class="fas fa-upload"></i></button>
             <input type="file" id="import-file" style="display:none" accept=".json" onchange="importData(event)">
             <button class="btn-outline btn-icon-only" id="btn-logout" style="display: none;" onclick="handleLogout()"><i class="fas fa-sign-out-alt"></i></button>
         </div>
@@ -204,7 +177,6 @@
                 </button>
                 <button class="btn-primary w-full justify-center" id="btn-local-login">本機測試模式</button>
             </div>
-            <p class="text-xs text-gray-500 mt-6">提示：按 <span class="kbd">/</span> 搜尋，按 <span class="kbd">N</span> 新增</p>
         </div>
     </main>
 
@@ -216,28 +188,49 @@
                     <span class="btn-text">儲存</span>
                     <div class="loader" id="add-loader"></div>
                 </button>
-                <button class="btn-outline btn-icon-only" onclick="openBulkModal()" title="批量匯入"><i class="fas fa-list-ul"></i></button>
             </div>
 
             <div>
-                <div class="category-chips" id="category-chips"></div>
+                <!-- A: 資料夾 Chips -->
+                <div class="chips-container" id="folder-chips"></div>
+                <!-- 標籤 Chips -->
+                <div class="chips-container" id="tag-chips"></div>
+                
                 <div class="filter-section">
                     <div class="search-box">
                         <i class="fas fa-search"></i>
                         <input type="text" id="search-input" placeholder="搜尋標題或標籤..." oninput="filterLinks()">
                     </div>
-                    <button class="btn-outline btn-icon-only" onclick="toggleView()" title="切換視圖"><i class="fas fa-grip-vertical" id="view-icon"></i></button>
+                    <div class="flex gap-2">
+                        <button class="btn-outline btn-icon-only" onclick="toggleView()" title="切換視圖"><i class="fas fa-grip-vertical" id="view-icon"></i></button>
+                        <button class="btn-outline" id="btn-kanban" onclick="toggleKanbanView()" title="切換看板"><i class="fas fa-columns"></i> 看板</button>
+                    </div>
                 </div>
             </div>
         </div>
-        <div class="links-grid" id="links-container"></div>
+        
+        <!-- E3: 瀑布流容器 -->
+        <div class="masonry-grid" id="links-container"></div>
+        
+        <div class="kanban-board" id="kanban-board" style="display: none;">
+            <div class="kanban-column" data-status="inbox"><div class="kanban-header">📥 待讀 <span class="kanban-count" id="count-inbox">0</span></div><div class="kanban-list" id="list-inbox"></div></div>
+            <div class="kanban-column" data-status="starred"><div class="kanban-header">⭐ 精選 <span class="kanban-count" id="count-starred">0</span></div><div class="kanban-list" id="list-starred"></div></div>
+            <div class="kanban-column" data-status="done"><div class="kanban-header">✅ 已讀 <span class="kanban-count" id="count-done">0</span></div><div class="kanban-list" id="list-done"></div></div>
+        </div>
     </main>
 
-    <footer class="max-w-2xl mx-auto w-full mt-6 py-4 text-center text-[11px] text-gray-400 dark:text-gray-500 flex flex-wrap items-center justify-center gap-2">
-        <div>更新時間 <span id="lastUpdatedDisplay" class="font-mono">讀取中...</span></div>
-        <span>|</span>
-        <a href="https://v.douyin.com/XmUkpVat8Lg/" target="_blank" class="font-bold text-blue-500 hover:text-blue-600 transition flex items-center gap-0.5">奇奇828 <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path></svg></a>
-    </footer>
+    <!-- Modals -->
+    <div class="modal-overlay" id="folder-modal">
+        <div class="modal">
+            <h3 class="text-xl font-bold mb-4">📂 管理資料夾</h3>
+            <div id="folder-list" class="mb-4 max-h-60 overflow-y-auto"></div>
+            <div class="flex gap-2">
+                <input type="text" id="new-folder-name" placeholder="新資料夾名稱 (如: 工作)" class="flex-1 p-2 rounded-lg border border-gray-600 bg-gray-800 text-white">
+                <button class="btn-primary" onclick="addFolder()">新增</button>
+            </div>
+            <div class="flex justify-end mt-4"><button class="btn-outline" onclick="closeModal('folder-modal')">關閉</button></div>
+        </div>
+    </div>
 
     <div class="modal-overlay" id="edit-modal">
         <div class="modal">
@@ -245,23 +238,12 @@
             <input type="hidden" id="edit-id">
             <div class="form-group"><label>標題</label><input type="text" id="edit-title"></div>
             <div class="form-group"><label>網址</label><input type="text" id="edit-url"></div>
-            <div class="form-group"><label>標籤 (用逗號分隔)</label><input type="text" id="edit-categories"></div>
-            <div class="form-group"><label>摘要說明</label><textarea id="edit-desc" style="width:100%; height:80px; padding:0.8rem; border-radius:12px; border:1px solid var(--border-color); background:var(--bg-dark); color:var(--text-main); outline:none;"></textarea></div>
-            <div class="modal-actions" style="display:flex; justify-content:flex-end; gap:1rem; margin-top:1.5rem;">
+            <div class="form-group"><label>所屬資料夾</label><select id="edit-folder"></select></div>
+            <div class="form-group"><label>標籤 (逗號分隔)</label><input type="text" id="edit-categories"></div>
+            <div class="form-group"><label>摘要</label><textarea id="edit-desc" style="height:80px;"></textarea></div>
+            <div class="flex justify-end gap-2 mt-4">
                 <button class="btn-outline" onclick="closeModal('edit-modal')">取消</button>
-                <button class="btn-primary" onclick="saveEdit()">儲存變更</button>
-            </div>
-        </div>
-    </div>
-
-    <div class="modal-overlay" id="bulk-modal">
-        <div class="modal">
-            <h3 class="text-xl font-bold mb-2">📦 批量匯入連結</h3>
-            <p class="text-sm text-gray-400 mb-4">請每行貼上一個網址，系統將自動解析並儲存。</p>
-            <textarea id="bulk-input" style="width:100%; height:200px; padding:1rem; border-radius:12px; background:var(--bg-dark); color:var(--text-main); border:1px solid var(--border-color); outline:none;" placeholder="https://...&#10;https://..."></textarea>
-            <div class="modal-actions" style="display:flex; justify-content:flex-end; gap:1rem; margin-top:1.5rem;">
-                <button class="btn-outline" onclick="closeModal('bulk-modal')">取消</button>
-                <button class="btn-primary" id="btn-bulk-save" onclick="processBulkSave()">開始匯入</button>
+                <button class="btn-primary" onclick="saveEdit()">儲存</button>
             </div>
         </div>
     </div>
@@ -273,411 +255,212 @@
     <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore-compat.js"></script>
 
     <script>
-        /* ============================================================
-           1. 配置與初始化
-           ============================================================ */
-        const firebaseConfig = {
-            apiKey: "AIzaSyAt0YAxzPbFZHyLKQLN1me3N9DQKnCrylg",
-            authDomain: "link-1b206.firebaseapp.com",
-            projectId: "link-1b206",
-            storageBucket: "link-1b206.appspot.com"
-        };
-
+        const firebaseConfig = { apiKey: "AIzaSyAt0YAxzPbFZHyLKQLN1me3N9DQKnCrylg", authDomain: "link-1b206.firebaseapp.com", projectId: "link-1b206", storageBucket: "link-1b206.appspot.com" };
         let app, auth, db, currentUser = null, isLocalMode = false, unsubscribeSnapshot = null;
-        let currentView = 'grid';
-        let activeTag = 'all';
-        let allLinksCache = []; // 用於快取當前渲染的連結，供 Markdown 匯出使用
+        let currentView = 'masonry', isKanbanMode = false, activeTag = 'all', activeFolder = 'all';
+        let allLinksCache = [], allFoldersCache = [];
 
-        try {
-            app = firebase.initializeApp(firebaseConfig);
-            auth = firebase.auth();
-            db = firebase.firestore();
-        } catch(e) { console.error("Firebase Init Error:", e); }
-
-        function initFileSaveTime() {
-            try {
-                const lastMod = new Date(document.lastModified);
-                const timeStr = `${lastMod.getFullYear()}/${String(lastMod.getMonth()+1).padStart(2,'0')}/${String(lastMod.getDate()).padStart(2,'0')} ${String(lastMod.getHours()).padStart(2,'0')}:${String(lastMod.getMinutes()).padStart(2,'0')}`;
-                document.getElementById('lastUpdatedDisplay').innerText = timeStr;
-            } catch (e) { document.getElementById('lastUpdatedDisplay').innerText = '無法讀取'; }
-        }
-
-        function formatTime(timestamp) {
-            if (!timestamp) return '';
-            const d = new Date(timestamp);
-            return `${d.getFullYear()}/${String(d.getMonth()+1).padStart(2,'0')}/${String(d.getDate()).padStart(2,'0')} ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;
-        }
-
-        function handleRefresh() {
-            const icon = document.getElementById('refresh-icon');
-            icon.classList.add('rotating');
-            loadLinks();
-            initFileSaveTime();
-            setTimeout(() => icon.classList.remove('rotating'), 600);
-            showToast("已重新整理資料", "success");
-        }
+        try { app = firebase.initializeApp(firebaseConfig); auth = firebase.auth(); db = firebase.firestore(); } catch(e) {}
 
         /* ============================================================
-           2. 終極智能解析引擎 (Microlink + Fallback)
+           A: 資料夾管理邏輯
            ============================================================ */
-        async function fetchWithMicrolink(url) {
-            const apiUrl = `https://api.microlink.io/?url=${encodeURIComponent(url)}`;
-            try {
-                const res = await fetch(apiUrl);
-                if (!res.ok) throw new Error("Microlink failed");
-                const data = await res.json();
-                if (data.status === 'success' && data.data) {
-                    return {
-                        title: data.data.title || "", description: data.data.description || "",
-                        image: data.data.image?.url || "", author: data.data.author || "",
-                        publisher: data.data.publisher || ""
-                    };
-                }
-            } catch (e) { console.warn("Microlink failed, falling back..."); }
-            return null;
-        }
-
-        async function fetchWithProxy(url) {
-            const proxies = [`https://api.allorigins.win/get?url=${encodeURIComponent(url)}`, `https://corsproxy.io/?${encodeURIComponent(url)}`];
-            for (let proxy of proxies) {
-                try {
-                    const res = await fetch(proxy);
-                    if (!res.ok) continue;
-                    if (proxy.includes('allorigins')) return (await res.json()).contents;
-                    else return await res.text();
-                } catch (e) { continue; }
-            }
-            throw new Error("All proxies failed");
-        }
-
-        async function fetchWebpageInfo(url) {
-            let result = { title: "未命名連結", description: "點擊查看原始連結", categories: ["一般網站"], account: "", image: "" };
-            try {
-                if (!url.startsWith('http')) url = 'https://' + url;
-                const urlObj = new URL(url);
-                const lowerUrl = url.toLowerCase();
-                const path = urlObj.pathname.split('/').filter(p => p);
-
-                const microlinkData = await fetchWithMicrolink(url);
-                if (microlinkData) {
-                    result.title = microlinkData.title || result.title;
-                    result.description = microlinkData.description || result.description;
-                    result.image = microlinkData.image || "";
-                    if (microlinkData.author) result.account = microlinkData.author;
-                    if (microlinkData.publisher) {
-                        const pub = microlinkData.publisher.toLowerCase();
-                        if (pub.includes('youtube')) result.categories = ["影音娛樂", "YouTube"];
-                        else if (pub.includes('instagram')) result.categories = ["社群媒體", "Instagram"];
-                        else if (pub.includes('facebook')) result.categories = ["社群媒體", "Facebook"];
-                        else if (pub.includes('threads')) result.categories = ["社群媒體", "Threads"];
-                        else if (pub.includes('tiktok') || pub.includes('douyin')) result.categories = ["短影音", "TikTok/抖音"];
-                        else result.categories = ["一般網站", microlinkData.publisher];
-                    }
-                } else {
-                    if (lowerUrl.includes('instagram.com') || lowerUrl.includes('threads.net')) {
-                        result.categories = ["社群媒體", lowerUrl.includes('threads.net') ? "Threads" : "Instagram"];
-                        const accountMatch = url.match(/@([a-zA-Z0-9._]+)/);
-                        if (accountMatch) result.account = `@${accountMatch[1]}`;
-                        else if (lowerUrl.includes('instagram.com') && !urlObj.pathname.includes('/p/') && !urlObj.pathname.includes('/reel/')) result.account = `@${path[0]}`;
-                        if (!result.title) result.title = result.account ? `${result.account} 的貼文` : "社群媒體內容";
-                    } else if (lowerUrl.includes('youtube.com') || lowerUrl.includes('youtu.be')) {
-                        result.categories = ["影音娛樂", "YouTube"];
-                        const ytUser = path.find(p => p.startsWith('@'));
-                        if (ytUser) result.account = ytUser;
-                        try {
-                            const res = await fetch(`https://noembed.com/embed?url=${encodeURIComponent(url)}`);
-                            const data = await res.json();
-                            if (data.title) result.title = data.title;
-                            if (data.author_name) result.account = data.author_name;
-                            if (data.thumbnail_url) result.image = data.thumbnail_url;
-                        } catch (e) {}
-                    } else if (lowerUrl.includes('douyin.com') || lowerUrl.includes('tiktok.com')) {
-                        result.categories = ["短影音", lowerUrl.includes('douyin.com') ? "抖音" : "TikTok"];
-                        result.title = "短影片內容";
-                    } else {
-                        result.categories = ["一般網站"];
-                        try {
-                            const html = await fetchWithProxy(url);
-                            const doc = new DOMParser().parseFromString(html, "text/html");
-                            result.title = doc.querySelector('meta[property="og:title"]')?.content || doc.querySelector('title')?.innerText || "無標題網頁";
-                            result.description = doc.querySelector('meta[property="og:description"]')?.content || doc.querySelector('meta[name="description"]')?.content || "無摘要資訊";
-                            result.image = doc.querySelector('meta[property="og:image"]')?.content;
-                        } catch (e) {}
-                    }
-                }
-            } catch (e) { console.error("Critical Error:", e); }
-            result.title = result.title.replace(/\s+/g, ' ').trim();
-            if (!result.title) result.title = "未命名連結";
-            return result;
-        }
-
-        /* ============================================================
-           3. 資料操作
-           ============================================================ */
-        async function processAndSaveUrl() {
-            const input = document.getElementById('url-input');
-            let url = input.value.trim();
-            if (!url) return;
-            
-            const currentLinks = isLocalMode ? JSON.parse(localStorage.getItem('my_links') || '[]') : await getAllLinks();
-            if (currentLinks.some(l => l.url === url)) {
-                if (!confirm("此連結已存在於庫中，是否仍要再次儲存？")) return;
-            }
-
-            const btn = document.getElementById('btn-add-url');
-            const loader = document.getElementById('add-loader');
-            const btnText = btn.querySelector('.btn-text');
-            btn.disabled = true; btnText.style.display = 'none'; loader.style.display = 'block';
-
-            const info = await fetchWebpageInfo(url);
-            let finalTitle = info.title;
-            if (info.account && !finalTitle.includes(info.account)) finalTitle = `${info.account} - ${finalTitle}`;
-
-            const data = { url, title: finalTitle, categories: info.categories, description: info.description, image: info.image || "", createdAt: Date.now(), pinned: false, isRead: false, account: info.account };
-
-            try {
-                if (isLocalMode) {
-                    const links = JSON.parse(localStorage.getItem('my_links') || '[]');
-                    data.id = 'loc_' + Date.now();
-                    links.unshift(data);
-                    localStorage.setItem('my_links', JSON.stringify(links));
-                    loadLinks();
-                } else {
-                    await db.collection('users').doc(currentUser.uid).collection('links').add(data);
-                }
-                showToast("✅ 儲存成功", "success");
-            } catch (e) { showToast("❌ 儲存錯誤: " + e.message, "error"); }
-
-            input.value = '';
-            btn.disabled = false; btnText.style.display = 'inline'; loader.style.display = 'none';
-        }
-
-        async function processBulkSave() {
-            const input = document.getElementById('bulk-input');
-            const urls = input.value.split('\n').filter(u => u.trim() !== '');
-            if (urls.length === 0) return;
-
-            const btn = document.getElementById('btn-bulk-save');
-            btn.disabled = true; btn.innerText = "解析中...";
-            let count = 0;
-
+        async function getFolders() {
             if (isLocalMode) {
-                const links = JSON.parse(localStorage.getItem('my_links') || '[]');
-                for (let url of urls) {
-                    const cleanedUrl = url.trim().startsWith('http') ? url.trim() : 'https://' + url.trim();
-                    try {
-                        const info = await fetchWebpageInfo(cleanedUrl);
-                        const finalTitle = info.account ? `${info.account} - ${info.title}` : info.title;
-                        links.unshift({ id: 'loc_' + Math.random(), url: cleanedUrl, title: finalTitle, categories: info.categories, description: info.description, image: info.image, createdAt: Date.now(), pinned: false, isRead: false, account: info.account });
-                        count++;
-                    } catch(e) {}
-                }
+                let f = JSON.parse(localStorage.getItem('my_folders') || '[]');
+                if (f.length === 0) { f = [{ id: 'default', name: '未分類', icon: 'fa-inbox' }]; localStorage.setItem('my_folders', JSON.stringify(f)); }
+                return f;
+            }
+            const snap = await db.collection('users').doc(currentUser.uid).collection('folders').get();
+            let f = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+            if (f.length === 0) { 
+                await db.collection('users').doc(currentUser.uid).collection('folders').add({ name: '未分類', icon: 'fa-inbox' });
+                return [{ id: 'default', name: '未分類', icon: 'fa-inbox' }]; 
+            }
+            return f;
+        }
+
+        async function renderFolderChips() {
+            allFoldersCache = await getFolders();
+            const container = document.getElementById('folder-chips');
+            let html = `<div class="chip ${activeFolder === 'all' ? 'active' : ''}" onclick="setFolder('all')"><i class="fas fa-layer-group"></i> 全部</div>`;
+            allFoldersCache.forEach(f => {
+                html += `<div class="chip ${activeFolder === f.id ? 'active' : ''}" onclick="setFolder('${f.id}')"><i class="fas ${f.icon || 'fa-folder'}"></i> ${f.name}</div>`;
+            });
+            container.innerHTML = html;
+        }
+
+        function setFolder(id) { activeFolder = id; renderFolderChips(); filterLinks(); }
+
+        function openFolderModal() {
+            const list = document.getElementById('folder-list');
+            list.innerHTML = allFoldersCache.map(f => `
+                <div class="flex justify-between items-center p-2 border-b border-gray-700">
+                    <span><i class="fas ${f.icon || 'fa-folder'} mr-2 text-gray-400"></i> ${f.name}</span>
+                    ${f.id !== 'default' ? `<button class="text-red-500 hover:text-red-400" onclick="deleteFolder('${f.id}')"><i class="fas fa-trash"></i></button>` : ''}
+                </div>
+            `).join('');
+            openModal('folder-modal');
+        }
+
+        async function addFolder() {
+            const name = document.getElementById('new-folder-name').value.trim();
+            if (!name) return;
+            const icons = ['fa-briefcase', 'fa-graduation-cap', 'fa-gamepad', 'fa-heart', 'fa-code', 'fa-book'];
+            const icon = icons[Math.floor(Math.random() * icons.length)];
+            
+            if (isLocalMode) {
+                const f = JSON.parse(localStorage.getItem('my_folders') || '[]');
+                f.push({ id: 'f_' + Date.now(), name, icon });
+                localStorage.setItem('my_folders', JSON.stringify(f));
+            } else {
+                await db.collection('users').doc(currentUser.uid).collection('folders').add({ name, icon });
+            }
+            document.getElementById('new-folder-name').value = '';
+            renderFolderChips();
+            openFolderModal(); // 刷新列表
+            showToast("資料夾已新增", "success");
+        }
+
+        async function deleteFolder(id) {
+            if (!confirm("刪除此資料夾？內含連結將移至「未分類」")) return;
+            if (isLocalMode) {
+                let f = JSON.parse(localStorage.getItem('my_folders') || '[]').filter(x => x.id !== id);
+                localStorage.setItem('my_folders', JSON.stringify(f));
+                let links = JSON.parse(localStorage.getItem('my_links') || '[]');
+                links.forEach(l => { if (l.folderId === id) l.folderId = 'default'; });
                 localStorage.setItem('my_links', JSON.stringify(links));
             } else {
+                await db.collection('users').doc(currentUser.uid).collection('folders').doc(id).delete();
                 const batch = db.batch();
-                for (let url of urls) {
-                    const cleanedUrl = url.trim().startsWith('http') ? url.trim() : 'https://' + url.trim();
-                    try {
-                        const info = await fetchWebpageInfo(cleanedUrl);
-                        const finalTitle = info.account ? `${info.account} - ${info.title}` : info.title;
-                        const ref = db.collection('users').doc(currentUser.uid).collection('links').doc();
-                        batch.set(ref, { url: cleanedUrl, title: finalTitle, categories: info.categories, description: info.description, image: info.image, createdAt: Date.now(), pinned: false, isRead: false, account: info.account });
-                        count++;
-                    } catch(e) {}
-                }
+                const snap = await db.collection('users').doc(currentUser.uid).collection('links').where('folderId', '==', id).get();
+                snap.docs.forEach(d => batch.update(d.ref, { folderId: 'default' }));
                 await batch.commit();
             }
-            showToast(`成功匯入 ${count} 個連結`, "success");
-            btn.disabled = false; btn.innerText = "開始匯入";
-            closeModal('bulk-modal');
+            renderFolderChips();
+            openFolderModal();
+            loadLinks();
+        }
+
+        /* ============================================================
+           E2: 彩色標籤算法
+           ============================================================ */
+        function stringToHslColor(str, s = 0.6, l = 0.5) {
+            let hash = 0;
+            for (let i = 0; i < str.length; i++) hash = str.charCodeAt(i) + ((hash << 5) - hash);
+            return `hsl(${hash % 360}, ${s*100}%, ${l*100}%)`;
+        }
+        function getTagStyles(tag) {
+            const bg = stringToHslColor(tag, 0.4, 0.85); // 淺色背景
+            const text = stringToHslColor(tag, 0.7, 0.3); // 深色文字
+            const border = stringToHslColor(tag, 0.4, 0.7);
+            return `background: ${bg}; color: ${text}; border: 1px solid ${border};`;
+        }
+
+        /* ============================================================
+           核心邏輯 (解析、儲存、渲染)
+           ============================================================ */
+        async function fetchWebpageInfo(url) {
+            let r = { title: "未命名連結", description: "點擊查看原始連結", categories: ["一般網站"], account: "", image: "" };
+            try {
+                if (!url.startsWith('http')) url = 'https://' + url;
+                const res = await fetch(`https://api.microlink.io/?url=${encodeURIComponent(url)}`);
+                const d = await res.json();
+                if (d.status === 'success') {
+                    r.title = d.data.title || r.title; r.description = d.data.description || r.description; r.image = d.data.image?.url || "";
+                    if (d.data.author) r.account = d.data.author;
+                }
+            } catch (e) {}
+            r.title = r.title.replace(/\s+/g, ' ').trim();
+            return r;
+        }
+
+        async function processAndSaveUrl() {
+            const input = document.getElementById('url-input'); let url = input.value.trim(); if (!url) return;
+            const btn = document.getElementById('btn-add-url'), loader = document.getElementById('add-loader'), txt = btn.querySelector('.btn-text');
+            btn.disabled = true; txt.style.display = 'none'; loader.style.display = 'block';
+            
+            const info = await fetchWebpageInfo(url);
+            let finalTitle = info.title; if (info.account && !finalTitle.includes(info.account)) finalTitle = `${info.account} - ${finalTitle}`;
+            
+            // 預設歸類到當前選擇的資料夾，或「未分類」
+            const targetFolder = activeFolder !== 'all' ? activeFolder : 'default';
+            const data = { url, title: finalTitle, categories: info.categories, description: info.description, image: info.image || "", folderId: targetFolder, createdAt: Date.now(), pinned: false, isRead: false };
+
+            try {
+                if (isLocalMode) { 
+                    const links = JSON.parse(localStorage.getItem('my_links') || '[]'); 
+                    data.id = 'loc_' + Date.now(); links.unshift(data); 
+                    localStorage.setItem('my_links', JSON.stringify(links)); 
+                } else { 
+                    await db.collection('users').doc(currentUser.uid).collection('links').add(data); 
+                }
+                showToast("✅ 儲存成功", "success");
+            } catch (e) { showToast("❌ " + e.message, "error"); }
+            
+            input.value = ''; btn.disabled = false; txt.style.display = 'inline'; loader.style.display = 'none';
             loadLinks();
         }
 
         async function getAllLinks() {
             if (isLocalMode) return JSON.parse(localStorage.getItem('my_links') || '[]');
-            const snap = await db.collection('users').doc(currentUser.uid).collection('links').get();
-            return snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+            return (await db.collection('users').doc(currentUser.uid).collection('links').get()).docs.map(d => ({ id: d.id, ...d.data() }));
         }
 
-        async function exportData() {
-            const links = await getAllLinks();
-            const blob = new Blob([JSON.stringify(links, null, 2)], { type: "application/json" });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url; a.download = `slm_backup_${new Date().toISOString().slice(0,10)}.json`;
-            a.click();
-            showToast("備份匯出成功");
-        }
-
-        function importData(event) {
-            const file = event.target.files[0];
-            if (!file) return;
-            const reader = new FileReader();
-            reader.onload = async (e) => {
-                try {
-                    const links = JSON.parse(e.target.result);
-                    if (!Array.isArray(links)) throw new Error("格式不正確");
-                    if (isLocalMode) {
-                        localStorage.setItem('my_links', JSON.stringify(links));
-                        loadLinks();
-                    } else {
-                        const batch = db.batch();
-                        links.forEach(l => {
-                            const ref = db.collection('users').doc(currentUser.uid).collection('links').doc(l.id);
-                            batch.set(ref, l);
-                        });
-                        await batch.commit();
-                        loadLinks();
-                    }
-                    showToast("備份匯入成功", "success");
-                } catch (err) { showToast("匯入失敗: " + err.message, "error"); }
-            };
-            reader.readAsText(file);
-        }
-
-        /* ============================================================
-           4. 新增功能：Markdown 匯出 & 失效體檢
-           ============================================================ */
-        
-        // 功能 A: 一鍵生成 Markdown 清單 (會尊重目前的搜尋/標籤過濾)
-        function exportAsMarkdown() {
-            if (allLinksCache.length === 0) {
-                showToast("目前沒有可匯出的連結", "warning");
-                return;
-            }
-            
-            let md = `# 我的智能連結清單\n\n`;
-            md += `*匯出時間：${new Date().toLocaleString()} | 共 ${allLinksCache.length} 個連結*\n\n`;
-            
-            // 按標籤分組
-            const grouped = {};
-            allLinksCache.forEach(link => {
-                const tags = Array.isArray(link.categories) ? link.categories : [link.categories || "未分類"];
-                tags.forEach(tag => {
-                    if (!grouped[tag]) grouped[tag] = [];
-                    grouped[tag].push(link);
-                });
-            });
-
-            Object.keys(grouped).sort().forEach(tag => {
-                md += `## ${tag}\n\n`;
-                grouped[tag].forEach(link => {
-                    md += `- [${link.title}](${link.url})\n`;
-                    if (link.description && link.description !== "點擊查看原始連結") {
-                        md += `  > ${link.description.substring(0, 50)}...\n`;
-                    }
-                });
-                md += `\n`;
-            });
-
-            navigator.clipboard.writeText(md).then(() => {
-                showToast("✅ Markdown 清單已複製到剪貼板！", "success");
-            }).catch(() => {
-                showToast("複製失敗，請手動複製", "error");
-            });
-        }
-
-        // 功能 B: 失效連結體檢 (純前端 no-cors 檢查，不耗 API)
-        async function checkDeadLinks() {
-            const links = await getAllLinks();
-            if (links.length === 0) {
-                showToast("沒有連結需要體檢", "info");
-                return;
-            }
-
-            showToast(`🩺 開始體檢 ${links.length} 個連結...`, "info");
-            let deadCount = 0;
-            let deadIds = [];
-
-            // 為了不卡死 UI，使用 Promise.all 並限制並發 (這裡簡單處理，直接跑)
-            const checkPromises = links.map(async (link) => {
-                try {
-                    // 使用 no-cors 模式，只要域名存在、網路通，就不會拋出錯誤
-                    // 注意：這無法判斷 404，但能抓出域名失效/斷網的死連結
-                    await fetch(link.url, { mode: 'no-cors' });
-                } catch (e) {
-                    deadCount++;
-                    deadIds.push(link.id);
-                }
-            });
-
-            await Promise.all(checkPromises);
-
-            if (deadCount > 0) {
-                showToast(`⚠️ 發現 ${deadCount} 個完全斷線的失效連結！`, "warning");
-                // 視覺標記失效連結
-                deadIds.forEach(id => {
-                    const card = document.querySelector(`[onclick*="openEdit('${id}')"]`)?.closest('.link-card');
-                    if (card) card.classList.add('is-dead');
-                });
-            } else {
-                showToast("✅ 體檢完成！所有連結都活著。", "success");
-            }
-        }
-
-        /* ============================================================
-           5. 渲染與過濾
-           ============================================================ */
         function loadLinks() {
-            if (isLocalMode) {
-                const links = JSON.parse(localStorage.getItem('my_links') || '[]');
-                renderLinks(links);
-            } else if(currentUser && db) {
+            if (isLocalMode) renderCurrentView(JSON.parse(localStorage.getItem('my_links') || '[]'));
+            else if(currentUser && db) {
                 if(unsubscribeSnapshot) unsubscribeSnapshot();
                 unsubscribeSnapshot = db.collection('users').doc(currentUser.uid).collection('links').orderBy('createdAt', 'desc').onSnapshot(snap => {
-                    const links = []; snap.forEach(doc => links.push({ id: doc.id, ...doc.data() }));
-                    renderLinks(links);
+                    renderCurrentView(snap.docs.map(d => ({ id: d.id, ...d.data() })));
                 });
             }
         }
 
-        function renderLinks(links) {
-            const container = document.getElementById('links-container');
+        function renderCurrentView(links) {
             const search = document.getElementById('search-input').value.toLowerCase();
-            renderTagsCloud(links);
+            renderTagChips(links);
             
             const filtered = links.filter(l => {
                 const matchSearch = l.title.toLowerCase().includes(search) || l.url.toLowerCase().includes(search);
-                let hasTag = (activeTag === 'all');
-                if (!hasTag) {
-                    if (Array.isArray(l.categories)) hasTag = l.categories.includes(activeTag);
-                    else if (typeof l.categories === 'string') hasTag = (l.categories === activeTag);
-                }
-                return matchSearch && hasTag;
+                const matchTag = activeTag === 'all' || (Array.isArray(l.categories) ? l.categories.includes(activeTag) : l.categories === activeTag);
+                const matchFolder = activeFolder === 'all' || l.folderId === activeFolder || (!l.folderId && activeFolder === 'default');
+                return matchSearch && matchTag && matchFolder;
             });
-
-            // 快取過濾後的結果，供 Markdown 匯出使用
+            
             allLinksCache = filtered;
+            if (isKanbanMode) renderKanban(filtered); else renderLinks(filtered);
+        }
 
-            if (filtered.length === 0) {
-                container.innerHTML = `<div class="col-span-full text-center py-20 text-gray-500">
-                    <i class="fas fa-search mb-4 text-4xl opacity-20"></i><br>找不到任何符合條件的連結
-                </div>`;
-                return;
-            }
+        // E3 & E4: 瀑布流渲染與進場動畫
+        function renderLinks(links) {
+            const container = document.getElementById('links-container');
+            if (links.length === 0) { container.innerHTML = `<div class="text-center py-20 text-gray-500 col-span-full">找不到連結</div>`; return; }
+            
+            container.innerHTML = links.map((link, index) => {
+                const titleHtml = link.title.includes('@') ? link.title.replace(/(@[^\s-]+)/, `<span class="account-handle">$1</span>`) : escapeHtml(link.title);
+                let sourceDisplay = ""; try { sourceDisplay = link.account || new URL(link.url).hostname; } catch(e) { sourceDisplay = "未知"; }
+                let imageHtml = link.image ? `<div class="link-image-preview"><img src="${link.image}" onerror="this.parentElement.style.display='none'"></div>` : "";
+                
+                // 取得資料夾名稱
+                const folder = allFoldersCache.find(f => f.id === link.folderId) || allFoldersCache.find(f => f.id === 'default');
+                const folderBadge = folder ? `<div class="folder-badge"><i class="fas ${folder.icon || 'fa-folder'}"></i> ${folder.name}</div>` : "";
 
-            container.innerHTML = filtered.map(link => {
-                const titleHtml = link.title.includes('@') 
-                    ? link.title.replace(/(@[^\s-]+)/, `<span class="account-handle">$1</span>`) 
-                    : escapeHtml(link.title);
+                // E2: 彩色標籤
+                const tagsHtml = (Array.isArray(link.categories) ? link.categories : (link.categories ? [link.categories] : [])).map(t => 
+                    `<span class="tag-badge" style="${getTagStyles(t)}">${escapeHtml(t)}</span>`
+                ).join('');
 
-                let sourceDisplay = "";
-                try {
-                    if (link.account) sourceDisplay = link.account;
-                    else sourceDisplay = new URL(link.url).hostname;
-                } catch(e) { sourceDisplay = "未知來源"; }
-
-                let imageHtml = "";
-                if (link.image) {
-                    imageHtml = `<div class="link-image-preview"><img src="${link.image}" onerror="this.parentElement.style.display='none'"></div>`;
-                }
+                // E4: 交錯動畫延遲
+                const delay = index * 0.05; 
 
                 return `
-                <div class="link-card ${link.pinned ? 'is-pinned' : ''} ${link.isRead ? 'is-read' : ''}">
+                <div class="link-card card-enter ${link.pinned ? 'is-pinned' : ''} ${link.isRead ? 'is-read' : ''}" style="animation-delay: ${delay}s;">
+                    ${folderBadge}
                     ${imageHtml}
                     <div class="card-actions">
                         <button class="btn-outline" onclick="togglePin('${link.id}')" title="釘選"><i class="fas ${link.pinned ? 'fa-thumbtack' : 'fa-thumbtack'}"></i></button>
-                        <button class="btn-outline" onclick="toggleRead('${link.id}')" title="標記已讀"><i class="fas ${link.isRead ? 'fa-check-circle' : 'fa-circle'}"></i></button>
+                        <button class="btn-outline" onclick="toggleRead('${link.id}')" title="已讀"><i class="fas ${link.isRead ? 'fa-check-circle' : 'fa-circle'}"></i></button>
                         <button class="btn-outline" onclick="openEdit('${link.id}')" title="編輯"><i class="fas fa-edit"></i></button>
                         <button class="btn-outline btn-delete" onclick="deleteLink('${link.id}')" title="刪除"><i class="fas fa-trash"></i></button>
                     </div>
@@ -685,99 +468,57 @@
                     <h3 class="link-title">${titleHtml}</h3>
                     <a href="${link.url}" target="_blank" class="link-url-display">${escapeHtml(link.url)}</a>
                     <div class="card-footer">
-                        <div class="source-info">
-                            <img class="favicon" src="https://www.google.com/s2/favicons?domain=${link.url}&sz=64">
-                            <div class="source-text">
-                                <span class="font-medium">${sourceDisplay}</span>
-                                <span>${formatTime(link.createdAt)}</span>
-                            </div>
-                        </div>
-                        <div class="tags-container">
-                            ${(Array.isArray(link.categories) ? link.categories : (link.categories ? [link.categories] : [])).map(t => `<span class="tag-badge">${escapeHtml(t)}</span>`).join('')}
-                        </div>
+                        <div class="source-info"><img class="favicon" src="https://www.google.com/s2/favicons?domain=${link.url}&sz=64"><div class="source-text"><span class="font-medium">${sourceDisplay}</span></div></div>
+                        <div class="tags-container">${tagsHtml}</div>
                     </div>
-                </div>
-            `}).join('');
+                </div>`;
+            }).join('');
         }
 
-        function renderTagsCloud(links = []) {
-            const container = document.getElementById('category-chips');
-            const allTags = new Set();
-            links.forEach(l => {
-                if (l.categories) {
-                    if (Array.isArray(l.categories)) l.categories.forEach(t => allTags.add(t));
-                    else if (typeof l.categories === 'string') allTags.add(l.categories);
-                }
-            });
-            let html = `<div class="chip ${activeTag === 'all' ? 'active' : ''}" onclick="setTag('all')">全部</div>`;
+        function renderTagChips(links) {
+            const container = document.getElementById('tag-chips'); const allTags = new Set();
+            links.forEach(l => { if (l.categories) { if (Array.isArray(l.categories)) l.categories.forEach(t => allTags.add(t)); else allTags.add(l.categories); } });
+            let html = `<div class="chip ${activeTag === 'all' ? 'active' : ''}" onclick="setTag('all')"><i class="fas fa-tags"></i> 全部標籤</div>`;
             allTags.forEach(tag => {
-                html += `<div class="chip ${activeTag === tag ? 'active' : ''}" onclick="setTag('${tag}')">${tag}</div>`;
+                // 讓 Chip 也帶有淡淡的顏色
+                const color = stringToHslColor(tag, 0.6, 0.5);
+                const isActive = activeTag === tag;
+                const style = isActive ? `background: ${color}; color: white; border-color: ${color};` : `border-color: ${color}40; color: ${color};`;
+                html += `<div class="chip ${isActive ? 'active' : ''}" style="${style}" onclick="setTag('${tag}')">${tag}</div>`;
             });
             container.innerHTML = html;
         }
 
-        function setTag(tag) { activeTag = tag; renderTagsCloud(); filterLinks(); }
+        function setTag(tag) { activeTag = tag; renderTagChips(allLinksCache); filterLinks(); }
         function filterLinks() { loadLinks(); }
 
-        async function togglePin(id) {
-            const links = await getAllLinks();
-            const link = links.find(l => l.id === id);
-            if (!link) return;
-            const newState = !link.pinned;
-            if (isLocalMode) {
-                const all = JSON.parse(localStorage.getItem('my_links') || '[]');
-                const idx = all.findIndex(i => i.id === id);
-                all[idx].pinned = newState;
-                localStorage.setItem('my_links', JSON.stringify(all));
-                loadLinks();
-            } else {
-                await db.collection('users').doc(currentUser.uid).collection('links').doc(id).update({ pinned: newState });
-            }
-            showToast(newState ? "已釘選至頂端" : "已取消釘選");
+        async function togglePin(id) { const l = (await getAllLinks()).find(x => x.id === id); if(!l) return; await updateLinkProp(id, 'pinned', !l.pinned); }
+        async function toggleRead(id) { const l = (await getAllLinks()).find(x => x.id === id); if(!l) return; await updateLinkProp(id, 'isRead', !l.isRead); }
+        async function updateLinkProp(id, prop, val) {
+            if (isLocalMode) { const all = JSON.parse(localStorage.getItem('my_links') || '[]'); const i = all.findIndex(x => x.id === id); if(i>-1) { all[i][prop] = val; localStorage.setItem('my_links', JSON.stringify(all)); loadLinks(); } }
+            else { await db.collection('users').doc(currentUser.uid).collection('links').doc(id).update({ [prop]: val }); }
         }
-
-        async function toggleRead(id) {
-            const links = await getAllLinks();
-            const link = links.find(l => l.id === id);
-            if (!link) return;
-            const newState = !link.isRead;
-            if (isLocalMode) {
-                const all = JSON.parse(localStorage.getItem('my_links') || '[]');
-                const idx = all.findIndex(i => i.id === id);
-                all[idx].isRead = newState;
-                localStorage.setItem('my_links', JSON.stringify(all));
-                loadLinks();
-            } else {
-                await db.collection('users').doc(currentUser.uid).collection('links').doc(id).update({ isRead: newState });
-            }
-            showToast(newState ? "標記為已讀" : "標記為未讀");
-        }
-
         async function deleteLink(id) {
-            if (!confirm("確定要刪除此連結？")) return;
-            if (isLocalMode) {
-                let l = JSON.parse(localStorage.getItem('my_links') || '[]');
-                localStorage.setItem('my_links', JSON.stringify(l.filter(i => i.id !== id)));
-                loadLinks();
-            } else {
-                await db.collection('users').doc(currentUser.uid).collection('links').doc(id).delete();
-            }
+            if (!confirm("確定刪除？")) return;
+            if (isLocalMode) { let l = JSON.parse(localStorage.getItem('my_links') || '[]'); localStorage.setItem('my_links', JSON.stringify(l.filter(i => i.id !== id))); loadLinks(); }
+            else { await db.collection('users').doc(currentUser.uid).collection('links').doc(id).delete(); }
         }
 
         async function openEdit(id) {
-            let link;
-            try {
+            let link; try {
                 if (isLocalMode) link = JSON.parse(localStorage.getItem('my_links') || '[]').find(l => l.id === id);
-                else {
-                    const snap = await db.collection('users').doc(currentUser.uid).collection('links').doc(id).get();
-                    if (snap.exists) { link = snap.data(); link.id = snap.id; }
-                }
+                else { const s = await db.collection('users').doc(currentUser.uid).collection('links').doc(id).get(); if(s.exists) { link = s.data(); link.id = s.id; } }
                 if (link) {
                     document.getElementById('edit-id').value = link.id;
                     document.getElementById('edit-title').value = link.title || "";
                     document.getElementById('edit-url').value = link.url || "";
                     document.getElementById('edit-categories').value = Array.isArray(link.categories) ? link.categories.join(', ') : (link.categories || "");
                     document.getElementById('edit-desc').value = link.description || "";
+                    
+                    // 渲染資料夾下拉選單
+                    const select = document.getElementById('edit-folder');
+                    select.innerHTML = allFoldersCache.map(f => `<option value="${f.id}" ${link.folderId === f.id ? 'selected' : ''}>${f.name}</option>`).join('');
+                    
                     openModal('edit-modal');
                 }
             } catch (e) { showToast("讀取失敗", "error"); }
@@ -789,102 +530,131 @@
                 title: document.getElementById('edit-title').value,
                 url: document.getElementById('edit-url').value,
                 categories: document.getElementById('edit-categories').value.split(',').map(t => t.trim()).filter(t => t),
-                description: document.getElementById('edit-desc').value
+                description: document.getElementById('edit-desc').value,
+                folderId: document.getElementById('edit-folder').value
             };
-            if (isLocalMode) {
-                let l = JSON.parse(localStorage.getItem('my_links') || '[]');
-                const idx = l.findIndex(i => i.id === id);
-                if (idx > -1) l[idx] = { ...l[idx], ...updated };
-                localStorage.setItem('my_links', JSON.stringify(l));
-                loadLinks();
-            } else {
-                await db.collection('users').doc(currentUser.uid).collection('links').doc(id).update(updated);
-            }
-            closeModal('edit-modal');
-            showToast("已儲存變更", "success");
+            if (isLocalMode) { let l = JSON.parse(localStorage.getItem('my_links') || '[]'); const i = l.findIndex(x => x.id === id); if(i>-1) { l[i] = { ...l[i], ...updated }; localStorage.setItem('my_links', JSON.stringify(l)); loadLinks(); } }
+            else { await db.collection('users').doc(currentUser.uid).collection('links').doc(id).update(updated); }
+            closeModal('edit-modal'); showToast("已儲存", "success");
         }
 
         function toggleView() {
-            currentView = currentView === 'grid' ? 'list' : 'grid';
-            document.getElementById('links-container').className = currentView === 'list' ? 'links-grid list-view' : 'links-grid';
-            document.getElementById('view-icon').className = currentView === 'list' ? 'fas fa-th-large' : 'fas fa-grip-vertical';
-            filterLinks();
+            currentView = currentView === 'masonry' ? 'list' : 'masonry';
+            const container = document.getElementById('links-container');
+            container.className = currentView === 'list' ? 'list-view' : 'masonry-grid';
+            document.getElementById('view-icon').className = currentView === 'list' ? 'fas fa-grip-vertical' : 'fas fa-list';
+            loadLinks();
         }
 
-        function toggleTheme() {
-            document.body.classList.toggle('light-mode');
-            localStorage.setItem('theme', document.body.classList.contains('light-mode') ? 'light' : 'dark');
+        function toggleKanbanView() {
+            isKanbanMode = !isKanbanMode;
+            document.getElementById('links-container').style.display = isKanbanMode ? 'none' : 'block';
+            document.getElementById('kanban-board').style.display = isKanbanMode ? 'flex' : 'none';
+            document.getElementById('btn-kanban').classList.toggle('btn-primary', isKanbanMode);
+            document.getElementById('btn-kanban').classList.toggle('btn-outline', !isKanbanMode);
+            if (isKanbanMode) renderKanban(allLinksCache);
+        }
+
+        function renderKanban(links) {
+            const inbox = [], starred = [], done = [];
+            links.forEach(l => { if (l.pinned) starred.push(l); else if (l.isRead) done.push(l); else inbox.push(l); });
+            document.getElementById('count-inbox').innerText = inbox.length;
+            document.getElementById('count-starred').innerText = starred.length;
+            document.getElementById('count-done').innerText = done.length;
+            const renderCard = (l) => `<div class="kanban-card" data-id="${l.id}"><div class="k-title">${escapeHtml(l.title)}</div><div class="k-desc">${escapeHtml(l.description)}</div></div>`;
+            document.getElementById('list-inbox').innerHTML = inbox.map(renderCard).join('');
+            document.getElementById('list-starred').innerHTML = starred.map(renderCard).join('');
+            document.getElementById('list-done').innerHTML = done.map(renderCard).join('');
+            initSortable();
+        }
+
+        function initSortable() {
+            ['list-inbox', 'list-starred', 'list-done'].forEach(id => {
+                const el = document.getElementById(id); if (el.sortable) el.sortable.destroy();
+                el.sortable = Sortable.create(el, {
+                    group: 'kanban', animation: 150, ghostClass: 'sortable-ghost',
+                    onEnd: async (evt) => {
+                        const itemId = evt.item.dataset.id, newColumnId = evt.to.id;
+                        let newStatus = { pinned: false, isRead: false };
+                        if (newColumnId === 'list-starred') newStatus = { pinned: true, isRead: false };
+                        else if (newColumnId === 'list-done') newStatus = { pinned: false, isRead: true };
+                        if (isLocalMode) { const all = JSON.parse(localStorage.getItem('my_links') || '[]'); const idx = all.findIndex(i => i.id === itemId); if (idx > -1) { all[idx].pinned = newStatus.pinned; all[idx].isRead = newStatus.isRead; localStorage.setItem('my_links', JSON.stringify(all)); } }
+                        else { await db.collection('users').doc(currentUser.uid).collection('links').doc(itemId).update(newStatus); }
+                    }
+                });
+            });
+        }
+
+        function toggleTheme() { document.body.classList.toggle('light-mode'); localStorage.setItem('theme', document.body.classList.contains('light-mode') ? 'light' : 'dark'); }
+        function handleRefresh() { const i = document.getElementById('refresh-icon'); i.classList.add('rotating'); loadLinks(); setTimeout(() => i.classList.remove('rotating'), 600); }
+        function exportAsMarkdown() {
+            if (!allLinksCache.length) return;
+            let md = `# 智能連結清單\n\n`;
+            allLinksCache.forEach(l => { md += `- [${l.title}](${l.url})\n`; });
+            navigator.clipboard.writeText(md).then(() => showToast("✅ 已複製", "success"));
+        }
+        async function exportData() {
+            const links = await getAllLinks(); const folders = await getFolders();
+            const a = document.createElement('a');
+            a.href = URL.createObjectURL(new Blob([JSON.stringify({ links, folders }, null, 2)], { type: "application/json" }));
+            a.download = `slm_backup_${new Date().toISOString().slice(0,10)}.json`; a.click();
+        }
+        function importData(event) {
+            const file = event.target.files[0]; if (!file) return;
+            const reader = new FileReader();
+            reader.onload = async (e) => {
+                try {
+                    const data = JSON.parse(e.target.result);
+                    const links = data.links || data;
+                    const folders = data.folders || [];
+                    if (isLocalMode) { 
+                        localStorage.setItem('my_links', JSON.stringify(links)); 
+                        if(folders.length) localStorage.setItem('my_folders', JSON.stringify(folders));
+                        loadLinks(); renderFolderChips();
+                    } else { 
+                        const b = db.batch(); 
+                        links.forEach(l => b.set(db.collection('users').doc(currentUser.uid).collection('links').doc(l.id), l));
+                        folders.forEach(f => b.set(db.collection('users').doc(currentUser.uid).collection('folders').doc(f.id), f));
+                        await b.commit(); loadLinks(); renderFolderChips();
+                    }
+                    showToast("匯入成功", "success");
+                } catch (err) { showToast("匯入失敗", "error"); }
+            };
+            reader.readAsText(file);
         }
 
         function showToast(msg, type='info') {
-            const container = document.getElementById('toast-container');
-            const t = document.createElement('div');
-            t.className = `toast ${type}`;
-            t.innerHTML = msg;
-            container.appendChild(t);
+            const c = document.getElementById('toast-container'), t = document.createElement('div');
+            t.className = `toast ${type}`; t.innerHTML = msg; c.appendChild(t);
             setTimeout(() => { t.style.animation = 'fadeOut 0.3s ease forwards'; setTimeout(() => t.remove(), 300); }, 3000);
         }
-
         function openModal(id) { document.getElementById(id).style.display = 'flex'; }
         function closeModal(id) { document.getElementById(id).style.display = 'none'; }
-        function openBulkModal() { openModal('bulk-modal'); }
         function handleEnter(e) { if (e.key === "Enter") processAndSaveUrl(); }
         function escapeHtml(u) { return String(u || '').replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;"); }
 
-        /* ============================================================
-           6. 快捷鍵與初始化
-           ============================================================ */
-        function initKeyboardShortcuts() {
-            document.addEventListener('keydown', (e) => {
-                // 如果焦點在輸入框或 textarea 內，則不觸發快捷鍵 (除了 Esc)
-                const isTyping = e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA';
-                
-                if (e.key === 'Escape') {
-                    closeModal('edit-modal');
-                    closeModal('bulk-modal');
-                } else if (!isTyping) {
-                    if (e.key === '/') {
-                        e.preventDefault();
-                        document.getElementById('search-input').focus();
-                    } else if (e.key.toLowerCase() === 'n') {
-                        e.preventDefault();
-                        document.getElementById('url-input').focus();
-                    }
-                }
-            });
-        }
-
         if(auth) {
-            auth.onAuthStateChanged(user => {
+            auth.onAuthStateChanged(async user => {
                 if (user) {
-                    currentUser = user;
-                    document.getElementById('login-screen').style.display = 'none';
-                    document.getElementById('app-screen').style.display = 'block';
-                    document.getElementById('btn-logout').style.display = 'inline-flex';
-                    document.getElementById('user-info').style.display = 'inline';
-                    document.getElementById('user-info').textContent = user.email;
-                    loadLinks();
+                    currentUser = user; document.getElementById('login-screen').style.display = 'none'; document.getElementById('app-screen').style.display = 'block';
+                    document.getElementById('btn-logout').style.display = 'inline-flex'; document.getElementById('user-info').style.display = 'inline'; document.getElementById('user-info').textContent = user.email;
+                    await renderFolderChips(); loadLinks();
                 }
             });
         }
-
-        document.getElementById('btn-google-login').addEventListener('click', () => {
-            auth.signInWithPopup(new firebase.auth.GoogleAuthProvider());
-        });
-        document.getElementById('btn-local-login').addEventListener('click', () => {
-            isLocalMode = true;
-            document.getElementById('login-screen').style.display = 'none';
-            document.getElementById('app-screen').style.display = 'block';
-            document.getElementById('user-info').style.display = 'inline';
-            document.getElementById('user-info').textContent = "本機模式";
-            loadLinks();
+        document.getElementById('btn-google-login').addEventListener('click', () => auth.signInWithPopup(new firebase.auth.GoogleAuthProvider()));
+        document.getElementById('btn-local-login').addEventListener('click', async () => {
+            isLocalMode = true; document.getElementById('login-screen').style.display = 'none'; document.getElementById('app-screen').style.display = 'block';
+            document.getElementById('user-info').style.display = 'inline'; document.getElementById('user-info').textContent = "本機模式"; 
+            await renderFolderChips(); loadLinks();
         });
         function handleLogout() { location.reload(); }
         
-        window.onload = () => { 
-            initFileSaveTime(); 
-            initKeyboardShortcuts(); // 初始化快捷鍵
-            if (localStorage.getItem('theme') === 'light') { document.body.classList.add('light-mode'); }
+        window.onload = async () => { 
+            if (localStorage.getItem('theme') === 'light') document.body.classList.add('light-mode'); 
+            // 初始化 PWA
+            const manifest = { name: "智能連結", short_name: "連結", start_url: ".", display: "standalone", background_color: "#0f172a", theme_color: "#6366f1", icons: [{ src: "data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🔗</text></svg>", sizes: "any", type: "image/svg+xml" }] };
+            document.getElementById('pwa-manifest').href = URL.createObjectURL(new Blob([JSON.stringify(manifest)], { type: 'application/json' }));
         };
     </script>
 </body>
