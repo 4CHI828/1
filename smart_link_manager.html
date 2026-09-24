@@ -6,6 +6,7 @@
     <title>Smart Link Manager</title>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <style>
+        /* 預設深色主題變數 */
         :root {
             --primary: #6366f1;
             --primary-hover: #4f46e5;
@@ -16,6 +17,15 @@
             --border-color: #334155;
             --danger: #ef4444;
             --success: #10b981;
+        }
+
+        /* 淺色主題變數 */
+        body.light-mode {
+            --bg-dark: #f8fafc;
+            --card-dark: #ffffff;
+            --text-main: #0f172a;
+            --text-muted: #64748b;
+            --border-color: #e2e8f0;
         }
 
         * {
@@ -31,6 +41,7 @@
             min-height: 100vh;
             display: flex;
             flex-direction: column;
+            transition: background-color 0.3s, color 0.3s;
         }
 
         /* 頂部導覽列 */
@@ -42,6 +53,7 @@
             align-items: center;
             border-bottom: 1px solid var(--border-color);
             box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            transition: background-color 0.3s, border-color 0.3s;
         }
 
         .logo {
@@ -55,7 +67,7 @@
 
         .header-actions {
             display: flex;
-            gap: 1rem;
+            gap: 0.8rem;
             align-items: center;
         }
 
@@ -71,6 +83,14 @@
             display: inline-flex;
             align-items: center;
             gap: 0.5rem;
+        }
+
+        .btn-icon-only {
+            padding: 0.6rem;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            justify-content: center;
         }
 
         .btn-primary {
@@ -121,24 +141,12 @@
             border: 1px solid var(--border-color);
             max-width: 450px;
             width: 100%;
+            transition: background-color 0.3s, border-color 0.3s;
         }
 
-        .login-card h2 {
-            margin-bottom: 0.5rem;
-            font-size: 1.8rem;
-        }
-
-        .login-card p {
-            color: var(--text-muted);
-            margin-bottom: 2rem;
-            line-height: 1.5;
-        }
-
-        .login-buttons {
-            display: flex;
-            flex-direction: column;
-            gap: 1rem;
-        }
+        .login-card h2 { margin-bottom: 0.5rem; font-size: 1.8rem; }
+        .login-card p { color: var(--text-muted); margin-bottom: 2rem; line-height: 1.5; }
+        .login-buttons { display: flex; flex-direction: column; gap: 1rem; }
 
         /* 主應用畫面 */
         #app-screen {
@@ -157,6 +165,7 @@
             border: 1px solid var(--border-color);
             display: flex;
             gap: 1rem;
+            transition: background-color 0.3s, border-color 0.3s;
         }
 
         .input-section input {
@@ -167,6 +176,7 @@
             background-color: var(--bg-dark);
             color: var(--text-main);
             font-size: 1rem;
+            transition: background-color 0.3s, color 0.3s, border-color 0.3s;
         }
 
         .input-section input:focus {
@@ -187,14 +197,14 @@
             padding: 1.5rem;
             border: 1px solid var(--border-color);
             position: relative;
-            transition: transform 0.2s, box-shadow 0.2s;
+            transition: transform 0.2s, box-shadow 0.2s, background-color 0.3s, border-color 0.3s;
             display: flex;
             flex-direction: column;
         }
 
         .link-card:hover {
             transform: translateY(-2px);
-            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
             border-color: var(--primary);
         }
 
@@ -233,10 +243,8 @@
             overflow: hidden;
         }
 
-        .link-url:hover {
-            text-decoration: underline;
-        }
-
+        .link-url:hover { text-decoration: underline; }
+        
         .link-desc {
             color: var(--text-muted);
             font-size: 0.9rem;
@@ -258,14 +266,11 @@
             justify-content: center;
         }
 
-        /* 模態框 (Modal) 樣式 */
+        /* 模態框 (Modal) */
         .modal-overlay {
             display: none;
             position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
+            top: 0; left: 0; width: 100%; height: 100%;
             background-color: rgba(0, 0, 0, 0.7);
             z-index: 1000;
             justify-content: center;
@@ -279,53 +284,35 @@
             width: 90%;
             max-width: 500px;
             border: 1px solid var(--border-color);
+            transition: background-color 0.3s, border-color 0.3s;
         }
 
-        .modal h3 {
-            margin-bottom: 1.5rem;
-        }
-
-        .form-group {
-            margin-bottom: 1rem;
-        }
-
+        .modal h3 { margin-bottom: 1.5rem; }
+        .form-group { margin-bottom: 1rem; }
         .form-group label {
-            display: block;
-            margin-bottom: 0.5rem;
-            color: var(--text-muted);
-            font-size: 0.9rem;
+            display: block; margin-bottom: 0.5rem;
+            color: var(--text-muted); font-size: 0.9rem;
         }
 
         .form-group input, .form-group textarea {
-            width: 100%;
-            padding: 0.8rem;
+            width: 100%; padding: 0.8rem;
             border-radius: 8px;
             border: 1px solid var(--border-color);
             background-color: var(--bg-dark);
             color: var(--text-main);
+            transition: background-color 0.3s, color 0.3s, border-color 0.3s;
         }
 
-        .form-group textarea {
-            resize: vertical;
-            min-height: 80px;
-        }
-
+        .form-group textarea { resize: vertical; min-height: 80px; }
         .modal-actions {
-            display: flex;
-            justify-content: flex-end;
-            gap: 1rem;
-            margin-top: 1.5rem;
+            display: flex; justify-content: flex-end;
+            gap: 1rem; margin-top: 1.5rem;
         }
 
         /* Toast 提示 */
         #toast-container {
-            position: fixed;
-            bottom: 2rem;
-            right: 2rem;
-            display: flex;
-            flex-direction: column;
-            gap: 0.5rem;
-            z-index: 9999;
+            position: fixed; bottom: 2rem; right: 2rem;
+            display: flex; flex-direction: column; gap: 0.5rem; z-index: 9999;
         }
 
         .toast {
@@ -333,25 +320,18 @@
             color: var(--text-main);
             padding: 1rem 1.5rem;
             border-radius: 8px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
             border-left: 4px solid var(--primary);
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
+            display: flex; align-items: center; gap: 0.5rem;
             animation: slideIn 0.3s ease forwards;
-            opacity: 0;
-            transform: translateX(100%);
+            opacity: 0; transform: translateX(100%);
         }
 
         .toast.error { border-left-color: var(--danger); }
         .toast.success { border-left-color: var(--success); }
 
-        @keyframes slideIn {
-            to { opacity: 1; transform: translateX(0); }
-        }
-        @keyframes fadeOut {
-            to { opacity: 0; transform: translateY(10px); }
-        }
+        @keyframes slideIn { to { opacity: 1; transform: translateX(0); } }
+        @keyframes fadeOut { to { opacity: 0; transform: translateY(10px); } }
 
         /* 載入動畫 */
         .loader {
@@ -359,10 +339,11 @@
             border: 3px solid var(--border-color);
             border-top: 3px solid var(--primary);
             border-radius: 50%;
-            width: 20px;
-            height: 20px;
+            width: 20px; height: 20px;
             animation: spin 1s linear infinite;
         }
+
+        .spin-anim { animation: spin 1s linear; }
 
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
     </style>
@@ -376,8 +357,26 @@
         </div>
         <div class="header-actions">
             <span id="user-info" style="display: none; color: var(--text-muted); font-size: 0.9rem;"></span>
-            <button class="btn-outline" onclick="openApiSettings()"><i class="fas fa-cog"></i> API 設定</button>
-            <button class="btn-outline" id="btn-logout" style="display: none;" onclick="handleLogout()"><i class="fas fa-sign-out-alt"></i> 登出</button>
+            
+            <!-- 重新整理按鈕 -->
+            <button class="btn-outline btn-icon-only" id="btn-refresh" onclick="refreshData()" title="重新整理資料">
+                <i class="fas fa-sync-alt"></i>
+            </button>
+
+            <!-- 深淺色切換按鈕 -->
+            <button class="btn-outline btn-icon-only" id="btn-theme" onclick="toggleTheme()" title="切換深/淺色模式">
+                <i class="fas fa-sun"></i>
+            </button>
+
+            <!-- API 設定按鈕 -->
+            <button class="btn-outline btn-icon-only" onclick="openApiSettings()" title="API 設定">
+                <i class="fas fa-cog"></i>
+            </button>
+
+            <!-- 登出按鈕 -->
+            <button class="btn-outline btn-icon-only" id="btn-logout" style="display: none;" onclick="handleLogout()" title="登出">
+                <i class="fas fa-sign-out-alt"></i>
+            </button>
         </div>
     </header>
 
@@ -402,7 +401,7 @@
     <!-- 主應用畫面 -->
     <main id="app-screen">
         <div class="input-section">
-            <input type="text" id="url-input" placeholder="貼上任何連結 (支援 FB, YT, IG, Threads, Google Maps)...">
+            <input type="text" id="url-input" placeholder="貼上任何連結 (支援 FB, YT, IG, Threads, Google Maps)..." onkeypress="handleEnter(event)">
             <button class="btn-primary" id="btn-add-url" onclick="processAndSaveUrl()">
                 <span class="btn-text">解析並儲存</span>
                 <div class="loader" id="add-loader"></div>
@@ -421,7 +420,7 @@
             <div class="form-group">
                 <label>Gemini API Key</label>
                 <input type="password" id="api-key-input" placeholder="AIzaSy...">
-                <p style="font-size: 0.8rem; color: var(--text-muted); margin-top: 0.5rem;">金鑰將安全地儲存在您的瀏覽器中。沒有金鑰也能使用，但無法自動解析網址。</p>
+                <p style="font-size: 0.8rem; color: var(--text-muted); margin-top: 0.5rem;">金鑰將安全地儲存在您的瀏覽器中。若未設定將以預設值儲存網址。</p>
             </div>
             <div class="modal-actions">
                 <button class="btn-outline" onclick="closeModal('api-modal')">取消</button>
@@ -468,9 +467,32 @@
 
     <script>
         // ==========================================
-        // 1. 系統狀態與設定
+        // 1. 初始化與主題設定
         // ==========================================
         
+        // 載入主題偏好
+        function initTheme() {
+            const savedTheme = localStorage.getItem('theme');
+            const btnIcon = document.querySelector('#btn-theme i');
+            if (savedTheme === 'light') {
+                document.body.classList.add('light-mode');
+                btnIcon.className = 'fas fa-moon';
+            } else {
+                btnIcon.className = 'fas fa-sun';
+            }
+        }
+        initTheme();
+
+        // 切換主題
+        function toggleTheme() {
+            document.body.classList.toggle('light-mode');
+            const isLight = document.body.classList.contains('light-mode');
+            localStorage.setItem('theme', isLight ? 'light' : 'dark');
+            
+            const btnIcon = document.querySelector('#btn-theme i');
+            btnIcon.className = isLight ? 'fas fa-moon' : 'fas fa-sun';
+        }
+
         // Firebase 專屬設定
         const firebaseConfig = {
             apiKey: "AIzaSyAt0YAxzPbFZHyLKQLN1me3N9DQKnCrylg",
@@ -485,7 +507,6 @@
         let currentUser = null;
         let isLocalMode = false;
 
-        // 初始化 Firebase
         try {
             app = firebase.initializeApp(firebaseConfig);
             auth = firebase.auth();
@@ -495,7 +516,7 @@
         }
 
         // ==========================================
-        // 2. UI 工具函數 (Toast & Modal)
+        // 2. UI 工具函數
         // ==========================================
         function showToast(message, type = 'info') {
             const container = document.getElementById('toast-container');
@@ -517,12 +538,25 @@
 
         function openModal(id) { document.getElementById(id).style.display = 'flex'; }
         function closeModal(id) { document.getElementById(id).style.display = 'none'; }
+        
+        function handleEnter(event) {
+            if (event.key === "Enter") processAndSaveUrl();
+        }
+
+        // 重新整理資料
+        async function refreshData() {
+            const icon = document.querySelector('#btn-refresh i');
+            icon.classList.add('spin-anim'); // 加入旋轉動畫
+            
+            showToast("正在重新整理資料...");
+            await loadLinks();
+            
+            setTimeout(() => { icon.classList.remove('spin-anim'); }, 1000);
+        }
 
         // ==========================================
         // 3. 認證與模式切換
         // ==========================================
-        
-        // 監聽 Firebase 登入狀態
         if(auth) {
             auth.onAuthStateChanged(user => {
                 if (user) {
@@ -534,15 +568,13 @@
             });
         }
 
-        // Google 雲端登入
         document.getElementById('btn-google-login').addEventListener('click', () => {
             const provider = new firebase.auth.GoogleAuthProvider();
             auth.signInWithPopup(provider).catch(error => {
-                showToast("登入失敗或被瀏覽器阻擋: " + error.message, 'error');
+                showToast("登入失敗: " + error.message, 'error');
             });
         });
 
-        // 本機測試模式
         document.getElementById('btn-local-login').addEventListener('click', () => {
             isLocalMode = true;
             currentUser = null;
@@ -590,15 +622,13 @@
         }
 
         // ==========================================
-        // 5. Gemini 網址解析核心 (已修復模型名稱)
+        // 5. Gemini 網址解析核心 (修復為最穩定的 1.5 Flash 版)
         // ==========================================
         async function analyzeUrlWithGemini(url) {
             const apiKey = localStorage.getItem('gemini_api_key');
-            if (!apiKey) {
-                return null;
-            }
+            if (!apiKey) return null;
 
-            // 修改為正確的 gemini-1.5-flash 模型
+            // 確保使用 100% 正確的 gemini-1.5-flash 端點，避免 404 錯誤
             const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
             
             const prompt = `
@@ -628,13 +658,11 @@
                 const data = await response.json();
                 let textResult = data.candidates[0].content.parts[0].text;
                 
-                // 正則清理：移除可能存在的 markdown 標籤
                 textResult = textResult.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
-                
                 return JSON.parse(textResult);
 
             } catch (error) {
-                console.warn("Gemini 解析失敗，將使用預設值:", error);
+                console.warn("Gemini 解析失敗:", error);
                 return null;
             }
         }
@@ -647,7 +675,6 @@
             const url = input.value.trim();
             if (!url) return showToast("請輸入網址", "error");
 
-            // UI 狀態切換
             const btn = document.getElementById('btn-add-url');
             const loader = document.getElementById('add-loader');
             const btnText = btn.querySelector('.btn-text');
@@ -657,10 +684,8 @@
 
             showToast("正在解析網址...");
 
-            // 嘗試透過 Gemini 解析
             const aiData = await analyzeUrlWithGemini(url);
             
-            // 準備儲存的資料物件
             const linkData = {
                 url: url,
                 title: aiData?.title || "新連結 (未命名)",
@@ -669,14 +694,12 @@
                 createdAt: new Date().toISOString()
             };
 
-            // 寫入資料庫或本機
             if (isLocalMode) {
                 saveToLocal(linkData);
             } else {
                 await saveToCloud(linkData);
             }
 
-            // 恢復 UI 狀態
             input.value = '';
             btn.disabled = false;
             btnText.style.display = 'inline';
@@ -687,10 +710,8 @@
         }
 
         // ==========================================
-        // 7. 資料 CRUD 操作 (Local / Cloud 雙模式)
+        // 7. 資料 CRUD 操作
         // ==========================================
-        
-        // --- 儲存 ---
         function saveToLocal(data) {
             const links = JSON.parse(localStorage.getItem('my_links') || '[]');
             data.id = 'local_' + Date.now(); 
@@ -703,7 +724,6 @@
             await db.collection('users').doc(currentUser.uid).collection('links').add(data);
         }
 
-        // --- 讀取 ---
         async function loadLinks() {
             const container = document.getElementById('links-container');
             container.innerHTML = '';
@@ -715,6 +735,7 @@
                 renderLinks(links);
             } else {
                 if(!currentUser) return;
+                // 由於 Firebase onSnapshot 是即時監聽，第一次載入或手動刷新時重新綁定即可
                 db.collection('users').doc(currentUser.uid).collection('links')
                   .orderBy('createdAt', 'desc')
                   .onSnapshot(snapshot => {
@@ -747,7 +768,6 @@
             }
         }
 
-        // --- 刪除 ---
         async function deleteLink(id) {
             if (isLocalMode) {
                 let links = JSON.parse(localStorage.getItem('my_links') || '[]');
@@ -760,7 +780,6 @@
             showToast("連結已刪除", "success");
         }
 
-        // --- 編輯 (彈出 Modal 與儲存) ---
         function openEdit(id) {
             let targetLink = null;
             if (isLocalMode) {
@@ -812,7 +831,6 @@
             showToast("已儲存變更", "success");
         }
 
-        // 防止 XSS 攻擊的工具函數
         function escapeHtml(unsafe) {
             if(!unsafe) return '';
             return unsafe
