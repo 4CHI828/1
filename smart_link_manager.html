@@ -90,8 +90,10 @@
         .link-card:hover { border-color: var(--primary); box-shadow: 0 10px 20px rgba(0,0,0,0.2); transform: translateY(-2px); }
         .link-card.is-pinned { border-left: 4px solid var(--warning); }
         .link-card.is-read { opacity: 0.6; }
+        /* 新增：失效連結視覺提示 */
+        .link-card.is-dead { border-color: var(--danger); background: rgba(239, 68, 68, 0.05); }
+        .link-card.is-dead .link-title::after { content: " (失效)"; color: var(--danger); font-size: 0.8rem; }
 
-        /* 圖片預覽區域樣式 */
         .link-image-preview {
             height: 160px; width: calc(100% + 3rem); margin: -1.5rem -1.5rem 1rem -1.5rem;
             overflow: hidden; background-color: #000; position: relative;
@@ -137,9 +139,6 @@
             position: absolute; top: 1rem; right: 1rem; z-index: 10;
             display: flex; gap: 0.5rem; opacity: 0; transition: opacity 0.2s;
         }
-        /* 如果有圖片，按鈕需要加個陰影以免看不清 */
-        .link-image-preview ~ .card-actions { top: 1rem; }
-        
         .link-card:hover .card-actions { opacity: 1; }
         .card-actions button { 
             width: 32px; height: 32px; padding: 0; border-radius: 50%; 
@@ -159,10 +158,17 @@
 
         #toast-container { position: fixed; bottom: 2rem; right: 2rem; z-index: 9999; display: flex; flex-direction: column; gap: 0.5rem; }
         .toast { background: var(--card-dark); color: var(--text-main); padding: 1rem 1.5rem; border-radius: 12px; border-left: 4px solid var(--primary); box-shadow: 0 10px 15px -3px rgba(0,0,0,0.4); animation: slideIn 0.3s ease forwards; }
+        .toast.success { border-left-color: var(--success); }
+        .toast.error { border-left-color: var(--danger); }
+        .toast.warning { border-left-color: var(--warning); }
+        
         @keyframes slideIn { from { opacity: 0; transform: translateX(100%); } to { opacity: 1; transform: translateX(0); } }
         @keyframes fadeOut { from { opacity: 1; transform: translateX(0); } to { opacity: 0; transform: translateX(100%); } }
         .loader { display: none; border: 3px solid var(--border-color); border-top: 3px solid var(--primary); border-radius: 50%; width: 18px; height: 18px; animation: spin 1s linear infinite; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        
+        /* 快捷鍵提示 */
+        .kbd { background: var(--bg-dark); border: 1px solid var(--border-color); border-radius: 4px; padding: 2px 6px; font-size: 0.7rem; font-family: monospace; color: var(--text-muted); }
     </style>
 </head>
 <body class="flex flex-col min-h-screen">
@@ -172,12 +178,17 @@
             <i class="fas fa-link"></i> 
             <span>智能連結 <span class="logo-en"><span class="highlight-letter">S</span>mart <span class="highlight-letter">L</span>ink <span class="highlight-letter">M</span>anager</span></span>
         </div>
-        <div class="header-actions">
+        <div class="header-actions flex-wrap gap-2">
             <span id="user-info" style="display: none; color: var(--text-muted); font-size: 0.9rem; margin-right: 10px;"></span>
+            
+            <!-- 新增功能按鈕 -->
+            <button class="btn-outline btn-icon-only" onclick="exportAsMarkdown()" title="一鍵生成 Markdown 清單"><i class="fab fa-markdown"></i></button>
+            <button class="btn-outline btn-icon-only" onclick="checkDeadLinks()" title="失效連結體檢"><i class="fas fa-stethoscope"></i></button>
+            
             <button class="btn-outline btn-icon-only" onclick="toggleTheme()" title="深淺色切換"><i class="fas fa-sun"></i></button>
             <button class="btn-outline btn-icon-only" id="btn-refresh" onclick="handleRefresh()" title="重新整理"><i class="fas fa-sync-alt" id="refresh-icon"></i></button>
-            <button class="btn-outline btn-icon-only" onclick="exportData()" title="匯出備份"><i class="fas fa-download"></i></button>
-            <button class="btn-outline btn-icon-only" onclick="document.getElementById('import-file').click()" title="匯入備份"><i class="fas fa-upload"></i></button>
+            <button class="btn-outline btn-icon-only" onclick="exportData()" title="匯出 JSON 備份"><i class="fas fa-download"></i></button>
+            <button class="btn-outline btn-icon-only" onclick="document.getElementById('import-file').click()" title="匯入 JSON 備份"><i class="fas fa-upload"></i></button>
             <input type="file" id="import-file" style="display:none" accept=".json" onchange="importData(event)">
             <button class="btn-outline btn-icon-only" id="btn-logout" style="display: none;" onclick="handleLogout()"><i class="fas fa-sign-out-alt"></i></button>
         </div>
@@ -187,12 +198,13 @@
         <div class="login-card">
             <h2 class="text-2xl font-bold mb-2">歡迎回來</h2>
             <p style="color: var(--text-muted); margin-bottom: 2rem;">您的個人智能連結知識庫</p>
-            <div class="login-buttons">
+            <div class="login-buttons flex flex-col gap-3">
                 <button class="btn-outline w-full justify-center" id="btn-google-login">
                     <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" style="width:18px" class="mr-2"> Google 登入
                 </button>
                 <button class="btn-primary w-full justify-center" id="btn-local-login">本機測試模式</button>
             </div>
+            <p class="text-xs text-gray-500 mt-6">提示：按 <span class="kbd">/</span> 搜尋，按 <span class="kbd">N</span> 新增</p>
         </div>
     </main>
 
@@ -233,10 +245,7 @@
             <input type="hidden" id="edit-id">
             <div class="form-group"><label>標題</label><input type="text" id="edit-title"></div>
             <div class="form-group"><label>網址</label><input type="text" id="edit-url"></div>
-            <div class="form-group">
-                <label>標籤 (用逗號分隔)</label>
-                <input type="text" id="edit-categories">
-            </div>
+            <div class="form-group"><label>標籤 (用逗號分隔)</label><input type="text" id="edit-categories"></div>
             <div class="form-group"><label>摘要說明</label><textarea id="edit-desc" style="width:100%; height:80px; padding:0.8rem; border-radius:12px; border:1px solid var(--border-color); background:var(--bg-dark); color:var(--text-main); outline:none;"></textarea></div>
             <div class="modal-actions" style="display:flex; justify-content:flex-end; gap:1rem; margin-top:1.5rem;">
                 <button class="btn-outline" onclick="closeModal('edit-modal')">取消</button>
@@ -277,6 +286,7 @@
         let app, auth, db, currentUser = null, isLocalMode = false, unsubscribeSnapshot = null;
         let currentView = 'grid';
         let activeTag = 'all';
+        let allLinksCache = []; // 用於快取當前渲染的連結，供 Markdown 匯出使用
 
         try {
             app = firebase.initializeApp(firebaseConfig);
@@ -308,74 +318,52 @@
         }
 
         /* ============================================================
-           2. 終極智能解析引擎 (整合 Microlink API + Fallback)
+           2. 終極智能解析引擎 (Microlink + Fallback)
            ============================================================ */
-        
-        // 輔助函數 1: Microlink API (專業級元數據解析，支援 JS 渲染)
         async function fetchWithMicrolink(url) {
             const apiUrl = `https://api.microlink.io/?url=${encodeURIComponent(url)}`;
             try {
                 const res = await fetch(apiUrl);
-                if (!res.ok) throw new Error("Microlink API request failed");
+                if (!res.ok) throw new Error("Microlink failed");
                 const data = await res.json();
-                
                 if (data.status === 'success' && data.data) {
                     return {
-                        title: data.data.title || "",
-                        description: data.data.description || "",
-                        image: data.data.image?.url || "",
-                        author: data.data.author || "",
+                        title: data.data.title || "", description: data.data.description || "",
+                        image: data.data.image?.url || "", author: data.data.author || "",
                         publisher: data.data.publisher || ""
                     };
                 }
-            } catch (e) {
-                console.warn("Microlink failed, falling back to proxy...");
-            }
+            } catch (e) { console.warn("Microlink failed, falling back..."); }
             return null;
         }
 
-        // 輔助函數 2: 傳統 CORS 代理備援 (當 Microlink 額度用完或失敗時使用)
         async function fetchWithProxy(url) {
-            const proxies = [
-                `https://api.allorigins.win/get?url=${encodeURIComponent(url)}`,
-                `https://corsproxy.io/?${encodeURIComponent(url)}`
-            ];
+            const proxies = [`https://api.allorigins.win/get?url=${encodeURIComponent(url)}`, `https://corsproxy.io/?${encodeURIComponent(url)}`];
             for (let proxy of proxies) {
                 try {
                     const res = await fetch(proxy);
                     if (!res.ok) continue;
-                    if (proxy.includes('allorigins')) {
-                        const data = await res.json();
-                        return data.contents;
-                    } else {
-                        return await res.text();
-                    }
+                    if (proxy.includes('allorigins')) return (await res.json()).contents;
+                    else return await res.text();
                 } catch (e) { continue; }
             }
             throw new Error("All proxies failed");
         }
 
-        // 核心解析函數
         async function fetchWebpageInfo(url) {
             let result = { title: "未命名連結", description: "點擊查看原始連結", categories: ["一般網站"], account: "", image: "" };
-            
             try {
                 if (!url.startsWith('http')) url = 'https://' + url;
                 const urlObj = new URL(url);
                 const lowerUrl = url.toLowerCase();
                 const path = urlObj.pathname.split('/').filter(p => p);
 
-                // --- 策略 1: 呼叫 Microlink API (最強大) ---
                 const microlinkData = await fetchWithMicrolink(url);
-                
                 if (microlinkData) {
                     result.title = microlinkData.title || result.title;
                     result.description = microlinkData.description || result.description;
                     result.image = microlinkData.image || "";
-                    
                     if (microlinkData.author) result.account = microlinkData.author;
-                    
-                    // 自動分類優化
                     if (microlinkData.publisher) {
                         const pub = microlinkData.publisher.toLowerCase();
                         if (pub.includes('youtube')) result.categories = ["影音娛樂", "YouTube"];
@@ -385,20 +373,14 @@
                         else if (pub.includes('tiktok') || pub.includes('douyin')) result.categories = ["短影音", "TikTok/抖音"];
                         else result.categories = ["一般網站", microlinkData.publisher];
                     }
-                } 
-                
-                // --- 策略 2: 如果 Microlink 失敗，針對特定社群做 URL 解析與 Proxy 備援 ---
-                else {
+                } else {
                     if (lowerUrl.includes('instagram.com') || lowerUrl.includes('threads.net')) {
                         result.categories = ["社群媒體", lowerUrl.includes('threads.net') ? "Threads" : "Instagram"];
                         const accountMatch = url.match(/@([a-zA-Z0-9._]+)/);
                         if (accountMatch) result.account = `@${accountMatch[1]}`;
-                        else if (lowerUrl.includes('instagram.com') && !urlObj.pathname.includes('/p/') && !urlObj.pathname.includes('/reel/')) {
-                            result.account = `@${path[0]}`;
-                        }
+                        else if (lowerUrl.includes('instagram.com') && !urlObj.pathname.includes('/p/') && !urlObj.pathname.includes('/reel/')) result.account = `@${path[0]}`;
                         if (!result.title) result.title = result.account ? `${result.account} 的貼文` : "社群媒體內容";
-                    } 
-                    else if (lowerUrl.includes('youtube.com') || lowerUrl.includes('youtu.be')) {
+                    } else if (lowerUrl.includes('youtube.com') || lowerUrl.includes('youtu.be')) {
                         result.categories = ["影音娛樂", "YouTube"];
                         const ytUser = path.find(p => p.startsWith('@'));
                         if (ytUser) result.account = ytUser;
@@ -409,13 +391,10 @@
                             if (data.author_name) result.account = data.author_name;
                             if (data.thumbnail_url) result.image = data.thumbnail_url;
                         } catch (e) {}
-                    } 
-                    else if (lowerUrl.includes('douyin.com') || lowerUrl.includes('tiktok.com')) {
+                    } else if (lowerUrl.includes('douyin.com') || lowerUrl.includes('tiktok.com')) {
                         result.categories = ["短影音", lowerUrl.includes('douyin.com') ? "抖音" : "TikTok"];
                         result.title = "短影片內容";
-                    }
-                    // 最後的備援：使用傳統 CORS 代理
-                    else {
+                    } else {
                         result.categories = ["一般網站"];
                         try {
                             const html = await fetchWithProxy(url);
@@ -426,9 +405,7 @@
                         } catch (e) {}
                     }
                 }
-            } catch (e) { console.error("Critical Error in fetchWebpageInfo:", e); }
-            
-            // 清理標題
+            } catch (e) { console.error("Critical Error:", e); }
             result.title = result.title.replace(/\s+/g, ' ').trim();
             if (!result.title) result.title = "未命名連結";
             return result;
@@ -454,15 +431,9 @@
 
             const info = await fetchWebpageInfo(url);
             let finalTitle = info.title;
-            if (info.account && !finalTitle.includes(info.account)) {
-                finalTitle = `${info.account} - ${finalTitle}`;
-            }
+            if (info.account && !finalTitle.includes(info.account)) finalTitle = `${info.account} - ${finalTitle}`;
 
-            const data = { 
-                url, title: finalTitle, categories: info.categories, 
-                description: info.description, image: info.image || "", 
-                createdAt: Date.now(), pinned: false, isRead: false, account: info.account 
-            };
+            const data = { url, title: finalTitle, categories: info.categories, description: info.description, image: info.image || "", createdAt: Date.now(), pinned: false, isRead: false, account: info.account };
 
             try {
                 if (isLocalMode) {
@@ -488,8 +459,8 @@
 
             const btn = document.getElementById('btn-bulk-save');
             btn.disabled = true; btn.innerText = "解析中...";
-
             let count = 0;
+
             if (isLocalMode) {
                 const links = JSON.parse(localStorage.getItem('my_links') || '[]');
                 for (let url of urls) {
@@ -499,7 +470,7 @@
                         const finalTitle = info.account ? `${info.account} - ${info.title}` : info.title;
                         links.unshift({ id: 'loc_' + Math.random(), url: cleanedUrl, title: finalTitle, categories: info.categories, description: info.description, image: info.image, createdAt: Date.now(), pinned: false, isRead: false, account: info.account });
                         count++;
-                    } catch(e) { console.error(e); }
+                    } catch(e) {}
                 }
                 localStorage.setItem('my_links', JSON.stringify(links));
             } else {
@@ -512,7 +483,7 @@
                         const ref = db.collection('users').doc(currentUser.uid).collection('links').doc();
                         batch.set(ref, { url: cleanedUrl, title: finalTitle, categories: info.categories, description: info.description, image: info.image, createdAt: Date.now(), pinned: false, isRead: false, account: info.account });
                         count++;
-                    } catch(e) { console.error(e); }
+                    } catch(e) {}
                 }
                 await batch.commit();
             }
@@ -565,7 +536,87 @@
         }
 
         /* ============================================================
-           4. 渲染與過濾
+           4. 新增功能：Markdown 匯出 & 失效體檢
+           ============================================================ */
+        
+        // 功能 A: 一鍵生成 Markdown 清單 (會尊重目前的搜尋/標籤過濾)
+        function exportAsMarkdown() {
+            if (allLinksCache.length === 0) {
+                showToast("目前沒有可匯出的連結", "warning");
+                return;
+            }
+            
+            let md = `# 我的智能連結清單\n\n`;
+            md += `*匯出時間：${new Date().toLocaleString()} | 共 ${allLinksCache.length} 個連結*\n\n`;
+            
+            // 按標籤分組
+            const grouped = {};
+            allLinksCache.forEach(link => {
+                const tags = Array.isArray(link.categories) ? link.categories : [link.categories || "未分類"];
+                tags.forEach(tag => {
+                    if (!grouped[tag]) grouped[tag] = [];
+                    grouped[tag].push(link);
+                });
+            });
+
+            Object.keys(grouped).sort().forEach(tag => {
+                md += `## ${tag}\n\n`;
+                grouped[tag].forEach(link => {
+                    md += `- [${link.title}](${link.url})\n`;
+                    if (link.description && link.description !== "點擊查看原始連結") {
+                        md += `  > ${link.description.substring(0, 50)}...\n`;
+                    }
+                });
+                md += `\n`;
+            });
+
+            navigator.clipboard.writeText(md).then(() => {
+                showToast("✅ Markdown 清單已複製到剪貼板！", "success");
+            }).catch(() => {
+                showToast("複製失敗，請手動複製", "error");
+            });
+        }
+
+        // 功能 B: 失效連結體檢 (純前端 no-cors 檢查，不耗 API)
+        async function checkDeadLinks() {
+            const links = await getAllLinks();
+            if (links.length === 0) {
+                showToast("沒有連結需要體檢", "info");
+                return;
+            }
+
+            showToast(`🩺 開始體檢 ${links.length} 個連結...`, "info");
+            let deadCount = 0;
+            let deadIds = [];
+
+            // 為了不卡死 UI，使用 Promise.all 並限制並發 (這裡簡單處理，直接跑)
+            const checkPromises = links.map(async (link) => {
+                try {
+                    // 使用 no-cors 模式，只要域名存在、網路通，就不會拋出錯誤
+                    // 注意：這無法判斷 404，但能抓出域名失效/斷網的死連結
+                    await fetch(link.url, { mode: 'no-cors' });
+                } catch (e) {
+                    deadCount++;
+                    deadIds.push(link.id);
+                }
+            });
+
+            await Promise.all(checkPromises);
+
+            if (deadCount > 0) {
+                showToast(`⚠️ 發現 ${deadCount} 個完全斷線的失效連結！`, "warning");
+                // 視覺標記失效連結
+                deadIds.forEach(id => {
+                    const card = document.querySelector(`[onclick*="openEdit('${id}')"]`)?.closest('.link-card');
+                    if (card) card.classList.add('is-dead');
+                });
+            } else {
+                showToast("✅ 體檢完成！所有連結都活著。", "success");
+            }
+        }
+
+        /* ============================================================
+           5. 渲染與過濾
            ============================================================ */
         function loadLinks() {
             if (isLocalMode) {
@@ -584,6 +635,7 @@
             const container = document.getElementById('links-container');
             const search = document.getElementById('search-input').value.toLowerCase();
             renderTagsCloud(links);
+            
             const filtered = links.filter(l => {
                 const matchSearch = l.title.toLowerCase().includes(search) || l.url.toLowerCase().includes(search);
                 let hasTag = (activeTag === 'all');
@@ -593,6 +645,9 @@
                 }
                 return matchSearch && hasTag;
             });
+
+            // 快取過濾後的結果，供 Markdown 匯出使用
+            allLinksCache = filtered;
 
             if (filtered.length === 0) {
                 container.innerHTML = `<div class="col-span-full text-center py-20 text-gray-500">
@@ -609,17 +664,12 @@
                 let sourceDisplay = "";
                 try {
                     if (link.account) sourceDisplay = link.account;
-                    else {
-                        const urlObj = new URL(link.url);
-                        sourceDisplay = urlObj.hostname;
-                    }
+                    else sourceDisplay = new URL(link.url).hostname;
                 } catch(e) { sourceDisplay = "未知來源"; }
 
                 let imageHtml = "";
                 if (link.image) {
-                    imageHtml = `<div class="link-image-preview">
-                        <img src="${link.image}" onerror="this.parentElement.style.display='none'">
-                    </div>`;
+                    imageHtml = `<div class="link-image-preview"><img src="${link.image}" onerror="this.parentElement.style.display='none'"></div>`;
                 }
 
                 return `
@@ -666,12 +716,7 @@
             container.innerHTML = html;
         }
 
-        function setTag(tag) {
-            activeTag = tag;
-            renderTagsCloud();
-            filterLinks();
-        }
-
+        function setTag(tag) { activeTag = tag; renderTagsCloud(); filterLinks(); }
         function filterLinks() { loadLinks(); }
 
         async function togglePin(id) {
@@ -722,9 +767,8 @@
         async function openEdit(id) {
             let link;
             try {
-                if (isLocalMode) {
-                    link = JSON.parse(localStorage.getItem('my_links') || '[]').find(l => l.id === id);
-                } else {
+                if (isLocalMode) link = JSON.parse(localStorage.getItem('my_links') || '[]').find(l => l.id === id);
+                else {
                     const snap = await db.collection('users').doc(currentUser.uid).collection('links').doc(id).get();
                     if (snap.exists) { link = snap.data(); link.id = snap.id; }
                 }
@@ -732,9 +776,7 @@
                     document.getElementById('edit-id').value = link.id;
                     document.getElementById('edit-title').value = link.title || "";
                     document.getElementById('edit-url').value = link.url || "";
-                    if (Array.isArray(link.categories)) document.getElementById('edit-categories').value = link.categories.join(', ');
-                    else if (typeof link.categories === 'string') document.getElementById('edit-categories').value = link.categories;
-                    else document.getElementById('edit-categories').value = "";
+                    document.getElementById('edit-categories').value = Array.isArray(link.categories) ? link.categories.join(', ') : (link.categories || "");
                     document.getElementById('edit-desc').value = link.description || "";
                     openModal('edit-modal');
                 }
@@ -789,6 +831,29 @@
         function handleEnter(e) { if (e.key === "Enter") processAndSaveUrl(); }
         function escapeHtml(u) { return String(u || '').replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;"); }
 
+        /* ============================================================
+           6. 快捷鍵與初始化
+           ============================================================ */
+        function initKeyboardShortcuts() {
+            document.addEventListener('keydown', (e) => {
+                // 如果焦點在輸入框或 textarea 內，則不觸發快捷鍵 (除了 Esc)
+                const isTyping = e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA';
+                
+                if (e.key === 'Escape') {
+                    closeModal('edit-modal');
+                    closeModal('bulk-modal');
+                } else if (!isTyping) {
+                    if (e.key === '/') {
+                        e.preventDefault();
+                        document.getElementById('search-input').focus();
+                    } else if (e.key.toLowerCase() === 'n') {
+                        e.preventDefault();
+                        document.getElementById('url-input').focus();
+                    }
+                }
+            });
+        }
+
         if(auth) {
             auth.onAuthStateChanged(user => {
                 if (user) {
@@ -818,6 +883,7 @@
         
         window.onload = () => { 
             initFileSaveTime(); 
+            initKeyboardShortcuts(); // 初始化快捷鍵
             if (localStorage.getItem('theme') === 'light') { document.body.classList.add('light-mode'); }
         };
     </script>
