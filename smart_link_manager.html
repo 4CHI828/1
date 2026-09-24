@@ -471,12 +471,11 @@
         // 1. 系統狀態與設定
         // ==========================================
         
-        // ★ 已經為您填入專屬的 Firebase 金鑰 ★
+        // Firebase 專屬設定
         const firebaseConfig = {
             apiKey: "AIzaSyAt0YAxzPbFZHyLKQLN1me3N9DQKnCrylg",
             authDomain: "link-1b206.firebaseapp.com",
             projectId: "link-1b206",
-            // 下方為推算的安全預設值，不影響 Auth/Firestore 核心功能
             storageBucket: "link-1b206.appspot.com", 
             messagingSenderId: "123456789",
             appId: "1:123456789:web:abcdef"
@@ -486,7 +485,7 @@
         let currentUser = null;
         let isLocalMode = false;
 
-        // 初始化 Firebase (如果金鑰有效)
+        // 初始化 Firebase
         try {
             app = firebase.initializeApp(firebaseConfig);
             auth = firebase.auth();
@@ -591,15 +590,16 @@
         }
 
         // ==========================================
-        // 5. Gemini 網址解析核心
+        // 5. Gemini 網址解析核心 (已修復模型名稱)
         // ==========================================
         async function analyzeUrlWithGemini(url) {
             const apiKey = localStorage.getItem('gemini_api_key');
             if (!apiKey) {
-                return null; // 沒有金鑰，回傳 null 以觸發容錯機制
+                return null;
             }
 
-            const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`;
+            // 修改為正確的 gemini-1.5-flash 模型
+            const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
             
             const prompt = `
             請分析以下網址並萃取資訊。如果遇到權限阻擋無法訪問該網頁，請直接從「網址字串」本身的結構(如帳號、經緯度、地點名稱)進行推敲。
@@ -619,7 +619,7 @@
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
                         contents: [{ parts: [{ text: prompt }] }],
-                        generationConfig: { temperature: 0.2 } // 降低隨機性，確保 JSON 格式穩定
+                        generationConfig: { temperature: 0.2 }
                     })
                 });
 
@@ -628,14 +628,14 @@
                 const data = await response.json();
                 let textResult = data.candidates[0].content.parts[0].text;
                 
-                // 正則清理：移除可能存在的 markdown ```json 標籤
+                // 正則清理：移除可能存在的 markdown 標籤
                 textResult = textResult.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
                 
                 return JSON.parse(textResult);
 
             } catch (error) {
                 console.warn("Gemini 解析失敗，將使用預設值:", error);
-                return null; // 發生任何錯誤都回傳 null，交給主流程處理
+                return null;
             }
         }
 
@@ -660,7 +660,7 @@
             // 嘗試透過 Gemini 解析
             const aiData = await analyzeUrlWithGemini(url);
             
-            // 準備儲存的資料物件 (加入 Fallback 容錯預設值)
+            // 準備儲存的資料物件
             const linkData = {
                 url: url,
                 title: aiData?.title || "新連結 (未命名)",
@@ -693,7 +693,7 @@
         // --- 儲存 ---
         function saveToLocal(data) {
             const links = JSON.parse(localStorage.getItem('my_links') || '[]');
-            data.id = 'local_' + Date.now(); // 產生假 ID
+            data.id = 'local_' + Date.now(); 
             links.unshift(data);
             localStorage.setItem('my_links', JSON.stringify(links));
         }
@@ -749,7 +749,6 @@
 
         // --- 刪除 ---
         async function deleteLink(id) {
-            // 這裡不再使用 confirm()，直接執行刪除並給予 Toast (您可依需求實作 Modal 確認框)
             if (isLocalMode) {
                 let links = JSON.parse(localStorage.getItem('my_links') || '[]');
                 links = links.filter(l => l.id !== id);
@@ -762,15 +761,12 @@
         }
 
         // --- 編輯 (彈出 Modal 與儲存) ---
-        let currentLinksForEdit = []; // 暫存資料供比對用
-
         function openEdit(id) {
             let targetLink = null;
             if (isLocalMode) {
                 const links = JSON.parse(localStorage.getItem('my_links') || '[]');
                 targetLink = links.find(l => l.id === id);
             } else {
-                // 雲端模式：從畫面的 DOM 中抓取資料比較快，或者您可以全域快取
                 const card = document.getElementById(`card-${id}`);
                 targetLink = {
                     id: id,
