@@ -432,11 +432,10 @@
     const DRIVE_SCOPE = "https://www.googleapis.com/auth/drive.file";
     const DRIVE_API = "https://www.googleapis.com/drive/v3";
     const DRIVE_UPLOAD_API = "https://www.googleapis.com/upload/drive/v3";
-    const DRIVE_APP_NAME = "奇奇雲端記帳";
+    const DRIVE_APP_NAME = "雲端記帳";
     let googleAccessToken = "", googleTokenClient = null, driveRootFolderId = null, driveReceiptFolderId = null, driveReady = false;
     
     let currentSheet = localStorage.getItem("app_active_sheet") || "預設帳本";
-    // 預設成員改為空陣列，由使用者自行新增
     let members = JSON.parse(localStorage.getItem("split_members_cache")) || [];
     let categories = JSON.parse(localStorage.getItem("app_categories_cache")) || ["餐飲", "交通", "住宿", "購物", "門票", "娛樂", "生活", "其他"];
     let exchangeRates = { TWD: 1, EUR: 35.0, JPY: 0.21, CNY: 4.45, USD: 32.5, KRW: 0.024 };
@@ -1019,7 +1018,6 @@
       }
     });
     
-    // 移除成員限制：允許全部刪除
     window.removeMember = function(idx) { 
       const removed = members.splice(idx, 1); 
       renderMemberControls(); 
