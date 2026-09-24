@@ -132,6 +132,9 @@
         
         .loader { display: none; border: 3px solid var(--border-color); border-top: 3px solid var(--primary); border-radius: 50%; width: 18px; height: 18px; animation: spin 1s linear infinite; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        
+        /* ✅ 修復 1：補上重新整理按鈕的旋轉動畫 */
+        .rotating { animation: spin 1s linear infinite; } 
     </style>
 </head>
 <body class="flex flex-col min-h-screen">
@@ -150,7 +153,7 @@
             <button class="btn-outline btn-icon-only" onclick="exportData()" title="匯出 JSON"><i class="fas fa-download"></i></button>
             <button class="btn-outline btn-icon-only" onclick="document.getElementById('import-file').click()" title="匯入 JSON"><i class="fas fa-upload"></i></button>
             <input type="file" id="import-file" style="display:none" accept=".json" onchange="importData(event)">
-            <button class="btn-outline btn-icon-only" id="btn-logout" style="display: none;" onclick="handleLogout()"><i class="fas fa-sign-out-alt"></i></button>
+            <button class="btn-outline btn-icon-only" id="btn-logout" style="display: none;" onclick="handleLogout()" title="登出"><i class="fas fa-sign-out-alt"></i></button>
         </div>
     </header>
 
@@ -203,7 +206,6 @@
         </div>
     </main>
 
-    <!-- ================= 底部 Footer ================= -->
     <footer style="text-align: center; color: var(--text-muted); font-size: 0.875rem; padding: 1.5rem 0; border-top: 1px solid var(--border-color); margin-top: auto; background-color: var(--card-dark);">
         <div style="display: flex; align-items: center; justify-content: center; gap: 0.8rem; flex-wrap: wrap;">
             <span>更新時間</span>
@@ -217,7 +219,6 @@
             </a>
         </div>
     </footer>
-    <!-- ============================================================ -->
 
     <!-- Modals -->
     <div class="modal-overlay" id="folder-modal">
@@ -262,6 +263,71 @@
 
         try { app = firebase.initializeApp(firebaseConfig); auth = firebase.auth(); db = firebase.firestore(); } catch(e) {}
 
+        // ============================================================
+        // 🔐 登入 / 登出 狀態管理
+        // ============================================================
+        function showAppScreen(userInfoText) {
+            document.getElementById('login-screen').style.display = 'none';
+            document.getElementById('app-screen').style.display = 'block';
+            document.getElementById('btn-logout').style.display = 'inline-flex';
+            document.getElementById('user-info').style.display = 'inline';
+            document.getElementById('user-info').textContent = userInfoText;
+        }
+
+        function showLoginScreen() {
+            document.getElementById('login-screen').style.display = 'flex';
+            document.getElementById('app-screen').style.display = 'none';
+            document.getElementById('btn-logout').style.display = 'none';
+            document.getElementById('user-info').style.display = 'none';
+        }
+
+        if(auth) {
+            auth.onAuthStateChanged(async user => {
+                if (user) {
+                    isLocalMode = false;
+                    currentUser = user;
+                    showAppScreen(user.email);
+                    await renderFolderChips();
+                    loadLinks();
+                } else {
+                    if (!isLocalMode) {
+                        currentUser = null;
+                        showLoginScreen();
+                    }
+                }
+            });
+        }
+
+        document.getElementById('btn-google-login').addEventListener('click', () => {
+            if(auth) auth.signInWithPopup(new firebase.auth.GoogleAuthProvider());
+        });
+
+        document.getElementById('btn-local-login').addEventListener('click', async () => {
+            isLocalMode = true;
+            currentUser = null;
+            showAppScreen("本機模式");
+            await renderFolderChips();
+            loadLinks();
+        });
+
+        async function handleLogout() {
+            if (isLocalMode) {
+                isLocalMode = false;
+                showLoginScreen();
+            } else if (auth) {
+                try {
+                    await auth.signOut();
+                } catch (e) {
+                    showLoginScreen();
+                }
+            } else {
+                showLoginScreen();
+            }
+        }
+
+        // ============================================================
+        // 📂 資料夾與標籤邏輯
+        // ============================================================
         async function getFolders() {
             if (isLocalMode) {
                 let f = JSON.parse(localStorage.getItem('my_folders') || '[]');
@@ -351,7 +417,9 @@
             return `background: ${bg}; color: ${text}; border: 1px solid ${border};`;
         }
 
-        // ✅ 核心邏輯：直接讀取資料檔案中最後一筆的 createdAt 作為更新時間
+        // ============================================================
+        // 🌐 網頁解析與自動標籤 (含 YouTube 修復)
+        // ============================================================
         function updateLastArchiveTime(links) {
             const displayEl = document.getElementById('lastUpdatedDisplay');
             if (!links || links.length === 0) {
@@ -359,9 +427,7 @@
                 return;
             }
             let maxTime = 0;
-            links.forEach(l => {
-                if (l.createdAt && l.createdAt > maxTime) maxTime = l.createdAt;
-            });
+            links.forEach(l => { if (l.createdAt && l.createdAt > maxTime) maxTime = l.createdAt; });
             
             if (maxTime > 0 && displayEl) {
                 const date = new Date(maxTime);
@@ -375,11 +441,9 @@
             }
         }
 
-        // ✅ YouTube 專屬解析邏輯 (解決 CORS 讀不到的問題)
         function getYouTubeVideoId(url) {
             const regex = /(?:youtu\.be\/|youtube\.com\/(?:watch\?v=|embed\/|v\/|shorts\/))([a-zA-Z0-9_-]{11})/;
-            const match = url.match(regex);
-            return match ? match[1] : null;
+            return url.match(regex)?.[1] || null;
         }
 
         async function fetchYouTubeInfo(url) {
@@ -390,70 +454,39 @@
                 const response = await fetch(oembedUrl);
                 if (!response.ok) throw new Error('oEmbed 請求失敗');
                 const data = await response.json();
-                return {
-                    title: data.title || 'YouTube 影片',
-                    summary: data.author_name || 'YouTube 頻道',
-                    author: data.author_name || '',
-                    image: data.thumbnail_url || `https://img.youtube.com/vi/${videoId}/hqdefault.jpg`
-                };
+                return { title: data.title || 'YouTube 影片', summary: data.author_name || 'YouTube 頻道', author: data.author_name || '', image: data.thumbnail_url || `https://img.youtube.com/vi/${videoId}/hqdefault.jpg` };
             } catch (error) {
-                console.warn('YouTube oEmbed 失敗:', error);
-                return {
-                    title: 'YouTube 影片',
-                    summary: 'YouTube',
-                    author: '',
-                    image: `https://img.youtube.com/vi/${videoId}/hqdefault.jpg`
-                };
+                return { title: 'YouTube 影片', summary: 'YouTube', author: '', image: `https://img.youtube.com/vi/${videoId}/hqdefault.jpg` };
             }
         }
 
         async function fetchWebpageInfo(url) {
             let r = { title: "未命名連結", description: "點擊查看原始連結", categories: ["一般網站"], account: "", image: "" };
-            
-            // ✅ 1. 自動辨識平台並設定預設標籤 (Tags)
             let detectedTags = ["一般網站"];
             const lowerUrl = url.toLowerCase();
-            if (lowerUrl.includes('youtube.com') || lowerUrl.includes('youtu.be')) {
-                detectedTags = ["YouTube", "影片"];
-            } else if (lowerUrl.includes('facebook.com') || lowerUrl.includes('fb.watch') || lowerUrl.includes('fb.com')) {
-                detectedTags = ["Facebook", "社群"];
-            } else if (lowerUrl.includes('instagram.com')) {
-                detectedTags = ["Instagram", "社群"];
-            } else if (lowerUrl.includes('x.com') || lowerUrl.includes('twitter.com')) {
-                detectedTags = ["X", "Twitter", "社群"];
-            } else if (lowerUrl.includes('threads.net')) {
-                detectedTags = ["Threads", "社群"];
-            }
+            
+            if (lowerUrl.includes('youtube.com') || lowerUrl.includes('youtu.be')) detectedTags = ["YouTube", "影片"];
+            else if (lowerUrl.includes('facebook.com') || lowerUrl.includes('fb.watch') || lowerUrl.includes('fb.com')) detectedTags = ["Facebook", "社群"];
+            else if (lowerUrl.includes('instagram.com')) detectedTags = ["Instagram", "社群"];
+            else if (lowerUrl.includes('x.com') || lowerUrl.includes('twitter.com')) detectedTags = ["X", "Twitter", "社群"];
+            else if (lowerUrl.includes('threads.net')) detectedTags = ["Threads", "社群"];
 
-            // ✅ 2. 優先處理 YouTube (解決 CORS 讀不到的問題)
             if (lowerUrl.includes('youtube.com') || lowerUrl.includes('youtu.be')) {
                 const ytData = await fetchYouTubeInfo(url);
-                if (ytData) {
-                    return {
-                        title: ytData.title,
-                        description: ytData.summary,
-                        categories: detectedTags, // 使用辨識到的標籤
-                        account: ytData.author,
-                        image: ytData.image
-                    };
-                }
+                if (ytData) return { title: ytData.title, description: ytData.summary, categories: detectedTags, account: ytData.author, image: ytData.image };
             }
 
-            // ✅ 3. 其他網站使用 Microlink API (保留您原本的 FB, IG, X 邏輯)
             try {
                 if (!url.startsWith('http')) url = 'https://' + url;
                 const res = await fetch(`https://api.microlink.io/?url=${encodeURIComponent(url)}`);
                 const d = await res.json();
                 if (d.status === 'success') {
-                    r.title = d.data.title || r.title; 
-                    r.description = d.data.description || r.description; 
-                    r.image = d.data.image?.url || "";
+                    r.title = d.data.title || r.title; r.description = d.data.description || r.description; r.image = d.data.image?.url || "";
                     if (d.data.author) r.account = d.data.author;
                 }
             } catch (e) {}
-            
             r.title = r.title.replace(/\s+/g, ' ').trim();
-            r.categories = detectedTags; // ✅ 將辨識到的標籤賦值給返回結果
+            r.categories = detectedTags;
             return r;
         }
 
@@ -463,7 +496,6 @@
             btn.disabled = true; txt.style.display = 'none'; loader.style.display = 'block';
             
             const info = await fetchWebpageInfo(url);
-            
             let finalTitle = info.title; if (info.account && !finalTitle.includes(info.account)) finalTitle = `${info.account} - ${finalTitle}`;
             
             const targetFolder = activeFolder !== 'all' ? activeFolder : 'default';
@@ -481,9 +513,12 @@
             } catch (e) { showToast("❌ " + e.message, "error"); }
             
             input.value = ''; btn.disabled = false; txt.style.display = 'inline'; loader.style.display = 'none';
-            loadLinks(); // 儲存後會觸發 loadLinks，進而自動更新底部的存檔時間
+            loadLinks();
         }
 
+        // ============================================================
+        // 🔄 渲染與互動邏輯
+        // ============================================================
         async function getAllLinks() {
             if (isLocalMode) return JSON.parse(localStorage.getItem('my_links') || '[]');
             return (await db.collection('users').doc(currentUser.uid).collection('links').get()).docs.map(d => ({ id: d.id, ...d.data() }));
@@ -492,13 +527,13 @@
         function loadLinks() {
             if (isLocalMode) {
                 const allData = JSON.parse(localStorage.getItem('my_links') || '[]');
-                updateLastArchiveTime(allData); // ✅ 讀取本地檔案的最後存檔時間
+                updateLastArchiveTime(allData);
                 renderCurrentView(allData);
             } else if(currentUser && db) {
                 if(unsubscribeSnapshot) unsubscribeSnapshot();
                 unsubscribeSnapshot = db.collection('users').doc(currentUser.uid).collection('links').orderBy('createdAt', 'desc').onSnapshot(snap => {
                     const allData = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-                    updateLastArchiveTime(allData); // ✅ 讀取雲端檔案的最後存檔時間
+                    updateLastArchiveTime(allData);
                     renderCurrentView(allData);
                 });
             }
@@ -507,14 +542,12 @@
         function renderCurrentView(links) {
             const search = document.getElementById('search-input').value.toLowerCase();
             renderTagChips(links);
-            
             const filtered = links.filter(l => {
                 const matchSearch = l.title.toLowerCase().includes(search) || l.url.toLowerCase().includes(search);
                 const matchTag = activeTag === 'all' || (Array.isArray(l.categories) ? l.categories.includes(activeTag) : l.categories === activeTag);
                 const matchFolder = activeFolder === 'all' || l.folderId === activeFolder || (!l.folderId && activeFolder === 'default');
                 return matchSearch && matchTag && matchFolder;
             });
-            
             allLinksCache = filtered;
             if (isKanbanMode) renderKanban(filtered); else renderLinks(filtered);
         }
@@ -522,36 +555,29 @@
         function renderLinks(links) {
             const container = document.getElementById('links-container');
             if (links.length === 0) { container.innerHTML = `<div class="text-center py-20 text-gray-500 col-span-full">找不到連結</div>`; return; }
-            
             container.innerHTML = links.map((link, index) => {
                 const titleHtml = link.title.includes('@') ? link.title.replace(/(@[^\s-]+)/, `<span class="account-handle">$1</span>`) : escapeHtml(link.title);
                 let sourceDisplay = ""; try { sourceDisplay = link.account || new URL(link.url).hostname; } catch(e) { sourceDisplay = "未知"; }
                 let imageHtml = link.image ? `<div class="link-image-preview"><img src="${link.image}" onerror="this.parentElement.style.display='none'"></div>` : "";
-                
                 const folder = allFoldersCache.find(f => f.id === link.folderId) || allFoldersCache.find(f => f.id === 'default');
                 const folderBadge = folder ? `<div class="folder-badge"><i class="fas ${folder.icon || 'fa-folder'}"></i> ${folder.name}</div>` : "";
-
-                const tagsHtml = (Array.isArray(link.categories) ? link.categories : (link.categories ? [link.categories] : [])).map(t => 
-                    `<span class="tag-badge" style="${getTagStyles(t)}">${escapeHtml(t)}</span>`
-                ).join('');
-
-                const delay = index * 0.05; 
-
+                const tagsHtml = (Array.isArray(link.categories) ? link.categories : (link.categories ? [link.categories] : [])).map(t => `<span class="tag-badge" style="${getTagStyles(t)}">${escapeHtml(t)}</span>`).join('');
+                
+                // ✅ 修復 2：使用更安全的 escapeHtml 防止破版
                 return `
-                <div class="link-card card-enter ${link.pinned ? 'is-pinned' : ''} ${link.isRead ? 'is-read' : ''}" style="animation-delay: ${delay}s;">
-                    ${folderBadge}
-                    ${imageHtml}
+                <div class="link-card card-enter ${link.pinned ? 'is-pinned' : ''} ${link.isRead ? 'is-read' : ''}" style="animation-delay: ${index * 0.05}s;">
+                    ${folderBadge}${imageHtml}
                     <div class="card-actions">
-                        <button class="btn-outline" onclick="togglePin('${link.id}')" title="釘選"><i class="fas ${link.pinned ? 'fa-thumbtack' : 'fa-thumbtack'}"></i></button>
+                        <button class="btn-outline" onclick="togglePin('${link.id}')" title="釘選"><i class="fas fa-thumbtack"></i></button>
                         <button class="btn-outline" onclick="toggleRead('${link.id}')" title="已讀"><i class="fas ${link.isRead ? 'fa-check-circle' : 'fa-circle'}"></i></button>
                         <button class="btn-outline" onclick="openEdit('${link.id}')" title="編輯"><i class="fas fa-edit"></i></button>
                         <button class="btn-outline btn-delete" onclick="deleteLink('${link.id}')" title="刪除"><i class="fas fa-trash"></i></button>
                     </div>
                     <p class="link-desc">${escapeHtml(link.description)}</p>
                     <h3 class="link-title">${titleHtml}</h3>
-                    <a href="${link.url}" target="_blank" class="link-url-display">${escapeHtml(link.url)}</a>
+                    <a href="${escapeHtml(link.url)}" target="_blank" class="link-url-display">${escapeHtml(link.url)}</a>
                     <div class="card-footer">
-                        <div class="source-info"><img class="favicon" src="https://www.google.com/s2/favicons?domain=${link.url}&sz=64"><div class="source-text"><span class="font-medium">${sourceDisplay}</span></div></div>
+                        <div class="source-info"><img class="favicon" src="https://www.google.com/s2/favicons?domain=${encodeURIComponent(link.url)}&sz=64"><div class="source-text"><span class="font-medium">${sourceDisplay}</span></div></div>
                         <div class="tags-container">${tagsHtml}</div>
                     </div>
                 </div>`;
@@ -596,10 +622,8 @@
                     document.getElementById('edit-url').value = link.url || "";
                     document.getElementById('edit-categories').value = Array.isArray(link.categories) ? link.categories.join(', ') : (link.categories || "");
                     document.getElementById('edit-desc').value = link.description || "";
-                    
                     const select = document.getElementById('edit-folder');
                     select.innerHTML = allFoldersCache.map(f => `<option value="${f.id}" ${link.folderId === f.id ? 'selected' : ''}>${f.name}</option>`).join('');
-                    
                     openModal('edit-modal');
                 }
             } catch (e) { showToast("讀取失敗", "error"); }
@@ -607,11 +631,15 @@
 
         async function saveEdit() {
             const id = document.getElementById('edit-id').value;
+            // ✅ 修復 3：支援全形/半形逗號分割標籤
+            const categoriesRaw = document.getElementById('edit-categories').value;
+            const categories = categoriesRaw.split(/[,，]\s*/).map(t => t.trim()).filter(t => t);
+            
             const updated = {
-                title: document.getElementById('edit-title').value,
+                title: document.getElementById('edit-title').value, 
                 url: document.getElementById('edit-url').value,
-                categories: document.getElementById('edit-categories').value.split(',').map(t => t.trim()).filter(t => t),
-                description: document.getElementById('edit-desc').value,
+                categories: categories,
+                description: document.getElementById('edit-desc').value, 
                 folderId: document.getElementById('edit-folder').value
             };
             if (isLocalMode) { let l = JSON.parse(localStorage.getItem('my_links') || '[]'); const i = l.findIndex(x => x.id === id); if(i>-1) { l[i] = { ...l[i], ...updated }; localStorage.setItem('my_links', JSON.stringify(l)); loadLinks(); } }
@@ -686,8 +714,7 @@
             reader.onload = async (e) => {
                 try {
                     const data = JSON.parse(e.target.result);
-                    const links = data.links || data;
-                    const folders = data.folders || [];
+                    const links = data.links || data; const folders = data.folders || [];
                     if (isLocalMode) { 
                         localStorage.setItem('my_links', JSON.stringify(links)); 
                         if(folders.length) localStorage.setItem('my_folders', JSON.stringify(folders));
@@ -700,6 +727,8 @@
                     }
                     showToast("匯入成功", "success");
                 } catch (err) { showToast("匯入失敗", "error"); }
+                // ✅ 修復 4：重置 input 確保可以重複匯入同一個檔案
+                event.target.value = ''; 
             };
             reader.readAsText(file);
         }
@@ -712,24 +741,43 @@
         function openModal(id) { document.getElementById(id).style.display = 'flex'; }
         function closeModal(id) { document.getElementById(id).style.display = 'none'; }
         function handleEnter(e) { if (e.key === "Enter") processAndSaveUrl(); }
-        function escapeHtml(u) { return String(u || '').replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;"); }
+        
+        // ✅ 修復 2：升級 escapeHtml，防止特殊字元破壞 HTML 結構
+        function escapeHtml(u) {
+            return String(u || '')
+                .replace(/&/g, "&amp;")
+                .replace(/</g, "&lt;")
+                .replace(/>/g, "&gt;")
+                .replace(/"/g, "&quot;")
+                .replace(/'/g, "&#039;");
+        }
 
         if(auth) {
             auth.onAuthStateChanged(async user => {
                 if (user) {
-                    currentUser = user; document.getElementById('login-screen').style.display = 'none'; document.getElementById('app-screen').style.display = 'block';
-                    document.getElementById('btn-logout').style.display = 'inline-flex'; document.getElementById('user-info').style.display = 'inline'; document.getElementById('user-info').textContent = user.email;
-                    await renderFolderChips(); loadLinks();
+                    isLocalMode = false;
+                    currentUser = user;
+                    showAppScreen(user.email);
+                    await renderFolderChips();
+                    loadLinks();
+                } else {
+                    if (!isLocalMode) {
+                        currentUser = null;
+                        showLoginScreen();
+                    }
                 }
             });
         }
-        document.getElementById('btn-google-login').addEventListener('click', () => auth.signInWithPopup(new firebase.auth.GoogleAuthProvider()));
-        document.getElementById('btn-local-login').addEventListener('click', async () => {
-            isLocalMode = true; document.getElementById('login-screen').style.display = 'none'; document.getElementById('app-screen').style.display = 'block';
-            document.getElementById('user-info').style.display = 'inline'; document.getElementById('user-info').textContent = "本機模式"; 
-            await renderFolderChips(); loadLinks();
+        document.getElementById('btn-google-login').addEventListener('click', () => {
+            if(auth) auth.signInWithPopup(new firebase.auth.GoogleAuthProvider());
         });
-        function handleLogout() { location.reload(); }
+        document.getElementById('btn-local-login').addEventListener('click', async () => {
+            isLocalMode = true;
+            currentUser = null;
+            showAppScreen("本機模式");
+            await renderFolderChips();
+            loadLinks();
+        });
         
         window.onload = async () => { 
             if (localStorage.getItem('theme') === 'light') document.body.classList.add('light-mode'); 
