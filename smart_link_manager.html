@@ -8,7 +8,6 @@
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <link rel="manifest" id="pwa-manifest">
     <meta name="theme-color" content="#0f172a">
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🔗</text></svg>">
@@ -18,7 +17,7 @@
             --primary: #6366f1; --primary-hover: #4f46e5; --bg-dark: #0f172a;
             --card-dark: #1e293b; --text-main: #f8fafc; --text-muted: #94a3b8;
             --border-color: #334155; --danger: #ef4444; --success: #10b981;
-            --warning: #f59e0b; --accent: #ec4899;
+            --warning: #f59e0b;
         }
         body.light-mode {
             --bg-dark: #f1f5f9; --card-dark: #ffffff; --text-main: #0f172a;
@@ -27,80 +26,80 @@
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Inter', 'Segoe UI', Roboto, sans-serif; }
         body { background-color: var(--bg-dark); color: var(--text-main); min-height: 100vh; transition: background-color 0.3s, color 0.3s; }
 
-        header { background-color: var(--card-dark); padding: 1rem 2rem; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-color); position: sticky; top: 0; z-index: 100; backdrop-filter: blur(10px); }
-        .logo { font-size: 1.3rem; font-weight: 600; display: flex; align-items: center; gap: 0.6rem; }
-        .logo i { color: var(--primary); font-size: 1.6rem; }
-        .highlight-letter { color: var(--primary); font-weight: 800; font-size: 1.4rem; }
-        .logo-en { color: var(--text-muted); font-weight: 400; margin-left: 0.4rem; }
+        /* Header & Buttons */
+        header { background-color: var(--card-dark); padding: 0.6rem 1.5rem; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-color); position: sticky; top: 0; z-index: 100; backdrop-filter: blur(10px); }
+        .logo { font-size: 1.1rem; font-weight: 600; display: flex; align-items: center; gap: 0.5rem; }
+        .logo i { color: var(--primary); font-size: 1.2rem; }
+        .highlight-letter { color: var(--primary); font-weight: 800; font-size: 1.1rem; }
+        .logo-en { color: var(--text-muted); font-weight: 400; margin-left: 0.3rem; font-size: 0.85rem; }
 
-        button { cursor: pointer; border: none; border-radius: 10px; padding: 0.6rem 1.2rem; font-size: 0.9rem; font-weight: 500; transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1); display: inline-flex; align-items: center; gap: 0.5rem; }
+        button { cursor: pointer; border: none; border-radius: 6px; padding: 0.4rem 0.8rem; font-size: 0.8rem; font-weight: 500; transition: all 0.2s; display: inline-flex; align-items: center; gap: 0.4rem; }
         button:active { transform: scale(0.95); }
         button:disabled { opacity: 0.5; cursor: not-allowed; }
-        .btn-primary { background-color: var(--primary); color: white; box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3); }
-        .btn-primary:hover { background-color: var(--primary-hover); transform: translateY(-1px); }
+        .btn-primary { background-color: var(--primary); color: white; box-shadow: 0 2px 8px rgba(99, 102, 241, 0.3); }
+        .btn-primary:hover { background-color: var(--primary-hover); }
         .btn-outline { background-color: transparent; color: var(--text-main); border: 1px solid var(--border-color); }
         .btn-outline:hover { background-color: var(--border-color); }
-        .btn-icon-only { padding: 0.6rem; border-radius: 50%; width: 40px; height: 40px; justify-content: center; }
+        .btn-icon-only { padding: 0.4rem; border-radius: 50%; width: 32px; height: 32px; justify-content: center; font-size: 0.8rem; }
 
+        /* Layouts */
         #login-screen { display: flex; flex-direction: column; justify-content: center; align-items: center; min-height: 80vh; padding: 2rem; }
-        .login-card { background-color: var(--card-dark); padding: 3rem; border-radius: 24px; text-align: center; border: 1px solid var(--border-color); max-width: 450px; width: 100%; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.3); }
-        #app-screen { display: none; padding: 2rem; max-width: 1400px; margin: 0 auto; width: 100%; flex: 1; }
-        .control-panel { display: flex; flex-direction: column; gap: 1.5rem; margin-bottom: 2rem; }
-        .input-section { background-color: var(--card-dark); padding: 1rem; border-radius: 16px; border: 1px solid var(--border-color); display: flex; gap: 1rem; box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1); }
-        .input-section input { flex: 1; padding: 0.8rem 1.2rem; border-radius: 12px; border: 1px solid var(--border-color); background-color: var(--bg-dark); color: var(--text-main); font-size: 1rem; outline: none; transition: border 0.2s; }
+        .login-card { background-color: var(--card-dark); padding: 2.5rem; border-radius: 20px; text-align: center; border: 1px solid var(--border-color); max-width: 400px; width: 100%; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.3); }
+        #app-screen { display: none; padding: 1rem; max-width: 1600px; margin: 0 auto; width: 100%; flex: 1; }
+        .control-panel { display: flex; flex-direction: column; gap: 0.8rem; margin-bottom: 1rem; }
+        .input-section { background-color: var(--card-dark); padding: 0.6rem; border-radius: 10px; border: 1px solid var(--border-color); display: flex; gap: 0.6rem; }
+        .input-section input { flex: 1; padding: 0.5rem 0.8rem; border-radius: 6px; border: 1px solid var(--border-color); background-color: var(--bg-dark); color: var(--text-main); font-size: 0.85rem; outline: none; }
         .input-section input:focus { border-color: var(--primary); }
 
-        .chips-container { display: flex; flex-wrap: wrap; gap: 0.7rem; margin-bottom: 0.8rem; }
-        .chip { padding: 0.4rem 1.2rem; border-radius: 20px; background: var(--card-dark); border: 1px solid var(--border-color); color: var(--text-main); font-size: 0.85rem; cursor: pointer; transition: all 0.2s; display: flex; align-items: center; gap: 0.4rem; }
+        .chips-container { display: flex; flex-wrap: wrap; gap: 0.4rem; margin-bottom: 0.3rem; }
+        .chip { padding: 0.2rem 0.6rem; border-radius: 12px; background: var(--card-dark); border: 1px solid var(--border-color); color: var(--text-main); font-size: 0.75rem; cursor: pointer; transition: all 0.2s; display: flex; align-items: center; gap: 0.3rem; }
         .chip:hover { border-color: var(--primary); }
-        .chip.active { background: var(--primary); color: white; border-color: var(--primary); box-shadow: 0 4px 10px rgba(99, 102, 241, 0.3); }
-        .chip i { font-size: 0.8rem; }
+        .chip.active { background: var(--primary); color: white; border-color: var(--primary); }
 
-        .filter-section { display: flex; flex-wrap: wrap; gap: 1rem; align-items: center; justify-content: space-between; }
-        .search-box { flex: 1; min-width: 300px; position: relative; }
-        .search-box i { position: absolute; left: 14px; top: 50%; transform: translateY(-50%); color: var(--text-muted); }
-        .search-box input { width: 100%; padding: 0.7rem 1rem 0.7rem 2.8rem; border-radius: 12px; border: 1px solid var(--border-color); background-color: var(--card-dark); color: var(--text-main); outline: none; }
+        .filter-section { display: flex; flex-wrap: wrap; gap: 0.6rem; align-items: center; justify-content: space-between; }
+        .search-box { flex: 1; min-width: 200px; position: relative; }
+        .search-box i { position: absolute; left: 10px; top: 50%; transform: translateY(-50%); color: var(--text-muted); font-size: 0.8rem; }
+        .search-box input { width: 100%; padding: 0.5rem 0.8rem 0.5rem 2.2rem; border-radius: 6px; border: 1px solid var(--border-color); background-color: var(--card-dark); color: var(--text-main); outline: none; font-size: 0.85rem; }
 
-        .masonry-grid { column-count: 3; column-gap: 1.5rem; }
-        .masonry-grid .link-card { break-inside: avoid; margin-bottom: 1.5rem; display: block; width: 100%; }
-        @media (max-width: 1024px) { .masonry-grid { column-count: 2; } }
-        @media (max-width: 640px) { .masonry-grid { column-count: 1; } }
-        
-        .list-view { display: flex; flex-direction: column; gap: 1rem; }
+        /* ✅ 5 欄瀑布流佈局 */
+        .masonry-grid { column-count: 5; column-gap: 0.8rem; }
+        .masonry-grid .link-card { break-inside: avoid; margin-bottom: 0.8rem; display: block; width: 100%; }
+        @media (max-width: 1280px) { .masonry-grid { column-count: 4; } }
+        @media (max-width: 1024px) { .masonry-grid { column-count: 3; } }
+        @media (max-width: 768px) { .masonry-grid { column-count: 2; } }
+        @media (max-width: 480px) { .masonry-grid { column-count: 1; } }
+
+        .list-view { display: flex; flex-direction: column; gap: 0.6rem; }
         .list-view .link-card { width: 100%; max-width: 100%; }
 
-        .link-card { background-color: var(--card-dark); border-radius: 16px; padding: 1.5rem; border: 1px solid var(--border-color); transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); display: flex; flex-direction: column; position: relative; overflow: hidden; }
-        .link-card:hover { border-color: var(--primary); box-shadow: 0 10px 20px rgba(0,0,0,0.2); transform: translateY(-4px); }
-        .link-card.is-pinned { border-left: 4px solid var(--warning); }
-        .link-card.is-read { opacity: 0.6; }
+        /* ✅ 緊緻卡片樣式 */
+        .link-card { background-color: var(--card-dark); border-radius: 8px; padding: 0.6rem; border: 1px solid var(--border-color); transition: all 0.25s; display: flex; flex-direction: column; position: relative; overflow: hidden; }
+        .link-card:hover { border-color: var(--primary); box-shadow: 0 4px 12px rgba(0,0,0,0.2); transform: translateY(-2px); }
+        .link-card.is-pinned { border-left: 2px solid var(--warning); }
+        .link-card.is-read { opacity: 0.55; }
+        .link-card.is-dead { border-color: var(--danger) !important; border-style: dashed !important; opacity: 0.8; }
 
-        /* ✅ 失效連結樣式 */
-        .link-card.is-dead { border-color: var(--danger) !important; border-style: dashed !important; opacity: 0.85; }
-        .dead-badge { position: absolute; bottom: 1rem; right: 1rem; background: var(--danger); color: white; padding: 0.2rem 0.6rem; border-radius: 6px; font-size: 0.7rem; font-weight: bold; display: flex; align-items: center; gap: 0.3rem; z-index: 5; box-shadow: 0 2px 5px rgba(239, 68, 68, 0.4); }
-
-        .link-image-preview { height: 160px; width: calc(100% + 3rem); margin: -1.5rem -1.5rem 1rem -1.5rem; overflow: hidden; background-color: #000; position: relative; }
-        .link-image-preview img { width: 100%; height: 100%; object-fit: cover; transition: transform 0.4s ease; }
+        .link-image-preview { height: 100px; width: calc(100% + 1.2rem); margin: -0.6rem -0.6rem 0.5rem -0.6rem; overflow: hidden; background-color: #000; position: relative; }
+        .link-image-preview img { width: 100%; height: 100%; object-fit: cover; transition: transform 0.3s ease; }
         .link-card:hover .link-image-preview img { transform: scale(1.05); }
 
-        .link-desc { color: var(--text-muted); font-size: 0.9rem; margin-bottom: 1.2rem; line-height: 1.6; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
-        .link-title { font-size: 1.1rem; font-weight: 700; margin-bottom: 0.5rem; line-height: 1.4; }
+        .link-desc { color: var(--text-muted); font-size: 0.75rem; margin-bottom: 0.4rem; line-height: 1.4; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+        .link-title { font-size: 0.82rem; font-weight: 700; margin-bottom: 0.2rem; line-height: 1.25; }
         .account-handle { color: var(--primary); font-weight: 800; }
-        .link-url-display { font-family: monospace; font-size: 0.75rem; color: var(--primary); opacity: 0.6; margin-bottom: 1.2rem; display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; text-decoration: none; }
-        
-        .card-footer { display: flex; align-items: center; justify-content: space-between; margin-top: auto; padding-top: 1rem; border-top: 1px solid var(--border-color); }
-        .source-info { display: flex; align-items: center; gap: 0.6rem; }
-        .favicon { width: 16px; height: 16px; border-radius: 3px; }
-        .source-text { font-size: 0.75rem; color: var(--text-muted); display: flex; align-items: center; gap: 0.4rem; }
-        
-        .tags-container { display: flex; flex-wrap: wrap; gap: 0.4rem; justify-content: flex-end; }
-        .tag-badge { padding: 0.2rem 0.6rem; border-radius: 6px; font-size: 0.65rem; font-weight: 600; transition: transform 0.2s; }
-        .tag-badge:hover { transform: scale(1.05); }
+        .link-url-display { font-family: monospace; font-size: 0.6rem; color: var(--primary); opacity: 0.5; margin-bottom: 0.4rem; display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; text-decoration: none; }
 
-        .folder-badge { position: absolute; top: 1rem; left: 1rem; z-index: 5; background: rgba(15, 23, 42, 0.8); backdrop-filter: blur(4px); color: #fff; padding: 0.3rem 0.6rem; border-radius: 8px; font-size: 0.7rem; display: flex; align-items: center; gap: 0.3rem; border: 1px solid rgba(255,255,255,0.1); }
+        .card-footer { display: flex; align-items: center; justify-content: space-between; margin-top: auto; padding-top: 0.4rem; border-top: 1px solid var(--border-color); }
+        .source-info { display: flex; align-items: center; gap: 0.3rem; }
+        .favicon { width: 12px; height: 12px; border-radius: 2px; }
+        .source-text { font-size: 0.6rem; color: var(--text-muted); }
 
-        .card-actions { position: absolute; top: 1rem; right: 1rem; z-index: 10; display: flex; gap: 0.5rem; opacity: 0; transition: opacity 0.2s; }
+        .tags-container { display: flex; flex-wrap: wrap; gap: 0.2rem; justify-content: flex-end; }
+        .tag-badge { padding: 0.1rem 0.3rem; border-radius: 3px; font-size: 0.55rem; font-weight: 600; }
+
+        .folder-badge { position: absolute; top: 0.5rem; left: 0.5rem; z-index: 5; background: rgba(15, 23, 42, 0.85); backdrop-filter: blur(4px); color: #fff; padding: 0.1rem 0.3rem; border-radius: 4px; font-size: 0.55rem; display: flex; align-items: center; gap: 0.15rem; }
+        .card-actions { position: absolute; top: 0.5rem; right: 0.5rem; z-index: 10; display: flex; gap: 0.2rem; opacity: 0; transition: opacity 0.2s; }
         .link-card:hover .card-actions { opacity: 1; }
-        .card-actions button { width: 32px; height: 32px; padding: 0; border-radius: 50%; background: rgba(15, 23, 42, 0.8); backdrop-filter: blur(4px); color: #fff; border: 1px solid rgba(255,255,255,0.2); }
+        .card-actions button { width: 22px; height: 22px; padding: 0; border-radius: 50%; background: rgba(15, 23, 42, 0.85); color: #fff; border: 1px solid rgba(255,255,255,0.2); font-size: 0.6rem; }
         .card-actions button:hover { color: var(--primary); border-color: var(--primary); }
         .card-actions .btn-delete:hover { color: var(--danger); border-color: var(--danger); }
 
@@ -109,109 +108,108 @@
             .card-actions button { background: rgba(30, 41, 59, 0.9); border: 1px solid var(--border-color); }
         }
 
-        /* ✅ 批次操作樣式 */
-        .batch-checkbox { position: absolute; top: 1rem; left: 1rem; z-index: 15; width: 24px; height: 24px; cursor: pointer; accent-color: var(--primary); display: none; }
+        /* 批次操作樣式 */
+        .batch-checkbox { position: absolute; top: 0.5rem; left: 0.5rem; z-index: 15; width: 14px; height: 14px; cursor: pointer; accent-color: var(--primary); display: none; }
         body.batch-mode .batch-checkbox { display: block; }
-        body.batch-mode .folder-badge { left: 3.5rem; }
+        body.batch-mode .folder-badge { left: 2rem; }
         body.batch-mode .card-actions { opacity: 0; pointer-events: none; }
         
-        .batch-toolbar { position: fixed; bottom: 2rem; left: 50%; transform: translateX(-50%) translateY(100px); background: var(--card-dark); border: 1px solid var(--primary); padding: 1rem 1.5rem; border-radius: 16px; display: flex; gap: 1rem; align-items: center; box-shadow: 0 10px 25px rgba(0,0,0,0.5); z-index: 900; transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); opacity: 0; pointer-events: none; }
+        .batch-toolbar { position: fixed; bottom: 1.5rem; left: 50%; transform: translateX(-50%) translateY(100px); background: var(--card-dark); border: 1px solid var(--primary); padding: 0.6rem 1rem; border-radius: 10px; display: flex; gap: 0.8rem; align-items: center; box-shadow: 0 10px 25px rgba(0,0,0,0.5); z-index: 900; transition: transform 0.3s; opacity: 0; pointer-events: none; font-size: 0.85rem; }
         .batch-toolbar.active { transform: translateX(-50%) translateY(0); opacity: 1; pointer-events: auto; }
 
-        .kanban-board { display: flex; gap: 1.5rem; overflow-x: auto; padding-bottom: 1rem; min-height: 60vh; }
-        .kanban-column { flex: 1; min-width: 320px; background: var(--bg-dark); border-radius: 16px; padding: 1rem; border: 1px solid var(--border-color); display: flex; flex-direction: column; }
-        .kanban-header { font-size: 1rem; font-weight: 700; margin-bottom: 1rem; padding-bottom: 0.5rem; border-bottom: 2px solid var(--border-color); display: flex; justify-content: space-between; align-items: center; }
-        .kanban-count { background: var(--card-dark); padding: 0.2rem 0.6rem; border-radius: 12px; font-size: 0.8rem; color: var(--text-muted); }
-        .kanban-list { flex: 1; min-height: 100px; }
-        .kanban-card { background: var(--card-dark); padding: 1rem; border-radius: 12px; margin-bottom: 0.8rem; border: 1px solid var(--border-color); cursor: grab; transition: all 0.2s; }
-        .kanban-card:hover { border-color: var(--primary); transform: translateY(-2px); box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
-        .kanban-card:active { cursor: grabbing; opacity: 0.8; transform: scale(1.02); box-shadow: 0 10px 15px rgba(0,0,0,0.2); }
-        .kanban-card .k-title { font-size: 0.95rem; font-weight: 600; margin-bottom: 0.4rem; }
-        .kanban-card .k-desc { font-size: 0.8rem; color: var(--text-muted); margin-bottom: 0.6rem; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+        /* 看板樣式 */
+        .kanban-board { display: flex; gap: 0.8rem; overflow-x: auto; padding-bottom: 1rem; min-height: 60vh; }
+        .kanban-column { flex: 1; min-width: 220px; background: var(--bg-dark); border-radius: 10px; padding: 0.6rem; border: 1px solid var(--border-color); display: flex; flex-direction: column; }
+        .kanban-header { font-size: 0.8rem; font-weight: 700; margin-bottom: 0.6rem; padding-bottom: 0.3rem; border-bottom: 2px solid var(--border-color); display: flex; justify-content: space-between; align-items: center; }
+        .kanban-count { background: var(--card-dark); padding: 0.1rem 0.4rem; border-radius: 8px; font-size: 0.7rem; color: var(--text-muted); }
+        .kanban-list { flex: 1; min-height: 80px; }
+        .kanban-card { background: var(--card-dark); padding: 0.6rem; border-radius: 6px; margin-bottom: 0.5rem; border: 1px solid var(--border-color); cursor: grab; transition: all 0.2s; }
+        .kanban-card:hover { border-color: var(--primary); transform: translateY(-1px); }
+        .kanban-card .k-title { font-size: 0.78rem; font-weight: 600; margin-bottom: 0.2rem; }
+        .kanban-card .k-desc { font-size: 0.7rem; color: var(--text-muted); display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
         .sortable-ghost { opacity: 0.4; background: var(--primary); }
 
+        /* Modals & Toast */
         .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15, 23, 42, 0.8); z-index: 1000; justify-content: center; align-items: center; backdrop-filter: blur(8px); }
-        .modal { background: var(--card-dark); padding: 2.5rem; border-radius: 24px; width: 90%; max-width: 500px; border: 1px solid var(--border-color); max-height: 90vh; overflow-y: auto; animation: zoomIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
-        .form-group { margin-bottom: 1.2rem; }
-        .form-group label { display: block; margin-bottom: 0.5rem; color: var(--text-muted); font-size: 0.9rem; }
-        .form-group input, .form-group textarea, .form-group select { width: 100%; padding: 0.8rem; border-radius: 12px; border: 1px solid var(--border-color); background: var(--bg-dark); color: var(--text-main); outline: none; }
-        .form-group select { cursor: pointer; }
-
-        #toast-container { position: fixed; bottom: 2rem; right: 2rem; z-index: 9999; display: flex; flex-direction: column; gap: 0.5rem; }
-        .toast { background: var(--card-dark); color: var(--text-main); padding: 1rem 1.5rem; border-radius: 12px; border-left: 4px solid var(--primary); box-shadow: 0 10px 15px -3px rgba(0,0,0,0.4); animation: slideIn 0.3s ease forwards; }
+        .modal { background: var(--card-dark); padding: 1.5rem; border-radius: 14px; width: 90%; max-width: 420px; border: 1px solid var(--border-color); max-height: 90vh; overflow-y: auto; animation: zoomIn 0.3s; }
+        .form-group { margin-bottom: 0.8rem; }
+        .form-group label { display: block; margin-bottom: 0.3rem; color: var(--text-muted); font-size: 0.8rem; }
+        .form-group input, .form-group textarea, .form-group select { width: 100%; padding: 0.5rem; border-radius: 6px; border: 1px solid var(--border-color); background: var(--bg-dark); color: var(--text-main); outline: none; font-size: 0.85rem; }
+        
+        #toast-container { position: fixed; bottom: 1.5rem; right: 1.5rem; z-index: 9999; display: flex; flex-direction: column; gap: 0.4rem; }
+        .toast { background: var(--card-dark); color: var(--text-main); padding: 0.6rem 1rem; border-radius: 6px; border-left: 3px solid var(--primary); box-shadow: 0 8px 12px rgba(0,0,0,0.4); animation: slideIn 0.3s ease forwards; font-size: 0.85rem; }
         .toast.success { border-left-color: var(--success); }
         .toast.error { border-left-color: var(--danger); }
         
         @keyframes slideIn { from { opacity: 0; transform: translateX(100%); } to { opacity: 1; transform: translateX(0); } }
         @keyframes fadeOut { from { opacity: 1; transform: translateX(0); } to { opacity: 0; transform: translateX(100%); } }
         @keyframes zoomIn { from { opacity: 0; transform: scale(0.9); } to { opacity: 1; transform: scale(1); } }
-        @keyframes fadeInUp { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
-        
-        .card-enter { animation: fadeInUp 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards; opacity: 0; }
-        
-        .loader { display: none; border: 3px solid var(--border-color); border-top: 3px solid var(--primary); border-radius: 50%; width: 18px; height: 18px; animation: spin 1s linear infinite; }
+        @keyframes fadeInUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        .card-enter { animation: fadeInUp 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards; opacity: 0; }
+
+        .loader { display: none; border: 2px solid var(--border-color); border-top: 2px solid var(--primary); border-radius: 50%; width: 14px; height: 14px; animation: spin 1s linear infinite; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
         .rotating { animation: spin 1s linear infinite; }
+
+        .dead-badge { position: absolute; bottom: 0.5rem; right: 0.5rem; background: var(--danger); color: white; padding: 0.05rem 0.3rem; border-radius: 3px; font-size: 0.55rem; font-weight: bold; display: flex; align-items: center; gap: 0.15rem; z-index: 5; }
     </style>
 </head>
 <body class="flex flex-col min-h-screen">
 
+    <!-- Header -->
     <header>
         <div class="logo">
-            <i class="fas fa-link"></i> 
+            <i class="fas fa-link"></i>
             <span>智能連結 <span class="logo-en"><span class="highlight-letter">S</span>mart <span class="highlight-letter">L</span>ink <span class="highlight-letter">M</span>anager</span></span>
         </div>
-        <div class="header-actions flex-wrap gap-2">
-            <span id="user-info" style="display: none; color: var(--text-muted); font-size: 0.9rem; margin-right: 10px;"></span>
-            <button class="btn-outline btn-icon-only" onclick="openFolderModal()" title="管理資料夾"><i class="fas fa-folder-plus"></i></button>
-            <button class="btn-outline btn-icon-only" onclick="toggleBatchMode()" title="批次管理 (B)"><i class="fas fa-check-square"></i></button>
-            <!-- ✅ 加上 ID 與旋轉圖示 -->
+        <div class="header-actions flex-wrap gap-1">
+            <span id="user-info" style="display:none;color:var(--text-muted);font-size:0.8rem;margin-right:6px;"></span>
+            <button class="btn-outline btn-icon-only" onclick="openFolderModal()" title="資料夾"><i class="fas fa-folder-plus"></i></button>
+            <button class="btn-outline btn-icon-only" onclick="toggleBatchMode()" title="批次 (B)"><i class="fas fa-check-square"></i></button>
             <button class="btn-outline btn-icon-only" id="btn-dead-check" onclick="startDeadLinkCheck()" title="失效檢測"><i class="fas fa-heartbeat" id="dead-check-icon"></i></button>
-            <button class="btn-outline btn-icon-only" onclick="exportAsMarkdown()" title="生成 Markdown"><i class="fab fa-markdown"></i></button>
-            <button class="btn-outline btn-icon-only" onclick="toggleTheme()" title="深淺色切換"><i class="fas fa-sun"></i></button>
+            <button class="btn-outline btn-icon-only" onclick="exportAsMarkdown()" title="Markdown"><i class="fab fa-markdown"></i></button>
+            <button class="btn-outline btn-icon-only" onclick="toggleTheme()" title="主題"><i class="fas fa-sun"></i></button>
             <button class="btn-outline btn-icon-only" id="btn-refresh" onclick="handleRefresh()" title="重新整理"><i class="fas fa-sync-alt" id="refresh-icon"></i></button>
-            <button class="btn-outline btn-icon-only" onclick="exportData()" title="匯出 JSON"><i class="fas fa-download"></i></button>
-            <button class="btn-outline btn-icon-only" onclick="document.getElementById('import-file').click()" title="匯入 JSON"><i class="fas fa-upload"></i></button>
+            <button class="btn-outline btn-icon-only" onclick="exportData()" title="匯出"><i class="fas fa-download"></i></button>
+            <button class="btn-outline btn-icon-only" onclick="document.getElementById('import-file').click()" title="匯入"><i class="fas fa-upload"></i></button>
             <input type="file" id="import-file" style="display:none" accept=".json" onchange="importData(event)">
-            <button class="btn-outline btn-icon-only" id="btn-logout" style="display: none;" onclick="handleLogout()" title="登出"><i class="fas fa-sign-out-alt"></i></button>
+            <button class="btn-outline btn-icon-only" id="btn-logout" style="display:none;" onclick="handleLogout()" title="登出"><i class="fas fa-sign-out-alt"></i></button>
         </div>
     </header>
 
+    <!-- Login Screen -->
     <main id="login-screen">
         <div class="login-card">
-            <h2 class="text-2xl font-bold mb-2">歡迎回來</h2>
-            <p style="color: var(--text-muted); margin-bottom: 2rem;">您的個人智能連結知識庫</p>
-            <div class="login-buttons flex flex-col gap-3">
-                <button class="btn-outline w-full justify-center" id="btn-google-login">
-                    <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" style="width:18px" class="mr-2"> Google 登入
-                </button>
+            <h2 class="text-xl font-bold mb-2">歡迎回來</h2>
+            <p style="color:var(--text-muted);margin-bottom:1.5rem;font-size:0.9rem;">您的個人智能連結知識庫</p>
+            <div class="login-buttons flex flex-col gap-2">
+                <button class="btn-outline w-full justify-center" id="btn-google-login"><img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" style="width:16px" class="mr-2"> Google 登入</button>
                 <button class="btn-primary w-full justify-center" id="btn-local-login">本機測試模式</button>
             </div>
         </div>
     </main>
 
+    <!-- App Screen -->
     <main id="app-screen">
         <div class="control-panel">
             <div class="input-section">
-                <input type="text" id="url-input" placeholder="貼上連結 (例如 IG, FB, YT, Threads 網址...) [快捷鍵: N]" onkeypress="handleEnter(event)">
+                <input type="text" id="url-input" placeholder="貼上連結 [快捷鍵: N]" onkeypress="handleEnter(event)">
                 <button class="btn-primary" id="btn-add-url" onclick="processAndSaveUrl()">
                     <span class="btn-text">儲存</span>
                     <div class="loader" id="add-loader"></div>
                 </button>
             </div>
-
             <div>
                 <div class="chips-container" id="folder-chips"></div>
                 <div class="chips-container" id="tag-chips"></div>
-                
                 <div class="filter-section">
                     <div class="search-box">
                         <i class="fas fa-search"></i>
-                        <input type="text" id="search-input" placeholder="搜尋標題、摘要、標籤或網址... [快捷鍵: /]" oninput="handleSearchInput()">
+                        <input type="text" id="search-input" placeholder="搜尋標題/摘要/標籤 [快捷鍵: /]" oninput="handleSearchInput()">
                     </div>
-                    <div class="flex gap-2">
-                        <button class="btn-outline btn-icon-only" onclick="toggleView()" title="切換視圖"><i class="fas fa-grip-vertical" id="view-icon"></i></button>
-                        <button class="btn-outline" id="btn-kanban" onclick="toggleKanbanView()" title="切換看板"><i class="fas fa-columns"></i> 看板</button>
+                    <div class="flex gap-1">
+                        <button class="btn-outline btn-icon-only" onclick="toggleView()" title="視圖"><i class="fas fa-grip-vertical" id="view-icon"></i></button>
+                        <button class="btn-outline" id="btn-kanban" onclick="toggleKanbanView()" title="看板" style="font-size:0.75rem;padding:0.4rem 0.6rem;"><i class="fas fa-columns"></i> 看板</button>
                     </div>
                 </div>
             </div>
@@ -219,56 +217,57 @@
         
         <div class="masonry-grid" id="links-container"></div>
         
-        <div class="kanban-board" id="kanban-board" style="display: none;">
-            <div class="kanban-column" data-status="inbox"><div class="kanban-header">📥 待讀 <span class="kanban-count" id="count-inbox">0</span></div><div class="kanban-list" id="list-inbox"></div></div>
-            <div class="kanban-column" data-status="starred"><div class="kanban-header">⭐ 精選 <span class="kanban-count" id="count-starred">0</span></div><div class="kanban-list" id="list-starred"></div></div>
-            <div class="kanban-column" data-status="done"><div class="kanban-header">✅ 已讀 <span class="kanban-count" id="count-done">0</span></div><div class="kanban-list" id="list-done"></div></div>
+        <div class="kanban-board" id="kanban-board" style="display:none;">
+            <div class="kanban-column"><div class="kanban-header">📥 待讀 <span class="kanban-count" id="count-inbox">0</span></div><div class="kanban-list" id="list-inbox"></div></div>
+            <div class="kanban-column"><div class="kanban-header">⭐ 精選 <span class="kanban-count" id="count-starred">0</span></div><div class="kanban-list" id="list-starred"></div></div>
+            <div class="kanban-column"><div class="kanban-header">✅ 已讀 <span class="kanban-count" id="count-done">0</span></div><div class="kanban-list" id="list-done"></div></div>
         </div>
     </main>
 
+    <!-- Batch Toolbar -->
     <div class="batch-toolbar" id="batch-toolbar">
-        <span>已選取 <strong id="batch-count" style="color: var(--primary); font-size: 1.2rem;">0</strong> 項</span>
+        <span>已選 <strong id="batch-count" style="color:var(--primary);">0</strong></span>
         <button class="btn-outline" onclick="batchMoveFolder()"><i class="fas fa-folder"></i> 移動</button>
-        <button class="btn-outline" style="color: var(--danger); border-color: var(--danger);" onclick="batchDelete()"><i class="fas fa-trash"></i> 刪除</button>
+        <button class="btn-outline" style="color:var(--danger);border-color:var(--danger);" onclick="batchDelete()"><i class="fas fa-trash"></i> 刪除</button>
         <button class="btn-outline" onclick="toggleBatchMode()">取消 (Esc)</button>
     </div>
 
-    <footer style="text-align: center; color: var(--text-muted); font-size: 0.875rem; padding: 1.5rem 0; border-top: 1px solid var(--border-color); margin-top: auto; background-color: var(--card-dark);">
-        <div style="display: flex; align-items: center; justify-content: center; gap: 0.8rem; flex-wrap: wrap;">
+    <!-- Footer -->
+    <footer style="text-align:center;color:var(--text-muted);font-size:0.7rem;padding:0.6rem 0;border-top:1px solid var(--border-color);margin-top:auto;background:var(--card-dark);">
+        <div style="display:flex;align-items:center;justify-content:center;gap:0.6rem;flex-wrap:wrap;">
             <span>更新時間</span>
-            <span id="lastUpdatedDisplay" style="font-family: monospace; background: var(--bg-dark); padding: 2px 8px; border-radius: 4px; color: var(--text-main); font-size: 0.75rem;">尚無存檔</span>
-            <span style="color: var(--border-color);">|</span>
-            <a href="https://v.douyin.com/XmUkpVat8Lg/" target="_blank" style="font-weight: bold; color: var(--primary); transition: color 0.2s; display: flex; align-items: center; gap: 4px; text-decoration: none;" onmouseover="this.style.color='var(--primary-hover)'" onmouseout="this.style.color='var(--primary)'">
+            <span id="lastUpdatedDisplay" style="font-family:monospace;background:var(--bg-dark);padding:1px 5px;border-radius:3px;color:var(--text-main);font-size:0.65rem;">尚無存檔</span>
+            <span style="color:var(--border-color);">|</span>
+            <a href="https://v.douyin.com/XmUkpVat8Lg/" target="_blank" style="font-weight:bold;color:var(--primary);display:flex;align-items:center;gap:3px;text-decoration:none;" onmouseover="this.style.color='var(--primary-hover)'" onmouseout="this.style.color='var(--primary)'">
                 奇奇828 
-                <svg style="width: 14px; height: 14px;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path>
-                </svg>
+                <svg style="width:10px;height:10px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path></svg>
             </a>
         </div>
     </footer>
 
+    <!-- Modals -->
     <div class="modal-overlay" id="folder-modal">
         <div class="modal">
-            <h3 class="text-xl font-bold mb-4">📂 管理資料夾</h3>
-            <div id="folder-list" class="mb-4 max-h-60 overflow-y-auto"></div>
+            <h3 class="text-lg font-bold mb-3">📂 管理資料夾</h3>
+            <div id="folder-list" class="mb-3 max-h-48 overflow-y-auto"></div>
             <div class="flex gap-2">
-                <input type="text" id="new-folder-name" placeholder="新資料夾名稱 (如: 工作)" class="flex-1 p-2 rounded-lg border border-gray-600 bg-gray-800 text-white">
+                <input type="text" id="new-folder-name" placeholder="新資料夾" class="flex-1 p-2 rounded border border-gray-600 bg-gray-800 text-white text-sm">
                 <button class="btn-primary" onclick="addFolder()">新增</button>
             </div>
-            <div class="flex justify-end mt-4"><button class="btn-outline" onclick="closeModal('folder-modal')">關閉</button></div>
+            <div class="flex justify-end mt-3"><button class="btn-outline" onclick="closeModal('folder-modal')">關閉</button></div>
         </div>
     </div>
 
     <div class="modal-overlay" id="edit-modal">
         <div class="modal">
-            <h3 class="text-xl font-bold mb-4">✏️ 編輯連結</h3>
+            <h3 class="text-lg font-bold mb-3">✏️ 編輯連結</h3>
             <input type="hidden" id="edit-id">
             <div class="form-group"><label>標題</label><input type="text" id="edit-title"></div>
             <div class="form-group"><label>網址</label><input type="text" id="edit-url"></div>
-            <div class="form-group"><label>所屬資料夾</label><select id="edit-folder"></select></div>
+            <div class="form-group"><label>資料夾</label><select id="edit-folder"></select></div>
             <div class="form-group"><label>標籤 (逗號分隔)</label><input type="text" id="edit-categories"></div>
-            <div class="form-group"><label>摘要</label><textarea id="edit-desc" style="height:80px;"></textarea></div>
-            <div class="flex justify-end gap-2 mt-4">
+            <div class="form-group"><label>摘要</label><textarea id="edit-desc" style="height:60px;"></textarea></div>
+            <div class="flex justify-end gap-2 mt-3">
                 <button class="btn-outline" onclick="closeModal('edit-modal')">取消</button>
                 <button class="btn-primary" onclick="saveEdit()">儲存</button>
             </div>
@@ -277,6 +276,7 @@
 
     <div id="toast-container"></div>
 
+    <!-- Scripts -->
     <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore-compat.js"></script>
@@ -285,23 +285,19 @@
         const firebaseConfig = { apiKey: "AIzaSyAt0YAxzPbFZHyLKQLN1me3N9DQKnCrylg", authDomain: "link-1b206.firebaseapp.com", projectId: "link-1b206", storageBucket: "link-1b206.appspot.com" };
         let app, auth, db, currentUser = null, isLocalMode = false, unsubscribeSnapshot = null;
         let currentView = 'masonry', isKanbanMode = false, activeTag = 'all', activeFolder = 'all';
-        let allLinksCache = [], allFoldersCache = [];
-        let searchTimeout;
-        let batchMode = false;
-        let selectedIds = new Set();
-        let isCheckingLinks = false;
+        let allLinksCache = [], allFoldersCache = [], searchTimeout, batchMode = false, selectedIds = new Set(), isCheckingLinks = false;
 
-        try { app = firebase.initializeApp(firebaseConfig); auth = firebase.auth(); db = firebase.firestore(); } catch(e) {}
+        try { app = firebase.initializeApp(firebaseConfig); auth = firebase.auth(); db = firebase.firestore(); } catch (e) {}
 
         // ============================================================
         // 🔐 登入 / 登出
         // ============================================================
-        function showAppScreen(userInfoText) {
+        function showAppScreen(t) {
             document.getElementById('login-screen').style.display = 'none';
             document.getElementById('app-screen').style.display = 'block';
             document.getElementById('btn-logout').style.display = 'inline-flex';
             document.getElementById('user-info').style.display = 'inline';
-            document.getElementById('user-info').textContent = userInfoText;
+            document.getElementById('user-info').textContent = t;
         }
         function showLoginScreen() {
             document.getElementById('login-screen').style.display = 'flex';
@@ -309,13 +305,13 @@
             document.getElementById('btn-logout').style.display = 'none';
             document.getElementById('user-info').style.display = 'none';
         }
-        if(auth) {
-            auth.onAuthStateChanged(async user => {
-                if (user) { isLocalMode = false; currentUser = user; showAppScreen(user.email); await renderFolderChips(); loadLinks(); } 
+        if (auth) {
+            auth.onAuthStateChanged(async u => {
+                if (u) { isLocalMode = false; currentUser = u; showAppScreen(u.email); await renderFolderChips(); loadLinks(); } 
                 else { if (!isLocalMode) { currentUser = null; showLoginScreen(); } }
             });
         }
-        document.getElementById('btn-google-login').addEventListener('click', () => { if(auth) auth.signInWithPopup(new firebase.auth.GoogleAuthProvider()); });
+        document.getElementById('btn-google-login').addEventListener('click', () => { if (auth) auth.signInWithPopup(new firebase.auth.GoogleAuthProvider()); });
         document.getElementById('btn-local-login').addEventListener('click', async () => { isLocalMode = true; currentUser = null; showAppScreen("本機模式"); await renderFolderChips(); loadLinks(); });
         async function handleLogout() {
             if (isLocalMode) { isLocalMode = false; showLoginScreen(); } 
@@ -329,86 +325,88 @@
         async function getFolders() {
             if (isLocalMode) {
                 let f = JSON.parse(localStorage.getItem('my_folders') || '[]');
-                if (f.length === 0) { f = [{ id: 'default', name: '未分類', icon: 'fa-inbox' }]; localStorage.setItem('my_folders', JSON.stringify(f)); }
+                if (!f.length) { f = [{ id: 'default', name: '未分類', icon: 'fa-inbox' }]; localStorage.setItem('my_folders', JSON.stringify(f)); }
                 return f;
             }
-            const snap = await db.collection('users').doc(currentUser.uid).collection('folders').get();
-            let f = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-            if (f.length === 0) { await db.collection('users').doc(currentUser.uid).collection('folders').add({ name: '未分類', icon: 'fa-inbox' }); return [{ id: 'default', name: '未分類', icon: 'fa-inbox' }]; }
+            const s = await db.collection('users').doc(currentUser.uid).collection('folders').get();
+            let f = s.docs.map(d => ({ id: d.id, ...d.data() }));
+            if (!f.length) { await db.collection('users').doc(currentUser.uid).collection('folders').add({ name: '未分類', icon: 'fa-inbox' }); return [{ id: 'default', name: '未分類', icon: 'fa-inbox' }]; }
             return f;
         }
         async function renderFolderChips() {
             allFoldersCache = await getFolders();
-            const container = document.getElementById('folder-chips');
-            let html = `<div class="chip ${activeFolder === 'all' ? 'active' : ''}" onclick="setFolder('all')"><i class="fas fa-layer-group"></i> 全部</div>`;
-            allFoldersCache.forEach(f => { html += `<div class="chip ${activeFolder === f.id ? 'active' : ''}" onclick="setFolder('${f.id}')"><i class="fas ${f.icon || 'fa-folder'}"></i> ${f.name}</div>`; });
-            container.innerHTML = html;
+            const c = document.getElementById('folder-chips');
+            let h = `<div class="chip ${activeFolder === 'all' ? 'active' : ''}" onclick="setFolder('all')"><i class="fas fa-layer-group"></i> 全部</div>`;
+            allFoldersCache.forEach(f => { h += `<div class="chip ${activeFolder === f.id ? 'active' : ''}" onclick="setFolder('${f.id}')"><i class="fas ${f.icon || 'fa-folder'}"></i> ${f.name}</div>`; });
+            c.innerHTML = h;
         }
         function setFolder(id) { activeFolder = id; renderFolderChips(); filterLinks(); }
         function openFolderModal() {
-            const list = document.getElementById('folder-list');
-            list.innerHTML = allFoldersCache.map(f => `<div class="flex justify-between items-center p-2 border-b border-gray-700"><span><i class="fas ${f.icon || 'fa-folder'} mr-2 text-gray-400"></i> ${f.name}</span>${f.id !== 'default' ? `<button class="text-red-500 hover:text-red-400" onclick="deleteFolder('${f.id}')"><i class="fas fa-trash"></i></button>` : ''}</div>`).join('');
+            const l = document.getElementById('folder-list');
+            l.innerHTML = allFoldersCache.map(f => `<div class="flex justify-between items-center p-1 border-b border-gray-700 text-sm"><span><i class="fas ${f.icon || 'fa-folder'} mr-1 text-gray-400"></i>${f.name}</span>${f.id !== 'default' ? `<button class="text-red-500" onclick="deleteFolder('${f.id}')"><i class="fas fa-trash"></i></button>` : ''}</div>`).join('');
             openModal('folder-modal');
         }
         async function addFolder() {
-            const name = document.getElementById('new-folder-name').value.trim(); if (!name) return;
+            const n = document.getElementById('new-folder-name').value.trim(); if (!n) return;
             const icons = ['fa-briefcase', 'fa-graduation-cap', 'fa-gamepad', 'fa-heart', 'fa-code', 'fa-book'];
-            const icon = icons[Math.floor(Math.random() * icons.length)];
-            if (isLocalMode) { const f = JSON.parse(localStorage.getItem('my_folders') || '[]'); f.push({ id: 'f_' + Date.now(), name, icon }); localStorage.setItem('my_folders', JSON.stringify(f)); } 
-            else { await db.collection('users').doc(currentUser.uid).collection('folders').add({ name, icon }); }
-            document.getElementById('new-folder-name').value = ''; renderFolderChips(); openFolderModal(); showToast("資料夾已新增", "success");
+            const ic = icons[Math.floor(Math.random() * icons.length)];
+            if (isLocalMode) { const f = JSON.parse(localStorage.getItem('my_folders') || '[]'); f.push({ id: 'f_' + Date.now(), name: n, icon: ic }); localStorage.setItem('my_folders', JSON.stringify(f)); } 
+            else { await db.collection('users').doc(currentUser.uid).collection('folders').add({ name: n, icon: ic }); }
+            document.getElementById('new-folder-name').value = ''; renderFolderChips(); openFolderModal(); showToast("已新增", "success");
         }
         async function deleteFolder(id) {
-            if (!confirm("刪除此資料夾？內含連結將移至「未分類」")) return;
-            if (isLocalMode) { let f = JSON.parse(localStorage.getItem('my_folders') || '[]').filter(x => x.id !== id); localStorage.setItem('my_folders', JSON.stringify(f)); let links = JSON.parse(localStorage.getItem('my_links') || '[]'); links.forEach(l => { if (l.folderId === id) l.folderId = 'default'; }); localStorage.setItem('my_links', JSON.stringify(links)); } 
-            else { await db.collection('users').doc(currentUser.uid).collection('folders').doc(id).delete(); const batch = db.batch(); const snap = await db.collection('users').doc(currentUser.uid).collection('links').where('folderId', '==', id).get(); snap.docs.forEach(d => batch.update(d.ref, { folderId: 'default' })); await batch.commit(); }
+            if (!confirm("刪除？")) return;
+            if (isLocalMode) { let f = JSON.parse(localStorage.getItem('my_folders') || '[]').filter(x => x.id !== id); localStorage.setItem('my_folders', JSON.stringify(f)); let l = JSON.parse(localStorage.getItem('my_links') || '[]'); l.forEach(x => { if (x.folderId === id) x.folderId = 'default'; }); localStorage.setItem('my_links', JSON.stringify(l)); } 
+            else { await db.collection('users').doc(currentUser.uid).collection('folders').doc(id).delete(); const b = db.batch(); const s = await db.collection('users').doc(currentUser.uid).collection('links').where('folderId', '==', id).get(); s.docs.forEach(d => b.update(d.ref, { folderId: 'default' })); await b.commit(); }
             renderFolderChips(); openFolderModal(); loadLinks();
         }
-        function stringToHslColor(str, s = 0.6, l = 0.5) { let hash = 0; for (let i = 0; i < str.length; i++) hash = str.charCodeAt(i) + ((hash << 5) - hash); return `hsl(${hash % 360}, ${s*100}%, ${l*100}%)`; }
-        function getTagStyles(tag) { const bg = stringToHslColor(tag, 0.4, 0.85); const text = stringToHslColor(tag, 0.7, 0.3); const border = stringToHslColor(tag, 0.4, 0.7); return `background: ${bg}; color: ${text}; border: 1px solid ${border};`; }
+        function stringToHslColor(s, a = 0.6, l = 0.5) { let h = 0; for (let i = 0; i < s.length; i++) h = s.charCodeAt(i) + ((h << 5) - h); return `hsl(${h % 360}, ${a * 100}%, ${l * 100}%)`; }
+        function getTagStyles(t) { return `background:${stringToHslColor(t, 0.4, 0.85)};color:${stringToHslColor(t, 0.7, 0.3)};border:1px solid ${stringToHslColor(t, 0.4, 0.7)};`; }
 
         // ============================================================
         // 🌐 網頁解析與自動標籤
         // ============================================================
         function updateLastArchiveTime(links) {
-            const displayEl = document.getElementById('lastUpdatedDisplay');
-            if (!links || links.length === 0) { if(displayEl) displayEl.textContent = '尚無存檔'; return; }
-            let maxTime = 0; links.forEach(l => { if (l.createdAt && l.createdAt > maxTime) maxTime = l.createdAt; });
-            if (maxTime > 0 && displayEl) { const date = new Date(maxTime); displayEl.textContent = date.toLocaleString('zh-TW', { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false }); } 
-            else if (displayEl) { displayEl.textContent = '尚無存檔'; }
+            const d = document.getElementById('lastUpdatedDisplay');
+            if (!links || !links.length) { if (d) d.textContent = '尚無存檔'; return; }
+            let m = 0; links.forEach(l => { if (l.createdAt && l.createdAt > m) m = l.createdAt; });
+            if (m > 0 && d) { d.textContent = new Date(m).toLocaleString('zh-TW', { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false }); } 
+            else if (d) { d.textContent = '尚無存檔'; }
         }
-        function getYouTubeVideoId(url) { const regex = /(?:youtu\.be\/|youtube\.com\/(?:watch\?v=|embed\/|v\/|shorts\/))([a-zA-Z0-9_-]{11})/; return url.match(regex)?.[1] || null; }
-        async function fetchYouTubeInfo(url) {
-            const videoId = getYouTubeVideoId(url); if (!videoId) return null;
-            try { const oembedUrl = `https://www.youtube.com/oembed?url=https://www.youtube.com/watch?v=${videoId}&format=json`; const response = await fetch(oembedUrl); if (!response.ok) throw new Error('oEmbed 請求失敗'); const data = await response.json(); return { title: data.title || 'YouTube 影片', summary: data.author_name || 'YouTube 頻道', author: data.author_name || '', image: data.thumbnail_url || `https://img.youtube.com/vi/${videoId}/hqdefault.jpg` }; } 
-            catch (error) { return { title: 'YouTube 影片', summary: 'YouTube', author: '', image: `https://img.youtube.com/vi/${videoId}/hqdefault.jpg` }; }
+        function getYouTubeVideoId(u) { const r = /(?:youtu\.be\/|youtube\.com\/(?:watch\?v=|embed\/|v\/|shorts\/))([a-zA-Z0-9_-]{11})/; return u.match(r)?.[1] || null; }
+        async function fetchYouTubeInfo(u) {
+            const v = getYouTubeVideoId(u); if (!v) return null;
+            try { const r = await fetch(`https://www.youtube.com/oembed?url=https://www.youtube.com/watch?v=${v}&format=json`); if (!r.ok) throw 0; const d = await r.json(); return { title: d.title || 'YouTube', summary: d.author_name || 'YouTube', author: d.author_name || '', image: d.thumbnail_url || `https://img.youtube.com/vi/${v}/hqdefault.jpg` }; } 
+            catch (e) { return { title: 'YouTube', summary: 'YouTube', author: '', image: `https://img.youtube.com/vi/${v}/hqdefault.jpg` }; }
         }
-        async function fetchWebpageInfo(url) {
-            let r = { title: "未命名連結", description: "點擊查看原始連結", categories: ["一般網站"], account: "", image: "" };
-            let detectedTags = ["一般網站"]; const lowerUrl = url.toLowerCase();
-            if (lowerUrl.includes('youtube.com') || lowerUrl.includes('youtu.be')) detectedTags = ["YouTube", "影片"];
-            else if (lowerUrl.includes('facebook.com') || lowerUrl.includes('fb.watch') || lowerUrl.includes('fb.com')) detectedTags = ["Facebook", "社群"];
-            else if (lowerUrl.includes('instagram.com')) detectedTags = ["Instagram", "社群"];
-            else if (lowerUrl.includes('x.com') || lowerUrl.includes('twitter.com')) detectedTags = ["X", "Twitter", "社群"];
-            else if (lowerUrl.includes('threads.net')) detectedTags = ["Threads", "社群"];
-            if (lowerUrl.includes('youtube.com') || lowerUrl.includes('youtu.be')) { const ytData = await fetchYouTubeInfo(url); if (ytData) return { title: ytData.title, description: ytData.summary, categories: detectedTags, account: ytData.author, image: ytData.image }; }
-            try { if (!url.startsWith('http')) url = 'https://' + url; const res = await fetch(`https://api.microlink.io/?url=${encodeURIComponent(url)}`); const d = await res.json(); if (d.status === 'success') { r.title = d.data.title || r.title; r.description = d.data.description || r.description; r.image = d.data.image?.url || ""; if (d.data.author) r.account = d.data.author; } } catch (e) {}
-            r.title = r.title.replace(/\s+/g, ' ').trim(); r.categories = detectedTags; return r;
+        async function fetchWebpageInfo(u) {
+            let r = { title: "未命名連結", description: "點擊查看", categories: ["一般網站"], account: "", image: "" };
+            let tags = ["一般網站"]; const l = u.toLowerCase();
+            if (l.includes('youtube.com') || l.includes('youtu.be')) tags = ["YouTube", "影片"];
+            else if (l.includes('facebook.com') || l.includes('fb.watch') || l.includes('fb.com')) tags = ["Facebook", "社群"];
+            else if (l.includes('instagram.com')) tags = ["Instagram", "社群"];
+            else if (l.includes('x.com') || l.includes('twitter.com')) tags = ["X", "Twitter", "社群"];
+            else if (l.includes('threads.net')) tags = ["Threads", "社群"];
+            
+            if (l.includes('youtube.com') || l.includes('youtu.be')) { const y = await fetchYouTubeInfo(u); if (y) return { title: y.title, description: y.summary, categories: tags, account: y.author, image: y.image }; }
+            
+            try { if (!u.startsWith('http')) u = 'https://' + u; const res = await fetch(`https://api.microlink.io/?url=${encodeURIComponent(u)}`); const d = await res.json(); if (d.status === 'success') { r.title = d.data.title || r.title; r.description = d.data.description || r.description; r.image = d.data.image?.url || ""; if (d.data.author) r.account = d.data.author; } } catch (e) {}
+            r.title = r.title.replace(/\s+/g, ' ').trim(); r.categories = tags; return r;
         }
         async function processAndSaveUrl() {
-            const input = document.getElementById('url-input'); let url = input.value.trim(); if (!url) return;
-            const btn = document.getElementById('btn-add-url'), loader = document.getElementById('add-loader'), txt = btn.querySelector('.btn-text');
-            btn.disabled = true; txt.style.display = 'none'; loader.style.display = 'block';
-            const info = await fetchWebpageInfo(url);
-            let finalTitle = info.title; if (info.account && !finalTitle.includes(info.account)) finalTitle = `${info.account} - ${finalTitle}`;
-            const targetFolder = activeFolder !== 'all' ? activeFolder : 'default';
-            const data = { url, title: finalTitle, categories: info.categories, description: info.description, image: info.image || "", folderId: targetFolder, createdAt: Date.now(), pinned: false, isRead: false, isDead: false };
+            const inp = document.getElementById('url-input'); let u = inp.value.trim(); if (!u) return;
+            const btn = document.getElementById('btn-add-url'), ld = document.getElementById('add-loader'), tx = btn.querySelector('.btn-text');
+            btn.disabled = true; tx.style.display = 'none'; ld.style.display = 'block';
+            const info = await fetchWebpageInfo(u);
+            let ft = info.title; if (info.account && !ft.includes(info.account)) ft = `${info.account} - ${ft}`;
+            const tf = activeFolder !== 'all' ? activeFolder : 'default';
+            const data = { url: u, title: ft, categories: info.categories, description: info.description, image: info.image || "", folderId: tf, createdAt: Date.now(), pinned: false, isRead: false, isDead: false };
             try {
-                if (isLocalMode) { const links = JSON.parse(localStorage.getItem('my_links') || '[]'); data.id = 'loc_' + Date.now(); links.unshift(data); localStorage.setItem('my_links', JSON.stringify(links)); } 
+                if (isLocalMode) { const l = JSON.parse(localStorage.getItem('my_links') || '[]'); data.id = 'loc_' + Date.now(); l.unshift(data); localStorage.setItem('my_links', JSON.stringify(l)); } 
                 else { await db.collection('users').doc(currentUser.uid).collection('links').add(data); }
                 showToast("✅ 儲存成功", "success");
             } catch (e) { showToast("❌ " + e.message, "error"); }
-            input.value = ''; btn.disabled = false; txt.style.display = 'inline'; loader.style.display = 'none'; loadLinks();
+            inp.value = ''; btn.disabled = false; tx.style.display = 'inline'; ld.style.display = 'none'; loadLinks();
         }
 
         // ============================================================
@@ -416,277 +414,202 @@
         // ============================================================
         async function getAllLinks() { if (isLocalMode) return JSON.parse(localStorage.getItem('my_links') || '[]'); return (await db.collection('users').doc(currentUser.uid).collection('links').get()).docs.map(d => ({ id: d.id, ...d.data() })); }
         function loadLinks() {
-            if (isLocalMode) { const allData = JSON.parse(localStorage.getItem('my_links') || '[]'); updateLastArchiveTime(allData); renderCurrentView(allData); } 
-            else if(currentUser && db) { if(unsubscribeSnapshot) unsubscribeSnapshot(); unsubscribeSnapshot = db.collection('users').doc(currentUser.uid).collection('links').orderBy('createdAt', 'desc').onSnapshot(snap => { const allData = snap.docs.map(d => ({ id: d.id, ...d.data() })); updateLastArchiveTime(allData); renderCurrentView(allData); }); }
+            if (isLocalMode) { const a = JSON.parse(localStorage.getItem('my_links') || '[]'); updateLastArchiveTime(a); renderCurrentView(a); } 
+            else if (currentUser && db) { if (unsubscribeSnapshot) unsubscribeSnapshot(); unsubscribeSnapshot = db.collection('users').doc(currentUser.uid).collection('links').orderBy('createdAt', 'desc').onSnapshot(s => { const a = s.docs.map(d => ({ id: d.id, ...d.data() })); updateLastArchiveTime(a); renderCurrentView(a); }); }
         }
         function renderCurrentView(links) {
-            const search = document.getElementById('search-input').value.toLowerCase(); renderTagChips(links);
-            const filtered = links.filter(l => {
-                const matchSearch = l.title.toLowerCase().includes(search) || l.url.toLowerCase().includes(search) || (l.description && l.description.toLowerCase().includes(search)) || (Array.isArray(l.categories) && l.categories.some(t => t.toLowerCase().includes(search)));
-                const matchTag = activeTag === 'all' || (Array.isArray(l.categories) ? l.categories.includes(activeTag) : l.categories === activeTag);
-                const matchFolder = activeFolder === 'all' || l.folderId === activeFolder || (!l.folderId && activeFolder === 'default');
-                return matchSearch && matchTag && matchFolder;
+            const s = document.getElementById('search-input').value.toLowerCase(); renderTagChips(links);
+            const f = links.filter(l => {
+                const ms = l.title.toLowerCase().includes(s) || l.url.toLowerCase().includes(s) || (l.description && l.description.toLowerCase().includes(s)) || (Array.isArray(l.categories) && l.categories.some(t => t.toLowerCase().includes(s)));
+                const mt = activeTag === 'all' || (Array.isArray(l.categories) ? l.categories.includes(activeTag) : l.categories === activeTag);
+                const mf = activeFolder === 'all' || l.folderId === activeFolder || (!l.folderId && activeFolder === 'default');
+                return ms && mt && mf;
             });
-            allLinksCache = filtered; if (isKanbanMode) renderKanban(filtered); else renderLinks(filtered);
+            allLinksCache = f; if (isKanbanMode) renderKanban(f); else renderLinks(f);
         }
         function renderLinks(links) {
-            const container = document.getElementById('links-container');
-            if (links.length === 0) { container.innerHTML = `<div class="text-center py-20 text-gray-500 col-span-full">找不到連結</div>`; return; }
-            container.innerHTML = links.map((link, index) => {
-                const titleHtml = link.title.includes('@') ? link.title.replace(/(@[^\s-]+)/, `<span class="account-handle">$1</span>`) : escapeHtml(link.title);
-                let sourceDisplay = ""; try { sourceDisplay = link.account || new URL(link.url).hostname; } catch(e) { sourceDisplay = "未知"; }
-                let imageHtml = link.image ? `<div class="link-image-preview"><img loading="lazy" src="${link.image}" onerror="this.parentElement.style.display='none'"></div>` : "";
-                const folder = allFoldersCache.find(f => f.id === link.folderId) || allFoldersCache.find(f => f.id === 'default');
-                const folderBadge = folder ? `<div class="folder-badge"><i class="fas ${folder.icon || 'fa-folder'}"></i> ${folder.name}</div>` : "";
-                const tagsHtml = (Array.isArray(link.categories) ? link.categories : (link.categories ? [link.categories] : [])).map(t => `<span class="tag-badge" style="${getTagStyles(t)}">${escapeHtml(t)}</span>`).join('');
+            const c = document.getElementById('links-container');
+            if (!links.length) { c.innerHTML = `<div class="text-center py-10 text-gray-500 col-span-full text-sm">找不到連結</div>`; return; }
+            c.innerHTML = links.map((l, i) => {
+                const th = l.title.includes('@') ? l.title.replace(/(@[^\s-]+)/, `<span class="account-handle">$1</span>`) : escapeHtml(l.title);
+                let sd = ""; try { sd = l.account || new URL(l.url).hostname; } catch (e) { sd = "未知"; }
+                let ih = l.image ? `<div class="link-image-preview"><img loading="lazy" src="${l.image}" onerror="this.parentElement.style.display='none'"></div>` : "";
+                const fo = allFoldersCache.find(f => f.id === l.folderId) || allFoldersCache.find(f => f.id === 'default');
+                const fb = fo ? `<div class="folder-badge"><i class="fas ${fo.icon || 'fa-folder'}"></i> ${fo.name}</div>` : "";
+                const tg = (Array.isArray(l.categories) ? l.categories : (l.categories ? [l.categories] : [])).map(t => `<span class="tag-badge" style="${getTagStyles(t)}">${escapeHtml(t)}</span>`).join('');
+                const cb = `<input type="checkbox" class="batch-checkbox" ${selectedIds.has(l.id) ? 'checked' : ''} onclick="event.stopPropagation();toggleSelect('${l.id}',this)">`;
+                const db = l.isDead ? `<div class="dead-badge"><i class="fas fa-exclamation-triangle"></i> 失效</div>` : "";
                 
-                const checkboxHtml = `<input type="checkbox" class="batch-checkbox" ${selectedIds.has(link.id) ? 'checked' : ''} onclick="event.stopPropagation(); toggleSelect('${link.id}', this)">`;
-                const deadBadgeHtml = link.isDead ? `<div class="dead-badge"><i class="fas fa-exclamation-triangle"></i> 失效</div>` : "";
-                const cardClass = `link-card card-enter ${link.pinned ? 'is-pinned' : ''} ${link.isRead ? 'is-read' : ''} ${link.isDead ? 'is-dead' : ''}`;
-
-                return `
-                <div class="${cardClass}" style="animation-delay: ${index * 0.05}s;">
-                    ${checkboxHtml}${folderBadge}${imageHtml}
+                return `<div class="link-card card-enter ${l.pinned ? 'is-pinned' : ''} ${l.isRead ? 'is-read' : ''} ${l.isDead ? 'is-dead' : ''}" style="animation-delay:${i * 0.02}s">
+                    ${cb}${fb}${ih}
                     <div class="card-actions">
-                        <button class="btn-outline" onclick="togglePin('${link.id}')" title="釘選"><i class="fas fa-thumbtack"></i></button>
-                        <button class="btn-outline" onclick="toggleRead('${link.id}')" title="已讀"><i class="fas ${link.isRead ? 'fa-check-circle' : 'fa-circle'}"></i></button>
-                        <button class="btn-outline" onclick="openEdit('${link.id}')" title="編輯"><i class="fas fa-edit"></i></button>
-                        <button class="btn-outline btn-delete" onclick="deleteLink('${link.id}')" title="刪除"><i class="fas fa-trash"></i></button>
+                        <button class="btn-outline" onclick="togglePin('${l.id}')" title="釘選"><i class="fas fa-thumbtack"></i></button>
+                        <button class="btn-outline" onclick="toggleRead('${l.id}')" title="已讀"><i class="fas ${l.isRead ? 'fa-check-circle' : 'fa-circle'}"></i></button>
+                        <button class="btn-outline" onclick="openEdit('${l.id}')" title="編輯"><i class="fas fa-edit"></i></button>
+                        <button class="btn-outline btn-delete" onclick="deleteLink('${l.id}')" title="刪除"><i class="fas fa-trash"></i></button>
                     </div>
-                    <p class="link-desc">${escapeHtml(link.description)}</p>
-                    <h3 class="link-title">${titleHtml}</h3>
-                    <a href="${escapeHtml(link.url)}" target="_blank" class="link-url-display">${escapeHtml(link.url)}</a>
+                    <p class="link-desc">${escapeHtml(l.description)}</p>
+                    <h3 class="link-title">${th}</h3>
+                    <a href="${escapeHtml(l.url)}" target="_blank" class="link-url-display">${escapeHtml(l.url)}</a>
                     <div class="card-footer">
-                        <div class="source-info"><img loading="lazy" class="favicon" src="https://www.google.com/s2/favicons?domain=${encodeURIComponent(link.url)}&sz=64"><div class="source-text"><span class="font-medium">${sourceDisplay}</span></div></div>
-                        <div class="tags-container">${tagsHtml}</div>
+                        <div class="source-info"><img loading="lazy" class="favicon" src="https://www.google.com/s2/favicons?domain=${encodeURIComponent(l.url)}&sz=64"><span class="source-text">${sd}</span></div>
+                        <div class="tags-container">${tg}</div>
                     </div>
-                    ${deadBadgeHtml}
+                    ${db}
                 </div>`;
             }).join('');
         }
         function renderTagChips(links) {
-            const container = document.getElementById('tag-chips'); const allTags = new Set();
-            links.forEach(l => { if (l.categories) { if (Array.isArray(l.categories)) l.categories.forEach(t => allTags.add(t)); else allTags.add(l.categories); } });
-            let html = `<div class="chip ${activeTag === 'all' ? 'active' : ''}" onclick="setTag('all')"><i class="fas fa-tags"></i> 全部標籤</div>`;
-            allTags.forEach(tag => { const color = stringToHslColor(tag, 0.6, 0.5); const isActive = activeTag === tag; const style = isActive ? `background: ${color}; color: white; border-color: ${color};` : `border-color: ${color}40; color: ${color};`; html += `<div class="chip ${isActive ? 'active' : ''}" style="${style}" onclick="setTag('${tag}')">${tag}</div>`; });
-            container.innerHTML = html;
+            const c = document.getElementById('tag-chips'); const at = new Set();
+            links.forEach(l => { if (l.categories) { if (Array.isArray(l.categories)) l.categories.forEach(t => at.add(t)); else at.add(l.categories); } });
+            let h = `<div class="chip ${activeTag === 'all' ? 'active' : ''}" onclick="setTag('all')"><i class="fas fa-tags"></i> 全部</div>`;
+            at.forEach(t => { const cl = stringToHslColor(t, 0.6, 0.5); const ia = activeTag === t; const st = ia ? `background:${cl};color:white;border-color:${cl};` : `border-color:${cl}40;color:${cl};`; h += `<div class="chip ${ia ? 'active' : ''}" style="${st}" onclick="setTag('${t}')">${t}</div>`; });
+            c.innerHTML = h;
         }
-        function setTag(tag) { activeTag = tag; renderTagChips(allLinksCache); filterLinks(); }
+        function setTag(t) { activeTag = t; renderTagChips(allLinksCache); filterLinks(); }
         function handleSearchInput() { clearTimeout(searchTimeout); searchTimeout = setTimeout(() => { filterLinks(); }, 300); }
         function filterLinks() { loadLinks(); }
 
-        async function togglePin(id) { const l = (await getAllLinks()).find(x => x.id === id); if(!l) return; await updateLinkProp(id, 'pinned', !l.pinned); }
-        async function toggleRead(id) { const l = (await getAllLinks()).find(x => x.id === id); if(!l) return; await updateLinkProp(id, 'isRead', !l.isRead); }
-        
-        async function updateLinkProp(id, prop, val, silent = false) {
-            if (isLocalMode) { const all = JSON.parse(localStorage.getItem('my_links') || '[]'); const i = all.findIndex(x => x.id === id); if(i>-1) { all[i][prop] = val; localStorage.setItem('my_links', JSON.stringify(all)); } }
-            else { await db.collection('users').doc(currentUser.uid).collection('links').doc(id).update({ [prop]: val }); }
-            if (!silent) loadLinks();
+        async function togglePin(id) { const l = (await getAllLinks()).find(x => x.id === id); if (!l) return; await updateLinkProp(id, 'pinned', !l.pinned); }
+        async function toggleRead(id) { const l = (await getAllLinks()).find(x => x.id === id); if (!l) return; await updateLinkProp(id, 'isRead', !l.isRead); }
+        async function updateLinkProp(id, p, v, s = false) {
+            if (isLocalMode) { const a = JSON.parse(localStorage.getItem('my_links') || '[]'); const i = a.findIndex(x => x.id === id); if (i > -1) { a[i][p] = v; localStorage.setItem('my_links', JSON.stringify(a)); } } 
+            else { await db.collection('users').doc(currentUser.uid).collection('links').doc(id).update({ [p]: v }); }
+            if (!s) loadLinks();
         }
-        
-        async function deleteLink(id, showConfirm = true) {
-            if (showConfirm && !confirm("確定刪除？")) return;
-            if (isLocalMode) { let l = JSON.parse(localStorage.getItem('my_links') || '[]'); localStorage.setItem('my_links', JSON.stringify(l.filter(i => i.id !== id))); }
+        async function deleteLink(id, sc = true) {
+            if (sc && !confirm("確定刪除？")) return;
+            if (isLocalMode) { let l = JSON.parse(localStorage.getItem('my_links') || '[]'); localStorage.setItem('my_links', JSON.stringify(l.filter(i => i.id !== id))); } 
             else { await db.collection('users').doc(currentUser.uid).collection('links').doc(id).delete(); }
-            if (showConfirm) { showToast("已刪除", "success"); loadLinks(); }
+            if (sc) { showToast("已刪除", "success"); loadLinks(); }
         }
 
         async function openEdit(id) {
-            let link; try {
-                if (isLocalMode) link = JSON.parse(localStorage.getItem('my_links') || '[]').find(l => l.id === id);
-                else { const s = await db.collection('users').doc(currentUser.uid).collection('links').doc(id).get(); if(s.exists) { link = s.data(); link.id = s.id; } }
-                if (link) {
-                    document.getElementById('edit-id').value = link.id; document.getElementById('edit-title').value = link.title || ""; document.getElementById('edit-url').value = link.url || "";
-                    document.getElementById('edit-categories').value = Array.isArray(link.categories) ? link.categories.join(', ') : (link.categories || ""); document.getElementById('edit-desc').value = link.description || "";
-                    const select = document.getElementById('edit-folder'); select.innerHTML = allFoldersCache.map(f => `<option value="${f.id}" ${link.folderId === f.id ? 'selected' : ''}>${f.name}</option>`).join('');
+            let l; try {
+                if (isLocalMode) l = JSON.parse(localStorage.getItem('my_links') || '[]').find(x => x.id === id);
+                else { const s = await db.collection('users').doc(currentUser.uid).collection('links').doc(id).get(); if (s.exists) { l = s.data(); l.id = s.id; } }
+                if (l) {
+                    document.getElementById('edit-id').value = l.id; document.getElementById('edit-title').value = l.title || ""; document.getElementById('edit-url').value = l.url || "";
+                    document.getElementById('edit-categories').value = Array.isArray(l.categories) ? l.categories.join(', ') : (l.categories || ""); document.getElementById('edit-desc').value = l.description || "";
+                    const s = document.getElementById('edit-folder'); s.innerHTML = allFoldersCache.map(f => `<option value="${f.id}" ${l.folderId === f.id ? 'selected' : ''}>${f.name}</option>`).join('');
                     openModal('edit-modal');
                 }
             } catch (e) { showToast("讀取失敗", "error"); }
         }
         async function saveEdit() {
-            const id = document.getElementById('edit-id').value; const categoriesRaw = document.getElementById('edit-categories').value; const categories = categoriesRaw.split(/[,，]\s*/).map(t => t.trim()).filter(t => t);
-            const updated = { title: document.getElementById('edit-title').value, url: document.getElementById('edit-url').value, categories: categories, description: document.getElementById('edit-desc').value, folderId: document.getElementById('edit-folder').value };
-            if (isLocalMode) { let l = JSON.parse(localStorage.getItem('my_links') || '[]'); const i = l.findIndex(x => x.id === id); if(i>-1) { l[i] = { ...l[i], ...updated }; localStorage.setItem('my_links', JSON.stringify(l)); loadLinks(); } }
-            else { await db.collection('users').doc(currentUser.uid).collection('links').doc(id).update(updated); loadLinks(); }
+            const id = document.getElementById('edit-id').value;
+            const cats = document.getElementById('edit-categories').value.split(/[,，]\s*/).map(t => t.trim()).filter(t => t);
+            const u = { title: document.getElementById('edit-title').value, url: document.getElementById('edit-url').value, categories: cats, description: document.getElementById('edit-desc').value, folderId: document.getElementById('edit-folder').value };
+            if (isLocalMode) { let l = JSON.parse(localStorage.getItem('my_links') || '[]'); const i = l.findIndex(x => x.id === id); if (i > -1) { l[i] = { ...l[i], ...u }; localStorage.setItem('my_links', JSON.stringify(l)); loadLinks(); } } 
+            else { await db.collection('users').doc(currentUser.uid).collection('links').doc(id).update(u); loadLinks(); }
             closeModal('edit-modal'); showToast("已儲存", "success");
         }
-        function toggleView() { currentView = currentView === 'masonry' ? 'list' : 'masonry'; const container = document.getElementById('links-container'); container.className = currentView === 'list' ? 'list-view' : 'masonry-grid'; document.getElementById('view-icon').className = currentView === 'list' ? 'fas fa-grip-vertical' : 'fas fa-list'; loadLinks(); }
-        function toggleKanbanView() { isKanbanMode = !isKanbanMode; document.getElementById('links-container').style.display = isKanbanMode ? 'none' : 'block'; document.getElementById('kanban-board').style.display = isKanbanMode ? 'flex' : 'none'; document.getElementById('btn-kanban').classList.toggle('btn-primary', isKanbanMode); document.getElementById('btn-kanban').classList.toggle('btn-outline', !isKanbanMode); if (isKanbanMode) renderKanban(allLinksCache); }
+
+        function toggleView() { currentView = currentView === 'masonry' ? 'list' : 'masonry'; const c = document.getElementById('links-container'); c.className = currentView === 'list' ? 'list-view' : 'masonry-grid'; document.getElementById('view-icon').className = currentView === 'list' ? 'fas fa-grip-vertical' : 'fas fa-list'; loadLinks(); }
+        function toggleKanbanView() {
+            isKanbanMode = !isKanbanMode;
+            document.getElementById('links-container').style.display = isKanbanMode ? 'none' : 'block';
+            document.getElementById('kanban-board').style.display = isKanbanMode ? 'flex' : 'none';
+            document.getElementById('btn-kanban').classList.toggle('btn-primary', isKanbanMode);
+            document.getElementById('btn-kanban').classList.toggle('btn-outline', !isKanbanMode);
+            if (isKanbanMode) renderKanban(allLinksCache);
+        }
         function renderKanban(links) {
-            const inbox = [], starred = [], done = []; links.forEach(l => { if (l.pinned) starred.push(l); else if (l.isRead) done.push(l); else inbox.push(l); });
-            document.getElementById('count-inbox').innerText = inbox.length; document.getElementById('count-starred').innerText = starred.length; document.getElementById('count-done').innerText = done.length;
-            const renderCard = (l) => `<div class="kanban-card" data-id="${l.id}"><div class="k-title">${escapeHtml(l.title)}</div><div class="k-desc">${escapeHtml(l.description)}</div></div>`;
-            document.getElementById('list-inbox').innerHTML = inbox.map(renderCard).join(''); document.getElementById('list-starred').innerHTML = starred.map(renderCard).join(''); document.getElementById('list-done').innerHTML = done.map(renderCard).join('');
+            const a = [], b = [], c = []; links.forEach(l => { if (l.pinned) b.push(l); else if (l.isRead) c.push(l); else a.push(l); });
+            document.getElementById('count-inbox').innerText = a.length; document.getElementById('count-starred').innerText = b.length; document.getElementById('count-done').innerText = c.length;
+            const r = l => `<div class="kanban-card" data-id="${l.id}"><div class="k-title">${escapeHtml(l.title)}</div><div class="k-desc">${escapeHtml(l.description)}</div></div>`;
+            document.getElementById('list-inbox').innerHTML = a.map(r).join(''); document.getElementById('list-starred').innerHTML = b.map(r).join(''); document.getElementById('list-done').innerHTML = c.map(r).join('');
             initSortable();
         }
         function initSortable() {
             ['list-inbox', 'list-starred', 'list-done'].forEach(id => {
                 const el = document.getElementById(id); if (el.sortable) el.sortable.destroy();
-                el.sortable = Sortable.create(el, { group: 'kanban', animation: 150, ghostClass: 'sortable-ghost', onEnd: async (evt) => { const itemId = evt.item.dataset.id, newColumnId = evt.to.id; let newStatus = { pinned: false, isRead: false }; if (newColumnId === 'list-starred') newStatus = { pinned: true, isRead: false }; else if (newColumnId === 'list-done') newStatus = { pinned: false, isRead: true }; if (isLocalMode) { const all = JSON.parse(localStorage.getItem('my_links') || '[]'); const idx = all.findIndex(i => i.id === itemId); if (idx > -1) { all[idx].pinned = newStatus.pinned; all[idx].isRead = newStatus.isRead; localStorage.setItem('my_links', JSON.stringify(all)); } } else { await db.collection('users').doc(currentUser.uid).collection('links').doc(itemId).update(newStatus); } loadLinks(); } });
+                el.sortable = Sortable.create(el, { group: 'kanban', animation: 150, ghostClass: 'sortable-ghost', onEnd: async e => {
+                    const iid = e.item.dataset.id, nc = e.to.id; let ns = { pinned: false, isRead: false };
+                    if (nc === 'list-starred') ns = { pinned: true, isRead: false }; else if (nc === 'list-done') ns = { pinned: false, isRead: true };
+                    if (isLocalMode) { const a = JSON.parse(localStorage.getItem('my_links') || '[]'); const i = a.findIndex(x => x.id === iid); if (i > -1) { a[i].pinned = ns.pinned; a[i].isRead = ns.isRead; localStorage.setItem('my_links', JSON.stringify(a)); } } 
+                    else { await db.collection('users').doc(currentUser.uid).collection('links').doc(iid).update(ns); }
+                    loadLinks();
+                }});
             });
         }
+
         function toggleTheme() { document.body.classList.toggle('light-mode'); localStorage.setItem('theme', document.body.classList.contains('light-mode') ? 'light' : 'dark'); }
         function handleRefresh() { const i = document.getElementById('refresh-icon'); i.classList.add('rotating'); loadLinks(); setTimeout(() => i.classList.remove('rotating'), 600); }
-        function exportAsMarkdown() { if (!allLinksCache.length) return; let md = `# 智能連結清單\n\n`; allLinksCache.forEach(l => { md += `- [${l.title}](${l.url})\n`; }); navigator.clipboard.writeText(md).then(() => showToast("✅ 已複製", "success")); }
-        async function exportData() { const links = await getAllLinks(); const folders = await getFolders(); const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([JSON.stringify({ links, folders }, null, 2)], { type: "application/json" })); a.download = `slm_backup_${new Date().toISOString().slice(0,10)}.json`; a.click(); }
-        function importData(event) {
-            const file = event.target.files[0]; if (!file) return; const reader = new FileReader();
-            reader.onload = async (e) => { try { const data = JSON.parse(e.target.result); const links = data.links || data; const folders = data.folders || []; if (isLocalMode) { localStorage.setItem('my_links', JSON.stringify(links)); if(folders.length) localStorage.setItem('my_folders', JSON.stringify(folders)); loadLinks(); renderFolderChips(); } else { const b = db.batch(); links.forEach(l => b.set(db.collection('users').doc(currentUser.uid).collection('links').doc(l.id), l)); folders.forEach(f => b.set(db.collection('users').doc(currentUser.uid).collection('folders').doc(f.id), f)); await b.commit(); loadLinks(); renderFolderChips(); } showToast("匯入成功", "success"); } catch (err) { showToast("匯入失敗", "error"); } event.target.value = ''; };
-            reader.readAsText(file);
+        function exportAsMarkdown() { if (!allLinksCache.length) return; let m = '# 智能連結清單\n\n'; allLinksCache.forEach(l => { m += `- [${l.title}](${l.url})\n`; }); navigator.clipboard.writeText(m).then(() => showToast("✅ 已複製", "success")); }
+        async function exportData() { const l = await getAllLinks(); const f = await getFolders(); const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([JSON.stringify({ links: l, folders: f }, null, 2)], { type: "application/json" })); a.download = `slm_${new Date().toISOString().slice(0, 10)}.json`; a.click(); }
+        function importData(ev) {
+            const f = ev.target.files[0]; if (!f) return; const r = new FileReader();
+            r.onload = async e => {
+                try { const d = JSON.parse(e.target.result); const l = d.links || d; const fo = d.folders || [];
+                    if (isLocalMode) { localStorage.setItem('my_links', JSON.stringify(l)); if (fo.length) localStorage.setItem('my_folders', JSON.stringify(fo)); loadLinks(); renderFolderChips(); } 
+                    else { const b = db.batch(); l.forEach(x => b.set(db.collection('users').doc(currentUser.uid).collection('links').doc(x.id), x)); fo.forEach(x => b.set(db.collection('users').doc(currentUser.uid).collection('folders').doc(x.id), x)); await b.commit(); loadLinks(); renderFolderChips(); }
+                    showToast("匯入成功", "success");
+                } catch (err) { showToast("匯入失敗", "error"); }
+                ev.target.value = '';
+            };
+            r.readAsText(f);
         }
-        function showToast(msg, type='info') { const c = document.getElementById('toast-container'), t = document.createElement('div'); t.className = `toast ${type}`; t.innerHTML = msg; c.appendChild(t); setTimeout(() => { t.style.animation = 'fadeOut 0.3s ease forwards'; setTimeout(() => t.remove(), 300); }, 3000); }
+
+        function showToast(m, t = 'info') { const c = document.getElementById('toast-container'), d = document.createElement('div'); d.className = `toast ${t}`; d.innerHTML = m; c.appendChild(d); setTimeout(() => { d.style.animation = 'fadeOut 0.3s ease forwards'; setTimeout(() => d.remove(), 300); }, 3000); }
         function openModal(id) { document.getElementById(id).style.display = 'flex'; }
         function closeModal(id) { document.getElementById(id).style.display = 'none'; }
         function handleEnter(e) { if (e.key === "Enter") processAndSaveUrl(); }
         function escapeHtml(u) { return String(u || '').replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;"); }
 
         // ============================================================
-        // ✅ 批次操作邏輯 (已優化：使用 Batch 批次寫入)
+        // ✅ 批次操作
         // ============================================================
-        function toggleBatchMode() {
-            batchMode = !batchMode; selectedIds.clear();
-            document.body.classList.toggle('batch-mode', batchMode);
-            document.getElementById('batch-toolbar').classList.toggle('active', batchMode);
-            updateBatchToolbar(); renderCurrentView(allLinksCache);
-        }
-        function toggleSelect(id, checkbox) {
-            if (checkbox.checked) selectedIds.add(id); else selectedIds.delete(id);
-            updateBatchToolbar();
-        }
+        function toggleBatchMode() { batchMode = !batchMode; selectedIds.clear(); document.body.classList.toggle('batch-mode', batchMode); document.getElementById('batch-toolbar').classList.toggle('active', batchMode); updateBatchToolbar(); renderCurrentView(allLinksCache); }
+        function toggleSelect(id, cb) { if (cb.checked) selectedIds.add(id); else selectedIds.delete(id); updateBatchToolbar(); }
         function updateBatchToolbar() { document.getElementById('batch-count').textContent = selectedIds.size; }
-        
         async function batchDelete() {
-            if (selectedIds.size === 0) return;
-            if (!confirm(`確定要刪除選取的 ${selectedIds.size} 個連結嗎？`)) return;
-            
-            // ✅ 優化：一次性批次刪除
-            if (isLocalMode) {
-                let all = JSON.parse(localStorage.getItem('my_links') || '[]');
-                all = all.filter(i => !selectedIds.has(i.id));
-                localStorage.setItem('my_links', JSON.stringify(all));
-            } else {
-                const batch = db.batch();
-                selectedIds.forEach(id => {
-                    batch.delete(db.collection('users').doc(currentUser.uid).collection('links').doc(id));
-                });
-                await batch.commit();
-            }
-            toggleBatchMode(); showToast(`已刪除 ${selectedIds.size} 個連結`, "success"); loadLinks();
+            if (!selectedIds.size) return; if (!confirm(`刪除 ${selectedIds.size} 個？`)) return;
+            if (isLocalMode) { let a = JSON.parse(localStorage.getItem('my_links') || '[]'); a = a.filter(i => !selectedIds.has(i.id)); localStorage.setItem('my_links', JSON.stringify(a)); } 
+            else { const b = db.batch(); selectedIds.forEach(id => { b.delete(db.collection('users').doc(currentUser.uid).collection('links').doc(id)); }); await b.commit(); }
+            toggleBatchMode(); showToast(`已刪除 ${selectedIds.size} 個`, "success"); loadLinks();
         }
         async function batchMoveFolder() {
-            if (selectedIds.size === 0) return;
-            const folderOptions = allFoldersCache.map(f => `${f.id}: ${f.name}`).join('\n');
-            const choice = prompt(`請輸入要移動到的資料夾 ID 或名稱：\n${folderOptions}`);
-            if (!choice) return;
-            const targetFolder = allFoldersCache.find(f => f.id === choice || f.name === choice);
-            if (!targetFolder) { showToast("找不到該資料夾", "error"); return; }
-            
-            // ✅ 優化：一次性批次移動
-            if (isLocalMode) {
-                const all = JSON.parse(localStorage.getItem('my_links') || '[]');
-                selectedIds.forEach(id => {
-                    const idx = all.findIndex(x => x.id === id);
-                    if (idx > -1) all[idx].folderId = targetFolder.id;
-                });
-                localStorage.setItem('my_links', JSON.stringify(all));
-            } else {
-                const batch = db.batch();
-                selectedIds.forEach(id => {
-                    batch.update(db.collection('users').doc(currentUser.uid).collection('links').doc(id), { folderId: targetFolder.id });
-                });
-                await batch.commit();
-            }
-            toggleBatchMode(); showToast(`已移動 ${selectedIds.size} 個連結`, "success"); loadLinks();
+            if (!selectedIds.size) return; const opts = allFoldersCache.map(f => `${f.id}: ${f.name}`).join('\n'); const ch = prompt(`移動到：\n${opts}`); if (!ch) return;
+            const tf = allFoldersCache.find(f => f.id === ch || f.name === ch); if (!tf) { showToast("找不到", "error"); return; }
+            if (isLocalMode) { const a = JSON.parse(localStorage.getItem('my_links') || '[]'); selectedIds.forEach(id => { const i = a.findIndex(x => x.id === id); if (i > -1) a[i].folderId = tf.id; }); localStorage.setItem('my_links', JSON.stringify(a)); } 
+            else { const b = db.batch(); selectedIds.forEach(id => { b.update(db.collection('users').doc(currentUser.uid).collection('links').doc(id), { folderId: tf.id }); }); await b.commit(); }
+            toggleBatchMode(); showToast(`已移動 ${selectedIds.size} 個`, "success"); loadLinks();
         }
 
         // ============================================================
-        // ✅ 失效連結檢測 (已優化：排除社群平台、修正 API 欄位、批次寫入)
+        // ✅ 失效連結檢測
         // ============================================================
         async function startDeadLinkCheck() {
-            if (isCheckingLinks) return;
-            if (!confirm("將開始檢測所有連結的有效性，這可能需要一些時間。\n(註：系統會自動跳過 FB/IG/X 等需要登入的社群平台以避免誤判)\n確定繼續？")) return;
-
-            isCheckingLinks = true;
-            const btn = document.getElementById('btn-dead-check');
-            const icon = document.getElementById('dead-check-icon');
-            btn.disabled = true;
-            icon.classList.add('rotating');
-            showToast("🔍 開始失效連結檢測...", "info");
-
-            const links = await getAllLinks();
-            let deadCount = 0;
-            let checkedCount = 0;
-            const updates = []; // 收集需要更新的資料
-
-            for (const link of links) {
-                if (!link.url) continue;
-                const lowerUrl = link.url.toLowerCase();
-
-                // ✅ 修正 1：跳過容易誤判的社群平台
-                if (lowerUrl.includes('facebook.com') || lowerUrl.includes('instagram.com') ||
-                    lowerUrl.includes('x.com') || lowerUrl.includes('twitter.com') ||
-                    lowerUrl.includes('threads.net')) {
-                    continue;
-                }
-
+            if (isCheckingLinks) return; if (!confirm("開始檢測？\n(自動跳過 FB/IG/X)")) return;
+            isCheckingLinks = true; const btn = document.getElementById('btn-dead-check'), ic = document.getElementById('dead-check-icon');
+            btn.disabled = true; ic.classList.add('rotating'); showToast("🔍 檢測中...", "info");
+            const links = await getAllLinks(); let dc = 0, cc = 0, ups = [];
+            for (const l of links) {
+                if (!l.url) continue; const lu = l.url.toLowerCase();
+                if (lu.includes('facebook.com') || lu.includes('instagram.com') || lu.includes('x.com') || lu.includes('twitter.com') || lu.includes('threads.net')) continue;
                 try {
-                    const res = await fetch(`https://api.microlink.io/?url=${encodeURIComponent(link.url)}`);
-                    const d = await res.json();
-                    let isDead = false;
-                    if (d.status !== 'success') {
-                        isDead = true;
-                    } else {
-                        // ✅ 修正 2：正確的欄位名稱是 statusCode
-                        if (d.data && d.data.statusCode && d.data.statusCode >= 400) isDead = true;
-                    }
-
-                    if (isDead !== (link.isDead || false)) {
-                        updates.push({ id: link.id, isDead: isDead });
-                        if (isDead) deadCount++;
-                    }
-                } catch (e) {
-                    if (!link.isDead) {
-                        updates.push({ id: link.id, isDead: true });
-                        deadCount++;
-                    }
-                }
-                checkedCount++;
-                await new Promise(r => setTimeout(r, 300)); // 避免 API 限制
+                    const r = await fetch(`https://api.microlink.io/?url=${encodeURIComponent(l.url)}`); const d = await r.json(); let dead = false;
+                    if (d.status !== 'success') dead = true; else if (d.data && d.data.statusCode && d.data.statusCode >= 400) dead = true;
+                    if (dead !== (l.isDead || false)) { ups.push({ id: l.id, isDead: dead }); if (dead) dc++; }
+                } catch (e) { if (!l.isDead) { ups.push({ id: l.id, isDead: true }); dc++; } }
+                cc++; await new Promise(r => setTimeout(r, 300));
             }
-
-            // ✅ 修正 3：批次寫入，避免 Firestore 寫入風暴
-            if (updates.length > 0) {
-                if (isLocalMode) {
-                    const all = JSON.parse(localStorage.getItem('my_links') || '[]');
-                    updates.forEach(u => {
-                        const idx = all.findIndex(x => x.id === u.id);
-                        if (idx > -1) all[idx].isDead = u.isDead;
-                    });
-                    localStorage.setItem('my_links', JSON.stringify(all));
-                } else {
-                    const batch = db.batch();
-                    updates.forEach(u => {
-                        const ref = db.collection('users').doc(currentUser.uid).collection('links').doc(u.id);
-                        batch.update(ref, { isDead: u.isDead });
-                    });
-                    await batch.commit();
-                }
+            if (ups.length) {
+                if (isLocalMode) { const a = JSON.parse(localStorage.getItem('my_links') || '[]'); ups.forEach(u => { const i = a.findIndex(x => x.id === u.id); if (i > -1) a[i].isDead = u.isDead; }); localStorage.setItem('my_links', JSON.stringify(a)); } 
+                else { const b = db.batch(); ups.forEach(u => { b.update(db.collection('users').doc(currentUser.uid).collection('links').doc(u.id), { isDead: u.isDead }); }); await b.commit(); }
             }
-
-            isCheckingLinks = false;
-            btn.disabled = false;
-            icon.classList.remove('rotating');
-            showToast(`✅ 檢測完成！共檢查 ${checkedCount} 個連結，發現 ${deadCount} 個失效`, deadCount > 0 ? "error" : "success");
-            loadLinks();
+            isCheckingLinks = false; btn.disabled = false; ic.classList.remove('rotating');
+            showToast(`✅ 完成！檢查 ${cc} 個，失效 ${dc} 個`, dc > 0 ? "error" : "success"); loadLinks();
         }
 
         // ============================================================
         // ✅ 鍵盤快捷鍵
         // ============================================================
-        document.addEventListener('keydown', (e) => {
-            const isInputFocused = ['INPUT', 'TEXTAREA', 'SELECT'].includes(document.activeElement.tagName);
+        document.addEventListener('keydown', e => {
+            const f = ['INPUT', 'TEXTAREA', 'SELECT'].includes(document.activeElement.tagName);
             if (e.key === 'Escape') { closeModal('folder-modal'); closeModal('edit-modal'); if (batchMode) toggleBatchMode(); }
-            if (!isInputFocused) {
+            if (!f) {
                 if (e.key === '/') { e.preventDefault(); document.getElementById('search-input').focus(); } 
                 else if (e.key === 'n' || e.key === 'N') { e.preventDefault(); document.getElementById('url-input').focus(); } 
                 else if (e.key === 'b' || e.key === 'B') { e.preventDefault(); toggleBatchMode(); }
@@ -698,8 +621,8 @@
         // ============================================================
         window.onload = async () => { 
             if (localStorage.getItem('theme') === 'light') document.body.classList.add('light-mode'); 
-            const manifest = { name: "智能連結", short_name: "連結", start_url: ".", display: "standalone", background_color: "#0f172a", theme_color: "#6366f1", icons: [{ src: "data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🔗</text></svg>", sizes: "any", type: "image/svg+xml" }] };
-            document.getElementById('pwa-manifest').href = URL.createObjectURL(new Blob([JSON.stringify(manifest)], { type: 'application/json' }));
+            const m = { name: "智能連結", short_name: "連結", start_url: ".", display: "standalone", background_color: "#0f172a", theme_color: "#6366f1", icons: [{ src: "data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🔗</text></svg>", sizes: "any", type: "image/svg+xml" }] };
+            document.getElementById('pwa-manifest').href = URL.createObjectURL(new Blob([JSON.stringify(m)], { type: 'application/json' }));
         };
     </script>
 </body>
