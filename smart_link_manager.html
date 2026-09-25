@@ -318,7 +318,7 @@
         document.getElementById('btn-google-login').addEventListener('click',()=>{if(auth)auth.signInWithPopup(new firebase.auth.GoogleAuthProvider());});
         document.getElementById('btn-local-login').addEventListener('click',async()=>{
             isLocalMode=true;
-            localStorage.setItem('isLocalMode', 'true'); // ✅ 修復：記住本機模式
+            localStorage.setItem('isLocalMode', 'true');
             currentUser=null;showAppScreen("本機模式");await renderFolderChips();loadLinks();
         });
         async function handleLogout(){
@@ -447,13 +447,13 @@
         document.addEventListener('keydown',e=>{const f=['INPUT','TEXTAREA','SELECT'].includes(document.activeElement.tagName);if(e.key==='Escape'){closeModal('folder-modal');closeModal('edit-modal');if(batchMode)toggleBatchMode();}if(!f){if(e.key==='/'){e.preventDefault();document.getElementById('search-input').focus();}else if(e.key==='n'||e.key==='N'){e.preventDefault();document.getElementById('url-input').focus();}else if(e.key==='b'||e.key==='B'){e.preventDefault();toggleBatchMode();}}});
 
         window.onload=async()=>{
-            // ✅ 修復：擴充功能快速存檔接收邏輯 (強制保存)
+            // ✅ 擴充功能快速存檔接收邏輯 (閃電存檔版)
             const urlParams = new URLSearchParams(window.location.search);
             if (urlParams.get('quick_add') === '1') {
                 const extUrl = urlParams.get('url');
                 const extTitle = urlParams.get('title');
+                
                 if (extUrl) {
-                    // 如果既沒登錄也不是本機模式，強制使用本機模式保存
                     if (!isLocalMode && !currentUser) {
                         isLocalMode = true;
                         localStorage.setItem('isLocalMode', 'true');
@@ -465,21 +465,24 @@
                         folderId: activeFolder !== 'all' ? activeFolder : 'default',
                         createdAt: Date.now(), pinned: false, isRead: false, isDead: false
                     };
+                    
                     try {
                         if (isLocalMode) {
                             const links = JSON.parse(localStorage.getItem('my_links') || '[]');
                             data.id = 'loc_' + Date.now(); links.unshift(data);
                             localStorage.setItem('my_links', JSON.stringify(links));
-                            showToast("✅ 擴充功能快速存檔成功", "success");
                         } else if (currentUser && db) {
                             await db.collection('users').doc(currentUser.uid).collection('links').add(data);
-                            showToast("✅ 擴充功能快速存檔成功", "success");
                         }
                         loadLinks();
                     } catch (e) {
-                        showToast(" 存檔失敗", "error");
+                        console.error("存檔失敗", e);
                     }
-                    window.history.replaceState({}, document.title, window.location.pathname);
+                    
+                    // ✅ 存檔完成後，延遲 0.5 秒自動關閉這個分頁
+                    setTimeout(() => {
+                        window.close();
+                    }, 500);
                 }
             }
 
