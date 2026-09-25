@@ -181,6 +181,7 @@
         </div>
         <div class="header-actions flex-wrap gap-1">
             <span id="user-info" style="display:none;color:var(--text-muted);font-size:0.8rem;margin-right:6px;"></span>
+            <button class="btn-outline btn-icon-only" onclick="openQuickAddModal()" title="快速新增 / 另存連結"><i class="fas fa-puzzle-piece"></i></button>
             <button class="btn-outline btn-icon-only" onclick="openFolderModal()" title="資料夾"><i class="fas fa-folder-plus"></i></button>
             <button class="btn-outline btn-icon-only" onclick="toggleBatchMode()" title="批次 (B)"><i class="fas fa-check-square"></i></button>
             <button class="btn-outline btn-icon-only" id="btn-dead-check" onclick="startDeadLinkCheck()" title="失效檢測"><i class="fas fa-heartbeat" id="dead-check-icon"></i></button>
@@ -190,8 +191,7 @@
             <button class="btn-outline btn-icon-only" id="btn-refresh" onclick="handleRefresh()" title="重新整理"><i class="fas fa-sync-alt" id="refresh-icon"></i></button>
             <button class="btn-outline btn-icon-only" onclick="exportData()" title="匯出"><i class="fas fa-download"></i></button>
             <button class="btn-outline btn-icon-only" onclick="document.getElementById('import-file').click()" title="匯入"><i class="fas fa-upload"></i></button>
-            <!-- ✅ 新增：下載擴充功能按鈕 -->
-            <a href="https://4chi828.github.io/1/Smart_Link_Manager.crx" download class="btn-outline btn-icon-only" title="下載擴充功能"><i class="fas fa-puzzle-piece"></i></a>
+            <a href="https://4chi828.github.io/1/Smart_Link_Manager.crx" download class="btn-outline btn-icon-only" title="下載擴充功能 (CRX)"><i class="fas fa-box"></i></a>
             <input type="file" id="import-file" style="display:none" accept=".json" onchange="importData(event)">
             <button class="btn-outline btn-icon-only" id="btn-logout" style="display:none;" onclick="handleLogout()" title="登出"><i class="fas fa-sign-out-alt"></i></button>
         </div>
@@ -250,6 +250,28 @@
         </div>
     </footer>
 
+    <div class="modal-overlay" id="quick-add-modal">
+        <div class="modal">
+            <h3 class="text-lg font-bold mb-3">🧩 快速新增 / 另存連結</h3>
+            <div class="form-group">
+                <label>網址 (必填)</label>
+                <input type="text" id="quick-add-url" placeholder="請貼上或輸入網址">
+            </div>
+            <div class="form-group">
+                <label>標題 (可留空，將自動抓取)</label>
+                <input type="text" id="quick-add-title" placeholder="自訂標題">
+            </div>
+            <div class="form-group">
+                <label>標籤 (逗號分隔，可留空)</label>
+                <input type="text" id="quick-add-tags" placeholder="例如: 工具, 教學, 重要">
+            </div>
+            <div class="flex justify-end gap-2 mt-4">
+                <button class="btn-outline" onclick="closeModal('quick-add-modal')">取消</button>
+                <button class="btn-primary" id="btn-quick-add" onclick="executeQuickAdd()">儲存</button>
+            </div>
+        </div>
+    </div>
+
     <div class="modal-overlay" id="folder-modal"><div class="modal"><h3 class="text-lg font-bold mb-3">📂 管理資料夾</h3><div id="folder-list" class="mb-3 max-h-48 overflow-y-auto"></div><div class="flex gap-2"><input type="text" id="new-folder-name" placeholder="新資料夾" class="flex-1 p-2 rounded border border-gray-600 bg-gray-800 text-white text-sm"><button class="btn-primary" onclick="addFolder()">新增</button></div><div class="flex justify-end mt-3"><button class="btn-outline" onclick="closeModal('folder-modal')">關閉</button></div></div></div>
     <div class="modal-overlay" id="edit-modal"><div class="modal"><h3 class="text-lg font-bold mb-3">✏️ 編輯連結</h3><input type="hidden" id="edit-id"><div class="form-group"><label>標題</label><input type="text" id="edit-title"></div><div class="form-group"><label>網址</label><input type="text" id="edit-url"></div><div class="form-group"><label>資料夾</label><select id="edit-folder"></select></div><div class="form-group"><label>標籤</label><input type="text" id="edit-categories"></div><div class="form-group"><label>摘要</label><textarea id="edit-desc" style="height:60px;"></textarea></div><div class="flex justify-end gap-2 mt-3"><button class="btn-outline" onclick="closeModal('edit-modal')">取消</button><button class="btn-primary" onclick="saveEdit()">儲存</button></div></div></div>
     <div id="toast-container"></div>
@@ -264,13 +286,60 @@
         let allLinksCache=[],allFoldersCache=[],searchTimeout,batchMode=false,selectedIds=new Set(),isCheckingLinks=false;
         try{app=firebase.initializeApp(firebaseConfig);auth=firebase.auth();db=firebase.firestore();}catch(e){}
 
+        function openQuickAddModal() {
+            document.getElementById('quick-add-url').value = '';
+            document.getElementById('quick-add-title').value = '';
+            document.getElementById('quick-add-tags').value = '';
+            openModal('quick-add-modal');
+        }
+
+        async function executeQuickAdd() {
+            let u = document.getElementById('quick-add-url').value.trim();
+            if (!u) { showToast("請輸入網址", "error"); return; }
+            if (!u.startsWith('http')) u = 'https://' + u;
+            
+            const customTitle = document.getElementById('quick-add-title').value.trim();
+            const customTagsStr = document.getElementById('quick-add-tags').value.trim();
+            const customTags = customTagsStr ? customTagsStr.split(/[,，]\s*/).filter(t => t) : [];
+
+            const btn = document.getElementById('btn-quick-add');
+            btn.disabled = true; btn.innerText = "抓取中...";
+
+            try {
+                const info = await fetchWebpageInfo(u);
+                let ft = customTitle || info.title;
+                if (info.account && !ft.includes(info.account)) ft = `${info.account} - ${ft}`;
+                const tags = customTags.length > 0 ? customTags : info.categories;
+                const tf = activeFolder !== 'all' ? activeFolder : 'default';
+
+                const data = {
+                    url: u, title: ft, categories: tags, description: info.description,
+                    image: info.image || "", folderId: tf, createdAt: Date.now(),
+                    pinned: false, isRead: false, isDead: false
+                };
+
+                if (isLocalMode) {
+                    const l = JSON.parse(localStorage.getItem('my_links') || '[]');
+                    data.id = 'loc_' + Date.now(); l.unshift(data);
+                    localStorage.setItem('my_links', JSON.stringify(l));
+                } else if (currentUser && db) {
+                    await db.collection('users').doc(currentUser.uid).collection('links').add(data);
+                }
+                showToast("✅ 另存連結成功", "success");
+                closeModal('quick-add-modal');
+                loadLinks();
+            } catch (e) {
+                showToast(" " + e.message, "error");
+            }
+            btn.disabled = false; btn.innerText = "儲存";
+        }
+
         function saveToLocal(data) {
             const links = JSON.parse(localStorage.getItem('my_links') || '[]');
             if (!links.some(l => l.url === data.url && (Date.now() - l.createdAt < 3000))) {
                 data.id = 'loc_' + Date.now(); 
                 links.unshift(data);
                 localStorage.setItem('my_links', JSON.stringify(links));
-                console.log("✅ 已儲存至本機");
             }
         }
 
@@ -292,12 +361,8 @@
         
         if(auth){
             auth.onAuthStateChanged(async u=>{
-                if(u){
-                    isLocalMode=false; localStorage.removeItem('isLocalMode'); currentUser=u;
-                    showAppScreen(u.email); await renderFolderChips(); loadLinks();
-                } else {
-                    if(!isLocalMode){ currentUser=null; showLoginScreen(); }
-                }
+                if(u){ isLocalMode=false; localStorage.removeItem('isLocalMode'); currentUser=u; showAppScreen(u.email); await renderFolderChips(); loadLinks(); } 
+                else { if(!isLocalMode){ currentUser=null; showLoginScreen(); } }
             });
         }
         
@@ -392,8 +457,9 @@
         
         async function startDeadLinkCheck(){if(isCheckingLinks)return;if(!confirm("開始檢測？\n(自動跳過 FB/IG/X)"))return;isCheckingLinks=true;const btn=document.getElementById('btn-dead-check'),ic=document.getElementById('dead-check-icon');btn.disabled=true;ic.classList.add('rotating');showToast(" 檢測中...","info");const links=await getAllLinks();let dc=0,cc=0,ups=[];for(const l of links){if(!l.url)continue;const lu=l.url.toLowerCase();if(lu.includes('facebook.com')||lu.includes('instagram.com')||lu.includes('x.com')||lu.includes('twitter.com')||lu.includes('threads.net'))continue;try{const r=await fetch(`https://api.microlink.io/?url=${encodeURIComponent(l.url)}`);const d=await r.json();let dead=false;if(d.status!=='success')dead=true;else if(d.data&&d.data.statusCode&&d.data.statusCode>=400)dead=true;if(dead!==(l.isDead||false)){ups.push({id:l.id,isDead:dead});if(dead)dc++;}}catch(e){if(!l.isDead){ups.push({id:l.id,isDead:true});dc++;}}cc++;await new Promise(r=>setTimeout(r,300));}if(ups.length){if(isLocalMode){const a=JSON.parse(localStorage.getItem('my_links')||'[]');ups.forEach(u=>{const i=a.findIndex(x=>x.id===u.id);if(i>-1)a[i].isDead=u.isDead;});localStorage.setItem('my_links',JSON.stringify(a));}else{const b=db.batch();ups.forEach(u=>{b.update(db.collection('users').doc(currentUser.uid).collection('links').doc(u.id),{isDead:u.isDead});});await b.commit();}}isCheckingLinks=false;btn.disabled=false;ic.classList.remove('rotating');showToast(`✅ 完成！檢查 ${cc} 個，失效 ${dc} 個`,dc>0?"error":"success");loadLinks();}
 
-        document.addEventListener('keydown',e=>{const f=['INPUT','TEXTAREA','SELECT'].includes(document.activeElement.tagName);if(e.key==='Escape'){closeModal('folder-modal');closeModal('edit-modal');if(batchMode)toggleBatchMode();}if(!f){if(e.key==='/'){e.preventDefault();document.getElementById('search-input').focus();}else if(e.key==='n'||e.key==='N'){e.preventDefault();document.getElementById('url-input').focus();}else if(e.key==='b'||e.key==='B'){e.preventDefault();toggleBatchMode();}}});
+        document.addEventListener('keydown',e=>{const f=['INPUT','TEXTAREA','SELECT'].includes(document.activeElement.tagName);if(e.key==='Escape'){closeModal('folder-modal');closeModal('edit-modal');closeModal('quick-add-modal');if(batchMode)toggleBatchMode();}if(!f){if(e.key==='/'){e.preventDefault();document.getElementById('search-input').focus();}else if(e.key==='n'||e.key==='N'){e.preventDefault();document.getElementById('url-input').focus();}else if(e.key==='b'||e.key==='B'){e.preventDefault();toggleBatchMode();}}});
 
+        // ✅ 終極修復：擴充功能閃電存檔邏輯 (先抓取內容，再存檔，最後關閉)
         window.onload = async () => {
             const urlParams = new URLSearchParams(window.location.search);
             if (urlParams.get('quick_add') === '1') {
@@ -401,9 +467,34 @@
                 const extTitle = urlParams.get('title');
                 
                 if (extUrl) {
-                    console.log("✅ 接收到擴充功能指令，準備存檔:", extUrl);
-                    const data = { url: extUrl, title: extTitle || "未命名網頁", categories: ["擴充功能", "快速新增"], description: "透過瀏覽器擴充功能一鍵新增", image: "", folderId: 'default', createdAt: Date.now(), pinned: false, isRead: false, isDead: false };
+                    console.log("✅ 接收到擴充功能指令，準備抓取並存檔:", extUrl);
+                    
+                    let finalData = {
+                        url: extUrl,
+                        title: extTitle || "抓取中...",
+                        categories: ["擴充功能", "快速新增"],
+                        description: "正在抓取網頁內容...",
+                        image: "",
+                        folderId: 'default',
+                        createdAt: Date.now(),
+                        pinned: false, isRead: false, isDead: false
+                    };
 
+                    try {
+                        // 1. 呼叫 API 抓取真實標題、摘要與圖片
+                        const info = await fetchWebpageInfo(extUrl);
+                        finalData.title = extTitle && extTitle !== "未命名網頁" ? extTitle : (info.title || extTitle || "未命名網頁");
+                        finalData.description = info.description || "無摘要";
+                        finalData.image = info.image || "";
+                        if (info.categories && info.categories.length > 0) {
+                            finalData.categories = [...new Set([...finalData.categories, ...info.categories])];
+                        }
+                        console.log("✅ 網頁資訊抓取成功");
+                    } catch (e) {
+                        console.warn("⚠️ 抓取網頁資訊失敗，將使用預設值", e);
+                    }
+
+                    // 2. 執行存檔 (等待 Auth 狀態)
                     await new Promise((resolve) => {
                         if (auth) {
                             const unsubscribe = auth.onAuthStateChanged((user) => { unsubscribe(); resolve(user); });
@@ -411,17 +502,26 @@
                     }).then(async (user) => {
                         if (user) {
                             try {
-                                const { id, ...cloudData } = data;
+                                const { id, ...cloudData } = finalData;
                                 await db.collection('users').doc(user.uid).collection('links').add(cloudData);
                                 console.log("✅ 已成功儲存至 Google 雲端！");
-                            } catch (e) { console.error("雲端儲存失敗，降級儲存至本機", e); saveToLocal(data); }
-                        } else { console.log("⚠️ 未登入 Google，儲存至本機"); saveToLocal(data); }
+                            } catch (e) { 
+                                console.error("雲端儲存失敗，降級儲存至本機", e); 
+                                saveToLocal(finalData); 
+                            }
+                        } else { 
+                            console.log("⚠️ 未登入 Google，儲存至本機"); 
+                            saveToLocal(finalData); 
+                        }
                     });
-                    setTimeout(() => window.close(), 300);
+                    
+                    // 3. 延遲 1.2 秒關閉，確保抓取與存檔動作 100% 完成
+                    setTimeout(() => window.close(), 1200);
                     return; 
                 }
             }
 
+            // 一般載入邏輯
             if(localStorage.getItem('theme')==='light') document.body.classList.add('light-mode');
             const savedScale = localStorage.getItem('fontScale');
             if (savedScale) document.documentElement.style.setProperty('--font-scale', savedScale);
