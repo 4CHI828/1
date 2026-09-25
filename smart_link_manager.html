@@ -10,7 +10,7 @@
     <script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
     <link rel="manifest" id="pwa-manifest">
     <meta name="theme-color" content="#0f172a">
-    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🔗</text></svg>">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22></text></svg>">
 
     <style>
         :root {
@@ -262,8 +262,8 @@
         </div>
     </footer>
 
-    <div class="modal-overlay" id="folder-modal"><div class="modal"><h3 class="text-lg font-bold mb-3"> 管理資料夾</h3><div id="folder-list" class="mb-3 max-h-48 overflow-y-auto"></div><div class="flex gap-2"><input type="text" id="new-folder-name" placeholder="新資料夾" class="flex-1 p-2 rounded border border-gray-600 bg-gray-800 text-white text-sm"><button class="btn-primary" onclick="addFolder()">新增</button></div><div class="flex justify-end mt-3"><button class="btn-outline" onclick="closeModal('folder-modal')">關閉</button></div></div></div>
-    <div class="modal-overlay" id="edit-modal"><div class="modal"><h3 class="text-lg font-bold mb-3">️ 編輯連結</h3><input type="hidden" id="edit-id"><div class="form-group"><label>標題</label><input type="text" id="edit-title"></div><div class="form-group"><label>網址</label><input type="text" id="edit-url"></div><div class="form-group"><label>資料夾</label><select id="edit-folder"></select></div><div class="form-group"><label>標籤</label><input type="text" id="edit-categories"></div><div class="form-group"><label>摘要</label><textarea id="edit-desc" style="height:60px;"></textarea></div><div class="flex justify-end gap-2 mt-3"><button class="btn-outline" onclick="closeModal('edit-modal')">取消</button><button class="btn-primary" onclick="saveEdit()">儲存</button></div></div></div>
+    <div class="modal-overlay" id="folder-modal"><div class="modal"><h3 class="text-lg font-bold mb-3">📂 管理資料夾</h3><div id="folder-list" class="mb-3 max-h-48 overflow-y-auto"></div><div class="flex gap-2"><input type="text" id="new-folder-name" placeholder="新資料夾" class="flex-1 p-2 rounded border border-gray-600 bg-gray-800 text-white text-sm"><button class="btn-primary" onclick="addFolder()">新增</button></div><div class="flex justify-end mt-3"><button class="btn-outline" onclick="closeModal('folder-modal')">關閉</button></div></div></div>
+    <div class="modal-overlay" id="edit-modal"><div class="modal"><h3 class="text-lg font-bold mb-3">✏️ 編輯連結</h3><input type="hidden" id="edit-id"><div class="form-group"><label>標題</label><input type="text" id="edit-title"></div><div class="form-group"><label>網址</label><input type="text" id="edit-url"></div><div class="form-group"><label>資料夾</label><select id="edit-folder"></select></div><div class="form-group"><label>標籤</label><input type="text" id="edit-categories"></div><div class="form-group"><label>摘要</label><textarea id="edit-desc" style="height:60px;"></textarea></div><div class="flex justify-end gap-2 mt-3"><button class="btn-outline" onclick="closeModal('edit-modal')">取消</button><button class="btn-primary" onclick="saveEdit()">儲存</button></div></div></div>
     <div id="toast-container"></div>
 
     <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
@@ -271,7 +271,6 @@
     <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore-compat.js"></script>
     <script>
         const firebaseConfig={apiKey:"AIzaSyAt0YAxzPbFZHyLKQLN1me3N9DQKnCrylg",authDomain:"link-1b206.firebaseapp.com",projectId:"link-1b206",storageBucket:"link-1b206.appspot.com"};
-        // ✅ 修復：從 localStorage 讀取本機模式狀態
         let app,auth,db,currentUser=null,isLocalMode=(localStorage.getItem('isLocalMode')==='true'),unsubscribeSnapshot=null;
         let currentView='masonry',isKanbanMode=false,activeTag='all',activeFolder='all';
         let allLinksCache=[],allFoldersCache=[],searchTimeout,batchMode=false,selectedIds=new Set(),isCheckingLinks=false;
@@ -447,7 +446,7 @@
 
         document.addEventListener('keydown',e=>{const f=['INPUT','TEXTAREA','SELECT'].includes(document.activeElement.tagName);if(e.key==='Escape'){closeModal('folder-modal');closeModal('edit-modal');if(batchMode)toggleBatchMode();}if(!f){if(e.key==='/'){e.preventDefault();document.getElementById('search-input').focus();}else if(e.key==='n'||e.key==='N'){e.preventDefault();document.getElementById('url-input').focus();}else if(e.key==='b'||e.key==='B'){e.preventDefault();toggleBatchMode();}}});
 
-        // ✅ 終極修復：擴充功能閃電存檔邏輯 (放在最前面執行)
+        // ✅ 終極修復：擴充功能閃電存檔邏輯 (支援本機與雲端雙重存檔)
         window.onload = async () => {
             const urlParams = new URLSearchParams(window.location.search);
             if (urlParams.get('quick_add') === '1') {
@@ -457,10 +456,6 @@
                 if (extUrl) {
                     console.log("✅ 接收到擴充功能指令，準備存檔:", extUrl);
                     
-                    // 強制設定為本機模式，確保一定能存進去
-                    isLocalMode = true;
-                    localStorage.setItem('isLocalMode', 'true');
-
                     const data = {
                         url: extUrl, 
                         title: extTitle || "未命名網頁", 
@@ -474,21 +469,38 @@
                         isDead: false
                     };
                     
+                    // 1. 一律先存入本機，確保閃電存檔成功且資料不遺失
                     try {
                         const links = JSON.parse(localStorage.getItem('my_links') || '[]');
-                        data.id = 'loc_' + Date.now(); 
-                        links.unshift(data);
-                        localStorage.setItem('my_links', JSON.stringify(links));
-                        console.log("✅ 存檔成功！");
-                    } catch (e) {
-                        console.error(" 存檔失敗:", e);
+                        // 避免 3 秒內重複存檔
+                        if (!links.some(l => l.url === data.url && (Date.now() - l.createdAt < 3000))) {
+                            data.id = 'loc_' + Date.now(); 
+                            links.unshift(data);
+                            localStorage.setItem('my_links', JSON.stringify(links));
+                            console.log("✅ 本機存檔成功！");
+                        }
+                    } catch (e) { console.error("本機存檔失敗", e); }
+
+                    // 2. 背景嘗試同步到雲端 (如果使用者有登入 Google)
+                    // 延遲 1.5 秒執行，給 Firebase Auth 恢復登入狀態的時間，且不影響視窗關閉
+                    if (auth) {
+                        setTimeout(async () => {
+                            const user = auth.currentUser;
+                            if (user) {
+                                try {
+                                    const { id, ...cloudData } = data; // 移除本機 id，讓 Firestore 自動生成
+                                    await db.collection('users').doc(user.uid).collection('links').add(cloudData);
+                                    console.log("✅ 已成功同步至 Google 雲端！");
+                                } catch (e) { console.error("雲端存檔失敗", e); }
+                            }
+                        }, 1500);
                     }
                     
-                    // 存檔後立即關閉視窗
+                    // 閃電關閉視窗
                     setTimeout(() => {
                         window.close();
                     }, 300);
-                    return; // 終止後續載入
+                    return; 
                 }
             }
 
@@ -498,7 +510,7 @@
             if (savedScale) document.documentElement.style.setProperty('--font-scale', savedScale);
             updateHtmlSaveTime();
             
-            const m={name:"智能連結",short_name:"連結",start_url:".",display:"standalone",background_color:"#0f172a",theme_color:"#6366f1",icons:[{src:"data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22></text></svg>",sizes:"any",type:"image/svg+xml"}]};
+            const m={name:"智能連結",short_name:"連結",start_url:".",display:"standalone",background_color:"#0f172a",theme_color:"#6366f1",icons:[{src:"data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🔗</text></svg>",sizes:"any",type:"image/svg+xml"}]};
             document.getElementById('pwa-manifest').href=URL.createObjectURL(new Blob([JSON.stringify(m)],{type:'application/json'}));
         };
     </script>
