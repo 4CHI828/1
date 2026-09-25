@@ -200,4 +200,267 @@
             <button class="btn-outline btn-icon-only" id="btn-dead-check" onclick="startDeadLinkCheck()" title="失效檢測"><i class="fas fa-heartbeat" id="dead-check-icon"></i></button>
             <button class="btn-outline btn-icon-only" onclick="adjustFontSize()" title="調整字體大小"><i class="fas fa-font"></i></button>
             <button class="btn-outline btn-icon-only" onclick="exportAsMarkdown()" title="Markdown"><i class="fab fa-markdown"></i></button>
-            <button class="btn-outline btn-icon-only" onclick="toggleTheme()" title
+            <button class="btn-outline btn-icon-only" onclick="toggleTheme()" title="主題"><i class="fas fa-sun"></i></button>
+            <button class="btn-outline btn-icon-only" id="btn-refresh" onclick="handleRefresh()" title="重新整理"><i class="fas fa-sync-alt" id="refresh-icon"></i></button>
+            <button class="btn-outline btn-icon-only" onclick="exportData()" title="匯出"><i class="fas fa-download"></i></button>
+            <button class="btn-outline btn-icon-only" onclick="document.getElementById('import-file').click()" title="匯入"><i class="fas fa-upload"></i></button>
+            <input type="file" id="import-file" style="display:none" accept=".json" onchange="importData(event)">
+            <button class="btn-outline btn-icon-only" id="btn-logout" style="display:none;" onclick="handleLogout()" title="登出"><i class="fas fa-sign-out-alt"></i></button>
+        </div>
+    </header>
+
+    <main id="login-screen">
+        <div class="login-card">
+            <h2 class="text-xl font-bold mb-2">歡迎回來</h2>
+            <p style="color:var(--text-muted);margin-bottom:1.5rem;font-size:0.9rem;">您的個人智能連結知識庫</p>
+            <div class="login-buttons flex flex-col gap-2">
+                <button class="btn-outline w-full justify-center" id="btn-google-login"><img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" style="width:16px" class="mr-2"> Google 登入</button>
+                <button class="btn-primary w-full justify-center" id="btn-local-login">本機測試模式</button>
+            </div>
+        </div>
+    </main>
+
+    <main id="app-screen">
+        <div class="control-panel">
+            <div class="input-section">
+                <input type="text" id="url-input" placeholder="貼上連結 [N]" onkeypress="handleEnter(event)">
+                <button class="btn-primary" id="btn-add-url" onclick="processAndSaveUrl()"><span class="btn-text">儲存</span><div class="loader" id="add-loader"></div></button>
+            </div>
+            <div>
+                <div class="chips-container" id="folder-chips"></div>
+                <div class="chips-container" id="tag-chips"></div>
+                <div class="filter-section">
+                    <div class="search-box"><i class="fas fa-search"></i><input type="text" id="search-input" placeholder="搜尋 [/]" oninput="handleSearchInput()"></div>
+                    <div class="flex gap-1">
+                        <button class="btn-outline btn-icon-only" onclick="toggleView()" title="視圖"><i class="fas fa-grip-vertical" id="view-icon"></i></button>
+                        <button class="btn-outline" id="btn-kanban" onclick="toggleKanbanView()" title="看板" style="font-size:0.75rem;padding:0.4rem 0.6rem;"><i class="fas fa-columns"></i> 看板</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="masonry-grid" id="links-container"></div>
+        <div class="kanban-board" id="kanban-board" style="display:none;">
+            <div class="kanban-column"><div class="kanban-header">📥 待讀 <span class="kanban-count" id="count-inbox">0</span></div><div class="kanban-list" id="list-inbox"></div></div>
+            <div class="kanban-column"><div class="kanban-header">⭐ 精選 <span class="kanban-count" id="count-starred">0</span></div><div class="kanban-list" id="list-starred"></div></div>
+            <div class="kanban-column"><div class="kanban-header">✅ 已讀 <span class="kanban-count" id="count-done">0</span></div><div class="kanban-list" id="list-done"></div></div>
+        </div>
+    </main>
+
+    <div class="batch-toolbar" id="batch-toolbar">
+        <span>已選 <strong id="batch-count" style="color:var(--primary);">0</strong></span>
+        <button class="btn-outline" onclick="batchMoveFolder()"><i class="fas fa-folder"></i> 移動</button>
+        <button class="btn-outline" style="color:var(--danger);border-color:var(--danger);" onclick="batchDelete()"><i class="fas fa-trash"></i> 刪除</button>
+        <button class="btn-outline" onclick="toggleBatchMode()">取消</button>
+    </div>
+
+    <footer style="text-align:center;color:var(--text-muted);font-size:0.7rem;padding:0.6rem 0;border-top:1px solid var(--border-color);margin-top:auto;background:var(--card-dark);">
+        <div style="display:flex;align-items:center;justify-content:center;gap:0.6rem;flex-wrap:wrap;">
+            <span>HTML 存檔時間</span>
+            <span id="lastUpdatedDisplay" style="font-family:monospace;background:var(--bg-dark);padding:1px 5px;border-radius:3px;color:var(--text-main);font-size:0.65rem;">讀取中...</span>
+            <span style="color:var(--border-color);">|</span>
+            <a href="https://v.douyin.com/XmUkpVat8Lg/" target="_blank" style="font-weight:bold;color:var(--primary);display:flex;align-items:center;gap:3px;text-decoration:none;" onmouseover="this.style.color='var(--primary-hover)'" onmouseout="this.style.color='var(--primary)'">奇奇828 <svg style="width:10px;height:10px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path></svg></a>
+        </div>
+    </footer>
+
+    <div class="modal-overlay" id="folder-modal"><div class="modal"><h3 class="text-lg font-bold mb-3"> 管理資料夾</h3><div id="folder-list" class="mb-3 max-h-48 overflow-y-auto"></div><div class="flex gap-2"><input type="text" id="new-folder-name" placeholder="新資料夾" class="flex-1 p-2 rounded border border-gray-600 bg-gray-800 text-white text-sm"><button class="btn-primary" onclick="addFolder()">新增</button></div><div class="flex justify-end mt-3"><button class="btn-outline" onclick="closeModal('folder-modal')">關閉</button></div></div></div>
+    <div class="modal-overlay" id="edit-modal"><div class="modal"><h3 class="text-lg font-bold mb-3">️ 編輯連結</h3><input type="hidden" id="edit-id"><div class="form-group"><label>標題</label><input type="text" id="edit-title"></div><div class="form-group"><label>網址</label><input type="text" id="edit-url"></div><div class="form-group"><label>資料夾</label><select id="edit-folder"></select></div><div class="form-group"><label>標籤</label><input type="text" id="edit-categories"></div><div class="form-group"><label>摘要</label><textarea id="edit-desc" style="height:60px;"></textarea></div><div class="flex justify-end gap-2 mt-3"><button class="btn-outline" onclick="closeModal('edit-modal')">取消</button><button class="btn-primary" onclick="saveEdit()">儲存</button></div></div></div>
+    <div id="toast-container"></div>
+
+    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore-compat.js"></script>
+    <script>
+        const firebaseConfig={apiKey:"AIzaSyAt0YAxzPbFZHyLKQLN1me3N9DQKnCrylg",authDomain:"link-1b206.firebaseapp.com",projectId:"link-1b206",storageBucket:"link-1b206.appspot.com"};
+        let app,auth,db,currentUser=null,isLocalMode=false,unsubscribeSnapshot=null;
+        let currentView='masonry',isKanbanMode=false,activeTag='all',activeFolder='all';
+        let allLinksCache=[],allFoldersCache=[],searchTimeout,batchMode=false,selectedIds=new Set(),isCheckingLinks=false;
+        try{app=firebase.initializeApp(firebaseConfig);auth=firebase.auth();db=firebase.firestore();}catch(e){}
+
+        function adjustFontSize() {
+            const levels = [0.85, 1, 1.2];
+            const labels = ['小字體 (緊湊)', '標準字體', '大字體 (舒適)'];
+            let currentScale = parseFloat(localStorage.getItem('fontScale') || '1');
+            let currentIndex = levels.indexOf(currentScale);
+            if (currentIndex === -1) currentIndex = 1; 
+            let nextIndex = (currentIndex + 1) % levels.length;
+            let nextScale = levels[nextIndex];
+            document.documentElement.style.setProperty('--font-scale', nextScale);
+            localStorage.setItem('fontScale', nextScale);
+            showToast(`已切換為：${labels[nextIndex]}`, 'success');
+        }
+
+        function updateHtmlSaveTime() {
+            const displayEl = document.getElementById('lastUpdatedDisplay');
+            if (displayEl) {
+                const lastMod = document.lastModified;
+                if (lastMod) {
+                    const date = new Date(lastMod);
+                    if (!isNaN(date.getTime())) {
+                        displayEl.textContent = date.toLocaleString('zh-TW', { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false });
+                    } else { displayEl.textContent = '無法讀取'; }
+                }
+            }
+        }
+
+        function showAppScreen(t){document.getElementById('login-screen').style.display='none';document.getElementById('app-screen').style.display='block';document.getElementById('btn-logout').style.display='inline-flex';document.getElementById('user-info').style.display='inline';document.getElementById('user-info').textContent=t;}
+        function showLoginScreen(){document.getElementById('login-screen').style.display='flex';document.getElementById('app-screen').style.display='none';document.getElementById('btn-logout').style.display='none';document.getElementById('user-info').style.display='none';}
+        if(auth){auth.onAuthStateChanged(async u=>{if(u){isLocalMode=false;currentUser=u;showAppScreen(u.email);await renderFolderChips();loadLinks();}else{if(!isLocalMode){currentUser=null;showLoginScreen();}}});}
+        document.getElementById('btn-google-login').addEventListener('click',()=>{if(auth)auth.signInWithPopup(new firebase.auth.GoogleAuthProvider());});
+        document.getElementById('btn-local-login').addEventListener('click',async()=>{isLocalMode=true;currentUser=null;showAppScreen("本機模式");await renderFolderChips();loadLinks();});
+        async function handleLogout(){if(isLocalMode){isLocalMode=false;showLoginScreen();}else if(auth){try{await auth.signOut();}catch(e){showLoginScreen();}}else{showLoginScreen();}}
+
+        async function getFolders(){if(isLocalMode){let f=JSON.parse(localStorage.getItem('my_folders')||'[]');if(!f.length){f=[{id:'default',name:'未分類',icon:'fa-inbox'}];localStorage.setItem('my_folders',JSON.stringify(f));}return f;}const s=await db.collection('users').doc(currentUser.uid).collection('folders').get();let f=s.docs.map(d=>({id:d.id,...d.data()}));if(!f.length){await db.collection('users').doc(currentUser.uid).collection('folders').add({name:'未分類',icon:'fa-inbox'});return[{id:'default',name:'未分類',icon:'fa-inbox'}];}return f;}
+        async function renderFolderChips(){allFoldersCache=await getFolders();const c=document.getElementById('folder-chips');let h=`<div class="chip ${activeFolder==='all'?'active':''}" onclick="setFolder('all')"><i class="fas fa-layer-group"></i> 全部</div>`;allFoldersCache.forEach(f=>{h+=`<div class="chip ${activeFolder===f.id?'active':''}" onclick="setFolder('${f.id}')"><i class="fas ${f.icon||'fa-folder'}"></i> ${f.name}</div>`;});c.innerHTML=h;}
+        function setFolder(id){activeFolder=id;renderFolderChips();filterLinks();}
+        function openFolderModal(){const l=document.getElementById('folder-list');l.innerHTML=allFoldersCache.map(f=>`<div class="flex justify-between items-center p-1 border-b border-gray-700 text-sm"><span><i class="fas ${f.icon||'fa-folder'} mr-1 text-gray-400"></i>${f.name}</span>${f.id!=='default'?`<button class="text-red-500" onclick="deleteFolder('${f.id}')"><i class="fas fa-trash"></i></button>`:''}</div>`).join('');openModal('folder-modal');}
+        async function addFolder(){const n=document.getElementById('new-folder-name').value.trim();if(!n)return;const icons=['fa-briefcase','fa-graduation-cap','fa-gamepad','fa-heart','fa-code','fa-book'];const ic=icons[Math.floor(Math.random()*icons.length)];if(isLocalMode){const f=JSON.parse(localStorage.getItem('my_folders')||'[]');f.push({id:'f_'+Date.now(),name:n,icon:ic});localStorage.setItem('my_folders',JSON.stringify(f));}else{await db.collection('users').doc(currentUser.uid).collection('folders').add({name:n,icon:ic});}document.getElementById('new-folder-name').value='';renderFolderChips();openFolderModal();showToast("已新增","success");}
+        async function deleteFolder(id){if(!confirm("刪除？"))return;if(isLocalMode){let f=JSON.parse(localStorage.getItem('my_folders')||'[]').filter(x=>x.id!==id);localStorage.setItem('my_folders',JSON.stringify(f));let l=JSON.parse(localStorage.getItem('my_links')||'[]');l.forEach(x=>{if(x.folderId===id)x.folderId='default';});localStorage.setItem('my_links',JSON.stringify(l));}else{await db.collection('users').doc(currentUser.uid).collection('folders').doc(id).delete();const b=db.batch();const s=await db.collection('users').doc(currentUser.uid).collection('links').where('folderId','==',id).get();s.docs.forEach(d=>b.update(d.ref,{folderId:'default'}));await b.commit();}renderFolderChips();openFolderModal();loadLinks();}
+        function stringToHslColor(s,a=0.6,l=0.5){let h=0;for(let i=0;i<s.length;i++)h=s.charCodeAt(i)+((h<<5)-h);return`hsl(${h%360},${a*100}%,${l*100}%)`;}
+        function getTagStyles(t){return`background:${stringToHslColor(t,0.4,0.85)};color:${stringToHslColor(t,0.7,0.3)};border:1px solid ${stringToHslColor(t,0.4,0.7)};`;}
+
+        function getYouTubeVideoId(u){const r=/(?:youtu\.be\/|youtube\.com\/(?:watch\?v=|embed\/|v\/|shorts\/))([a-zA-Z0-9_-]{11})/;return u.match(r)?.[1]||null;}
+        async function fetchYouTubeInfo(u){const v=getYouTubeVideoId(u);if(!v)return null;try{const r=await fetch(`https://www.youtube.com/oembed?url=https://www.youtube.com/watch?v=${v}&format=json`);if(!r.ok)throw 0;const d=await r.json();return{title:d.title||'YouTube',summary:d.author_name||'YouTube',author:d.author_name||'',image:d.thumbnail_url||`https://img.youtube.com/vi/${v}/hqdefault.jpg`};}catch(e){return{title:'YouTube',summary:'YouTube',author:'',image:`https://img.youtube.com/vi/${v}/hqdefault.jpg`};}}
+        async function fetchWebpageInfo(u){let r={title:"未命名連結",description:"點擊查看",categories:["一般網站"],account:"",image:""};let tags=["一般網站"];const l=u.toLowerCase();if(l.includes('youtube.com')||l.includes('youtu.be'))tags=["YouTube","影片"];else if(l.includes('facebook.com')||l.includes('fb.watch')||l.includes('fb.com'))tags=["Facebook","社群"];else if(l.includes('instagram.com'))tags=["Instagram","社群"];else if(l.includes('x.com')||l.includes('twitter.com'))tags=["X","Twitter","社群"];else if(l.includes('threads.net'))tags=["Threads","社群"];if(l.includes('youtube.com')||l.includes('youtu.be')){const y=await fetchYouTubeInfo(u);if(y)return{title:y.title,description:y.summary,categories:tags,account:y.author,image:y.image};}try{if(!u.startsWith('http'))u='https://'+u;const res=await fetch(`https://api.microlink.io/?url=${encodeURIComponent(u)}`);const d=await res.json();if(d.status==='success'){r.title=d.data.title||r.title;r.description=d.data.description||r.description;r.image=d.data.image?.url||"";if(d.data.author)r.account=d.data.author;}}catch(e){}r.title=r.title.replace(/\s+/g,' ').trim();r.categories=tags;return r;}
+        
+        async function processAndSaveUrl(){
+            const inp=document.getElementById('url-input');let u=inp.value.trim();if(!u)return;
+            const btn=document.getElementById('btn-add-url'),ld=document.getElementById('add-loader'),tx=btn.querySelector('.btn-text');
+            btn.disabled=true;tx.style.display='none';ld.style.display='block';
+            const info=await fetchWebpageInfo(u);
+            let ft=info.title;if(info.account&&!ft.includes(info.account))ft=`${info.account} - ${ft}`;
+            const tf=activeFolder!=='all'?activeFolder:'default';
+            const data={url:u,title:ft,categories:info.categories,description:info.description,image:info.image||"",folderId:tf,createdAt:Date.now(),pinned:false,isRead:false,isDead:false};
+            try{
+                if(isLocalMode){const l=JSON.parse(localStorage.getItem('my_links')||'[]');data.id='loc_'+Date.now();l.unshift(data);localStorage.setItem('my_links',JSON.stringify(l));}
+                else{await db.collection('users').doc(currentUser.uid).collection('links').add(data);}
+                showToast("✅ 儲存成功","success");
+            }catch(e){showToast(" "+e.message,"error");}
+            inp.value='';btn.disabled=false;tx.style.display='inline';ld.style.display='none';loadLinks();
+        }
+
+        async function getAllLinks(){if(isLocalMode)return JSON.parse(localStorage.getItem('my_links')||'[]');return(await db.collection('users').doc(currentUser.uid).collection('links').get()).docs.map(d=>({id:d.id,...d.data()}));}
+        function loadLinks(){if(isLocalMode){const a=JSON.parse(localStorage.getItem('my_links')||'[]');renderCurrentView(a);}else if(currentUser&&db){if(unsubscribeSnapshot)unsubscribeSnapshot();unsubscribeSnapshot=db.collection('users').doc(currentUser.uid).collection('links').orderBy('createdAt','desc').onSnapshot(s=>{const a=s.docs.map(d=>({id:d.id,...d.data()}));renderCurrentView(a);});}}
+        function renderCurrentView(links){const s=document.getElementById('search-input').value.toLowerCase();renderTagChips(links);const f=links.filter(l=>{const ms=l.title.toLowerCase().includes(s)||l.url.toLowerCase().includes(s)||(l.description&&l.description.toLowerCase().includes(s))||(Array.isArray(l.categories)&&l.categories.some(t=>t.toLowerCase().includes(s)));const mt=activeTag==='all'||(Array.isArray(l.categories)?l.categories.includes(activeTag):l.categories===activeTag);const mf=activeFolder==='all'||l.folderId===activeFolder||(!l.folderId&&activeFolder==='default');return ms&&mt&&mf;});allLinksCache=f;if(isKanbanMode)renderKanban(f);else renderLinks(f);}
+        
+        function renderLinks(links){
+            const c=document.getElementById('links-container');
+            if(!links.length){c.innerHTML=`<div class="text-center py-10 text-gray-500 col-span-full text-sm">找不到連結</div>`;return;}
+            c.innerHTML=links.map((l,i)=>{
+                const th=l.title.includes('@')?l.title.replace(/(@[^\s-]+)/,`<span class="account-handle">$1</span>`):escapeHtml(l.title);
+                let timeText = '未知';
+                if (l.createdAt) {
+                    const date = new Date(l.createdAt);
+                    timeText = date.toLocaleString('zh-TW', { month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', hour12: false }).replace(/\//g, '/');
+                }
+                let ih=l.image?`<div class="link-image-preview"><img loading="lazy" src="${l.image}" onerror="this.parentElement.style.display='none'"></div>`:"";
+                const fo=allFoldersCache.find(f=>f.id===l.folderId)||allFoldersCache.find(f=>f.id==='default');
+                const fb=fo?`<div class="folder-badge"><i class="fas ${fo.icon||'fa-folder'}"></i> ${fo.name}</div>`:"";
+                const tg=(Array.isArray(l.categories)?l.categories:(l.categories?[l.categories]:[])).map(t=>`<span class="tag-badge" style="${getTagStyles(t)}">${escapeHtml(t)}</span>`).join('');
+                const cb=`<input type="checkbox" class="batch-checkbox" ${selectedIds.has(l.id)?'checked':''} onclick="event.stopPropagation();toggleSelect('${l.id}',this)">`;
+                const dbadge=l.isDead?`<div class="dead-badge"><i class="fas fa-exclamation-triangle"></i> 失效</div>`:"";
+                
+                return`<div class="link-card card-enter ${l.pinned?'is-pinned':''} ${l.isRead?'is-read':''} ${l.isDead?'is-dead':''}" style="animation-delay:${i*0.02}s">
+                    ${cb}${fb}${ih}
+                    <div class="card-actions">
+                        <button class="btn-outline" onclick="togglePin('${l.id}')" title="釘選"><i class="fas fa-thumbtack"></i></button>
+                        <button class="btn-outline" onclick="toggleRead('${l.id}')" title="已讀"><i class="fas ${l.isRead?'fa-check-circle':'fa-circle'}"></i></button>
+                        <button class="btn-outline" onclick="openEdit('${l.id}')" title="編輯"><i class="fas fa-edit"></i></button>
+                        <button class="btn-outline btn-delete" onclick="deleteLink('${l.id}')" title="刪除"><i class="fas fa-trash"></i></button>
+                    </div>
+                    <p class="link-desc">${escapeHtml(l.description)}</p>
+                    <h3 class="link-title">${th}</h3>
+                    <a href="${escapeHtml(l.url)}" target="_blank" class="link-url-display">${escapeHtml(l.url)}</a>
+                    <div class="card-footer">
+                        <div class="source-info">
+                            <img loading="lazy" class="favicon" src="https://www.google.com/s2/favicons?domain=${encodeURIComponent(l.url)}&sz=64">
+                            <span class="source-text">${timeText}</span>
+                        </div>
+                        <div class="tags-container">${tg}</div>
+                    </div>
+                    ${dbadge}
+                </div>`;
+            }).join('');
+        }
+        
+        function renderTagChips(links){const c=document.getElementById('tag-chips');const at=new Set();links.forEach(l=>{if(l.categories){if(Array.isArray(l.categories))l.categories.forEach(t=>at.add(t));else at.add(l.categories);}});let h=`<div class="chip ${activeTag==='all'?'active':''}" onclick="setTag('all')"><i class="fas fa-tags"></i> 全部</div>`;at.forEach(t=>{const cl=stringToHslColor(t,0.6,0.5);const ia=activeTag===t;const st=ia?`background:${cl};color:white;border-color:${cl};`:`border-color:${cl}40;color:${cl};`;h+=`<div class="chip ${ia?'active':''}" style="${st}" onclick="setTag('${t}')">${t}</div>`;});c.innerHTML=h;}
+        function setTag(t){activeTag=t;renderTagChips(allLinksCache);filterLinks();}
+        function handleSearchInput(){clearTimeout(searchTimeout);searchTimeout=setTimeout(()=>{filterLinks();},300);}
+        function filterLinks(){loadLinks();}
+        
+        async function togglePin(id){const l=(await getAllLinks()).find(x=>x.id===id);if(!l)return;await updateLinkProp(id,'pinned',!l.pinned);}
+        async function toggleRead(id){const l=(await getAllLinks()).find(x=>x.id===id);if(!l)return;await updateLinkProp(id,'isRead',!l.isRead);}
+        async function updateLinkProp(id,p,v){if(isLocalMode){const a=JSON.parse(localStorage.getItem('my_links')||'[]');const i=a.findIndex(x=>x.id===id);if(i>-1){a[i][p]=v;localStorage.setItem('my_links',JSON.stringify(a));}}else{await db.collection('users').doc(currentUser.uid).collection('links').doc(id).update({[p]:v});}loadLinks();}
+        async function deleteLink(id,sc=true){if(sc&&!confirm("確定刪除？"))return;if(isLocalMode){let l=JSON.parse(localStorage.getItem('my_links')||'[]');localStorage.setItem('my_links',JSON.stringify(l.filter(i=>i.id!==id)));}else{await db.collection('users').doc(currentUser.uid).collection('links').doc(id).delete();}if(sc){showToast("已刪除","success");loadLinks();}}
+        
+        async function openEdit(id){let l;try{if(isLocalMode)l=JSON.parse(localStorage.getItem('my_links')||'[]').find(x=>x.id===id);else{const s=await db.collection('users').doc(currentUser.uid).collection('links').doc(id).get();if(s.exists){l=s.data();l.id=s.id;}}if(l){document.getElementById('edit-id').value=l.id;document.getElementById('edit-title').value=l.title||"";document.getElementById('edit-url').value=l.url||"";document.getElementById('edit-categories').value=Array.isArray(l.categories)?l.categories.join(', '):(l.categories||"");document.getElementById('edit-desc').value=l.description||"";const s=document.getElementById('edit-folder');s.innerHTML=allFoldersCache.map(f=>`<option value="${f.id}" ${l.folderId===f.id?'selected':''}>${f.name}</option>`).join('');openModal('edit-modal');}}catch(e){showToast("讀取失敗","error");}}
+        async function saveEdit(){
+            const id=document.getElementById('edit-id').value;const cats=document.getElementById('edit-categories').value.split(/[,，]\s*/).map(t=>t.trim()).filter(t=>t);
+            const u={title:document.getElementById('edit-title').value,url:document.getElementById('edit-url').value,categories:cats,description:document.getElementById('edit-desc').value,folderId:document.getElementById('edit-folder').value};
+            if(isLocalMode){let l=JSON.parse(localStorage.getItem('my_links')||'[]');const i=l.findIndex(x=>x.id===id);if(i>-1){l[i]={...l[i],...u};localStorage.setItem('my_links',JSON.stringify(l));loadLinks();}}
+            else{await db.collection('users').doc(currentUser.uid).collection('links').doc(id).update(u);loadLinks();}
+            closeModal('edit-modal');showToast("已儲存","success");
+        }
+        
+        function toggleView(){currentView=currentView==='masonry'?'list':'masonry';const c=document.getElementById('links-container');c.className=currentView==='list'?'list-view':'masonry-grid';document.getElementById('view-icon').className=currentView==='list'?'fas fa-grip-vertical':'fas fa-list';loadLinks();}
+        function toggleKanbanView(){isKanbanMode=!isKanbanMode;document.getElementById('links-container').style.display=isKanbanMode?'none':'block';document.getElementById('kanban-board').style.display=isKanbanMode?'flex':'none';document.getElementById('btn-kanban').classList.toggle('btn-primary',isKanbanMode);document.getElementById('btn-kanban').classList.toggle('btn-outline',!isKanbanMode);if(isKanbanMode)renderKanban(allLinksCache);}
+        function renderKanban(links){const a=[],b=[],c=[];links.forEach(l=>{if(l.pinned)b.push(l);else if(l.isRead)c.push(l);else a.push(l);});document.getElementById('count-inbox').innerText=a.length;document.getElementById('count-starred').innerText=b.length;document.getElementById('count-done').innerText=c.length;const r=l=>`<div class="kanban-card" data-id="${l.id}"><div class="k-title">${escapeHtml(l.title)}</div><div class="k-desc">${escapeHtml(l.description)}</div></div>`;document.getElementById('list-inbox').innerHTML=a.map(r).join('');document.getElementById('list-starred').innerHTML=b.map(r).join('');document.getElementById('list-done').innerHTML=c.map(r).join('');initSortable();}
+        function initSortable(){['list-inbox','list-starred','list-done'].forEach(id=>{const el=document.getElementById(id);if(el.sortable)el.sortable.destroy();el.sortable=Sortable.create(el,{group:'kanban',animation:150,ghostClass:'sortable-ghost',onEnd:async e=>{const iid=e.item.dataset.id,nc=e.to.id;let ns={pinned:false,isRead:false};if(nc==='list-starred')ns={pinned:true,isRead:false};else if(nc==='list-done')ns={pinned:false,isRead:true};if(isLocalMode){const a=JSON.parse(localStorage.getItem('my_links')||'[]');const i=a.findIndex(x=>x.id===iid);if(i>-1){a[i].pinned=ns.pinned;a[i].isRead=ns.isRead;localStorage.setItem('my_links',JSON.stringify(a));}}else{await db.collection('users').doc(currentUser.uid).collection('links').doc(iid).update(ns);}loadLinks();}});});}
+        
+        function toggleTheme(){document.body.classList.toggle('light-mode');localStorage.setItem('theme',document.body.classList.contains('light-mode')?'light':'dark');}
+        function handleRefresh(){const i=document.getElementById('refresh-icon');i.classList.add('rotating');loadLinks();setTimeout(()=>i.classList.remove('rotating'),600);}
+        function exportAsMarkdown(){if(!allLinksCache.length)return;let m='# 智能連結清單\n\n';allLinksCache.forEach(l=>{m+=`- [${l.title}](${l.url})\n`;});navigator.clipboard.writeText(m).then(()=>showToast("✅ 已複製","success"));}
+        async function exportData(){const l=await getAllLinks();const f=await getFolders();const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([JSON.stringify({links:l,folders:f},null,2)],{type:"application/json"}));a.download=`slm_${new Date().toISOString().slice(0,10)}.json`;a.click();}
+        function importData(ev){const f=ev.target.files[0];if(!f)return;const r=new FileReader();r.onload=async e=>{try{const d=JSON.parse(e.target.result);const l=d.links||d;const fo=d.folders||[];if(isLocalMode){localStorage.setItem('my_links',JSON.stringify(l));if(fo.length)localStorage.setItem('my_folders',JSON.stringify(fo));loadLinks();renderFolderChips();}else{const b=db.batch();l.forEach(x=>b.set(db.collection('users').doc(currentUser.uid).collection('links').doc(x.id),x));fo.forEach(x=>b.set(db.collection('users').doc(currentUser.uid).collection('folders').doc(x.id),x));await b.commit();loadLinks();renderFolderChips();}showToast("匯入成功","success");}catch(err){showToast("匯入失敗","error");}ev.target.value='';};r.readAsText(f);}
+        
+        function showToast(m,t='info'){const c=document.getElementById('toast-container'),d=document.createElement('div');d.className=`toast ${t}`;d.innerHTML=m;c.appendChild(d);setTimeout(()=>{d.style.animation='fadeOut 0.3s ease forwards';setTimeout(()=>d.remove(),300);},3000);}
+        function openModal(id){document.getElementById(id).style.display='flex';}
+        function closeModal(id){document.getElementById(id).style.display='none';}
+        function handleEnter(e){if(e.key==="Enter")processAndSaveUrl();}
+        function escapeHtml(u){return String(u||'').replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;").replace(/'/g,"&#039;");}
+
+        function toggleBatchMode(){batchMode=!batchMode;selectedIds.clear();document.body.classList.toggle('batch-mode',batchMode);document.getElementById('batch-toolbar').classList.toggle('active',batchMode);updateBatchToolbar();renderCurrentView(allLinksCache);}
+        function toggleSelect(id,cb){if(cb.checked)selectedIds.add(id);else selectedIds.delete(id);updateBatchToolbar();}
+        function updateBatchToolbar(){document.getElementById('batch-count').textContent=selectedIds.size;}
+        async function batchDelete(){if(!selectedIds.size)return;if(!confirm(`刪除 ${selectedIds.size} 個？`))return;if(isLocalMode){let a=JSON.parse(localStorage.getItem('my_links')||'[]');a=a.filter(i=>!selectedIds.has(i.id));localStorage.setItem('my_links',JSON.stringify(a));}else{const b=db.batch();selectedIds.forEach(id=>{b.delete(db.collection('users').doc(currentUser.uid).collection('links').doc(id));});await b.commit();}toggleBatchMode();showToast(`已刪除 ${selectedIds.size} 個`,"success");loadLinks();}
+        async function batchMoveFolder(){if(!selectedIds.size)return;const opts=allFoldersCache.map(f=>`${f.id}: ${f.name}`).join('\n');const ch=prompt(`移動到：\n${opts}`);if(!ch)return;const tf=allFoldersCache.find(f=>f.id===ch||f.name===ch);if(!tf){showToast("找不到","error");return;}if(isLocalMode){const a=JSON.parse(localStorage.getItem('my_links')||'[]');selectedIds.forEach(id=>{const i=a.findIndex(x=>x.id===id);if(i>-1)a[i].folderId=tf.id;});localStorage.setItem('my_links',JSON.stringify(a));}else{const b=db.batch();selectedIds.forEach(id=>{b.update(db.collection('users').doc(currentUser.uid).collection('links').doc(id),{folderId:tf.id});});await b.commit();}toggleBatchMode();showToast(`已移動 ${selectedIds.size} 個`,"success");loadLinks();}
+        
+        async function startDeadLinkCheck(){if(isCheckingLinks)return;if(!confirm("開始檢測？\n(自動跳過 FB/IG/X)"))return;isCheckingLinks=true;const btn=document.getElementById('btn-dead-check'),ic=document.getElementById('dead-check-icon');btn.disabled=true;ic.classList.add('rotating');showToast(" 檢測中...","info");const links=await getAllLinks();let dc=0,cc=0,ups=[];for(const l of links){if(!l.url)continue;const lu=l.url.toLowerCase();if(lu.includes('facebook.com')||lu.includes('instagram.com')||lu.includes('x.com')||lu.includes('twitter.com')||lu.includes('threads.net'))continue;try{const r=await fetch(`https://api.microlink.io/?url=${encodeURIComponent(l.url)}`);const d=await r.json();let dead=false;if(d.status!=='success')dead=true;else if(d.data&&d.data.statusCode&&d.data.statusCode>=400)dead=true;if(dead!==(l.isDead||false)){ups.push({id:l.id,isDead:dead});if(dead)dc++;}}catch(e){if(!l.isDead){ups.push({id:l.id,isDead:true});dc++;}}cc++;await new Promise(r=>setTimeout(r,300));}if(ups.length){if(isLocalMode){const a=JSON.parse(localStorage.getItem('my_links')||'[]');ups.forEach(u=>{const i=a.findIndex(x=>x.id===u.id);if(i>-1)a[i].isDead=u.isDead;});localStorage.setItem('my_links',JSON.stringify(a));}else{const b=db.batch();ups.forEach(u=>{b.update(db.collection('users').doc(currentUser.uid).collection('links').doc(u.id),{isDead:u.isDead});});await b.commit();}}isCheckingLinks=false;btn.disabled=false;ic.classList.remove('rotating');showToast(`✅ 完成！檢查 ${cc} 個，失效 ${dc} 個`,dc>0?"error":"success");loadLinks();}
+
+        document.addEventListener('keydown',e=>{const f=['INPUT','TEXTAREA','SELECT'].includes(document.activeElement.tagName);if(e.key==='Escape'){closeModal('folder-modal');closeModal('edit-modal');if(batchMode)toggleBatchMode();}if(!f){if(e.key==='/'){e.preventDefault();document.getElementById('search-input').focus();}else if(e.key==='n'||e.key==='N'){e.preventDefault();document.getElementById('url-input').focus();}else if(e.key==='b'||e.key==='B'){e.preventDefault();toggleBatchMode();}}});
+
+        window.onload=async()=>{
+            // ✅ 擴充功能快速存檔接收邏輯
+            const urlParams = new URLSearchParams(window.location.search);
+            if (urlParams.get('quick_add') === '1') {
+                const extUrl = urlParams.get('url');
+                const extTitle = urlParams.get('title');
+                if (extUrl) {
+                    const data = {
+                        url: extUrl, title: extTitle || "未命名網頁", categories: ["擴充功能", "快速新增"],
+                        description: "透過瀏覽器擴充功能一鍵新增", image: "", 
+                        folderId: activeFolder !== 'all' ? activeFolder : 'default',
+                        createdAt: Date.now(), pinned: false, isRead: false, isDead: false
+                    };
+                    if (isLocalMode) {
+                        const links = JSON.parse(localStorage.getItem('my_links') || '[]');
+                        data.id = 'loc_' + Date.now(); links.unshift(data);
+                        localStorage.setItem('my_links', JSON.stringify(links));
+                        showToast("✅ 擴充功能快速存檔成功", "success"); loadLinks();
+                    } else if (currentUser && db) {
+                        await db.collection('users').doc(currentUser.uid).collection('links').add(data);
+                        showToast("✅ 擴充功能快速存檔成功", "success"); loadLinks();
+                    }
+                    window.history.replaceState({}, document.title, window.location.pathname);
+                }
+            }
+
+            if(localStorage.getItem('theme')==='light')document.body.classList.add('light-mode');
+            const savedScale = localStorage.getItem('fontScale');
+            if (savedScale) document.documentElement.style.setProperty('--font-scale', savedScale);
+            updateHtmlSaveTime();
+            const m={name:"智能連結",short_name:"連結",start_url:".",display:"standalone",background_color:"#0f172a",theme_color:"#6366f1",icons:[{src:"data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22></text></svg>",sizes:"any",type:"image/svg+xml"}]};
+            document.getElementById('pwa-manifest').href=URL.createObjectURL(new Blob([JSON.stringify(m)],{type:'application/json'}));
+        };
+    </script>
+</body>
+</html>
