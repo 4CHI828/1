@@ -139,11 +139,7 @@
         .form-group label { display: block; margin-bottom: 0.3rem; color: var(--text-muted); font-size: 0.8rem; }
         .form-group input, .form-group textarea, .form-group select { width: 100%; padding: 0.5rem; border-radius: 6px; border: 1px solid var(--border-color); background: var(--bg-dark); color: var(--text-main); outline: none; font-size: 0.85rem; }
         
-        /* ✅ 調整彈窗內按鈕（如「新增」、「儲存」）的文字大小與點擊區域 */
-        .modal button {
-            font-size: 0.95rem !important;
-            padding: 0.5rem 1.2rem !important;
-        }
+        .modal button { font-size: 0.95rem !important; padding: 0.5rem 1.2rem !important; }
 
         #toast-container { position: fixed; bottom: 1.5rem; right: 1.5rem; z-index: 9999; display: flex; flex-direction: column; gap: 0.4rem; }
         .toast { background: var(--card-dark); color: var(--text-main); padding: 0.6rem 1rem; border-radius: 6px; border-left: 3px solid var(--primary); box-shadow: 0 8px 12px rgba(0,0,0,0.4); animation: slideIn 0.3s ease forwards; font-size: 0.85rem; }
@@ -162,7 +158,7 @@
 
         .dead-badge { position: absolute; bottom: 0.5rem; right: 0.5rem; background: var(--danger); color: white; padding: 0.05rem 0.3rem; border-radius: 3px; font-size: 0.55rem; font-weight: bold; display: flex; align-items: center; gap: 0.15rem; z-index: 5; }
 
-        /* ✅ 手機端專屬排版優化 */
+        /* ✅ 手機端專屬排版優化 (極簡高密度) */
         @media (max-width: 480px) {
             header { padding: 0.5rem 1rem; flex-wrap: wrap; gap: 0.5rem; }
             .logo { font-size: 1rem; }
@@ -179,20 +175,19 @@
             .search-box { min-width: 100%; }
             .filter-section .flex.gap-1 { justify-content: space-between; }
             
-            .link-image-preview { height: 140px; }
-            .link-card { padding: 0.8rem; }
-            .link-title { font-size: 0.9rem; white-space: normal; }
-            .link-desc { font-size: 0.8rem; -webkit-line-clamp: 2; }
-            .link-url-display { font-size: 0.65rem; }
-            .source-text { font-size: 0.7rem; }
-            .tag-badge { font-size: 0.6rem; padding: 0.15rem 0.4rem; }
+            /* ✅ 手機卡片極致壓縮 */
+            .link-image-preview { height: 120px; }
+            .link-card { padding: 0.5rem; }
+            .link-title { font-size: 0.8rem !important; white-space: nowrap !important; overflow: hidden !important; text-overflow: ellipsis !important; margin-bottom: 0.1rem !important; }
+            .link-desc { font-size: 0.7rem !important; -webkit-line-clamp: 1 !important; margin-bottom: 0.1rem !important; }
+            .link-url-display { font-size: 0.6rem !important; margin-bottom: 0.1rem !important; }
+            .source-text { font-size: 0.65rem !important; }
+            .tag-badge { font-size: 0.55rem !important; padding: 0.1rem 0.3rem !important; }
             
             .batch-toolbar { width: 90%; padding: 0.8rem; }
             .batch-toolbar button { flex: 1; justify-content: center; }
             
             .kanban-column { min-width: 260px; }
-            
-            /* 手機版彈窗按鈕進一步微調 */
             .modal button { font-size: 1rem !important; padding: 0.6rem 1rem !important; }
         }
     </style>
@@ -272,7 +267,7 @@
         </div>
     </footer>
 
-    <div class="modal-overlay" id="folder-modal"><div class="modal"><h3 class="text-lg font-bold mb-3"> 管理資料夾</h3><div id="folder-list" class="mb-3 max-h-48 overflow-y-auto"></div><div class="flex gap-2"><input type="text" id="new-folder-name" placeholder="新資料夾" class="flex-1 p-2 rounded border border-gray-600 bg-gray-800 text-white text-sm"><button class="btn-primary" onclick="addFolder()">新增</button></div><div class="flex justify-end mt-3"><button class="btn-outline" onclick="closeModal('folder-modal')">關閉</button></div></div></div>
+    <div class="modal-overlay" id="folder-modal"><div class="modal"><h3 class="text-lg font-bold mb-3">📂 管理資料夾</h3><div id="folder-list" class="mb-3 max-h-48 overflow-y-auto"></div><div class="flex gap-2"><input type="text" id="new-folder-name" placeholder="新資料夾" class="flex-1 p-2 rounded border border-gray-600 bg-gray-800 text-white text-sm"><button class="btn-primary" onclick="addFolder()">新增</button></div><div class="flex justify-end mt-3"><button class="btn-outline" onclick="closeModal('folder-modal')">關閉</button></div></div></div>
     <div class="modal-overlay" id="edit-modal"><div class="modal"><h3 class="text-lg font-bold mb-3">✏️ 編輯連結</h3><input type="hidden" id="edit-id"><div class="form-group"><label>標題</label><input type="text" id="edit-title"></div><div class="form-group"><label>網址</label><input type="text" id="edit-url"></div><div class="form-group"><label>資料夾</label><select id="edit-folder"></select></div><div class="form-group"><label>標籤</label><input type="text" id="edit-categories"></div><div class="form-group"><label>摘要</label><textarea id="edit-desc" style="height:60px;"></textarea></div><div class="flex justify-end gap-2 mt-3"><button class="btn-outline" onclick="closeModal('edit-modal')">取消</button><button class="btn-primary" onclick="saveEdit()">儲存</button></div></div></div>
     <div id="toast-container"></div>
 
