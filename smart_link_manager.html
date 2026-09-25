@@ -223,7 +223,8 @@
     <main id="app-screen">
         <div class="control-panel">
             <div class="input-section">
-                <input type="text" id="url-input" placeholder="貼上連結 [N]" onkeypress="handleEnter(event)">
+                <!-- ✅ 新增 onpaste 事件 -->
+                <input type="text" id="url-input" placeholder="貼上連結自動存檔 [N]" onkeypress="handleEnter(event)" onpaste="handleAutoSave(event)">
                 <button class="btn-primary" id="btn-add-url" onclick="processAndSaveUrl()"><span class="btn-text">儲存</span><div class="loader" id="add-loader"></div></button>
             </div>
             <div>
@@ -275,6 +276,17 @@
         let currentView='masonry',isKanbanMode=false,activeTag='all',activeFolder='all';
         let allLinksCache=[],allFoldersCache=[],searchTimeout,batchMode=false,selectedIds=new Set(),isCheckingLinks=false;
         try{app=firebase.initializeApp(firebaseConfig);auth=firebase.auth();db=firebase.firestore();}catch(e){}
+
+        // ✅ 新增：貼上網址後自動存檔邏輯
+        function handleAutoSave(event) {
+            setTimeout(() => {
+                const input = document.getElementById('url-input');
+                const url = input.value.trim();
+                if (url && (url.startsWith('http://') || url.startsWith('https://'))) {
+                    processAndSaveUrl(); 
+                }
+            }, 500);
+        }
 
         function adjustFontSize() {
             const levels = [0.85, 1, 1.2];
