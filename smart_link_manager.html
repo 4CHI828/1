@@ -10,7 +10,7 @@
     <script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
     <link rel="manifest" id="pwa-manifest">
     <meta name="theme-color" content="#0f172a">
-    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22></text></svg>">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🔗</text></svg>">
 
     <style>
         :root {
@@ -382,15 +382,18 @@
         function getYouTubeVideoId(u){const r=/(?:youtu\.be\/|youtube\.com\/(?:watch\?v=|embed\/|v\/|shorts\/))([a-zA-Z0-9_-]{11})/;return u.match(r)?.[1]||null;}
         async function fetchYouTubeInfo(u){const v=getYouTubeVideoId(u);if(!v)return null;try{const r=await fetch(`https://www.youtube.com/oembed?url=https://www.youtube.com/watch?v=${v}&format=json`);if(!r.ok)throw 0;const d=await r.json();return{title:d.title||'YouTube',summary:d.author_name||'YouTube',author:d.author_name||'',image:d.thumbnail_url||`https://img.youtube.com/vi/${v}/hqdefault.jpg`};}catch(e){return{title:'YouTube',summary:'YouTube',author:'',image:`https://img.youtube.com/vi/${v}/hqdefault.jpg`};}}
         
+        // ✅ 優化：智能標題處理與標籤偵測
         async function fetchWebpageInfo(u){
             let r={title:"未命名連結",description:"點擊查看",categories:["一般網站"],account:"",image:""};
             let tags=["一般網站"];
             const l=u.toLowerCase();
+            
+            // ✅ 修改：只要網址包含 "threads" 就自動新增 Threads 標籤
             if(l.includes('youtube.com')||l.includes('youtu.be'))tags=["YouTube","影片"];
             else if(l.includes('facebook.com')||l.includes('fb.watch')||l.includes('fb.com'))tags=["Facebook","社群"];
             else if(l.includes('instagram.com'))tags=["Instagram","社群"];
             else if(l.includes('x.com')||l.includes('twitter.com'))tags=["X","Twitter","社群"];
-            else if(l.includes('threads.net'))tags=["Threads","社群"];
+            else if(l.includes('threads'))tags=["Threads","社群"]; // 這裡從 threads.net 改為 threads
             
             if(l.includes('youtube.com')||l.includes('youtu.be')){
                 const y=await fetchYouTubeInfo(u);
@@ -409,10 +412,19 @@
                 }
             }catch(e){}
             
+            // 備用邏輯：如果 API 抓取失敗，從 URL 提取域名作為標題
             if (r.title === "未命名連結" || !r.title) {
-                try { const urlObj = new URL(u); r.title = urlObj.hostname.replace('www.', ''); } catch(e) { r.title = u; }
+                try {
+                    const urlObj = new URL(u);
+                    r.title = urlObj.hostname.replace('www.', '');
+                } catch(e) {
+                    r.title = u;
+                }
             }
-            if (r.description === "點擊查看" || !r.description) { r.description = `已保存連結：${u}`; }
+            if (r.description === "點擊查看" || !r.description) {
+                r.description = `已保存連結：${u}`;
+            }
+            
             r.title=r.title.replace(/\s+/g,' ').trim();
             r.categories=tags;
             return r;
@@ -494,7 +506,7 @@
 
         document.addEventListener('keydown',e=>{const f=['INPUT','TEXTAREA','SELECT'].includes(document.activeElement.tagName);if(e.key==='Escape'){closeModal('folder-modal');closeModal('edit-modal');closeModal('quick-add-modal');if(batchMode)toggleBatchMode();}if(!f){if(e.key==='/'){e.preventDefault();document.getElementById('search-input').focus();}else if(e.key==='n'||e.key==='N'){e.preventDefault();document.getElementById('url-input').focus();}else if(e.key==='b'||e.key==='B'){e.preventDefault();toggleBatchMode();}}});
 
-        // ✅ 終極修復：擴充功能閃電存檔邏輯 (解決 Instagram 標題只顯示平台名稱的問題)
+        // ✅ 終極修復：擴充功能閃電存檔邏輯
         window.onload = async () => {
             const urlParams = new URLSearchParams(window.location.search);
             if (urlParams.get('quick_add') === '1') {
@@ -525,16 +537,14 @@
                         let finalTitle = extTitle;
                         let finalDesc = info.description || "無摘要";
 
-                        // 1. 如果擴充功能沒傳來標題，或傳來的是無效標題
                         if (!finalTitle || finalTitle.trim() === "" || finalTitle === "未命名網頁" || finalTitle.includes("Smart Link Manager")) {
                             finalTitle = info.title;
                         }
 
-                        // 2. 核心修復：如果標題只是平台名稱 (Instagram, Facebook 等)，把摘要升級為標題
                         const platformNames = ["Instagram", "Facebook", "Twitter", "X", "Threads", "TikTok", "LinkedIn", "YouTube"];
                         if (platformNames.includes(finalTitle) && info.description && info.description !== "點擊查看") {
-                            finalTitle = info.description; // 摘要變標題
-                            finalDesc = "已保存社群連結"; // 原摘要欄位顯示提示
+                            finalTitle = info.description;
+                            finalDesc = "已保存社群連結";
                         }
 
                         finalData.title = finalTitle;
@@ -567,7 +577,7 @@
             const savedScale = localStorage.getItem('fontScale');
             if (savedScale) document.documentElement.style.setProperty('--font-scale', savedScale);
             updateHtmlSaveTime();
-            const m={name:"智能連結",short_name:"連結",start_url:".",display:"standalone",background_color:"#0f172a",theme_color:"#6366f1",icons:[{src:"data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22></text></svg>",sizes:"any",type:"image/svg+xml"}]};
+            const m={name:"智能連結",short_name:"連結",start_url:".",display:"standalone",background_color:"#0f172a",theme_color:"#6366f1",icons:[{src:"data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🔗</text></svg>",sizes:"any",type:"image/svg+xml"}]};
             document.getElementById('pwa-manifest').href=URL.createObjectURL(new Blob([JSON.stringify(m)],{type:'application/json'}));
         };
     </script>
