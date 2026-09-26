@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>5:95 框架導覽</title>
+  <title>MyDaily｜個人生活工作站</title>
   <style>
     /* CSS 主題變數宣告 */
     :root {
@@ -70,10 +70,10 @@
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
     }
 
-    /* 5% / 95% Grid 框架（加入 minmax 避免在手機端 5% 太扁） */
+    /* 5% / 95% Grid 框架（含 minmax 保護） */
     .container {
       display: grid;
-      grid-template-rows: minmax(42px, 5%) 1fr;
+      grid-template-rows: minmax(44px, 5%) 1fr;
       width: 100%;
       height: 100%;
     }
@@ -91,11 +91,48 @@
       z-index: 10;
     }
 
+    /* 左側：品牌 Logo / 標題 + 導覽連結 */
+    .nav-left {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      height: 100%;
+    }
+
+    /* 品牌標題區域 */
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      color: var(--text-active);
+      font-weight: 700;
+      font-size: 0.95rem;
+      letter-spacing: 0.2px;
+    }
+
+    .brand-icon {
+      width: 18px;
+      height: 18px;
+      stroke: var(--accent);
+      stroke-width: 2.2;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+      fill: none;
+      flex-shrink: 0;
+    }
+
+    .brand-divider {
+      width: 1px;
+      height: 16px;
+      background-color: var(--border-color);
+      margin: 0 4px;
+    }
+
     /* 連結群組 */
     .nav-links {
       display: flex;
       align-items: center;
-      gap: 8px;
+      gap: 6px;
       height: 100%;
     }
 
@@ -107,7 +144,7 @@
       text-decoration: none;
       font-size: 0.85rem;
       font-weight: 500;
-      padding: 5px 12px;
+      padding: 5px 10px;
       border-radius: 6px;
       transition: background-color 0.2s ease, color 0.2s ease;
     }
@@ -176,7 +213,7 @@
       height: 100%;
       border: none;
       display: block;
-      background-color: #ffffff; /* 確保載入的網頁有預設白底 */
+      background-color: #ffffff;
     }
   </style>
 </head>
@@ -184,57 +221,73 @@
   <div class="container">
     <!-- 上方 5% -->
     <header class="top-panel">
-      <!-- 導覽連結：target 指向下方 iframe 的 name -->
-      <nav class="nav-links">
-        <a href="https://4chi828.github.io/1/smart_link_manager.html" target="content-frame" class="nav-item active" onclick="setActiveLink(this)">
-          <!-- 智能連結圖示 -->
-          <svg class="nav-icon" viewBox="0 0 24 24">
-            <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path>
-            <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path>
+      <div class="nav-left">
+        <!-- 品牌標題 -->
+        <div class="brand">
+          <svg class="brand-icon" viewBox="0 0 24 24">
+            <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+            <line x1="16" y1="2" x2="16" y2="6"></line>
+            <line x1="8" y1="2" x2="8" y2="6"></line>
+            <line x1="3" y1="10" x2="21" y2="10"></line>
           </svg>
-          <span>智能連結</span>
-        </a>
+          <span>MyDaily</span>
+        </div>
 
-        <a href="https://4chi828.github.io/1/pay.html" target="content-frame" class="nav-item" onclick="setActiveLink(this)">
-          <!-- 記帳圖示 -->
-          <svg class="nav-icon" viewBox="0 0 24 24">
-            <rect x="2" y="5" width="20" height="14" rx="2"></rect>
-            <line x1="2" y1="10" x2="22" y2="10"></line>
-          </svg>
-          <span>記帳</span>
-        </a>
-      </nav>
+        <!-- 分隔線 -->
+        <div class="brand-divider"></div>
 
-      <!-- 色彩切換色票 -->
+        <!-- 導覽連結 -->
+        <nav class="nav-links">
+          <a href="smart_link_manager.html" target="content-frame" class="nav-item active" onclick="setActiveLink(this)">
+            <!-- 智能連結圖示 -->
+            <svg class="nav-icon" viewBox="0 0 24 24">
+              <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path>
+              <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path>
+            </svg>
+            <span>智能連結</span>
+          </a>
+
+          <a href="pay.html" target="content-frame" class="nav-item" onclick="setActiveLink(this)">
+            <!-- 記帳圖示 -->
+            <svg class="nav-icon" viewBox="0 0 24 24">
+              <rect x="2" y="5" width="20" height="14" rx="2"></rect>
+              <line x1="2" y1="10" x2="22" y2="10"></line>
+            </svg>
+            <span>記帳</span>
+          </a>
+        </nav>
+      </div>
+
+      <!-- 右側色彩切換色票 -->
       <div class="theme-switcher">
-        <button class="color-dot active" style="background: #38bdf8;" onclick="setTheme('default', this)"></button>
-        <button class="color-dot" style="background: #34d399;" onclick="setTheme('emerald', this)"></button>
-        <button class="color-dot" style="background: #c084fc;" onclick="setTheme('cyber', this)"></button>
-        <button class="color-dot" style="background: #fb923c;" onclick="setTheme('sunset', this)"></button>
-        <button class="color-dot" style="background: #64748b;" onclick="setTheme('light', this)"></button>
+        <button class="color-dot active" style="background: #38bdf8;" onclick="setTheme('default', this)" title="曜石黑"></button>
+        <button class="color-dot" style="background: #34d399;" onclick="setTheme('emerald', this)" title="翡翠綠"></button>
+        <button class="color-dot" style="background: #c084fc;" onclick="setTheme('cyber', this)" title="賽博紫"></button>
+        <button class="color-dot" style="background: #fb923c;" onclick="setTheme('sunset', this)" title="日落橘"></button>
+        <button class="color-dot" style="background: #64748b;" onclick="setTheme('light', this)" title="極簡淺"></button>
       </div>
     </header>
 
-    <!-- 下方 95%：放入 iframe -->
+    <!-- 下方 95% -->
     <main class="bottom-panel">
       <iframe 
         name="content-frame" 
         id="content-frame" 
         class="content-frame" 
-        src="https://4chi828.github.io/1/smart_link_manager.html"
+        src="smart_link_manager.html"
         allowfullscreen>
       </iframe>
     </main>
   </div>
 
   <script>
-    // 點擊導覽項目時切換 active 高亮
+    // 點擊導覽項目切換高亮
     function setActiveLink(element) {
       document.querySelectorAll('.nav-item').forEach(item => item.classList.remove('active'));
       element.classList.add('active');
     }
 
-    // 主題切換函式
+    // 切換色彩主題
     function setTheme(theme, btn) {
       if (theme === 'default') {
         document.documentElement.removeAttribute('data-theme');
