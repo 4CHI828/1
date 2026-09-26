@@ -5,61 +5,78 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>MyDaily｜個人生活工作站</title>
   <style>
-    /* CSS 主題變數宣告 */
+    /* CSS 全域變數與 5 套色彩主題配置 */
     :root {
       --top-bg: #1e293b;
       --bottom-bg: #0f172a;
       --border-color: #334155;
-      --text-color: #94a3b8;
-      --text-active: #ffffff;
+      --text-muted: #94a3b8;
+      --text-main: #f1f5f9;
       --hover-bg: rgba(255, 255, 255, 0.08);
       --accent: #38bdf8;
+      --accent-glow: rgba(56, 189, 248, 0.25);
+      --drawer-bg: rgba(30, 41, 59, 0.95);
+      --card-bg: rgba(15, 23, 42, 0.6);
     }
 
     [data-theme="emerald"] {
       --top-bg: #064e3b;
       --bottom-bg: #022c22;
       --border-color: #047857;
-      --text-color: #a7f3d0;
-      --text-active: #ffffff;
-      --hover-bg: rgba(255, 255, 255, 0.08);
+      --text-muted: #a7f3d0;
+      --text-main: #f0fdf4;
+      --hover-bg: rgba(255, 255, 255, 0.1);
       --accent: #34d399;
+      --accent-glow: rgba(52, 211, 153, 0.25);
+      --drawer-bg: rgba(6, 78, 59, 0.95);
+      --card-bg: rgba(2, 44, 34, 0.6);
     }
 
     [data-theme="cyber"] {
       --top-bg: #2e1065;
-      --bottom-bg: #1e1b4b;
+      --bottom-bg: #1a0b36;
       --border-color: #581c87;
-      --text-color: #e9d5ff;
-      --text-active: #ffffff;
-      --hover-bg: rgba(255, 255, 255, 0.08);
+      --text-muted: #e9d5ff;
+      --text-main: #faf5ff;
+      --hover-bg: rgba(255, 255, 255, 0.1);
       --accent: #c084fc;
+      --accent-glow: rgba(192, 132, 252, 0.25);
+      --drawer-bg: rgba(46, 16, 101, 0.95);
+      --card-bg: rgba(26, 11, 54, 0.6);
     }
 
     [data-theme="sunset"] {
       --top-bg: #431407;
       --bottom-bg: #1c1917;
       --border-color: #7c2d12;
-      --text-color: #fed7aa;
-      --text-active: #ffffff;
-      --hover-bg: rgba(255, 255, 255, 0.08);
+      --text-muted: #fed7aa;
+      --text-main: #fff7ed;
+      --hover-bg: rgba(255, 255, 255, 0.1);
       --accent: #fb923c;
+      --accent-glow: rgba(251, 146, 60, 0.25);
+      --drawer-bg: rgba(67, 20, 7, 0.95);
+      --card-bg: rgba(28, 25, 23, 0.6);
     }
 
     [data-theme="light"] {
       --top-bg: #ffffff;
       --bottom-bg: #f8fafc;
       --border-color: #e2e8f0;
-      --text-color: #64748b;
-      --text-active: #0f172a;
+      --text-muted: #64748b;
+      --text-main: #0f172a;
       --hover-bg: rgba(0, 0, 0, 0.05);
       --accent: #2563eb;
+      --accent-glow: rgba(37, 99, 235, 0.2);
+      --drawer-bg: rgba(255, 255, 255, 0.96);
+      --card-bg: rgba(241, 245, 249, 0.8);
     }
 
+    /* 基礎重置 */
     * {
       margin: 0;
       padding: 0;
       box-sizing: border-box;
+      -webkit-font-smoothing: antialiased;
     }
 
     html, body {
@@ -67,103 +84,134 @@
       height: 100vh;
       height: 100dvh;
       overflow: hidden;
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "PingFang TC", "Noto Sans TC", sans-serif;
+      background-color: var(--bottom-bg);
+      color: var(--text-main);
+      transition: background-color 0.3s ease;
     }
 
-    /* 5% / 95% Grid 框架（含 minmax 保護） */
-    .container {
+    /* 主網格佈局：5% / 95% (含保底高度) */
+    .app-layout {
       display: grid;
-      grid-template-rows: minmax(44px, 5%) 1fr;
+      grid-template-rows: minmax(46px, 5%) 1fr;
       width: 100%;
       height: 100%;
+      position: relative;
+      transition: grid-template-rows 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     }
 
-    /* 上方 5% 導覽區塊 */
-    .top-panel {
+    /* 專注模式（隱藏頂部 5%） */
+    .app-layout.focus-mode {
+      grid-template-rows: 0fr 1fr;
+    }
+
+    .app-layout.focus-mode .top-bar {
+      opacity: 0;
+      pointer-events: none;
+      transform: translateY(-100%);
+    }
+
+    /* 頂部 5% 控制導覽列 */
+    .top-bar {
       background-color: var(--top-bg);
       border-bottom: 1px solid var(--border-color);
       display: flex;
       align-items: center;
       justify-content: space-between;
-      padding: 0 16px;
-      transition: background-color 0.4s ease, border-color 0.4s ease;
-      user-select: none;
-      z-index: 10;
+      padding: 0 14px;
+      gap: 12px;
+      z-index: 50;
+      transition: background-color 0.3s ease, border-color 0.3s ease, transform 0.3s ease, opacity 0.2s ease;
+      overflow-x: auto;
+      overflow-y: hidden;
     }
 
-    /* 左側：品牌 Logo / 標題 + 導覽連結 */
-    .nav-left {
+    .top-bar::-webkit-scrollbar {
+      display: none;
+    }
+
+    /* 左側區域：Logo 與導覽頁籤 */
+    .nav-left-section {
       display: flex;
       align-items: center;
-      gap: 14px;
-      height: 100%;
+      gap: 10px;
+      flex-shrink: 0;
     }
 
-    /* 品牌標題區域 */
-    .brand {
+    .brand-box {
       display: flex;
       align-items: center;
       gap: 8px;
-      color: var(--text-active);
-      font-weight: 700;
-      font-size: 0.95rem;
-      letter-spacing: 0.2px;
+      cursor: pointer;
+      padding-right: 4px;
     }
 
     .brand-icon {
-      width: 18px;
-      height: 18px;
+      width: 20px;
+      height: 20px;
       stroke: var(--accent);
       stroke-width: 2.2;
       stroke-linecap: round;
       stroke-linejoin: round;
       fill: none;
-      flex-shrink: 0;
+      filter: drop-shadow(0 0 6px var(--accent-glow));
     }
 
-    .brand-divider {
+    .brand-title {
+      font-weight: 700;
+      font-size: 0.95rem;
+      letter-spacing: 0.3px;
+      color: var(--text-main);
+      white-space: nowrap;
+    }
+
+    .nav-separator {
       width: 1px;
-      height: 16px;
+      height: 18px;
       background-color: var(--border-color);
-      margin: 0 4px;
     }
 
-    /* 連結群組 */
-    .nav-links {
+    /* 分頁列容器 */
+    .tabs-container {
       display: flex;
       align-items: center;
-      gap: 6px;
-      height: 100%;
+      gap: 4px;
     }
 
-    .nav-item {
+    .nav-tab {
       display: inline-flex;
       align-items: center;
       gap: 6px;
-      color: var(--text-color);
+      color: var(--text-muted);
       text-decoration: none;
       font-size: 0.85rem;
       font-weight: 500;
       padding: 5px 10px;
       border-radius: 6px;
-      transition: background-color 0.2s ease, color 0.2s ease;
+      cursor: pointer;
+      border: 1px solid transparent;
+      transition: all 0.2s ease;
+      white-space: nowrap;
+      user-select: none;
+      background: transparent;
     }
 
-    .nav-item:hover {
+    .nav-tab:hover {
       background-color: var(--hover-bg);
-      color: var(--text-active);
+      color: var(--text-main);
     }
 
-    /* 當前選中狀態 */
-    .nav-item.active {
+    .nav-tab.active {
       color: var(--accent);
       background-color: var(--hover-bg);
+      border-color: rgba(255, 255, 255, 0.08);
       font-weight: 600;
+      box-shadow: inset 0 0 12px var(--accent-glow);
     }
 
-    .nav-icon {
-      width: 16px;
-      height: 16px;
+    .tab-icon {
+      width: 15px;
+      height: 15px;
       stroke: currentColor;
       stroke-width: 2;
       stroke-linecap: round;
@@ -172,16 +220,153 @@
       flex-shrink: 0;
     }
 
-    /* 色彩切換器（純色票點擊） */
-    .theme-switcher {
+    .tab-close {
+      opacity: 0.5;
+      font-size: 13px;
+      margin-left: 2px;
+      line-height: 1;
+      padding: 1px 3px;
+      border-radius: 3px;
+    }
+    .tab-close:hover {
+      opacity: 1;
+      background-color: rgba(239, 68, 68, 0.2);
+      color: #ef4444;
+    }
+
+    /* 新增分頁微按鈕 */
+    .btn-add-tab {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 26px;
+      height: 26px;
+      border-radius: 6px;
+      border: 1px dashed var(--border-color);
+      background: transparent;
+      color: var(--text-muted);
+      cursor: pointer;
+      font-size: 15px;
+      transition: all 0.2s ease;
+    }
+
+    .btn-add-tab:hover {
+      color: var(--accent);
+      border-color: var(--accent);
+      background: var(--hover-bg);
+      transform: scale(1.05);
+    }
+
+    /* 右側區域：功能工具列 + 時鐘 + 番茄鐘 + 便條 + 主題 */
+    .nav-right-section {
       display: flex;
       align-items: center;
-      gap: 8px;
+      gap: 12px;
+      flex-shrink: 0;
+    }
+
+    /* 頂部圖示按鈕組 */
+    .action-group {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .action-btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 28px;
+      height: 28px;
+      border-radius: 6px;
+      border: none;
+      background: transparent;
+      color: var(--text-muted);
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .action-btn:hover {
+      background-color: var(--hover-bg);
+      color: var(--text-main);
+    }
+
+    .action-btn.active {
+      color: var(--accent);
+      background-color: var(--hover-bg);
+    }
+
+    .action-icon {
+      width: 15px;
+      height: 15px;
+      stroke: currentColor;
+      stroke-width: 2;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+      fill: none;
+    }
+
+    /* 微型番茄鐘組件 */
+    .pomodoro-pill {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      background: var(--hover-bg);
+      border: 1px solid var(--border-color);
+      border-radius: 14px;
+      padding: 2px 8px;
+      font-size: 0.75rem;
+      font-variant-numeric: tabular-nums;
+      color: var(--text-muted);
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .pomodoro-pill:hover {
+      border-color: var(--accent);
+      color: var(--text-main);
+    }
+
+    .pomodoro-pill.running {
+      border-color: var(--accent);
+      color: var(--accent);
+      box-shadow: 0 0 10px var(--accent-glow);
+    }
+
+    .pomo-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background-color: currentColor;
+    }
+
+    /* 即時時間 */
+    .live-clock {
+      display: flex;
+      align-items: baseline;
+      gap: 6px;
+      font-size: 0.78rem;
+      color: var(--text-muted);
+      font-variant-numeric: tabular-nums;
+      user-select: none;
+      white-space: nowrap;
+    }
+
+    .live-clock-time {
+      font-weight: 600;
+      color: var(--text-main);
+    }
+
+    /* 色彩切換色票 */
+    .theme-palette {
+      display: flex;
+      align-items: center;
+      gap: 6px;
     }
 
     .color-dot {
-      width: 12px;
-      height: 12px;
+      width: 11px;
+      height: 11px;
       border-radius: 50%;
       border: 1.5px solid rgba(255, 255, 255, 0.4);
       cursor: pointer;
@@ -191,7 +376,7 @@
     }
 
     .color-dot:hover {
-      transform: scale(1.25);
+      transform: scale(1.3);
     }
 
     .color-dot.active {
@@ -199,105 +384,713 @@
       box-shadow: 0 0 0 2px var(--accent);
     }
 
-    /* 下方 95% 內容區塊 */
-    .bottom-panel {
-      background-color: var(--bottom-bg);
+    /* 下方 95% 主內容區 */
+    .workspace-area {
+      position: relative;
       width: 100%;
       height: 100%;
-      position: relative;
+      background-color: var(--bottom-bg);
+      overflow: hidden;
     }
 
-    /* 內嵌網頁框架 */
-    .content-frame {
+    /* 頂部微型載入指示條 */
+    .loading-bar {
+      position: absolute;
+      top: 0;
+      left: 0;
+      height: 2.5px;
+      width: 0%;
+      background: linear-gradient(90deg, var(--accent), #f43f5e);
+      z-index: 30;
+      transition: width 0.3s ease, opacity 0.4s ease;
+      box-shadow: 0 0 8px var(--accent-glow);
+    }
+
+    .loading-bar.active {
+      width: 75%;
+      opacity: 1;
+    }
+
+    .loading-bar.done {
+      width: 100%;
+      opacity: 0;
+    }
+
+    /* 全版 iframe */
+    .app-frame {
       width: 100%;
       height: 100%;
       border: none;
       display: block;
       background-color: #ffffff;
     }
+
+    /* 專注模式浮動還原按鈕 */
+    .focus-exit-pill {
+      position: fixed;
+      top: 10px;
+      left: 50%;
+      transform: translateX(-50%) translateY(-100px);
+      background: var(--drawer-bg);
+      border: 1px solid var(--border-color);
+      color: var(--text-main);
+      padding: 6px 14px;
+      border-radius: 20px;
+      font-size: 0.78rem;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+      z-index: 100;
+      transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.2s ease;
+      backdrop-filter: blur(10px);
+      opacity: 0;
+    }
+
+    .app-layout.focus-mode .focus-exit-pill {
+      transform: translateX(-50%) translateY(0);
+      opacity: 1;
+    }
+
+    /* 右側便條備忘錄抽屜 (Scratchpad) */
+    .scratchpad-drawer {
+      position: absolute;
+      top: 0;
+      right: 0;
+      width: 320px;
+      height: 100%;
+      background: var(--drawer-bg);
+      border-left: 1px solid var(--border-color);
+      box-shadow: -8px 0 32px rgba(0, 0, 0, 0.3);
+      backdrop-filter: blur(12px);
+      z-index: 40;
+      transform: translateX(100%);
+      transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+      display: flex;
+      flex-direction: column;
+    }
+
+    .scratchpad-drawer.open {
+      transform: translateX(0);
+    }
+
+    .scratchpad-header {
+      padding: 12px 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px solid var(--border-color);
+    }
+
+    .scratchpad-title {
+      font-size: 0.88rem;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .scratchpad-status {
+      font-size: 0.72rem;
+      color: var(--text-muted);
+    }
+
+    .scratchpad-textarea {
+      flex: 1;
+      width: 100%;
+      padding: 14px 16px;
+      background: transparent;
+      border: none;
+      outline: none;
+      resize: none;
+      color: var(--text-main);
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      font-size: 0.85rem;
+      line-height: 1.6;
+    }
+
+    .scratchpad-footer {
+      padding: 8px 16px;
+      font-size: 0.7rem;
+      color: var(--text-muted);
+      border-top: 1px solid var(--border-color);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    /* 自訂新增分頁彈窗 (Modal) */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.65);
+      backdrop-filter: blur(4px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 200;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.2s ease;
+    }
+
+    .modal-overlay.active {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .modal-card {
+      background: var(--top-bg);
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      width: 90%;
+      max-width: 380px;
+      padding: 20px;
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5);
+    }
+
+    .modal-title {
+      font-size: 1rem;
+      font-weight: 600;
+      margin-bottom: 14px;
+    }
+
+    .modal-input-group {
+      margin-bottom: 12px;
+    }
+
+    .modal-label {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      display: block;
+      margin-bottom: 5px;
+    }
+
+    .modal-input {
+      width: 100%;
+      padding: 8px 12px;
+      background: var(--card-bg);
+      border: 1px solid var(--border-color);
+      border-radius: 6px;
+      color: var(--text-main);
+      outline: none;
+      font-size: 0.85rem;
+    }
+
+    .modal-input:focus {
+      border-color: var(--accent);
+    }
+
+    .modal-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 8px;
+      margin-top: 16px;
+    }
+
+    .btn-secondary, .btn-primary {
+      padding: 6px 14px;
+      border-radius: 6px;
+      font-size: 0.82rem;
+      cursor: pointer;
+      font-weight: 500;
+      border: none;
+    }
+
+    .btn-secondary {
+      background: transparent;
+      color: var(--text-muted);
+    }
+    .btn-secondary:hover {
+      background: var(--hover-bg);
+      color: var(--text-main);
+    }
+
+    .btn-primary {
+      background: var(--accent);
+      color: #0f172a;
+      font-weight: 600;
+    }
+    .btn-primary:hover {
+      filter: brightness(1.1);
+    }
   </style>
 </head>
-<body>
-  <div class="container">
-    <!-- 上方 5% -->
-    <header class="top-panel">
-      <div class="nav-left">
-        <!-- 品牌標題 -->
-        <div class="brand">
+<body data-theme="obsidian">
+
+  <div class="app-layout" id="appLayout">
+    <!-- ================== 上方 5% 導覽列 ================== -->
+    <header class="top-bar" id="topBar">
+      <!-- 左區塊：品牌與分頁列 -->
+      <div class="nav-left-section">
+        <div class="brand-box" onclick="reloadCurrentTab()" title="MyDaily 點擊重新整理目前頁面">
           <svg class="brand-icon" viewBox="0 0 24 24">
             <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
             <line x1="16" y1="2" x2="16" y2="6"></line>
             <line x1="8" y1="2" x2="8" y2="6"></line>
             <line x1="3" y1="10" x2="21" y2="10"></line>
           </svg>
-          <span>MyDaily</span>
+          <span class="brand-title">MyDaily</span>
         </div>
 
-        <!-- 分隔線 -->
-        <div class="brand-divider"></div>
+        <div class="nav-separator"></div>
 
-        <!-- 導覽連結 -->
-        <nav class="nav-links">
-          <a href="smart_link_manager.html" target="content-frame" class="nav-item active" onclick="setActiveLink(this)">
-            <!-- 智能連結圖示 -->
-            <svg class="nav-icon" viewBox="0 0 24 24">
+        <!-- 動態分頁容器 -->
+        <nav class="tabs-container" id="tabsContainer">
+          <!-- 智能連結 (預設) -->
+          <button class="nav-tab active" data-url="smart_link_manager.html" onclick="switchTab(this)">
+            <svg class="tab-icon" viewBox="0 0 24 24">
               <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path>
               <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path>
             </svg>
             <span>智能連結</span>
-          </a>
+          </button>
 
-          <a href="pay.html" target="content-frame" class="nav-item" onclick="setActiveLink(this)">
-            <!-- 記帳圖示 -->
-            <svg class="nav-icon" viewBox="0 0 24 24">
+          <!-- 記帳 (預設) -->
+          <button class="nav-tab" data-url="pay.html" onclick="switchTab(this)">
+            <svg class="tab-icon" viewBox="0 0 24 24">
               <rect x="2" y="5" width="20" height="14" rx="2"></rect>
               <line x1="2" y1="10" x2="22" y2="10"></line>
             </svg>
             <span>記帳</span>
-          </a>
+          </button>
         </nav>
+
+        <!-- 新增自訂分頁按鈕 -->
+        <button class="btn-add-tab" onclick="openAddTabModal()" title="新增自訂分頁 (Tab)">+</button>
       </div>
 
-      <!-- 右側色彩切換色票 -->
-      <div class="theme-switcher">
-        <button class="color-dot active" style="background: #38bdf8;" onclick="setTheme('default', this)" title="曜石黑"></button>
-        <button class="color-dot" style="background: #34d399;" onclick="setTheme('emerald', this)" title="翡翠綠"></button>
-        <button class="color-dot" style="background: #c084fc;" onclick="setTheme('cyber', this)" title="賽博紫"></button>
-        <button class="color-dot" style="background: #fb923c;" onclick="setTheme('sunset', this)" title="日落橘"></button>
-        <button class="color-dot" style="background: #64748b;" onclick="setTheme('light', this)" title="極簡淺"></button>
+      <!-- 右區塊：小工具、時鐘、番茄鐘、備忘錄與色票 -->
+      <div class="nav-right-section">
+        <!-- iframe 操作按鈕組 -->
+        <div class="action-group">
+          <!-- 重新整理 -->
+          <button class="action-btn" onclick="reloadCurrentTab()" title="重新整理當前畫面">
+            <svg class="action-icon" viewBox="0 0 24 24">
+              <path d="M21.5 2v6h-6M2.5 22v-6h6M2 11.5a10 10 0 0 1 18.8-4.3M22 12.5a10 10 0 0 1-18.8 4.3"></path>
+            </svg>
+          </button>
+
+          <!-- 新分頁彈出開啟 -->
+          <button class="action-btn" onclick="openInNewWindow()" title="新分頁彈出開啟">
+            <svg class="action-icon" viewBox="0 0 24 24">
+              <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>
+              <polyline points="15 3 21 3 21 9"></polyline>
+              <line x1="10" y1="14" x2="21" y2="3"></line>
+            </svg>
+          </button>
+
+          <!-- 全螢幕 / 專注模式 -->
+          <button class="action-btn" onclick="toggleFocusMode()" title="專注模式 (快速鍵: F)">
+            <svg class="action-icon" viewBox="0 0 24 24">
+              <path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"></path>
+            </svg>
+          </button>
+
+          <!-- 便條備忘錄抽屜開關 -->
+          <button class="action-btn" id="scratchpadToggle" onclick="toggleScratchpad()" title="快速便條 / 備忘錄">
+            <svg class="action-icon" viewBox="0 0 24 24">
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+              <polyline points="14 2 14 8 20 8"></polyline>
+              <line x1="16" y1="13" x2="8" y2="13"></line>
+              <line x1="16" y1="17" x2="8" y2="17"></line>
+            </svg>
+          </button>
+        </div>
+
+        <div class="nav-separator"></div>
+
+        <!-- 微型番茄鐘 (25m 專注) -->
+        <div class="pomodoro-pill" id="pomodoroBtn" onclick="togglePomodoro()" title="點擊切換 25 分鐘番茄鐘計時 (長按重設)">
+          <span class="pomo-dot"></span>
+          <span id="pomoDisplay">25:00</span>
+        </div>
+
+        <!-- 即時數位時鐘 -->
+        <div class="live-clock">
+          <span id="liveDate">--/--</span>
+          <span class="live-clock-time" id="liveTime">00:00</span>
+          <span id="liveDay">週-</span>
+        </div>
+
+        <div class="nav-separator"></div>
+
+        <!-- 5 色主題色票切換 -->
+        <div class="theme-palette">
+          <button class="color-dot active" style="background: #38bdf8;" onclick="changeTheme('obsidian', this)" title="黑曜極光"></button>
+          <button class="color-dot" style="background: #34d399;" onclick="changeTheme('emerald', this)" title="翡翠深林"></button>
+          <button class="color-dot" style="background: #c084fc;" onclick="changeTheme('cyber', this)" title="賽博霓虹"></button>
+          <button class="color-dot" style="background: #fb923c;" onclick="changeTheme('sunset', this)" title="暮色暖橘"></button>
+          <button class="color-dot" style="background: #64748b;" onclick="changeTheme('light', this)" title="簡約淺白"></button>
+        </div>
       </div>
     </header>
 
-    <!-- 下方 95% -->
-    <main class="bottom-panel">
+    <!-- ================== 下方 95% 工作區 ================== -->
+    <main class="workspace-area">
+      <!-- 頂部載入進度條 -->
+      <div class="loading-bar" id="loadingBar"></div>
+
+      <!-- 主體 iframe (預設載入相對路徑) -->
       <iframe 
         name="content-frame" 
-        id="content-frame" 
-        class="content-frame" 
+        id="contentFrame" 
+        class="app-frame" 
         src="smart_link_manager.html"
         allowfullscreen>
       </iframe>
+
+      <!-- 右側便條備忘錄抽屜 (Scratchpad) -->
+      <aside class="scratchpad-drawer" id="scratchpadDrawer">
+        <div class="scratchpad-header">
+          <div class="scratchpad-title">
+            <svg style="width:16px;height:16px;stroke:var(--accent);fill:none;stroke-width:2;" viewBox="0 0 24 24">
+              <path d="M12 20h9"></path>
+              <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path>
+            </svg>
+            <span>隨手筆記 / Scratchpad</span>
+          </div>
+          <span class="scratchpad-status" id="scratchpadStatus">已即時儲存</span>
+        </div>
+        <textarea 
+          class="scratchpad-textarea" 
+          id="scratchpadInput" 
+          placeholder="在此隨手貼上文字、待辦項目或代碼，關閉或重新整理後內容皆會自動保留於本機瀏覽器..."></textarea>
+        <div class="scratchpad-footer">
+          <span>支援自動本機儲存</span>
+          <button class="btn-secondary" style="padding:2px 6px; font-size:0.7rem;" onclick="clearScratchpad()">清空</button>
+        </div>
+      </aside>
+
+      <!-- 專注模式浮動還原按鈕 -->
+      <div class="focus-exit-pill" onclick="toggleFocusMode()">
+        <svg style="width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:2;" viewBox="0 0 24 24">
+          <polyline points="4 14 10 14 10 20"></polyline>
+          <polyline points="20 10 14 10 14 4"></polyline>
+          <line x1="14" y1="10" x2="21" y2="3"></line>
+          <line x1="3" y1="21" x2="10" y2="14"></line>
+        </svg>
+        <span>離開專注模式 (Esc)</span>
+      </div>
     </main>
   </div>
 
+  <!-- 新增自訂分頁 Modal -->
+  <div class="modal-overlay" id="modalOverlay">
+    <div class="modal-card">
+      <h3 class="modal-title">新增自訂分頁</h3>
+      <div class="modal-input-group">
+        <label class="modal-label">分頁名稱 (例如: 個人行事曆)</label>
+        <input type="text" id="tabNameInput" class="modal-input" placeholder="輸入名稱" maxlength="15">
+      </div>
+      <div class="modal-input-group">
+        <label class="modal-label">檔案路徑或外部網址</label>
+        <input type="text" id="tabUrlInput" class="modal-input" placeholder="例如: todo.html 或 https://example.com">
+      </div>
+      <div class="modal-actions">
+        <button class="btn-secondary" onclick="closeAddTabModal()">取消</button>
+        <button class="btn-primary" onclick="confirmAddTab()">新增</button>
+      </div>
+    </div>
+  </div>
+
   <script>
-    // 點擊導覽項目切換高亮
-    function setActiveLink(element) {
-      document.querySelectorAll('.nav-item').forEach(item => item.classList.remove('active'));
-      element.classList.add('active');
+    // ---------------- 狀態常數與本地記憶儲存 ----------------
+    const STORAGE_KEY_THEME = 'mydaily_theme';
+    const STORAGE_KEY_LAST_TAB = 'mydaily_last_tab';
+    const STORAGE_KEY_CUSTOM_TABS = 'mydaily_custom_tabs';
+    const STORAGE_KEY_NOTES = 'mydaily_scratchpad';
+
+    const iframe = document.getElementById('contentFrame');
+    const loadingBar = document.getElementById('loadingBar');
+    let currentActiveUrl = 'smart_link_manager.html';
+
+    // ---------------- Iframe 載入條動畫 ----------------
+    function triggerLoading() {
+      loadingBar.className = 'loading-bar active';
     }
 
-    // 切換色彩主題
-    function setTheme(theme, btn) {
-      if (theme === 'default') {
-        document.documentElement.removeAttribute('data-theme');
-      } else {
-        document.documentElement.setAttribute('data-theme', theme);
+    iframe.addEventListener('load', () => {
+      loadingBar.className = 'loading-bar done';
+      setTimeout(() => {
+        loadingBar.className = 'loading-bar';
+      }, 400);
+    });
+
+    // ---------------- 分頁切換與記憶 ----------------
+    function switchTab(button) {
+      const url = button.getAttribute('data-url');
+      if (!url) return;
+
+      document.querySelectorAll('.nav-tab').forEach(tab => tab.classList.remove('active'));
+      button.classList.add('active');
+
+      if (iframe.src !== url && !iframe.src.endsWith(url)) {
+        triggerLoading();
+        iframe.src = url;
       }
-
-      document.querySelectorAll('.color-dot').forEach(dot => dot.classList.remove('active'));
-      btn.classList.add('active');
+      currentActiveUrl = url;
+      localStorage.setItem(STORAGE_KEY_LAST_TAB, url);
     }
+
+    function reloadCurrentTab() {
+      triggerLoading();
+      iframe.src = iframe.src;
+    }
+
+    function openInNewWindow() {
+      window.open(iframe.src, '_blank');
+    }
+
+    // ---------------- 專注模式 (Focus Mode) ----------------
+    function toggleFocusMode() {
+      const layout = document.getElementById('appLayout');
+      layout.classList.toggle('focus-mode');
+    }
+
+    // ---------------- 自訂分頁功能 (LocalStorage) ----------------
+    function loadCustomTabs() {
+      const savedTabs = JSON.parse(localStorage.getItem(STORAGE_KEY_CUSTOM_TABS) || '[]');
+      savedTabs.forEach(tab => renderCustomTabElement(tab.name, tab.url));
+    }
+
+    function renderCustomTabElement(name, url) {
+      const container = document.getElementById('tabsContainer');
+      const tab = document.createElement('button');
+      tab.className = 'nav-tab';
+      tab.setAttribute('data-url', url);
+      tab.setAttribute('data-custom', 'true');
+      tab.onclick = () => switchTab(tab);
+
+      tab.innerHTML = `
+        <svg class="tab-icon" viewBox="0 0 24 24">
+          <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
+        </svg>
+        <span>${escapeHtml(name)}</span>
+        <span class="tab-close" onclick="removeCustomTab(event, '${url}')" title="關閉分頁">&times;</span>
+      `;
+      container.appendChild(tab);
+    }
+
+    function openAddTabModal() {
+      document.getElementById('modalOverlay').classList.add('active');
+      document.getElementById('tabNameInput').focus();
+    }
+
+    function closeAddTabModal() {
+      document.getElementById('modalOverlay').classList.remove('active');
+      document.getElementById('tabNameInput').value = '';
+      document.getElementById('tabUrlInput').value = '';
+    }
+
+    function confirmAddTab() {
+      const name = document.getElementById('tabNameInput').value.trim();
+      let url = document.getElementById('tabUrlInput').value.trim();
+      if (!name || !url) return;
+
+      const savedTabs = JSON.parse(localStorage.getItem(STORAGE_KEY_CUSTOM_TABS) || '[]');
+      savedTabs.push({ name, url });
+      localStorage.setItem(STORAGE_KEY_CUSTOM_TABS, JSON.stringify(savedTabs));
+
+      renderCustomTabElement(name, url);
+      closeAddTabModal();
+
+      // 自動切換至新分頁
+      const lastTab = document.querySelector(`.nav-tab[data-url="${url}"]`);
+      if (lastTab) switchTab(lastTab);
+    }
+
+    function removeCustomTab(e, url) {
+      e.stopPropagation();
+      let savedTabs = JSON.parse(localStorage.getItem(STORAGE_KEY_CUSTOM_TABS) || '[]');
+      savedTabs = savedTabs.filter(t => t.url !== url);
+      localStorage.setItem(STORAGE_KEY_CUSTOM_TABS, JSON.stringify(savedTabs));
+
+      const tabElem = document.querySelector(`.nav-tab[data-url="${url}"]`);
+      if (tabElem) {
+        if (tabElem.classList.contains('active')) {
+          const firstTab = document.querySelector('.nav-tab');
+          if (firstTab) switchTab(firstTab);
+        }
+        tabElem.remove();
+      }
+    }
+
+    function escapeHtml(string) {
+      return String(string).replace(/[&<>"']/g, s => ({
+        '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+      }[s]));
+    }
+
+    // ---------------- 即時時鐘 (台灣/繁中) ----------------
+    function initClock() {
+      const dateEl = document.getElementById('liveDate');
+      const timeEl = document.getElementById('liveTime');
+      const dayEl = document.getElementById('liveDay');
+      const dayNames = ['週日', '週一', '週二', '週三', '週四', '週五', '週六'];
+
+      function update() {
+        const now = new Date();
+        const m = String(now.getMonth() + 1).padStart(2, '0');
+        const d = String(now.getDate()).padStart(2, '0');
+        const hh = String(now.getHours()).padStart(2, '0');
+        const mm = String(now.getMinutes()).padStart(2, '0');
+        
+        dateEl.textContent = `${m}/${d}`;
+        timeEl.textContent = `${hh}:${mm}`;
+        dayEl.textContent = dayNames[now.getDay()];
+      }
+      update();
+      setInterval(update, 1000);
+    }
+
+    // ---------------- 微型番茄鐘 (25 分鐘) ----------------
+    let pomoSeconds = 25 * 60;
+    let pomoInterval = null;
+    let pomoRunning = false;
+
+    function togglePomodoro() {
+      const pill = document.getElementById('pomodoroBtn');
+      const display = document.getElementById('pomoDisplay');
+
+      if (pomoRunning) {
+        // 暫停
+        clearInterval(pomoInterval);
+        pomoRunning = false;
+        pill.classList.remove('running');
+      } else {
+        // 開始計時
+        pomoRunning = true;
+        pill.classList.add('running');
+        pomoInterval = setInterval(() => {
+          if (pomoSeconds > 0) {
+            pomoSeconds--;
+            const mins = String(Math.floor(pomoSeconds / 60)).padStart(2, '0');
+            const secs = String(pomoSeconds % 60).padStart(2, '0');
+            display.textContent = `${mins}:${secs}`;
+          } else {
+            clearInterval(pomoInterval);
+            pomoRunning = false;
+            pill.classList.remove('running');
+            display.textContent = '完成!';
+            setTimeout(resetPomodoro, 4000);
+          }
+        }, 1000);
+      }
+    }
+
+    function resetPomodoro() {
+      clearInterval(pomoInterval);
+      pomoRunning = false;
+      pomoSeconds = 25 * 60;
+      document.getElementById('pomodoroBtn').classList.remove('running');
+      document.getElementById('pomoDisplay').textContent = '25:00';
+    }
+
+    // 長按番茄鐘重置
+    let pressTimer;
+    document.getElementById('pomodoroBtn').addEventListener('mousedown', () => {
+      pressTimer = setTimeout(resetPomodoro, 800);
+    });
+    document.getElementById('pomodoroBtn').addEventListener('mouseup', () => clearTimeout(pressTimer));
+
+    // ---------------- 隨手筆記 (Scratchpad Drawer) ----------------
+    const scratchpad = document.getElementById('scratchpadDrawer');
+    const scratchpadInput = document.getElementById('scratchpadInput');
+    const scratchpadStatus = document.getElementById('scratchpadStatus');
+
+    function toggleScratchpad() {
+      const isOpen = scratchpad.classList.toggle('open');
+      document.getElementById('scratchpadToggle').classList.toggle('active', isOpen);
+      if (isOpen) scratchpadInput.focus();
+    }
+
+    function initScratchpad() {
+      scratchpadInput.value = localStorage.getItem(STORAGE_KEY_NOTES) || '';
+      let saveTimer;
+      scratchpadInput.addEventListener('input', () => {
+        scratchpadStatus.textContent = '儲存中...';
+        clearTimeout(saveTimer);
+        saveTimer = setTimeout(() => {
+          localStorage.setItem(STORAGE_KEY_NOTES, scratchpadInput.value);
+          scratchpadStatus.textContent = '已即時儲存';
+        }, 350);
+      });
+    }
+
+    function clearScratchpad() {
+      scratchpadInput.value = '';
+      localStorage.removeItem(STORAGE_KEY_NOTES);
+      scratchpadStatus.textContent = '已清空';
+    }
+
+    // ---------------- 色彩主題切換 ----------------
+    function changeTheme(themeName, btn) {
+      document.body.setAttribute('data-theme', themeName);
+      localStorage.setItem(STORAGE_KEY_THEME, themeName);
+      document.querySelectorAll('.color-dot').forEach(dot => dot.classList.remove('active'));
+      if (btn) btn.classList.add('active');
+    }
+
+    function loadSavedTheme() {
+      const saved = localStorage.getItem(STORAGE_KEY_THEME) || 'obsidian';
+      document.body.setAttribute('data-theme', saved);
+      const activeDot = document.querySelector(`.color-dot[onclick*="${saved}"]`);
+      if (activeDot) {
+        document.querySelectorAll('.color-dot').forEach(dot => dot.classList.remove('active'));
+        activeDot.classList.add('active');
+      }
+    }
+
+    // ---------------- 鍵盤快速鍵支援 ----------------
+    window.addEventListener('keydown', (e) => {
+      // Esc: 退出專注模式或關閉筆記抽屜/彈窗
+      if (e.key === 'Escape') {
+        const layout = document.getElementById('appLayout');
+        if (layout.classList.contains('focus-mode')) layout.classList.remove('focus-mode');
+        if (scratchpad.classList.contains('open')) toggleScratchpad();
+        closeAddTabModal();
+      }
+      // F 鍵 (非輸入狀態下): 切換專注模式
+      if ((e.key === 'f' || e.key === 'F') && !['INPUT', 'TEXTAREA'].includes(document.activeElement.tagName)) {
+        e.preventDefault();
+        toggleFocusMode();
+      }
+      // Alt + 1: 切換至第 1 個分頁 (智能連結)
+      if (e.altKey && e.key === '1') {
+        e.preventDefault();
+        const tab = document.querySelectorAll('.nav-tab')[0];
+        if (tab) switchTab(tab);
+      }
+      // Alt + 2: 切換至第 2 個分頁 (記帳)
+      if (e.altKey && e.key === '2') {
+        e.preventDefault();
+        const tab = document.querySelectorAll('.nav-tab')[1];
+        if (tab) switchTab(tab);
+      }
+    });
+
+    // ---------------- 初始化執行 ----------------
+    window.addEventListener('DOMContentLoaded', () => {
+      initClock();
+      initScratchpad();
+      loadCustomTabs();
+      loadSavedTheme();
+
+      // 還原上次瀏覽頁籤
+      const lastUrl = localStorage.getItem(STORAGE_KEY_LAST_TAB);
+      if (lastUrl) {
+        const matchTab = document.querySelector(`.nav-tab[data-url="${lastUrl}"]`);
+        if (matchTab) {
+          switchTab(matchTab);
+        } else {
+          switchTab(document.querySelector('.nav-tab'));
+        }
+      } else {
+        triggerLoading();
+      }
+    });
   </script>
 </body>
 </html>
