@@ -61,7 +61,7 @@
 
       <div class="flex items-center gap-1.5 flex-wrap w-full sm:w-auto justify-end">
         <button type="button" id="themeToggleBtn" class="p-1.5 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 rounded-xl transition active:scale-95 shadow-sm text-sm">🌙</button>
-        <button type="button" id="toggleFontPanelBtn" class="text-xs bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 px-2.5 py-1.5 rounded-xl font-medium shadow-sm transition active:scale-95">🔤</button>
+        <button type="button" id="toggleFontPanelBtn" class="text-xs bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 px-2.5 py-1.5 rounded-xl font-medium shadow-sm transition active:scale-95">🔤 字型</button>
         <button type="button" id="toggleMemberBtn" class="text-xs bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 px-2.5 py-1.5 rounded-xl font-medium shadow-sm transition active:scale-95">👥 成員</button>
         <button type="button" id="toggleCategoryBtn" class="text-xs bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 px-2.5 py-1.5 rounded-xl font-medium shadow-sm transition active:scale-95">🏷️ 類別</button>
         <button type="button" id="togglePoolBtn" class="text-xs bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-300 hover:bg-amber-200 px-2.5 py-1.5 rounded-xl font-bold shadow-sm transition active:scale-95">🏦 公費</button>
@@ -70,11 +70,11 @@
       </div>
     </div>
 
-    <!-- 匯率橫幅 (優化手機與電腦端切換幣別 + ✏️自訂匯率) -->
+    <!-- 匯率橫幅 -->
     <div class="bg-gradient-to-r from-blue-50/80 to-indigo-50/80 dark:from-slate-800/80 dark:to-gray-800/80 border border-blue-100/50 dark:border-gray-700 rounded-2xl p-3 shadow-sm">
       <div class="flex items-center justify-between text-[11px] font-bold text-gray-500 dark:text-gray-400 mb-2">
         <button type="button" onclick="fetchExchangeRates(true)" class="flex items-center gap-1 cursor-pointer hover:text-blue-600 dark:hover:text-blue-400 transition active:scale-95">
-          💱 <span>即時參考匯率 (點幣別切換 / 點 ✏️ 自訂匯率)</span>
+          💱 <span>即時參考匯率 (點擊更新)</span>
           <svg class="w-3 h-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
         </button>
         <span id="rateUpdateTime" class="font-mono text-[10px] bg-white/50 dark:bg-black/20 px-2 py-0.5 rounded-full">連線中...</span>
@@ -104,14 +104,14 @@
       </div>
     </div>
 
-    <!-- 設定面板群組 -->
+    <!-- 設定面板群組：調整字型大小 (支援 12px ~ 36px) -->
     <div id="fontConfigPanel" class="hidden bg-white/60 dark:bg-slate-900/60 border border-gray-200/50 dark:border-gray-700/50 rounded-2xl p-4 space-y-3 shadow-inner">
       <div class="flex justify-between items-center text-xs font-bold text-gray-700 dark:text-gray-300">
-        <span>自訂全站字體大小</span><span id="fontSizeDisplay" class="text-blue-600 font-mono text-sm bg-blue-50 dark:bg-blue-900/30 px-2 py-0.5 rounded-lg">16px</span>
+        <span>🔤 自訂全站字型大小 (12px ~ 36px)</span><span id="fontSizeDisplay" class="text-blue-600 font-mono text-sm bg-blue-50 dark:bg-blue-900/30 px-2 py-0.5 rounded-lg">16px</span>
       </div>
       <div class="flex items-center gap-3">
         <button type="button" id="fontDecBtn" class="w-8 h-8 bg-white dark:bg-gray-700 rounded-full shadow hover:bg-gray-50 transition font-bold active:scale-90">-</button>
-        <input type="range" id="fontSlider" min="12" max="24" step="1" value="16" class="flex-1 accent-blue-600 h-1.5 bg-gray-200 rounded-lg appearance-none">
+        <input type="range" id="fontSlider" min="12" max="36" step="1" value="16" class="flex-1 accent-blue-600 h-1.5 bg-gray-200 rounded-lg appearance-none cursor-pointer">
         <button type="button" id="fontIncBtn" class="w-8 h-8 bg-white dark:bg-gray-700 rounded-full shadow hover:bg-gray-50 transition font-bold active:scale-90">+</button>
         <button type="button" id="fontResetBtn" class="text-xs text-gray-500 hover:text-blue-500 ml-1 font-medium">重設</button>
       </div>
@@ -602,7 +602,7 @@
       { icon: "🍺", title: "居酒屋晚餐", category: "餐飲", amount: 3500, currency: "JPY" }
     ];
     let quickTemplates = JSON.parse(localStorage.getItem("app_quick_templates")) || DEFAULT_TEMPLATES;
-    let exchangeRates = JSON.parse(localStorage.getItem("app_exchange_rates")) || { TWD: 1, EUR: 35.0, JPY: 0.21, CNY: 4.45, USD: 32.5, KRW: 0.024 };
+    let exchangeRates = { TWD: 1, EUR: 35.0, JPY: 0.21, CNY: 4.45, USD: 32.5, KRW: 0.024 };
     let cachedRecords = [];
     let currentSplitMode = "equal";
     let isMultiPayerMode = false;
@@ -930,7 +930,7 @@
       } catch (e) { el.textContent = "無法讀取"; }
     }
 
-    // ⚡ 快選範本渲染（改用索引呼叫，避免特殊字元破版）
+    // ⚡ 快選範本渲染
     function renderQuickTemplates() {
       const bar = document.getElementById("quickTemplatesBar");
       if (!bar) return;
@@ -2056,7 +2056,6 @@
       showToast(`📄 已複製「${item.title}」至表單，可直接修改儲存！`, "info");
     };
 
-    // ✏️ 修正編輯紀錄時精準還原「均分」或「自訂」模式
     window.startEditRecord = function(id) {
       const item = cachedRecords.find(r => r.id === id);
       if (!item) return;
@@ -2073,7 +2072,6 @@
       document.getElementById("currency").value = item.currency || "TWD";
       document.getElementById("originalAmount").value = item.originalAmount || "";
 
-      // 若當初台幣金額與匯率試算差距超過 2 元，才填入 overrideTwdInput，否則留空以便隨金額自動連動
       const calcAutoTwd = Math.round((Number(item.originalAmount) || 0) * (exchangeRates[item.currency || "TWD"] || 1));
       if (item.currency !== "TWD" && Math.abs((Number(item.twdAmount) || 0) - calcAutoTwd) > 2) {
         document.getElementById("overrideTwdInput").value = item.twdAmount || "";
@@ -2331,7 +2329,6 @@
       document.getElementById("statNetExpense").textContent = `$${(totalExpense - totalIncome).toLocaleString()}`;
       document.getElementById("summaryStatsBar").classList.remove("hidden");
 
-      // 納入所有帳戶（含公費袋退還剩餘公費）確保正負總和 100% 守恆
       const debtors = [], creditors = [];
       Object.keys(balances).forEach(m => {
         const b = Math.round(balances[m]);
@@ -2656,7 +2653,6 @@
       });
     }
 
-    // 📝 歷史明細渲染 (改用 openImageModalById 避免 Base64 塞入 DOM 屬性)
     function renderRecordsList() {
       const activeTotal = getActiveRecords().length;
       const filtered = getFilteredActiveRecords();
@@ -2867,7 +2863,6 @@
     window.openLineShareModal = () => document.getElementById("lineShareModal").classList.remove("hidden");
     window.closeLineShareModal = () => document.getElementById("lineShareModal").classList.add("hidden");
 
-    // 💡 LINE 清單匯出（補齊已完成平帳還款明細顯示）
     window.executeLineShare = function(type) {
       closeLineShareModal();
       const activeRecs = getActiveRecords();
@@ -3218,16 +3213,12 @@
       } catch (err) { showToast("❌ 檔案解析失敗", "error"); }
     };
 
-    // 💱 匯率卡片渲染：支援手機與電腦點擊切換幣別、點擊 ✏️ 自訂匯率
     function renderRateChips() {
       const currencies = ["USD", "EUR", "JPY", "CNY", "KRW"];
       document.getElementById("rateChipsContainer").innerHTML = currencies.map(c => `
-        <div class="flex-shrink-0 inline-flex items-center bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl shadow-sm text-xs overflow-hidden">
-          <button type="button" onclick="selectCurrencyFromChip('${c}')" title="點擊切換記帳幣別為 ${c}" class="px-2.5 py-1.5 hover:bg-blue-50 dark:hover:bg-gray-600 transition active:scale-95">
-            <span class="font-bold text-gray-800 dark:text-gray-100">${c}</span> 
-            <span class="font-mono text-blue-600 dark:text-blue-400 font-bold ml-1">≈ ${(exchangeRates[c] < 1 ? exchangeRates[c].toFixed(4) : exchangeRates[c].toFixed(2))}</span>
-          </button>
-          <button type="button" onclick="editCustomRate('${c}')" title="手動自訂 ${c} 匯率" class="px-1.5 py-1.5 text-[10px] text-gray-400 hover:text-blue-600 border-l border-gray-100 dark:border-gray-600">✏️</button>
+        <div onclick="selectCurrencyFromChip('${c}')" title="點擊切換記帳幣別為 ${c}" class="cursor-pointer hover:border-blue-400 active:scale-95 transition flex-shrink-0 bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 px-3 py-1.5 rounded-xl shadow-sm text-xs">
+          <span class="font-bold text-gray-800 dark:text-gray-100">${c}</span> 
+          <span class="font-mono text-blue-600 dark:text-blue-400 font-bold ml-1">≈ ${(exchangeRates[c] < 1 ? exchangeRates[c].toFixed(4) : exchangeRates[c].toFixed(2))}</span>
         </div>
       `).join("");
     }
@@ -3237,21 +3228,6 @@
       document.getElementById("overrideTwdInput").value = "";
       updateTwdPreview();
       showToast(`💱 已切換記帳幣別為：${cur}`, "info");
-    };
-
-    window.editCustomRate = function(cur) {
-      const currentVal = exchangeRates[cur];
-      const input = prompt(`手動設定 ${cur} 對台幣 (TWD) 的匯率：`, currentVal);
-      if (input === null) return;
-      const num = parseFloat(input);
-      if (!isNaN(num) && num > 0) {
-        exchangeRates[cur] = num;
-        localStorage.setItem("app_exchange_rates", JSON.stringify(exchangeRates));
-        renderRateChips();
-        updateTwdPreview();
-        document.getElementById("rateUpdateTime").textContent = "自訂匯率";
-        showToast(`✅ 已手動設定 ${cur} 匯率為 ${num}`);
-      }
     };
 
     window.fetchExchangeRates = async function(manual = false) {
@@ -3265,7 +3241,6 @@
           if (data.rates.JPY) exchangeRates.JPY = 1 / data.rates.JPY;
           if (data.rates.CNY) exchangeRates.CNY = 1 / data.rates.CNY;
           if (data.rates.KRW) exchangeRates.KRW = 1 / data.rates.KRW;
-          localStorage.setItem("app_exchange_rates", JSON.stringify(exchangeRates));
           document.getElementById("rateUpdateTime").textContent = "已更新最新匯率";
           if (manual) showToast("💱 匯率已更新至最新報價", "info");
         }
@@ -3276,8 +3251,9 @@
       updateTwdPreview();
     };
 
+    // 🔤 字型大小與面板收合控制 (上限提升至 36px)
     function applyFontSize(size) {
-      size = Math.min(Math.max(parseInt(size, 10) || 16, 12), 24);
+      size = Math.min(Math.max(parseInt(size, 10) || 16, 12), 36);
       document.documentElement.style.fontSize = `${size}px`;
       document.getElementById("fontSlider").value = size;
       document.getElementById("fontSizeDisplay").textContent = `${size}px`;
