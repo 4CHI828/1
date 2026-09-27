@@ -40,6 +40,7 @@
         .btn-outline { background-color: transparent; color: var(--text-main); border: 1px solid var(--border-color); }
         .btn-outline:hover { background-color: var(--border-color); }
         .btn-icon-only { padding: 0.4rem; border-radius: 50%; width: 32px; height: 32px; justify-content: center; font-size: 0.8rem; }
+        .btn-checking-active { width: auto !important; border-radius: 16px !important; padding: 0.3rem 0.65rem !important; border-color: var(--warning) !important; color: var(--warning) !important; }
 
         #login-screen { display: flex; flex-direction: column; justify-content: center; align-items: center; min-height: 80vh; padding: 2rem; }
         .login-card { background-color: var(--card-dark); padding: 2.5rem; border-radius: 20px; text-align: center; border: 1px solid var(--border-color); max-width: 400px; width: 100%; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.3); }
@@ -141,7 +142,7 @@
         body.batch-mode .folder-badge { left: 2rem; } 
         body.batch-mode .card-actions { opacity: 0; pointer-events: none; }
         
-        .batch-toolbar { position: fixed; bottom: 1.5rem; left: 50%; transform: translateX(-50%) translateY(100px); background: var(--card-dark); border: 1px solid var(--primary); padding: 0.6rem 1rem; border-radius: 10px; display: flex; gap: 0.5rem; align-items: center; box-shadow: 0 10px 25px rgba(0,0,0,0.5); z-index: 900; transition: transform 0.3s; opacity: 0; pointer-events: none; font-size: 0.85rem; flex-wrap: wrap; justify-content: center; }
+        .batch-toolbar { position: fixed; bottom: 1.5rem; left: 50%; transform: translateX(-50%) translateY(100px); background: var(--card-dark); border: 1px solid var(--primary); padding: 0.6rem 1rem; border-radius: 10px; display: flex; gap: 0.45rem; align-items: center; box-shadow: 0 10px 25px rgba(0,0,0,0.5); z-index: 900; transition: transform 0.3s; opacity: 0; pointer-events: none; font-size: 0.82rem; flex-wrap: wrap; justify-content: center; }
         .batch-toolbar.active { transform: translateX(-50%) translateY(0); opacity: 1; pointer-events: auto; }
 
         .kanban-board { display: flex; gap: 0.8rem; overflow-x: auto; padding-bottom: 1rem; min-height: 60vh; }
@@ -151,12 +152,13 @@
         .kanban-list { flex: 1; min-height: 80px; }
         .kanban-card { background: var(--card-dark); padding: 0.6rem; border-radius: 6px; margin-bottom: 0.5rem; border: 1px solid var(--border-color); cursor: grab; transition: all 0.2s; position: relative; }
         .kanban-card:hover { border-color: var(--primary); transform: translateY(-1px); }
-        .kanban-card .k-title { font-size: calc(0.78rem * var(--font-scale)); font-weight: 600; margin-bottom: 0.2rem; padding-right: 1.5rem; }
+        .kanban-card .k-title { font-size: calc(0.78rem * var(--font-scale)); font-weight: 600; margin-bottom: 0.2rem; padding-right: 4rem; }
         .kanban-card .k-title a { color: var(--text-main); text-decoration: none; }
         .kanban-card .k-title a:hover { color: var(--primary); text-decoration: underline; }
         .kanban-card .k-desc { font-size: calc(0.7rem * var(--font-scale)); color: var(--text-muted); display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
-        .kanban-card .k-edit { position: absolute; top: 0.45rem; right: 0.45rem; width: 22px; height: 22px; padding: 0; border-radius: 4px; font-size: 0.65rem; justify-content: center; opacity: 0.6; }
-        .kanban-card .k-edit:hover { opacity: 1; color: var(--primary); }
+        .kanban-card .k-actions { position: absolute; top: 0.4rem; right: 0.4rem; display: flex; gap: 0.15rem; opacity: 0.65; transition: opacity 0.2s; }
+        .kanban-card:hover .k-actions { opacity: 1; }
+        .kanban-card .k-actions button { width: 20px; height: 20px; padding: 0; border-radius: 4px; font-size: 0.6rem; justify-content: center; }
         .sortable-ghost { opacity: 0.4; background: var(--primary); }
 
         .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15, 23, 42, 0.8); z-index: 1000; justify-content: center; align-items: center; backdrop-filter: blur(8px); }
@@ -227,7 +229,6 @@
             .input-section { flex-direction: column; } 
             .input-section input { width: 100%; } 
             .input-section .btn-primary { width: 100%; justify-content: center; }
-            /* 手機版分類晶片改為單行平滑橫向滑動，不佔用垂直空間 */
             .chips-container { flex-wrap: nowrap; overflow-x: auto; padding-bottom: 2px; }
             .filter-section { flex-direction: column; align-items: stretch; } 
             .search-box { min-width: 100%; } 
@@ -239,7 +240,7 @@
             .link-url-display { font-size: calc(0.6rem * var(--font-scale)); margin-bottom: 0.1rem; } 
             .source-text { font-size: calc(0.65rem * var(--font-scale)); }
             .tag-badge { font-size: calc(0.55rem * var(--font-scale)); padding: 0.1rem 0.3rem; }
-            .batch-toolbar { width: 95%; padding: 0.5rem; gap: 0.35rem; } 
+            .batch-toolbar { width: 96%; padding: 0.5rem; gap: 0.3rem; } 
             .kanban-column { min-width: 260px; } 
         }
     </style>
@@ -256,16 +257,16 @@
             <button type="button" class="btn-outline btn-icon-only" onclick="openQuickAddModal()" title="快速新增 / 另存連結"><i class="fas fa-puzzle-piece"></i></button>
             <button type="button" class="btn-outline btn-icon-only" onclick="openFolderModal()" title="管理資料夾"><i class="fas fa-folder-plus"></i></button>
             <button type="button" class="btn-outline btn-icon-only" onclick="toggleBatchMode()" title="批次管理 (B)"><i class="fas fa-check-square"></i></button>
-            <button type="button" class="btn-outline btn-icon-only" id="btn-dead-check" onclick="startDeadLinkCheck()" title="失效檢測"><i class="fas fa-heartbeat" id="dead-check-icon"></i></button>
-            <button type="button" class="btn-outline btn-icon-only" onclick="openFontModal()" title="字體與縮圖設置"><i class="fas fa-font"></i></button>
+            <!-- ✅ 支援顯示檢測進度與點擊中途停止 -->
+            <button type="button" class="btn-outline btn-icon-only" id="btn-dead-check" onclick="startDeadLinkCheck()" title="失效檢測 (檢測中再次點擊可停止)"><i class="fas fa-heartbeat" id="dead-check-icon"></i><span id="dead-check-text" style="display:none;font-size:0.7rem;margin-left:3px;"></span></button>
+            <button type="button" class="btn-outline btn-icon-only" onclick="openFontModal()" title="字體與顯示設置"><i class="fas fa-font"></i></button>
             <button type="button" class="btn-outline btn-icon-only" onclick="exportAsMarkdown()" title="複製為 Markdown"><i class="fab fa-markdown"></i></button>
             <button type="button" class="btn-outline btn-icon-only" id="btn-theme" onclick="toggleTheme()" title="切換主題"><i class="fas fa-sun" id="theme-icon"></i></button>
             <button type="button" class="btn-outline btn-icon-only" id="btn-refresh" onclick="handleRefresh()" title="重新整理"><i class="fas fa-sync-alt" id="refresh-icon"></i></button>
             <button type="button" class="btn-outline btn-icon-only" onclick="exportData()" title="匯出備份"><i class="fas fa-download"></i></button>
-            <button type="button" class="btn-outline btn-icon-only" onclick="document.getElementById('import-file').click()" title="匯入 JSON 備份或瀏覽器 HTML 書籤"><i class="fas fa-upload"></i></button>
+            <button type="button" class="btn-outline btn-icon-only" onclick="document.getElementById('import-file').click()" title="匯入 JSON 備份或瀏覽器 HTML 書籤 (自動去重)"><i class="fas fa-upload"></i></button>
             <a href="https://4chi828.github.io/1/Smart_Link_Manager.crx" download class="btn-outline btn-icon-only" title="下載擴充功能 (CRX)"><i class="fas fa-box"></i></a>
             <button type="button" class="btn-outline btn-icon-only" onclick="openModal('help-modal')" title="功能說明 (?)"><i class="fas fa-question"></i></button>
-            <!-- ✅ 支援同時匯入 .json 備份與瀏覽器 .html 書籤檔 -->
             <input type="file" id="import-file" style="display:none" accept=".json,.html,.htm" onchange="importData(event)">
             <button type="button" class="btn-outline btn-icon-only" id="btn-logout" style="display:none;" onclick="handleLogout()" title="登出"><i class="fas fa-sign-out-alt"></i></button>
         </div>
@@ -299,7 +300,6 @@
                     </div>
                     <div class="flex gap-1 items-center">
                         <span id="result-count" class="result-count-badge">共 0 筆</span>
-                        <!-- ✅ 新增：閱讀與健康狀態快速篩選 -->
                         <select id="status-select" class="sort-select" onchange="handleStatusChange(this.value)" title="狀態篩選">
                             <option value="all">📋 全部狀態</option>
                             <option value="unread">📥 僅看未讀</option>
@@ -331,11 +331,12 @@
     <!-- 回到頂部按鈕 -->
     <button type="button" id="back-to-top" onclick="window.scrollTo({top:0,behavior:'smooth'})" title="回到頂部"><i class="fas fa-arrow-up"></i></button>
 
-    <!-- 批次操作工具列 -->
+    <!-- ✅ 升級版：批次操作工具列 (含批次加標籤) -->
     <div class="batch-toolbar" id="batch-toolbar">
         <span>已選 <strong id="batch-count" style="color:var(--primary);">0</strong></span>
         <button type="button" class="btn-outline" onclick="batchSelectAll()"><i class="fas fa-check-double"></i> 全選/反選</button>
         <button type="button" class="btn-outline" onclick="batchToggleRead()"><i class="fas fa-check-circle"></i> 已讀/未讀</button>
+        <button type="button" class="btn-outline" onclick="openBatchTagModal()"><i class="fas fa-tags"></i> 加標籤</button>
         <button type="button" class="btn-outline" onclick="openBatchMoveModal()"><i class="fas fa-folder-open"></i> 移動</button>
         <button type="button" class="btn-outline" style="color:var(--danger);border-color:var(--danger);" onclick="batchDelete()"><i class="fas fa-trash"></i> 刪除</button>
         <button type="button" class="btn-outline" onclick="toggleBatchMode()">取消</button>
@@ -373,10 +374,10 @@
 
             <!-- 2. 智能存檔與網址淨化 -->
             <div class="help-section">
-                <div class="help-section-title"><i class="fas fa-wand-magic-sparkles"></i> 全域貼上、混合文案提取與防重複</div>
+                <div class="help-section-title"><i class="fas fa-wand-magic-sparkles"></i> 全域貼上、混合文案提取與重新抓取</div>
                 <ul class="help-list">
-                    <li><span><strong>全域 <code>Ctrl+V</code> 直存 & 混合文案提取：</strong>不用點選輸入框，打開網頁直接按 <code>Ctrl+V</code> 即可存檔；貼上手機 App（抖音、小紅書、YouTube）帶文字的分享段落會自動分離出網址與標題。</span></li>
-                    <li><span><strong>追蹤碼自動淨化：</strong>存檔時自動拔除 <code>utm_*</code>、<code>fbclid</code>、<code>igshid</code>、<code>si</code>、<code>xmt</code>、<code>vd_source</code> 等冗長追蹤參數。</span></li>
+                    <li><span><strong>全域 <code>Ctrl+V</code> 直存 & 混合文案提取：</strong>打開網頁直接按 <code>Ctrl+V</code> 即可存檔；貼上手機 App（抖音、小紅書、YouTube）帶文字的分享段落會自動分離出網址與標題。</span></li>
+                    <li><span><strong>編輯視窗一鍵重抓 (<i class="fas fa-sync-alt"></i>)：</strong>在編輯連結視窗點擊網址旁的重新抓取鈕，可隨時重新補抓最新的網頁標題、摘要與預覽圖。</span></li>
                     <li><span><strong>重複連結偵測：</strong>若偵測到相同網址已存在，會提醒所在資料夾，並可選擇一鍵將舊連結更新時間推至最上方。</span></li>
                 </ul>
             </div>
@@ -386,34 +387,34 @@
                 <div class="help-section-title"><i class="fas fa-folder-tree"></i> 階層分類連動、搜尋高亮與狀態快篩</div>
                 <ul class="help-list">
                     <li><span><strong>資料夾 ➔ 標籤階層連動：</strong>選擇特定資料夾時，下方標籤列會自動只統計該資料夾內的標籤與筆數；支援直接點擊卡片上的徽章進行過濾。</span></li>
-                    <li><span><strong>搜尋關鍵字高亮：</strong>輸入關鍵字時，卡片標題與摘要中的命中字詞會自動以螢光底色高亮標示。</span></li>
+                    <li><span><strong>搜尋關鍵字高亮：</strong>輸入關鍵字時，瀑布流、列表與看板卡片中的命中字詞皆會自動以螢光底色高亮標示。</span></li>
                     <li><span><strong>狀態快篩與 5 種排序：</strong>支援篩選「僅看未讀／已讀／釘選／失效」以及 5 種排序方式（最新、最舊、最常造訪、標題 A-Z、隨機靈感）。</span></li>
                 </ul>
             </div>
 
             <!-- 4. 視圖模式、三段式縮圖與字體縮放 -->
             <div class="help-section">
-                <div class="help-section-title"><i class="fas fa-sliders-h"></i> 視圖切換、三段式縮圖與 200% 字體設置</div>
+                <div class="help-section-title"><i class="fas fa-sliders-h"></i> 視圖切換、三段式縮圖與自動已讀設置</div>
                 <ul class="help-list">
                     <li><span><strong>三種瀏覽視圖：</strong>支援「瀑布流（多欄卡片）」、「列表視圖」以及可拖曳分類的「看板模式（📥 待讀 / ⭐ 精選 / ✅ 已讀）」。</span></li>
-                    <li><span><strong>三段式縮圖 (<i class="fas fa-font"></i>) 與 200% 字體縮放：</strong>可隨時切換「頂部大圖 / 右側小方圖 / 極簡無圖」；字體放大至 <strong>135% 以上</strong>時自動調整欄數並展開雙行標題。</span></li>
+                    <li><span><strong>三段式縮圖 (<i class="fas fa-font"></i>) 與 200% 字體縮放：</strong>可切換「頂部大圖 / 右側小方圖 / 極簡無圖」，並可開啟<strong>「點擊連結後自動標為已讀」</strong>。</span></li>
                 </ul>
             </div>
 
             <!-- 5. 卡片操作、防誤刪復原與批次管理 -->
             <div class="help-section">
-                <div class="help-section-title"><i class="fas fa-tasks"></i> 獨立刪除復原佇列、批次管理與失效檢測</div>
+                <div class="help-section-title"><i class="fas fa-tasks"></i> 獨立刪除復原、批次貼標與可中斷失效檢測</div>
                 <ul class="help-list">
                     <li><span><strong>連續刪除獨立復原 (Undo)：</strong>單筆刪除免確認彈窗，即使連續刪除多筆，每個右下角 Toast 都能在 5 秒內獨立點擊「↩️ 復原」救回。</span></li>
-                    <li><span><strong>批次管理 (<i class="fas fa-check-square"></i>) 與失效檢測 (<i class="fas fa-heartbeat"></i>)：</strong>支援整卡點擊勾選、全選／反選、批次已讀／未讀、批次移動與死鏈自動檢測。</span></li>
+                    <li><span><strong>批次管理 (<i class="fas fa-check-square"></i>) 與可中斷檢測 (<i class="fas fa-heartbeat"></i>)：</strong>支援批次加標籤、批次已讀、批次移動；失效檢測會顯示即時進度（如 <code>12/45</code>），再次點擊可隨時安全停止。</span></li>
                 </ul>
             </div>
 
             <!-- 6. 備份匯出與雙模式儲存 -->
             <div class="help-section" style="margin-bottom:0;">
-                <div class="help-section-title"><i class="fas fa-cloud-download-alt"></i> 支援匯入 Chrome 書籤檔與 JSON 備份</div>
+                <div class="help-section-title"><i class="fas fa-cloud-download-alt"></i> 智能去重匯入（支援 Chrome 書籤與 JSON）</div>
                 <ul class="help-list">
-                    <li><span><strong>雙格式匯入 (<i class="fas fa-upload"></i>)：</strong>除了支援本系統匯出的 <code>.json</code> 備份檔，也支援直接匯入 Chrome / Edge / Firefox 匯出的 <code>bookmarks.html</code> 書籤檔（自動保留資料夾分類）。</span></li>
+                    <li><span><strong>雙格式自動去重合併 (<i class="fas fa-upload"></i>)：</strong>支援匯入 <code>.json</code> 備份檔與瀏覽器匯出的 <code>bookmarks.html</code> 書籤檔，自動比對網址略過重複項目，不會覆蓋既有書籤。</span></li>
                 </ul>
             </div>
 
@@ -423,11 +424,11 @@
         </div>
     </div>
 
-    <!-- 字體大小(上限200%) 與 三段式縮圖設置 Modal -->
+    <!-- 字體大小(上限200%)、三段式縮圖與自動已讀設置 Modal -->
     <div class="modal-overlay" id="font-modal" onclick="if(event.target===this)closeModal('font-modal')">
         <div class="modal">
             <div class="flex justify-between items-center mb-4">
-                <h3 class="text-lg font-bold"><i class="fas fa-sliders-h mr-2" style="color:var(--primary);"></i>顯示與字體設置</h3>
+                <h3 class="text-lg font-bold"><i class="fas fa-sliders-h mr-2" style="color:var(--primary);"></i>顯示與閱讀設置</h3>
                 <span id="font-percent-display" class="font-value-display" style="font-size:1.1rem;background:var(--bg-dark);padding:0.2rem 0.6rem;border-radius:6px;border:1px solid var(--border-color);">100%</span>
             </div>
 
@@ -449,7 +450,7 @@
                         </div>
                     </div>
                     <div class="card-footer">
-                        <div class="source-info"><span class="source-text">09/28 03:35</span></div>
+                        <div class="source-info"><span class="source-text">09/28 03:50</span></div>
                         <div class="tags-container"><span class="tag-badge" style="background:rgba(99,102,241,0.2);color:#818cf8;border:1px solid rgba(99,102,241,0.4);">預覽標籤</span></div>
                     </div>
                 </div>
@@ -471,7 +472,15 @@
                 </div>
             </div>
 
-            <div class="form-group mt-4">
+            <!-- 點擊後自動標為已讀開關 -->
+            <div class="form-group mt-3">
+                <label class="flex items-center justify-between cursor-pointer p-2 rounded" style="background:var(--bg-dark);border:1px solid var(--border-color);color:var(--text-main);">
+                    <span class="text-xs font-medium"><i class="fas fa-check-circle mr-1.5" style="color:var(--success);"></i>點擊開啟連結時，自動標記為「已讀」</span>
+                    <input type="checkbox" id="auto-read-checkbox" style="width:16px;height:16px;accent-color:var(--primary);cursor:pointer;" onchange="toggleAutoReadSetting(this.checked)">
+                </label>
+            </div>
+
+            <div class="form-group mt-3">
                 <label>拖曳滑桿或點擊按鈕微調字體 (80% ~ 200%)</label>
                 <div class="font-slider-container">
                     <button type="button" class="btn-outline btn-icon-only" onclick="stepFontSize(-0.05)" title="縮小 5%"><i class="fas fa-minus"></i></button>
@@ -558,13 +567,36 @@
         </div>
     </div>
 
-    <!-- 編輯連結 Modal -->
+    <!-- ✅ 新增：批次加標籤 Modal -->
+    <div class="modal-overlay" id="batch-tag-modal" onclick="if(event.target===this)closeModal('batch-tag-modal')">
+        <div class="modal">
+            <h3 class="text-lg font-bold mb-3"><i class="fas fa-tags mr-2" style="color:var(--primary);"></i>批次加上標籤</h3>
+            <div class="form-group">
+                <label>輸入要附加的標籤 (逗號分隔，或點擊下方現有標籤)</label>
+                <input type="text" id="batch-tag-input" placeholder="例如：必看，待整理" oninput="renderModalTagSuggestions('batch-tag-input', 'batch-tag-suggestions')" onkeydown="handleEnter(event, confirmBatchAddTags)">
+                <div id="batch-tag-suggestions" class="modal-tag-suggestions"></div>
+            </div>
+            <div class="flex justify-end gap-2 mt-4">
+                <button type="button" class="btn-outline" onclick="closeModal('batch-tag-modal')">取消</button>
+                <button type="button" class="btn-primary" onclick="confirmBatchAddTags()">確認加上</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 編輯連結 Modal (新增一鍵重新抓取網頁資訊按鈕) -->
     <div class="modal-overlay" id="edit-modal" onclick="if(event.target===this)closeModal('edit-modal')">
         <div class="modal">
             <h3 class="text-lg font-bold mb-3">✏️ 編輯連結</h3>
             <input type="hidden" id="edit-id">
+            <input type="hidden" id="edit-image">
+            <div class="form-group">
+                <label>網址</label>
+                <div class="flex gap-1.5">
+                    <input type="text" id="edit-url" class="flex-1" onkeydown="handleEnter(event, saveEdit)">
+                    <button type="button" class="btn-outline btn-sm" id="btn-refetch-edit" onclick="refetchInEditModal()" title="重新抓取最新標題、摘要與預覽圖" style="white-space:nowrap;"><i class="fas fa-sync-alt" id="refetch-edit-icon"></i> 重抓資訊</button>
+                </div>
+            </div>
             <div class="form-group"><label>標題</label><input type="text" id="edit-title" onkeydown="handleEnter(event, saveEdit)"></div>
-            <div class="form-group"><label>網址</label><input type="text" id="edit-url" onkeydown="handleEnter(event, saveEdit)"></div>
             <div class="form-group"><label>資料夾</label><select id="edit-folder"></select></div>
             <div class="form-group">
                 <label>標籤 (逗號分隔，或點擊下方標籤增減)</label>
@@ -589,9 +621,11 @@
         let app,auth,db,currentUser=null,isLocalMode=(localStorage.getItem('isLocalMode')==='true'),unsubscribeSnapshot=null;
         let currentView = localStorage.getItem('preferredView') === 'list' ? 'list' : 'masonry';
         let currentSort = localStorage.getItem('preferredSort') || 'newest';
+        let autoMarkReadOnClick = localStorage.getItem('autoMarkRead') === 'true';
         let activeStatus = 'all';
         let isKanbanMode=false,activeTag='all',activeFolder='all',isInitialRender=true;
-        let rawLinksCache=[],allLinksCache=[],allFoldersCache=[],randomWeightMap=new Map(),searchTimeout,batchMode=false,selectedIds=new Set(),isCheckingLinks=false,isSavingUrl=false;
+        let rawLinksCache=[],allLinksCache=[],allFoldersCache=[],randomWeightMap=new Map(),searchTimeout,batchMode=false,selectedIds=new Set();
+        let isCheckingLinks=false,abortDeadCheck=false,isSavingUrl=false;
         
         const isQuickAddMode = new URLSearchParams(window.location.search).get('quick_add') === '1';
 
@@ -667,7 +701,7 @@
             };
         }
 
-        // ✅ 八階優化 1：安全搜尋關鍵字螢光筆高亮 (不破壞 HTML 實體與 @帳號 標籤)
+        // 安全搜尋關鍵字螢光筆高亮
         function highlightText(escapedStr, rawQuery) {
             if (!rawQuery) return escapedStr;
             const escapedQuery = escapeHtml(rawQuery).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
@@ -789,13 +823,20 @@
             renderModalTagSuggestions(inputId, containerId);
         }
 
-        // 字體大小與三段式縮圖模式控制邏輯
+        // 字體大小、三段式縮圖與自動已讀控制邏輯
         function openFontModal() {
             const currentScale = parseFloat(localStorage.getItem('fontScale') || '1');
             const currentThumb = localStorage.getItem('thumbMode') || 'large';
             syncFontUI(currentScale);
             setThumbMode(currentThumb);
+            const cb = document.getElementById('auto-read-checkbox');
+            if (cb) cb.checked = autoMarkReadOnClick;
             openModal('font-modal');
+        }
+
+        function toggleAutoReadSetting(checked) {
+            autoMarkReadOnClick = !!checked;
+            localStorage.setItem('autoMarkRead', autoMarkReadOnClick ? 'true' : 'false');
         }
 
         function setThumbMode(mode) {
@@ -835,7 +876,10 @@
         function resetDisplaySettings() {
             syncFontUI(1);
             setThumbMode('large');
-            showToast("已恢復預設字體 (100%) 與大圖模式", "success");
+            toggleAutoReadSetting(false);
+            const cb = document.getElementById('auto-read-checkbox');
+            if (cb) cb.checked = false;
+            showToast("已恢復預設字體 (100%) 與顯示設置", "success");
         }
 
         document.getElementById('font-slider').addEventListener('input', function(e) {
@@ -1277,7 +1321,6 @@
             renderCurrentView(rawLinksCache);
         }
 
-        // ✅ 八階優化 2：支援未讀 / 已讀 / 釘選 / 失效狀態快速篩選
         function handleStatusChange(val) {
             activeStatus = val;
             renderCurrentView(rawLinksCache);
@@ -1338,24 +1381,27 @@
             renderCurrentView(rawLinksCache);
         }
 
+        // ✅ 九階優化 1：點擊連結時累計熱度，並支援「點擊後自動標記為已讀」偏好設置
         async function recordLinkClick(id) {
             if (batchMode) return;
             const target = rawLinksCache.find(x => x.id === id);
             if (!target) return;
             target.clicks = (target.clicks || 0) + 1;
+            const shouldMarkRead = autoMarkReadOnClick && !target.isRead;
+            if (shouldMarkRead) target.isRead = true;
 
             if (isLocalMode) {
                 writeLocalJson('my_links', rawLinksCache);
-                if (currentSort === 'clicks') {
+                if (currentSort === 'clicks' || shouldMarkRead) {
                     renderCurrentView(rawLinksCache);
                 } else {
                     const badgeHolder = document.getElementById('click-badge-' + id);
                     if (badgeHolder) badgeHolder.innerHTML = `<span class="click-count-badge" title="造訪次數"><i class="fas fa-fire"></i>${target.clicks}</span>`;
                 }
             } else if (currentUser && db) {
-                db.collection('users').doc(currentUser.uid).collection('links').doc(id).update({
-                    clicks: firebase.firestore.FieldValue.increment(1)
-                }).catch(() => {});
+                const upObj = { clicks: firebase.firestore.FieldValue.increment(1) };
+                if (shouldMarkRead) upObj.isRead = true;
+                db.collection('users').doc(currentUser.uid).collection('links').doc(id).update(upObj).catch(() => {});
             }
         }
 
@@ -1472,7 +1518,6 @@
             }
         }
 
-        // ✅ 八階優化 3：使用獨立閉包綁定每筆被刪除的項目，支援連續刪除多筆並逐一復原
         async function deleteLink(id){
             const target = rawLinksCache.find(x => x.id === id);
             if (!target) return;
@@ -1522,6 +1567,7 @@
             }
             if(l){
                 document.getElementById('edit-id').value=safeId(l.id);
+                document.getElementById('edit-image').value=l.image||"";
                 document.getElementById('edit-title').value=l.title||"";
                 document.getElementById('edit-url').value=l.url||"";
                 document.getElementById('edit-categories').value=Array.isArray(l.categories)?l.categories.join(', '):(l.categories||"");
@@ -1533,12 +1579,46 @@
             }
         }
 
+        // ✅ 九階優化 2：編輯視窗內一鍵「重新抓取最新網頁標題、摘要與縮圖」
+        async function refetchInEditModal() {
+            const raw = document.getElementById('edit-url').value.trim();
+            const u = cleanUrl(raw);
+            if (!u) { showToast("請先輸入有效的 http/https 網址", "error"); return; }
+
+            const btn = document.getElementById('btn-refetch-edit');
+            const icon = document.getElementById('refetch-edit-icon');
+            btn.disabled = true;
+            icon.classList.add('rotating');
+
+            try {
+                const info = await fetchWebpageInfo(u);
+                let ft = info.title;
+                if (info.account && !ft.includes(info.account)) ft = `${info.account} - ${ft}`;
+                document.getElementById('edit-url').value = u;
+                document.getElementById('edit-title').value = ft;
+                document.getElementById('edit-desc').value = info.description || '';
+                if (info.image) document.getElementById('edit-image').value = info.image;
+                const curCats = document.getElementById('edit-categories').value.split(/[,，]\s*/).map(t => t.trim()).filter(Boolean);
+                if (curCats.length === 0 && info.categories && info.categories.length) {
+                    document.getElementById('edit-categories').value = info.categories.join(', ');
+                    renderModalTagSuggestions('edit-categories', 'edit-tag-suggestions');
+                }
+                showToast("✨ 已重新抓取最新網頁資訊", "success");
+            } catch (e) {
+                showToast("❌ 重新抓取失敗：" + e.message, "error");
+            } finally {
+                btn.disabled = false;
+                icon.classList.remove('rotating');
+            }
+        }
+
         async function saveEdit(){
             const id=safeId(document.getElementById('edit-id').value);
             const cleaned = cleanUrl(document.getElementById('edit-url').value);
             if (!cleaned) { showToast("請輸入有效的 http/https 網址", "error"); return; }
             const cats=document.getElementById('edit-categories').value.split(/[,，]\s*/).map(t=>t.trim()).filter(t=>t);
-            const u={title:document.getElementById('edit-title').value,url:cleaned,categories:cats,description:document.getElementById('edit-desc').value,folderId:safeId(document.getElementById('edit-folder').value)||'default'};
+            const imgVal=document.getElementById('edit-image').value;
+            const u={title:document.getElementById('edit-title').value,url:cleaned,categories:cats,description:document.getElementById('edit-desc').value,folderId:safeId(document.getElementById('edit-folder').value)||'default',image:imgVal};
             try {
                 if(isLocalMode){
                     let l=readLocalJson('my_links', []);
@@ -1582,7 +1662,9 @@
             if(isKanbanMode)renderKanban(allLinksCache);
         }
         
+        // ✅ 九階優化 3：看板模式同步支援「搜尋關鍵字高亮」與「複製網址 / 編輯 / 刪除」操作鈕
         function renderKanban(links){
+            const rawQuery = document.getElementById('search-input').value.trim();
             const a=[],b=[],c=[];
             links.forEach(l=>{if(l.pinned)b.push(l);else if(l.isRead)c.push(l);else a.push(l);});
             document.getElementById('count-inbox').innerText=a.length;
@@ -1591,10 +1673,16 @@
             const r=l=>{
                 const lid = safeId(l.id);
                 const safeUrl = safeHref(l.url) || '#';
+                const th = formatTitleHtml(l.title, rawQuery);
+                const descHtml = highlightText(escapeHtml(l.description), rawQuery);
                 return `<div class="kanban-card" data-id="${lid}">
-                    <button type="button" class="btn-outline k-edit" onclick="openEdit('${lid}')" title="編輯"><i class="fas fa-pen"></i></button>
-                    <div class="k-title"><a href="${safeUrl}" target="_blank" rel="noopener noreferrer" onclick="recordLinkClick('${lid}')">${escapeHtml(l.title)}</a></div>
-                    <div class="k-desc">${escapeHtml(l.description)}</div>
+                    <div class="k-actions">
+                        <button type="button" class="btn-outline" onclick="copyLinkById('${lid}',event)" title="複製網址"><i class="fas fa-copy"></i></button>
+                        <button type="button" class="btn-outline" onclick="openEdit('${lid}')" title="編輯"><i class="fas fa-pen"></i></button>
+                        <button type="button" class="btn-outline" style="color:var(--danger);" onclick="deleteLink('${lid}')" title="刪除"><i class="fas fa-trash"></i></button>
+                    </div>
+                    <div class="k-title"><a href="${safeUrl}" target="_blank" rel="noopener noreferrer" onclick="recordLinkClick('${lid}')">${th}</a></div>
+                    <div class="k-desc">${descHtml}</div>
                 </div>`;
             };
             document.getElementById('list-inbox').innerHTML=a.map(r).join('');
@@ -1674,7 +1762,6 @@
             setTimeout(() => URL.revokeObjectURL(objUrl), 1000);
         }
 
-        // ✅ 八階優化 4：解析 Chrome / Edge / Firefox 匯出的 HTML 書籤檔並自動歸類資料夾
         function parseBrowserBookmarksHtml(htmlText) {
             const doc = new DOMParser().parseFromString(htmlText, 'text/html');
             const existingFolderNameMap = new Map();
@@ -1728,6 +1815,7 @@
             return { links: parsedLinks, folders: newFolders };
         }
         
+        // ✅ 九階優化 4：JSON 與 HTML 匯入皆支援「智能網址去重合併 (Smart Merge)」，不洗掉既有資料
         function importData(ev){
             const f=ev.target.files[0];if(!f)return;
             const isHtmlFile = /\.(html?|htm)$/i.test(f.name);
@@ -1735,52 +1823,68 @@
             r.onload=async e=>{
                 try{
                     const rawText = String(e.target.result || '');
-                    let l = [], fo = [];
+                    let incomingLinks = [], incomingFolders = [];
 
                     if (isHtmlFile || /^\s*<!DOCTYPE NETSCAPE-Bookmark-file/i.test(rawText)) {
                         const parsed = parseBrowserBookmarksHtml(rawText);
-                        l = parsed.links;
-                        fo = parsed.folders;
-                        if (!l.length) throw new Error("在 HTML 檔案中找不到有效連結");
-                        if (isLocalMode) {
-                            const curLinks = readLocalJson('my_links', []);
-                            const curFolders = readLocalJson('my_folders', []);
-                            writeLocalJson('my_links', [...l, ...curLinks]);
-                            if (fo.length) writeLocalJson('my_folders', [...curFolders, ...fo]);
-                        } else {
-                            await executeBatchInChunks(fo, (batch, x) => {
-                                const { id, ...cleanFolder } = x;
-                                batch.set(db.collection('users').doc(currentUser.uid).collection('folders').doc(safeId(id)), cleanFolder);
-                            });
-                            await executeBatchInChunks(l, (batch, x) => {
-                                const { id, ...cleanObj } = x;
-                                batch.set(db.collection('users').doc(currentUser.uid).collection('links').doc(safeId(id)), cleanObj);
-                            });
-                        }
+                        incomingLinks = parsed.links;
+                        incomingFolders = parsed.folders;
                     } else {
-                        const d=JSON.parse(rawText);
-                        l=Array.isArray(d.links)?d.links:(Array.isArray(d)?d:[]);
-                        fo=Array.isArray(d.folders)?d.folders:[];
-                        if(isLocalMode){
-                            writeLocalJson('my_links', l.map((x,i)=>({...x,id:safeId(x.id)||('loc_'+Date.now()+'_'+i)})));
-                            if(fo.length)writeLocalJson('my_folders', fo.map((x,i)=>({...x,id:safeId(x.id)||('f_'+Date.now()+'_'+i),icon:safeIcon(x.icon)})));
-                        }else{
-                            await executeBatchInChunks(fo, (batch, x, i) => {
-                                const docId = safeId(x.id) || ('f_' + Date.now() + '_' + i);
-                                const { id, ...cleanFolder } = x;
-                                cleanFolder.icon = safeIcon(cleanFolder.icon);
-                                batch.set(db.collection('users').doc(currentUser.uid).collection('folders').doc(docId), cleanFolder);
-                            });
-                            await executeBatchInChunks(l, (batch, x, i) => {
-                                const docId = safeId(x.id) || ('imp_' + Date.now() + '_' + i);
-                                const { id, ...cleanObj } = x;
-                                batch.set(db.collection('users').doc(currentUser.uid).collection('links').doc(docId), cleanObj);
-                            });
-                        }
+                        const d = JSON.parse(rawText);
+                        incomingLinks = Array.isArray(d.links) ? d.links : (Array.isArray(d) ? d : []);
+                        incomingFolders = Array.isArray(d.folders) ? d.folders : [];
                     }
+
+                    const existingUrlSet = new Set(rawLinksCache.map(x => cleanUrl(x.url) || x.url));
+                    let skippedCount = 0;
+                    const uniqueNewLinks = [];
+
+                    incomingLinks.forEach((x, idx) => {
+                        const cu = cleanUrl(x.url);
+                        if (!cu) return;
+                        if (existingUrlSet.has(cu)) {
+                            skippedCount++;
+                            return;
+                        }
+                        existingUrlSet.add(cu);
+                        uniqueNewLinks.push({
+                            ...x,
+                            url: cu,
+                            id: safeId(x.id) || ('imp_' + Date.now() + '_' + idx)
+                        });
+                    });
+
+                    const existingFolderIds = new Set(allFoldersCache.map(fo => fo.id));
+                    const uniqueNewFolders = incomingFolders.filter(fo => {
+                        const fid = safeId(fo.id);
+                        if (!fid || existingFolderIds.has(fid)) return false;
+                        existingFolderIds.add(fid);
+                        return true;
+                    }).map((fo, i) => ({
+                        ...fo,
+                        id: safeId(fo.id) || ('f_' + Date.now() + '_' + i),
+                        icon: safeIcon(fo.icon)
+                    }));
+
+                    if (isLocalMode) {
+                        const curLinks = readLocalJson('my_links', []);
+                        const curFolders = readLocalJson('my_folders', []);
+                        writeLocalJson('my_links', [...uniqueNewLinks, ...curLinks]);
+                        if (uniqueNewFolders.length) writeLocalJson('my_folders', [...curFolders, ...uniqueNewFolders]);
+                    } else {
+                        await executeBatchInChunks(uniqueNewFolders, (batch, x) => {
+                            const { id, ...cleanFolder } = x;
+                            batch.set(db.collection('users').doc(currentUser.uid).collection('folders').doc(id), cleanFolder);
+                        });
+                        await executeBatchInChunks(uniqueNewLinks, (batch, x) => {
+                            const { id, ...cleanObj } = x;
+                            batch.set(db.collection('users').doc(currentUser.uid).collection('links').doc(id), cleanObj);
+                        });
+                    }
+
                     await renderFolderChips();
                     loadLinks();
-                    showToast(`✅ 成功匯入 ${l.length} 筆連結`,"success");
+                    showToast(`✅ 新增 ${uniqueNewLinks.length} 筆連結${skippedCount > 0 ? ` (已略過 ${skippedCount} 筆重複)` : ''}`, "success");
                 }catch(err){
                     showToast("❌ 匯入失敗：" + err.message,"error");
                 }
@@ -1899,6 +2003,48 @@
             }
         }
 
+        // ✅ 九階優化 5：批次加標籤功能 (為所有勾選連結附加新標籤並自動去重)
+        function openBatchTagModal() {
+            if (!selectedIds.size) { showToast("請先勾選連結", "error"); return; }
+            document.getElementById('batch-tag-input').value = '';
+            renderModalTagSuggestions('batch-tag-input', 'batch-tag-suggestions');
+            openModal('batch-tag-modal', 'batch-tag-input');
+        }
+
+        async function confirmBatchAddTags() {
+            const ids = Array.from(selectedIds);
+            const count = ids.length;
+            const newTags = document.getElementById('batch-tag-input').value.split(/[,，]\s*/).map(t => t.trim()).filter(Boolean);
+            if (!count || !newTags.length) { showToast("請輸入或選擇至少一個標籤", "error"); return; }
+
+            try {
+                if (isLocalMode) {
+                    const a = readLocalJson('my_links', []);
+                    ids.forEach(id => {
+                        const i = a.findIndex(x => x.id === id);
+                        if (i > -1) {
+                            const cur = Array.isArray(a[i].categories) ? a[i].categories : (a[i].categories ? [a[i].categories] : []);
+                            a[i].categories = [...new Set([...cur, ...newTags])];
+                        }
+                    });
+                    writeLocalJson('my_links', a);
+                } else {
+                    await executeBatchInChunks(ids, (batch, id) => {
+                        const item = rawLinksCache.find(x => x.id === id);
+                        const cur = (item && Array.isArray(item.categories)) ? item.categories : (item && item.categories ? [item.categories] : []);
+                        const merged = [...new Set([...cur, ...newTags])];
+                        batch.update(db.collection('users').doc(currentUser.uid).collection('links').doc(id), { categories: merged });
+                    });
+                }
+                closeModal('batch-tag-modal');
+                toggleBatchMode();
+                showToast(`🏷️ 已為 ${count} 個連結加上標籤`, "success");
+                loadLinks();
+            } catch (e) {
+                showToast("❌ 批次加標籤失敗：" + e.message, "error");
+            }
+        }
+
         function openBatchMoveModal() {
             if (!selectedIds.size) { showToast("請先勾選連結", "error"); return; }
             const sel = document.getElementById('batch-move-select');
@@ -1957,32 +2103,53 @@
             }
         }
         
+        // ✅ 九階優化 6：失效檢測支援「即時進度顯示 (如 12/45)」與「點擊中途停止」
         async function startDeadLinkCheck(){
-            if(isCheckingLinks)return;
-            if(!confirm("開始檢測失效連結？\n(自動跳過 FB/IG/X 等需登入社群)"))return;
-            isCheckingLinks=true;
-            const btn=document.getElementById('btn-dead-check'),ic=document.getElementById('dead-check-icon');
-            btn.disabled=true;ic.classList.add('rotating');
-            showToast("🔍 檢測中...","info");
-            const links=await getAllLinks();
-            let dc=0,cc=0,ups=[];
-            for(const l of links){
-                if(!l.url)continue;
-                const lu=l.url.toLowerCase();
-                if(lu.includes('facebook.com')||lu.includes('instagram.com')||lu.includes('x.com')||lu.includes('twitter.com')||lu.includes('threads.net'))continue;
-                try{
-                    const r=await fetchWithTimeout(`https://api.microlink.io/?url=${encodeURIComponent(l.url)}`, 8000);
-                    const d=await r.json();
-                    let dead=false;
-                    if(d.status!=='success')dead=true;
-                    else if(d.data&&d.data.statusCode&&d.data.statusCode>=400)dead=true;
-                    if(dead!==(l.isDead||false)){ups.push({id:l.id,isDead:dead});if(dead)dc++;}
-                }catch(e){
-                    if(!l.isDead){ups.push({id:l.id,isDead:true});dc++;}
+            if (isCheckingLinks) {
+                abortDeadCheck = true;
+                showToast("🛑 已停止檢測，正在儲存目前已檢查的進度...", "info");
+                return;
+            }
+            if(!confirm("開始檢測失效連結？\n(自動跳過 FB/IG/X 等需登入社群，檢測期間再次點擊按鈕可隨時停止)"))return;
+            
+            isCheckingLinks = true;
+            abortDeadCheck = false;
+            const btn = document.getElementById('btn-dead-check');
+            const ic = document.getElementById('dead-check-icon');
+            const tx = document.getElementById('dead-check-text');
+            
+            btn.classList.add('btn-checking-active');
+            ic.classList.add('rotating');
+            tx.style.display = 'inline';
+
+            const links = await getAllLinks();
+            const checkableLinks = links.filter(l => {
+                if (!l.url) return false;
+                const lu = l.url.toLowerCase();
+                return !(lu.includes('facebook.com') || lu.includes('instagram.com') || lu.includes('x.com') || lu.includes('twitter.com') || lu.includes('threads.net'));
+            });
+
+            const total = checkableLinks.length;
+            let dc = 0, cc = 0, ups = [];
+            tx.textContent = `0/${total}`;
+
+            for (const l of checkableLinks) {
+                if (abortDeadCheck) break;
+                try {
+                    const r = await fetchWithTimeout(`https://api.microlink.io/?url=${encodeURIComponent(l.url)}`, 8000);
+                    const d = await r.json();
+                    let dead = false;
+                    if (d.status !== 'success') dead = true;
+                    else if (d.data && d.data.statusCode && d.data.statusCode >= 400) dead = true;
+                    if (dead !== (l.isDead || false)) { ups.push({ id: l.id, isDead: dead }); if (dead) dc++; }
+                } catch (e) {
+                    if (!l.isDead) { ups.push({ id: l.id, isDead: true }); dc++; }
                 }
                 cc++;
-                await new Promise(r=>setTimeout(r,300));
+                tx.textContent = `${cc}/${total}`;
+                await new Promise(r => setTimeout(r, 250));
             }
+
             if(ups.length){
                 try {
                     if(isLocalMode){
@@ -1998,12 +2165,18 @@
                     showToast("⚠️ 寫回檢測結果失敗：" + err.message, "error");
                 }
             }
-            isCheckingLinks=false;btn.disabled=false;ic.classList.remove('rotating');
-            showToast(`✅ 完成！檢查 ${cc} 個，失效 ${dc} 個`,dc>0?"error":"success");
+
+            isCheckingLinks = false;
+            abortDeadCheck = false;
+            btn.classList.remove('btn-checking-active');
+            ic.classList.remove('rotating');
+            tx.style.display = 'none';
+            tx.textContent = '';
+            showToast(`✅ 檢測結束！已檢查 ${cc} 個，新增標記失效 ${dc} 個`, dc > 0 ? "error" : "success");
             loadLinks();
         }
 
-        // ✅ 八階優化 5：全域 Ctrl+V 直接貼上存檔 (無須先點擊輸入框)
+        // 全域 Ctrl+V 直接貼上存檔
         document.addEventListener('paste', e => {
             if (isSavingUrl) return;
             const activeEl = document.activeElement;
@@ -2037,6 +2210,7 @@
                 closeModal('quick-add-modal');
                 closeModal('font-modal');
                 closeModal('batch-move-modal');
+                closeModal('batch-tag-modal');
                 closeModal('help-modal');
                 if(batchMode)toggleBatchMode();
             }
