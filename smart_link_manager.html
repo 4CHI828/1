@@ -130,7 +130,7 @@
         .modal button { font-size: 0.95rem !important; padding: 0.5rem 1.2rem !important; }
 
         /* 字體滑桿樣式 */
-        .font-slider-container { display: flex; align-items: center; gap: 1rem; margin-top: 0.5rem; }
+        .font-slider-container { display: flex; align-items: center; gap: 0.8rem; margin-top: 0.5rem; }
         .font-slider { flex: 1; -webkit-appearance: none; height: 6px; background: var(--border-color); border-radius: 3px; outline: none; }
         .font-slider::-webkit-slider-thumb { -webkit-appearance: none; width: 18px; height: 18px; border-radius: 50%; background: var(--primary); cursor: pointer; }
         .font-value-display { font-weight: bold; color: var(--primary); min-width: 45px; text-align: right; }
@@ -256,24 +256,47 @@
         </div>
     </footer>
 
-    <!-- 字體大小設置 Modal -->
-    <div class="modal-overlay" id="font-modal">
+    <!-- ✅ 升級版：字體大小設置 Modal (上限 200%) -->
+    <div class="modal-overlay" id="font-modal" onclick="if(event.target===this)closeModal('font-modal')">
         <div class="modal">
-            <h3 class="text-lg font-bold mb-4"><i class="fas fa-font mr-2"></i>字體大小設置</h3>
-            <div class="form-group">
-                <label>拖曳滑桿調整全區字體大小</label>
-                <div class="font-slider-container">
-                    <i class="fas fa-minus" style="color:var(--text-muted);font-size:0.8rem;"></i>
-                    <input type="range" id="font-slider" class="font-slider" min="0.8" max="1.5" step="0.05" value="1">
-                    <i class="fas fa-plus" style="color:var(--text-muted);font-size:0.8rem;"></i>
-                </div>
-                <div style="text-align:center;margin-top:0.5rem;">
-                    <span id="font-percent-display" class="font-value-display" style="font-size:1.2rem;">100%</span>
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-lg font-bold"><i class="fas fa-font mr-2" style="color:var(--primary);"></i>字體大小設置</h3>
+                <span id="font-percent-display" class="font-value-display" style="font-size:1.1rem;background:var(--bg-dark);padding:0.2rem 0.6rem;border-radius:6px;border:1px solid var(--border-color);">100%</span>
+            </div>
+
+            <!-- 即時預覽區 -->
+            <div style="background:var(--bg-dark);padding:0.75rem;border-radius:8px;border:1px solid var(--border-color);margin-bottom:1rem;">
+                <div style="font-size:0.7rem;color:var(--text-muted);margin-bottom:0.4rem;">即時預覽效果：</div>
+                <div class="link-card" style="pointer-events:none;margin:0;box-shadow:none;">
+                    <p class="link-desc">這是一段網頁摘要預覽文字，用來測試閱讀舒適度。</p>
+                    <h3 class="link-title"><span class="account-handle">@SmartLink</span> - 智能連結卡片標題預覽</h3>
+                    <span class="link-url-display">https://example.com/preview-link</span>
+                    <div class="card-footer">
+                        <div class="source-info"><span class="source-text">09/27 17:15</span></div>
+                        <div class="tags-container"><span class="tag-badge" style="background:rgba(99,102,241,0.2);color:#818cf8;border:1px solid rgba(99,102,241,0.4);">預覽標籤</span></div>
+                    </div>
                 </div>
             </div>
-            <div class="flex justify-between gap-2 mt-6">
+
+            <div class="form-group">
+                <label>拖曳滑桿或點擊按鈕微調 (80% ~ 200%)</label>
+                <div class="font-slider-container">
+                    <button class="btn-outline btn-icon-only" style="width:32px !important;height:32px !important;padding:0 !important;font-size:0.8rem !important;" onclick="stepFontSize(-0.05)" title="縮小 5%"><i class="fas fa-minus"></i></button>
+                    <input type="range" id="font-slider" class="font-slider" min="0.8" max="2.0" step="0.05" value="1">
+                    <button class="btn-outline btn-icon-only" style="width:32px !important;height:32px !important;padding:0 !important;font-size:0.8rem !important;" onclick="stepFontSize(0.05)" title="放大 5%"><i class="fas fa-plus"></i></button>
+                </div>
+                <!-- 快速檔位 -->
+                <div class="flex gap-2 mt-3">
+                    <button class="btn-outline" style="flex:1;justify-content:center;padding:0.35rem 0.2rem !important;font-size:0.75rem !important;" onclick="setFontPreset(1)">標準 (100%)</button>
+                    <button class="btn-outline" style="flex:1;justify-content:center;padding:0.35rem 0.2rem !important;font-size:0.75rem !important;" onclick="setFontPreset(1.25)">大 (125%)</button>
+                    <button class="btn-outline" style="flex:1;justify-content:center;padding:0.35rem 0.2rem !important;font-size:0.75rem !important;" onclick="setFontPreset(1.5)">特大 (150%)</button>
+                    <button class="btn-outline" style="flex:1;justify-content:center;padding:0.35rem 0.2rem !important;font-size:0.75rem !important;" onclick="setFontPreset(2.0)">最大 (200%)</button>
+                </div>
+            </div>
+
+            <div class="flex justify-between gap-2 mt-5">
                 <button class="btn-outline" onclick="resetFontSize()" style="flex:1;justify-content:center;"><i class="fas fa-undo mr-1"></i> 恢復預設</button>
-                <button class="btn-primary" onclick="closeModal('font-modal')" style="flex:1;justify-content:center;">關閉</button>
+                <button class="btn-primary" onclick="closeModal('font-modal')" style="flex:1;justify-content:center;">完成</button>
             </div>
         </div>
     </div>
@@ -314,31 +337,40 @@
         let allLinksCache=[],allFoldersCache=[],searchTimeout,batchMode=false,selectedIds=new Set(),isCheckingLinks=false;
         try{app=firebase.initializeApp(firebaseConfig);auth=firebase.auth();db=firebase.firestore();}catch(e){}
 
-        // 字體大小控制邏輯
+        // ✅ 升級版：字體大小控制邏輯 (80% ~ 200%)
         function openFontModal() {
-            const slider = document.getElementById('font-slider');
-            const display = document.getElementById('font-percent-display');
             const currentScale = parseFloat(localStorage.getItem('fontScale') || '1');
-            
-            slider.value = currentScale;
-            display.innerText = Math.round(currentScale * 100) + '%';
+            syncFontUI(currentScale);
             openModal('font-modal');
         }
 
-        function updateFontScale(scale) {
-            document.documentElement.style.setProperty('--font-scale', scale);
-            localStorage.setItem('fontScale', scale);
-            document.getElementById('font-percent-display').innerText = Math.round(scale * 100) + '%';
+        function syncFontUI(scale) {
+            const clamped = Math.min(2.0, Math.max(0.8, Math.round(scale * 100) / 100));
+            document.documentElement.style.setProperty('--font-scale', clamped);
+            localStorage.setItem('fontScale', clamped);
+            
+            const slider = document.getElementById('font-slider');
+            const display = document.getElementById('font-percent-display');
+            if (slider) slider.value = clamped;
+            if (display) display.innerText = Math.round(clamped * 100) + '%';
+        }
+
+        function stepFontSize(delta) {
+            const current = parseFloat(localStorage.getItem('fontScale') || '1');
+            syncFontUI(current + delta);
+        }
+
+        function setFontPreset(scale) {
+            syncFontUI(scale);
         }
 
         function resetFontSize() {
-            updateFontScale(1);
-            document.getElementById('font-slider').value = 1;
-            showToast("已恢復預設字體大小", "success");
+            syncFontUI(1);
+            showToast("已恢復預設字體大小 (100%)", "success");
         }
 
         document.getElementById('font-slider').addEventListener('input', function(e) {
-            updateFontScale(parseFloat(e.target.value));
+            syncFontUI(parseFloat(e.target.value));
         });
 
         function openQuickAddModal() {
@@ -480,7 +512,6 @@
         async function getAllLinks(){if(isLocalMode)return JSON.parse(localStorage.getItem('my_links')||'[]');return(await db.collection('users').doc(currentUser.uid).collection('links').get()).docs.map(d=>({id:d.id,...d.data()}));}
         function loadLinks(){if(isLocalMode){const a=JSON.parse(localStorage.getItem('my_links')||'[]');renderCurrentView(a);}else if(currentUser&&db){if(unsubscribeSnapshot)unsubscribeSnapshot();unsubscribeSnapshot=db.collection('users').doc(currentUser.uid).collection('links').orderBy('createdAt','desc').onSnapshot(s=>{const a=s.docs.map(d=>({id:d.id,...d.data()}));renderCurrentView(a);});}}
         
-        // ✅ 修正：過濾後將 pinned (釘選) 項目自動排到最前面
         function renderCurrentView(links){
             const s=document.getElementById('search-input').value.toLowerCase();
             renderTagChips(links);
@@ -551,7 +582,6 @@
         function toggleSelect(id,cb){if(cb.checked)selectedIds.add(id);else selectedIds.delete(id);updateBatchToolbar();}
         function updateBatchToolbar(){document.getElementById('batch-count').textContent=selectedIds.size;}
         
-        // ✅ 修正：先儲存 count 再呼叫 toggleBatchMode()，避免數量被歸零
         async function batchDelete(){
             const count = selectedIds.size;
             if(!count) return;
@@ -570,7 +600,6 @@
             loadLinks();
         }
         
-        // ✅ 修正：先儲存 count 再呼叫 toggleBatchMode()，避免數量被歸零
         async function batchMoveFolder(){
             const count = selectedIds.size;
             if(!count) return;
