@@ -47,7 +47,7 @@
     
     <!-- 頂部控制列 -->
     <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center border-b border-gray-200/60 dark:border-gray-700/60 pb-4 gap-3">
-      <div class="flex items-center gap-1.5 w-full sm:w-auto">
+      <div class="flex items-center gap-1.5 w-full sm:w-auto flex-wrap">
         <div class="bg-blue-600 text-white p-2 rounded-xl shadow-md flex-shrink-0">
           <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
         </div>
@@ -72,12 +72,12 @@
 
     <!-- 匯率橫幅 -->
     <div class="bg-gradient-to-r from-blue-50/80 to-indigo-50/80 dark:from-slate-800/80 dark:to-gray-800/80 border border-blue-100/50 dark:border-gray-700 rounded-2xl p-3 shadow-sm">
-      <div class="flex items-center justify-between text-[11px] font-bold text-gray-500 dark:text-gray-400 mb-2">
+      <div class="flex items-center justify-between text-[0.75rem] font-bold text-gray-500 dark:text-gray-400 mb-2 flex-wrap gap-1">
         <button type="button" onclick="fetchExchangeRates(true)" class="flex items-center gap-1 cursor-pointer hover:text-blue-600 dark:hover:text-blue-400 transition active:scale-95">
           💱 <span>即時參考匯率 (點擊更新)</span>
-          <svg class="w-3 h-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
+          <svg class="w-3.5 h-3.5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
         </button>
-        <span id="rateUpdateTime" class="font-mono text-[10px] bg-white/50 dark:bg-black/20 px-2 py-0.5 rounded-full">連線中...</span>
+        <span id="rateUpdateTime" class="font-mono text-[0.68rem] bg-white/50 dark:bg-black/20 px-2 py-0.5 rounded-full">連線中...</span>
       </div>
       <div id="rateChipsContainer" class="flex gap-2 overflow-x-auto pb-1 text-xs snap-x">
         <div class="text-gray-400 py-1">載入中...</div>
@@ -87,13 +87,13 @@
     <!-- Google Drive 登入授權區塊 (永久固定「雲端記帳」) -->
     <div class="bg-blue-50/80 dark:bg-blue-900/20 border border-blue-200/60 dark:border-blue-700/40 rounded-2xl p-3.5 flex flex-wrap items-center justify-between gap-3 shadow-sm">
       <div class="flex items-center gap-2.5">
-        <img src="https://upload.wikimedia.org/wikipedia/commons/1/12/Google_Drive_icon_%282020%29.svg" class="w-6 h-6" alt="Drive">
+        <img src="https://upload.wikimedia.org/wikipedia/commons/1/12/Google_Drive_icon_%282020%29.svg" class="w-6 h-6 flex-shrink-0" alt="Drive">
         <div class="flex flex-col">
-          <div class="flex items-center gap-2">
+          <div class="flex items-center gap-2 flex-wrap">
             <span class="text-xs font-bold text-gray-800 dark:text-gray-100" id="googleAccountStatus">尚未連結 Google 帳號</span>
-            <span id="syncIndicator" class="hidden text-[10px] px-2 py-0.5 rounded-full bg-blue-100 text-blue-700 dark:bg-blue-900/50 dark:text-blue-300 font-mono">已同步</span>
+            <button type="button" id="syncIndicator" onclick="retryPendingSync()" class="hidden text-[0.7rem] px-2 py-0.5 rounded-full bg-blue-100 text-blue-700 dark:bg-blue-900/50 dark:text-blue-300 font-mono">已同步</button>
           </div>
-          <span class="text-[10px] text-gray-500 dark:text-gray-400">資料自動儲存於您的 Google Drive「雲端記帳」</span>
+          <span class="text-[0.7rem] text-gray-500 dark:text-gray-400">資料自動儲存於您的 Google Drive「雲端記帳」</span>
         </div>
       </div>
       <div class="flex items-center gap-2">
@@ -119,27 +119,27 @@
 
     <!-- 🏦 公費錢包 (共同基金) 面板 -->
     <div id="poolConfigPanel" class="hidden bg-gradient-to-r from-amber-50 to-orange-50/70 dark:from-slate-900/80 dark:to-amber-950/30 border border-amber-200/70 dark:border-amber-800/50 rounded-2xl p-4 space-y-3 shadow-inner">
-      <div class="flex justify-between items-center text-xs">
+      <div class="flex justify-between items-center text-xs flex-wrap gap-1">
         <span class="font-bold text-amber-800 dark:text-amber-300 flex items-center gap-1">🏦 公費錢包（共同基金池 TWD）</span>
-        <span class="text-[10px] text-gray-500 dark:text-gray-400">自動統計所有「公費」入金與消費</span>
+        <span class="text-[0.7rem] text-gray-500 dark:text-gray-400">自動統計所有「公費」入金與消費</span>
       </div>
       <div class="grid grid-cols-3 gap-2 text-center text-xs">
         <div class="bg-white/80 dark:bg-gray-800 p-2 rounded-xl border border-amber-100 dark:border-gray-700">
-          <div class="text-[10px] text-gray-500 font-bold">公費總入金</div>
+          <div class="text-[0.7rem] text-gray-500 font-bold">公費總入金</div>
           <div id="poolInStat" class="font-mono font-bold text-emerald-600 mt-0.5">$0</div>
         </div>
         <div class="bg-white/80 dark:bg-gray-800 p-2 rounded-xl border border-amber-100 dark:border-gray-700">
-          <div class="text-[10px] text-gray-500 font-bold">公費已支出</div>
+          <div class="text-[0.7rem] text-gray-500 font-bold">公費已支出</div>
           <div id="poolOutStat" class="font-mono font-bold text-red-500 mt-0.5">$0</div>
         </div>
         <div class="bg-white/80 dark:bg-gray-800 p-2 rounded-xl border border-amber-100 dark:border-gray-700">
-          <div class="text-[10px] text-gray-500 font-bold">目前剩餘公費</div>
+          <div class="text-[0.7rem] text-gray-500 font-bold">目前剩餘公費</div>
           <div id="poolRemainStat" class="font-mono font-bold text-amber-600 dark:text-amber-400 mt-0.5">$0</div>
         </div>
       </div>
-      <div class="flex gap-2 pt-1 text-xs">
-        <button type="button" onclick="quickPoolAction('contribute')" class="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-2 rounded-xl shadow transition active:scale-95">➕ 成員繳交公費</button>
-        <button type="button" onclick="quickPoolAction('spend')" class="flex-1 bg-amber-600 hover:bg-amber-700 text-white font-bold py-2 rounded-xl shadow transition active:scale-95">💸 由公費袋支出</button>
+      <div class="flex gap-2 pt-1 text-xs flex-wrap">
+        <button type="button" onclick="quickPoolAction('contribute')" class="flex-1 min-w-[120px] bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-2 rounded-xl shadow transition active:scale-95">➕ 成員繳交公費</button>
+        <button type="button" onclick="quickPoolAction('spend')" class="flex-1 min-w-[120px] bg-amber-600 hover:bg-amber-700 text-white font-bold py-2 rounded-xl shadow transition active:scale-95">💸 由公費袋支出</button>
       </div>
     </div>
 
@@ -151,8 +151,8 @@
         <button type="button" id="exportTxtBtn" class="bg-indigo-500 hover:bg-indigo-600 text-white py-2 rounded-xl font-medium shadow transition active:scale-95">文字檔 (TXT)</button>
       </div>
       <div class="pt-3 border-t border-gray-200/50 dark:border-gray-700/50">
-        <div class="text-[11px] font-bold text-gray-500 dark:text-gray-400 mb-2">📤 匯入資料至當前帳本 (支援 CSV / TXT)</div>
-        <div class="flex gap-2">
+        <div class="text-[0.75rem] font-bold text-gray-500 dark:text-gray-400 mb-2">📤 匯入資料至當前帳本 (支援 CSV / TXT，自動防重複)</div>
+        <div class="flex gap-2 flex-wrap">
           <input type="file" id="importFileInput" accept=".csv,.txt" class="text-xs text-slate-500 file:mr-2 file:py-1 file:px-3 file:rounded-xl file:border-0 file:text-xs file:font-medium file:bg-gray-100 dark:file:bg-gray-700 file:text-gray-700 dark:file:text-gray-200 hover:file:bg-gray-200">
           <button type="button" id="importBtn" class="bg-gray-800 dark:bg-gray-700 hover:bg-black text-white px-4 py-1.5 rounded-xl text-xs font-medium shadow transition active:scale-95">開始匯入</button>
         </div>
@@ -163,7 +163,7 @@
     <div id="memberConfigPanel" class="hidden bg-white/60 dark:bg-slate-900/60 border border-gray-200/50 dark:border-gray-700/50 rounded-2xl p-4 space-y-3 shadow-inner">
       <div class="flex justify-between items-center text-xs font-bold text-gray-700 dark:text-gray-300 mb-1">
         <span>👥 管理與編輯分攤成員名單</span>
-        <span class="text-[10px] text-blue-500 bg-blue-50 dark:bg-blue-900/40 px-2 py-0.5 rounded-full">雲端硬碟同步</span>
+        <span class="text-[0.7rem] text-blue-500 bg-blue-50 dark:bg-blue-900/40 px-2 py-0.5 rounded-full">雲端硬碟同步</span>
       </div>
       <div class="flex gap-2">
         <input type="text" id="newMemberName" placeholder="輸入新成員名字" class="flex-1 border border-gray-300 dark:border-gray-600 rounded-xl px-3 py-1.5 text-xs bg-white dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none transition">
@@ -176,7 +176,7 @@
     <div id="categoryConfigPanel" class="hidden bg-white/60 dark:bg-slate-900/60 border border-gray-200/50 dark:border-gray-700/50 rounded-2xl p-4 space-y-3 shadow-inner">
       <div class="flex justify-between items-center text-xs font-bold text-gray-700 dark:text-gray-300 mb-1">
         <span>🏷️ 管理記帳類別</span>
-        <span class="text-[10px] text-blue-500 bg-blue-50 dark:bg-blue-900/40 px-2 py-0.5 rounded-full">雲端硬碟同步</span>
+        <span class="text-[0.7rem] text-blue-500 bg-blue-50 dark:bg-blue-900/40 px-2 py-0.5 rounded-full">雲端硬碟同步</span>
       </div>
       <div class="flex gap-2">
         <input type="text" id="newCategoryName" placeholder="輸入新類別名稱" class="flex-1 border border-gray-300 dark:border-gray-600 rounded-xl px-3 py-1.5 text-xs bg-white dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none transition">
@@ -187,13 +187,13 @@
 
     <!-- 分帳結算卡片 -->
     <div class="bg-gradient-to-br from-blue-50 to-blue-100/50 dark:from-slate-800/80 dark:to-blue-900/20 border border-blue-200/60 dark:border-blue-800/50 rounded-2xl p-4 shadow-sm space-y-3">
-      <div class="flex items-center justify-between">
-        <div class="text-[11px] font-bold text-blue-800 dark:text-blue-300 uppercase tracking-widest flex items-center gap-1">
-          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z"></path></svg>
+      <div class="flex items-center justify-between flex-wrap gap-2">
+        <div class="text-[0.75rem] font-bold text-blue-800 dark:text-blue-300 uppercase tracking-widest flex items-center gap-1 flex-wrap">
+          <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z"></path></svg>
           <span>成員結餘 (TWD)</span>
-          <span class="text-[10px] font-normal text-blue-500 ml-1">💡 點擊成員查看對帳單</span>
+          <span class="text-[0.68rem] font-normal text-blue-500 ml-1">💡 點擊成員查看對帳單</span>
         </div>
-        <button type="button" onclick="openLineShareModal()" class="hidden sm:inline-flex items-center gap-1 bg-emerald-600 hover:bg-emerald-700 text-white px-2.5 py-1 rounded-xl text-[11px] font-bold shadow transition active:scale-95" id="lineShareBtn">
+        <button type="button" onclick="openLineShareModal()" class="hidden sm:inline-flex items-center gap-1 bg-emerald-600 hover:bg-emerald-700 text-white px-2.5 py-1 rounded-xl text-[0.75rem] font-bold shadow transition active:scale-95" id="lineShareBtn">
           📋 複製 LINE 清單
         </button>
       </div>
@@ -204,15 +204,15 @@
       
       <div id="summaryStatsBar" class="hidden grid grid-cols-3 gap-2 pt-2 border-t border-blue-200/60 dark:border-blue-800/50 text-center text-xs">
         <div class="bg-white/60 dark:bg-gray-800/60 p-2 rounded-xl border border-blue-100 dark:border-gray-700 shadow-sm">
-          <div class="text-[10px] text-gray-500 font-bold">全本總支出</div>
+          <div class="text-[0.7rem] text-gray-500 font-bold">全本總支出</div>
           <div id="statTotalExpense" class="font-mono font-bold text-red-500 dark:text-red-400 mt-0.5">$0</div>
         </div>
         <div class="bg-white/60 dark:bg-gray-800/60 p-2 rounded-xl border border-blue-100 dark:border-gray-700 shadow-sm">
-          <div class="text-[10px] text-gray-500 font-bold">全本總收入</div>
+          <div class="text-[0.7rem] text-gray-500 font-bold">全本總收入</div>
           <div id="statTotalIncome" class="font-mono font-bold text-emerald-600 dark:text-emerald-400 mt-0.5">$0</div>
         </div>
         <div class="bg-white/60 dark:bg-gray-800/60 p-2 rounded-xl border border-blue-100 dark:border-gray-700 shadow-sm">
-          <div class="text-[10px] text-gray-500 font-bold">全本淨支出</div>
+          <div class="text-[0.7rem] text-gray-500 font-bold">全本淨支出</div>
           <div id="statNetExpense" class="font-mono font-bold text-blue-600 dark:text-blue-400 mt-0.5">$0</div>
         </div>
       </div>
@@ -228,31 +228,31 @@
 
     <!-- 個人總計卡片 -->
     <div id="personalStatsCard" class="hidden bg-gradient-to-br from-purple-50/80 to-indigo-50/60 dark:from-slate-800/80 dark:to-purple-900/20 border border-purple-200/60 dark:border-purple-800/50 rounded-2xl p-4 shadow-sm space-y-3">
-      <div class="flex items-center justify-between">
-        <div class="text-[11px] font-bold text-purple-800 dark:text-purple-300 uppercase tracking-widest flex items-center gap-1">
+      <div class="flex items-center justify-between flex-wrap gap-2">
+        <div class="text-[0.75rem] font-bold text-purple-800 dark:text-purple-300 uppercase tracking-widest flex items-center gap-1">
           <span>👤 個人消費與代墊統計 (TWD)</span>
         </div>
         <div class="flex items-center gap-1.5">
-          <span class="text-[11px] text-gray-500 font-medium">切換成員：</span>
+          <span class="text-[0.75rem] text-gray-500 font-medium">切換成員：</span>
           <select id="personalStatsMemberSelect" class="border border-purple-200 dark:border-purple-700 rounded-lg px-2.5 py-1 text-xs font-bold bg-white dark:bg-gray-800 text-purple-700 dark:text-purple-300 outline-none shadow-sm focus:ring-1 focus:ring-purple-400 transition">
           </select>
         </div>
       </div>
       <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 text-center text-xs">
         <div class="bg-white/80 dark:bg-gray-800/80 p-2.5 rounded-xl border border-purple-100 dark:border-gray-700 shadow-sm">
-          <div class="text-[10px] text-gray-500 font-bold">個人自購支出</div>
+          <div class="text-[0.7rem] text-gray-500 font-bold">個人自購支出</div>
           <div id="statPersonalOwnExpense" class="font-mono font-bold text-purple-600 dark:text-purple-400 mt-1">$0</div>
         </div>
         <div class="bg-white/80 dark:bg-gray-800/80 p-2.5 rounded-xl border border-purple-100 dark:border-gray-700 shadow-sm">
-          <div class="text-[10px] text-gray-500 font-bold">分帳應攤份額</div>
+          <div class="text-[0.7rem] text-gray-500 font-bold">分帳應攤份額</div>
           <div id="statPersonalSplitShare" class="font-mono font-bold text-orange-500 dark:text-orange-400 mt-1">$0</div>
         </div>
         <div class="bg-white/80 dark:bg-gray-800/80 p-2.5 rounded-xl border border-purple-100 dark:border-gray-700 shadow-sm">
-          <div class="text-[10px] text-gray-500 font-bold">個人總負擔</div>
+          <div class="text-[0.7rem] text-gray-500 font-bold">個人總負擔</div>
           <div id="statPersonalTotalBurden" class="font-mono font-bold text-red-500 dark:text-red-400 mt-1">$0</div>
         </div>
         <div class="bg-white/80 dark:bg-gray-800/80 p-2.5 rounded-xl border border-purple-100 dark:border-gray-700 shadow-sm">
-          <div class="text-[10px] text-gray-500 font-bold">代墊款總額</div>
+          <div class="text-[0.7rem] text-gray-500 font-bold">代墊款總額</div>
           <div id="statPersonalPaidTotal" class="font-mono font-bold text-emerald-600 dark:text-emerald-400 mt-1">$0</div>
         </div>
       </div>
@@ -263,13 +263,13 @@
       
       <div id="editModeBanner" class="hidden flex items-center justify-between bg-amber-500 text-white px-3 py-1.5 rounded-xl text-xs font-bold shadow-sm">
         <span>✏️ 正在編輯紀錄 ID: <span id="editingIdText" class="font-mono"></span></span>
-        <button type="button" onclick="cancelEdit(false)" class="bg-black/20 hover:bg-black/30 px-2 py-0.5 rounded text-[11px] transition">取消</button>
+        <button type="button" onclick="cancelEdit(false)" class="bg-black/20 hover:bg-black/30 px-2 py-0.5 rounded text-[0.75rem] transition">取消</button>
       </div>
 
       <!-- AI 輔助與自訂快捷範本 -->
       <div class="space-y-2">
-        <div class="flex items-center justify-between bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-slate-800 dark:to-indigo-900/30 p-2.5 rounded-xl border border-blue-100/50 dark:border-indigo-800/50 text-xs">
-          <span class="font-bold text-blue-900 dark:text-blue-200 flex items-center gap-1">✨ <span>智慧記帳</span> <span class="text-[10px] font-normal text-gray-400 ml-1">(🧠 自動記憶上次設定)</span></span>
+        <div class="flex items-center justify-between bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-slate-800 dark:to-indigo-900/30 p-2.5 rounded-xl border border-blue-100/50 dark:border-indigo-800/50 text-xs flex-wrap gap-2">
+          <span class="font-bold text-blue-900 dark:text-blue-200 flex items-center gap-1 flex-wrap">✨ <span>智慧記帳</span> <span class="text-[0.7rem] font-normal text-gray-400">(🧠 自動記憶上次設定)</span></span>
           <div class="flex items-center gap-2">
             <button type="button" id="voiceInputBtn" class="flex items-center gap-1 bg-white/80 dark:bg-gray-700 shadow-sm border border-gray-200/50 dark:border-gray-600 px-2.5 py-1.5 rounded-lg text-blue-600 dark:text-blue-300 font-bold hover:scale-105 transition">🎤 語音</button>
             <label class="flex items-center gap-1 bg-white/80 dark:bg-gray-700 shadow-sm border border-gray-200/50 dark:border-gray-600 px-2.5 py-1.5 rounded-lg text-emerald-600 dark:text-emerald-400 font-bold cursor-pointer hover:scale-105 transition">📷 辨識收據<input type="file" id="ocrReceiptInput" accept="image/*" class="hidden"></label>
@@ -290,14 +290,15 @@
       <input type="hidden" id="type" value="expense">
 
       <!-- 欄位輸入區 -->
-      <div class="grid grid-cols-3 gap-2.5">
+      <div class="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
         <select id="category" class="border border-gray-200 dark:border-gray-600 rounded-xl px-2 py-2 text-xs bg-gray-50/50 dark:bg-gray-700 dark:text-white font-medium focus:ring-2 focus:ring-blue-500 outline-none">
         </select>
-        <input type="text" id="title" placeholder="項目名稱 (按 Enter 可直接儲存)" class="col-span-2 border border-gray-200 dark:border-gray-600 rounded-xl px-3 py-2 text-sm bg-white dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none font-medium shadow-inner">
+        <input type="text" id="title" placeholder="項目名稱 (按 Enter 可直接儲存)" class="sm:col-span-2 border border-gray-200 dark:border-gray-600 rounded-xl px-3 py-2 text-sm bg-white dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none font-medium shadow-inner">
       </div>
 
-      <div class="grid grid-cols-5 gap-2.5">
-        <select id="currency" class="col-span-2 border border-gray-200 dark:border-gray-600 rounded-xl px-2 py-2 text-xs bg-blue-50/50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300 font-bold focus:ring-2 focus:ring-blue-500 outline-none">
+      <!-- 🧮 支援「算式計算機」的金額輸入框 -->
+      <div class="grid grid-cols-1 sm:grid-cols-5 gap-2.5">
+        <select id="currency" class="sm:col-span-2 border border-gray-200 dark:border-gray-600 rounded-xl px-2 py-2 text-xs bg-blue-50/50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300 font-bold focus:ring-2 focus:ring-blue-500 outline-none">
           <option value="TWD">TWD 台幣</option>
           <option value="EUR">EUR 歐元</option>
           <option value="JPY">JPY 日圓</option>
@@ -305,12 +306,12 @@
           <option value="USD">USD 美元</option>
           <option value="KRW">KRW 韓元</option>
         </select>
-        <input type="number" id="originalAmount" placeholder="輸入金額 (Enter 儲存)" step="any" class="col-span-3 border border-gray-200 dark:border-gray-600 rounded-xl px-3 py-2 text-base font-bold bg-white dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none shadow-inner text-right">
+        <input type="text" inputmode="decimal" id="originalAmount" placeholder="輸入金額或算式 (如 2500-450)" class="sm:col-span-3 border border-gray-200 dark:border-gray-600 rounded-xl px-3 py-2 text-base font-bold font-mono bg-white dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none shadow-inner text-right">
       </div>
 
       <!-- 一鍵稅金/服務費、+1.5%刷卡費與「鎖定最終台幣請款額」 -->
       <div class="flex flex-wrap items-center justify-between gap-2 pt-0.5">
-        <div class="flex items-center gap-1 text-[11px] overflow-x-auto">
+        <div class="flex items-center gap-1 text-[0.75rem] overflow-x-auto">
           <span class="text-gray-400 font-bold mr-0.5">💰 稅費：</span>
           <button type="button" onclick="applyTaxRate(1.08)" class="bg-amber-50 hover:bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300 border border-amber-200/60 dark:border-amber-700/50 px-2 py-0.5 rounded-lg font-mono font-bold active:scale-95 transition">+8%</button>
           <button type="button" onclick="applyTaxRate(1.10)" class="bg-amber-50 hover:bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300 border border-amber-200/60 dark:border-amber-700/50 px-2 py-0.5 rounded-lg font-mono font-bold active:scale-95 transition">+10%</button>
@@ -318,9 +319,9 @@
           <button type="button" onclick="applyCardFee15()" class="bg-indigo-50 hover:bg-indigo-100 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-300 border border-indigo-200/60 dark:border-indigo-700/50 px-2 py-0.5 rounded-lg font-mono font-bold active:scale-95 transition">+1.5%刷卡</button>
           <button type="button" onclick="roundOriginalAmount()" class="bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-300 px-2 py-0.5 rounded-lg font-bold active:scale-95 transition">取整</button>
         </div>
-        <div class="flex items-center justify-end gap-1.5 text-xs text-gray-400 ml-auto">
+        <div class="flex items-center justify-end gap-1.5 text-xs text-gray-400 ml-auto flex-wrap">
           <span>折合台幣 <span id="previewTwd" class="font-bold text-blue-600 dark:text-blue-400 text-sm">0</span></span>
-          <input type="number" id="overrideTwdInput" placeholder="🔒請款TWD" title="可手動輸入信用卡實際請款台幣金額覆寫匯率" class="w-24 border border-dashed border-blue-300 dark:border-blue-600 rounded-lg px-2 py-0.5 text-xs font-mono text-right bg-blue-50/40 dark:bg-gray-800 text-blue-700 dark:text-blue-300 outline-none focus:ring-1 focus:ring-blue-500">
+          <input type="number" id="overrideTwdInput" placeholder="🔒請款TWD" title="可手動輸入信用卡實際請款台幣金額覆寫匯率" class="w-28 border border-dashed border-blue-300 dark:border-blue-600 rounded-lg px-2 py-0.5 text-xs font-mono text-right bg-blue-50/40 dark:bg-gray-800 text-blue-700 dark:text-blue-300 outline-none focus:ring-1 focus:ring-blue-500">
         </div>
       </div>
 
@@ -328,16 +329,16 @@
       <div id="splitSection" class="p-3.5 bg-gray-50/80 dark:bg-gray-700/30 rounded-2xl border border-gray-200/60 dark:border-gray-600/50 space-y-3">
         <!-- 支援單人代墊與「多人共同代墊 (Multi-Payer)」 -->
         <div class="space-y-2">
-          <div class="flex items-center justify-between text-xs">
+          <div class="flex items-center justify-between text-xs flex-wrap gap-2">
             <span id="payerLabelText" class="font-bold text-gray-600 dark:text-gray-300">付款人 (代墊)：</span>
             <div class="flex items-center gap-1.5">
               <select id="payer" class="border border-gray-200 dark:border-gray-600 rounded-lg px-3 py-1 bg-white dark:bg-gray-700 font-bold text-blue-700 dark:text-blue-300 shadow-sm outline-none"></select>
-              <button type="button" id="toggleMultiPayerBtn" onclick="toggleMultiPayerMode()" class="text-[11px] bg-blue-100/80 dark:bg-blue-900/40 text-blue-600 dark:text-blue-300 px-2 py-1 rounded-lg font-bold hover:bg-blue-200 transition active:scale-95">➕ 多人合付</button>
+              <button type="button" id="toggleMultiPayerBtn" onclick="toggleMultiPayerMode()" class="text-[0.75rem] bg-blue-100/80 dark:bg-blue-900/40 text-blue-600 dark:text-blue-300 px-2 py-1 rounded-lg font-bold hover:bg-blue-200 transition active:scale-95">➕ 多人合付</button>
             </div>
           </div>
 
           <div id="multiPayerContainer" class="hidden p-2.5 bg-blue-50/60 dark:bg-slate-800/80 rounded-xl border border-blue-200/60 dark:border-blue-800/50 space-y-2 text-xs">
-            <div class="flex justify-between items-center text-[11px] text-gray-500">
+            <div class="flex justify-between items-center text-[0.75rem] text-gray-500 flex-wrap gap-1">
               <div class="flex items-center gap-1">
                 <span>合付幣別：</span>
                 <select id="multiPayerCurrency" onchange="checkMultiPayerTotal()" class="bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded px-1.5 py-0.5 outline-none text-gray-700 dark:text-gray-200">
@@ -354,7 +355,7 @@
         <div id="splitAlgorithmBox" class="space-y-3">
           <div class="flex items-center justify-between border-t border-gray-200 dark:border-gray-700 pt-3 text-xs flex-wrap gap-2">
             <span class="font-bold text-gray-600 dark:text-gray-300">分攤演算法：</span>
-            <div class="flex bg-gray-200 dark:bg-gray-800 p-0.5 rounded-xl shadow-inner text-[11px]">
+            <div class="flex bg-gray-200 dark:bg-gray-800 p-0.5 rounded-xl shadow-inner text-[0.75rem] flex-wrap">
               <button type="button" onclick="setSplitMode('equal')" id="modeEqualBtn" class="px-2.5 py-1 rounded-lg bg-white dark:bg-gray-600 font-bold text-blue-600 shadow-sm transition">均分</button>
               <button type="button" onclick="setSplitMode('custom')" id="modeCustomBtn" class="px-2.5 py-1 rounded-lg text-gray-500 dark:text-gray-400 font-medium hover:text-gray-800 transition">按金額</button>
               <button type="button" onclick="setSplitMode('ratio')" id="modeRatioBtn" class="px-2.5 py-1 rounded-lg text-gray-500 dark:text-gray-400 font-medium hover:text-gray-800 transition">比例權重</button>
@@ -364,7 +365,7 @@
 
           <!-- 1. 均分模式 -->
           <div id="splitModeEqualContainer">
-            <div class="flex items-center justify-between text-[11px] text-gray-400 mb-1">
+            <div class="flex items-center justify-between text-[0.75rem] text-gray-400 mb-1 flex-wrap gap-1">
               <span>勾選分攤者 (除不盡差額自動配平)</span>
               <div class="flex gap-2">
                 <button type="button" onclick="selectAllMembers(true)" class="text-blue-500 font-bold hover:underline">全選</button>
@@ -376,7 +377,7 @@
           
           <!-- 2. 按金額模式 -->
           <div id="splitModeCustomContainer" class="hidden space-y-2 pt-1">
-            <div class="flex justify-between items-center text-[11px] font-medium text-gray-500">
+            <div class="flex justify-between items-center text-[0.75rem] font-medium text-gray-500 flex-wrap gap-1">
               <div class="flex items-center gap-1.5">
                 <span>輸入依據：</span>
                 <select id="customSplitCurrency" class="bg-gray-100 dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded px-1.5 py-0.5 outline-none focus:ring-1 focus:ring-blue-500 text-gray-700 dark:text-gray-300 transition">
@@ -387,9 +388,9 @@
               <span id="customSumStatus" class="font-mono text-gray-400">0 / 0</span>
             </div>
             <div id="customMembersList" class="space-y-2 max-h-56 overflow-y-auto pr-1"></div>
-            <div class="flex flex-wrap justify-between items-center gap-1.5 pt-1.5 text-[11px] border-t border-gray-200 dark:border-gray-600">
+            <div class="flex flex-wrap justify-between items-center gap-1.5 pt-1.5 text-[0.75rem] border-t border-gray-200 dark:border-gray-600">
               <span class="text-gray-400">差額智慧分配：</span>
-              <div class="flex gap-1.5">
+              <div class="flex gap-1.5 flex-wrap">
                 <button type="button" onclick="distributeRemainingEqually()" class="text-blue-600 dark:text-blue-400 font-bold bg-blue-50 dark:bg-blue-900/30 px-2 py-1 rounded-lg active:scale-95 transition">⚡ 剩餘款均分</button>
                 <button type="button" onclick="distributeRemainingProportionally()" class="text-amber-600 dark:text-amber-400 font-bold bg-amber-50 dark:bg-amber-900/30 px-2 py-1 rounded-lg active:scale-95 transition" title="先輸入每人未稅單點金額，點擊後自動將稅金/服務費按比例攤入">📈 按比例攤稅/服務費</button>
               </div>
@@ -398,7 +399,7 @@
 
           <!-- 3. 比例權重模式 -->
           <div id="splitModeRatioContainer" class="hidden space-y-2 pt-1">
-            <div class="text-[11px] text-gray-400 flex justify-between">
+            <div class="text-[0.75rem] text-gray-400 flex justify-between flex-wrap gap-1">
               <span>設定份額 (如: 大人 1、小孩 0.5、家庭 2)</span>
               <span id="ratioSumStatus" class="font-mono text-blue-500 font-bold">總份額: 0</span>
             </div>
@@ -407,7 +408,7 @@
 
           <!-- 4. 百分比模式 -->
           <div id="splitModePercentContainer" class="hidden space-y-2 pt-1">
-            <div class="text-[11px] text-gray-400 flex justify-between items-center">
+            <div class="text-[0.75rem] text-gray-400 flex justify-between items-center flex-wrap gap-1">
               <span>各成員分擔比例 (總和須為 100%)</span>
               <span id="percentSumStatus" class="font-mono">0% / 100%</span>
             </div>
@@ -427,28 +428,35 @@
         </div>
       </div>
 
-      <div class="flex gap-2.5 pt-1">
-        <input type="date" id="date" class="w-[40%] border border-gray-200 dark:border-gray-600 rounded-xl px-2.5 text-xs font-mono font-medium bg-white dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none shadow-inner">
-        <button type="button" id="saveRecordBtn" class="w-[60%] bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-bold py-2.5 rounded-xl text-sm shadow-md transition active:scale-95 flex justify-center items-center gap-1.5">
+      <div class="flex flex-col sm:flex-row gap-2.5 pt-1">
+        <input type="date" id="date" class="w-full sm:w-[40%] border border-gray-200 dark:border-gray-600 rounded-xl px-2.5 py-2 text-xs font-mono font-medium bg-white dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none shadow-inner">
+        <button type="button" id="saveRecordBtn" class="w-full sm:w-[60%] bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-bold py-2.5 rounded-xl text-sm shadow-md transition active:scale-95 flex justify-center items-center gap-1.5">
           <span id="saveBtnText">儲存紀錄 (Enter)</span>
         </button>
       </div>
     </div>
 
-    <!-- 歷史明細清單、回收桶與圖表展示區 -->
+    <!-- 歷史明細清單、排序、回收桶與圖表展示區 -->
     <div class="pt-2">
       <div class="flex justify-between items-center mb-2 px-1 flex-wrap gap-2">
-        <div class="flex items-center gap-2">
+        <div class="flex items-center gap-2 flex-wrap">
           <h2 class="text-xs font-bold text-gray-500 dark:text-gray-400 flex items-center gap-1">
             <span class="text-sm">📝</span> 歷史紀錄 (<span id="recordCountDisplay">0</span>)
           </h2>
-          <span class="text-[10px] text-gray-400 hidden sm:inline">💡 長按卡片可快速複製</span>
+          <!-- ↕️ 排序切換選單 -->
+          <select id="sortOrderSelect" onchange="renderRecordsList()" class="bg-white/80 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg px-2 py-0.5 text-[0.7rem] font-bold text-gray-600 dark:text-gray-300 outline-none">
+            <option value="input">🕒 依輸入順序</option>
+            <option value="dateDesc">📅 日期 (新➔舊)</option>
+            <option value="dateAsc">📅 日期 (舊➔新)</option>
+            <option value="amtDesc">💰 金額 (高➔低)</option>
+            <option value="amtAsc">💰 金額 (低➔高)</option>
+          </select>
         </div>
-        <div class="flex items-center gap-1.5">
-          <button type="button" id="toggleTrashBtn" class="text-[11px] bg-gray-100 hover:bg-gray-200 text-gray-600 dark:bg-gray-700 dark:hover:bg-gray-600 dark:text-gray-300 font-bold px-2.5 py-1 rounded-lg transition shadow-sm border border-gray-200 dark:border-gray-600">
+        <div class="flex items-center gap-1.5 flex-wrap">
+          <button type="button" id="toggleTrashBtn" class="text-[0.75rem] bg-gray-100 hover:bg-gray-200 text-gray-600 dark:bg-gray-700 dark:hover:bg-gray-600 dark:text-gray-300 font-bold px-2.5 py-1 rounded-lg transition shadow-sm border border-gray-200 dark:border-gray-600">
             🗑️ 回收桶 (<span id="trashCountDisplay">0</span>)
           </button>
-          <button type="button" id="mainChartToggleBtn" class="text-[11px] bg-indigo-50 hover:bg-indigo-100 text-indigo-600 dark:bg-indigo-900/30 dark:hover:bg-indigo-900/50 dark:text-indigo-300 font-bold px-2.5 py-1 rounded-lg transition shadow-sm border border-indigo-100 dark:border-indigo-800/50">
+          <button type="button" id="mainChartToggleBtn" class="text-[0.75rem] bg-indigo-50 hover:bg-indigo-100 text-indigo-600 dark:bg-indigo-900/30 dark:hover:bg-indigo-900/50 dark:text-indigo-300 font-bold px-2.5 py-1 rounded-lg transition shadow-sm border border-indigo-100 dark:border-indigo-800/50">
             📊 顯示圖表
           </button>
         </div>
@@ -461,7 +469,7 @@
           <input type="text" id="searchInput" placeholder="搜尋文字或金額 (例如: 咖啡, 150, >1000, 500-2000)..." class="w-full pl-8 pr-8 py-1.5 text-xs bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-600 outline-none focus:ring-2 focus:ring-blue-500 text-gray-800 dark:text-gray-100 shadow-inner">
           <button type="button" id="clearSearchBtn" class="hidden absolute right-2.5 top-1.5 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 text-sm font-bold">×</button>
         </div>
-        <div class="flex items-center gap-1.5 text-[11px] overflow-x-auto pb-0.5">
+        <div class="flex items-center gap-1.5 text-[0.75rem] overflow-x-auto pb-0.5">
           <span class="text-gray-500 font-bold flex-shrink-0">篩選：</span>
           <select id="filterTypeSelect" class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-lg px-2 py-1 outline-none text-gray-700 dark:text-gray-200">
             <option value="all">全部類型</option>
@@ -476,7 +484,7 @@
           <button type="button" id="resetFilterBtn" class="flex-shrink-0 text-blue-600 dark:text-blue-400 hover:underline px-1.5 py-0.5 font-bold ml-auto">重設條件</button>
         </div>
         <!-- 自訂日期區間 -->
-        <div class="flex items-center gap-1.5 text-[11px] pt-1 border-t border-gray-200/60 dark:border-gray-700/50 flex-wrap">
+        <div class="flex items-center gap-1.5 text-[0.75rem] pt-1 border-t border-gray-200/60 dark:border-gray-700/50 flex-wrap">
           <span class="text-gray-500 font-bold flex-shrink-0">📅 區間：</span>
           <input type="date" id="filterStartDate" class="flex-1 min-w-[115px] bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-lg px-2 py-0.5 font-mono text-gray-700 dark:text-gray-200 outline-none">
           <span class="text-gray-400">～</span>
@@ -484,18 +492,28 @@
         </div>
       </div>
 
+      <!-- 📌 篩選結果動態小計列 -->
+      <div id="filteredSubtotalBanner" class="hidden mb-3 bg-indigo-50/90 dark:bg-indigo-950/40 border border-indigo-200 dark:border-indigo-800/60 rounded-xl px-3 py-2 text-xs flex flex-wrap items-center justify-between gap-2 shadow-sm">
+        <span class="font-bold text-indigo-800 dark:text-indigo-300">📌 當前篩選小計 (<span id="filterSubCount">0</span> 筆)：</span>
+        <div class="flex items-center gap-3 font-mono font-bold flex-wrap">
+          <span class="text-red-500">支出 $<span id="filterSubExpense">0</span></span>
+          <span class="text-emerald-600">收入 $<span id="filterSubIncome">0</span></span>
+          <span class="text-blue-600 dark:text-blue-400">淨額 $<span id="filterSubNet">0</span></span>
+        </div>
+      </div>
+
       <!-- 回收桶檢視面板 (預設隱藏) -->
       <div id="trashContainer" class="hidden mb-4 bg-red-50/70 dark:bg-red-950/30 border border-red-200 dark:border-red-900/60 rounded-2xl p-3.5 space-y-2.5 shadow-inner">
-        <div class="flex justify-between items-center text-xs">
+        <div class="flex justify-between items-center text-xs flex-wrap gap-1">
           <span class="font-bold text-red-700 dark:text-red-300 flex items-center gap-1">🗑️ 回收桶 (軟刪除暫存區，不計入帳務結算)</span>
-          <button type="button" onclick="emptyTrash()" class="text-[11px] bg-red-600 hover:bg-red-700 text-white font-bold px-2.5 py-1 rounded-lg shadow-sm active:scale-95 transition">清空回收桶</button>
+          <button type="button" onclick="emptyTrash()" class="text-[0.75rem] bg-red-600 hover:bg-red-700 text-white font-bold px-2.5 py-1 rounded-lg shadow-sm active:scale-95 transition">清空回收桶</button>
         </div>
         <div id="trashList" class="space-y-2 max-h-60 overflow-y-auto pr-1"></div>
       </div>
 
       <!-- 圖表區塊 -->
       <div id="mainChartContainer" class="hidden mb-4 bg-white/60 dark:bg-slate-900/60 border border-gray-200/50 dark:border-gray-700/50 rounded-2xl p-4 shadow-inner">
-        <div class="flex justify-between items-center text-xs font-bold text-gray-700 dark:text-gray-300 mb-2">
+        <div class="flex justify-between items-center text-xs font-bold text-gray-700 dark:text-gray-300 mb-2 flex-wrap gap-1">
           <span>📊 支出圖表分析 (TWD)</span>
           <div class="flex bg-gray-200 dark:bg-gray-800 p-0.5 rounded-lg shadow-inner">
             <button type="button" id="chartTypePieBtn" class="px-2 py-1 rounded-md bg-white dark:bg-gray-600 font-bold text-blue-600 shadow-sm transition">佔比</button>
@@ -509,7 +527,7 @@
         </div>
       </div>
 
-      <div id="recordList" class="space-y-2.5 max-h-[520px] overflow-y-auto pr-1 pb-4">
+      <div id="recordList" class="space-y-2.5 max-h-[560px] overflow-y-auto pr-1 pb-4">
         <div class="text-gray-400 dark:text-gray-500 text-center py-8 bg-white/50 dark:bg-gray-800/50 rounded-2xl border border-dashed border-gray-300 dark:border-gray-600">請先連結 Google 帳號</div>
       </div>
     </div>
@@ -520,7 +538,7 @@
   <div id="memberDrilldownModal" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 transition-opacity" onclick="if(event.target===this)closeMemberDrilldown()">
     <div class="bg-white dark:bg-gray-800 rounded-3xl p-5 max-w-md w-full space-y-3.5 shadow-2xl border border-gray-100 dark:border-gray-700 text-left max-h-[85vh] flex flex-col">
       <div class="flex items-center justify-between border-b border-gray-200 dark:border-gray-700 pb-2.5">
-        <h3 class="font-bold text-sm text-gray-800 dark:text-gray-100 flex items-center gap-2">
+        <h3 class="font-bold text-sm text-gray-800 dark:text-gray-100 flex items-center gap-2 flex-wrap">
           <span>🔍 成員專屬對帳單：</span>
           <span id="drillMemberName" class="px-2.5 py-0.5 rounded-lg text-xs font-bold"></span>
         </h3>
@@ -544,16 +562,16 @@
       <div class="space-y-2.5 text-xs">
         <button type="button" onclick="executeLineShare('group')" class="w-full bg-blue-50 dark:bg-blue-900/30 hover:bg-blue-100 dark:hover:bg-blue-900/50 p-3 rounded-2xl text-left border border-blue-200/60 dark:border-blue-800/50 transition active:scale-95 flex flex-col gap-0.5">
           <span class="font-bold text-blue-700 dark:text-blue-300 text-sm">👥 群組分帳清單 (含白話文+分攤明細)</span>
-          <span class="text-[11px] text-gray-500 dark:text-gray-400">含每人代墊/應攤白話總覽、最少轉帳路徑與逐筆分攤名單。</span>
+          <span class="text-[0.75rem] text-gray-500 dark:text-gray-400">含每人代墊/應攤白話總覽、最少轉帳路徑與逐筆分攤名單。</span>
         </button>
 
         <div class="bg-purple-50 dark:bg-purple-900/30 p-3 rounded-2xl border border-purple-200/60 dark:border-purple-800/50 space-y-2">
-          <div class="font-bold text-purple-700 dark:text-purple-300 text-sm flex items-center justify-between">
+          <div class="font-bold text-purple-700 dark:text-purple-300 text-sm flex items-center justify-between flex-wrap gap-1">
             <span>👤 個人帳務白話明細</span>
             <select id="lineShareMemberSelect" class="bg-white dark:bg-gray-700 border border-purple-300 dark:border-purple-600 rounded-lg px-2 py-0.5 text-xs font-bold text-purple-700 dark:text-purple-200 outline-none">
             </select>
           </div>
-          <div class="text-[11px] text-gray-500 dark:text-gray-400">白話解析代墊抵扣、個人私帳與應攤份額。</div>
+          <div class="text-[0.75rem] text-gray-500 dark:text-gray-400">白話解析代墊抵扣、個人私帳與應攤份額。</div>
           <button type="button" onclick="executeLineShare('personal')" class="w-full bg-purple-600 hover:bg-purple-700 text-white font-bold py-1.5 rounded-xl shadow transition active:scale-95 text-center block">
             複製個人明細
           </button>
@@ -561,7 +579,7 @@
 
         <button type="button" onclick="executeLineShare('all')" class="w-full bg-gray-50 dark:bg-gray-700/40 hover:bg-gray-100 dark:hover:bg-gray-700/70 p-3 rounded-2xl text-left border border-gray-200 dark:border-gray-600 transition active:scale-95 flex flex-col gap-0.5">
           <span class="font-bold text-gray-700 dark:text-gray-200 text-sm">📑 完整帳本匯總</span>
-          <span class="text-[11px] text-gray-500 dark:text-gray-400">包含全體分帳、平帳還款、個人私帳與收入的所有原始明細。</span>
+          <span class="text-[0.75rem] text-gray-500 dark:text-gray-400">包含全體分帳、平帳還款、個人私帳與收入的所有原始明細。</span>
         </button>
       </div>
     </div>
@@ -573,7 +591,7 @@
   </div>
 
   <!-- 頁腳 -->
-  <footer class="max-w-2xl mx-auto w-full mt-6 py-4 text-center text-[11px] text-gray-400 dark:text-gray-500 flex flex-wrap items-center justify-center gap-2">
+  <footer class="max-w-2xl mx-auto w-full mt-6 py-4 text-center text-[0.75rem] text-gray-400 dark:text-gray-500 flex flex-wrap items-center justify-center gap-2">
     <div>更新時間 <span id="lastUpdatedDisplay" class="font-mono">讀取中...</span></div>
     <span>|</span>
     <a href="https://v.douyin.com/XmUkpVat8Lg/" target="_blank" class="font-bold text-blue-500 hover:text-blue-600 transition flex items-center gap-0.5">奇奇828 <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path></svg></a>
@@ -589,7 +607,7 @@
     let accessToken = localStorage.getItem("gdrive_access_token") || null;
     let driveFolderId = localStorage.getItem("gdrive_folder_id") || null;
     let configFileId = null;
-    let sheetFileMap = {}; 
+    let sheetFileMap = JSON.parse(localStorage.getItem("app_sheet_map")) || { "預設帳本": null }; 
     let isSettingUpDrive = false;
 
     let currentSheet = localStorage.getItem("app_active_sheet") || "預設帳本";
@@ -602,7 +620,7 @@
       { icon: "🍺", title: "居酒屋晚餐", category: "餐飲", amount: 3500, currency: "JPY" }
     ];
     let quickTemplates = JSON.parse(localStorage.getItem("app_quick_templates")) || DEFAULT_TEMPLATES;
-    let exchangeRates = { TWD: 1, EUR: 35.0, JPY: 0.21, CNY: 4.45, USD: 32.5, KRW: 0.024 };
+    let exchangeRates = JSON.parse(localStorage.getItem("app_exchange_rates")) || { TWD: 1, EUR: 35.0, JPY: 0.21, CNY: 4.45, USD: 32.5, KRW: 0.024 };
     let cachedRecords = [];
     let currentSplitMode = "equal";
     let isMultiPayerMode = false;
@@ -638,6 +656,37 @@
 
     function getDeletedRecords() {
       return cachedRecords.filter(r => r.deleted);
+    }
+
+    // 📴 離線鏡像與待同步狀態管理
+    function saveLocalSheetMirror(sheetName, records) {
+      try { localStorage.setItem(`local_records_${sheetName}`, JSON.stringify(records)); } catch (e) {}
+    }
+    function loadLocalSheetMirror(sheetName) {
+      try {
+        const raw = localStorage.getItem(`local_records_${sheetName}`);
+        return raw ? JSON.parse(raw) : [];
+      } catch (e) { return []; }
+    }
+    function markSheetDirty(sheetName, isDirty) {
+      localStorage.setItem(`dirty_${sheetName}`, isDirty ? "1" : "0");
+    }
+    function isSheetDirty(sheetName) {
+      return localStorage.getItem(`dirty_${sheetName}`) === "1";
+    }
+
+    // 🧮 安全算式計算器（支援金額欄輸入 2500-450 或 350*3）
+    function evaluateMathInput(rawStr) {
+      const s = String(rawStr || "").replace(/,/g, "").trim();
+      if (!s) return 0;
+      if (/^-?\d+(\.\d+)?$/.test(s)) return parseFloat(s) || 0;
+      if (/^[\d+\-*/().\s]+$/.test(s)) {
+        try {
+          const val = Function('"use strict"; return (' + s + ')')();
+          if (typeof val === "number" && isFinite(val)) return Math.max(0, parseFloat(val.toFixed(2)));
+        } catch (e) {}
+      }
+      return parseFloat(s) || 0;
     }
 
     function isInvalidMemberName(name) {
@@ -805,7 +854,7 @@
 
     window.applyTaxRate = function(multiplier) {
       const input = document.getElementById("originalAmount");
-      const val = parseFloat(input.value);
+      const val = evaluateMathInput(input.value);
       if (isNaN(val) || val <= 0) return showToast("請先輸入原始金額", "info");
       const cur = document.getElementById("currency").value;
       const newVal = val * multiplier;
@@ -816,7 +865,7 @@
     };
 
     window.applyCardFee15 = function() {
-      const amount = parseFloat(document.getElementById("originalAmount").value) || 0;
+      const amount = evaluateMathInput(document.getElementById("originalAmount").value);
       if (amount <= 0) return showToast("請先輸入原始金額", "info");
       const rate = exchangeRates[document.getElementById("currency").value] || 1;
       const baseTwd = amount * rate;
@@ -828,8 +877,8 @@
 
     window.roundOriginalAmount = function() {
       const input = document.getElementById("originalAmount");
-      const val = parseFloat(input.value);
-      if (isNaN(val)) return;
+      const val = evaluateMathInput(input.value);
+      if (isNaN(val) || val <= 0) return;
       input.value = Math.round(val);
       updateTwdPreview();
     };
@@ -875,7 +924,7 @@
             ctx.stroke();
 
             const labelText = `${chart.data.labels[index]} $${value.toLocaleString()}`;
-            ctx.font = 'bold 10px sans-serif';
+            ctx.font = 'bold 11px sans-serif';
             ctx.fillStyle = textColor;
             ctx.textAlign = isRight ? 'left' : 'right';
             ctx.textBaseline = 'middle';
@@ -897,10 +946,15 @@
       setTimeout(() => { if(container.contains(toast)) container.removeChild(toast); }, 3500);
     }
 
-    function setSyncBadge(text, isLoading = false) {
+    function setSyncBadge(text, isLoading = false, isWarning = false) {
       const badge = document.getElementById("syncIndicator");
       badge.textContent = text;
-      badge.classList.remove("hidden");
+      badge.classList.remove("hidden", "bg-blue-100", "text-blue-700", "bg-amber-100", "text-amber-700");
+      if (isWarning) {
+        badge.classList.add("bg-amber-100", "text-amber-700");
+      } else {
+        badge.classList.add("bg-blue-100", "text-blue-700");
+      }
       if (isLoading) badge.classList.add("animate-pulse");
       else badge.classList.remove("animate-pulse");
     }
@@ -941,7 +995,7 @@
             <button type="button" onclick="applyTemplateByIndex(${idx})" class="px-2.5 py-1 hover:bg-blue-50 dark:hover:bg-gray-600 transition">
               ${escapeHtml(t.icon || '⚡')} ${escapeHtml(t.title)} ${sym}${t.amount}
             </button>
-            <button type="button" onclick="removeQuickTemplate(${idx})" title="刪除此範本" class="px-1.5 py-1 text-gray-400 hover:text-red-500 border-l border-gray-200 dark:border-gray-600 text-[10px] font-bold">×</button>
+            <button type="button" onclick="removeQuickTemplate(${idx})" title="刪除此範本" class="px-1.5 py-1 text-gray-400 hover:text-red-500 border-l border-gray-200 dark:border-gray-600 text-[0.7rem] font-bold">×</button>
           </div>
         `;
       }).join("");
@@ -967,7 +1021,7 @@
 
     window.saveCurrentFormAsTemplate = function() {
       const title = document.getElementById("title").value.trim();
-      const amt = parseFloat(document.getElementById("originalAmount").value);
+      const amt = evaluateMathInput(document.getElementById("originalAmount").value);
       const cat = document.getElementById("category").value;
       const cur = document.getElementById("currency").value;
       if (!title || isNaN(amt) || amt <= 0) {
@@ -997,10 +1051,15 @@
       if (members.length === 0) members = ["奇奇", "鼻涕"];
       localStorage.setItem("split_members", JSON.stringify(members));
 
+      renderSheetSelector();
       renderMemberControls();
       renderCategoryControls();
       renderQuickTemplates();
       restoreLastFormPrefs();
+
+      // 啟動時先載入本機鏡像快取，沒網路也能立即查看
+      cachedRecords = loadLocalSheetMirror(currentSheet);
+      renderAllViews();
       fetchExchangeRates();
 
       const handleEnterSave = (e) => {
@@ -1012,6 +1071,25 @@
       document.getElementById("title").addEventListener("keydown", handleEnterSave);
       document.getElementById("originalAmount").addEventListener("keydown", handleEnterSave);
       document.getElementById("overrideTwdInput").addEventListener("keydown", handleEnterSave);
+
+      // 金額欄位離開焦點時自動將算式結算成數字
+      document.getElementById("originalAmount").addEventListener("blur", function() {
+        const raw = this.value.trim();
+        if (raw && /[+\-*/]/.test(raw)) {
+          const evaluated = evaluateMathInput(raw);
+          if (evaluated > 0) {
+            this.value = evaluated;
+            updateTwdPreview();
+          }
+        }
+      });
+
+      // 網路恢復連線時自動補傳待同步帳目
+      window.addEventListener("online", () => {
+        if (accessToken && isSheetDirty(currentSheet)) {
+          saveRecordsToDrive();
+        }
+      });
 
       if (window.google) {
         initGoogleClient();
@@ -1060,13 +1138,7 @@
       localStorage.removeItem("gdrive_access_token");
       localStorage.removeItem("gdrive_folder_id");
       updateGoogleUI(false);
-      cachedRecords = [];
-      renderAllViews();
-      document.getElementById("settlementGrid").innerHTML = `<div class="col-span-full text-gray-400 py-2">請先連結 Google 雲端硬碟以載入帳目</div>`;
-      document.getElementById("summaryStatsBar").classList.add("hidden");
-      document.getElementById("settlementTransfers").innerHTML = "";
-      document.getElementById("personalStatsCard").classList.add("hidden");
-      showToast("已中斷與 Google 雲端硬碟的連結", "info");
+      showToast("已中斷雲端連結（目前顯示本機快取資料）", "info");
     };
 
     function updateGoogleUI(isLoggedIn) {
@@ -1081,7 +1153,7 @@
         loginBtn.classList.add("hidden");
         logoutBtn.classList.remove("hidden");
       } else {
-        statusText.textContent = "尚未連結 Google 帳號";
+        statusText.textContent = "尚未連結 Google 帳號 (離線快取模式)";
         statusText.classList.remove("text-emerald-600", "dark:text-emerald-400");
         loginBtn.classList.remove("hidden");
         logoutBtn.classList.add("hidden");
@@ -1144,7 +1216,7 @@
     }
 
     async function setupDriveEnvironment() {
-      if (isSettingUpDrive) return;
+      if (isSettingUpDrive || !accessToken) return;
       isSettingUpDrive = true;
 
       try {
@@ -1201,8 +1273,8 @@
         await loadRecordsFromDrive();
         setSyncBadge("已同步", false);
       } catch (err) {
-        setSyncBadge("同步失敗", false);
-        showToast("雲端同步異常: " + err.message, "error");
+        setSyncBadge("⚠️ 離線/待同步", false, true);
+        showToast("雲端連線異常，已啟用本機快取模式: " + err.message, "info");
       } finally {
         isSettingUpDrive = false;
       }
@@ -1231,7 +1303,7 @@
       if (!(currentSheet in sheetFileMap)) {
         sheetFileMap[currentSheet] = null;
       }
-
+      localStorage.setItem("app_sheet_map", JSON.stringify(sheetFileMap));
       renderSheetSelector();
     }
 
@@ -1284,18 +1356,33 @@
         });
         setSyncBadge("已同步", false);
       } catch (e) {
-        setSyncBadge("設定同步失敗", false);
+        setSyncBadge("⚠️ 設定待同步", false, true);
       }
     }
 
     async function loadRecordsFromDrive() {
-      if (!accessToken || !driveFolderId) return;
+      // 若本機有尚未上傳的離線修改，優先將本機最新資料推上雲端
+      if (isSheetDirty(currentSheet)) {
+        const localData = loadLocalSheetMirror(currentSheet);
+        if (localData && localData.length > 0) {
+          cachedRecords = localData;
+          renderAllViews();
+          await saveRecordsToDrive();
+          return;
+        }
+      }
+
+      if (!accessToken || !driveFolderId) {
+        cachedRecords = loadLocalSheetMirror(currentSheet);
+        renderAllViews();
+        return;
+      }
       setSyncBadge("讀取中...", true);
 
       try {
         const fileId = sheetFileMap[currentSheet];
         if (!fileId) {
-          cachedRecords = [];
+          cachedRecords = loadLocalSheetMirror(currentSheet) || [];
         } else {
           const res = await driveApi(`https://www.googleapis.com/drive/v3/files/${fileId}?alt=media`);
           const data = await res.json();
@@ -1303,6 +1390,7 @@
         }
 
         const wasHealed = sanitizeAndHealRecords(cachedRecords);
+        saveLocalSheetMirror(currentSheet, cachedRecords);
         renderAllViews();
 
         if (wasHealed) {
@@ -1313,14 +1401,20 @@
           setSyncBadge("已同步", false);
         }
       } catch (e) {
-        setSyncBadge("讀取失敗", false);
-        showToast("讀取失敗: " + e.message, "error");
+        cachedRecords = loadLocalSheetMirror(currentSheet);
+        renderAllViews();
+        setSyncBadge("⚠️ 離線快取", false, true);
       }
     }
 
     async function saveRecordsToDrive() {
+      // 第一時間先存入本機鏡像，保證斷網或重整也不會遺失
+      saveLocalSheetMirror(currentSheet, cachedRecords);
+      markSheetDirty(currentSheet, true);
+
       if (!accessToken || !driveFolderId) {
-        showToast("請先登入 Google 才能儲存至雲端", "error");
+        setSyncBadge("⚠️ 待同步 (點此重試)", false, true);
+        showToast("💾 已先儲存於本機！登入 Google 後將自動同步至雲端", "info");
         return;
       }
       setSyncBadge("寫入雲端...", true);
@@ -1329,13 +1423,27 @@
         const currentFileId = sheetFileMap[currentSheet];
         const newFileId = await saveJsonFileToDrive(`${currentSheet}.json`, currentFileId, cachedRecords);
         sheetFileMap[currentSheet] = newFileId;
+        localStorage.setItem("app_sheet_map", JSON.stringify(sheetFileMap));
+        markSheetDirty(currentSheet, false);
         setSyncBadge("已同步", false);
         showToast("✅ 已同步儲存至 Google Drive「雲端記帳」！");
       } catch (e) {
-        setSyncBadge("寫入失敗", false);
-        showToast("雲端寫入失敗: " + e.message, "error");
+        setSyncBadge("⚠️ 待同步 (點此重試)", false, true);
+        showToast("💾 網路或授權異常，已安全暫存於本機，點擊「待同步」可重試", "info");
       }
     }
+
+    window.retryPendingSync = async function() {
+      if (!accessToken) {
+        if (tokenClient) tokenClient.requestAccessToken({ prompt: '' });
+        return;
+      }
+      if (!driveFolderId) {
+        await setupDriveEnvironment();
+      } else {
+        await saveRecordsToDrive();
+      }
+    };
 
     function renderAllViews() {
       renderRecordsList();
@@ -1368,13 +1476,15 @@
         }
         currentSheet = cleanName;
         localStorage.setItem("app_active_sheet", currentSheet);
+        localStorage.setItem("app_sheet_map", JSON.stringify(sheetFileMap));
         renderSheetSelector();
         cachedRecords = [];
+        saveLocalSheetMirror(currentSheet, cachedRecords);
         renderAllViews();
         if (accessToken && driveFolderId) {
           await saveRecordsToDrive();
         } else {
-          showToast(`已切換至新帳本：${cleanName}`, "info");
+          showToast(`已建立並切換至新帳本：${cleanName}`, "info");
         }
       }
     });
@@ -1386,10 +1496,15 @@
       if (cleanName in sheetFileMap) return alert("此帳本名稱已存在！");
 
       const fileId = sheetFileMap[currentSheet];
+      const oldRecords = cachedRecords;
+      localStorage.removeItem(`local_records_${currentSheet}`);
       delete sheetFileMap[currentSheet];
+
       sheetFileMap[cleanName] = fileId;
       currentSheet = cleanName;
       localStorage.setItem("app_active_sheet", currentSheet);
+      localStorage.setItem("app_sheet_map", JSON.stringify(sheetFileMap));
+      saveLocalSheetMirror(currentSheet, oldRecords);
       renderSheetSelector();
 
       if (accessToken && fileId) {
@@ -1410,9 +1525,11 @@
       if (!confirm(`確定要刪除整個帳本「${currentSheet}」嗎？\n(檔案將移至您的 Google 雲端硬碟垃圾桶)`)) return;
 
       const fileId = sheetFileMap[currentSheet];
+      localStorage.removeItem(`local_records_${currentSheet}`);
       delete sheetFileMap[currentSheet];
       currentSheet = Object.keys(sheetFileMap)[0];
       localStorage.setItem("app_active_sheet", currentSheet);
+      localStorage.setItem("app_sheet_map", JSON.stringify(sheetFileMap));
       renderSheetSelector();
 
       if (accessToken && fileId) {
@@ -1429,13 +1546,14 @@
     });
 
     function calculateTwd() {
-      const amount = parseFloat(document.getElementById("originalAmount").value) || 0;
+      const amount = evaluateMathInput(document.getElementById("originalAmount").value);
+      const cur = document.getElementById("currency").value;
       const overrideVal = parseFloat(document.getElementById("overrideTwdInput")?.value);
-      if (!isNaN(overrideVal) && overrideVal > 0) {
+      if (cur !== "TWD" && !isNaN(overrideVal) && overrideVal > 0) {
         const effectiveRate = amount > 0 ? (overrideVal / amount) : 1;
         return { rate: effectiveRate, twd: Math.round(overrideVal) };
       }
-      const rate = exchangeRates[document.getElementById("currency").value] || 1;
+      const rate = cur === "TWD" ? 1 : (exchangeRates[cur] || 1);
       return { rate, twd: Math.round(amount * rate) };
     }
 
@@ -1479,7 +1597,7 @@
       if (!isMultiPayerMode) return;
       const curMode = document.getElementById("multiPayerCurrency").value;
       const { twd: totalTwd } = calculateTwd();
-      const origAmt = parseFloat(document.getElementById("originalAmount").value) || 0;
+      const origAmt = evaluateMathInput(document.getElementById("originalAmount").value);
       const targetTotal = curMode === "TWD" ? totalTwd : origAmt;
 
       let sum = 0;
@@ -1498,7 +1616,7 @@
     window.autoFillMultiPayer = function(memberName) {
       const curMode = document.getElementById("multiPayerCurrency").value;
       const { twd: totalTwd } = calculateTwd();
-      const origAmt = parseFloat(document.getElementById("originalAmount").value) || 0;
+      const origAmt = evaluateMathInput(document.getElementById("originalAmount").value);
       const targetTotal = curMode === "TWD" ? totalTwd : origAmt;
       let sumOther = 0;
       let targetInput = null;
@@ -1583,7 +1701,7 @@
       if (currentSplitMode !== 'custom') return;
       const splitCurrency = document.getElementById("customSplitCurrency").value;
       const { twd: totalTwd } = calculateTwd();
-      const origAmt = parseFloat(document.getElementById("originalAmount").value) || 0;
+      const origAmt = evaluateMathInput(document.getElementById("originalAmount").value);
       const targetTotal = splitCurrency === "TWD" ? totalTwd : origAmt;
 
       let sum = 0;
@@ -1605,7 +1723,7 @@
     window.autoFillDifference = function(memberName) {
       const splitCurrency = document.getElementById("customSplitCurrency").value;
       const { twd: totalTwd } = calculateTwd();
-      const origAmt = parseFloat(document.getElementById("originalAmount").value) || 0;
+      const origAmt = evaluateMathInput(document.getElementById("originalAmount").value);
       const targetTotal = splitCurrency === "TWD" ? totalTwd : origAmt;
       let sumOther = 0;
       let targetInput = null;
@@ -1625,7 +1743,7 @@
     window.distributeRemainingEqually = function() {
       const splitCurrency = document.getElementById("customSplitCurrency").value;
       const { twd: totalTwd } = calculateTwd();
-      const origAmt = parseFloat(document.getElementById("originalAmount").value) || 0;
+      const origAmt = evaluateMathInput(document.getElementById("originalAmount").value);
       const targetTotal = splitCurrency === "TWD" ? totalTwd : origAmt;
 
       let currentAllocated = 0;
@@ -1654,7 +1772,7 @@
     window.distributeRemainingProportionally = function() {
       const splitCurrency = document.getElementById("customSplitCurrency").value;
       const { twd: totalTwd } = calculateTwd();
-      const origAmt = parseFloat(document.getElementById("originalAmount").value) || 0;
+      const origAmt = evaluateMathInput(document.getElementById("originalAmount").value);
       const targetTotal = splitCurrency === "TWD" ? totalTwd : origAmt;
 
       if (targetTotal <= 0) return showToast("請先輸入上方總金額", "info");
@@ -1740,16 +1858,13 @@
     };
 
     document.getElementById("saveRecordBtn").onclick = async () => {
-      if (!accessToken) {
-        showToast("請先點選上方登入 Google 帳號！", "error");
-        return;
-      }
       const title = document.getElementById("title").value.trim();
-      const origAmt = parseFloat(document.getElementById("originalAmount").value);
+      const origAmt = evaluateMathInput(document.getElementById("originalAmount").value);
       if (!title || isNaN(origAmt) || origAmt <= 0) {
         showToast("請完整填寫項目與有效金額", "error");
         return;
       }
+      document.getElementById("originalAmount").value = origAmt;
 
       const { rate, twd } = calculateTwd();
       const type = document.getElementById("type").value;
@@ -1892,7 +2007,6 @@
     };
 
     window.settleDebtQuickly = async function(debtor, creditor, amount) {
-      if (!accessToken) return showToast("請先登入 Google 帳號！", "error");
       if (!confirm(`確定記錄「${debtor} ➔ 給 ${creditor} NT$ ${amount.toLocaleString()}」嗎？\n(此筆將自動沖銷雙方結餘，且不會重複計入全本總支出)`)) return;
 
       const settleRec = {
@@ -1990,15 +2104,15 @@
       const net = totalPaid - totalShare;
       document.getElementById("drillSummaryBox").innerHTML = `
         <div class="bg-emerald-50 dark:bg-emerald-950/40 p-2 rounded-xl border border-emerald-200 dark:border-emerald-800">
-          <div class="text-[10px] text-gray-500">總代墊/付出(+)</div>
+          <div class="text-[0.7rem] text-gray-500">總代墊/付出(+)</div>
           <div class="font-mono font-bold text-emerald-600">+$${totalPaid.toLocaleString()}</div>
         </div>
         <div class="bg-orange-50 dark:bg-orange-950/40 p-2 rounded-xl border border-orange-200 dark:border-orange-800">
-          <div class="text-[10px] text-gray-500">總分攤/入金(-)</div>
+          <div class="text-[0.7rem] text-gray-500">總分攤/入金(-)</div>
           <div class="font-mono font-bold text-orange-500">-$${totalShare.toLocaleString()}</div>
         </div>
         <div class="bg-blue-50 dark:bg-blue-950/40 p-2 rounded-xl border border-blue-200 dark:border-blue-800">
-          <div class="text-[10px] text-gray-500">目前淨結餘</div>
+          <div class="text-[0.7rem] text-gray-500">目前淨結餘</div>
           <div class="font-mono font-bold ${net >= 0 ? 'text-emerald-600' : 'text-red-500'}">${net >= 0 ? '+$' : '-$'}${Math.abs(net).toLocaleString()}</div>
         </div>
       `;
@@ -2008,8 +2122,8 @@
         <div class="space-y-1.5">
           <div class="font-bold text-emerald-700 dark:text-emerald-400">➕ 先代墊 / 付出項目 (${paidItems.length} 筆)：</div>
           ${paidItems.length ? paidItems.map(item => `
-            <div class="flex justify-between items-center bg-gray-50 dark:bg-gray-700/50 px-3 py-1.5 rounded-xl">
-              <span class="truncate pr-2"><span class="font-mono text-gray-400">${escapeHtml(item.date)}</span> · ${escapeHtml(item.title)}</span>
+            <div class="flex justify-between items-center bg-gray-50 dark:bg-gray-700/50 px-3 py-1.5 rounded-xl gap-2">
+              <span class="truncate"><span class="font-mono text-gray-400">${escapeHtml(item.date)}</span> · ${escapeHtml(item.title)}</span>
               <span class="font-mono font-bold text-emerald-600 flex-shrink-0">+$${item.myPaid.toLocaleString()}</span>
             </div>
           `).join("") : `<div class="text-gray-400 pl-2">無代墊紀錄</div>`}
@@ -2017,8 +2131,8 @@
         <div class="space-y-1.5 pt-2 border-t border-gray-200 dark:border-gray-700">
           <div class="font-bold text-orange-600 dark:text-orange-400">➖ 參與分攤 / 收款項目 (${shareItems.length} 筆)：</div>
           ${shareItems.length ? shareItems.map(item => `
-            <div class="flex justify-between items-center bg-gray-50 dark:bg-gray-700/50 px-3 py-1.5 rounded-xl">
-              <span class="truncate pr-2"><span class="font-mono text-gray-400">${escapeHtml(item.date)}</span> · ${escapeHtml(item.title)}</span>
+            <div class="flex justify-between items-center bg-gray-50 dark:bg-gray-700/50 px-3 py-1.5 rounded-xl gap-2">
+              <span class="truncate"><span class="font-mono text-gray-400">${escapeHtml(item.date)}</span> · ${escapeHtml(item.title)}</span>
               <span class="font-mono font-bold text-orange-500 flex-shrink-0">-$${item.myShare.toLocaleString()}</span>
             </div>
           `).join("") : `<div class="text-gray-400 pl-2">無分攤紀錄</div>`}
@@ -2204,15 +2318,15 @@
 
       deletedList.forEach(item => {
         const div = document.createElement("div");
-        div.className = "p-2.5 bg-white/80 dark:bg-gray-800/80 rounded-xl border border-red-200/60 dark:border-red-900/40 text-xs flex justify-between items-center gap-2";
+        div.className = "p-2.5 bg-white/80 dark:bg-gray-800/80 rounded-xl border border-red-200/60 dark:border-red-900/40 text-xs flex justify-between items-center gap-2 flex-wrap";
         div.innerHTML = `
           <div class="truncate">
             <span class="font-bold text-gray-700 dark:text-gray-200">${escapeHtml(item.title)}</span>
             <span class="text-gray-400 font-mono ml-1">(${escapeHtml(item.date)} · $${(item.twdAmount || 0).toLocaleString()})</span>
           </div>
           <div class="flex items-center gap-1.5 flex-shrink-0">
-            <button onclick="restoreRecord('${escapeHtml(item.id)}')" class="bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300 px-2 py-1 rounded-lg font-bold text-[10px]">♻️ 復原</button>
-            <button onclick="permanentDeleteRecord('${escapeHtml(item.id)}')" class="bg-red-100 text-red-600 dark:bg-red-900/40 dark:text-red-300 px-2 py-1 rounded-lg font-bold text-[10px]">永久刪除</button>
+            <button onclick="restoreRecord('${escapeHtml(item.id)}')" class="bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300 px-2 py-1 rounded-lg font-bold text-[0.7rem]">♻️ 復原</button>
+            <button onclick="permanentDeleteRecord('${escapeHtml(item.id)}')" class="bg-red-100 text-red-600 dark:bg-red-900/40 dark:text-red-300 px-2 py-1 rounded-lg font-bold text-[0.7rem]">永久刪除</button>
           </div>
         `;
         listEl.appendChild(div);
@@ -2309,11 +2423,11 @@
 
         g.innerHTML += `
           <div onclick="openMemberDrilldown('${escapeHtml(m)}')" title="點擊查看 ${escapeHtml(m)} 的詳細對帳單" class="cursor-pointer hover:scale-[1.03] active:scale-95 transition bg-white/80 dark:bg-gray-800 p-2.5 rounded-xl shadow-sm border ${isZero ? 'border-gray-200 dark:border-gray-700' : isPositive ? 'border-emerald-200 dark:border-emerald-800' : 'border-red-200 dark:border-red-800'}">
-            <div class="inline-block px-2 py-0.5 rounded-md text-[11px] font-bold ${color.bg} ${color.text} truncate max-w-full">${isPool ? '🏦 ' : ''}${escapeHtml(m)} 🔍</div>
+            <div class="inline-block px-2 py-0.5 rounded-md text-[0.75rem] font-bold ${color.bg} ${color.text} truncate max-w-full">${isPool ? '🏦 ' : ''}${escapeHtml(m)} 🔍</div>
             <div class="font-mono font-bold mt-1 text-sm ${isZero ? 'text-gray-400' : isPositive ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-500 dark:text-red-400'}">
               ${isZero ? '$0' : (isPositive ? `+$${val.toLocaleString()}` : `-$${Math.abs(val).toLocaleString()}`)}
             </div>
-            <div class="text-[9px] text-gray-400 mt-0.5">${statusLabel}</div>
+            <div class="text-[0.65rem] text-gray-400 mt-0.5">${statusLabel}</div>
           </div>
         `;
       });
@@ -2356,15 +2470,15 @@
           const dLabel = debtor === "公費" ? "🏦 公費袋(退還剩餘)" : debtor;
 
           transferHtml.push(`
-            <div class="flex justify-between items-center bg-white/60 dark:bg-gray-800/60 px-3 py-2 rounded-xl shadow-sm border border-blue-100 dark:border-gray-700 gap-2">
+            <div class="flex justify-between items-center bg-white/60 dark:bg-gray-800/60 px-3 py-2 rounded-xl shadow-sm border border-blue-100 dark:border-gray-700 gap-2 flex-wrap">
               <span class="flex items-center gap-1 flex-wrap">
                 <span class="px-2 py-0.5 rounded font-bold ${dCol.bg} ${dCol.text}">${escapeHtml(dLabel)}</span>
                 <span class="text-gray-400 font-bold">➔</span>
                 <span class="px-2 py-0.5 rounded font-bold ${cCol.bg} ${cCol.text}">${escapeHtml(creditor)}</span>
               </span>
-              <div class="flex items-center gap-2 flex-shrink-0">
+              <div class="flex items-center gap-2 flex-shrink-0 ml-auto">
                 <span class="font-mono font-bold text-blue-600 dark:text-blue-400">$${transAmt.toLocaleString()}</span>
-                <button type="button" onclick="settleDebtQuickly('${escapeHtml(debtor)}', '${escapeHtml(creditor)}', ${transAmt})" class="bg-emerald-500 hover:bg-emerald-600 text-white px-2 py-1 rounded-lg text-[10px] font-bold shadow-sm active:scale-95 transition">✅ 已結清</button>
+                <button type="button" onclick="settleDebtQuickly('${escapeHtml(debtor)}', '${escapeHtml(creditor)}', ${transAmt})" class="bg-emerald-500 hover:bg-emerald-600 text-white px-2 py-1 rounded-lg text-[0.7rem] font-bold shadow-sm active:scale-95 transition">✅ 已結清</button>
               </div>
             </div>
           `);
@@ -2439,10 +2553,8 @@
       renderMemberControls();
       renderAllViews();
 
-      if (accessToken && driveFolderId) {
-        await syncConfigToDrive();
-        if (updatedCount > 0) await saveRecordsToDrive();
-      }
+      await syncConfigToDrive();
+      if (updatedCount > 0) await saveRecordsToDrive();
       showToast(`✅ 已更名為「${cleanName}」(更新了 ${updatedCount} 筆紀錄)`);
     };
 
@@ -2463,7 +2575,7 @@
           <div class="flex items-center gap-2 bg-white dark:bg-gray-700/80 p-1.5 rounded-xl border border-gray-100 dark:border-gray-600 shadow-sm">
             <span class="w-16 px-2 py-0.5 rounded text-center font-bold ${col.bg} ${col.text} truncate">${escapeHtml(m)}</span>
             <input type="number" step="any" min="0" placeholder="代墊額" data-member="${escapeHtml(m)}" class="multi-payer-input flex-1 px-2.5 py-1 border border-gray-200 dark:border-gray-600 rounded-lg bg-gray-50 dark:bg-gray-800 text-right font-mono outline-none">
-            <button type="button" onclick="autoFillMultiPayer('${escapeHtml(m)}')" class="bg-blue-50 dark:bg-blue-900/50 text-blue-600 font-bold px-2 py-1 rounded-lg text-[11px]">補滿</button>
+            <button type="button" onclick="autoFillMultiPayer('${escapeHtml(m)}')" class="bg-blue-50 dark:bg-blue-900/50 text-blue-600 font-bold px-2 py-1 rounded-lg text-[0.75rem]">補滿</button>
           </div>
         `;
       }).join("");
@@ -2603,6 +2715,7 @@
       const filterCat = document.getElementById("filterCategorySelect")?.value || "all";
       const startDate = document.getElementById("filterStartDate")?.value || "";
       const endDate = document.getElementById("filterEndDate")?.value || "";
+      const sortOrder = document.getElementById("sortOrderSelect")?.value || "input";
 
       let isAmountQuery = false;
       let amountFilterFn = null;
@@ -2630,7 +2743,7 @@
       const isPureNumber = !isNaN(exactNum) && /^\d+(?:\.\d+)?$/.test(rawInput);
       const keyword = rawInput.toLowerCase();
 
-      return getActiveRecords().filter(item => {
+      const filtered = getActiveRecords().filter(item => {
         const twdAmt = Number(item.twdAmount) || 0;
         const origAmt = Number(item.originalAmount) || 0;
         let matchQuery = false;
@@ -2651,8 +2764,18 @@
 
         return matchQuery && matchType && matchCategory && matchStart && matchEnd;
       });
+
+      // ↕️ 套用排序條件
+      const sorted = [...filtered];
+      if (sortOrder === "dateDesc") sorted.sort((a, b) => (b.date || "").localeCompare(a.date || ""));
+      else if (sortOrder === "dateAsc") sorted.sort((a, b) => (a.date || "").localeCompare(b.date || ""));
+      else if (sortOrder === "amtDesc") sorted.sort((a, b) => (Number(b.twdAmount) || 0) - (Number(a.twdAmount) || 0));
+      else if (sortOrder === "amtAsc") sorted.sort((a, b) => (Number(a.twdAmount) || 0) - (Number(b.twdAmount) || 0));
+
+      return sorted;
     }
 
+    // 📝 歷史明細渲染（包含動態篩選小計列與 36px 大字型彈性換行）
     function renderRecordsList() {
       const activeTotal = getActiveRecords().length;
       const filtered = getFilteredActiveRecords();
@@ -2660,11 +2783,36 @@
       const countEl = document.getElementById("recordCountDisplay");
       countEl.textContent = filtered.length !== activeTotal ? `${filtered.length}/${activeTotal}` : activeTotal;
 
+      // 📌 檢查是否啟用了任何篩選條件並顯示動態小計列
+      const hasActiveFilter = Boolean(
+        (document.getElementById("searchInput")?.value || "").trim() ||
+        (document.getElementById("filterTypeSelect")?.value || "all") !== "all" ||
+        (document.getElementById("filterCategorySelect")?.value || "all") !== "all" ||
+        (document.getElementById("filterStartDate")?.value || "") ||
+        (document.getElementById("filterEndDate")?.value || "")
+      );
+      const subBanner = document.getElementById("filteredSubtotalBanner");
+      if (hasActiveFilter && filtered.length > 0) {
+        let subExp = 0, subInc = 0;
+        filtered.forEach(r => {
+          const amt = Number(r.twdAmount) || 0;
+          if (r.type === "expense" || r.type === "personal") subExp += amt;
+          else if (r.type === "income") subInc += amt;
+        });
+        document.getElementById("filterSubCount").textContent = filtered.length;
+        document.getElementById("filterSubExpense").textContent = subExp.toLocaleString();
+        document.getElementById("filterSubIncome").textContent = subInc.toLocaleString();
+        document.getElementById("filterSubNet").textContent = (subExp - subInc).toLocaleString();
+        subBanner.classList.remove("hidden");
+      } else {
+        subBanner.classList.add("hidden");
+      }
+
       const listEl = document.getElementById("recordList");
       listEl.innerHTML = "";
 
       if (activeTotal === 0) {
-        listEl.innerHTML = `<div class="text-gray-400 text-center py-8 text-xs bg-white/40 dark:bg-gray-800/40 rounded-2xl border border-dashed border-gray-300 dark:border-gray-600">${accessToken ? '此帳本尚無紀錄' : '請先連結 Google 帳號'}</div>`;
+        listEl.innerHTML = `<div class="text-gray-400 text-center py-8 text-xs bg-white/40 dark:bg-gray-800/40 rounded-2xl border border-dashed border-gray-300 dark:border-gray-600">${accessToken ? '此帳本尚無紀錄' : '尚無紀錄（可直接輸入或登入 Google 同步雲端帳本）'}</div>`;
         return;
       }
 
@@ -2686,7 +2834,7 @@
         const shareBadgesHtml = Object.entries(shares).map(([n, a]) => {
           const mCol = getMemberColor(n);
           const isPayerSelf = isSplit && payers[n] !== undefined;
-          return `<span class="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded text-[10px] font-medium border ${mCol.bg} ${mCol.text} ${mCol.border}">
+          return `<span class="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded text-[0.7rem] font-medium border ${mCol.bg} ${mCol.text} ${mCol.border}">
             ${escapeHtml(n)}: $${Math.round(a).toLocaleString()}${isPayerSelf ? '<b class="ml-0.5 opacity-80">(已代墊抵扣)</b>' : ''}
           </span>`;
         }).join(" ");
@@ -2694,31 +2842,31 @@
         const rateDisplay = item.currency !== 'TWD' && item.rate ? ` (匯率 ${Number(item.rate) < 1 ? Number(item.rate).toFixed(4) : Number(item.rate).toFixed(2)})` : '';
 
         const r = document.createElement("div");
-        r.className = `record-card p-3.5 bg-white/80 dark:bg-gray-800/80 rounded-2xl shadow-sm border ${isSettlement ? 'border-emerald-300 dark:border-emerald-700 bg-emerald-50/40' : 'border-gray-100 dark:border-gray-700'} text-xs flex justify-between items-start gap-2 hover:border-blue-300 dark:hover:border-blue-600 transition`;
+        r.className = `record-card p-3.5 bg-white/80 dark:bg-gray-800/80 rounded-2xl shadow-sm border ${isSettlement ? 'border-emerald-300 dark:border-emerald-700 bg-emerald-50/40' : 'border-gray-100 dark:border-gray-700'} text-xs flex flex-wrap justify-between items-start gap-2.5 hover:border-blue-300 dark:hover:border-blue-600 transition`;
         r.title = "長按卡片可快速複製此筆設定";
         r.innerHTML = `
-          <div class="flex-1 space-y-1.5">
+          <div class="flex-1 min-w-[180px] space-y-1.5">
             <div class="flex items-center gap-1.5 flex-wrap">
-              <span class="px-2 py-0.5 rounded-lg text-[10px] font-bold ${isSettlement ? 'bg-emerald-500 text-white' : isIncome ? 'bg-emerald-100 text-emerald-700' : 'bg-blue-100 text-blue-700'}">${escapeHtml(item.category || "其他")}</span>
-              ${isPersonal ? `<span class="px-1.5 py-0.5 rounded text-[9px] font-bold bg-purple-100 text-purple-700">👤 個人</span>` : ''}
-              <span class="font-bold text-sm text-gray-900 dark:text-gray-100">${escapeHtml(item.title)}</span>
-              ${item.receiptImage ? `<button type="button" onclick="openImageModalById('${escapeHtml(item.id)}')" class="text-[10px] bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 rounded px-1.5 py-0.5 border border-gray-200 dark:border-gray-600">📷照</button>` : ''}
+              <span class="px-2 py-0.5 rounded-lg text-[0.7rem] font-bold ${isSettlement ? 'bg-emerald-500 text-white' : isIncome ? 'bg-emerald-100 text-emerald-700' : 'bg-blue-100 text-blue-700'}">${escapeHtml(item.category || "其他")}</span>
+              ${isPersonal ? `<span class="px-1.5 py-0.5 rounded text-[0.68rem] font-bold bg-purple-100 text-purple-700">👤 個人</span>` : ''}
+              <span class="font-bold text-sm text-gray-900 dark:text-gray-100 break-all">${escapeHtml(item.title)}</span>
+              ${item.receiptImage ? `<button type="button" onclick="openImageModalById('${escapeHtml(item.id)}')" class="text-[0.7rem] bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 rounded px-1.5 py-0.5 border border-gray-200 dark:border-gray-600">📷照</button>` : ''}
             </div>
             <div class="flex items-center gap-1.5 text-gray-400 font-mono flex-wrap">
               <span>${escapeHtml(item.date)}</span>
-              ${item.payer ? `· <span class="px-1.5 py-0.2 rounded font-sans font-bold text-[10px] ${primaryPayerCol.bg} ${primaryPayerCol.text}">${escapeHtml(formatPayerDisplay(item.payer))} ${isSettlement ? '還款' : isSplit ? '先付' : '個人'}</span>` : ''}
+              ${item.payer ? `· <span class="px-1.5 py-0.5 rounded font-sans font-bold text-[0.7rem] ${primaryPayerCol.bg} ${primaryPayerCol.text}">${escapeHtml(formatPayerDisplay(item.payer))} ${isSettlement ? '還款' : isSplit ? '先付' : '個人'}</span>` : ''}
             </div>
             ${isSplit && shareBadgesHtml ? `<div class="flex flex-wrap gap-1 pt-0.5">${shareBadgesHtml}</div>` : ''}
           </div>
-          <div class="text-right flex flex-col items-end gap-1.5">
+          <div class="text-right flex flex-col items-end gap-1.5 ml-auto">
             <div class="font-mono font-bold text-base ${isSettlement ? 'text-emerald-600' : isIncome ? 'text-emerald-600' : 'text-gray-900 dark:text-white'}">
-              ${item.currency !== 'TWD' ? `<span class="text-[10px] text-gray-400 font-normal block -mb-1">${escapeHtml(item.currency)} ${Number(item.originalAmount || 0).toLocaleString()}${rateDisplay}</span>` : ''}
+              ${item.currency !== 'TWD' ? `<span class="text-[0.7rem] text-gray-400 font-normal block -mb-0.5">${escapeHtml(item.currency)} ${Number(item.originalAmount || 0).toLocaleString()}${rateDisplay}</span>` : ''}
               ${isSettlement ? '🤝 ' : (isIncome ? '+' : '-')}$${(item.twdAmount || 0).toLocaleString()}
             </div>
-            <div class="flex items-center gap-1">
-              <button type="button" onclick="duplicateRecordToForm('${escapeHtml(item.id)}')" class="text-[10px] font-bold text-gray-500 hover:text-gray-700 bg-gray-100 dark:bg-gray-700 dark:text-gray-300 px-2 py-1 rounded-lg active:scale-95" title="複製此筆到表單">複製</button>
-              <button type="button" onclick="startEditRecord('${escapeHtml(item.id)}')" class="text-[10px] font-bold text-blue-500 hover:text-blue-700 bg-blue-50 dark:bg-blue-900/20 px-2 py-1 rounded-lg active:scale-95">編輯</button>
-              <button type="button" onclick="deleteRecord('${escapeHtml(item.id)}')" class="text-[10px] font-bold text-red-400 hover:text-red-600 bg-red-50 dark:bg-red-900/20 px-2 py-1 rounded-lg active:scale-95">刪除</button>
+            <div class="flex items-center gap-1 flex-wrap justify-end">
+              <button type="button" onclick="duplicateRecordToForm('${escapeHtml(item.id)}')" class="text-[0.7rem] font-bold text-gray-500 hover:text-gray-700 bg-gray-100 dark:bg-gray-700 dark:text-gray-300 px-2 py-1 rounded-lg active:scale-95" title="複製此筆到表單">複製</button>
+              <button type="button" onclick="startEditRecord('${escapeHtml(item.id)}')" class="text-[0.7rem] font-bold text-blue-500 hover:text-blue-700 bg-blue-50 dark:bg-blue-900/20 px-2 py-1 rounded-lg active:scale-95">編輯</button>
+              <button type="button" onclick="deleteRecord('${escapeHtml(item.id)}')" class="text-[0.7rem] font-bold text-red-400 hover:text-red-600 bg-red-50 dark:bg-red-900/20 px-2 py-1 rounded-lg active:scale-95">刪除</button>
             </div>
           </div>
         `;
@@ -3140,8 +3288,12 @@
       document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(url);
     }
 
+    // 🛡️ 匯入備份檔（具備自動防重複去重比對機制）
+    function getRecordSignature(r) {
+      return `${r.date}|${r.type}|${(r.title || '').trim()}|${Math.round(Number(r.twdAmount) || 0)}|${(r.payer || '').trim()}`;
+    }
+
     document.getElementById("importBtn").onclick = async () => {
-      if (!accessToken) return alert("請先登入 Google 帳號！");
       const fileInput = document.getElementById("importFileInput");
       if (!fileInput.files.length) return alert("請選擇 CSV 或 TXT 檔案！");
 
@@ -3203,13 +3355,33 @@
         }
 
         if (itemsToImport.length === 0) return alert("無法解析檔案內容！");
-        if (!confirm(`確定要匯入 ${itemsToImport.length} 筆紀錄至【${currentSheet}】嗎？`)) return;
 
-        cachedRecords = [...itemsToImport, ...cachedRecords];
+        const existingSignatures = new Set(getActiveRecords().map(getRecordSignature));
+        const uniqueNewItems = [];
+        let skippedCount = 0;
+
+        itemsToImport.forEach(item => {
+          const sig = getRecordSignature(item);
+          if (existingSignatures.has(sig)) {
+            skippedCount++;
+          } else {
+            existingSignatures.add(sig);
+            uniqueNewItems.push(item);
+          }
+        });
+
+        if (uniqueNewItems.length === 0) {
+          fileInput.value = "";
+          return showToast(`ℹ️ 檔案內的 ${skippedCount} 筆資料皆已存在，無須重複匯入！`, "info");
+        }
+
+        if (!confirm(`解析完成：共發現 ${uniqueNewItems.length} 筆新紀錄${skippedCount > 0 ? `（已自動略過 ${skippedCount} 筆重複帳目）` : ''}，確定匯入至【${currentSheet}】嗎？`)) return;
+
+        cachedRecords = [...uniqueNewItems, ...cachedRecords];
         renderAllViews();
         await saveRecordsToDrive();
         fileInput.value = "";
-        showToast(`✅ 成功匯入 ${itemsToImport.length} 筆資料！`);
+        showToast(`✅ 成功匯入 ${uniqueNewItems.length} 筆資料${skippedCount > 0 ? ` (略過 ${skippedCount} 筆重複)` : ''}！`);
       } catch (err) { showToast("❌ 檔案解析失敗", "error"); }
     };
 
@@ -3241,6 +3413,7 @@
           if (data.rates.JPY) exchangeRates.JPY = 1 / data.rates.JPY;
           if (data.rates.CNY) exchangeRates.CNY = 1 / data.rates.CNY;
           if (data.rates.KRW) exchangeRates.KRW = 1 / data.rates.KRW;
+          localStorage.setItem("app_exchange_rates", JSON.stringify(exchangeRates));
           document.getElementById("rateUpdateTime").textContent = "已更新最新匯率";
           if (manual) showToast("💱 匯率已更新至最新報價", "info");
         }
@@ -3251,7 +3424,7 @@
       updateTwdPreview();
     };
 
-    // 🔤 字型大小與面板收合控制 (上限提升至 36px)
+    // 🔤 字型大小與面板收合控制 (12px ~ 36px)
     function applyFontSize(size) {
       size = Math.min(Math.max(parseInt(size, 10) || 16, 12), 36);
       document.documentElement.style.fontSize = `${size}px`;
