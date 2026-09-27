@@ -155,6 +155,7 @@
         .form-group { margin-bottom: 0.8rem; } 
         .form-group label { display: block; margin-bottom: 0.3rem; color: var(--text-muted); font-size: 0.8rem; }
         .form-group input, .form-group textarea, .form-group select { width: 100%; padding: 0.5rem; border-radius: 6px; border: 1px solid var(--border-color); background: var(--bg-dark); color: var(--text-main); outline: none; font-size: calc(0.85rem * var(--font-scale)); }
+        .form-group input:focus, .form-group textarea:focus, .form-group select:focus { border-color: var(--primary); }
         .modal button { font-size: 0.9rem; padding: 0.45rem 1rem; }
         .modal .btn-sm { font-size: 0.75rem; padding: 0.35rem 0.4rem; }
         .modal .btn-icon-only { width: 32px; height: 32px; padding: 0; font-size: 0.8rem; }
@@ -342,7 +343,7 @@
                 <div class="help-section-title"><i class="fas fa-folder-tree"></i> 分類管理、搜尋與 5 種排序</div>
                 <ul class="help-list">
                     <li><span><strong>自訂資料夾 (<i class="fas fa-folder-plus"></i>)：</strong>支援新增專屬圖示資料夾、重新命名（<i class="fas fa-pen"></i>）與刪除（刪除後內部連結自動歸回「未分類」）。</span></li>
-                    <li><span><strong>動態色彩標籤：</strong>根據網站類型或自訂標籤自動產生專屬配色篩選器，支援複合搜尋。</span></li>
+                    <li><span><strong>動態色彩標籤：</strong>根據網站類型或自訂標籤自動產生深淺色自適應配色篩選器，當標籤無對應連結時會自動歸位至「全部」。</span></li>
                     <li><span><strong>5 種排序切換：</strong>支援「🕒 最新加入」、「⏳ 最舊優先」、「🔥 最常造訪（自動統計點擊次數）」、「🔤 標題 A-Z」與「🎲 隨機靈感（點擊重新整理可再次洗牌）」，且<strong>釘選（<i class="fas fa-thumbtack"></i>）卡片永遠優先置頂</strong>。</span></li>
                 </ul>
             </div>
@@ -408,7 +409,7 @@
                         </div>
                     </div>
                     <div class="card-footer">
-                        <div class="source-info"><span class="source-text">09/28 01:41</span></div>
+                        <div class="source-info"><span class="source-text">09/28 02:55</span></div>
                         <div class="tags-container"><span class="tag-badge" style="background:rgba(99,102,241,0.2);color:#818cf8;border:1px solid rgba(99,102,241,0.4);">預覽標籤</span></div>
                     </div>
                 </div>
@@ -548,7 +549,27 @@
 
         try{app=firebase.initializeApp(firebaseConfig);auth=firebase.auth();db=firebase.firestore();}catch(e){}
 
-        // ✅ 四階優化 1：嚴格白名單過濾 ID 與 FontAwesome Icon，阻絕外部匯入 JSON 造成行內屬性跳脫
+        // ✅ 五階優化 1：安全讀取與寫入 localStorage JSON，防止快取損毀或無痕限制導致白畫面崩潰
+        function readLocalJson(key, fallback = []) {
+            try {
+                const raw = localStorage.getItem(key);
+                if (!raw) return fallback;
+                const parsed = JSON.parse(raw);
+                return Array.isArray(fallback) ? (Array.isArray(parsed) ? parsed : fallback) : (parsed ?? fallback);
+            } catch {
+                return fallback;
+            }
+        }
+
+        function writeLocalJson(key, value) {
+            try {
+                localStorage.setItem(key, JSON.stringify(value));
+            } catch (e) {
+                showToast("⚠️ 本機儲存空間已滿或受限", "error");
+            }
+        }
+
+        // 嚴格白名單過濾 ID 與 FontAwesome Icon
         function safeId(id) {
             return String(id || '').replace(/[^a-zA-Z0-9_-]/g, '');
         }
@@ -717,7 +738,7 @@
             document.getElementById('quick-add-url').value = '';
             document.getElementById('quick-add-title').value = '';
             document.getElementById('quick-add-tags').value = '';
-            openModal('quick-add-modal');
+            openModal('quick-add-modal', 'quick-add-url');
         }
 
         async function executeQuickAdd() {
@@ -769,11 +790,11 @@
         }
 
         function saveToLocal(data) {
-            const links = JSON.parse(localStorage.getItem('my_links') || '[]');
+            const links = readLocalJson('my_links', []);
             if (!links.some(l => l.url === data.url && (Date.now() - l.createdAt < 3000))) {
                 data.id = 'loc_' + Date.now(); 
                 links.unshift(data);
-                localStorage.setItem('my_links', JSON.stringify(links));
+                writeLocalJson('my_links', links);
             }
         }
 
@@ -823,7 +844,6 @@
             }
         }
         
-        // ✅ 四階優化 2：補齊 Google 登入彈窗錯誤攔截 (防止關閉視窗或 file:// 未授權網域拋出 Uncaught Promise)
         document.getElementById('btn-google-login').addEventListener('click', () => {
             if (!auth) {
                 showToast("⚠️ Firebase 尚未初始化，請使用本機測試模式", "error");
@@ -862,25 +882,32 @@
 
         async function getFolders(){
             if(isLocalMode){
-                let f=JSON.parse(localStorage.getItem('my_folders')||'[]');
+                let f=readLocalJson('my_folders', []);
                 if(!f.some(x=>x.id==='default')){
                     f.unshift({id:'default',name:'未分類',icon:'fa-inbox'});
-                    localStorage.setItem('my_folders',JSON.stringify(f));
+                    writeLocalJson('my_folders', f);
                 }
                 return f.map(x => ({ ...x, id: safeId(x.id) || 'default', icon: safeIcon(x.icon) }));
             }
-            const s=await db.collection('users').doc(currentUser.uid).collection('folders').get();
-            let f=s.docs.map(d=>({id:safeId(d.id),...d.data(),icon:safeIcon(d.data().icon)}));
-            if(!f.some(x=>x.id==='default')){
-                const defFolder = {name:'未分類',icon:'fa-inbox'};
-                await db.collection('users').doc(currentUser.uid).collection('folders').doc('default').set(defFolder);
-                f.unshift({id:'default',...defFolder});
+            try {
+                const s=await db.collection('users').doc(currentUser.uid).collection('folders').get();
+                let f=s.docs.map(d=>({id:safeId(d.id),...d.data(),icon:safeIcon(d.data().icon)}));
+                if(!f.some(x=>x.id==='default')){
+                    const defFolder = {name:'未分類',icon:'fa-inbox'};
+                    await db.collection('users').doc(currentUser.uid).collection('folders').doc('default').set(defFolder);
+                    f.unshift({id:'default',...defFolder});
+                }
+                return f;
+            } catch (e) {
+                return [{id:'default',name:'未分類',icon:'fa-inbox'}];
             }
-            return f;
         }
 
         async function renderFolderChips(){
             allFoldersCache=await getFolders();
+            if (activeFolder !== 'all' && !allFoldersCache.some(f => f.id === activeFolder)) {
+                activeFolder = 'all';
+            }
             const c=document.getElementById('folder-chips');
             let h=`<div class="chip ${activeFolder==='all'?'active':''}" onclick="setFolder('all')"><i class="fas fa-layer-group"></i> 全部</div>`;
             allFoldersCache.forEach(f=>{
@@ -907,7 +934,7 @@
                     </div>
                 </div>`;
             }).join('');
-            openModal('folder-modal');
+            openModal('folder-modal', 'new-folder-name');
         }
 
         async function renameFolder(id) {
@@ -916,55 +943,67 @@
             const newName = prompt("請輸入新的資料夾名稱：", target.name);
             if (!newName || !newName.trim() || newName.trim() === target.name) return;
             const trimmed = newName.trim();
-            if (isLocalMode) {
-                const f = JSON.parse(localStorage.getItem('my_folders') || '[]');
-                const idx = f.findIndex(x => x.id === id);
-                if (idx > -1) { f[idx].name = trimmed; localStorage.setItem('my_folders', JSON.stringify(f)); }
-            } else {
-                await db.collection('users').doc(currentUser.uid).collection('folders').doc(id).update({ name: trimmed });
+            try {
+                if (isLocalMode) {
+                    const f = readLocalJson('my_folders', []);
+                    const idx = f.findIndex(x => x.id === id);
+                    if (idx > -1) { f[idx].name = trimmed; writeLocalJson('my_folders', f); }
+                } else {
+                    await db.collection('users').doc(currentUser.uid).collection('folders').doc(id).update({ name: trimmed });
+                }
+                await renderFolderChips();
+                openFolderModal();
+                renderCurrentView(rawLinksCache);
+                showToast("已重新命名", "success");
+            } catch (e) {
+                showToast("❌ 重新命名失敗：" + e.message, "error");
             }
-            await renderFolderChips();
-            openFolderModal();
-            renderCurrentView(rawLinksCache);
-            showToast("已重新命名", "success");
         }
 
         async function addFolder(){
             const n=document.getElementById('new-folder-name').value.trim();
             const ic=safeIcon(document.getElementById('new-folder-icon').value);
             if(!n)return;
-            if(isLocalMode){
-                const f=JSON.parse(localStorage.getItem('my_folders')||'[]');
-                f.push({id:'f_'+Date.now(),name:n,icon:ic});
-                localStorage.setItem('my_folders',JSON.stringify(f));
-            }else{
-                await db.collection('users').doc(currentUser.uid).collection('folders').add({name:n,icon:ic});
+            try {
+                if(isLocalMode){
+                    const f=readLocalJson('my_folders', []);
+                    f.push({id:'f_'+Date.now(),name:n,icon:ic});
+                    writeLocalJson('my_folders', f);
+                }else{
+                    await db.collection('users').doc(currentUser.uid).collection('folders').add({name:n,icon:ic});
+                }
+                document.getElementById('new-folder-name').value='';
+                await renderFolderChips();
+                openFolderModal();
+                showToast("已新增資料夾","success");
+            } catch (e) {
+                showToast("❌ 新增資料夾失敗：" + e.message, "error");
             }
-            document.getElementById('new-folder-name').value='';
-            await renderFolderChips();
-            openFolderModal();
-            showToast("已新增資料夾","success");
         }
 
         async function deleteFolder(id){
             if(!confirm("確定刪除此資料夾？（內含的連結將移回「未分類」）"))return;
-            if(isLocalMode){
-                let f=JSON.parse(localStorage.getItem('my_folders')||'[]').filter(x=>x.id!==id);
-                localStorage.setItem('my_folders',JSON.stringify(f));
-                let l=JSON.parse(localStorage.getItem('my_links')||'[]');
-                l.forEach(x=>{if(x.folderId===id)x.folderId='default';});
-                localStorage.setItem('my_links',JSON.stringify(l));
-            }else{
-                await db.collection('users').doc(currentUser.uid).collection('folders').doc(id).delete();
-                const s=await db.collection('users').doc(currentUser.uid).collection('links').where('folderId','==',id).get();
-                await executeBatchInChunks(s.docs, (batch, doc) => {
-                    batch.update(doc.ref, { folderId: 'default' });
-                });
+            try {
+                if(isLocalMode){
+                    let f=readLocalJson('my_folders', []).filter(x=>x.id!==id);
+                    writeLocalJson('my_folders', f);
+                    let l=readLocalJson('my_links', []);
+                    l.forEach(x=>{if(x.folderId===id)x.folderId='default';});
+                    writeLocalJson('my_links', l);
+                }else{
+                    await db.collection('users').doc(currentUser.uid).collection('folders').doc(id).delete();
+                    const s=await db.collection('users').doc(currentUser.uid).collection('links').where('folderId','==',id).get();
+                    await executeBatchInChunks(s.docs, (batch, doc) => {
+                        batch.update(doc.ref, { folderId: 'default' });
+                    });
+                }
+                if(activeFolder===id) activeFolder='all';
+                await renderFolderChips();
+                openFolderModal();
+                loadLinks();
+            } catch (e) {
+                showToast("❌ 刪除資料夾失敗：" + e.message, "error");
             }
-            if(activeFolder===id) activeFolder='all';
-            await renderFolderChips();
-            openFolderModal();
-            loadLinks();
         }
 
         function stringToHslColor(s,a=0.6,l=0.5){
@@ -1061,15 +1100,18 @@
 
         async function getAllLinks(){
             if(rawLinksCache.length > 0) return rawLinksCache;
-            if(isLocalMode) return JSON.parse(localStorage.getItem('my_links')||'[]');
+            if(isLocalMode) return readLocalJson('my_links', []);
             if(!currentUser || !db) return [];
-            return (await db.collection('users').doc(currentUser.uid).collection('links').get()).docs.map(d=>({id:safeId(d.id),...d.data()}));
+            try {
+                return (await db.collection('users').doc(currentUser.uid).collection('links').get()).docs.map(d=>({id:safeId(d.id),...d.data()}));
+            } catch {
+                return [];
+            }
         }
 
-        // ✅ 四階優化 3：為 Firestore onSnapshot 補上錯誤監聽回呼，避免權限或斷線時靜默失敗
         function loadLinks(){
             if(isLocalMode){
-                rawLinksCache=JSON.parse(localStorage.getItem('my_links')||'[]').map((x,i)=>({...x,id:safeId(x.id)||('loc_'+i)}));
+                rawLinksCache=readLocalJson('my_links', []).map((x,i)=>({...x,id:safeId(x.id)||('loc_'+i)}));
                 if (currentSort === 'random' && randomWeightMap.size === 0) refreshRandomWeights(rawLinksCache);
                 renderCurrentView(rawLinksCache);
             }else if(currentUser&&db){
@@ -1129,7 +1171,7 @@
             target.clicks = (target.clicks || 0) + 1;
 
             if (isLocalMode) {
-                localStorage.setItem('my_links', JSON.stringify(rawLinksCache));
+                writeLocalJson('my_links', rawLinksCache);
                 if (currentSort === 'clicks') {
                     renderCurrentView(rawLinksCache);
                 } else {
@@ -1160,7 +1202,6 @@
             renderLinks(allLinksCache);
         }
         
-        // ✅ 四階優化 4：精準匹配 @帳號 正則，避免破壞轉義後的 HTML 實體 (&amp; / &#039;)
         function renderLinks(links){
             const c=document.getElementById('links-container');
             if(!links.length){c.innerHTML=`<div class="text-center py-10 col-span-full text-sm" style="color:var(--text-muted);">找不到符合條件的連結</div>`;return;}
@@ -1190,21 +1231,75 @@
             }).join('');
         }
         
-        function renderTagChips(links){const c=document.getElementById('tag-chips');const at=new Set();links.forEach(l=>{if(l.categories){if(Array.isArray(l.categories))l.categories.forEach(t=>at.add(t));else at.add(l.categories);}});let h=`<div class="chip ${activeTag==='all'?'active':''}" onclick="setTag('all')"><i class="fas fa-tags"></i> 全部</div>`;at.forEach(t=>{const cl=stringToHslColor(t,0.6,0.5);const ia=activeTag===t;const st=ia?`background:${cl};color:white;border-color:${cl};`:`border-color:${cl}40;color:${cl};`;h+=`<div class="chip ${ia?'active':''}" style="${st}" data-tag="${escapeHtml(t)}" onclick="setTag(this.dataset.tag)">${escapeHtml(t)}</div>`;});c.innerHTML=h;}
+        // ✅ 五階優化 2：當篩選中的標籤因刪除或編輯而不再存在時，自動歸位回 'all'，並依據深淺色主題微調文字明度
+        function renderTagChips(links){
+            const c=document.getElementById('tag-chips');
+            const at=new Set();
+            links.forEach(l=>{
+                if(l.categories){
+                    if(Array.isArray(l.categories))l.categories.forEach(t=>at.add(t));
+                    else at.add(l.categories);
+                }
+            });
+            if (activeTag !== 'all' && !at.has(activeTag)) {
+                activeTag = 'all';
+            }
+            const isLight = document.body.classList.contains('light-mode');
+            let h=`<div class="chip ${activeTag==='all'?'active':''}" onclick="setTag('all')"><i class="fas fa-tags"></i> 全部</div>`;
+            at.forEach(t=>{
+                const activeBg = stringToHslColor(t, 0.65, 0.48);
+                const textColor = stringToHslColor(t, 0.7, isLight ? 0.38 : 0.68);
+                const borderColor = stringToHslColor(t, 0.5, isLight ? 0.75 : 0.35);
+                const ia = activeTag === t;
+                const st = ia ? `background:${activeBg};color:white;border-color:${activeBg};` : `border-color:${borderColor};color:${textColor};`;
+                h+=`<div class="chip ${ia?'active':''}" style="${st}" data-tag="${escapeHtml(t)}" onclick="setTag(this.dataset.tag)">${escapeHtml(t)}</div>`;
+            });
+            c.innerHTML=h;
+        }
         function setTag(t){activeTag=t;renderCurrentView(rawLinksCache);}
         function handleSearchInput(){clearTimeout(searchTimeout);searchTimeout=setTimeout(()=>{renderCurrentView(rawLinksCache);},250);}
         function filterLinks(){renderCurrentView(rawLinksCache);}
         
         async function togglePin(id){const l=rawLinksCache.find(x=>x.id===id);if(!l)return;await updateLinkProp(id,'pinned',!l.pinned);}
         async function toggleRead(id){const l=rawLinksCache.find(x=>x.id===id);if(!l)return;await updateLinkProp(id,'isRead',!l.isRead);}
-        async function updateLinkProp(id,p,v){if(isLocalMode){const a=JSON.parse(localStorage.getItem('my_links')||'[]');const i=a.findIndex(x=>x.id===id);if(i>-1){a[i][p]=v;localStorage.setItem('my_links',JSON.stringify(a));}loadLinks();}else{await db.collection('users').doc(currentUser.uid).collection('links').doc(id).update({[p]:v});}}
-        async function deleteLink(id,sc=true){if(sc&&!confirm("確定刪除？"))return;if(isLocalMode){let l=JSON.parse(localStorage.getItem('my_links')||'[]');localStorage.setItem('my_links',JSON.stringify(l.filter(i=>i.id!==id)));loadLinks();}else{await db.collection('users').doc(currentUser.uid).collection('links').doc(id).delete();}if(sc){showToast("已刪除","success");}}
+        
+        // ✅ 五階優化 3：為所有 Firestore 寫入與刪除補齊 try...catch 錯誤攔截
+        async function updateLinkProp(id,p,v){
+            try {
+                if(isLocalMode){
+                    const a=readLocalJson('my_links', []);
+                    const i=a.findIndex(x=>x.id===id);
+                    if(i>-1){a[i][p]=v;writeLocalJson('my_links', a);}
+                    loadLinks();
+                }else{
+                    await db.collection('users').doc(currentUser.uid).collection('links').doc(id).update({[p]:v});
+                }
+            } catch (e) {
+                showToast("❌ 更新失敗：" + e.message, "error");
+            }
+        }
+
+        async function deleteLink(id,sc=true){
+            if(sc&&!confirm("確定刪除？"))return;
+            try {
+                if(isLocalMode){
+                    let l=readLocalJson('my_links', []);
+                    writeLocalJson('my_links', l.filter(i=>i.id!==id));
+                    loadLinks();
+                }else{
+                    await db.collection('users').doc(currentUser.uid).collection('links').doc(id).delete();
+                }
+                if(sc){showToast("已刪除","success");}
+            } catch (e) {
+                showToast("❌ 刪除失敗：" + e.message, "error");
+            }
+        }
         
         async function openEdit(id){
             let l = rawLinksCache.find(x=>x.id===id);
             if(!l){
                 try{
-                    if(isLocalMode) l=JSON.parse(localStorage.getItem('my_links')||'[]').find(x=>x.id===id);
+                    if(isLocalMode) l=readLocalJson('my_links', []).find(x=>x.id===id);
                     else{const s=await db.collection('users').doc(currentUser.uid).collection('links').doc(id).get();if(s.exists)l={id:safeId(s.id),...s.data()};}
                 }catch(e){showToast("讀取失敗","error");return;}
             }
@@ -1216,7 +1311,7 @@
                 document.getElementById('edit-desc').value=l.description||"";
                 const s=document.getElementById('edit-folder');
                 s.innerHTML=allFoldersCache.map(f=>`<option value="${safeId(f.id)}" ${l.folderId===f.id?'selected':''}>${escapeHtml(f.name)}</option>`).join('');
-                openModal('edit-modal');
+                openModal('edit-modal', 'edit-title');
             }
         }
 
@@ -1226,9 +1321,19 @@
             if (!cleaned) { showToast("請輸入有效的 http/https 網址", "error"); return; }
             const cats=document.getElementById('edit-categories').value.split(/[,，]\s*/).map(t=>t.trim()).filter(t=>t);
             const u={title:document.getElementById('edit-title').value,url:cleaned,categories:cats,description:document.getElementById('edit-desc').value,folderId:safeId(document.getElementById('edit-folder').value)||'default'};
-            if(isLocalMode){let l=JSON.parse(localStorage.getItem('my_links')||'[]');const i=l.findIndex(x=>x.id===id);if(i>-1){l[i]={...l[i],...u};localStorage.setItem('my_links',JSON.stringify(l));loadLinks();}}
-            else{await db.collection('users').doc(currentUser.uid).collection('links').doc(id).update(u);}
-            closeModal('edit-modal');showToast("已儲存","success");
+            try {
+                if(isLocalMode){
+                    let l=readLocalJson('my_links', []);
+                    const i=l.findIndex(x=>x.id===id);
+                    if(i>-1){l[i]={...l[i],...u};writeLocalJson('my_links', l);loadLinks();}
+                }else{
+                    await db.collection('users').doc(currentUser.uid).collection('links').doc(id).update(u);
+                }
+                closeModal('edit-modal');
+                showToast("已儲存","success");
+            } catch (e) {
+                showToast("❌ 儲存失敗：" + e.message, "error");
+            }
         }
         
         function toggleView(){
@@ -1240,7 +1345,6 @@
             renderCurrentView(rawLinksCache);
         }
 
-        // ✅ 四階優化 5：看板模式與批次模式自動互斥，避免狀態重疊衝突
         function toggleKanbanView(){
             if (!isKanbanMode && batchMode) {
                 toggleBatchMode();
@@ -1285,22 +1389,28 @@
                     let ns={pinned:false,isRead:false};
                     if(nc==='list-starred')ns={pinned:true,isRead:false};
                     else if(nc==='list-done')ns={pinned:false,isRead:true};
-                    if(isLocalMode){
-                        const a=JSON.parse(localStorage.getItem('my_links')||'[]');
-                        const i=a.findIndex(x=>x.id===iid);
-                        if(i>-1){a[i].pinned=ns.pinned;a[i].isRead=ns.isRead;localStorage.setItem('my_links',JSON.stringify(a));}
-                        loadLinks();
-                    }else{
-                        await db.collection('users').doc(currentUser.uid).collection('links').doc(iid).update(ns);
+                    try {
+                        if(isLocalMode){
+                            const a=readLocalJson('my_links', []);
+                            const i=a.findIndex(x=>x.id===iid);
+                            if(i>-1){a[i].pinned=ns.pinned;a[i].isRead=ns.isRead;writeLocalJson('my_links', a);}
+                            loadLinks();
+                        }else{
+                            await db.collection('users').doc(currentUser.uid).collection('links').doc(iid).update(ns);
+                        }
+                    } catch (err) {
+                        showToast("❌ 狀態更新失敗：" + err.message, "error");
                     }
                 }});
             });
         }
         
+        // ✅ 五階優化 4：切換深淺色主題時，同步刷新上方標籤晶片色彩對比度
         function applyTheme(isLight) {
             document.body.classList.toggle('light-mode', isLight);
             const icon = document.getElementById('theme-icon');
             if (icon) icon.className = isLight ? 'fas fa-moon' : 'fas fa-sun';
+            if (rawLinksCache.length > 0) renderTagChips(rawLinksCache);
         }
 
         function toggleTheme(){
@@ -1348,8 +1458,8 @@
                     const l=Array.isArray(d.links)?d.links:(Array.isArray(d)?d:[]);
                     const fo=Array.isArray(d.folders)?d.folders:[];
                     if(isLocalMode){
-                        localStorage.setItem('my_links',JSON.stringify(l.map((x,i)=>({...x,id:safeId(x.id)||('loc_'+Date.now()+'_'+i)}))));
-                        if(fo.length)localStorage.setItem('my_folders',JSON.stringify(fo.map((x,i)=>({...x,id:safeId(x.id)||('f_'+Date.now()+'_'+i),icon:safeIcon(x.icon)}))));
+                        writeLocalJson('my_links', l.map((x,i)=>({...x,id:safeId(x.id)||('loc_'+Date.now()+'_'+i)})));
+                        if(fo.length)writeLocalJson('my_folders', fo.map((x,i)=>({...x,id:safeId(x.id)||('f_'+Date.now()+'_'+i),icon:safeIcon(x.icon)})));
                         await renderFolderChips();loadLinks();
                     }else{
                         await executeBatchInChunks(fo, (batch, x, i) => {
@@ -1375,10 +1485,21 @@
         }
         
         function showToast(m,t='info'){const c=document.getElementById('toast-container'),d=document.createElement('div');d.className=`toast ${t}`;d.innerHTML=m;c.appendChild(d);setTimeout(()=>{d.style.animation='fadeOut 0.3s ease forwards';setTimeout(()=>d.remove(),300);},3000);}
-        function openModal(id){document.getElementById(id).style.display='flex';}
+        
+        // ✅ 五階優化 5：開啟 Modal 支援自動聚焦指定輸入框 (focusInputId)
+        function openModal(id, focusInputId = null) {
+            const el = document.getElementById(id);
+            if (!el) return;
+            el.style.display = 'flex';
+            if (focusInputId) {
+                setTimeout(() => {
+                    const inp = document.getElementById(focusInputId);
+                    if (inp) inp.focus();
+                }, 50);
+            }
+        }
         function closeModal(id){document.getElementById(id).style.display='none';}
         
-        // ✅ 四階優化 6：統一處理 onkeydown Enter 事件，並排除中文輸入法組字狀態 (isComposing)
         function handleEnter(e, callback) {
             if (e.isComposing || e.keyCode === 229) return;
             if (e.key === "Enter" && typeof callback === "function") {
@@ -1417,7 +1538,7 @@
             if (!selectedIds.size) { showToast("請先勾選連結", "error"); return; }
             const sel = document.getElementById('batch-move-select');
             sel.innerHTML = allFoldersCache.map(f => `<option value="${safeId(f.id)}">${escapeHtml(f.name)}</option>`).join('');
-            openModal('batch-move-modal');
+            openModal('batch-move-modal', 'batch-move-select');
         }
 
         async function confirmBatchMove() {
@@ -1426,22 +1547,26 @@
             const targetFolderId = safeId(document.getElementById('batch-move-select').value);
             if (!count || !targetFolderId) return;
 
-            if (isLocalMode) {
-                const a = JSON.parse(localStorage.getItem('my_links') || '[]');
-                ids.forEach(id => {
-                    const i = a.findIndex(x => x.id === id);
-                    if (i > -1) a[i].folderId = targetFolderId;
-                });
-                localStorage.setItem('my_links', JSON.stringify(a));
-            } else {
-                await executeBatchInChunks(ids, (batch, id) => {
-                    batch.update(db.collection('users').doc(currentUser.uid).collection('links').doc(id), { folderId: targetFolderId });
-                });
+            try {
+                if (isLocalMode) {
+                    const a = readLocalJson('my_links', []);
+                    ids.forEach(id => {
+                        const i = a.findIndex(x => x.id === id);
+                        if (i > -1) a[i].folderId = targetFolderId;
+                    });
+                    writeLocalJson('my_links', a);
+                } else {
+                    await executeBatchInChunks(ids, (batch, id) => {
+                        batch.update(db.collection('users').doc(currentUser.uid).collection('links').doc(id), { folderId: targetFolderId });
+                    });
+                }
+                closeModal('batch-move-modal');
+                toggleBatchMode();
+                showToast(`✅ 已移動 ${count} 個連結`, "success");
+                loadLinks();
+            } catch (e) {
+                showToast("❌ 批次移動失敗：" + e.message, "error");
             }
-            closeModal('batch-move-modal');
-            toggleBatchMode();
-            showToast(`✅ 已移動 ${count} 個連結`, "success");
-            loadLinks();
         }
 
         async function batchDelete(){
@@ -1449,18 +1574,22 @@
             const count = ids.length;
             if(!count) { showToast("請先勾選連結", "error"); return; }
             if(!confirm(`確定刪除已選取的 ${count} 個連結？`)) return;
-            if(isLocalMode){
-                let a=JSON.parse(localStorage.getItem('my_links')||'[]');
-                a=a.filter(i=>!selectedIds.has(i.id));
-                localStorage.setItem('my_links',JSON.stringify(a));
-            }else{
-                await executeBatchInChunks(ids, (batch, id) => {
-                    batch.delete(db.collection('users').doc(currentUser.uid).collection('links').doc(id));
-                });
+            try {
+                if(isLocalMode){
+                    let a=readLocalJson('my_links', []);
+                    a=a.filter(i=>!selectedIds.has(i.id));
+                    writeLocalJson('my_links', a);
+                }else{
+                    await executeBatchInChunks(ids, (batch, id) => {
+                        batch.delete(db.collection('users').doc(currentUser.uid).collection('links').doc(id));
+                    });
+                }
+                toggleBatchMode();
+                showToast(`🗑️ 已刪除 ${count} 個連結`,"success");
+                loadLinks();
+            } catch (e) {
+                showToast("❌ 批次刪除失敗：" + e.message, "error");
             }
-            toggleBatchMode();
-            showToast(`🗑️ 已刪除 ${count} 個連結`,"success");
-            loadLinks();
         }
         
         async function startDeadLinkCheck(){
@@ -1490,14 +1619,18 @@
                 await new Promise(r=>setTimeout(r,300));
             }
             if(ups.length){
-                if(isLocalMode){
-                    const a=JSON.parse(localStorage.getItem('my_links')||'[]');
-                    ups.forEach(u=>{const i=a.findIndex(x=>x.id===u.id);if(i>-1)a[i].isDead=u.isDead;});
-                    localStorage.setItem('my_links',JSON.stringify(a));
-                }else{
-                    await executeBatchInChunks(ups, (batch, u) => {
-                        batch.update(db.collection('users').doc(currentUser.uid).collection('links').doc(u.id), { isDead: u.isDead });
-                    });
+                try {
+                    if(isLocalMode){
+                        const a=readLocalJson('my_links', []);
+                        ups.forEach(u=>{const i=a.findIndex(x=>x.id===u.id);if(i>-1)a[i].isDead=u.isDead;});
+                        writeLocalJson('my_links', a);
+                    }else{
+                        await executeBatchInChunks(ups, (batch, u) => {
+                            batch.update(db.collection('users').doc(currentUser.uid).collection('links').doc(u.id), { isDead: u.isDead });
+                        });
+                    }
+                } catch (err) {
+                    showToast("⚠️ 寫回檢測結果失敗：" + err.message, "error");
                 }
             }
             isCheckingLinks=false;btn.disabled=false;ic.classList.remove('rotating');
