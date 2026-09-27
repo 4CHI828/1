@@ -172,6 +172,11 @@
         .modal .btn-sm { font-size: 0.75rem; padding: 0.35rem 0.4rem; }
         .modal .btn-icon-only { width: 32px; height: 32px; padding: 0; font-size: 0.8rem; }
 
+        /* 資料夾與全域標籤管理分頁切換 */
+        .modal-tabs { display: flex; gap: 0.4rem; margin-bottom: 0.85rem; border-bottom: 1px solid var(--border-color); padding-bottom: 0.5rem; }
+        .modal-tab-btn { flex: 1; justify-content: center; font-size: 0.8rem !important; padding: 0.35rem 0.5rem !important; }
+        .modal-tab-btn.active { background-color: var(--primary); color: #fff; border-color: var(--primary); }
+
         /* 彈窗內快速點選標籤膠囊 */
         .modal-tag-suggestions { display: flex; flex-wrap: wrap; gap: 0.3rem; margin-top: 0.4rem; max-height: 72px; overflow-y: auto; }
         .modal-tag-pill { font-size: 0.7rem; padding: 0.15rem 0.45rem; border-radius: 10px; background: var(--bg-dark); border: 1px solid var(--border-color); color: var(--text-muted); cursor: pointer; user-select: none; transition: all 0.15s; }
@@ -255,9 +260,8 @@
         <div class="header-actions flex-wrap gap-1">
             <span id="user-info" style="display:none;color:var(--text-muted);font-size:0.8rem;margin-right:6px;"></span>
             <button type="button" class="btn-outline btn-icon-only" onclick="openQuickAddModal()" title="快速新增 / 另存連結"><i class="fas fa-puzzle-piece"></i></button>
-            <button type="button" class="btn-outline btn-icon-only" onclick="openFolderModal()" title="管理資料夾"><i class="fas fa-folder-plus"></i></button>
+            <button type="button" class="btn-outline btn-icon-only" onclick="openFolderModal()" title="管理資料夾與全域標籤"><i class="fas fa-folder-plus"></i></button>
             <button type="button" class="btn-outline btn-icon-only" onclick="toggleBatchMode()" title="批次管理 (B)"><i class="fas fa-check-square"></i></button>
-            <!-- ✅ 支援顯示檢測進度與點擊中途停止 -->
             <button type="button" class="btn-outline btn-icon-only" id="btn-dead-check" onclick="startDeadLinkCheck()" title="失效檢測 (檢測中再次點擊可停止)"><i class="fas fa-heartbeat" id="dead-check-icon"></i><span id="dead-check-text" style="display:none;font-size:0.7rem;margin-left:3px;"></span></button>
             <button type="button" class="btn-outline btn-icon-only" onclick="openFontModal()" title="字體與顯示設置"><i class="fas fa-font"></i></button>
             <button type="button" class="btn-outline btn-icon-only" onclick="exportAsMarkdown()" title="複製為 Markdown"><i class="fab fa-markdown"></i></button>
@@ -295,17 +299,17 @@
                 <div class="filter-section">
                     <div class="search-box">
                         <i class="fas fa-search"></i>
-                        <input type="text" id="search-input" placeholder="搜尋標題、網址、標籤 (支援關鍵字高亮) [/]" oninput="handleSearchInput()">
+                        <input type="text" id="search-input" placeholder="支援空白鍵多關鍵字交集搜尋 (如: youtube 音樂) [/]" oninput="handleSearchInput()">
                         <button type="button" class="search-clear-btn" id="search-clear-btn" onclick="clearSearchInput()" title="清除搜尋"><i class="fas fa-times"></i></button>
                     </div>
                     <div class="flex gap-1 items-center">
                         <span id="result-count" class="result-count-badge">共 0 筆</span>
                         <select id="status-select" class="sort-select" onchange="handleStatusChange(this.value)" title="狀態篩選">
-                            <option value="all">📋 全部狀態</option>
-                            <option value="unread">📥 僅看未讀</option>
-                            <option value="read">✅ 僅看已讀</option>
-                            <option value="pinned">⭐ 僅看釘選</option>
-                            <option value="dead">💔 僅看失效</option>
+                            <option value="all" id="opt-status-all">📋 全部狀態</option>
+                            <option value="unread" id="opt-status-unread">📥 僅看未讀</option>
+                            <option value="read" id="opt-status-read">✅ 僅看已讀</option>
+                            <option value="pinned" id="opt-status-pinned">⭐ 僅看釘選</option>
+                            <option value="dead" id="opt-status-dead">💔 僅看失效</option>
                         </select>
                         <select id="sort-select" class="sort-select" onchange="handleSortChange(this.value)" title="排序方式">
                             <option value="newest">🕒 最新加入</option>
@@ -321,6 +325,10 @@
             </div>
         </div>
         <div class="masonry-grid" id="links-container"></div>
+        <!-- ✅ 新增：千筆書籤分頁無限捲動哨兵 -->
+        <div id="load-more-sentinel" style="display:none;text-align:center;padding:1.2rem 0;">
+            <button type="button" class="btn-outline" onclick="loadMoreLinks()"><i class="fas fa-angle-double-down"></i> 載入更多連結 (<span id="load-more-count"></span>)</button>
+        </div>
         <div class="kanban-board" id="kanban-board" style="display:none;">
             <div class="kanban-column"><div class="kanban-header">📥 待讀 <span class="kanban-count" id="count-inbox">0</span></div><div class="kanban-list" id="list-inbox"></div></div>
             <div class="kanban-column"><div class="kanban-header">⭐ 精選 <span class="kanban-count" id="count-starred">0</span></div><div class="kanban-list" id="list-starred"></div></div>
@@ -331,9 +339,9 @@
     <!-- 回到頂部按鈕 -->
     <button type="button" id="back-to-top" onclick="window.scrollTo({top:0,behavior:'smooth'})" title="回到頂部"><i class="fas fa-arrow-up"></i></button>
 
-    <!-- ✅ 升級版：批次操作工具列 (含批次加標籤) -->
+    <!-- 批次操作工具列 -->
     <div class="batch-toolbar" id="batch-toolbar">
-        <span>已選 <strong id="batch-count" style="color:var(--primary);">0</strong></span>
+        <span title="按住 Shift 點擊卡片可區間連選">已選 <strong id="batch-count" style="color:var(--primary);">0</strong></span>
         <button type="button" class="btn-outline" onclick="batchSelectAll()"><i class="fas fa-check-double"></i> 全選/反選</button>
         <button type="button" class="btn-outline" onclick="batchToggleRead()"><i class="fas fa-check-circle"></i> 已讀/未讀</button>
         <button type="button" class="btn-outline" onclick="openBatchTagModal()"><i class="fas fa-tags"></i> 加標籤</button>
@@ -361,14 +369,14 @@
 
             <!-- 1. 鍵盤快捷鍵 -->
             <div class="help-section">
-                <div class="help-section-title"><i class="fas fa-keyboard"></i> 鍵盤快捷鍵（非輸入狀態下）</div>
+                <div class="help-section-title"><i class="fas fa-keyboard"></i> 鍵盤與滑鼠快捷操作</div>
                 <div class="grid grid-cols-2 gap-2 text-xs" style="color:var(--text-muted);">
                     <div><span class="kbd-badge">Ctrl+V</span> 頁面任意處直接貼上存檔</div>
+                    <div><span class="kbd-badge">Shift+點擊</span> 批次模式區間快速連選</div>
                     <div><span class="kbd-badge">N</span> 聚焦上方網址輸入框</div>
                     <div><span class="kbd-badge">/</span> 聚焦搜尋框快速檢索</div>
                     <div><span class="kbd-badge">B</span> 開啟 / 關閉批次管理模式</div>
-                    <div><span class="kbd-badge">?</span> 開啟本功能說明視窗</div>
-                    <div><span class="kbd-badge">Esc</span> 關閉視窗或退出批次模式</div>
+                    <div><span class="kbd-badge">? / Esc</span> 開啟說明 / 關閉所有視窗</div>
                 </div>
             </div>
 
@@ -384,37 +392,38 @@
 
             <!-- 3. 資料夾、標籤與多維度排序 -->
             <div class="help-section">
-                <div class="help-section-title"><i class="fas fa-folder-tree"></i> 階層分類連動、搜尋高亮與狀態快篩</div>
+                <div class="help-section-title"><i class="fas fa-folder-tree"></i> 全域標籤改名、空白鍵多詞交集搜尋與狀態快篩</div>
                 <ul class="help-list">
-                    <li><span><strong>資料夾 ➔ 標籤階層連動：</strong>選擇特定資料夾時，下方標籤列會自動只統計該資料夾內的標籤與筆數；支援直接點擊卡片上的徽章進行過濾。</span></li>
-                    <li><span><strong>搜尋關鍵字高亮：</strong>輸入關鍵字時，瀑布流、列表與看板卡片中的命中字詞皆會自動以螢光底色高亮標示。</span></li>
-                    <li><span><strong>狀態快篩與 5 種排序：</strong>支援篩選「僅看未讀／已讀／釘選／失效」以及 5 種排序方式（最新、最舊、最常造訪、標題 A-Z、隨機靈感）。</span></li>
+                    <li><span><strong>資料夾與全域標籤管理 (<i class="fas fa-folder-plus"></i>)：</strong>支援資料夾改名，亦可切換至「🏷️ 全域標籤管理」一鍵將某個標籤全域改名（自動合併同名標籤）或全域刪除。</span></li>
+                    <li><span><strong>空白鍵多關鍵字交集搜尋：</strong>輸入多個關鍵字（如 <code>react 教學</code>）會自動取交集比對標題、網址、摘要與標籤，並同時套用螢光筆高亮。</span></li>
+                    <li><span><strong>狀態即時筆數與 5 種排序：</strong>狀態選單即時顯示「未讀／已讀／釘選／失效」筆數，並支援 5 種排序切換。</span></li>
                 </ul>
             </div>
 
             <!-- 4. 視圖模式、三段式縮圖與字體縮放 -->
             <div class="help-section">
-                <div class="help-section-title"><i class="fas fa-sliders-h"></i> 視圖切換、三段式縮圖與自動已讀設置</div>
+                <div class="help-section-title"><i class="fas fa-sliders-h"></i> 視圖切換、無限捲動與自動已讀設置</div>
                 <ul class="help-list">
-                    <li><span><strong>三種瀏覽視圖：</strong>支援「瀑布流（多欄卡片）」、「列表視圖」以及可拖曳分類的「看板模式（📥 待讀 / ⭐ 精選 / ✅ 已讀）」。</span></li>
+                    <li><span><strong>三種視圖與無限捲動：</strong>支援瀑布流、列表與拖曳看板；千筆書籤下自動採用每 60 筆智慧分頁無限捲動，保持極速流暢。</span></li>
                     <li><span><strong>三段式縮圖 (<i class="fas fa-font"></i>) 與 200% 字體縮放：</strong>可切換「頂部大圖 / 右側小方圖 / 極簡無圖」，並可開啟<strong>「點擊連結後自動標為已讀」</strong>。</span></li>
                 </ul>
             </div>
 
             <!-- 5. 卡片操作、防誤刪復原與批次管理 -->
             <div class="help-section">
-                <div class="help-section-title"><i class="fas fa-tasks"></i> 獨立刪除復原、批次貼標與可中斷失效檢測</div>
+                <div class="help-section-title"><i class="fas fa-tasks"></i> 區間連選、獨立刪除復原與可中斷失效檢測</div>
                 <ul class="help-list">
-                    <li><span><strong>連續刪除獨立復原 (Undo)：</strong>單筆刪除免確認彈窗，即使連續刪除多筆，每個右下角 Toast 都能在 5 秒內獨立點擊「↩️ 復原」救回。</span></li>
-                    <li><span><strong>批次管理 (<i class="fas fa-check-square"></i>) 與可中斷檢測 (<i class="fas fa-heartbeat"></i>)：</strong>支援批次加標籤、批次已讀、批次移動；失效檢測會顯示即時進度（如 <code>12/45</code>），再次點擊可隨時安全停止。</span></li>
+                    <li><span><strong>批次 <code>Shift</code> 連選與獨立復原：</strong>批次模式支援按住 <code>Shift</code> 區間連選卡片；單筆刪除提供 5 秒獨立「↩️ 復原」按鈕。</span></li>
+                    <li><span><strong>可中斷失效檢測 (<i class="fas fa-heartbeat"></i>)：</strong>檢測期間顯示即時進度（如 <code>12/45</code>），再次點擊按鈕可隨時安全停止並保存進度。</span></li>
                 </ul>
             </div>
 
             <!-- 6. 備份匯出與雙模式儲存 -->
             <div class="help-section" style="margin-bottom:0;">
-                <div class="help-section-title"><i class="fas fa-cloud-download-alt"></i> 智能去重匯入（支援 Chrome 書籤與 JSON）</div>
+                <div class="help-section-title"><i class="fas fa-cloud-download-alt"></i> 本機轉雲端自動合併 & 雙格式去重匯入</div>
                 <ul class="help-list">
-                    <li><span><strong>雙格式自動去重合併 (<i class="fas fa-upload"></i>)：</strong>支援匯入 <code>.json</code> 備份檔與瀏覽器匯出的 <code>bookmarks.html</code> 書籤檔，自動比對網址略過重複項目，不會覆蓋既有書籤。</span></li>
+                    <li><span><strong>本機登入雲端自動合併：</strong>若先在本機模式儲存了書籤，後續登入 Google 帳號時會自動提示一鍵將本機書籤合併上雲端。</span></li>
+                    <li><span><strong>雙格式自動去重匯入 (<i class="fas fa-upload"></i>)：</strong>支援匯入 <code>.json</code> 備份檔與瀏覽器匯出的 <code>bookmarks.html</code> 書籤檔。</span></li>
                 </ul>
             </div>
 
@@ -450,7 +459,7 @@
                         </div>
                     </div>
                     <div class="card-footer">
-                        <div class="source-info"><span class="source-text">09/28 03:50</span></div>
+                        <div class="source-info"><span class="source-text">09/28 06:40</span></div>
                         <div class="tags-container"><span class="tag-badge" style="background:rgba(99,102,241,0.2);color:#818cf8;border:1px solid rgba(99,102,241,0.4);">預覽標籤</span></div>
                     </div>
                 </div>
@@ -526,26 +535,40 @@
         </div>
     </div>
 
-    <!-- 資料夾管理 Modal -->
+    <!-- ✅ 升級版：資料夾與全域標籤管理 Modal (雙分頁) -->
     <div class="modal-overlay" id="folder-modal" onclick="if(event.target===this)closeModal('folder-modal')">
         <div class="modal">
-            <h3 class="text-lg font-bold mb-3">📂 管理資料夾</h3>
-            <div id="folder-list" class="mb-3 max-h-52 overflow-y-auto"></div>
-            <div class="flex gap-2 items-center">
-                <select id="new-folder-icon" style="width:70px;padding:0.5rem;border-radius:6px;border:1px solid var(--border-color);background:var(--bg-dark);color:var(--text-main);font-size:0.85rem;">
-                    <option value="fa-folder">📁</option>
-                    <option value="fa-briefcase">💼</option>
-                    <option value="fa-code">💻</option>
-                    <option value="fa-graduation-cap">🎓</option>
-                    <option value="fa-gamepad">🎮</option>
-                    <option value="fa-heart">❤️</option>
-                    <option value="fa-book">📚</option>
-                    <option value="fa-video">🎬</option>
-                    <option value="fa-shopping-bag">🛍️</option>
-                </select>
-                <input type="text" id="new-folder-name" placeholder="新資料夾名稱" class="flex-1 p-2 rounded border text-sm" style="background:var(--bg-dark);color:var(--text-main);border-color:var(--border-color);" onkeydown="handleEnter(event, addFolder)">
-                <button type="button" class="btn-primary" onclick="addFolder()">新增</button>
+            <div class="modal-tabs">
+                <button type="button" class="btn-outline modal-tab-btn active" id="tab-btn-folders" onclick="switchManageTab('folders')"><i class="fas fa-folder"></i> 資料夾管理</button>
+                <button type="button" class="btn-outline modal-tab-btn" id="tab-btn-tags" onclick="switchManageTab('tags')"><i class="fas fa-tags"></i> 全域標籤管理</button>
             </div>
+
+            <!-- 分頁 1：資料夾管理 -->
+            <div id="manage-pane-folders">
+                <div id="folder-list" class="mb-3 max-h-52 overflow-y-auto"></div>
+                <div class="flex gap-2 items-center">
+                    <select id="new-folder-icon" style="width:70px;padding:0.5rem;border-radius:6px;border:1px solid var(--border-color);background:var(--bg-dark);color:var(--text-main);font-size:0.85rem;">
+                        <option value="fa-folder">📁</option>
+                        <option value="fa-briefcase">💼</option>
+                        <option value="fa-code">💻</option>
+                        <option value="fa-graduation-cap">🎓</option>
+                        <option value="fa-gamepad">🎮</option>
+                        <option value="fa-heart">❤️</option>
+                        <option value="fa-book">📚</option>
+                        <option value="fa-video">🎬</option>
+                        <option value="fa-shopping-bag">🛍️</option>
+                    </select>
+                    <input type="text" id="new-folder-name" placeholder="新資料夾名稱" class="flex-1 p-2 rounded border text-sm" style="background:var(--bg-dark);color:var(--text-main);border-color:var(--border-color);" onkeydown="handleEnter(event, addFolder)">
+                    <button type="button" class="btn-primary" onclick="addFolder()">新增</button>
+                </div>
+            </div>
+
+            <!-- 分頁 2：全域標籤管理 (改名/合併/刪除) -->
+            <div id="manage-pane-tags" style="display:none;">
+                <p class="text-xs mb-2" style="color:var(--text-muted);">點擊 <i class="fas fa-pen"></i> 可將標籤全域改名（若輸入已存在的標籤名稱將自動合併）：</p>
+                <div id="global-tag-list" class="mb-3 max-h-60 overflow-y-auto"></div>
+            </div>
+
             <div class="flex justify-end mt-4">
                 <button type="button" class="btn-outline" onclick="closeModal('folder-modal')">關閉</button>
             </div>
@@ -567,7 +590,7 @@
         </div>
     </div>
 
-    <!-- ✅ 新增：批次加標籤 Modal -->
+    <!-- 批次加標籤 Modal -->
     <div class="modal-overlay" id="batch-tag-modal" onclick="if(event.target===this)closeModal('batch-tag-modal')">
         <div class="modal">
             <h3 class="text-lg font-bold mb-3"><i class="fas fa-tags mr-2" style="color:var(--primary);"></i>批次加上標籤</h3>
@@ -583,7 +606,7 @@
         </div>
     </div>
 
-    <!-- 編輯連結 Modal (新增一鍵重新抓取網頁資訊按鈕) -->
+    <!-- 編輯連結 Modal -->
     <div class="modal-overlay" id="edit-modal" onclick="if(event.target===this)closeModal('edit-modal')">
         <div class="modal">
             <h3 class="text-lg font-bold mb-3">✏️ 編輯連結</h3>
@@ -625,7 +648,13 @@
         let activeStatus = 'all';
         let isKanbanMode=false,activeTag='all',activeFolder='all',isInitialRender=true;
         let rawLinksCache=[],allLinksCache=[],allFoldersCache=[],randomWeightMap=new Map(),searchTimeout,batchMode=false,selectedIds=new Set();
-        let isCheckingLinks=false,abortDeadCheck=false,isSavingUrl=false;
+        let lastBatchClickedId = null;
+        let isCheckingLinks=false,abortDeadCheck=false,isSavingUrl=false,hasPromptedCloudSync=false;
+
+        // 分頁無限捲動狀態
+        const PAGE_SIZE = 60;
+        let visibleLimit = PAGE_SIZE;
+        let scrollObserver = null;
         
         const isQuickAddMode = new URLSearchParams(window.location.search).get('quick_add') === '1';
 
@@ -701,12 +730,13 @@
             };
         }
 
-        // 安全搜尋關鍵字螢光筆高亮
+        // ✅ 十階優化 1：支援空白鍵多關鍵字同時螢光筆高亮
         function highlightText(escapedStr, rawQuery) {
             if (!rawQuery) return escapedStr;
-            const escapedQuery = escapeHtml(rawQuery).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-            if (!escapedQuery) return escapedStr;
-            return escapedStr.replace(new RegExp(`(${escapedQuery})`, 'gi'), '<mark class="search-hl">$1</mark>');
+            const tokens = String(rawQuery).trim().split(/\s+/).filter(Boolean).map(t => escapeHtml(t).replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).filter(Boolean);
+            if (!tokens.length) return escapedStr;
+            const pattern = tokens.join('|');
+            return escapedStr.replace(new RegExp(`(${pattern})`, 'gi'), '<mark class="search-hl">$1</mark>');
         }
 
         function formatTitleHtml(rawTitle, rawQuery) {
@@ -730,12 +760,10 @@
             return '';
         }
 
-        // 提取純網域名稱供 Google Favicon API 使用
         function getDomain(url) {
             try { return new URL(url).hostname; } catch { return String(url || ''); }
         }
 
-        // 具備 file:// 與非安全環境備援的剪貼簿複製函式
         async function copyTextToClipboard(text, successMsg) {
             try {
                 if (navigator.clipboard && window.isSecureContext) {
@@ -757,7 +785,6 @@
             }
         }
 
-        // 具備 8 秒自動逾時中斷的 Fetch 包裝器
         async function fetchWithTimeout(url, timeoutMs = 8000) {
             const controller = new AbortController();
             const timer = setTimeout(() => controller.abort(), timeoutMs);
@@ -768,7 +795,6 @@
             }
         }
 
-        // 分批寫入輔助函式 (每 450 筆自動切分一個 Batch)
         async function executeBatchInChunks(items, operationCallback) {
             if (!db || !items.length) return;
             const CHUNK_SIZE = 450;
@@ -780,13 +806,11 @@
             }
         }
 
-        // 穩定隨機洗牌權重
         function refreshRandomWeights(links) {
             randomWeightMap.clear();
             links.forEach(l => randomWeightMap.set(l.id, Math.random()));
         }
 
-        // 編輯與快速新增視窗提供「現有標籤快速點選膠囊」
         function renderModalTagSuggestions(inputId, containerId) {
             const container = document.getElementById(containerId);
             const inp = document.getElementById(inputId);
@@ -985,6 +1009,35 @@
         function showAppScreen(t){document.getElementById('login-screen').style.display='none';document.getElementById('app-screen').style.display='block';document.getElementById('btn-logout').style.display='inline-flex';document.getElementById('user-info').style.display='inline';document.getElementById('user-info').textContent=t;}
         function showLoginScreen(){document.getElementById('login-screen').style.display='flex';document.getElementById('app-screen').style.display='none';document.getElementById('btn-logout').style.display='none';document.getElementById('user-info').style.display='none';}
         
+        // ✅ 十階優化 2：當使用者從本機模式登入 Google 帳號時，自動提示是否將本機書籤合併上雲端
+        async function checkAndMergeLocalToCloud(cloudLinks) {
+            if (hasPromptedCloudSync || isLocalMode || !currentUser || !db) return;
+            hasPromptedCloudSync = true;
+            const localLinks = readLocalJson('my_links', []);
+            if (!localLinks.length) return;
+
+            const cloudUrlSet = new Set(cloudLinks.map(x => cleanUrl(x.url) || x.url));
+            const unsynced = localLinks.filter(x => {
+                const cu = cleanUrl(x.url);
+                return cu && !cloudUrlSet.has(cu);
+            });
+
+            if (!unsynced.length) return;
+            if (confirm(`🔄 偵測到您在本機模式有 ${unsynced.length} 筆尚未同步的連結，是否一併合併至目前的 Google 雲端帳號？（合併後將清空本機暫存）`)) {
+                try {
+                    await executeBatchInChunks(unsynced, (batch, x, i) => {
+                        const docId = safeId(x.id) || ('sync_' + Date.now() + '_' + i);
+                        const { id, ...cleanObj } = x;
+                        batch.set(db.collection('users').doc(currentUser.uid).collection('links').doc(docId), cleanObj);
+                    });
+                    localStorage.removeItem('my_links');
+                    showToast(`✅ 已將 ${unsynced.length} 筆本機連結同步至雲端`, "success");
+                } catch (e) {
+                    showToast("❌ 同步本機連結失敗：" + e.message, "error");
+                }
+            }
+        }
+
         if (!isQuickAddMode) {
             if (auth) {
                 auth.onAuthStateChanged(async u => {
@@ -1097,11 +1150,127 @@
 
         function setFolder(id){
             activeFolder = (activeFolder === id && id !== 'all') ? 'all' : id;
+            visibleLimit = PAGE_SIZE;
             renderFolderChips(true);
             renderCurrentView(rawLinksCache);
         }
 
+        // ✅ 十階優化 3：資料夾與全域標籤雙分頁管理 (支援全域標籤改名/合併與移除)
+        function switchManageTab(tab) {
+            const isFolders = tab === 'folders';
+            document.getElementById('tab-btn-folders').classList.toggle('active', isFolders);
+            document.getElementById('tab-btn-tags').classList.toggle('active', !isFolders);
+            document.getElementById('manage-pane-folders').style.display = isFolders ? 'block' : 'none';
+            document.getElementById('manage-pane-tags').style.display = isFolders ? 'none' : 'block';
+            if (!isFolders) renderGlobalTagList();
+        }
+
+        function renderGlobalTagList() {
+            const container = document.getElementById('global-tag-list');
+            if (!container) return;
+            const tagCounts = new Map();
+            rawLinksCache.forEach(l => {
+                if (l.categories) {
+                    const arr = Array.isArray(l.categories) ? l.categories : [l.categories];
+                    arr.forEach(t => { if (t) tagCounts.set(t, (tagCounts.get(t) || 0) + 1); });
+                }
+            });
+
+            if (tagCounts.size === 0) {
+                container.innerHTML = `<div class="text-center py-6 text-xs" style="color:var(--text-muted);">目前沒有任何標籤</div>`;
+                return;
+            }
+
+            container.innerHTML = Array.from(tagCounts.entries()).map(([t, cnt]) => `
+                <div class="flex justify-between items-center p-1.5 text-sm" style="border-bottom:1px solid var(--border-color);">
+                    <span class="flex items-center gap-2">
+                        <span class="tag-badge" style="${getTagStyles(t)}">${escapeHtml(t)}</span>
+                        <span class="text-xs" style="color:var(--text-muted);">${cnt} 筆</span>
+                    </span>
+                    <div class="flex gap-1">
+                        <button type="button" class="btn-outline btn-sm" data-tag="${escapeHtml(t)}" onclick="renameGlobalTag(this.dataset.tag)" title="全域改名或合併"><i class="fas fa-pen"></i></button>
+                        <button type="button" class="btn-outline btn-sm" style="color:var(--danger);border-color:var(--danger);" data-tag="${escapeHtml(t)}" onclick="deleteGlobalTag(this.dataset.tag)" title="從所有連結移除此標籤"><i class="fas fa-trash"></i></button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        async function renameGlobalTag(oldTag) {
+            if (!oldTag) return;
+            const newTagInput = prompt(`將標籤「${oldTag}」全域改名為（若輸入已存在的標籤名稱將自動合併）：`, oldTag);
+            if (!newTagInput || !newTagInput.trim() || newTagInput.trim() === oldTag) return;
+            const newTag = newTagInput.trim();
+
+            const affected = rawLinksCache.filter(l => {
+                const arr = Array.isArray(l.categories) ? l.categories : (l.categories ? [l.categories] : []);
+                return arr.includes(oldTag);
+            });
+            if (!affected.length) return;
+
+            try {
+                if (isLocalMode) {
+                    const a = readLocalJson('my_links', []);
+                    a.forEach(l => {
+                        const arr = Array.isArray(l.categories) ? l.categories : (l.categories ? [l.categories] : []);
+                        if (arr.includes(oldTag)) {
+                            l.categories = [...new Set(arr.map(x => x === oldTag ? newTag : x))];
+                        }
+                    });
+                    writeLocalJson('my_links', a);
+                } else {
+                    await executeBatchInChunks(affected, (batch, l) => {
+                        const arr = Array.isArray(l.categories) ? l.categories : (l.categories ? [l.categories] : []);
+                        const updated = [...new Set(arr.map(x => x === oldTag ? newTag : x))];
+                        batch.update(db.collection('users').doc(currentUser.uid).collection('links').doc(l.id), { categories: updated });
+                    });
+                }
+                if (activeTag === oldTag) activeTag = newTag;
+                loadLinks();
+                setTimeout(() => renderGlobalTagList(), 150);
+                showToast(`✅ 已將 ${affected.length} 筆連結的標籤更新為「${newTag}」`, "success");
+            } catch (e) {
+                showToast("❌ 標籤改名失敗：" + e.message, "error");
+            }
+        }
+
+        async function deleteGlobalTag(targetTag) {
+            if (!targetTag) return;
+            if (!confirm(`確定要從所有連結中移除標籤「${targetTag}」嗎？（連結本身不會被刪除）`)) return;
+
+            const affected = rawLinksCache.filter(l => {
+                const arr = Array.isArray(l.categories) ? l.categories : (l.categories ? [l.categories] : []);
+                return arr.includes(targetTag);
+            });
+            if (!affected.length) return;
+
+            try {
+                if (isLocalMode) {
+                    const a = readLocalJson('my_links', []);
+                    a.forEach(l => {
+                        const arr = Array.isArray(l.categories) ? l.categories : (l.categories ? [l.categories] : []);
+                        if (arr.includes(targetTag)) {
+                            l.categories = arr.filter(x => x !== targetTag);
+                        }
+                    });
+                    writeLocalJson('my_links', a);
+                } else {
+                    await executeBatchInChunks(affected, (batch, l) => {
+                        const arr = Array.isArray(l.categories) ? l.categories : (l.categories ? [l.categories] : []);
+                        const updated = arr.filter(x => x !== targetTag);
+                        batch.update(db.collection('users').doc(currentUser.uid).collection('links').doc(l.id), { categories: updated });
+                    });
+                }
+                if (activeTag === targetTag) activeTag = 'all';
+                loadLinks();
+                setTimeout(() => renderGlobalTagList(), 150);
+                showToast(`🗑️ 已從 ${affected.length} 筆連結移除標籤「${targetTag}」`, "success");
+            } catch (e) {
+                showToast("❌ 移除標籤失敗：" + e.message, "error");
+            }
+        }
+
         function openFolderModal(){
+            switchManageTab('folders');
             const l=document.getElementById('folder-list');
             l.innerHTML=allFoldersCache.map(f=>{
                 const fid = safeId(f.id);
@@ -1306,6 +1475,7 @@
                         if (currentSort === 'random' && randomWeightMap.size === 0) refreshRandomWeights(rawLinksCache);
                         renderFolderChips(true);
                         renderCurrentView(rawLinksCache);
+                        checkAndMergeLocalToCloud(rawLinksCache);
                     },
                     err => {
                         showToast("⚠️ 雲端同步異常：" + err.message, "error");
@@ -1323,27 +1493,61 @@
 
         function handleStatusChange(val) {
             activeStatus = val;
+            visibleLimit = PAGE_SIZE;
             renderCurrentView(rawLinksCache);
+        }
+
+        // ✅ 十階優化 4：動態更新狀態下拉選單中的各狀態連結筆數 + 空白鍵多關鍵字 AND 交集搜尋
+        function updateStatusSelectCounts(baseLinks) {
+            let unread = 0, read = 0, pinned = 0, dead = 0;
+            baseLinks.forEach(l => {
+                if (l.isRead) read++; else unread++;
+                if (l.pinned) pinned++;
+                if (l.isDead) dead++;
+            });
+            const setOpt = (id, label, cnt) => {
+                const el = document.getElementById(id);
+                if (el) el.textContent = `${label} (${cnt})`;
+            };
+            setOpt('opt-status-all', '📋 全部狀態', baseLinks.length);
+            setOpt('opt-status-unread', '📥 僅看未讀', unread);
+            setOpt('opt-status-read', '✅ 僅看已讀', read);
+            setOpt('opt-status-pinned', '⭐ 僅看釘選', pinned);
+            setOpt('opt-status-dead', '💔 僅看失效', dead);
         }
 
         function renderCurrentView(links){
             const searchEl = document.getElementById('search-input');
-            const s = searchEl.value.toLowerCase();
+            const s = searchEl.value.toLowerCase().trim();
+            const searchTokens = s ? s.split(/\s+/).filter(Boolean) : [];
             const clearBtn = document.getElementById('search-clear-btn');
             if (clearBtn) clearBtn.style.display = s.length > 0 ? 'flex' : 'none';
 
             const folderFiltered = links.filter(l => activeFolder === 'all' || l.folderId === activeFolder || (!l.folderId && activeFolder === 'default'));
             renderTagChips(folderFiltered);
 
-            let f = folderFiltered.filter(l => {
-                const ms = (l.title||'').toLowerCase().includes(s) || (l.url||'').toLowerCase().includes(s) || (l.description&&l.description.toLowerCase().includes(s)) || (Array.isArray(l.categories)&&l.categories.some(t=>t.toLowerCase().includes(s)));
+            // 先依標籤與多關鍵字交集過濾，供狀態選單統計筆數
+            const preStatusFiltered = folderFiltered.filter(l => {
                 const mt = activeTag === 'all' || (Array.isArray(l.categories) ? l.categories.includes(activeTag) : l.categories === activeTag);
-                let mStat = true;
-                if (activeStatus === 'unread') mStat = !l.isRead;
-                else if (activeStatus === 'read') mStat = !!l.isRead;
-                else if (activeStatus === 'pinned') mStat = !!l.pinned;
-                else if (activeStatus === 'dead') mStat = !!l.isDead;
-                return ms && mt && mStat;
+                if (!mt) return false;
+                if (!searchTokens.length) return true;
+                const titleStr = (l.title || '').toLowerCase();
+                const urlStr = (l.url || '').toLowerCase();
+                const descStr = (l.description || '').toLowerCase();
+                const catArr = Array.isArray(l.categories) ? l.categories.map(c => String(c).toLowerCase()) : [];
+                return searchTokens.every(tok =>
+                    titleStr.includes(tok) || urlStr.includes(tok) || descStr.includes(tok) || catArr.some(c => c.includes(tok))
+                );
+            });
+
+            updateStatusSelectCounts(preStatusFiltered);
+
+            let f = preStatusFiltered.filter(l => {
+                if (activeStatus === 'unread') return !l.isRead;
+                if (activeStatus === 'read') return !!l.isRead;
+                if (activeStatus === 'pinned') return !!l.pinned;
+                if (activeStatus === 'dead') return !!l.isDead;
+                return true;
             });
 
             f.sort((a, b) => {
@@ -1364,8 +1568,12 @@
             const countBadge = document.getElementById('result-count');
             if (countBadge) countBadge.textContent = `共 ${f.length} 筆`;
 
-            if(isKanbanMode)renderKanban(f);
-            else renderLinks(f);
+            if(isKanbanMode){
+                document.getElementById('load-more-sentinel').style.display = 'none';
+                renderKanban(f);
+            } else {
+                renderLinks(f);
+            }
             isInitialRender = false;
         }
 
@@ -1373,6 +1581,7 @@
             activeFolder = 'all';
             activeTag = 'all';
             activeStatus = 'all';
+            visibleLimit = PAGE_SIZE;
             const searchEl = document.getElementById('search-input');
             const statusEl = document.getElementById('status-select');
             if (searchEl) searchEl.value = '';
@@ -1381,7 +1590,6 @@
             renderCurrentView(rawLinksCache);
         }
 
-        // ✅ 九階優化 1：點擊連結時累計熱度，並支援「點擊後自動標記為已讀」偏好設置
         async function recordLinkClick(id) {
             if (batchMode) return;
             const target = rawLinksCache.find(x => x.id === id);
@@ -1412,20 +1620,70 @@
             copyTextToClipboard(target.url, "📋 已複製網址");
         }
 
+        // ✅ 十階優化 5：批次模式支援按住 Shift 進行區間連選
+        function applyBatchSelection(id, targetChecked, isShiftKey) {
+            if (isShiftKey && lastBatchClickedId && lastBatchClickedId !== id) {
+                const startIdx = allLinksCache.findIndex(x => x.id === lastBatchClickedId);
+                const endIdx = allLinksCache.findIndex(x => x.id === id);
+                if (startIdx !== -1 && endIdx !== -1) {
+                    const min = Math.min(startIdx, endIdx);
+                    const max = Math.max(startIdx, endIdx);
+                    for (let i = min; i <= max; i++) {
+                        const rangeId = safeId(allLinksCache[i].id);
+                        if (targetChecked) selectedIds.add(rangeId);
+                        else selectedIds.delete(rangeId);
+                    }
+                    lastBatchClickedId = id;
+                    updateBatchToolbar();
+                    renderLinks(allLinksCache);
+                    return;
+                }
+            }
+            if (targetChecked) selectedIds.add(id);
+            else selectedIds.delete(id);
+            lastBatchClickedId = id;
+            updateBatchToolbar();
+            renderLinks(allLinksCache);
+        }
+
         function handleCardClick(id, ev) {
             if (!batchMode) return;
             if (ev.target.closest('button') || ev.target.closest('input')) return;
             ev.preventDefault();
-            if (selectedIds.has(id)) selectedIds.delete(id);
-            else selectedIds.add(id);
-            updateBatchToolbar();
-            renderLinks(allLinksCache);
+            const nextChecked = !selectedIds.has(id);
+            applyBatchSelection(id, nextChecked, ev.shiftKey);
+        }
+
+        function toggleSelect(id, cb, ev) {
+            applyBatchSelection(id, cb.checked, ev && ev.shiftKey);
+        }
+
+        // ✅ 十階優化 6：千筆書籤智慧分頁與 IntersectionObserver 自動無限捲動
+        function loadMoreLinks() {
+            if (visibleLimit < allLinksCache.length) {
+                visibleLimit += PAGE_SIZE;
+                renderLinks(allLinksCache);
+            }
+        }
+
+        function initInfiniteScrollObserver() {
+            if (scrollObserver || typeof IntersectionObserver === 'undefined') return;
+            const sentinel = document.getElementById('load-more-sentinel');
+            if (!sentinel) return;
+            scrollObserver = new IntersectionObserver(entries => {
+                if (entries[0] && entries[0].isIntersecting && !isKanbanMode && visibleLimit < allLinksCache.length) {
+                    loadMoreLinks();
+                }
+            }, { rootMargin: '240px' });
+            scrollObserver.observe(sentinel);
         }
         
         function renderLinks(links){
             const c=document.getElementById('links-container');
+            const sentinel = document.getElementById('load-more-sentinel');
             const rawQuery = document.getElementById('search-input').value.trim();
             if(!links.length){
+                if (sentinel) sentinel.style.display = 'none';
                 const isFiltered = activeFolder !== 'all' || activeTag !== 'all' || activeStatus !== 'all' || rawQuery !== '';
                 c.innerHTML=`<div class="text-center py-10 col-span-full text-sm" style="color:var(--text-muted);">
                     <p class="mb-3">找不到符合條件的連結</p>
@@ -1433,8 +1691,19 @@
                 </div>`;
                 return;
             }
+
+            const visibleSlice = links.slice(0, visibleLimit);
+            if (sentinel) {
+                if (links.length > visibleLimit) {
+                    sentinel.style.display = 'block';
+                    document.getElementById('load-more-count').textContent = `剩餘 ${links.length - visibleLimit} 筆`;
+                } else {
+                    sentinel.style.display = 'none';
+                }
+            }
+
             const animClass = isInitialRender ? 'card-enter' : '';
-            c.innerHTML=links.map((l,i)=>{
+            c.innerHTML=visibleSlice.map((l,i)=>{
                 const lid = safeId(l.id);
                 const th = formatTitleHtml(l.title, rawQuery);
                 const descHtml = highlightText(escapeHtml(l.description), rawQuery);
@@ -1452,7 +1721,7 @@
                 const fb=fo?`<div class="folder-badge" onclick="if(!batchMode){event.stopPropagation();setFolder('${safeId(fo.id)}');}" title="篩選此資料夾"><i class="fas ${safeIcon(fo.icon)}"></i> ${escapeHtml(fo.name)}</div>`:"";
                 const tg=(Array.isArray(l.categories)?l.categories:(l.categories?[l.categories]:[])).map(t=>`<span class="tag-badge" style="${getTagStyles(t)}" data-tag="${escapeHtml(t)}" onclick="if(!batchMode){event.stopPropagation();setTag(this.dataset.tag);}" title="點擊篩選標籤">${escapeHtml(t)}</span>`).join('');
                 const isSelected = selectedIds.has(lid);
-                const cb=`<input type="checkbox" class="batch-checkbox" ${isSelected?'checked':''} onclick="event.stopPropagation();toggleSelect('${lid}',this)">`;
+                const cb=`<input type="checkbox" class="batch-checkbox" ${isSelected?'checked':''} onclick="event.stopPropagation();toggleSelect('${lid}',this,event)">`;
                 const dbadge=l.isDead?`<div class="dead-badge"><i class="fas fa-exclamation-triangle"></i> 失效</div>`:"";
                 const clickBadge = l.clicks > 0 ? `<span class="click-count-badge" title="造訪次數"><i class="fas fa-fire"></i>${l.clicks}</span>` : "";
                 const extraClasses = `${animClass} ${l.pinned?'is-pinned':''} ${l.isRead?'is-read':''} ${l.isDead?'is-dead':''} ${fo?'has-folder':''} ${!safeImg?'no-image':''} ${isSelected?'batch-selected':''}`;
@@ -1488,13 +1757,21 @@
 
         function setTag(t){
             activeTag = (activeTag === t && t !== 'all') ? 'all' : t;
+            visibleLimit = PAGE_SIZE;
             renderCurrentView(rawLinksCache);
         }
 
-        function handleSearchInput(){clearTimeout(searchTimeout);searchTimeout=setTimeout(()=>{renderCurrentView(rawLinksCache);},200);}
+        function handleSearchInput(){
+            clearTimeout(searchTimeout);
+            searchTimeout=setTimeout(()=>{
+                visibleLimit = PAGE_SIZE;
+                renderCurrentView(rawLinksCache);
+            },200);
+        }
         function clearSearchInput(){
             const inp = document.getElementById('search-input');
             inp.value = '';
+            visibleLimit = PAGE_SIZE;
             renderCurrentView(rawLinksCache);
             inp.focus();
         }
@@ -1579,7 +1856,6 @@
             }
         }
 
-        // ✅ 九階優化 2：編輯視窗內一鍵「重新抓取最新網頁標題、摘要與縮圖」
         async function refetchInEditModal() {
             const raw = document.getElementById('edit-url').value.trim();
             const u = cleanUrl(raw);
@@ -1659,10 +1935,9 @@
             document.getElementById('kanban-board').style.display=isKanbanMode?'flex':'none';
             document.getElementById('btn-kanban').classList.toggle('btn-primary',isKanbanMode);
             document.getElementById('btn-kanban').classList.toggle('btn-outline',!isKanbanMode);
-            if(isKanbanMode)renderKanban(allLinksCache);
+            renderCurrentView(rawLinksCache);
         }
         
-        // ✅ 九階優化 3：看板模式同步支援「搜尋關鍵字高亮」與「複製網址 / 編輯 / 刪除」操作鈕
         function renderKanban(links){
             const rawQuery = document.getElementById('search-input').value.trim();
             const a=[],b=[],c=[];
@@ -1735,6 +2010,7 @@
             const i=document.getElementById('refresh-icon');
             i.classList.add('rotating');
             isInitialRender = true;
+            visibleLimit = PAGE_SIZE;
             if (currentSort === 'random') refreshRandomWeights(rawLinksCache);
             loadLinks();
             setTimeout(()=>i.classList.remove('rotating'),600);
@@ -1815,7 +2091,6 @@
             return { links: parsedLinks, folders: newFolders };
         }
         
-        // ✅ 九階優化 4：JSON 與 HTML 匯入皆支援「智能網址去重合併 (Smart Merge)」，不洗掉既有資料
         function importData(ev){
             const f=ev.target.files[0];if(!f)return;
             const isHtmlFile = /\.(html?|htm)$/i.test(f.name);
@@ -1955,12 +2230,12 @@
             }
             batchMode=!batchMode;
             selectedIds.clear();
+            lastBatchClickedId = null;
             document.body.classList.toggle('batch-mode',batchMode);
             document.getElementById('batch-toolbar').classList.toggle('active',batchMode);
             updateBatchToolbar();
             renderCurrentView(rawLinksCache);
         }
-        function toggleSelect(id,cb){if(cb.checked)selectedIds.add(id);else selectedIds.delete(id);updateBatchToolbar();renderLinks(allLinksCache);}
         function updateBatchToolbar(){document.getElementById('batch-count').textContent=selectedIds.size;}
         
         function batchSelectAll() {
@@ -2003,7 +2278,6 @@
             }
         }
 
-        // ✅ 九階優化 5：批次加標籤功能 (為所有勾選連結附加新標籤並自動去重)
         function openBatchTagModal() {
             if (!selectedIds.size) { showToast("請先勾選連結", "error"); return; }
             document.getElementById('batch-tag-input').value = '';
@@ -2103,7 +2377,6 @@
             }
         }
         
-        // ✅ 九階優化 6：失效檢測支援「即時進度顯示 (如 12/45)」與「點擊中途停止」
         async function startDeadLinkCheck(){
             if (isCheckingLinks) {
                 abortDeadCheck = true;
@@ -2305,6 +2578,7 @@
             setThumbMode(savedThumb);
             
             updateHtmlSaveTime();
+            initInfiniteScrollObserver();
             const m={name:"智能連結",short_name:"連結",start_url:".",display:"standalone",background_color:"#0f172a",theme_color:"#6366f1",icons:[{src:"data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🔗</text></svg>",sizes:"any",type:"image/svg+xml"}]};
             document.getElementById('pwa-manifest').href=URL.createObjectURL(new Blob([JSON.stringify(m)],{type:'application/json'}));
         };
