@@ -372,7 +372,7 @@
                 <div class="help-section-title"><i class="fas fa-cloud-download-alt"></i> 雲端／本機雙模式與資料備份</div>
                 <ul class="help-list">
                     <li><span><strong>雙模式切換：</strong>支援「Google 帳號雲端同步（Firebase）」與免登入的「本機測試模式（LocalStorage）」。</span></li>
-                    <li><span><strong>多元匯出與備份：</strong>點擊 <i class="fab fa-markdown"></i> 可將當前篩選清單複製為 Markdown 語法；點擊 <i class="fas fa-download"></i> / <i class="fas fa-upload"></i> 可匯出或還原完整 JSON 備份檔（支援大筆數自動分批寫入）。</span></li>
+                    <li><span><strong>多元匯出與備份：</strong>點擊 <i class="fab fa-markdown"></i> 可將當前篩選清單複製為 Markdown 語法（自動轉義括號）；點擊 <i class="fas fa-download"></i> / <i class="fas fa-upload"></i> 可匯出或還原完整 JSON 備份檔。</span></li>
                 </ul>
             </div>
 
@@ -408,7 +408,7 @@
                         </div>
                     </div>
                     <div class="card-footer">
-                        <div class="source-info"><span class="source-text">09/28 00:55</span></div>
+                        <div class="source-info"><span class="source-text">09/28 01:35</span></div>
                         <div class="tags-container"><span class="tag-badge" style="background:rgba(99,102,241,0.2);color:#818cf8;border:1px solid rgba(99,102,241,0.4);">預覽標籤</span></div>
                     </div>
                 </div>
@@ -543,6 +543,10 @@
         let app,auth,db,currentUser=null,isLocalMode=(localStorage.getItem('isLocalMode')==='true'),unsubscribeSnapshot=null;
         let currentView='masonry',isKanbanMode=false,activeTag='all',activeFolder='all',currentSort='newest';
         let rawLinksCache=[],allLinksCache=[],allFoldersCache=[],randomWeightMap=new Map(),searchTimeout,batchMode=false,selectedIds=new Set(),isCheckingLinks=false,isSavingUrl=false;
+        
+        // ✅ 三階優化 1：在頂層優先識別是否為擴充功能彈窗，避免背景主程式監聽器重複下載整張表
+        const isQuickAddMode = new URLSearchParams(window.location.search).get('quick_add') === '1';
+
         try{app=firebase.initializeApp(firebaseConfig);auth=firebase.auth();db=firebase.firestore();}catch(e){}
 
         // 儲存與比對專用：嚴格 URL 協定驗證與追蹤碼淨化
@@ -569,7 +573,7 @@
             }
         }
 
-        // ✅ 二階優化 1：渲染專用極速安全過濾 (不重複解析 URL SearchParams，並支援 data:image/ 預覽圖)
+        // 渲染專用極速安全過濾 (支援 http/https 與 data:image/ 預覽圖)
         function safeHref(url, allowDataImg = false) {
             const s = String(url || '').trim();
             if (/^https?:\/\//i.test(s)) return escapeHtml(s);
@@ -577,7 +581,34 @@
             return '';
         }
 
-        // ✅ 二階優化 2：具備 8 秒自動逾時中斷的 Fetch 包裝器 (防止死網卡死按鈕)
+        // ✅ 三階優化 2：提取純網域名稱供 Google Favicon API 使用，提高圖示命中率與隱私性
+        function getDomain(url) {
+            try { return new URL(url).hostname; } catch { return String(url || ''); }
+        }
+
+        // ✅ 三階優化 3：具備 file:// 與非安全環境備援的剪貼簿複製函式
+        async function copyTextToClipboard(text, successMsg) {
+            try {
+                if (navigator.clipboard && window.isSecureContext) {
+                    await navigator.clipboard.writeText(text);
+                } else {
+                    const ta = document.createElement('textarea');
+                    ta.value = text;
+                    ta.style.position = 'fixed';
+                    ta.style.left = '-9999px';
+                    ta.style.opacity = '0';
+                    document.body.appendChild(ta);
+                    ta.select();
+                    document.execCommand('copy');
+                    ta.remove();
+                }
+                showToast(successMsg, "success");
+            } catch {
+                showToast("❌ 複製失敗，請手動複製", "error");
+            }
+        }
+
+        // 具備 8 秒自動逾時中斷的 Fetch 包裝器
         async function fetchWithTimeout(url, timeoutMs = 8000) {
             const controller = new AbortController();
             const timer = setTimeout(() => controller.abort(), timeoutMs);
@@ -657,10 +688,10 @@
             syncFontUI(parseFloat(e.target.value));
         });
 
-        // 重複連結檢查與置頂舊連結邏輯
+        // ✅ 三階優化 4：極速防重比對 (優先做 O(1) 純字串比對，不相等才呼叫 cleanUrl)
         async function checkDuplicateAndHandle(cleanedUrl) {
             const all = await getAllLinks();
-            const existing = all.find(l => cleanUrl(l.url) === cleanedUrl);
+            const existing = all.find(l => l.url === cleanedUrl || cleanUrl(l.url) === cleanedUrl);
             if (!existing) return false;
 
             const folderObj = allFoldersCache.find(f => f.id === existing.folderId) || { name: '未分類' };
@@ -755,29 +786,32 @@
         function showAppScreen(t){document.getElementById('login-screen').style.display='none';document.getElementById('app-screen').style.display='block';document.getElementById('btn-logout').style.display='inline-flex';document.getElementById('user-info').style.display='inline';document.getElementById('user-info').textContent=t;}
         function showLoginScreen(){document.getElementById('login-screen').style.display='flex';document.getElementById('app-screen').style.display='none';document.getElementById('btn-logout').style.display='none';document.getElementById('user-info').style.display='none';}
         
-        if(auth){
-            auth.onAuthStateChanged(async u=>{
-                if(u){
-                    isLocalMode=false;
-                    localStorage.removeItem('isLocalMode');
-                    currentUser=u;
-                    showAppScreen(u.email);
-                    await renderFolderChips();
-                    loadLinks();
-                } else {
-                    currentUser=null;
-                    if(isLocalMode){
-                        showAppScreen("本機模式");
+        // 非擴充功能彈窗時，才啟動主程式登入監聽
+        if (!isQuickAddMode) {
+            if (auth) {
+                auth.onAuthStateChanged(async u => {
+                    if (u) {
+                        isLocalMode = false;
+                        localStorage.removeItem('isLocalMode');
+                        currentUser = u;
+                        showAppScreen(u.email);
                         await renderFolderChips();
                         loadLinks();
                     } else {
-                        showLoginScreen();
+                        currentUser = null;
+                        if (isLocalMode) {
+                            showAppScreen("本機模式");
+                            await renderFolderChips();
+                            loadLinks();
+                        } else {
+                            showLoginScreen();
+                        }
                     }
-                }
-            });
-        } else if (isLocalMode) {
-            showAppScreen("本機模式");
-            renderFolderChips().then(() => loadLinks());
+                });
+            } else if (isLocalMode) {
+                showAppScreen("本機模式");
+                renderFolderChips().then(() => loadLinks());
+            }
         }
         
         document.getElementById('btn-google-login').addEventListener('click',()=>{if(auth)auth.signInWithPopup(new firebase.auth.GoogleAuthProvider());});
@@ -903,7 +937,13 @@
             loadLinks();
         }
 
-        function stringToHslColor(s,a=0.6,l=0.5){let h=0;for(let i=0;i<s.length;i++)h=s.charCodeAt(i)+((h<<5)-h);return`hsl(${h%360},${a*100}%,${l*100}%)`;}
+        // ✅ 三階優化 5：修正 32-bit 溢位負數問題，確保 HSL 色相角永遠為 0~359 正整數
+        function stringToHslColor(s,a=0.6,l=0.5){
+            let h=0;
+            const str = String(s || '');
+            for(let i=0;i<str.length;i++) h = str.charCodeAt(i) + ((h << 5) - h);
+            return `hsl(${Math.abs(h) % 360}, ${a * 100}%, ${l * 100}%)`;
+        }
         function getTagStyles(t){return`background:${stringToHslColor(t,0.4,0.85)};color:${stringToHslColor(t,0.7,0.3)};border:1px solid ${stringToHslColor(t,0.4,0.7)};`;}
 
         function getYouTubeVideoId(u){const r=/(?:youtu\.be\/|youtube\.com\/(?:watch\?v=|embed\/|v\/|shorts\/))([a-zA-Z0-9_-]{11})/;return u.match(r)?.[1]||null;}
@@ -990,7 +1030,6 @@
             }
         }
 
-        // ✅ 二階優化 3：優先使用記憶體快取 rawLinksCache，零延遲且不浪費 Firestore 讀取額度
         async function getAllLinks(){
             if(rawLinksCache.length > 0) return rawLinksCache;
             if(isLocalMode) return JSON.parse(localStorage.getItem('my_links')||'[]');
@@ -1048,7 +1087,6 @@
             else renderLinks(f);
         }
 
-        // ✅ 二階優化 4：原子化點擊計數 (FieldValue.increment) 與免重繪局部更新
         async function recordLinkClick(id) {
             if (batchMode) return;
             const target = rawLinksCache.find(x => x.id === id);
@@ -1074,7 +1112,7 @@
             if (ev) ev.stopPropagation();
             const target = rawLinksCache.find(x => x.id === id);
             if (!target || !target.url) return;
-            navigator.clipboard.writeText(target.url).then(() => showToast("📋 已複製網址", "success"));
+            copyTextToClipboard(target.url, "📋 已複製網址");
         }
 
         function handleCardClick(id, ev) {
@@ -1099,6 +1137,7 @@
                 }
                 const safeUrl = safeHref(l.url) || '#';
                 const safeImg = safeHref(l.image, true);
+                const domainHost = encodeURIComponent(getDomain(l.url));
                 let ih = safeImg ? `<a href="${safeUrl}" target="_blank" rel="noopener noreferrer" class="link-image-preview" onclick="if(batchMode){event.preventDefault();return;}recordLinkClick('${l.id}')"><img loading="lazy" src="${safeImg}" onerror="this.parentElement.style.display='none'"></a>` : "";
                 let sh = safeImg ? `<a href="${safeUrl}" target="_blank" rel="noopener noreferrer" class="link-thumb-small" onclick="if(batchMode){event.preventDefault();return;}recordLinkClick('${l.id}')"><img loading="lazy" src="${safeImg}" onerror="this.parentElement.style.display='none'"></a>` : "";
                 const fo=allFoldersCache.find(f=>f.id===l.folderId)||allFoldersCache.find(f=>f.id==='default');
@@ -1109,7 +1148,7 @@
                 const dbadge=l.isDead?`<div class="dead-badge"><i class="fas fa-exclamation-triangle"></i> 失效</div>`:"";
                 const clickBadge = l.clicks > 0 ? `<span class="click-count-badge" title="造訪次數"><i class="fas fa-fire"></i>${l.clicks}</span>` : "";
                 const extraClasses = `${l.pinned?'is-pinned':''} ${l.isRead?'is-read':''} ${l.isDead?'is-dead':''} ${fo?'has-folder':''} ${!safeImg?'no-image':''} ${isSelected?'batch-selected':''}`;
-                return`<div class="link-card card-enter ${extraClasses}" style="animation-delay:${Math.min(i*0.015, 0.3)}s" onclick="handleCardClick('${l.id}',event)">${cb}${fb}${ih}<div class="card-actions"><button type="button" class="btn-outline" onclick="copyLinkById('${l.id}',event)" title="複製網址"><i class="fas fa-copy"></i></button><button type="button" class="btn-outline" onclick="togglePin('${l.id}')" title="釘選置頂"><i class="fas fa-thumbtack" style="${l.pinned?'color:var(--warning);':''}"></i></button><button type="button" class="btn-outline" onclick="toggleRead('${l.id}')" title="標記已讀"><i class="fas ${l.isRead?'fa-check-circle':'fa-circle'}"></i></button><button type="button" class="btn-outline" onclick="openEdit('${l.id}')" title="編輯"><i class="fas fa-edit"></i></button><button type="button" class="btn-outline btn-delete" onclick="deleteLink('${l.id}')" title="刪除"><i class="fas fa-trash"></i></button></div><div class="card-body-row"><div class="card-text-col"><p class="link-desc">${escapeHtml(l.description)}</p><h3 class="link-title"><a href="${safeUrl}" target="_blank" rel="noopener noreferrer" onclick="if(batchMode){event.preventDefault();return;}recordLinkClick('${l.id}')">${th}</a></h3><a href="${safeUrl}" target="_blank" rel="noopener noreferrer" class="link-url-display" onclick="if(batchMode){event.preventDefault();return;}recordLinkClick('${l.id}')">${safeUrl}</a></div>${sh}</div><div class="card-footer"><div class="source-info"><img loading="lazy" class="favicon" src="https://www.google.com/s2/favicons?domain=${encodeURIComponent(l.url)}&sz=64" alt=""><span class="source-text">${timeText}</span><span id="click-badge-${l.id}">${clickBadge}</span></div><div class="tags-container">${tg}</div></div>${dbadge}</div>`;
+                return`<div class="link-card card-enter ${extraClasses}" style="animation-delay:${Math.min(i*0.015, 0.3)}s" onclick="handleCardClick('${l.id}',event)">${cb}${fb}${ih}<div class="card-actions"><button type="button" class="btn-outline" onclick="copyLinkById('${l.id}',event)" title="複製網址"><i class="fas fa-copy"></i></button><button type="button" class="btn-outline" onclick="togglePin('${l.id}')" title="釘選置頂"><i class="fas fa-thumbtack" style="${l.pinned?'color:var(--warning);':''}"></i></button><button type="button" class="btn-outline" onclick="toggleRead('${l.id}')" title="標記已讀"><i class="fas ${l.isRead?'fa-check-circle':'fa-circle'}"></i></button><button type="button" class="btn-outline" onclick="openEdit('${l.id}')" title="編輯"><i class="fas fa-edit"></i></button><button type="button" class="btn-outline btn-delete" onclick="deleteLink('${l.id}')" title="刪除"><i class="fas fa-trash"></i></button></div><div class="card-body-row"><div class="card-text-col"><p class="link-desc">${escapeHtml(l.description)}</p><h3 class="link-title"><a href="${safeUrl}" target="_blank" rel="noopener noreferrer" onclick="if(batchMode){event.preventDefault();return;}recordLinkClick('${l.id}')">${th}</a></h3><a href="${safeUrl}" target="_blank" rel="noopener noreferrer" class="link-url-display" onclick="if(batchMode){event.preventDefault();return;}recordLinkClick('${l.id}')">${safeUrl}</a></div>${sh}</div><div class="card-footer"><div class="source-info"><img loading="lazy" class="favicon" src="https://www.google.com/s2/favicons?domain=${domainHost}&sz=64" alt=""><span class="source-text">${timeText}</span><span id="click-badge-${l.id}">${clickBadge}</span></div><div class="tags-container">${tg}</div></div>${dbadge}</div>`;
             }).join('');
         }
         
@@ -1177,7 +1216,28 @@
             initSortable();
         }
 
-        function initSortable(){['list-inbox','list-starred','list-done'].forEach(id=>{const el=document.getElementById(id);if(el.sortable)el.sortable.destroy();el.sortable=Sortable.create(el,{group:'kanban',animation:150,ghostClass:'sortable-ghost',onEnd:async e=>{const iid=e.item.dataset.id,nc=e.to.id;let ns={pinned:false,isRead:false};if(nc==='list-starred')ns={pinned:true,isRead:false};else if(nc==='list-done')ns={pinned:false,isRead:true};if(isLocalMode){const a=JSON.parse(localStorage.getItem('my_links')||'[]');const i=a.findIndex(x=>x.id===iid);if(i>-1){a[i].pinned=ns.pinned;a[i].isRead=ns.isRead;localStorage.setItem('my_links',JSON.stringify(a));}loadLinks();}else{await db.collection('users').doc(currentUser.uid).collection('links').doc(iid).update(ns);}}});});}
+        function initSortable(){
+            if (typeof Sortable === 'undefined') return;
+            ['list-inbox','list-starred','list-done'].forEach(id=>{
+                const el=document.getElementById(id);
+                if(!el)return;
+                if(el.sortable)el.sortable.destroy();
+                el.sortable=Sortable.create(el,{group:'kanban',animation:150,ghostClass:'sortable-ghost',onEnd:async e=>{
+                    const iid=e.item.dataset.id,nc=e.to.id;
+                    let ns={pinned:false,isRead:false};
+                    if(nc==='list-starred')ns={pinned:true,isRead:false};
+                    else if(nc==='list-done')ns={pinned:false,isRead:true};
+                    if(isLocalMode){
+                        const a=JSON.parse(localStorage.getItem('my_links')||'[]');
+                        const i=a.findIndex(x=>x.id===iid);
+                        if(i>-1){a[i].pinned=ns.pinned;a[i].isRead=ns.isRead;localStorage.setItem('my_links',JSON.stringify(a));}
+                        loadLinks();
+                    }else{
+                        await db.collection('users').doc(currentUser.uid).collection('links').doc(iid).update(ns);
+                    }
+                }});
+            });
+        }
         
         function applyTheme(isLight) {
             document.body.classList.toggle('light-mode', isLight);
@@ -1199,9 +1259,17 @@
             setTimeout(()=>i.classList.remove('rotating'),600);
         }
 
-        function exportAsMarkdown(){if(!allLinksCache.length)return;let m='# 智能連結清單\n\n';allLinksCache.forEach(l=>{m+=`- [${l.title}](${l.url})\n`;});navigator.clipboard.writeText(m).then(()=>showToast("✅ 已複製 Markdown","success"));}
+        // ✅ 三階優化 6：Markdown 匯出自動將方括號轉義為全形，避免破壞 Markdown 連結語法
+        function exportAsMarkdown(){
+            if(!allLinksCache.length)return;
+            let m='# 智能連結清單\n\n';
+            allLinksCache.forEach(l=>{
+                const safeTitle = String(l.title || '未命名連結').replace(/\[/g, '【').replace(/\]/g, '】');
+                m+=`- [${safeTitle}](${l.url})\n`;
+            });
+            copyTextToClipboard(m, "✅ 已複製 Markdown");
+        }
         
-        // ✅ 二階優化 5：下載完成後自動釋放 ObjectURL 記憶體
         async function exportData(){
             const l = await getAllLinks();
             const f = allFoldersCache.length ? allFoldersCache : await getFolders();
@@ -1381,7 +1449,7 @@
 
         window.onload = async () => {
             const urlParams = new URLSearchParams(window.location.search);
-            if (urlParams.get('quick_add') === '1') {
+            if (isQuickAddMode) {
                 const extUrl = urlParams.get('url');
                 const extTitle = urlParams.get('title');
                 
