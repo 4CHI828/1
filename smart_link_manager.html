@@ -49,8 +49,9 @@
         .input-section input { flex: 1; padding: 0.5rem 0.8rem; border-radius: 6px; border: 1px solid var(--border-color); background-color: var(--bg-dark); color: var(--text-main); font-size: calc(0.85rem * var(--font-scale)); outline: none; }
         .input-section input:focus { border-color: var(--primary); }
 
-        .chips-container { display: flex; flex-wrap: wrap; gap: 0.4rem; margin-bottom: 0.3rem; }
-        .chip { padding: 0.2rem 0.6rem; border-radius: 12px; background: var(--card-dark); border: 1px solid var(--border-color); color: var(--text-main); font-size: calc(0.75rem * var(--font-scale)); cursor: pointer; transition: all 0.2s; display: flex; align-items: center; gap: 0.3rem; user-select: none; }
+        .chips-container { display: flex; flex-wrap: wrap; gap: 0.4rem; margin-bottom: 0.3rem; scrollbar-width: none; }
+        .chips-container::-webkit-scrollbar { display: none; }
+        .chip { padding: 0.2rem 0.6rem; border-radius: 12px; background: var(--card-dark); border: 1px solid var(--border-color); color: var(--text-main); font-size: calc(0.75rem * var(--font-scale)); cursor: pointer; transition: all 0.2s; display: flex; align-items: center; gap: 0.3rem; user-select: none; white-space: nowrap; flex-shrink: 0; }
         .chip:hover { border-color: var(--primary); } 
         .chip.active { background: var(--primary); color: white; border-color: var(--primary); }
         .chip-count { font-size: 0.85em; opacity: 0.75; font-weight: 600; padding-left: 2px; }
@@ -63,8 +64,11 @@
         .search-clear-btn { position: absolute; right: 6px; top: 50%; transform: translateY(-50%); width: 22px; height: 22px; padding: 0; border-radius: 50%; background: transparent; color: var(--text-muted); display: none; justify-content: center; align-items: center; font-size: 0.75rem; }
         .search-clear-btn:hover { color: var(--text-main); background: var(--border-color); }
         .result-count-badge { font-size: 0.75rem; color: var(--text-muted); white-space: nowrap; padding: 0 0.2rem; }
-        .sort-select { padding: 0.45rem 0.6rem; border-radius: 6px; border: 1px solid var(--border-color); background-color: var(--card-dark); color: var(--text-main); font-size: 0.78rem; outline: none; cursor: pointer; }
+        .sort-select { padding: 0.45rem 0.5rem; border-radius: 6px; border: 1px solid var(--border-color); background-color: var(--card-dark); color: var(--text-main); font-size: 0.76rem; outline: none; cursor: pointer; }
         .sort-select:hover { border-color: var(--primary); }
+
+        /* 搜尋關鍵字高亮樣式 */
+        mark.search-hl { background-color: rgba(245, 158, 11, 0.35); color: inherit; padding: 0 2px; border-radius: 3px; font-weight: inherit; }
 
         .masonry-grid { column-count: 5; column-gap: 0.8rem; }
         .masonry-grid .link-card { break-inside: avoid; margin-bottom: 0.8rem; display: block; width: 100%; }
@@ -223,9 +227,11 @@
             .input-section { flex-direction: column; } 
             .input-section input { width: 100%; } 
             .input-section .btn-primary { width: 100%; justify-content: center; }
+            /* 手機版分類晶片改為單行平滑橫向滑動，不佔用垂直空間 */
+            .chips-container { flex-wrap: nowrap; overflow-x: auto; padding-bottom: 2px; }
             .filter-section { flex-direction: column; align-items: stretch; } 
             .search-box { min-width: 100%; } 
-            .filter-section .flex.gap-1 { justify-content: space-between; width: 100%; }
+            .filter-section .flex.gap-1 { justify-content: space-between; width: 100%; flex-wrap: wrap; }
             .link-image-preview { height: 120px; } 
             .link-card { padding: 0.5rem; }
             .link-title { font-size: calc(0.8rem * var(--font-scale)); margin-bottom: 0.1rem; }
@@ -256,10 +262,11 @@
             <button type="button" class="btn-outline btn-icon-only" id="btn-theme" onclick="toggleTheme()" title="切換主題"><i class="fas fa-sun" id="theme-icon"></i></button>
             <button type="button" class="btn-outline btn-icon-only" id="btn-refresh" onclick="handleRefresh()" title="重新整理"><i class="fas fa-sync-alt" id="refresh-icon"></i></button>
             <button type="button" class="btn-outline btn-icon-only" onclick="exportData()" title="匯出備份"><i class="fas fa-download"></i></button>
-            <button type="button" class="btn-outline btn-icon-only" onclick="document.getElementById('import-file').click()" title="匯入備份"><i class="fas fa-upload"></i></button>
+            <button type="button" class="btn-outline btn-icon-only" onclick="document.getElementById('import-file').click()" title="匯入 JSON 備份或瀏覽器 HTML 書籤"><i class="fas fa-upload"></i></button>
             <a href="https://4chi828.github.io/1/Smart_Link_Manager.crx" download class="btn-outline btn-icon-only" title="下載擴充功能 (CRX)"><i class="fas fa-box"></i></a>
             <button type="button" class="btn-outline btn-icon-only" onclick="openModal('help-modal')" title="功能說明 (?)"><i class="fas fa-question"></i></button>
-            <input type="file" id="import-file" style="display:none" accept=".json" onchange="importData(event)">
+            <!-- ✅ 支援同時匯入 .json 備份與瀏覽器 .html 書籤檔 -->
+            <input type="file" id="import-file" style="display:none" accept=".json,.html,.htm" onchange="importData(event)">
             <button type="button" class="btn-outline btn-icon-only" id="btn-logout" style="display:none;" onclick="handleLogout()" title="登出"><i class="fas fa-sign-out-alt"></i></button>
         </div>
     </header>
@@ -278,7 +285,7 @@
     <main id="app-screen">
         <div class="control-panel">
             <div class="input-section">
-                <input type="text" id="url-input" placeholder="貼上網址或帶文字的分享連結，自動提取並存檔 [N]" onkeydown="handleEnter(event, processAndSaveUrl)" onpaste="handleAutoSave()">
+                <input type="text" id="url-input" placeholder="貼上網址或帶文字的分享連結，自動提取並存檔 (或直接按 Ctrl+V) [N]" onkeydown="handleEnter(event, processAndSaveUrl)" onpaste="handleAutoSave()">
                 <button type="button" class="btn-primary" id="btn-add-url" onclick="processAndSaveUrl()"><span class="btn-text">儲存</span><div class="loader" id="add-loader"></div></button>
             </div>
             <div>
@@ -287,11 +294,19 @@
                 <div class="filter-section">
                     <div class="search-box">
                         <i class="fas fa-search"></i>
-                        <input type="text" id="search-input" placeholder="搜尋標題、網址、標籤 [/]" oninput="handleSearchInput()">
+                        <input type="text" id="search-input" placeholder="搜尋標題、網址、標籤 (支援關鍵字高亮) [/]" oninput="handleSearchInput()">
                         <button type="button" class="search-clear-btn" id="search-clear-btn" onclick="clearSearchInput()" title="清除搜尋"><i class="fas fa-times"></i></button>
                     </div>
                     <div class="flex gap-1 items-center">
                         <span id="result-count" class="result-count-badge">共 0 筆</span>
+                        <!-- ✅ 新增：閱讀與健康狀態快速篩選 -->
+                        <select id="status-select" class="sort-select" onchange="handleStatusChange(this.value)" title="狀態篩選">
+                            <option value="all">📋 全部狀態</option>
+                            <option value="unread">📥 僅看未讀</option>
+                            <option value="read">✅ 僅看已讀</option>
+                            <option value="pinned">⭐ 僅看釘選</option>
+                            <option value="dead">💔 僅看失效</option>
+                        </select>
                         <select id="sort-select" class="sort-select" onchange="handleSortChange(this.value)" title="排序方式">
                             <option value="newest">🕒 最新加入</option>
                             <option value="oldest">⏳ 最舊優先</option>
@@ -316,7 +331,7 @@
     <!-- 回到頂部按鈕 -->
     <button type="button" id="back-to-top" onclick="window.scrollTo({top:0,behavior:'smooth'})" title="回到頂部"><i class="fas fa-arrow-up"></i></button>
 
-    <!-- 批次操作工具列 (新增批次已讀/未讀) -->
+    <!-- 批次操作工具列 -->
     <div class="batch-toolbar" id="batch-toolbar">
         <span>已選 <strong id="batch-count" style="color:var(--primary);">0</strong></span>
         <button type="button" class="btn-outline" onclick="batchSelectAll()"><i class="fas fa-check-double"></i> 全選/反選</button>
@@ -347,32 +362,32 @@
             <div class="help-section">
                 <div class="help-section-title"><i class="fas fa-keyboard"></i> 鍵盤快捷鍵（非輸入狀態下）</div>
                 <div class="grid grid-cols-2 gap-2 text-xs" style="color:var(--text-muted);">
+                    <div><span class="kbd-badge">Ctrl+V</span> 頁面任意處直接貼上存檔</div>
                     <div><span class="kbd-badge">N</span> 聚焦上方網址輸入框</div>
                     <div><span class="kbd-badge">/</span> 聚焦搜尋框快速檢索</div>
                     <div><span class="kbd-badge">B</span> 開啟 / 關閉批次管理模式</div>
                     <div><span class="kbd-badge">?</span> 開啟本功能說明視窗</div>
-                    <div class="col-span-2"><span class="kbd-badge">Esc</span> 關閉所有彈出視窗或退出批次模式</div>
+                    <div><span class="kbd-badge">Esc</span> 關閉視窗或退出批次模式</div>
                 </div>
             </div>
 
             <!-- 2. 智能存檔與網址淨化 -->
             <div class="help-section">
-                <div class="help-section-title"><i class="fas fa-wand-magic-sparkles"></i> 智能存檔、混合文案提取與防重複</div>
+                <div class="help-section-title"><i class="fas fa-wand-magic-sparkles"></i> 全域貼上、混合文案提取與防重複</div>
                 <ul class="help-list">
-                    <li><span><strong>混合分享文案提取：</strong>直接貼上手機 App（如抖音、小紅書、YouTube）帶文字的分享段落，系統會自動分離出網址與標題並識別平台標籤。</span></li>
+                    <li><span><strong>全域 <code>Ctrl+V</code> 直存 & 混合文案提取：</strong>不用點選輸入框，打開網頁直接按 <code>Ctrl+V</code> 即可存檔；貼上手機 App（抖音、小紅書、YouTube）帶文字的分享段落會自動分離出網址與標題。</span></li>
                     <li><span><strong>追蹤碼自動淨化：</strong>存檔時自動拔除 <code>utm_*</code>、<code>fbclid</code>、<code>igshid</code>、<code>si</code>、<code>xmt</code>、<code>vd_source</code> 等冗長追蹤參數。</span></li>
                     <li><span><strong>重複連結偵測：</strong>若偵測到相同網址已存在，會提醒所在資料夾，並可選擇一鍵將舊連結更新時間推至最上方。</span></li>
-                    <li><span><strong>快速新增 (<i class="fas fa-puzzle-piece"></i>) 與點選既有標籤：</strong>支援手動自訂標題或直接點擊現有標籤膠囊快速帶入。</span></li>
                 </ul>
             </div>
 
             <!-- 3. 資料夾、標籤與多維度排序 -->
             <div class="help-section">
-                <div class="help-section-title"><i class="fas fa-folder-tree"></i> 階層分類連動、搜尋與 5 種排序</div>
+                <div class="help-section-title"><i class="fas fa-folder-tree"></i> 階層分類連動、搜尋高亮與狀態快篩</div>
                 <ul class="help-list">
-                    <li><span><strong>資料夾 ➔ 標籤階層連動：</strong>選擇特定資料夾時，下方標籤列會自動只統計該資料夾內的標籤與筆數。</span></li>
-                    <li><span><strong>卡片內徽章直覺篩選：</strong>直接點擊卡片上的<strong>資料夾或標籤徽章</strong>即可過濾同類書籤，再點一次可取消篩選。</span></li>
-                    <li><span><strong>5 種排序切換（自動記憶）：</strong>支援「🕒 最新加入」、「⏳ 最舊優先」、「🔥 最常造訪」、「🔤 標題 A-Z」與「🎲 隨機靈感」，且<strong>釘選（<i class="fas fa-thumbtack"></i>）卡片永遠置頂</strong>。</span></li>
+                    <li><span><strong>資料夾 ➔ 標籤階層連動：</strong>選擇特定資料夾時，下方標籤列會自動只統計該資料夾內的標籤與筆數；支援直接點擊卡片上的徽章進行過濾。</span></li>
+                    <li><span><strong>搜尋關鍵字高亮：</strong>輸入關鍵字時，卡片標題與摘要中的命中字詞會自動以螢光底色高亮標示。</span></li>
+                    <li><span><strong>狀態快篩與 5 種排序：</strong>支援篩選「僅看未讀／已讀／釘選／失效」以及 5 種排序方式（最新、最舊、最常造訪、標題 A-Z、隨機靈感）。</span></li>
                 </ul>
             </div>
 
@@ -381,27 +396,24 @@
                 <div class="help-section-title"><i class="fas fa-sliders-h"></i> 視圖切換、三段式縮圖與 200% 字體設置</div>
                 <ul class="help-list">
                     <li><span><strong>三種瀏覽視圖：</strong>支援「瀑布流（多欄卡片）」、「列表視圖」以及可拖曳分類的「看板模式（📥 待讀 / ⭐ 精選 / ✅ 已讀）」。</span></li>
-                    <li><span><strong>三段式縮圖 (<i class="fas fa-font"></i>)：</strong>可隨時切換「🖼️ 頂部大圖」、「🔲 右側小方圖」或「🚫 極簡無圖」模式，並提供即時預覽。</span></li>
-                    <li><span><strong>無段式字體縮放 (80% ~ 200%)：</strong>拖曳滑桿或點擊快速檔位調整全區字體；當放大至 <strong>135% 以上</strong>時，瀑布流會自動減少欄數並展開雙行標題。</span></li>
+                    <li><span><strong>三段式縮圖 (<i class="fas fa-font"></i>) 與 200% 字體縮放：</strong>可隨時切換「頂部大圖 / 右側小方圖 / 極簡無圖」；字體放大至 <strong>135% 以上</strong>時自動調整欄數並展開雙行標題。</span></li>
                 </ul>
             </div>
 
             <!-- 5. 卡片操作、防誤刪復原與批次管理 -->
             <div class="help-section">
-                <div class="help-section-title"><i class="fas fa-tasks"></i> 卡片操作、5 秒刪除復原與批次管理</div>
+                <div class="help-section-title"><i class="fas fa-tasks"></i> 獨立刪除復原佇列、批次管理與失效檢測</div>
                 <ul class="help-list">
-                    <li><span><strong>單筆刪除 5 秒復原 (Undo)：</strong>點擊卡片垃圾桶刪除時免除煩人確認視窗，右下角會浮現 5 秒「↩️ 復原」按鈕，手滑誤刪可隨時救回。</span></li>
-                    <li><span><strong>批次管理 (<i class="fas fa-check-square"></i>)：</strong>進入批次模式後，<strong>點擊整張卡片任意處</strong>即可勾選，支援「全選／反選」、「批次已讀／未讀」、「批次移動資料夾」與「批次刪除」。</span></li>
-                    <li><span><strong>失效連結檢測 (<i class="fas fa-heartbeat"></i>)：</strong>自動巡檢所有書籤（跳過需登入的社群網站），將無法連線或 404 的卡片標記紅色「失效」警示。</span></li>
+                    <li><span><strong>連續刪除獨立復原 (Undo)：</strong>單筆刪除免確認彈窗，即使連續刪除多筆，每個右下角 Toast 都能在 5 秒內獨立點擊「↩️ 復原」救回。</span></li>
+                    <li><span><strong>批次管理 (<i class="fas fa-check-square"></i>) 與失效檢測 (<i class="fas fa-heartbeat"></i>)：</strong>支援整卡點擊勾選、全選／反選、批次已讀／未讀、批次移動與死鏈自動檢測。</span></li>
                 </ul>
             </div>
 
             <!-- 6. 備份匯出與雙模式儲存 -->
             <div class="help-section" style="margin-bottom:0;">
-                <div class="help-section-title"><i class="fas fa-cloud-download-alt"></i> 雲端／本機雙模式與資料備份</div>
+                <div class="help-section-title"><i class="fas fa-cloud-download-alt"></i> 支援匯入 Chrome 書籤檔與 JSON 備份</div>
                 <ul class="help-list">
-                    <li><span><strong>雙模式切換：</strong>支援「Google 帳號雲端同步（Firebase）」與免登入的「本機測試模式（LocalStorage）」。</span></li>
-                    <li><span><strong>多元匯出與備份：</strong>點擊 <i class="fab fa-markdown"></i> 可將當前篩選清單複製為 Markdown 語法；點擊 <i class="fas fa-download"></i> / <i class="fas fa-upload"></i> 可匯出或還原完整 JSON 備份檔。</span></li>
+                    <li><span><strong>雙格式匯入 (<i class="fas fa-upload"></i>)：</strong>除了支援本系統匯出的 <code>.json</code> 備份檔，也支援直接匯入 Chrome / Edge / Firefox 匯出的 <code>bookmarks.html</code> 書籤檔（自動保留資料夾分類）。</span></li>
                 </ul>
             </div>
 
@@ -437,7 +449,7 @@
                         </div>
                     </div>
                     <div class="card-footer">
-                        <div class="source-info"><span class="source-text">09/28 03:20</span></div>
+                        <div class="source-info"><span class="source-text">09/28 03:35</span></div>
                         <div class="tags-container"><span class="tag-badge" style="background:rgba(99,102,241,0.2);color:#818cf8;border:1px solid rgba(99,102,241,0.4);">預覽標籤</span></div>
                     </div>
                 </div>
@@ -481,7 +493,7 @@
         </div>
     </div>
 
-    <!-- 快速新增 Modal (含既有標籤快速點選) -->
+    <!-- 快速新增 Modal -->
     <div class="modal-overlay" id="quick-add-modal" onclick="if(event.target===this)closeModal('quick-add-modal')">
         <div class="modal">
             <h3 class="text-lg font-bold mb-3">🧩 快速新增 / 另存連結</h3>
@@ -546,7 +558,7 @@
         </div>
     </div>
 
-    <!-- 編輯連結 Modal (含既有標籤快速點選) -->
+    <!-- 編輯連結 Modal -->
     <div class="modal-overlay" id="edit-modal" onclick="if(event.target===this)closeModal('edit-modal')">
         <div class="modal">
             <h3 class="text-lg font-bold mb-3">✏️ 編輯連結</h3>
@@ -577,9 +589,9 @@
         let app,auth,db,currentUser=null,isLocalMode=(localStorage.getItem('isLocalMode')==='true'),unsubscribeSnapshot=null;
         let currentView = localStorage.getItem('preferredView') === 'list' ? 'list' : 'masonry';
         let currentSort = localStorage.getItem('preferredSort') || 'newest';
+        let activeStatus = 'all';
         let isKanbanMode=false,activeTag='all',activeFolder='all',isInitialRender=true;
         let rawLinksCache=[],allLinksCache=[],allFoldersCache=[],randomWeightMap=new Map(),searchTimeout,batchMode=false,selectedIds=new Set(),isCheckingLinks=false,isSavingUrl=false;
-        let lastDeletedLink = null;
         
         const isQuickAddMode = new URLSearchParams(window.location.search).get('quick_add') === '1';
 
@@ -614,7 +626,7 @@
             return /^fa-[a-z0-9-]+$/i.test(s) ? s : 'fa-folder';
         }
 
-        // ✅ 七階優化 1：擴充網址追蹤參數淨化名單 (含 Threads xmt、Bilibili vd_source/spm_id_from、小紅書 xsec_token 等)
+        // 擴充網址追蹤參數淨化名單
         function cleanUrl(rawUrl) {
             let u = String(rawUrl || '').trim();
             if (!u) return '';
@@ -653,6 +665,27 @@
                 url: cleanUrl(matchedUrl),
                 extractedTitle: (leftover.length >= 2 && leftover.length <= 80) ? leftover : ''
             };
+        }
+
+        // ✅ 八階優化 1：安全搜尋關鍵字螢光筆高亮 (不破壞 HTML 實體與 @帳號 標籤)
+        function highlightText(escapedStr, rawQuery) {
+            if (!rawQuery) return escapedStr;
+            const escapedQuery = escapeHtml(rawQuery).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+            if (!escapedQuery) return escapedStr;
+            return escapedStr.replace(new RegExp(`(${escapedQuery})`, 'gi'), '<mark class="search-hl">$1</mark>');
+        }
+
+        function formatTitleHtml(rawTitle, rawQuery) {
+            const s = String(rawTitle || '');
+            const q = String(rawQuery || '').trim();
+            if (!s.includes('@')) return highlightText(escapeHtml(s), q);
+            const m = s.match(/(@[a-zA-Z0-9_.\u4e00-\u9fa5]+)/);
+            if (!m) return highlightText(escapeHtml(s), q);
+            const idx = m.index;
+            const before = highlightText(escapeHtml(s.slice(0, idx)), q);
+            const handle = `<span class="account-handle">${highlightText(escapeHtml(m[0]), q)}</span>`;
+            const after = highlightText(escapeHtml(s.slice(idx + m[0].length)), q);
+            return before + handle + after;
         }
 
         // 渲染專用極速安全過濾
@@ -719,7 +752,7 @@
             links.forEach(l => randomWeightMap.set(l.id, Math.random()));
         }
 
-        // ✅ 七階優化 2：編輯與快速新增視窗提供「現有標籤快速點選膠囊」
+        // 編輯與快速新增視窗提供「現有標籤快速點選膠囊」
         function renderModalTagSuggestions(inputId, containerId) {
             const container = document.getElementById(containerId);
             const inp = document.getElementById(inputId);
@@ -1244,7 +1277,12 @@
             renderCurrentView(rawLinksCache);
         }
 
-        // ✅ 七階優化 3：先以選中資料夾過濾連結，再計算並渲染該資料夾下的標籤與筆數（階層式連動）
+        // ✅ 八階優化 2：支援未讀 / 已讀 / 釘選 / 失效狀態快速篩選
+        function handleStatusChange(val) {
+            activeStatus = val;
+            renderCurrentView(rawLinksCache);
+        }
+
         function renderCurrentView(links){
             const searchEl = document.getElementById('search-input');
             const s = searchEl.value.toLowerCase();
@@ -1257,7 +1295,12 @@
             let f = folderFiltered.filter(l => {
                 const ms = (l.title||'').toLowerCase().includes(s) || (l.url||'').toLowerCase().includes(s) || (l.description&&l.description.toLowerCase().includes(s)) || (Array.isArray(l.categories)&&l.categories.some(t=>t.toLowerCase().includes(s)));
                 const mt = activeTag === 'all' || (Array.isArray(l.categories) ? l.categories.includes(activeTag) : l.categories === activeTag);
-                return ms && mt;
+                let mStat = true;
+                if (activeStatus === 'unread') mStat = !l.isRead;
+                else if (activeStatus === 'read') mStat = !!l.isRead;
+                else if (activeStatus === 'pinned') mStat = !!l.pinned;
+                else if (activeStatus === 'dead') mStat = !!l.isDead;
+                return ms && mt && mStat;
             });
 
             f.sort((a, b) => {
@@ -1286,8 +1329,11 @@
         function resetAllFilters() {
             activeFolder = 'all';
             activeTag = 'all';
+            activeStatus = 'all';
             const searchEl = document.getElementById('search-input');
+            const statusEl = document.getElementById('status-select');
             if (searchEl) searchEl.value = '';
+            if (statusEl) statusEl.value = 'all';
             renderFolderChips(true);
             renderCurrentView(rawLinksCache);
         }
@@ -1330,11 +1376,11 @@
             renderLinks(allLinksCache);
         }
         
-        // ✅ 七階優化 4：找不到連結且處於篩選狀態時，顯示「清除所有篩選條件」按鈕
         function renderLinks(links){
             const c=document.getElementById('links-container');
+            const rawQuery = document.getElementById('search-input').value.trim();
             if(!links.length){
-                const isFiltered = activeFolder !== 'all' || activeTag !== 'all' || document.getElementById('search-input').value.trim() !== '';
+                const isFiltered = activeFolder !== 'all' || activeTag !== 'all' || activeStatus !== 'all' || rawQuery !== '';
                 c.innerHTML=`<div class="text-center py-10 col-span-full text-sm" style="color:var(--text-muted);">
                     <p class="mb-3">找不到符合條件的連結</p>
                     ${isFiltered ? `<button type="button" class="btn-outline" onclick="resetAllFilters()"><i class="fas fa-broom"></i> 清除所有篩選條件</button>` : ''}
@@ -1344,8 +1390,8 @@
             const animClass = isInitialRender ? 'card-enter' : '';
             c.innerHTML=links.map((l,i)=>{
                 const lid = safeId(l.id);
-                const escapedTitle = escapeHtml(l.title);
-                const th = escapedTitle.includes('@') ? escapedTitle.replace(/(@[a-zA-Z0-9_.\u4e00-\u9fa5]+)/, `<span class="account-handle">$1</span>`) : escapedTitle;
+                const th = formatTitleHtml(l.title, rawQuery);
+                const descHtml = highlightText(escapeHtml(l.description), rawQuery);
                 let timeText = '未知';
                 if (l.createdAt) {
                     const date = new Date(l.createdAt);
@@ -1365,7 +1411,7 @@
                 const clickBadge = l.clicks > 0 ? `<span class="click-count-badge" title="造訪次數"><i class="fas fa-fire"></i>${l.clicks}</span>` : "";
                 const extraClasses = `${animClass} ${l.pinned?'is-pinned':''} ${l.isRead?'is-read':''} ${l.isDead?'is-dead':''} ${fo?'has-folder':''} ${!safeImg?'no-image':''} ${isSelected?'batch-selected':''}`;
                 const animStyle = isInitialRender ? `style="animation-delay:${Math.min(i*0.015, 0.3)}s"` : '';
-                return`<div class="link-card ${extraClasses}" ${animStyle} onclick="handleCardClick('${lid}',event)">${cb}${fb}${ih}<div class="card-actions"><button type="button" class="btn-outline" onclick="copyLinkById('${lid}',event)" title="複製網址"><i class="fas fa-copy"></i></button><button type="button" class="btn-outline" onclick="togglePin('${lid}')" title="釘選置頂"><i class="fas fa-thumbtack" style="${l.pinned?'color:var(--warning);':''}"></i></button><button type="button" class="btn-outline" onclick="toggleRead('${lid}')" title="標記已讀"><i class="fas ${l.isRead?'fa-check-circle':'fa-circle'}"></i></button><button type="button" class="btn-outline" onclick="openEdit('${lid}')" title="編輯"><i class="fas fa-edit"></i></button><button type="button" class="btn-outline btn-delete" onclick="deleteLink('${lid}')" title="刪除"><i class="fas fa-trash"></i></button></div><div class="card-body-row"><div class="card-text-col"><p class="link-desc">${escapeHtml(l.description)}</p><h3 class="link-title"><a href="${safeUrl}" target="_blank" rel="noopener noreferrer" onclick="if(batchMode){event.preventDefault();return;}recordLinkClick('${lid}')">${th}</a></h3><a href="${safeUrl}" target="_blank" rel="noopener noreferrer" class="link-url-display" onclick="if(batchMode){event.preventDefault();return;}recordLinkClick('${lid}')">${safeUrl}</a></div>${sh}</div><div class="card-footer"><div class="source-info"><img loading="lazy" class="favicon" src="https://www.google.com/s2/favicons?domain=${domainHost}&sz=64" alt=""><span class="source-text">${timeText}</span><span id="click-badge-${lid}">${clickBadge}</span></div><div class="tags-container">${tg}</div></div>${dbadge}</div>`;
+                return`<div class="link-card ${extraClasses}" ${animStyle} onclick="handleCardClick('${lid}',event)">${cb}${fb}${ih}<div class="card-actions"><button type="button" class="btn-outline" onclick="copyLinkById('${lid}',event)" title="複製網址"><i class="fas fa-copy"></i></button><button type="button" class="btn-outline" onclick="togglePin('${lid}')" title="釘選置頂"><i class="fas fa-thumbtack" style="${l.pinned?'color:var(--warning);':''}"></i></button><button type="button" class="btn-outline" onclick="toggleRead('${lid}')" title="標記已讀"><i class="fas ${l.isRead?'fa-check-circle':'fa-circle'}"></i></button><button type="button" class="btn-outline" onclick="openEdit('${lid}')" title="編輯"><i class="fas fa-edit"></i></button><button type="button" class="btn-outline btn-delete" onclick="deleteLink('${lid}')" title="刪除"><i class="fas fa-trash"></i></button></div><div class="card-body-row"><div class="card-text-col"><p class="link-desc">${descHtml}</p><h3 class="link-title"><a href="${safeUrl}" target="_blank" rel="noopener noreferrer" onclick="if(batchMode){event.preventDefault();return;}recordLinkClick('${lid}')">${th}</a></h3><a href="${safeUrl}" target="_blank" rel="noopener noreferrer" class="link-url-display" onclick="if(batchMode){event.preventDefault();return;}recordLinkClick('${lid}')">${safeUrl}</a></div>${sh}</div><div class="card-footer"><div class="source-info"><img loading="lazy" class="favicon" src="https://www.google.com/s2/favicons?domain=${domainHost}&sz=64" alt=""><span class="source-text">${timeText}</span><span id="click-badge-${lid}">${clickBadge}</span></div><div class="tags-container">${tg}</div></div>${dbadge}</div>`;
             }).join('');
         }
         
@@ -1426,11 +1472,11 @@
             }
         }
 
-        // ✅ 七階優化 5：單筆刪除免確認視窗 + 支援 5 秒「↩️ 復原 (Undo)」機制
+        // ✅ 八階優化 3：使用獨立閉包綁定每筆被刪除的項目，支援連續刪除多筆並逐一復原
         async function deleteLink(id){
             const target = rawLinksCache.find(x => x.id === id);
             if (!target) return;
-            lastDeletedLink = { ...target };
+            const snapshotToRestore = { ...target };
             try {
                 if(isLocalMode){
                     let l=readLocalJson('my_links', []);
@@ -1439,22 +1485,22 @@
                 }else{
                     await db.collection('users').doc(currentUser.uid).collection('links').doc(id).delete();
                 }
-                showUndoToast("🗑️ 已刪除連結", undoDeleteLink);
+                showUndoToast("🗑️ 已刪除連結", () => restoreDeletedLink(snapshotToRestore));
             } catch (e) {
                 showToast("❌ 刪除失敗：" + e.message, "error");
             }
         }
 
-        async function undoDeleteLink() {
-            if (!lastDeletedLink) return;
-            const itemToRestore = { ...lastDeletedLink };
-            lastDeletedLink = null;
+        async function restoreDeletedLink(itemToRestore) {
+            if (!itemToRestore) return;
             try {
                 if (isLocalMode) {
                     const l = readLocalJson('my_links', []);
-                    l.unshift(itemToRestore);
-                    writeLocalJson('my_links', l);
-                    loadLinks();
+                    if (!l.some(x => x.id === itemToRestore.id)) {
+                        l.unshift(itemToRestore);
+                        writeLocalJson('my_links', l);
+                        loadLinks();
+                    }
                 } else if (currentUser && db) {
                     const docId = safeId(itemToRestore.id) || ('restored_' + Date.now());
                     const { id, ...cleanData } = itemToRestore;
@@ -1627,34 +1673,114 @@
             a.click();
             setTimeout(() => URL.revokeObjectURL(objUrl), 1000);
         }
+
+        // ✅ 八階優化 4：解析 Chrome / Edge / Firefox 匯出的 HTML 書籤檔並自動歸類資料夾
+        function parseBrowserBookmarksHtml(htmlText) {
+            const doc = new DOMParser().parseFromString(htmlText, 'text/html');
+            const existingFolderNameMap = new Map();
+            allFoldersCache.forEach(f => existingFolderNameMap.set(f.name, f.id));
+
+            const newFolders = [];
+            const parsedLinks = [];
+            const now = Date.now();
+
+            doc.querySelectorAll('a[href]').forEach((a, idx) => {
+                const u = cleanUrl(a.getAttribute('href'));
+                if (!u) return;
+                const title = (a.textContent || '').trim() || getDomain(u);
+                const addDateAttr = a.getAttribute('add_date');
+                const createdAt = addDateAttr ? (parseInt(addDateAttr, 10) * 1000 || (now - idx)) : (now - idx);
+
+                let folderId = 'default';
+                let categories = ['書籤匯入'];
+                const parentDl = a.closest('dl');
+                if (parentDl && parentDl.previousElementSibling && parentDl.previousElementSibling.tagName === 'H3') {
+                    const folderName = parentDl.previousElementSibling.textContent.trim();
+                    if (folderName && !['書籤列', 'Bookmarks bar', '其他書籤', 'Other bookmarks'].includes(folderName)) {
+                        if (existingFolderNameMap.has(folderName)) {
+                            folderId = existingFolderNameMap.get(folderName);
+                        } else {
+                            const newFid = 'f_bm_' + now + '_' + newFolders.length;
+                            existingFolderNameMap.set(folderName, newFid);
+                            newFolders.push({ id: newFid, name: folderName, icon: 'fa-bookmark' });
+                            folderId = newFid;
+                        }
+                        categories.push(folderName);
+                    }
+                }
+
+                parsedLinks.push({
+                    id: 'bm_' + now + '_' + idx,
+                    url: u,
+                    title: title,
+                    description: `由瀏覽器書籤匯入：${u}`,
+                    categories: categories,
+                    image: '',
+                    folderId: folderId,
+                    createdAt: createdAt,
+                    pinned: false,
+                    isRead: false,
+                    isDead: false,
+                    clicks: 0
+                });
+            });
+
+            return { links: parsedLinks, folders: newFolders };
+        }
         
         function importData(ev){
             const f=ev.target.files[0];if(!f)return;
+            const isHtmlFile = /\.(html?|htm)$/i.test(f.name);
             const r=new FileReader();
             r.onload=async e=>{
                 try{
-                    const d=JSON.parse(e.target.result);
-                    const l=Array.isArray(d.links)?d.links:(Array.isArray(d)?d:[]);
-                    const fo=Array.isArray(d.folders)?d.folders:[];
-                    if(isLocalMode){
-                        writeLocalJson('my_links', l.map((x,i)=>({...x,id:safeId(x.id)||('loc_'+Date.now()+'_'+i)})));
-                        if(fo.length)writeLocalJson('my_folders', fo.map((x,i)=>({...x,id:safeId(x.id)||('f_'+Date.now()+'_'+i),icon:safeIcon(x.icon)})));
-                        await renderFolderChips();loadLinks();
-                    }else{
-                        await executeBatchInChunks(fo, (batch, x, i) => {
-                            const docId = safeId(x.id) || ('f_' + Date.now() + '_' + i);
-                            const { id, ...cleanFolder } = x;
-                            cleanFolder.icon = safeIcon(cleanFolder.icon);
-                            batch.set(db.collection('users').doc(currentUser.uid).collection('folders').doc(docId), cleanFolder);
-                        });
-                        await executeBatchInChunks(l, (batch, x, i) => {
-                            const docId = safeId(x.id) || ('imp_' + Date.now() + '_' + i);
-                            const { id, ...cleanObj } = x;
-                            batch.set(db.collection('users').doc(currentUser.uid).collection('links').doc(docId), cleanObj);
-                        });
-                        await renderFolderChips();loadLinks();
+                    const rawText = String(e.target.result || '');
+                    let l = [], fo = [];
+
+                    if (isHtmlFile || /^\s*<!DOCTYPE NETSCAPE-Bookmark-file/i.test(rawText)) {
+                        const parsed = parseBrowserBookmarksHtml(rawText);
+                        l = parsed.links;
+                        fo = parsed.folders;
+                        if (!l.length) throw new Error("在 HTML 檔案中找不到有效連結");
+                        if (isLocalMode) {
+                            const curLinks = readLocalJson('my_links', []);
+                            const curFolders = readLocalJson('my_folders', []);
+                            writeLocalJson('my_links', [...l, ...curLinks]);
+                            if (fo.length) writeLocalJson('my_folders', [...curFolders, ...fo]);
+                        } else {
+                            await executeBatchInChunks(fo, (batch, x) => {
+                                const { id, ...cleanFolder } = x;
+                                batch.set(db.collection('users').doc(currentUser.uid).collection('folders').doc(safeId(id)), cleanFolder);
+                            });
+                            await executeBatchInChunks(l, (batch, x) => {
+                                const { id, ...cleanObj } = x;
+                                batch.set(db.collection('users').doc(currentUser.uid).collection('links').doc(safeId(id)), cleanObj);
+                            });
+                        }
+                    } else {
+                        const d=JSON.parse(rawText);
+                        l=Array.isArray(d.links)?d.links:(Array.isArray(d)?d:[]);
+                        fo=Array.isArray(d.folders)?d.folders:[];
+                        if(isLocalMode){
+                            writeLocalJson('my_links', l.map((x,i)=>({...x,id:safeId(x.id)||('loc_'+Date.now()+'_'+i)})));
+                            if(fo.length)writeLocalJson('my_folders', fo.map((x,i)=>({...x,id:safeId(x.id)||('f_'+Date.now()+'_'+i),icon:safeIcon(x.icon)})));
+                        }else{
+                            await executeBatchInChunks(fo, (batch, x, i) => {
+                                const docId = safeId(x.id) || ('f_' + Date.now() + '_' + i);
+                                const { id, ...cleanFolder } = x;
+                                cleanFolder.icon = safeIcon(cleanFolder.icon);
+                                batch.set(db.collection('users').doc(currentUser.uid).collection('folders').doc(docId), cleanFolder);
+                            });
+                            await executeBatchInChunks(l, (batch, x, i) => {
+                                const docId = safeId(x.id) || ('imp_' + Date.now() + '_' + i);
+                                const { id, ...cleanObj } = x;
+                                batch.set(db.collection('users').doc(currentUser.uid).collection('links').doc(docId), cleanObj);
+                            });
+                        }
                     }
-                    showToast("✅ 匯入成功","success");
+                    await renderFolderChips();
+                    loadLinks();
+                    showToast(`✅ 成功匯入 ${l.length} 筆連結`,"success");
                 }catch(err){
                     showToast("❌ 匯入失敗：" + err.message,"error");
                 }
@@ -1743,7 +1869,6 @@
             renderLinks(allLinksCache);
         }
 
-        // ✅ 七階優化 6：批次標記已讀 / 未讀
         async function batchToggleRead() {
             const ids = Array.from(selectedIds);
             const count = ids.length;
@@ -1877,6 +2002,26 @@
             showToast(`✅ 完成！檢查 ${cc} 個，失效 ${dc} 個`,dc>0?"error":"success");
             loadLinks();
         }
+
+        // ✅ 八階優化 5：全域 Ctrl+V 直接貼上存檔 (無須先點擊輸入框)
+        document.addEventListener('paste', e => {
+            if (isSavingUrl) return;
+            const activeEl = document.activeElement;
+            if (activeEl && ['INPUT', 'TEXTAREA', 'SELECT'].includes(activeEl.tagName)) return;
+            const anyModalOpen = Array.from(document.querySelectorAll('.modal-overlay')).some(m => m.style.display === 'flex');
+            if (anyModalOpen) return;
+            const appScreen = document.getElementById('app-screen');
+            if (!appScreen || appScreen.style.display === 'none') return;
+
+            const pasted = (e.clipboardData || window.clipboardData)?.getData('text') || '';
+            const { url } = parseInputText(pasted);
+            if (url) {
+                e.preventDefault();
+                const inp = document.getElementById('url-input');
+                inp.value = pasted.trim();
+                processAndSaveUrl();
+            }
+        });
 
         window.addEventListener('scroll', () => {
             const btn = document.getElementById('back-to-top');
