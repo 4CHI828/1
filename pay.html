@@ -43,6 +43,11 @@
   
   <div id="toastContainer" class="fixed top-4 left-1/2 transform -translate-x-1/2 z-50 flex flex-col gap-2 pointer-events-none w-11/12 max-w-sm"></div>
 
+  <!-- ⬆️ 懸浮快速回到記帳表單按鈕 -->
+  <button type="button" id="floatingTopBtn" onclick="scrollToForm()" class="hidden fixed bottom-5 right-5 z-40 bg-blue-600 hover:bg-blue-700 text-white font-bold px-3.5 py-2.5 rounded-full shadow-xl border border-white/30 text-xs transition transform active:scale-90 flex items-center gap-1">
+    <span>⬆️</span> <span>記帳</span>
+  </button>
+
   <div class="max-w-2xl mx-auto w-full glass bg-white/80 dark:bg-gray-800/80 rounded-[1.5rem] shadow-xl border border-white/50 dark:border-gray-700/50 p-4 sm:p-6 space-y-5">
     
     <!-- 頂部控制列 -->
@@ -263,7 +268,7 @@
       
       <div id="editModeBanner" class="hidden flex items-center justify-between bg-amber-500 text-white px-3 py-1.5 rounded-xl text-xs font-bold shadow-sm">
         <span>✏️ 正在編輯紀錄 ID: <span id="editingIdText" class="font-mono"></span></span>
-        <button type="button" onclick="cancelEdit(false)" class="bg-black/20 hover:bg-black/30 px-2 py-0.5 rounded text-[0.75rem] transition">取消</button>
+        <button type="button" onclick="cancelEdit(false)" class="bg-black/20 hover:bg-black/30 px-2 py-0.5 rounded text-[0.75rem] transition">取消 (Esc)</button>
       </div>
 
       <!-- AI 輔助與自訂快捷範本 -->
@@ -289,14 +294,15 @@
       </div>
       <input type="hidden" id="type" value="expense">
 
-      <!-- 欄位輸入區 -->
+      <!-- 欄位輸入區 (支援歷史項目自動完成建議) -->
       <div class="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
         <select id="category" class="border border-gray-200 dark:border-gray-600 rounded-xl px-2 py-2 text-xs bg-gray-50/50 dark:bg-gray-700 dark:text-white font-medium focus:ring-2 focus:ring-blue-500 outline-none">
         </select>
-        <input type="text" id="title" placeholder="項目名稱 (按 Enter 可直接儲存)" class="sm:col-span-2 border border-gray-200 dark:border-gray-600 rounded-xl px-3 py-2 text-sm bg-white dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none font-medium shadow-inner">
+        <input type="text" id="title" list="titleSuggestions" placeholder="項目名稱 (支援歷史自動建議，Enter 儲存)" class="sm:col-span-2 border border-gray-200 dark:border-gray-600 rounded-xl px-3 py-2 text-sm bg-white dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none font-medium shadow-inner">
+        <datalist id="titleSuggestions"></datalist>
       </div>
 
-      <!-- 🧮 支援「算式計算機」的金額輸入框 -->
+      <!-- 支援「算式計算機」的金額輸入框 -->
       <div class="grid grid-cols-1 sm:grid-cols-5 gap-2.5">
         <select id="currency" class="sm:col-span-2 border border-gray-200 dark:border-gray-600 rounded-xl px-2 py-2 text-xs bg-blue-50/50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300 font-bold focus:ring-2 focus:ring-blue-500 outline-none">
           <option value="TWD">TWD 台幣</option>
@@ -430,7 +436,7 @@
 
       <div class="flex flex-col sm:flex-row gap-2.5 pt-1">
         <input type="date" id="date" class="w-full sm:w-[40%] border border-gray-200 dark:border-gray-600 rounded-xl px-2.5 py-2 text-xs font-mono font-medium bg-white dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none shadow-inner">
-        <button type="button" id="saveRecordBtn" class="w-full sm:w-[60%] bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-bold py-2.5 rounded-xl text-sm shadow-md transition active:scale-95 flex justify-center items-center gap-1.5">
+        <button type="button" id="saveRecordBtn" class="w-full sm:w-[60%] bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-bold py-2.5 rounded-xl text-sm shadow-md transition active:scale-95 flex justify-center items-center gap-1.5 disabled:opacity-50">
           <span id="saveBtnText">儲存紀錄 (Enter)</span>
         </button>
       </div>
@@ -550,7 +556,7 @@
   </div>
 
   <!-- LINE 分享選擇彈窗 -->
-  <div id="lineShareModal" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 transition-opacity">
+  <div id="lineShareModal" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 transition-opacity" onclick="if(event.target===this)closeLineShareModal()">
     <div class="bg-white dark:bg-gray-800 rounded-3xl p-5 max-w-sm w-full space-y-4 shadow-2xl border border-gray-100 dark:border-gray-700 text-left">
       <div class="flex items-center justify-between border-b border-gray-200 dark:border-gray-700 pb-2">
         <h3 class="font-bold text-sm text-gray-800 dark:text-gray-100 flex items-center gap-1.5">
@@ -609,6 +615,8 @@
     let configFileId = null;
     let sheetFileMap = JSON.parse(localStorage.getItem("app_sheet_map")) || { "預設帳本": null }; 
     let isSettingUpDrive = false;
+    let isSavingToDrive = false;
+    let pendingDriveSave = false;
 
     let currentSheet = localStorage.getItem("app_active_sheet") || "預設帳本";
     let members = JSON.parse(localStorage.getItem("split_members")) || ["奇奇", "鼻涕"];
@@ -628,6 +636,7 @@
     let editingRecordId = null;
     let chartInstance = null;
     let currentChartMode = 'pie';
+    let titleToCategoryMap = {};
 
     const MEMBER_PALETTE = [
       { bg: "bg-blue-100 dark:bg-blue-900/50", text: "text-blue-700 dark:text-blue-300", border: "border-blue-200 dark:border-blue-700" },
@@ -639,6 +648,24 @@
       { bg: "bg-rose-100 dark:bg-rose-900/50", text: "text-rose-700 dark:text-rose-300", border: "border-rose-200 dark:border-rose-700" },
       { bg: "bg-indigo-100 dark:bg-indigo-900/50", text: "text-indigo-700 dark:text-indigo-300", border: "border-indigo-200 dark:border-indigo-700" }
     ];
+
+    function debounce(fn, delay = 150) {
+      let timer = null;
+      return function(...args) {
+        if (timer) clearTimeout(timer);
+        timer = setTimeout(() => fn.apply(this, args), delay);
+      };
+    }
+
+    function getWeekdayLabel(dateStr) {
+      if (!dateStr) return "";
+      const parts = dateStr.split("-");
+      if (parts.length !== 3) return "";
+      const d = new Date(Number(parts[0]), Number(parts[1]) - 1, Number(parts[2]));
+      if (isNaN(d.getTime())) return "";
+      const days = ["週日", "週一", "週二", "週三", "週四", "週五", "週六"];
+      return `(${days[d.getDay()]})`;
+    }
 
     function getMemberColor(name) {
       if (!name) return MEMBER_PALETTE[0];
@@ -675,7 +702,24 @@
       return localStorage.getItem(`dirty_${sheetName}`) === "1";
     }
 
-    // 🧮 安全算式計算器（支援金額欄輸入 2500-450 或 350*3）
+    // 💡 更新歷史項目名稱自動完成建議與類別連動
+    function updateTitleAutocomplete() {
+      const dl = document.getElementById("titleSuggestions");
+      if (!dl) return;
+      titleToCategoryMap = {};
+      const seen = new Set();
+      getActiveRecords().forEach(r => {
+        if (r.type === "settlement") return;
+        const t = (r.title || "").trim();
+        if (t && !seen.has(t)) {
+          seen.add(t);
+          if (r.category) titleToCategoryMap[t] = r.category;
+        }
+      });
+      dl.innerHTML = Array.from(seen).slice(0, 40).map(t => `<option value="${escapeHtml(t)}"></option>`).join("");
+    }
+
+    // 🧮 安全算式計算器
     function evaluateMathInput(rawStr) {
       const s = String(rawStr || "").replace(/,/g, "").trim();
       if (!s) return 0;
@@ -984,6 +1028,18 @@
       } catch (e) { el.textContent = "無法讀取"; }
     }
 
+    // ⬆️ 滾動至記帳表單
+    window.scrollToForm = function() {
+      document.getElementById("recordFormBox").scrollIntoView({ behavior: "smooth" });
+      setTimeout(() => document.getElementById("title").focus(), 350);
+    };
+
+    window.addEventListener("scroll", () => {
+      const btn = document.getElementById("floatingTopBtn");
+      if (window.scrollY > 480) btn.classList.remove("hidden");
+      else btn.classList.add("hidden");
+    }, { passive: true });
+
     // ⚡ 快選範本渲染
     function renderQuickTemplates() {
       const bar = document.getElementById("quickTemplatesBar");
@@ -1057,7 +1113,6 @@
       renderQuickTemplates();
       restoreLastFormPrefs();
 
-      // 啟動時先載入本機鏡像快取，沒網路也能立即查看
       cachedRecords = loadLocalSheetMirror(currentSheet);
       renderAllViews();
       fetchExchangeRates();
@@ -1072,7 +1127,25 @@
       document.getElementById("originalAmount").addEventListener("keydown", handleEnterSave);
       document.getElementById("overrideTwdInput").addEventListener("keydown", handleEnterSave);
 
-      // 金額欄位離開焦點時自動將算式結算成數字
+      // 選取歷史建議項目時，自動帶入對應類別
+      document.getElementById("title").addEventListener("input", function() {
+        const val = this.value.trim();
+        if (titleToCategoryMap[val] && categories.includes(titleToCategoryMap[val])) {
+          document.getElementById("category").value = titleToCategoryMap[val];
+        }
+      });
+
+      // 全域 Esc 快捷鍵支援（關閉彈窗或取消編輯）
+      document.addEventListener("keydown", (e) => {
+        if (e.key === "Escape") {
+          closeImageModal();
+          closeLineShareModal();
+          closeMemberDrilldown();
+          if (editingRecordId) cancelEdit(false);
+        }
+      });
+
+      // 金額欄離開焦點自動計算算式
       document.getElementById("originalAmount").addEventListener("blur", function() {
         const raw = this.value.trim();
         if (raw && /[+\-*/]/.test(raw)) {
@@ -1084,7 +1157,6 @@
         }
       });
 
-      // 網路恢復連線時自動補傳待同步帳目
       window.addEventListener("online", () => {
         if (accessToken && isSheetDirty(currentSheet)) {
           saveRecordsToDrive();
@@ -1361,7 +1433,6 @@
     }
 
     async function loadRecordsFromDrive() {
-      // 若本機有尚未上傳的離線修改，優先將本機最新資料推上雲端
       if (isSheetDirty(currentSheet)) {
         const localData = loadLocalSheetMirror(currentSheet);
         if (localData && localData.length > 0) {
@@ -1407,8 +1478,8 @@
       }
     }
 
+    // ⚡ 具備防撞佇列鎖 (Sequential Queue) 的雲端寫入函式
     async function saveRecordsToDrive() {
-      // 第一時間先存入本機鏡像，保證斷網或重整也不會遺失
       saveLocalSheetMirror(currentSheet, cachedRecords);
       markSheetDirty(currentSheet, true);
 
@@ -1417,19 +1488,33 @@
         showToast("💾 已先儲存於本機！登入 Google 後將自動同步至雲端", "info");
         return;
       }
+
+      if (isSavingToDrive) {
+        pendingDriveSave = true;
+        return;
+      }
+      isSavingToDrive = true;
       setSyncBadge("寫入雲端...", true);
 
       try {
-        const currentFileId = sheetFileMap[currentSheet];
-        const newFileId = await saveJsonFileToDrive(`${currentSheet}.json`, currentFileId, cachedRecords);
-        sheetFileMap[currentSheet] = newFileId;
-        localStorage.setItem("app_sheet_map", JSON.stringify(sheetFileMap));
-        markSheetDirty(currentSheet, false);
+        do {
+          pendingDriveSave = false;
+          const targetSheet = currentSheet;
+          const snapshot = [...cachedRecords];
+          const currentFileId = sheetFileMap[targetSheet];
+          const newFileId = await saveJsonFileToDrive(`${targetSheet}.json`, currentFileId, snapshot);
+          sheetFileMap[targetSheet] = newFileId;
+          localStorage.setItem("app_sheet_map", JSON.stringify(sheetFileMap));
+          markSheetDirty(targetSheet, false);
+        } while (pendingDriveSave);
+
         setSyncBadge("已同步", false);
         showToast("✅ 已同步儲存至 Google Drive「雲端記帳」！");
       } catch (e) {
         setSyncBadge("⚠️ 待同步 (點此重試)", false, true);
         showToast("💾 網路或授權異常，已安全暫存於本機，點擊「待同步」可重試", "info");
+      } finally {
+        isSavingToDrive = false;
       }
     }
 
@@ -1446,6 +1531,7 @@
     };
 
     function renderAllViews() {
+      updateTitleAutocomplete();
       renderRecordsList();
       renderTrashList();
       const active = getActiveRecords();
@@ -1857,7 +1943,9 @@
       }
     };
 
-    document.getElementById("saveRecordBtn").onclick = async () => {
+    // 🛡️ 具備防連點保護的儲存按鈕
+    document.getElementById("saveRecordBtn").onclick = async function() {
+      if (this.disabled) return;
       const title = document.getElementById("title").value.trim();
       const origAmt = evaluateMathInput(document.getElementById("originalAmount").value);
       if (!title || isNaN(origAmt) || origAmt <= 0) {
@@ -1972,6 +2060,7 @@
         }
       }
 
+      this.disabled = true;
       saveLastFormPrefs();
 
       const isEditing = Boolean(editingRecordId);
@@ -2003,6 +2092,7 @@
       renderAllViews();
       cancelEdit(true);
       document.getElementById("title").focus();
+      this.disabled = false;
       await saveRecordsToDrive();
     };
 
@@ -2316,6 +2406,7 @@
         return;
       }
 
+      const frag = document.createDocumentFragment();
       deletedList.forEach(item => {
         const div = document.createElement("div");
         div.className = "p-2.5 bg-white/80 dark:bg-gray-800/80 rounded-xl border border-red-200/60 dark:border-red-900/40 text-xs flex justify-between items-center gap-2 flex-wrap";
@@ -2329,8 +2420,9 @@
             <button onclick="permanentDeleteRecord('${escapeHtml(item.id)}')" class="bg-red-100 text-red-600 dark:bg-red-900/40 dark:text-red-300 px-2 py-1 rounded-lg font-bold text-[0.7rem]">永久刪除</button>
           </div>
         `;
-        listEl.appendChild(div);
+        frag.appendChild(div);
       });
+      listEl.appendChild(frag);
     }
 
     function parseShares(item) {
@@ -2765,7 +2857,6 @@
         return matchQuery && matchType && matchCategory && matchStart && matchEnd;
       });
 
-      // ↕️ 套用排序條件
       const sorted = [...filtered];
       if (sortOrder === "dateDesc") sorted.sort((a, b) => (b.date || "").localeCompare(a.date || ""));
       else if (sortOrder === "dateAsc") sorted.sort((a, b) => (a.date || "").localeCompare(b.date || ""));
@@ -2775,15 +2866,15 @@
       return sorted;
     }
 
-    // 📝 歷史明細渲染（包含動態篩選小計列與 36px 大字型彈性換行）
+    // 📝 歷史明細渲染（DocumentFragment 批次渲染 + 日期分組標頭與當日小計）
     function renderRecordsList() {
       const activeTotal = getActiveRecords().length;
       const filtered = getFilteredActiveRecords();
+      const sortOrder = document.getElementById("sortOrderSelect")?.value || "input";
 
       const countEl = document.getElementById("recordCountDisplay");
       countEl.textContent = filtered.length !== activeTotal ? `${filtered.length}/${activeTotal}` : activeTotal;
 
-      // 📌 檢查是否啟用了任何篩選條件並顯示動態小計列
       const hasActiveFilter = Boolean(
         (document.getElementById("searchInput")?.value || "").trim() ||
         (document.getElementById("filterTypeSelect")?.value || "all") !== "all" ||
@@ -2821,7 +2912,33 @@
         return;
       }
 
+      // 預先統計每日總支出供日期分組標頭顯示
+      const dailyTotals = {};
+      filtered.forEach(r => {
+        if (r.type === "expense" || r.type === "personal") {
+          const d = r.date || "未知日期";
+          dailyTotals[d] = (dailyTotals[d] || 0) + (Number(r.twdAmount) || 0);
+        }
+      });
+
+      const showDateHeaders = (sortOrder === "input" || sortOrder === "dateDesc" || sortOrder === "dateAsc");
+      let lastRenderedDate = null;
+      const frag = document.createDocumentFragment();
+
       filtered.forEach(item => {
+        const itemDate = item.date || "未知日期";
+        if (showDateHeaders && itemDate !== lastRenderedDate) {
+          lastRenderedDate = itemDate;
+          const dateHeader = document.createElement("div");
+          dateHeader.className = "flex justify-between items-center px-3 py-1 bg-blue-100/60 dark:bg-slate-800/90 rounded-xl text-[0.72rem] font-bold text-blue-900 dark:text-blue-300 mt-2 first:mt-0";
+          const daySum = dailyTotals[itemDate] || 0;
+          dateHeader.innerHTML = `
+            <span>📅 ${escapeHtml(itemDate)} ${escapeHtml(getWeekdayLabel(itemDate))}</span>
+            ${daySum > 0 ? `<span class="font-mono text-gray-600 dark:text-gray-300">當日支出 $${daySum.toLocaleString()}</span>` : ''}
+          `;
+          frag.appendChild(dateHeader);
+        }
+
         const isSplit = item.type === "expense";
         const isSettlement = item.type === "settlement";
         const isPersonal = item.type === "personal";
@@ -2886,14 +3003,18 @@
         r.addEventListener("mouseup", cancelPress);
         r.addEventListener("mouseleave", cancelPress);
 
-        listEl.appendChild(r);
+        frag.appendChild(r);
       });
+
+      listEl.appendChild(frag);
       if(!document.getElementById("mainChartContainer").classList.contains("hidden")) drawChart();
     }
 
+    // 搜尋框加上 150ms 防抖動 (Debounce)
+    const debouncedRenderRecords = debounce(renderRecordsList, 150);
     document.getElementById("searchInput").addEventListener("input", (e) => {
       document.getElementById("clearSearchBtn").classList.toggle("hidden", !e.target.value);
-      renderRecordsList();
+      debouncedRenderRecords();
     });
     document.getElementById("clearSearchBtn").onclick = () => {
       document.getElementById("searchInput").value = "";
@@ -3288,7 +3409,6 @@
       document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(url);
     }
 
-    // 🛡️ 匯入備份檔（具備自動防重複去重比對機制）
     function getRecordSignature(r) {
       return `${r.date}|${r.type}|${(r.title || '').trim()}|${Math.round(Number(r.twdAmount) || 0)}|${(r.payer || '').trim()}`;
     }
