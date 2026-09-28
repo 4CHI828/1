@@ -12,6 +12,15 @@
   <meta name="apple-mobile-web-app-title" content="雲端記帳">
   <link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/2936/2936758.png">
 
+  <!-- 防深色模式初始化閃爍 -->
+  <script>
+    if (localStorage.getItem("theme") === "dark" || (!localStorage.getItem("theme") && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+      document.documentElement.classList.add("dark");
+    } else {
+      document.documentElement.classList.remove("dark");
+    }
+  </script>
+
   <!-- 第三方函式庫 -->
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
@@ -32,7 +41,7 @@
       90% { transform: translateY(0); opacity: 1; }
       100% { transform: translateY(-100%); opacity: 0; }
     }
-    .toast-anim { animation: slideDown 3.5s ease-in-out forwards; }
+    .toast-anim { animation: slideDown 4.5s ease-in-out forwards; }
     .record-card { user-select: none; -webkit-user-select: none; }
   </style>
   <script>
@@ -41,7 +50,7 @@
 </head>
 <body class="bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-slate-900 dark:to-gray-900 min-h-screen p-2 sm:p-4 text-gray-800 dark:text-gray-100 transition-colors duration-300 font-sans">
   
-  <div id="toastContainer" class="fixed top-4 left-1/2 transform -translate-x-1/2 z-50 flex flex-col gap-2 pointer-events-none w-11/12 max-w-sm"></div>
+  <div id="toastContainer" class="fixed top-4 left-1/2 transform -translate-x-1/2 z-50 flex flex-col gap-2 pointer-events-auto w-11/12 max-w-sm"></div>
 
   <!-- ⬆️ 懸浮快速回到記帳表單按鈕 -->
   <button type="button" id="floatingTopBtn" onclick="scrollToForm()" class="hidden fixed bottom-5 right-5 z-40 bg-blue-600 hover:bg-blue-700 text-white font-bold px-3.5 py-2.5 rounded-full shadow-xl border border-white/30 text-xs transition transform active:scale-90 flex items-center gap-1">
@@ -75,7 +84,7 @@
       </div>
     </div>
 
-    <!-- 匯率橫幅 -->
+    <!-- 匯率橫幅 (已擴充泰銖與港幣) -->
     <div class="bg-gradient-to-r from-blue-50/80 to-indigo-50/80 dark:from-slate-800/80 dark:to-gray-800/80 border border-blue-100/50 dark:border-gray-700 rounded-2xl p-3 shadow-sm">
       <div class="flex items-center justify-between text-[0.75rem] font-bold text-gray-500 dark:text-gray-400 mb-2 flex-wrap gap-1">
         <button type="button" onclick="fetchExchangeRates(true)" class="flex items-center gap-1 cursor-pointer hover:text-blue-600 dark:hover:text-blue-400 transition active:scale-95">
@@ -89,7 +98,7 @@
       </div>
     </div>
 
-    <!-- Google Drive 登入授權區塊 (永久固定「雲端記帳」) -->
+    <!-- Google Drive 登入授權區塊 -->
     <div class="bg-blue-50/80 dark:bg-blue-900/20 border border-blue-200/60 dark:border-blue-700/40 rounded-2xl p-3.5 flex flex-wrap items-center justify-between gap-3 shadow-sm">
       <div class="flex items-center gap-2.5">
         <img src="https://upload.wikimedia.org/wikipedia/commons/1/12/Google_Drive_icon_%282020%29.svg" class="w-6 h-6 flex-shrink-0" alt="Drive">
@@ -109,7 +118,7 @@
       </div>
     </div>
 
-    <!-- 設定面板群組：調整字型大小 (支援 12px ~ 36px) -->
+    <!-- 設定面板群組：調整字型大小 -->
     <div id="fontConfigPanel" class="hidden bg-white/60 dark:bg-slate-900/60 border border-gray-200/50 dark:border-gray-700/50 rounded-2xl p-4 space-y-3 shadow-inner">
       <div class="flex justify-between items-center text-xs font-bold text-gray-700 dark:text-gray-300">
         <span>🔤 自訂全站字型大小 (12px ~ 36px)</span><span id="fontSizeDisplay" class="text-blue-600 font-mono text-sm bg-blue-50 dark:bg-blue-900/30 px-2 py-0.5 rounded-lg">16px</span>
@@ -122,7 +131,7 @@
       </div>
     </div>
 
-    <!-- 🏦 公費錢包 (共同基金) 面板 -->
+    <!-- 🏦 公費錢包 面板 -->
     <div id="poolConfigPanel" class="hidden bg-gradient-to-r from-amber-50 to-orange-50/70 dark:from-slate-900/80 dark:to-amber-950/30 border border-amber-200/70 dark:border-amber-800/50 rounded-2xl p-4 space-y-3 shadow-inner">
       <div class="flex justify-between items-center text-xs flex-wrap gap-1">
         <span class="font-bold text-amber-800 dark:text-amber-300 flex items-center gap-1">🏦 公費錢包（共同基金池 TWD）</span>
@@ -294,7 +303,7 @@
       </div>
       <input type="hidden" id="type" value="expense">
 
-      <!-- 欄位輸入區 (支援歷史項目自動完成建議) -->
+      <!-- 欄位輸入區 -->
       <div class="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
         <select id="category" class="border border-gray-200 dark:border-gray-600 rounded-xl px-2 py-2 text-xs bg-gray-50/50 dark:bg-gray-700 dark:text-white font-medium focus:ring-2 focus:ring-blue-500 outline-none">
         </select>
@@ -302,17 +311,35 @@
         <datalist id="titleSuggestions"></datalist>
       </div>
 
-      <!-- 支援「算式計算機」的金額輸入框 -->
-      <div class="grid grid-cols-1 sm:grid-cols-5 gap-2.5">
-        <select id="currency" class="sm:col-span-2 border border-gray-200 dark:border-gray-600 rounded-xl px-2 py-2 text-xs bg-blue-50/50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300 font-bold focus:ring-2 focus:ring-blue-500 outline-none">
-          <option value="TWD">TWD 台幣</option>
-          <option value="EUR">EUR 歐元</option>
-          <option value="JPY">JPY 日圓</option>
-          <option value="CNY">CNY 人民幣</option>
-          <option value="USD">USD 美元</option>
-          <option value="KRW">KRW 韓元</option>
-        </select>
-        <input type="text" inputmode="decimal" id="originalAmount" placeholder="輸入金額或算式 (如 2500-450)" class="sm:col-span-3 border border-gray-200 dark:border-gray-600 rounded-xl px-3 py-2 text-base font-bold font-mono bg-white dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none shadow-inner text-right">
+      <!-- 金額與幣別（含算式預覽浮動提示與算式快捷鍵列） -->
+      <div class="space-y-1.5">
+        <div class="grid grid-cols-1 sm:grid-cols-5 gap-2.5">
+          <select id="currency" class="sm:col-span-2 border border-gray-200 dark:border-gray-600 rounded-xl px-2 py-2 text-xs bg-blue-50/50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300 font-bold focus:ring-2 focus:ring-blue-500 outline-none">
+            <option value="TWD">TWD 台幣</option>
+            <option value="JPY">JPY 日圓</option>
+            <option value="THB">THB 泰銖</option>
+            <option value="HKD">HKD 港幣</option>
+            <option value="KRW">KRW 韓元</option>
+            <option value="USD">USD 美元</option>
+            <option value="EUR">EUR 歐元</option>
+            <option value="CNY">CNY 人民幣</option>
+          </select>
+          <div class="relative sm:col-span-3">
+            <input type="text" inputmode="decimal" id="originalAmount" placeholder="輸入金額或算式 (如 2500-450)" class="w-full border border-gray-200 dark:border-gray-600 rounded-xl px-3 py-2 text-base font-bold font-mono bg-white dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none shadow-inner text-right">
+            <span id="mathLiveEvalPreview" class="hidden absolute left-2.5 top-2.5 bg-blue-100/90 text-blue-800 dark:bg-blue-900/70 dark:text-blue-200 text-[0.72rem] px-1.5 py-0.5 rounded font-mono font-bold shadow-sm pointer-events-none"></span>
+          </div>
+        </div>
+
+        <!-- 📱 手機端算式快捷按鈕列 (當金額欄獲得焦點或輸入時呈現) -->
+        <div id="mathKeyboardToolbar" class="flex items-center gap-1.5 overflow-x-auto py-1 text-xs">
+          <span class="text-gray-400 font-bold text-[0.7rem] mr-0.5">鍵盤快捷：</span>
+          <button type="button" onclick="insertMathKey('+')" class="bg-white dark:bg-gray-700 hover:bg-blue-50 border border-gray-200 dark:border-gray-600 font-mono font-bold px-2.5 py-1 rounded-lg shadow-sm text-blue-600 dark:text-blue-400 text-sm active:scale-95">+</button>
+          <button type="button" onclick="insertMathKey('-')" class="bg-white dark:bg-gray-700 hover:bg-blue-50 border border-gray-200 dark:border-gray-600 font-mono font-bold px-2.5 py-1 rounded-lg shadow-sm text-blue-600 dark:text-blue-400 text-sm active:scale-95">-</button>
+          <button type="button" onclick="insertMathKey('*')" class="bg-white dark:bg-gray-700 hover:bg-blue-50 border border-gray-200 dark:border-gray-600 font-mono font-bold px-2.5 py-1 rounded-lg shadow-sm text-blue-600 dark:text-blue-400 text-sm active:scale-95">×</button>
+          <button type="button" onclick="insertMathKey('/')" class="bg-white dark:bg-gray-700 hover:bg-blue-50 border border-gray-200 dark:border-gray-600 font-mono font-bold px-2.5 py-1 rounded-lg shadow-sm text-blue-600 dark:text-blue-400 text-sm active:scale-95">÷</button>
+          <button type="button" onclick="insertMathKey('00')" class="bg-white dark:bg-gray-700 hover:bg-blue-50 border border-gray-200 dark:border-gray-600 font-mono font-bold px-2.5 py-1 rounded-lg shadow-sm text-gray-700 dark:text-gray-200 active:scale-95">00</button>
+          <button type="button" onclick="insertMathKey('backspace')" class="bg-white dark:bg-gray-700 hover:bg-red-50 border border-gray-200 dark:border-gray-600 font-mono font-bold px-2.5 py-1 rounded-lg shadow-sm text-red-500 active:scale-95">⌫</button>
+        </div>
       </div>
 
       <!-- 一鍵稅金/服務費、+1.5%刷卡費與「鎖定最終台幣請款額」 -->
@@ -333,7 +360,7 @@
 
       <!-- 分帳計算設定區塊 -->
       <div id="splitSection" class="p-3.5 bg-gray-50/80 dark:bg-gray-700/30 rounded-2xl border border-gray-200/60 dark:border-gray-600/50 space-y-3">
-        <!-- 支援單人代墊與「多人共同代墊 (Multi-Payer)」 -->
+        <!-- 付款人 -->
         <div class="space-y-2">
           <div class="flex items-center justify-between text-xs flex-wrap gap-2">
             <span id="payerLabelText" class="font-bold text-gray-600 dark:text-gray-300">付款人 (代墊)：</span>
@@ -369,10 +396,13 @@
             </div>
           </div>
 
-          <!-- 1. 均分模式 -->
+          <!-- 1. 均分模式 (已新增即時每人分攤預覽提示) -->
           <div id="splitModeEqualContainer">
             <div class="flex items-center justify-between text-[0.75rem] text-gray-400 mb-1 flex-wrap gap-1">
-              <span>勾選分攤者 (除不盡差額自動配平)</span>
+              <div class="flex items-center gap-1.5">
+                <span>勾選分攤者</span>
+                <span id="equalPerPersonPreview" class="text-blue-600 dark:text-blue-400 font-mono font-bold bg-blue-50 dark:bg-blue-900/40 px-2 py-0.5 rounded-md"></span>
+              </div>
               <div class="flex gap-2">
                 <button type="button" onclick="selectAllMembers(true)" class="text-blue-500 font-bold hover:underline">全選</button>
                 <button type="button" onclick="selectAllMembers(false)" class="text-gray-400 hover:text-gray-600 font-bold hover:underline">全不選</button>
@@ -434,9 +464,15 @@
         </div>
       </div>
 
+      <!-- 日期快速微調按鈕列（前一天 / 今天 / 後一天）與儲存 -->
       <div class="flex flex-col sm:flex-row gap-2.5 pt-1">
-        <input type="date" id="date" class="w-full sm:w-[40%] border border-gray-200 dark:border-gray-600 rounded-xl px-2.5 py-2 text-xs font-mono font-medium bg-white dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none shadow-inner">
-        <button type="button" id="saveRecordBtn" class="w-full sm:w-[60%] bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-bold py-2.5 rounded-xl text-sm shadow-md transition active:scale-95 flex justify-center items-center gap-1.5 disabled:opacity-50">
+        <div class="flex items-center gap-1 w-full sm:w-[45%]">
+          <button type="button" onclick="adjustFormDate(-1)" title="前一天" class="px-2.5 py-2 bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 rounded-xl text-xs font-bold transition active:scale-95">◀</button>
+          <input type="date" id="date" class="flex-1 border border-gray-200 dark:border-gray-600 rounded-xl px-2 py-2 text-xs font-mono font-medium bg-white dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none shadow-inner min-w-0">
+          <button type="button" onclick="adjustFormDate(1)" title="後一天" class="px-2.5 py-2 bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 rounded-xl text-xs font-bold transition active:scale-95">▶</button>
+          <button type="button" onclick="setFormDateToday()" title="設為今天" class="px-2 py-2 bg-blue-50 text-blue-600 dark:bg-blue-900/40 dark:text-blue-300 hover:bg-blue-100 rounded-xl text-xs font-bold transition active:scale-95">今日</button>
+        </div>
+        <button type="button" id="saveRecordBtn" class="flex-1 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-bold py-2.5 rounded-xl text-sm shadow-md transition active:scale-95 flex justify-center items-center gap-1.5 disabled:opacity-50">
           <span id="saveBtnText">儲存紀錄 (Enter)</span>
         </button>
       </div>
@@ -468,7 +504,7 @@
         </div>
       </div>
 
-      <!-- 搜尋、類型、類別與自訂日期區間篩選列 -->
+      <!-- 搜尋、類型、類別、成員與日期區間篩選列 -->
       <div class="bg-gray-50/80 dark:bg-gray-700/30 p-2.5 rounded-2xl border border-gray-200/60 dark:border-gray-700/50 space-y-2 mb-3">
         <div class="relative">
           <span class="absolute left-3 top-2 text-gray-400 text-xs">🔍</span>
@@ -486,6 +522,10 @@
           </select>
           <select id="filterCategorySelect" class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-lg px-2 py-1 outline-none text-gray-700 dark:text-gray-200">
             <option value="all">全部類別</option>
+          </select>
+          <!-- 🔍 新增：依成員篩選 -->
+          <select id="filterMemberSelect" class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-lg px-2 py-1 outline-none text-gray-700 dark:text-gray-200">
+            <option value="all">全部成員</option>
           </select>
           <button type="button" id="resetFilterBtn" class="flex-shrink-0 text-blue-600 dark:text-blue-400 hover:underline px-1.5 py-0.5 font-bold ml-auto">重設條件</button>
         </div>
@@ -508,7 +548,7 @@
         </div>
       </div>
 
-      <!-- 回收桶檢視面板 (預設隱藏) -->
+      <!-- 回收桶檢視面板 -->
       <div id="trashContainer" class="hidden mb-4 bg-red-50/70 dark:bg-red-950/30 border border-red-200 dark:border-red-900/60 rounded-2xl p-3.5 space-y-2.5 shadow-inner">
         <div class="flex justify-between items-center text-xs flex-wrap gap-1">
           <span class="font-bold text-red-700 dark:text-red-300 flex items-center gap-1">🗑️ 回收桶 (軟刪除暫存區，不計入帳務結算)</span>
@@ -551,6 +591,7 @@
         <button type="button" onclick="closeMemberDrilldown()" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 font-bold text-xl leading-none">×</button>
       </div>
       <div id="drillSummaryBox" class="grid grid-cols-3 gap-2 text-center text-xs"></div>
+      <div class="text-[0.7rem] text-gray-400 px-1">💡 點選下方任一明細項目可直接跳轉編輯</div>
       <div id="drillContentList" class="space-y-3 overflow-y-auto pr-1 text-xs flex-1"></div>
     </div>
   </div>
@@ -605,12 +646,12 @@
 
   <script>
     const GOOGLE_CLIENT_ID = "1075640102629-sh7lmhrp0ple0emdb0q2s01gjs26naa6.apps.googleusercontent.com";
-    // 🔒 永久固定 Google Drive 儲存資料夾名稱為「雲端記帳」
     const DRIVE_FOLDER_NAME = "雲端記帳";
     const CONFIG_FILE_NAME = "_app_config.json";
 
     let tokenClient = null;
     let accessToken = localStorage.getItem("gdrive_access_token") || null;
+    let tokenExpiry = parseInt(localStorage.getItem("gdrive_token_expiry") || "0", 10);
     let driveFolderId = localStorage.getItem("gdrive_folder_id") || null;
     let configFileId = null;
     let sheetFileMap = JSON.parse(localStorage.getItem("app_sheet_map")) || { "預設帳本": null }; 
@@ -628,7 +669,10 @@
       { icon: "🍺", title: "居酒屋晚餐", category: "餐飲", amount: 3500, currency: "JPY" }
     ];
     let quickTemplates = JSON.parse(localStorage.getItem("app_quick_templates")) || DEFAULT_TEMPLATES;
-    let exchangeRates = JSON.parse(localStorage.getItem("app_exchange_rates")) || { TWD: 1, EUR: 35.0, JPY: 0.21, CNY: 4.45, USD: 32.5, KRW: 0.024 };
+    // 💱 擴充 THB、HKD 預設基準匯率
+    let exchangeRates = JSON.parse(localStorage.getItem("app_exchange_rates")) || { 
+      TWD: 1, JPY: 0.21, THB: 0.95, HKD: 4.15, USD: 32.5, EUR: 35.0, CNY: 4.45, KRW: 0.024 
+    };
     let cachedRecords = [];
     let currentSplitMode = "equal";
     let isMultiPayerMode = false;
@@ -648,6 +692,33 @@
       { bg: "bg-rose-100 dark:bg-rose-900/50", text: "text-rose-700 dark:text-rose-300", border: "border-rose-200 dark:border-rose-700" },
       { bg: "bg-indigo-100 dark:bg-indigo-900/50", text: "text-indigo-700 dark:text-indigo-300", border: "border-indigo-200 dark:border-indigo-700" }
     ];
+
+    // 🛡️ 安全跳脫函式 (防止內嵌 HTML 與動態 JS 函式參數被惡意中斷)
+    function escapeHtml(str) {
+      if (!str) return "";
+      return String(str).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
+    }
+    function escapeJsStr(str) {
+      if (!str) return "";
+      return String(str).replace(/\\/g, "\\\\").replace(/'/g, "\\'").replace(/"/g, '\\"').replace(/\n/g, '\\n').replace(/\r/g, '');
+    }
+    function escapeDriveQueryString(str) {
+      return String(str || "").replace(/\\/g, "\\\\").replace(/'/g, "\\'");
+    }
+
+    // 💾 LocalStorage 安全寫入保護機制
+    function safeSetLocalStorage(key, value) {
+      try {
+        localStorage.setItem(key, value);
+        return true;
+      } catch (e) {
+        if (e.name === 'QuotaExceededError' || e.code === 22) {
+          console.warn(`LocalStorage quota exceeded while saving: ${key}`);
+          showToast("⚠️ 本機快取容量即將額滿，建議清理收據照片或清空回收桶", "info");
+        }
+        return false;
+      }
+    }
 
     function debounce(fn, delay = 150) {
       let timer = null;
@@ -680,14 +751,12 @@
     function getActiveRecords() {
       return cachedRecords.filter(r => !r.deleted);
     }
-
     function getDeletedRecords() {
       return cachedRecords.filter(r => r.deleted);
     }
 
-    // 📴 離線鏡像與待同步狀態管理
     function saveLocalSheetMirror(sheetName, records) {
-      try { localStorage.setItem(`local_records_${sheetName}`, JSON.stringify(records)); } catch (e) {}
+      safeSetLocalStorage(`local_records_${sheetName}`, JSON.stringify(records));
     }
     function loadLocalSheetMirror(sheetName) {
       try {
@@ -696,13 +765,12 @@
       } catch (e) { return []; }
     }
     function markSheetDirty(sheetName, isDirty) {
-      localStorage.setItem(`dirty_${sheetName}`, isDirty ? "1" : "0");
+      safeSetLocalStorage(`dirty_${sheetName}`, isDirty ? "1" : "0");
     }
     function isSheetDirty(sheetName) {
       return localStorage.getItem(`dirty_${sheetName}`) === "1";
     }
 
-    // 💡 更新歷史項目名稱自動完成建議與類別連動
     function updateTitleAutocomplete() {
       const dl = document.getElementById("titleSuggestions");
       if (!dl) return;
@@ -719,7 +787,7 @@
       dl.innerHTML = Array.from(seen).slice(0, 40).map(t => `<option value="${escapeHtml(t)}"></option>`).join("");
     }
 
-    // 🧮 安全算式計算器
+    // 🧮 算式評估器（支援即時運算）
     function evaluateMathInput(rawStr) {
       const s = String(rawStr || "").replace(/,/g, "").trim();
       if (!s) return 0;
@@ -733,11 +801,54 @@
       return parseFloat(s) || 0;
     }
 
+    // 📱 手機端鍵盤快捷鍵插入運算子
+    window.insertMathKey = function(key) {
+      const input = document.getElementById("originalAmount");
+      input.focus();
+      let cur = input.value;
+      if (key === 'backspace') {
+        input.value = cur.slice(0, -1);
+      } else {
+        input.value = cur + key;
+      }
+      input.dispatchEvent(new Event("input"));
+    };
+
+    function updateMathLivePreview() {
+      const input = document.getElementById("originalAmount");
+      const badge = document.getElementById("mathLiveEvalPreview");
+      const val = (input.value || "").trim();
+      if (val && /[+\-*/]/.test(val)) {
+        try {
+          const res = evaluateMathInput(val);
+          if (res > 0) {
+            badge.textContent = `= ${res.toLocaleString()}`;
+            badge.classList.remove("hidden");
+            return;
+          }
+        } catch (e) {}
+      }
+      badge.classList.add("hidden");
+    }
+
+    // 📅 日期微調捷徑
+    window.adjustFormDate = function(dayOffset) {
+      const dInput = document.getElementById("date");
+      let base = dInput.value ? new Date(dInput.value + "T00:00:00") : new Date();
+      if (isNaN(base.getTime())) base = new Date();
+      base.setDate(base.getDate() + dayOffset);
+      const pad = n => String(n).padStart(2, '0');
+      dInput.value = `${base.getFullYear()}-${pad(base.getMonth() + 1)}-${pad(base.getDate())}`;
+    };
+    window.setFormDateToday = function() {
+      document.getElementById("date").value = getTodayString();
+    };
+
     function isInvalidMemberName(name) {
       const s = String(name || "").trim();
       if (!s) return true;
       if (/^-?\d+(\.\d+)?$/.test(s)) return true;
-      if (["TWD", "JPY", "USD", "EUR", "CNY", "KRW", "無", "null", "undefined"].includes(s.toUpperCase())) return true;
+      if (["TWD", "JPY", "USD", "EUR", "CNY", "KRW", "THB", "HKD", "無", "null", "undefined"].includes(s.toUpperCase())) return true;
       return false;
     }
 
@@ -812,7 +923,7 @@
       });
       if (cleanMembers.length !== members.length && cleanMembers.length > 0) {
         members = cleanMembers;
-        localStorage.setItem("split_members", JSON.stringify(members));
+        safeSetLocalStorage("split_members", JSON.stringify(members));
         renderMemberControls();
         modified = true;
       }
@@ -875,7 +986,7 @@
         date: document.getElementById("date").value,
         splitMode: currentSplitMode
       };
-      localStorage.setItem("last_form_prefs", JSON.stringify(prefs));
+      safeSetLocalStorage("last_form_prefs", JSON.stringify(prefs));
     }
 
     function restoreLastFormPrefs() {
@@ -979,15 +1090,32 @@
       }
     };
 
-    function showToast(message, type = 'success') {
+    // ♻️ Toast 支援「一鍵復原」按鈕
+    function showToast(message, type = 'success', undoCallback = null) {
       const container = document.getElementById("toastContainer");
       const toast = document.createElement("div");
       const isErr = type === 'error', isInfo = type === 'info';
       let bgClass = isErr ? "bg-red-50 text-red-700 border-red-200" : isInfo ? "bg-blue-50 text-blue-700 border-blue-200" : "bg-emerald-50 text-emerald-700 border-emerald-200";
-      toast.className = `toast-anim flex items-center justify-center p-3 text-sm font-bold rounded-2xl shadow-lg border ${bgClass} glass`;
-      toast.innerHTML = message;
+      toast.className = `toast-anim flex items-center justify-between p-3 text-sm font-bold rounded-2xl shadow-lg border ${bgClass} glass`;
+      
+      const msgSpan = document.createElement("span");
+      msgSpan.innerHTML = message;
+      toast.appendChild(msgSpan);
+
+      if (typeof undoCallback === 'function') {
+        const undoBtn = document.createElement("button");
+        undoBtn.type = "button";
+        undoBtn.className = "ml-3 px-2 py-0.5 rounded-lg bg-red-600 hover:bg-red-700 text-white text-xs font-bold shadow-sm transition active:scale-95";
+        undoBtn.textContent = "復原 ♻️";
+        undoBtn.onclick = () => {
+          undoCallback();
+          if (container.contains(toast)) container.removeChild(toast);
+        };
+        toast.appendChild(undoBtn);
+      }
+
       container.appendChild(toast);
-      setTimeout(() => { if(container.contains(toast)) container.removeChild(toast); }, 3500);
+      setTimeout(() => { if (container.contains(toast)) container.removeChild(toast); }, 4500);
     }
 
     function setSyncBadge(text, isLoading = false, isWarning = false) {
@@ -1003,13 +1131,6 @@
       else badge.classList.remove("animate-pulse");
     }
 
-    function escapeHtml(str) {
-      if (!str) return "";
-      return String(str).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
-    }
-    function escapeDriveQueryString(str) {
-      return String(str || "").replace(/\\/g, "\\\\").replace(/'/g, "\\'");
-    }
     function getTodayString() {
       const d = new Date();
       return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
@@ -1028,7 +1149,6 @@
       } catch (e) { el.textContent = "無法讀取"; }
     }
 
-    // ⬆️ 滾動至記帳表單
     window.scrollToForm = function() {
       document.getElementById("recordFormBox").scrollIntoView({ behavior: "smooth" });
       setTimeout(() => document.getElementById("title").focus(), 350);
@@ -1040,12 +1160,11 @@
       else btn.classList.add("hidden");
     }, { passive: true });
 
-    // ⚡ 快選範本渲染
     function renderQuickTemplates() {
       const bar = document.getElementById("quickTemplatesBar");
       if (!bar) return;
       const itemsHtml = quickTemplates.map((t, idx) => {
-        const sym = t.currency === 'JPY' ? '¥' : (t.currency === 'EUR' ? '€' : '$');
+        const sym = t.currency === 'JPY' ? '¥' : (t.currency === 'EUR' ? '€' : (t.currency === 'THB' ? '฿' : '$'));
         return `
           <div class="flex-shrink-0 inline-flex items-center bg-gray-50 dark:bg-gray-700/60 border border-gray-200 dark:border-gray-600 rounded-xl overflow-hidden shadow-sm">
             <button type="button" onclick="applyTemplateByIndex(${idx})" class="px-2.5 py-1 hover:bg-blue-50 dark:hover:bg-gray-600 transition">
@@ -1072,7 +1191,7 @@
       document.getElementById("originalAmount").value = t.amount;
       document.getElementById("overrideTwdInput").value = "";
       updateTwdPreview();
-      showToast(`⚡ 已套用範本：${t.title}`, "info");
+      showToast(`⚡ 已套用範本：${escapeHtml(t.title)}`, "info");
     };
 
     window.saveCurrentFormAsTemplate = function() {
@@ -1084,17 +1203,17 @@
         return showToast("請先在表單填寫「項目名稱」與「金額」，再點選存為範本！", "info");
       }
       quickTemplates.push({ icon: "⚡", title, category: cat, amount: amt, currency: cur });
-      localStorage.setItem("app_quick_templates", JSON.stringify(quickTemplates));
+      safeSetLocalStorage("app_quick_templates", JSON.stringify(quickTemplates));
       renderQuickTemplates();
       syncConfigToDrive();
-      showToast(`✅ 已將「${title}」加入快選範本！`);
+      showToast(`✅ 已將「${escapeHtml(title)}」加入快選範本！`);
     };
 
     window.removeQuickTemplate = function(idx) {
       const t = quickTemplates[idx];
       if (!t || !confirm(`確定刪除快選範本「${t.title}」嗎？`)) return;
       quickTemplates.splice(idx, 1);
-      localStorage.setItem("app_quick_templates", JSON.stringify(quickTemplates));
+      safeSetLocalStorage("app_quick_templates", JSON.stringify(quickTemplates));
       renderQuickTemplates();
       syncConfigToDrive();
     };
@@ -1105,7 +1224,7 @@
       updateTimestampDisplay();
       members = members.filter(m => !isInvalidMemberName(m));
       if (members.length === 0) members = ["奇奇", "鼻涕"];
-      localStorage.setItem("split_members", JSON.stringify(members));
+      safeSetLocalStorage("split_members", JSON.stringify(members));
 
       renderSheetSelector();
       renderMemberControls();
@@ -1127,7 +1246,6 @@
       document.getElementById("originalAmount").addEventListener("keydown", handleEnterSave);
       document.getElementById("overrideTwdInput").addEventListener("keydown", handleEnterSave);
 
-      // 選取歷史建議項目時，自動帶入對應類別
       document.getElementById("title").addEventListener("input", function() {
         const val = this.value.trim();
         if (titleToCategoryMap[val] && categories.includes(titleToCategoryMap[val])) {
@@ -1135,7 +1253,6 @@
         }
       });
 
-      // 全域 Esc 快捷鍵支援（關閉彈窗或取消編輯）
       document.addEventListener("keydown", (e) => {
         if (e.key === "Escape") {
           closeImageModal();
@@ -1145,7 +1262,6 @@
         }
       });
 
-      // 金額欄離開焦點自動計算算式
       document.getElementById("originalAmount").addEventListener("blur", function() {
         const raw = this.value.trim();
         if (raw && /[+\-*/]/.test(raw)) {
@@ -1175,6 +1291,7 @@
       }
     };
 
+    // 🔑 Google OAuth 初始化與 Token 效期偵測 (55 分鐘緩衝)
     function initGoogleClient() {
       tokenClient = google.accounts.oauth2.initTokenClient({
         client_id: GOOGLE_CLIENT_ID,
@@ -1185,7 +1302,9 @@
             return;
           }
           accessToken = resp.access_token;
-          localStorage.setItem("gdrive_access_token", accessToken);
+          tokenExpiry = Date.now() + 55 * 60 * 1000;
+          safeSetLocalStorage("gdrive_access_token", accessToken);
+          safeSetLocalStorage("gdrive_token_expiry", String(tokenExpiry));
           updateGoogleUI(true);
           showToast("✅ 已成功連接 Google 雲端硬碟！");
           await setupDriveEnvironment();
@@ -1193,8 +1312,16 @@
       });
 
       if (accessToken) {
-        updateGoogleUI(true);
-        setupDriveEnvironment();
+        if (tokenExpiry && Date.now() > tokenExpiry) {
+          accessToken = null;
+          localStorage.removeItem("gdrive_access_token");
+          localStorage.removeItem("gdrive_token_expiry");
+          updateGoogleUI(false);
+          showToast("雲端授權過期，請重新登入 Google 雲端硬碟", "info");
+        } else {
+          updateGoogleUI(true);
+          setupDriveEnvironment();
+        }
       }
     }
 
@@ -1208,6 +1335,7 @@
       driveFolderId = null;
       configFileId = null;
       localStorage.removeItem("gdrive_access_token");
+      localStorage.removeItem("gdrive_token_expiry");
       localStorage.removeItem("gdrive_folder_id");
       updateGoogleUI(false);
       showToast("已中斷雲端連結（目前顯示本機快取資料）", "info");
@@ -1235,6 +1363,12 @@
 
     async function driveApi(url, options = {}) {
       if (!accessToken) throw new Error("尚未登入 Google");
+      if (tokenExpiry && Date.now() > tokenExpiry) {
+        accessToken = null;
+        localStorage.removeItem("gdrive_access_token");
+        updateGoogleUI(false);
+        throw new Error("授權已過期，請重新點擊「登入 Google 雲端硬碟」");
+      }
       options.headers = options.headers || {};
       options.headers["Authorization"] = `Bearer ${accessToken}`;
 
@@ -1242,8 +1376,9 @@
       if (res.status === 401) {
         accessToken = null;
         localStorage.removeItem("gdrive_access_token");
+        localStorage.removeItem("gdrive_token_expiry");
         updateGoogleUI(false);
-        throw new Error("授權已過期，請重新點擊「登入 Google 雲端硬碟」");
+        throw new Error("授權已失效，請重新點擊「登入 Google 雲端硬碟」");
       }
       if (!res.ok) {
         const errText = await res.text();
@@ -1301,7 +1436,7 @@
 
         if (folders.length > 0) {
           driveFolderId = folders[0].id;
-          localStorage.setItem("gdrive_folder_id", driveFolderId);
+          safeSetLocalStorage("gdrive_folder_id", driveFolderId);
 
           if (folders[0].name !== DRIVE_FOLDER_NAME) {
             await driveApi(`https://www.googleapis.com/drive/v3/files/${driveFolderId}`, {
@@ -1337,7 +1472,7 @@
           });
           const folder = await createRes.json();
           driveFolderId = folder.id;
-          localStorage.setItem("gdrive_folder_id", driveFolderId);
+          safeSetLocalStorage("gdrive_folder_id", driveFolderId);
         }
 
         await fetchSheetFilesFromDrive();
@@ -1375,7 +1510,7 @@
       if (!(currentSheet in sheetFileMap)) {
         sheetFileMap[currentSheet] = null;
       }
-      localStorage.setItem("app_sheet_map", JSON.stringify(sheetFileMap));
+      safeSetLocalStorage("app_sheet_map", JSON.stringify(sheetFileMap));
       renderSheetSelector();
     }
 
@@ -1398,18 +1533,18 @@
           const validCloudMembers = cfg.members.filter(m => !isInvalidMemberName(m) && !/^(.+?)\(\$\s*([\d,.]+)\)$/.test(String(m).trim()));
           if (validCloudMembers.length > 0) {
             members = validCloudMembers;
-            localStorage.setItem("split_members", JSON.stringify(members));
+            safeSetLocalStorage("split_members", JSON.stringify(members));
             renderMemberControls();
           }
         }
         if (cfg && Array.isArray(cfg.categories) && cfg.categories.length > 0) {
           categories = cfg.categories;
-          localStorage.setItem("app_categories", JSON.stringify(categories));
+          safeSetLocalStorage("app_categories", JSON.stringify(categories));
           renderCategoryControls();
         }
         if (cfg && Array.isArray(cfg.quickTemplates) && cfg.quickTemplates.length > 0) {
           quickTemplates = cfg.quickTemplates;
-          localStorage.setItem("app_quick_templates", JSON.stringify(quickTemplates));
+          safeSetLocalStorage("app_quick_templates", JSON.stringify(quickTemplates));
           renderQuickTemplates();
         }
         restoreLastFormPrefs();
@@ -1478,7 +1613,6 @@
       }
     }
 
-    // ⚡ 具備防撞佇列鎖 (Sequential Queue) 的雲端寫入函式
     async function saveRecordsToDrive() {
       saveLocalSheetMirror(currentSheet, cachedRecords);
       markSheetDirty(currentSheet, true);
@@ -1504,7 +1638,7 @@
           const currentFileId = sheetFileMap[targetSheet];
           const newFileId = await saveJsonFileToDrive(`${targetSheet}.json`, currentFileId, snapshot);
           sheetFileMap[targetSheet] = newFileId;
-          localStorage.setItem("app_sheet_map", JSON.stringify(sheetFileMap));
+          safeSetLocalStorage("app_sheet_map", JSON.stringify(sheetFileMap));
           markSheetDirty(targetSheet, false);
         } while (pendingDriveSave);
 
@@ -1548,7 +1682,7 @@
         return;
       }
       currentSheet = newSheet;
-      localStorage.setItem("app_active_sheet", currentSheet);
+      safeSetLocalStorage("app_active_sheet", currentSheet);
       cancelEdit(true);
       await loadRecordsFromDrive();
     });
@@ -1561,8 +1695,8 @@
           sheetFileMap[cleanName] = null;
         }
         currentSheet = cleanName;
-        localStorage.setItem("app_active_sheet", currentSheet);
-        localStorage.setItem("app_sheet_map", JSON.stringify(sheetFileMap));
+        safeSetLocalStorage("app_active_sheet", currentSheet);
+        safeSetLocalStorage("app_sheet_map", JSON.stringify(sheetFileMap));
         renderSheetSelector();
         cachedRecords = [];
         saveLocalSheetMirror(currentSheet, cachedRecords);
@@ -1570,7 +1704,7 @@
         if (accessToken && driveFolderId) {
           await saveRecordsToDrive();
         } else {
-          showToast(`已建立並切換至新帳本：${cleanName}`, "info");
+          showToast(`已建立並切換至新帳本：${escapeHtml(cleanName)}`, "info");
         }
       }
     });
@@ -1588,8 +1722,8 @@
 
       sheetFileMap[cleanName] = fileId;
       currentSheet = cleanName;
-      localStorage.setItem("app_active_sheet", currentSheet);
-      localStorage.setItem("app_sheet_map", JSON.stringify(sheetFileMap));
+      safeSetLocalStorage("app_active_sheet", currentSheet);
+      safeSetLocalStorage("app_sheet_map", JSON.stringify(sheetFileMap));
       saveLocalSheetMirror(currentSheet, oldRecords);
       renderSheetSelector();
 
@@ -1600,7 +1734,7 @@
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ name: `${cleanName}.json` })
           });
-          showToast(`✅ 帳本已更名為「${cleanName}」`);
+          showToast(`✅ 帳本已更名為「${escapeHtml(cleanName)}」`);
         } catch (e) { showToast("雲端更名失敗", "error"); }
       }
     });
@@ -1614,8 +1748,8 @@
       localStorage.removeItem(`local_records_${currentSheet}`);
       delete sheetFileMap[currentSheet];
       currentSheet = Object.keys(sheetFileMap)[0];
-      localStorage.setItem("app_active_sheet", currentSheet);
-      localStorage.setItem("app_sheet_map", JSON.stringify(sheetFileMap));
+      safeSetLocalStorage("app_active_sheet", currentSheet);
+      safeSetLocalStorage("app_sheet_map", JSON.stringify(sheetFileMap));
       renderSheetSelector();
 
       if (accessToken && fileId) {
@@ -1643,9 +1777,26 @@
       return { rate, twd: Math.round(amount * rate) };
     }
 
+    function updateEqualSharePreview() {
+      const previewEl = document.getElementById("equalPerPersonPreview");
+      if (!previewEl || currentSplitMode !== 'equal') return;
+      const selected = Array.from(document.querySelectorAll(".member-cb:checked"));
+      const { twd } = calculateTwd();
+      if (selected.length > 0 && twd > 0) {
+        const per = Math.round(twd / selected.length);
+        previewEl.textContent = `每人約 $${per.toLocaleString()} (${selected.length}人)`;
+        previewEl.classList.remove("hidden");
+      } else {
+        previewEl.textContent = "";
+        previewEl.classList.add("hidden");
+      }
+    }
+
     function updateTwdPreview() {
       const { twd } = calculateTwd();
       document.getElementById("previewTwd").textContent = twd.toLocaleString();
+      updateMathLivePreview();
+      updateEqualSharePreview();
       checkCustomSplitTotal();
       checkPercentSplitTotal();
       checkRatioSplitTotal();
@@ -1766,6 +1917,7 @@
         if (check && cb.value === '公費') cb.checked = false;
         else cb.checked = check;
       });
+      updateEqualSharePreview();
     };
 
     function computeEqualShares(totalTwd, selectedMembers, primaryPayer) {
@@ -1943,7 +2095,6 @@
       }
     };
 
-    // 🛡️ 具備防連點保護的儲存按鈕
     document.getElementById("saveRecordBtn").onclick = async function() {
       if (this.disabled) return;
       const title = document.getElementById("title").value.trim();
@@ -2118,7 +2269,7 @@
 
       cachedRecords.unshift(settleRec);
       renderAllViews();
-      showToast(`🎉 已完成 ${debtor} ➔ ${creditor} ($${amount.toLocaleString()}) 平帳沖銷！`);
+      showToast(`🎉 已完成 ${escapeHtml(debtor)} ➔ ${escapeHtml(creditor)} ($${amount.toLocaleString()}) 平帳沖銷！`);
       await saveRecordsToDrive();
     };
 
@@ -2141,7 +2292,7 @@
     window.quickPoolAction = function(action) {
       if (!members.includes("公費")) {
         members.push("公費");
-        localStorage.setItem("split_members", JSON.stringify(members));
+        safeSetLocalStorage("split_members", JSON.stringify(members));
         renderMemberControls();
         syncConfigToDrive();
       }
@@ -2164,6 +2315,7 @@
       document.getElementById("originalAmount").focus();
     };
 
+    // 🔍 成員專屬對帳單（支援點擊單筆直達跳轉編輯）
     window.openMemberDrilldown = function(memberName) {
       const active = getActiveRecords();
       const col = getMemberColor(memberName);
@@ -2212,18 +2364,18 @@
         <div class="space-y-1.5">
           <div class="font-bold text-emerald-700 dark:text-emerald-400">➕ 先代墊 / 付出項目 (${paidItems.length} 筆)：</div>
           ${paidItems.length ? paidItems.map(item => `
-            <div class="flex justify-between items-center bg-gray-50 dark:bg-gray-700/50 px-3 py-1.5 rounded-xl gap-2">
+            <div onclick="closeMemberDrilldown(); startEditRecord('${escapeJsStr(item.id)}');" class="cursor-pointer hover:bg-emerald-50/60 dark:hover:bg-slate-700 transition flex justify-between items-center bg-gray-50 dark:bg-gray-700/50 px-3 py-1.5 rounded-xl gap-2 active:scale-98">
               <span class="truncate"><span class="font-mono text-gray-400">${escapeHtml(item.date)}</span> · ${escapeHtml(item.title)}</span>
-              <span class="font-mono font-bold text-emerald-600 flex-shrink-0">+$${item.myPaid.toLocaleString()}</span>
+              <span class="font-mono font-bold text-emerald-600 flex-shrink-0">+$${item.myPaid.toLocaleString()} ✏️</span>
             </div>
           `).join("") : `<div class="text-gray-400 pl-2">無代墊紀錄</div>`}
         </div>
         <div class="space-y-1.5 pt-2 border-t border-gray-200 dark:border-gray-700">
           <div class="font-bold text-orange-600 dark:text-orange-400">➖ 參與分攤 / 收款項目 (${shareItems.length} 筆)：</div>
           ${shareItems.length ? shareItems.map(item => `
-            <div class="flex justify-between items-center bg-gray-50 dark:bg-gray-700/50 px-3 py-1.5 rounded-xl gap-2">
+            <div onclick="closeMemberDrilldown(); startEditRecord('${escapeJsStr(item.id)}');" class="cursor-pointer hover:bg-orange-50/60 dark:hover:bg-slate-700 transition flex justify-between items-center bg-gray-50 dark:bg-gray-700/50 px-3 py-1.5 rounded-xl gap-2 active:scale-98">
               <span class="truncate"><span class="font-mono text-gray-400">${escapeHtml(item.date)}</span> · ${escapeHtml(item.title)}</span>
-              <span class="font-mono font-bold text-orange-500 flex-shrink-0">-$${item.myShare.toLocaleString()}</span>
+              <span class="font-mono font-bold text-orange-500 flex-shrink-0">-$${item.myShare.toLocaleString()} ✏️</span>
             </div>
           `).join("") : `<div class="text-gray-400 pl-2">無分攤紀錄</div>`}
         </div>
@@ -2257,7 +2409,7 @@
       }
       updateTwdPreview();
       document.getElementById("recordFormBox").scrollIntoView({ behavior: 'smooth' });
-      showToast(`📄 已複製「${item.title}」至表單，可直接修改儲存！`, "info");
+      showToast(`📄 已複製「${escapeHtml(item.title)}」至表單，可直接修改儲存！`, "info");
     };
 
     window.startEditRecord = function(id) {
@@ -2355,13 +2507,22 @@
       updateTwdPreview();
     }
 
+    // ♻️ 刪除附帶 Toast 一鍵復原
     window.deleteRecord = async function(id) {
       const item = cachedRecords.find(r => r.id === id);
       if (!item) return;
       item.deleted = true;
       item.deletedAt = new Date().toISOString();
       renderAllViews();
-      showToast(`🗑️ 已將「${item.title}」移至回收桶`, "info");
+
+      showToast(`🗑️ 已將「${escapeHtml(item.title)}」移至回收桶`, "info", async () => {
+        item.deleted = false;
+        delete item.deletedAt;
+        renderAllViews();
+        showToast(`♻️ 已成功復原「${escapeHtml(item.title)}」`);
+        await saveRecordsToDrive();
+      });
+
       await saveRecordsToDrive();
     };
 
@@ -2371,7 +2532,7 @@
       item.deleted = false;
       delete item.deletedAt;
       renderAllViews();
-      showToast(`♻️ 已復原「${item.title}」`);
+      showToast(`♻️ 已復原「${escapeHtml(item.title)}」`);
       await saveRecordsToDrive();
     };
 
@@ -2416,8 +2577,8 @@
             <span class="text-gray-400 font-mono ml-1">(${escapeHtml(item.date)} · $${(item.twdAmount || 0).toLocaleString()})</span>
           </div>
           <div class="flex items-center gap-1.5 flex-shrink-0">
-            <button onclick="restoreRecord('${escapeHtml(item.id)}')" class="bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300 px-2 py-1 rounded-lg font-bold text-[0.7rem]">♻️ 復原</button>
-            <button onclick="permanentDeleteRecord('${escapeHtml(item.id)}')" class="bg-red-100 text-red-600 dark:bg-red-900/40 dark:text-red-300 px-2 py-1 rounded-lg font-bold text-[0.7rem]">永久刪除</button>
+            <button onclick="restoreRecord('${escapeJsStr(item.id)}')" class="bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300 px-2 py-1 rounded-lg font-bold text-[0.7rem]">♻️ 復原</button>
+            <button onclick="permanentDeleteRecord('${escapeJsStr(item.id)}')" class="bg-red-100 text-red-600 dark:bg-red-900/40 dark:text-red-300 px-2 py-1 rounded-lg font-bold text-[0.7rem]">永久刪除</button>
           </div>
         `;
         frag.appendChild(div);
@@ -2514,7 +2675,7 @@
         const statusLabel = isZero ? '已結清' : (isPool ? (val < 0 ? '袋內剩餘公費' : '公費透支') : (isPositive ? '應收回' : '應補付'));
 
         g.innerHTML += `
-          <div onclick="openMemberDrilldown('${escapeHtml(m)}')" title="點擊查看 ${escapeHtml(m)} 的詳細對帳單" class="cursor-pointer hover:scale-[1.03] active:scale-95 transition bg-white/80 dark:bg-gray-800 p-2.5 rounded-xl shadow-sm border ${isZero ? 'border-gray-200 dark:border-gray-700' : isPositive ? 'border-emerald-200 dark:border-emerald-800' : 'border-red-200 dark:border-red-800'}">
+          <div onclick="openMemberDrilldown('${escapeJsStr(m)}')" title="點擊查看 ${escapeHtml(m)} 的詳細對帳單" class="cursor-pointer hover:scale-[1.03] active:scale-95 transition bg-white/80 dark:bg-gray-800 p-2.5 rounded-xl shadow-sm border ${isZero ? 'border-gray-200 dark:border-gray-700' : isPositive ? 'border-emerald-200 dark:border-emerald-800' : 'border-red-200 dark:border-red-800'}">
             <div class="inline-block px-2 py-0.5 rounded-md text-[0.75rem] font-bold ${color.bg} ${color.text} truncate max-w-full">${isPool ? '🏦 ' : ''}${escapeHtml(m)} 🔍</div>
             <div class="font-mono font-bold mt-1 text-sm ${isZero ? 'text-gray-400' : isPositive ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-500 dark:text-red-400'}">
               ${isZero ? '$0' : (isPositive ? `+$${val.toLocaleString()}` : `-$${Math.abs(val).toLocaleString()}`)}
@@ -2570,7 +2731,7 @@
               </span>
               <div class="flex items-center gap-2 flex-shrink-0 ml-auto">
                 <span class="font-mono font-bold text-blue-600 dark:text-blue-400">$${transAmt.toLocaleString()}</span>
-                <button type="button" onclick="settleDebtQuickly('${escapeHtml(debtor)}', '${escapeHtml(creditor)}', ${transAmt})" class="bg-emerald-500 hover:bg-emerald-600 text-white px-2 py-1 rounded-lg text-[0.7rem] font-bold shadow-sm active:scale-95 transition">✅ 已結清</button>
+                <button type="button" onclick="settleDebtQuickly('${escapeJsStr(debtor)}', '${escapeJsStr(creditor)}', ${transAmt})" class="bg-emerald-500 hover:bg-emerald-600 text-white px-2 py-1 rounded-lg text-[0.7rem] font-bold shadow-sm active:scale-95 transition">✅ 已結清</button>
               </div>
             </div>
           `);
@@ -2622,7 +2783,7 @@
       if (members.includes(cleanName)) return alert("此名字已存在！");
 
       members[idx] = cleanName;
-      localStorage.setItem("split_members", JSON.stringify(members));
+      safeSetLocalStorage("split_members", JSON.stringify(members));
 
       let updatedCount = 0;
       cachedRecords.forEach(item => {
@@ -2647,7 +2808,7 @@
 
       await syncConfigToDrive();
       if (updatedCount > 0) await saveRecordsToDrive();
-      showToast(`✅ 已更名為「${cleanName}」(更新了 ${updatedCount} 筆紀錄)`);
+      showToast(`✅ 已更名為「${escapeHtml(cleanName)}」(更新了 ${updatedCount} 筆紀錄)`);
     };
 
     function renderMemberControls() {
@@ -2656,7 +2817,7 @@
         const col = getMemberColor(m);
         return `
           <label class="flex items-center gap-1.5 cursor-pointer px-2.5 py-1.5 rounded-lg border ${col.bg} ${col.text} ${col.border} shadow-sm font-bold">
-            <input type="checkbox" value="${escapeHtml(m)}" ${m === '公費' ? '' : 'checked'} class="member-cb text-blue-500 h-4 w-4 rounded"> <span>${escapeHtml(m)}</span>
+            <input type="checkbox" onchange="updateEqualSharePreview()" value="${escapeHtml(m)}" ${m === '公費' ? '' : 'checked'} class="member-cb text-blue-500 h-4 w-4 rounded"> <span>${escapeHtml(m)}</span>
           </label>
         `;
       }).join("");
@@ -2667,7 +2828,7 @@
           <div class="flex items-center gap-2 bg-white dark:bg-gray-700/80 p-1.5 rounded-xl border border-gray-100 dark:border-gray-600 shadow-sm">
             <span class="w-16 px-2 py-0.5 rounded text-center font-bold ${col.bg} ${col.text} truncate">${escapeHtml(m)}</span>
             <input type="number" step="any" min="0" placeholder="代墊額" data-member="${escapeHtml(m)}" class="multi-payer-input flex-1 px-2.5 py-1 border border-gray-200 dark:border-gray-600 rounded-lg bg-gray-50 dark:bg-gray-800 text-right font-mono outline-none">
-            <button type="button" onclick="autoFillMultiPayer('${escapeHtml(m)}')" class="bg-blue-50 dark:bg-blue-900/50 text-blue-600 font-bold px-2 py-1 rounded-lg text-[0.75rem]">補滿</button>
+            <button type="button" onclick="autoFillMultiPayer('${escapeJsStr(m)}')" class="bg-blue-50 dark:bg-blue-900/50 text-blue-600 font-bold px-2 py-1 rounded-lg text-[0.75rem]">補滿</button>
           </div>
         `;
       }).join("");
@@ -2679,7 +2840,7 @@
           <div class="flex items-center gap-2 bg-white dark:bg-gray-700/80 p-2 rounded-xl border border-gray-100 dark:border-gray-600 shadow-sm">
             <span class="w-16 px-2 py-0.5 rounded text-center font-bold ${col.bg} ${col.text} truncate">${escapeHtml(m)}</span>
             <input type="number" step="any" min="0" data-member="${escapeHtml(m)}" class="custom-split-input flex-1 px-3 py-1 border border-gray-200 dark:border-gray-600 rounded-lg bg-gray-50 dark:bg-gray-800 text-right font-mono outline-none">
-            <button type="button" onclick="autoFillDifference('${escapeHtml(m)}')" class="bg-blue-50 dark:bg-blue-900/50 text-blue-600 font-bold px-2 py-1 rounded-lg text-xs">補滿</button>
+            <button type="button" onclick="autoFillDifference('${escapeJsStr(m)}')" class="bg-blue-50 dark:bg-blue-900/50 text-blue-600 font-bold px-2 py-1 rounded-lg text-xs">補滿</button>
           </div>
         `;
       }).join("");
@@ -2707,7 +2868,7 @@
               <span class="absolute right-2 top-1 text-gray-400 font-mono text-xs">%</span>
             </div>
             <span id="hint_percent_${escapeHtml(m)}" class="text-xs font-mono text-gray-400 w-14 text-right">$0</span>
-            <button type="button" onclick="autoFillPercent('${escapeHtml(m)}')" class="bg-blue-50 dark:bg-blue-900/50 text-blue-600 font-bold px-2 py-1 rounded-lg text-xs">補至100%</button>
+            <button type="button" onclick="autoFillPercent('${escapeJsStr(m)}')" class="bg-blue-50 dark:bg-blue-900/50 text-blue-600 font-bold px-2 py-1 rounded-lg text-xs">補至100%</button>
           </div>
         `;
       }).join("");
@@ -2733,6 +2894,14 @@
 
       const lineSelect = document.getElementById("lineShareMemberSelect");
       lineSelect.innerHTML = humanMembers.map(m => `<option value="${escapeHtml(m)}">${escapeHtml(m)}</option>`).join("");
+
+      // 🔍 更新篩選列中的成員選單
+      const filterMemSelect = document.getElementById("filterMemberSelect");
+      const prevFilterMem = filterMemSelect.value;
+      filterMemSelect.innerHTML = `<option value="all">全部成員</option>` + humanMembers.map(m => `<option value="${escapeHtml(m)}">${escapeHtml(m)}</option>`).join("");
+      if (prevFilterMem && (prevFilterMem === 'all' || humanMembers.includes(prevFilterMem))) filterMemSelect.value = prevFilterMem;
+
+      updateEqualSharePreview();
     }
 
     document.getElementById("addMemberBtn").onclick = () => {
@@ -2740,20 +2909,20 @@
       if (val && !members.includes(val) && !isInvalidMemberName(val)) {
         members.push(val);
         document.getElementById("newMemberName").value = "";
-        localStorage.setItem("split_members", JSON.stringify(members));
+        safeSetLocalStorage("split_members", JSON.stringify(members));
         renderMemberControls();
         syncConfigToDrive();
-        showToast(`已新增成員：${val}`);
+        showToast(`已新增成員：${escapeHtml(val)}`);
       }
     };
 
     window.removeMember = function(idx) {
       if (members.length > 1) {
         const removed = members.splice(idx, 1);
-        localStorage.setItem("split_members", JSON.stringify(members));
+        safeSetLocalStorage("split_members", JSON.stringify(members));
         renderMemberControls();
         syncConfigToDrive();
-        showToast(`已移除成員：${removed}`, "info");
+        showToast(`已移除成員：${escapeHtml(removed)}`, "info");
       } else { alert("至少需保留一位成員！"); }
     };
 
@@ -2784,27 +2953,29 @@
       if (val && !categories.includes(val)) {
         categories.push(val);
         document.getElementById("newCategoryName").value = "";
-        localStorage.setItem("app_categories", JSON.stringify(categories));
+        safeSetLocalStorage("app_categories", JSON.stringify(categories));
         renderCategoryControls();
         syncConfigToDrive();
-        showToast(`已新增類別：${val}`);
+        showToast(`已新增類別：${escapeHtml(val)}`);
       }
     };
 
     window.removeCategory = function(idx) {
       if (categories.length > 1) {
         const removed = categories.splice(idx, 1);
-        localStorage.setItem("app_categories", JSON.stringify(categories));
+        safeSetLocalStorage("app_categories", JSON.stringify(categories));
         renderCategoryControls();
         syncConfigToDrive();
-        showToast(`已移除類別：${removed}`, "info");
+        showToast(`已移除類別：${escapeHtml(removed)}`, "info");
       }
     };
 
+    // 🔍 篩選器（包含依成員篩選判斷）
     function getFilteredActiveRecords() {
       const rawInput = (document.getElementById("searchInput")?.value || "").trim();
       const filterType = document.getElementById("filterTypeSelect")?.value || "all";
       const filterCat = document.getElementById("filterCategorySelect")?.value || "all";
+      const filterMem = document.getElementById("filterMemberSelect")?.value || "all";
       const startDate = document.getElementById("filterStartDate")?.value || "";
       const endDate = document.getElementById("filterEndDate")?.value || "";
       const sortOrder = document.getElementById("sortOrderSelect")?.value || "input";
@@ -2850,11 +3021,19 @@
 
         const matchType = filterType === "all" || item.type === filterType;
         const matchCategory = filterCat === "all" || (item.category || "其他") === filterCat;
+        
+        let matchMember = true;
+        if (filterMem !== "all") {
+          const payers = parsePayers(item);
+          const shares = parseShares(item);
+          matchMember = Boolean(payers[filterMem] || shares[filterMem] || item.payer === filterMem);
+        }
+
         const itemDate = item.date || "";
         const matchStart = !startDate || itemDate >= startDate;
         const matchEnd = !endDate || itemDate <= endDate;
 
-        return matchQuery && matchType && matchCategory && matchStart && matchEnd;
+        return matchQuery && matchType && matchCategory && matchMember && matchStart && matchEnd;
       });
 
       const sorted = [...filtered];
@@ -2866,7 +3045,6 @@
       return sorted;
     }
 
-    // 📝 歷史明細渲染（DocumentFragment 批次渲染 + 日期分組標頭與當日小計）
     function renderRecordsList() {
       const activeTotal = getActiveRecords().length;
       const filtered = getFilteredActiveRecords();
@@ -2879,6 +3057,7 @@
         (document.getElementById("searchInput")?.value || "").trim() ||
         (document.getElementById("filterTypeSelect")?.value || "all") !== "all" ||
         (document.getElementById("filterCategorySelect")?.value || "all") !== "all" ||
+        (document.getElementById("filterMemberSelect")?.value || "all") !== "all" ||
         (document.getElementById("filterStartDate")?.value || "") ||
         (document.getElementById("filterEndDate")?.value || "")
       );
@@ -2912,7 +3091,6 @@
         return;
       }
 
-      // 預先統計每日總支出供日期分組標頭顯示
       const dailyTotals = {};
       filtered.forEach(r => {
         if (r.type === "expense" || r.type === "personal") {
@@ -2967,7 +3145,7 @@
               <span class="px-2 py-0.5 rounded-lg text-[0.7rem] font-bold ${isSettlement ? 'bg-emerald-500 text-white' : isIncome ? 'bg-emerald-100 text-emerald-700' : 'bg-blue-100 text-blue-700'}">${escapeHtml(item.category || "其他")}</span>
               ${isPersonal ? `<span class="px-1.5 py-0.5 rounded text-[0.68rem] font-bold bg-purple-100 text-purple-700">👤 個人</span>` : ''}
               <span class="font-bold text-sm text-gray-900 dark:text-gray-100 break-all">${escapeHtml(item.title)}</span>
-              ${item.receiptImage ? `<button type="button" onclick="openImageModalById('${escapeHtml(item.id)}')" class="text-[0.7rem] bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 rounded px-1.5 py-0.5 border border-gray-200 dark:border-gray-600">📷照</button>` : ''}
+              ${item.receiptImage ? `<button type="button" onclick="openImageModalById('${escapeJsStr(item.id)}')" class="text-[0.7rem] bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 rounded px-1.5 py-0.5 border border-gray-200 dark:border-gray-600">📷照</button>` : ''}
             </div>
             <div class="flex items-center gap-1.5 text-gray-400 font-mono flex-wrap">
               <span>${escapeHtml(item.date)}</span>
@@ -2981,9 +3159,9 @@
               ${isSettlement ? '🤝 ' : (isIncome ? '+' : '-')}$${(item.twdAmount || 0).toLocaleString()}
             </div>
             <div class="flex items-center gap-1 flex-wrap justify-end">
-              <button type="button" onclick="duplicateRecordToForm('${escapeHtml(item.id)}')" class="text-[0.7rem] font-bold text-gray-500 hover:text-gray-700 bg-gray-100 dark:bg-gray-700 dark:text-gray-300 px-2 py-1 rounded-lg active:scale-95" title="複製此筆到表單">複製</button>
-              <button type="button" onclick="startEditRecord('${escapeHtml(item.id)}')" class="text-[0.7rem] font-bold text-blue-500 hover:text-blue-700 bg-blue-50 dark:bg-blue-900/20 px-2 py-1 rounded-lg active:scale-95">編輯</button>
-              <button type="button" onclick="deleteRecord('${escapeHtml(item.id)}')" class="text-[0.7rem] font-bold text-red-400 hover:text-red-600 bg-red-50 dark:bg-red-900/20 px-2 py-1 rounded-lg active:scale-95">刪除</button>
+              <button type="button" onclick="duplicateRecordToForm('${escapeJsStr(item.id)}')" class="text-[0.7rem] font-bold text-gray-500 hover:text-gray-700 bg-gray-100 dark:bg-gray-700 dark:text-gray-300 px-2 py-1 rounded-lg active:scale-95" title="複製此筆到表單">複製</button>
+              <button type="button" onclick="startEditRecord('${escapeJsStr(item.id)}')" class="text-[0.7rem] font-bold text-blue-500 hover:text-blue-700 bg-blue-50 dark:bg-blue-900/20 px-2 py-1 rounded-lg active:scale-95">編輯</button>
+              <button type="button" onclick="deleteRecord('${escapeJsStr(item.id)}')" class="text-[0.7rem] font-bold text-red-400 hover:text-red-600 bg-red-50 dark:bg-red-900/20 px-2 py-1 rounded-lg active:scale-95">刪除</button>
             </div>
           </div>
         `;
@@ -3010,7 +3188,6 @@
       if(!document.getElementById("mainChartContainer").classList.contains("hidden")) drawChart();
     }
 
-    // 搜尋框加上 150ms 防抖動 (Debounce)
     const debouncedRenderRecords = debounce(renderRecordsList, 150);
     document.getElementById("searchInput").addEventListener("input", (e) => {
       document.getElementById("clearSearchBtn").classList.toggle("hidden", !e.target.value);
@@ -3023,6 +3200,7 @@
     };
     document.getElementById("filterTypeSelect").addEventListener("change", renderRecordsList);
     document.getElementById("filterCategorySelect").addEventListener("change", renderRecordsList);
+    document.getElementById("filterMemberSelect").addEventListener("change", renderRecordsList);
     document.getElementById("filterStartDate").addEventListener("change", renderRecordsList);
     document.getElementById("filterEndDate").addEventListener("change", renderRecordsList);
     document.getElementById("resetFilterBtn").onclick = () => {
@@ -3030,6 +3208,7 @@
       document.getElementById("clearSearchBtn").classList.add("hidden");
       document.getElementById("filterTypeSelect").value = "all";
       document.getElementById("filterCategorySelect").value = "all";
+      document.getElementById("filterMemberSelect").value = "all";
       document.getElementById("filterStartDate").value = "";
       document.getElementById("filterEndDate").value = "";
       renderRecordsList();
@@ -3086,13 +3265,16 @@
       rec.onresult = e => {
         const txt = e.results[0][0].transcript;
         aiStatus.textContent = `解析中: ${txt}`;
-        if (txt.includes("歐")) document.getElementById("currency").value = "EUR";
+        if (txt.includes("泰") || txt.includes("泰銖")) document.getElementById("currency").value = "THB";
+        else if (txt.includes("港") || txt.includes("港幣")) document.getElementById("currency").value = "HKD";
         else if (txt.includes("日")) document.getElementById("currency").value = "JPY";
+        else if (txt.includes("歐")) document.getElementById("currency").value = "EUR";
         else if (txt.includes("美")) document.getElementById("currency").value = "USD";
+        else if (txt.includes("韓")) document.getElementById("currency").value = "KRW";
         else document.getElementById("currency").value = "TWD";
         const nums = txt.match(/\d+/g);
         if (nums) document.getElementById("originalAmount").value = nums[nums.length - 1];
-        document.getElementById("title").value = txt.replace(/\d+|元|塊|台幣|日幣|美金|歐元/g, '').trim() || "語音記帳";
+        document.getElementById("title").value = txt.replace(/\d+|元|塊|台幣|日幣|美金|歐元|泰銖|港幣|韓元/g, '').trim() || "語音記帳";
         updateTwdPreview();
         setTimeout(() => aiStatus.classList.add("hidden"), 2000);
       };
@@ -3505,8 +3687,9 @@
       } catch (err) { showToast("❌ 檔案解析失敗", "error"); }
     };
 
+    // 💱 渲染即時匯率 Chip（包含 THB 與 HKD）
     function renderRateChips() {
-      const currencies = ["USD", "EUR", "JPY", "CNY", "KRW"];
+      const currencies = ["JPY", "THB", "HKD", "USD", "EUR", "CNY", "KRW"];
       document.getElementById("rateChipsContainer").innerHTML = currencies.map(c => `
         <div onclick="selectCurrencyFromChip('${c}')" title="點擊切換記帳幣別為 ${c}" class="cursor-pointer hover:border-blue-400 active:scale-95 transition flex-shrink-0 bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 px-3 py-1.5 rounded-xl shadow-sm text-xs">
           <span class="font-bold text-gray-800 dark:text-gray-100">${c}</span> 
@@ -3528,12 +3711,14 @@
         const res = await fetch("https://open.er-api.com/v6/latest/TWD");
         const data = await res.json();
         if (data && data.rates) {
+          if (data.rates.JPY) exchangeRates.JPY = 1 / data.rates.JPY;
+          if (data.rates.THB) exchangeRates.THB = 1 / data.rates.THB;
+          if (data.rates.HKD) exchangeRates.HKD = 1 / data.rates.HKD;
           if (data.rates.USD) exchangeRates.USD = 1 / data.rates.USD;
           if (data.rates.EUR) exchangeRates.EUR = 1 / data.rates.EUR;
-          if (data.rates.JPY) exchangeRates.JPY = 1 / data.rates.JPY;
           if (data.rates.CNY) exchangeRates.CNY = 1 / data.rates.CNY;
           if (data.rates.KRW) exchangeRates.KRW = 1 / data.rates.KRW;
-          localStorage.setItem("app_exchange_rates", JSON.stringify(exchangeRates));
+          safeSetLocalStorage("app_exchange_rates", JSON.stringify(exchangeRates));
           document.getElementById("rateUpdateTime").textContent = "已更新最新匯率";
           if (manual) showToast("💱 匯率已更新至最新報價", "info");
         }
@@ -3544,13 +3729,12 @@
       updateTwdPreview();
     };
 
-    // 🔤 字型大小與面板收合控制 (12px ~ 36px)
     function applyFontSize(size) {
       size = Math.min(Math.max(parseInt(size, 10) || 16, 12), 36);
       document.documentElement.style.fontSize = `${size}px`;
       document.getElementById("fontSlider").value = size;
       document.getElementById("fontSizeDisplay").textContent = `${size}px`;
-      localStorage.setItem("app_custom_font_size", size);
+      safeSetLocalStorage("app_custom_font_size", size);
     }
     document.getElementById("fontSlider").addEventListener("input", (e) => applyFontSize(e.target.value));
     document.getElementById("fontDecBtn").onclick = () => applyFontSize(parseInt(document.getElementById("fontSlider").value) - 1);
@@ -3567,14 +3751,16 @@
     document.getElementById("togglePoolBtn").onclick = () => { closeAllPanelsExcept("poolConfigPanel"); document.getElementById("poolConfigPanel").classList.toggle("hidden"); };
     document.getElementById("toggleDataBtn").onclick = () => { closeAllPanelsExcept("dataConfigPanel"); document.getElementById("dataConfigPanel").classList.toggle("hidden"); };
 
+    // 🌙 深色模式初始圖示同步
     function initTheme() {
-      if (localStorage.getItem("theme") === "dark") document.documentElement.classList.add("dark");
+      const isDark = document.documentElement.classList.contains("dark");
+      document.getElementById("themeToggleBtn").textContent = isDark ? "☀️" : "🌙";
     }
     document.getElementById("themeToggleBtn").onclick = () => {
       const isDark = document.documentElement.classList.toggle("dark");
-      localStorage.setItem("theme", isDark ? "dark" : "light");
+      safeSetLocalStorage("theme", isDark ? "dark" : "light");
       document.getElementById("themeToggleBtn").textContent = isDark ? "☀️" : "🌙";
-      if(!document.getElementById("mainChartContainer").classList.contains("hidden")) drawChart();
+      if (!document.getElementById("mainChartContainer").classList.contains("hidden")) drawChart();
     };
   </script>
 </body>
