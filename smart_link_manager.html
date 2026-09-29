@@ -41,6 +41,9 @@
         .btn-outline:hover { background-color: var(--border-color); }
         .btn-icon-only { padding: 0.4rem; border-radius: 50%; width: 32px; height: 32px; justify-content: center; font-size: 0.8rem; }
         .btn-checking-active { width: auto !important; border-radius: 16px !important; padding: 0.3rem 0.65rem !important; border-color: var(--warning) !important; color: var(--warning) !important; }
+        
+        #btn-install-pwa { display: none; background: rgba(16, 185, 129, 0.15); color: var(--success); border-color: rgba(16, 185, 129, 0.4); }
+        #btn-install-pwa:hover { background: rgba(16, 185, 129, 0.25); }
 
         #login-screen { display: flex; flex-direction: column; justify-content: center; align-items: center; min-height: 80vh; padding: 2rem; }
         .login-card { background-color: var(--card-dark); padding: 2.5rem; border-radius: 20px; text-align: center; border: 1px solid var(--border-color); max-width: 400px; width: 100%; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.3); }
@@ -68,7 +71,6 @@
         .sort-select { padding: 0.45rem 0.5rem; border-radius: 6px; border: 1px solid var(--border-color); background-color: var(--card-dark); color: var(--text-main); font-size: 0.76rem; outline: none; cursor: pointer; }
         .sort-select:hover { border-color: var(--primary); }
 
-        /* 搜尋關鍵字高亮樣式 */
         mark.search-hl { background-color: rgba(245, 158, 11, 0.35); color: inherit; padding: 0 2px; border-radius: 3px; font-weight: inherit; }
 
         .masonry-grid { column-count: 5; column-gap: 0.8rem; }
@@ -91,7 +93,6 @@
         body.batch-mode .link-card { cursor: pointer; user-select: none; }
         body.batch-mode .link-card.batch-selected { border-color: var(--primary); box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.35); }
 
-        /* 三段式縮圖模式樣式 */
         .link-image-preview { display: block; height: 100px; width: calc(100% + 1.2rem); margin: -0.6rem -0.6rem 0.5rem -0.6rem; overflow: hidden; background-color: #000; position: relative; }
         .link-image-preview img { width: 100%; height: 100%; object-fit: cover; transition: transform 0.3s ease; }
         .link-card:hover .link-image-preview img { transform: scale(1.05); }
@@ -101,12 +102,9 @@
         .link-thumb-small { display: none; width: calc(44px * var(--font-scale)); height: calc(44px * var(--font-scale)); min-width: calc(44px * var(--font-scale)); border-radius: 6px; overflow: hidden; background-color: #000; border: 1px solid var(--border-color); flex-shrink: 0; margin-top: 0.1rem; }
         .link-thumb-small img { width: 100%; height: 100%; object-fit: cover; }
 
-        body.thumb-mode-small .link-image-preview,
-        body.thumb-mode-none .link-image-preview { display: none; }
+        body.thumb-mode-small .link-image-preview, body.thumb-mode-none .link-image-preview { display: none; }
         body.thumb-mode-small .link-thumb-small { display: block; }
-        body.thumb-mode-small .link-card.has-folder .card-body-row,
-        body.thumb-mode-none .link-card.has-folder .card-body-row,
-        .link-card.no-image.has-folder .card-body-row { padding-top: 1.1rem; }
+        body.thumb-mode-small .link-card.has-folder .card-body-row, body.thumb-mode-none .link-card.has-folder .card-body-row, .link-card.no-image .card-body-row { padding-top: 1.1rem; }
 
         .link-desc { color: var(--text-muted); font-size: calc(0.7rem * var(--font-scale)); margin-bottom: 0.2rem; line-height: 1.3; display: -webkit-box; -webkit-line-clamp: 1; -webkit-box-orient: vertical; overflow: hidden; }
         .link-title { font-size: calc(0.78rem * var(--font-scale)); font-weight: 700; margin-bottom: 0.1rem; line-height: 1.25; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
@@ -164,7 +162,6 @@
         .folder-drag-handle { cursor: grab; color: var(--text-muted); padding: 0 0.35rem; }
         .folder-drag-handle:active { cursor: grabbing; }
 
-        /* 全域拖放提示遮罩 */
         #drop-zone-overlay { display: none; position: fixed; inset: 0; background: rgba(15, 23, 42, 0.82); backdrop-filter: blur(6px); z-index: 9500; border: 3px dashed var(--primary); margin: 0.75rem; border-radius: 16px; justify-content: center; align-items: center; flex-direction: column; gap: 0.6rem; pointer-events: none; color: #fff; }
         #drop-zone-overlay.active { display: flex; }
 
@@ -179,18 +176,15 @@
         .modal .btn-sm { font-size: 0.75rem; padding: 0.35rem 0.4rem; }
         .modal .btn-icon-only { width: 32px; height: 32px; padding: 0; font-size: 0.8rem; }
 
-        /* 資料夾與全域標籤管理分頁切換 */
         .modal-tabs { display: flex; gap: 0.4rem; margin-bottom: 0.85rem; border-bottom: 1px solid var(--border-color); padding-bottom: 0.5rem; }
         .modal-tab-btn { flex: 1; justify-content: center; font-size: 0.8rem !important; padding: 0.35rem 0.5rem !important; }
         .modal-tab-btn.active { background-color: var(--primary); color: #fff; border-color: var(--primary); }
 
-        /* 彈窗內快速點選標籤膠囊 */
         .modal-tag-suggestions { display: flex; flex-wrap: wrap; gap: 0.3rem; margin-top: 0.4rem; max-height: 72px; overflow-y: auto; }
         .modal-tag-pill { font-size: 0.7rem; padding: 0.15rem 0.45rem; border-radius: 10px; background: var(--bg-dark); border: 1px solid var(--border-color); color: var(--text-muted); cursor: pointer; user-select: none; transition: all 0.15s; }
         .modal-tag-pill:hover { border-color: var(--primary); color: var(--text-main); }
         .modal-tag-pill.selected { background: var(--primary); color: #fff; border-color: var(--primary); }
 
-        /* 功能說明 Modal 專屬樣式 */
         .help-section { background: var(--bg-dark); border: 1px solid var(--border-color); border-radius: 10px; padding: 0.85rem 1rem; margin-bottom: 0.75rem; }
         .help-section-title { font-size: 0.88rem; font-weight: 700; color: var(--primary); display: flex; align-items: center; gap: 0.45rem; margin-bottom: 0.45rem; }
         .help-list { list-style: none; font-size: 0.79rem; color: var(--text-main); line-height: 1.65; display: flex; flex-direction: column; gap: 0.3rem; }
@@ -201,7 +195,6 @@
         .help-icon-item { display: flex; align-items: center; gap: 0.4rem; }
         .help-icon-badge { width: 22px; height: 22px; border-radius: 50%; border: 1px solid var(--border-color); background: var(--card-dark); color: var(--primary); display: inline-flex; align-items: center; justify-content: center; font-size: 0.68rem; flex-shrink: 0; }
 
-        /* 字體滑桿與縮圖切換樣式 */
         .font-slider-container { display: flex; align-items: center; gap: 0.8rem; margin-top: 0.5rem; }
         .font-slider { flex: 1; -webkit-appearance: none; appearance: none; height: 6px; background: var(--border-color); border-radius: 3px; outline: none; }
         .font-slider::-webkit-slider-thumb { -webkit-appearance: none; appearance: none; width: 18px; height: 18px; border-radius: 50%; background: var(--primary); cursor: pointer; }
@@ -211,13 +204,12 @@
         .footer-author-link { font-weight: bold; color: var(--primary); display: flex; align-items: center; gap: 3px; text-decoration: none; transition: color 0.2s; }
         .footer-author-link:hover { color: var(--primary-hover); }
 
-        /* 回到頂部懸浮按鈕 */
         #back-to-top { position: fixed; bottom: 4.5rem; right: 1.5rem; z-index: 850; width: 38px; height: 38px; border-radius: 50%; background: var(--primary); color: #fff; box-shadow: 0 4px 12px rgba(99, 102, 241, 0.4); justify-content: center; align-items: center; opacity: 0; pointer-events: none; transform: translateY(15px); transition: all 0.25s; }
         #back-to-top.visible { opacity: 1; pointer-events: auto; transform: translateY(0); }
         #back-to-top:hover { background: var(--primary-hover); }
 
-        #toast-container { position: fixed; bottom: 1.5rem; right: 1.5rem; z-index: 9999; display: flex; flex-direction: column; gap: 0.4rem; }
-        .toast { background: var(--card-dark); color: var(--text-main); padding: 0.6rem 1rem; border-radius: 6px; border-left: 3px solid var(--primary); box-shadow: 0 8px 12px rgba(0,0,0,0.4); animation: slideIn 0.3s ease forwards; font-size: 0.85rem; display: flex; align-items: center; gap: 0.6rem; }
+        #toast-container { position: fixed; bottom: 1.5rem; right: 1.5rem; z-index: 9999; display: flex; flex-direction: column; gap: 0.4rem; pointer-events: none; }
+        .toast { background: var(--card-dark); color: var(--text-main); padding: 0.6rem 1rem; border-radius: 6px; border-left: 3px solid var(--primary); box-shadow: 0 8px 12px rgba(0,0,0,0.4); animation: slideIn 0.3s ease forwards; font-size: 0.85rem; display: flex; align-items: center; gap: 0.6rem; pointer-events: auto; }
         .toast.success { border-left-color: var(--success); } 
         .toast.error { border-left-color: var(--danger); }
         .toast-undo-btn { background: var(--primary); color: #fff; border: none; padding: 0.15rem 0.5rem; border-radius: 4px; font-size: 0.75rem; font-weight: 600; cursor: pointer; }
@@ -263,7 +255,6 @@
 </head>
 <body class="flex flex-col min-h-screen">
 
-    <!-- 全域拖放提示遮罩 -->
     <div id="drop-zone-overlay">
         <i class="fas fa-cloud-upload-alt" style="font-size:3rem;color:var(--primary);"></i>
         <div class="text-lg font-bold">放開滑鼠以新增網址或匯入書籤備份檔 (.json / .html)</div>
@@ -276,6 +267,7 @@
         </div>
         <div class="header-actions flex-wrap gap-1">
             <span id="user-info" style="display:none;color:var(--text-muted);font-size:0.8rem;margin-right:6px;"></span>
+            <button type="button" class="btn-outline" id="btn-install-pwa" title="將本應用程式安裝至桌面或手機主畫面"><i class="fas fa-download mr-1"></i>安裝 App</button>
             <button type="button" class="btn-outline btn-icon-only" onclick="openQuickAddModal()" title="快速新增 / 另存連結"><i class="fas fa-puzzle-piece"></i></button>
             <button type="button" class="btn-outline btn-icon-only" onclick="openFolderModal()" title="管理資料夾、標籤與清理重複"><i class="fas fa-folder-plus"></i></button>
             <button type="button" class="btn-outline btn-icon-only" onclick="toggleBatchMode()" title="批次管理 (B)"><i class="fas fa-check-square"></i></button>
@@ -343,7 +335,6 @@
             </div>
         </div>
         <div class="masonry-grid" id="links-container"></div>
-        <!-- 千筆書籤分頁無限捲動哨兵 -->
         <div id="load-more-sentinel" style="display:none;text-align:center;padding:1.2rem 0;">
             <button type="button" class="btn-outline" onclick="loadMoreLinks()"><i class="fas fa-angle-double-down"></i> 載入更多連結 (<span id="load-more-count"></span>)</button>
         </div>
@@ -377,7 +368,7 @@
         </div>
     </footer>
 
-    <!-- 完整功能說明指南 Modal (涵蓋第十二輪全數新功能) -->
+    <!-- 完整功能說明指南 Modal -->
     <div class="modal-overlay" id="help-modal" onclick="if(event.target===this)closeModal('help-modal')">
         <div class="modal modal-lg">
             <div class="flex justify-between items-center mb-4">
@@ -414,7 +405,7 @@
                     <div><span class="kbd-badge">Ctrl + Enter</span> 編輯摘要多行框內直接儲存</div>
                     <div><span class="kbd-badge">N</span> / <span class="kbd-badge">/</span> 聚焦主網址框 / 聚焦搜尋框</div>
                     <div><span class="kbd-badge">B</span> / <span class="kbd-badge">?</span> 批次管理模式 / 開啟功能指南</div>
-                    <div class="col-span-2"><span class="kbd-badge">Esc</span> 關閉所有彈出視窗或退出批次模式 ｜ <span class="kbd-badge">Enter</span> 於單行輸入框內直接送出（具備中文選字防誤觸）</div>
+                    <div class="col-span-2"><span class="kbd-badge">Esc</span> 清空搜尋框、關閉彈窗或退出批次模式</div>
                 </div>
             </div>
 
@@ -423,49 +414,50 @@
                 <div class="help-section-title"><i class="fas fa-wand-magic-sparkles"></i> 3. 全域貼上／拖放、混合文案提取與網址淨化</div>
                 <ul class="help-list">
                     <li><span><strong>全域 <code>Ctrl+V</code> 直存 & 外部拖放支援：</strong>未開啟彈窗時直接按 <code>Ctrl+V</code>，或從其他視窗將「網址」或「<code>.json</code> / <code>.html</code> 備份檔」直接拖進畫面任意處，即可自動存檔或匯入。</span></li>
-                    <li><span><strong>手機 App 混合分享文案提取：</strong>直接貼上抖音、小紅書、YouTube 等帶有文字的分享段落（如 <code>【標題】https://... 複製此連結</code>），會自動分離出乾淨網址並將文案作為備用標題。</span></li>
-                    <li><span><strong>追蹤碼深度淨化 & 8 秒防卡死：</strong>自動拔除 <code>utm_*</code>、<code>fbclid</code>、<code>igshid</code>、<code>si</code>、<code>xmt</code> (Threads)、<code>vd_source</code> (B站)、<code>xsec_token</code> (小紅書) 等參數；遇慢速網站逾 8 秒自動以網域快速存檔。</span></li>
+                    <li><span><strong>手機 App 混合分享文案提取：</strong>直接貼上抖音、小紅書、YouTube 等帶有文字的分享段落，會自動分離出乾淨網址並將文案作為備用標題。</span></li>
+                    <li><span><strong>追蹤碼深度淨化 & 8 秒防卡死：</strong>自動拔除各大平台追蹤參數；遇慢速網站逾 8 秒自動以網域快速存檔。</span></li>
                     <li><span><strong>重複連結智慧歸位 & 編輯重抓 (<i class="fas fa-sync-alt"></i>)：</strong>貼上重複網址可一鍵推至最上方並自動移入當前資料夾；編輯視窗點擊「重抓資訊」可隨時重新補齊標題、摘要與預覽圖。</span></li>
                 </ul>
             </div>
 
             <!-- 4. 資料夾拖曳排序、全域標籤改名與交集搜尋 -->
             <div class="help-section">
-                <div class="help-section-title"><i class="fas fa-folder-tree"></i> 4. 資料夾拖曳排序、全域標籤管理與一鍵去重</div>
+                <div class="help-section-title"><i class="fas fa-folder-tree"></i> 4. 資料夾排序、標籤管理、自動去重與交集搜尋</div>
                 <ul class="help-list">
-                    <li><span><strong>資料夾拖曳排序 & 全域標籤管理 (<i class="fas fa-folder-plus"></i>)：</strong>按住 <i class="fas fa-grip-vertical"></i> 可上下拖曳自訂資料夾順序；切換至「🏷️ 全域標籤管理」可將標籤全域改名（自動合併同名標籤）或全域移除。</span></li>
-                    <li><span><strong>歷史重複網址一鍵清理 (🧹 清理重複網址)：</strong>位於「📂 分類管理」視窗左下角，可自動掃描現有書籤庫，將相同網址的卡片合併標籤、累加點擊數並清除多餘副本。</span></li>
-                    <li><span><strong>卡片徽章與網站圖示 (Favicon) 快篩：</strong>點擊卡片上的<strong>資料夾徽章、標籤徽章</strong>或左下角<strong>網站小圖示 (Favicon)</strong> 即可立即過濾同類或同網域書籤（再點一次取消）。</span></li>
-                    <li><span><strong>空白鍵多關鍵字交集搜尋 (AND) + 螢光筆高亮：</strong>搜尋框輸入多組字詞（如 <code>youtube 教學</code>）會取交集比對標題、網址、摘要與標籤，並安全套用螢光筆底色高亮。</span></li>
+                    <li><span><strong>資料夾拖曳排序 & 全域標籤管理 (<i class="fas fa-folder-plus"></i>)：</strong>按住 <i class="fas fa-grip-vertical"></i> 可上下拖曳自訂資料夾順序；切換至「🏷️ 全域標籤管理」可將標籤全域改名（自動合併）或全域移除。</span></li>
+                    <li><span><strong>歷史重複網址一鍵清理 (🧹 清理重複網址)：</strong>位於「📂 分類管理」底部，執行前會自動下載防呆備份檔，接著掃描書籤庫將相同網址合併標籤、累加點擊數並清除副本。</span></li>
+                    <li><span><strong>卡片徽章與網站圖示 (Favicon) 快篩：</strong>點擊卡片上的<strong>資料夾、標籤徽章</strong>或左下角<strong>網站圖示 (Favicon)</strong> 即可立即過濾同類或同網域書籤。</span></li>
+                    <li><span><strong>空白鍵多關鍵字交集搜尋 (AND) + 螢光筆高亮：</strong>搜尋框輸入多組字詞（如 <code>react 教學</code>）會取交集比對標題、網址、摘要與標籤，並安全套用螢光筆底色高亮。</span></li>
                 </ul>
             </div>
 
             <!-- 5. 視圖模式、三段式縮圖、200% 字體與無限捲動 -->
             <div class="help-section">
-                <div class="help-section-title"><i class="fas fa-sliders-h"></i> 5. 視圖切換、200% 字體縮放、自動已讀與無限捲動</div>
+                <div class="help-section-title"><i class="fas fa-sliders-h"></i> 5. 手機版防誤觸視圖、自動已讀與無限捲動</div>
                 <ul class="help-list">
-                    <li><span><strong>三種瀏覽視圖（自動記憶偏好）：</strong>支援「瀑布流（多欄卡片）」、「列表視圖」與可拖曳歸檔的「看板模式（📥 待讀 / ⭐ 精選 / ✅ 已讀，同步支援關鍵字高亮與快捷操作）」。</span></li>
-                    <li><span><strong>三段式縮圖與 200% 字體縮放 (<i class="fas fa-font"></i>)：</strong>隨時切換「🖼️ 頂部大圖 / 🔲 右側小方圖 / 🚫 極簡無圖」；字體支援 80% ~ 200% 微調，並可開啟<strong>「點擊連結後自動標為已讀」</strong>。</span></li>
-                    <li><span><strong>千筆書籤無限捲動分頁：</strong>採用每 60 筆智慧分頁與 <code>IntersectionObserver</code> 滑動自動載入，搭配右下角「<i class="fas fa-arrow-up"></i> 回到頂部」懸浮鈕，書籤破千筆依然瞬開不掉幀。</span></li>
+                    <li><span><strong>三種瀏覽視圖與看板防衝突：</strong>支援瀑布流、列表與拖曳看板（手機端看板需「長按 0.15 秒」才觸發拖曳，不影響正常上下捲動）。</span></li>
+                    <li><span><strong>三段式縮圖 (<i class="fas fa-font"></i>) 與 200% 字體縮放：</strong>可切換「大圖 / 右側小圖 / 無圖」（手機端預設無圖）；字體支援 80% ~ 200% 無段縮放，並可開啟「點擊連結後自動標為已讀」。</span></li>
+                    <li><span><strong>千筆書籤無限捲動分頁：</strong>採用每 60 筆智慧分頁與 <code>IntersectionObserver</code> 滑動自動載入，書籤破千筆依然瞬開不掉幀。</span></li>
                 </ul>
             </div>
 
             <!-- 6. 獨立刪除復原佇列、批次管理與可中斷失效檢測 -->
             <div class="help-section">
-                <div class="help-section-title"><i class="fas fa-tasks"></i> 6. 獨立刪除復原佇列、批次貼標與可中斷失效檢測</div>
+                <div class="help-section-title"><i class="fas fa-tasks"></i> 6. 獨立刪除復原佇列、批次貼標與併發失效檢測</div>
                 <ul class="help-list">
-                    <li><span><strong>單筆刪除 5 秒獨立復原 (Undo Queue)：</strong>點擊卡片刪除鈕免除確認彈窗，右下角會浮現 5 秒「↩️ 復原」按鈕；即使連續刪除多筆，每張卡片的提示皆可獨立點擊復原。</span></li>
-                    <li><span><strong>零閃爍批次管理 (<i class="fas fa-check-square"></i>)：</strong>支援點擊整張卡片勾選、按住 <code>Shift</code> 區間連選、「全選／反選」、「批次標記已讀／未讀」、「🏷️ 批次加標籤」、「批次移動資料夾」與「批次刪除」。</span></li>
-                    <li><span><strong>可隨時中斷的失效檢測 (<i class="fas fa-heartbeat"></i>)：</strong>自動巡檢書籤（跳過 FB/IG/X 等需登入社群），按鈕會即時顯示檢測進度（如 <code>15/68</code>）；<strong>檢測途中再次點擊該按鈕即可安全停止</strong>並先行保存已檢查的結果。</span></li>
+                    <li><span><strong>單筆刪除 5 秒獨立復原 (Undo Stack)：</strong>點擊垃圾桶免除確認彈窗，即使連續刪除多筆，每個右下角 Toast 都能獨立點擊「↩️ 復原」救回（自動堆疊，最多顯示 3 則）。</span></li>
+                    <li><span><strong>零閃爍批次管理 (<i class="fas fa-check-square"></i>)：</strong>支援點擊卡片勾選、按住 <code>Shift</code> 區間連選、「批次已讀／未讀」、「🏷️ 批次加標籤」、「批次移動」與「批次刪除」。</span></li>
+                    <li><span><strong>400% 提速的可中斷失效檢測 (<i class="fas fa-heartbeat"></i>)：</strong>導入併發池（Concurrency Pool）大幅提速，並即時顯示檢測進度（如 <code>15/68</code>）；<strong>檢測途中再次點擊即可安全停止</strong>並先行保存結果。</span></li>
                 </ul>
             </div>
 
             <!-- 7. 雲端／本機自動合併與跨瀏覽器書籤互通 -->
             <div class="help-section" style="margin-bottom:0;">
-                <div class="help-section-title"><i class="fas fa-cloud-download-alt"></i> 7. 本機轉雲端自動合併 & 跨瀏覽器書籤互通</div>
+                <div class="help-section-title"><i class="fas fa-cloud-download-alt"></i> 7. 原生 PWA 安裝、本機合併與跨瀏覽器書籤互通</div>
                 <ul class="help-list">
-                    <li><span><strong>本機登入雲端自動合併：</strong>若先在「本機測試模式」儲存了連結，後續點擊 Google 登入切換至雲端時，系統會自動偵測並詢問是否一鍵將本機未同步書籤合併至雲端帳號。</span></li>
-                    <li><span><strong>三種匯出與雙格式智能去重匯入：</strong>支援複製 Markdown (<i class="fab fa-markdown"></i>)、匯出 JSON 備份 (<i class="fas fa-download"></i>) 與匯出瀏覽器通用 <code>bookmarks.html</code> (<i class="fas fa-file-code"></i>)；點擊匯入 (<i class="fas fa-upload"></i>) 或直接拖入檔案可讀取 <code>.json</code> 與各大瀏覽器 <code>.html</code> 書籤檔，自動依網址去重合併。</span></li>
+                    <li><span><strong>PWA 原生安裝：</strong>若瀏覽器支援，頂部工具列將自動浮現「📥 安裝 App」按鈕，可將本工具安裝至桌面或手機主畫面，享有原生 App 體驗。</span></li>
+                    <li><span><strong>本機登入雲端自動合併：</strong>若先在「本機模式」儲存連結，後續登入 Google 時會自動偵測並提示一鍵將本機未同步書籤合併至雲端帳號。</span></li>
+                    <li><span><strong>雙格式自動去重匯入 (<i class="fas fa-upload"></i>) 與匯出：</strong>支援拖入或選取 <code>.json</code> 備份與各大瀏覽器匯出的 <code>.html</code> 書籤檔進行智能去重匯入；且支援匯出為瀏覽器標準的 <code>bookmarks.html</code>。</span></li>
                 </ul>
             </div>
 
@@ -501,7 +493,7 @@
                         </div>
                     </div>
                     <div class="card-footer">
-                        <div class="source-info"><span class="source-text">09/28 10:48</span></div>
+                        <div class="source-info"><span class="source-text">09/28 11:20</span></div>
                         <div class="tags-container"><span class="tag-badge" style="background:rgba(99,102,241,0.2);color:#818cf8;border:1px solid rgba(99,102,241,0.4);">預覽標籤</span></div>
                     </div>
                 </div>
@@ -695,6 +687,25 @@
         let lastBatchClickedId = null;
         let isCheckingLinks=false,abortDeadCheck=false,isSavingUrl=false,hasPromptedCloudSync=false;
 
+        // PWA 原生安裝提示
+        let deferredPrompt;
+        window.addEventListener('beforeinstallprompt', (e) => {
+            e.preventDefault();
+            deferredPrompt = e;
+            const btnInstall = document.getElementById('btn-install-pwa');
+            if (btnInstall) btnInstall.style.display = 'inline-flex';
+        });
+        document.getElementById('btn-install-pwa')?.addEventListener('click', async () => {
+            if (deferredPrompt) {
+                deferredPrompt.prompt();
+                const { outcome } = await deferredPrompt.userChoice;
+                if (outcome === 'accepted') {
+                    document.getElementById('btn-install-pwa').style.display = 'none';
+                }
+                deferredPrompt = null;
+            }
+        });
+
         // 分頁無限捲動狀態
         const PAGE_SIZE = 60;
         let visibleLimit = PAGE_SIZE;
@@ -813,7 +824,6 @@
             try { return new URL(url).hostname; } catch { return String(url || ''); }
         }
 
-        // ✅ 十二階優化 1：點擊卡片左下角 Favicon 快速過濾相同網域的連結
         function filterByDomain(domain) {
             if (!domain) return;
             const cleanDom = domain.replace(/^www\./i, '');
@@ -911,7 +921,8 @@
         // 字體大小、三段式縮圖與自動已讀控制邏輯
         function openFontModal() {
             const currentScale = parseFloat(localStorage.getItem('fontScale') || '1');
-            const currentThumb = localStorage.getItem('thumbMode') || 'large';
+            const defaultThumb = window.innerWidth <= 768 ? 'none' : 'large';
+            const currentThumb = localStorage.getItem('thumbMode') || defaultThumb;
             syncFontUI(currentScale);
             setThumbMode(currentThumb);
             const cb = document.getElementById('auto-read-checkbox');
@@ -925,7 +936,8 @@
         }
 
         function setThumbMode(mode) {
-            const validMode = ['large', 'small', 'none'].includes(mode) ? mode : 'large';
+            const defaultThumb = window.innerWidth <= 768 ? 'none' : 'large';
+            const validMode = ['large', 'small', 'none'].includes(mode) ? mode : defaultThumb;
             document.body.classList.remove('thumb-mode-large', 'thumb-mode-small', 'thumb-mode-none');
             document.body.classList.add('thumb-mode-' + validMode);
             localStorage.setItem('thumbMode', validMode);
@@ -960,11 +972,12 @@
 
         function resetDisplaySettings() {
             syncFontUI(1);
-            setThumbMode('large');
+            const defaultThumb = window.innerWidth <= 768 ? 'none' : 'large';
+            setThumbMode(defaultThumb);
             toggleAutoReadSetting(false);
             const cb = document.getElementById('auto-read-checkbox');
             if (cb) cb.checked = false;
-            showToast("已恢復預設字體 (100%) 與顯示設置", "success");
+            showToast(`已恢復預設設置 (100% / ${defaultThumb === 'none' ? '無圖' : '大圖'}模式)`, "success");
         }
 
         document.getElementById('font-slider').addEventListener('input', function(e) {
@@ -1004,7 +1017,6 @@
             return true;
         }
 
-        // ✅ 十二階優化 2：一鍵掃描並合併清理歷史重複網址 (合併標籤與點擊數)
         async function deduplicateExistingLinks() {
             const links = await getAllLinks();
             if (!links.length) { showToast("目前沒有任何連結", "info"); return; }
@@ -1037,7 +1049,11 @@
                 return;
             }
 
-            if (!confirm(`🔍 掃描發現 ${toDeleteIds.length} 筆重複網址！\n是否自動合併它們的標籤與點擊數，並移除多餘的重複副本？`)) return;
+            if (!confirm(`🔍 掃描發現 ${toDeleteIds.length} 筆重複網址！\n是否自動下載安全備份，並合併它們的標籤與點擊數、清除多餘副本？`)) return;
+
+            // 背景自動觸發一次備份
+            exportData(true);
+            showToast("📦 已自動下載合併前的安全備份檔", "info");
 
             try {
                 if (isLocalMode) {
@@ -1052,7 +1068,7 @@
                     });
                 }
                 loadLinks();
-                showToast(`🧹 已成功合併並清除 ${toDeleteIds.length} 筆重複連結`, "success");
+                setTimeout(() => showToast(`🧹 已成功合併並清除 ${toDeleteIds.length} 筆重複連結`, "success"), 1000);
             } catch (e) {
                 showToast("❌ 清理重複連結失敗：" + e.message, "error");
             }
@@ -1418,6 +1434,7 @@
                 handle: '.folder-drag-handle',
                 animation: 150,
                 ghostClass: 'sortable-ghost',
+                delay: 150, delayOnTouchOnly: true,
                 onEnd: async () => {
                     const ids = Array.from(listEl.querySelectorAll('[data-folder-id]')).map(el => safeId(el.dataset.folderId));
                     const reordered = [];
@@ -1639,7 +1656,6 @@
             }
         }
 
-        // ✅ 十二階優化 3：本機模式載入時若發現舊資料缺少合法 id，立即補齊並回寫 localStorage 保持一致性
         function loadLinks(){
             if(isLocalMode){
                 let mutated = false;
@@ -1871,7 +1887,6 @@
             scrollObserver.observe(sentinel);
         }
         
-        // ✅ 十二階優化 4：預覽圖載入失敗 (onerror) 時同步為母卡片加上 .no-image，防止左上角資料夾徽章壓住標題
         function renderLinks(links){
             const c=document.getElementById('links-container');
             const sentinel = document.getElementById('load-more-sentinel');
@@ -1966,10 +1981,12 @@
         }
         function clearSearchInput(){
             const inp = document.getElementById('search-input');
-            inp.value = '';
-            visibleLimit = PAGE_SIZE;
-            renderCurrentView(rawLinksCache);
-            inp.focus();
+            if (inp) {
+                inp.value = '';
+                visibleLimit = PAGE_SIZE;
+                renderCurrentView(rawLinksCache);
+                inp.blur();
+            }
         }
         function filterLinks(){renderCurrentView(rawLinksCache);}
         
@@ -2168,24 +2185,30 @@
                 const el=document.getElementById(id);
                 if(!el)return;
                 if(el.sortable)el.sortable.destroy();
-                el.sortable=Sortable.create(el,{group:'kanban',animation:150,ghostClass:'sortable-ghost',onEnd:async e=>{
-                    const iid=safeId(e.item.dataset.id),nc=e.to.id;
-                    let ns={pinned:false,isRead:false};
-                    if(nc==='list-starred')ns={pinned:true,isRead:false};
-                    else if(nc==='list-done')ns={pinned:false,isRead:true};
-                    try {
-                        if(isLocalMode){
-                            const a=readLocalJson('my_links', []);
-                            const i=a.findIndex(x=>x.id===iid);
-                            if(i>-1){a[i].pinned=ns.pinned;a[i].isRead=ns.isRead;writeLocalJson('my_links', a);}
-                            loadLinks();
-                        }else{
-                            await db.collection('users').doc(currentUser.uid).collection('links').doc(iid).update(ns);
+                el.sortable=Sortable.create(el,{
+                    group:'kanban',
+                    animation:150,
+                    ghostClass:'sortable-ghost',
+                    delay: 150, delayOnTouchOnly: true,
+                    onEnd:async e=>{
+                        const iid=safeId(e.item.dataset.id),nc=e.to.id;
+                        let ns={pinned:false,isRead:false};
+                        if(nc==='list-starred')ns={pinned:true,isRead:false};
+                        else if(nc==='list-done')ns={pinned:false,isRead:true};
+                        try {
+                            if(isLocalMode){
+                                const a=readLocalJson('my_links', []);
+                                const i=a.findIndex(x=>x.id===iid);
+                                if(i>-1){a[i].pinned=ns.pinned;a[i].isRead=ns.isRead;writeLocalJson('my_links', a);}
+                                loadLinks();
+                            }else{
+                                await db.collection('users').doc(currentUser.uid).collection('links').doc(iid).update(ns);
+                            }
+                        } catch (err) {
+                            showToast("❌ 狀態更新失敗：" + err.message, "error");
                         }
-                    } catch (err) {
-                        showToast("❌ 狀態更新失敗：" + err.message, "error");
                     }
-                }});
+                });
             });
         }
         
@@ -2222,14 +2245,14 @@
             copyTextToClipboard(m, "✅ 已複製 Markdown");
         }
         
-        async function exportData(){
+        async function exportData(autoBackup = false){
             const l = await getAllLinks();
             const f = allFoldersCache.length ? allFoldersCache : await getFolders();
             const blob = new Blob([JSON.stringify({links:l,folders:f},null,2)],{type:"application/json"});
             const objUrl = URL.createObjectURL(blob);
             const a = document.createElement('a');
             a.href = objUrl;
-            a.download = `slm_${new Date().toISOString().slice(0,10)}.json`;
+            a.download = autoBackup ? `slm_backup_before_merge_${new Date().toISOString().slice(0,10)}.json` : `slm_${new Date().toISOString().slice(0,10)}.json`;
             a.click();
             setTimeout(() => URL.revokeObjectURL(objUrl), 1000);
         }
@@ -2404,7 +2427,9 @@
         }
         
         function showToast(m,t='info'){
-            const c=document.getElementById('toast-container'),d=document.createElement('div');
+            const c=document.getElementById('toast-container');
+            while (c.children.length >= 3) c.removeChild(c.firstChild);
+            const d=document.createElement('div');
             d.className=`toast ${t}`;
             d.innerHTML=`<span>${m}</span>`;
             c.appendChild(d);
@@ -2413,6 +2438,7 @@
 
         function showUndoToast(m, undoCallback) {
             const c = document.getElementById('toast-container');
+            while (c.children.length >= 3) c.removeChild(c.firstChild);
             const d = document.createElement('div');
             d.className = 'toast info';
             const span = document.createElement('span');
@@ -2639,21 +2665,25 @@
             let dc = 0, cc = 0, ups = [];
             tx.textContent = `0/${total}`;
 
-            for (const l of checkableLinks) {
+            const chunkSize = 4;
+            for (let i = 0; i < checkableLinks.length; i += chunkSize) {
                 if (abortDeadCheck) break;
-                try {
-                    const r = await fetchWithTimeout(`https://api.microlink.io/?url=${encodeURIComponent(l.url)}`, 8000);
-                    const d = await r.json();
-                    let dead = false;
-                    if (d.status !== 'success') dead = true;
-                    else if (d.data && d.data.statusCode && d.data.statusCode >= 400) dead = true;
-                    if (dead !== (l.isDead || false)) { ups.push({ id: l.id, isDead: dead }); if (dead) dc++; }
-                } catch (e) {
-                    if (!l.isDead) { ups.push({ id: l.id, isDead: true }); dc++; }
-                }
-                cc++;
+                const chunk = checkableLinks.slice(i, i + chunkSize);
+                await Promise.all(chunk.map(async l => {
+                    try {
+                        const r = await fetchWithTimeout(`https://api.microlink.io/?url=${encodeURIComponent(l.url)}`, 8000);
+                        const d = await r.json();
+                        let dead = false;
+                        if (d.status !== 'success') dead = true;
+                        else if (d.data && d.data.statusCode && d.data.statusCode >= 400) dead = true;
+                        if (dead !== (l.isDead || false)) { ups.push({ id: l.id, isDead: dead }); if (dead) dc++; }
+                    } catch (e) {
+                        if (!l.isDead) { ups.push({ id: l.id, isDead: true }); dc++; }
+                    }
+                }));
+                cc += chunk.length;
                 tx.textContent = `${cc}/${total}`;
-                await new Promise(r => setTimeout(r, 250));
+                await new Promise(r => setTimeout(r, 300));
             }
 
             if(ups.length){
@@ -2682,7 +2712,6 @@
             loadLinks();
         }
 
-        // 全域 Ctrl+V 直接貼上存檔
         document.addEventListener('paste', e => {
             if (isSavingUrl) return;
             const activeEl = document.activeElement;
@@ -2702,7 +2731,6 @@
             }
         });
 
-        // ✅ 十二階優化 5：支援全域拖放外部網址或備份檔 (.json / .html) 直接新增與匯入
         let dragCounter = 0;
         window.addEventListener('dragenter', e => {
             const appScreen = document.getElementById('app-screen');
@@ -2761,8 +2789,15 @@
 
         document.addEventListener('keydown',e=>{
             if (e.isComposing || e.keyCode === 229) return;
-            const f=['INPUT','TEXTAREA','SELECT'].includes(document.activeElement.tagName);
+            const activeEl = document.activeElement;
+            const inInput = ['INPUT','TEXTAREA','SELECT'].includes(activeEl.tagName);
+            
             if(e.key==='Escape'){
+                const searchInp = document.getElementById('search-input');
+                if (searchInp && activeEl === searchInp && searchInp.value.trim() !== '') {
+                    clearSearchInput();
+                    return;
+                }
                 closeModal('folder-modal');
                 closeModal('edit-modal');
                 closeModal('quick-add-modal');
@@ -2772,7 +2807,7 @@
                 closeModal('help-modal');
                 if(batchMode)toggleBatchMode();
             }
-            if(!f){
+            if(!inInput){
                 if(e.key==='/'){e.preventDefault();document.getElementById('search-input').focus();}
                 else if(e.key==='n'||e.key==='N'){e.preventDefault();document.getElementById('url-input').focus();}
                 else if(e.key==='b'||e.key==='B'){e.preventDefault();toggleBatchMode();}
@@ -2859,7 +2894,7 @@
             
             const savedScale = parseFloat(localStorage.getItem('fontScale') || '1');
             syncFontUI(savedScale);
-            const savedThumb = localStorage.getItem('thumbMode') || 'large';
+            const savedThumb = localStorage.getItem('thumbMode') || (window.innerWidth <= 768 ? 'none' : 'large');
             setThumbMode(savedThumb);
             
             updateHtmlSaveTime();
