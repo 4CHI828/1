@@ -1817,6 +1817,9 @@
     window.startEditRecord = function(id) {
       const r = cachedRecords.find(x => x.id === id);
       if (!r) return;
+
+      // 編輯紀錄時自動切換到「記帳」頁面，避免使用者停留在歷史/結算頁找不到編輯表單。
+      if (typeof window.switchTab === 'function') window.switchTab('record');
       editingRecordId = r.id;
       document.getElementById("editModeBanner").classList.remove("hidden");
       document.getElementById("saveBtnText").textContent = "儲存修改 (Enter)";
@@ -2418,6 +2421,9 @@
     window.startEditRecord = function(id) {
       const r = cachedRecords.find(x => x.id === id);
       if (!r) return;
+
+      // 編輯紀錄時自動切換到「記帳」頁面，避免使用者停留在歷史/結算頁找不到編輯表單。
+      if (typeof window.switchTab === 'function') window.switchTab('record');
       editingRecordId = r.id;
       document.getElementById("editModeBanner").classList.remove("hidden");
       document.getElementById("saveBtnText").textContent = "儲存修改 (Enter)";
@@ -2922,6 +2928,104 @@
       return rows.filter(x => x.amount > 0);
     }
 
+
+    // ============================================================
+    // 分攤修復層 v3：精確尾差 + 原幣換算 + 編輯還原
+    // ============================================================
+    function getSplitRate(){
+      const cur=document.getElementById("currency")?.value||"TWD";
+      if(cur==="TWD") return 1;
+      const amount=evaluateMathInput(document.getElementById("originalAmount")?.value||"");
+      const override=finiteNumber(document.getElementById("overrideTwdInput")?.value,0);
+      if(amount>0&&override>0) return override/amount;
+      return Math.max(0,finiteNumber(exchangeRates[cur],1));
+    }
+    function convertSplitRowsToTwd(rows,total){
+      const rate=getSplitRate(), out=rows.filter(x=>x.member&&x.amount>0).map(x=>({member:String(x.member),amount:Math.floor(x.amount*rate)}));
+      if(!out.length) return [];
+      const assigned=out.reduce((a,x)=>a+x.amount,0), remainder=Math.round(total)-assigned;
+      out[out.length-1].amount+=remainder;
+      if(out[out.length-1].amount<0) throw new Error("分攤換算結果異常，請重新確認金額與匯率");
+      return out.filter(x=>x.amount>0);
+    }
+    function buildSplitData(twd){
+      const total=Math.max(0,Math.round(finiteNumber(twd,0)));
+      if(total<=0) throw new Error("分攤總額必須大於 0");
+      if(currentSplitMode==="equal"){
+        const selected=Array.from(document.querySelectorAll(".member-cb:checked")).map(c=>String(c.value||"").trim()).filter(Boolean);
+        if(!selected.length) throw new Error("請選擇分攤成員");
+        const base=Math.floor(total/selected.length),rem=total-base*selected.length;
+        return selected.map((member,i)=>({member,amount:base+(i===selected.length-1?rem:0)})).filter(x=>x.amount>0);
+      }
+      if(currentSplitMode==="custom"){
+        const cur=document.getElementById("customSplitCurrency")?.value||"auto";
+        const rows=Array.from(document.querySelectorAll(".custom-split-input")).map(i=>({member:String(i.dataset.member||"").trim(),amount:Math.max(0,finiteNumber(i.value,0))})).filter(x=>x.member&&x.amount>0);
+        if(!rows.length) throw new Error("請至少輸入一位成員金額");
+        if(cur==="TWD"){
+          const sum=rows.reduce((a,x)=>a+x.amount,0);
+          if(Math.abs(sum-total)>0.01) throw new Error(`分攤金額需等於 ${total.toLocaleString()} TWD，目前為 ${Math.round(sum).toLocaleString()} TWD`);
+          return rows.map(x=>({member:x.member,amount:Math.round(x.amount)}));
+        }
+        const sourceTotal=evaluateMathInput(document.getElementById("originalAmount")?.value||"");
+        const sourceSum=rows.reduce((a,x)=>a+x.amount,0);
+        const tolerance=Math.max(0.01,Math.abs(sourceTotal)*0.000001);
+        if(Math.abs(sourceSum-sourceTotal)>tolerance) throw new Error(`分攤金額${sourceSum>sourceTotal?"超過":"不足"} ${Math.abs(sourceTotal-sourceSum).toFixed(2)} ${document.getElementById("currency")?.value||""}`);
+        return convertSplitRowsToTwd(rows,total);
+      }
+      const cls=currentSplitMode==="ratio"?".ratio-split-input":".percent-split-input";
+      const rows=Array.from(document.querySelectorAll(cls)).map(i=>({member:String(i.dataset.member||"").trim(),weight:Math.max(0,finiteNumber(i.value,0))})).filter(x=>x.member&&x.weight>0);
+      const sum=rows.reduce((a,x)=>a+x.weight,0);
+      if(!rows.length||sum<=0) throw new Error(currentSplitMode==="ratio"?"總份額不能為 0":"請輸入分攤百分比");
+      if(currentSplitMode==="percent"&&Math.abs(sum-100)>0.01) throw new Error(`百分比總和必須為 100%，目前為 ${sum.toFixed(2)}%`);
+      const out=rows.map(x=>({member:x.member,amount:Math.floor(total*x.weight/sum)}));
+      out[out.length-1].amount+=total-out.reduce((a,x)=>a+x.amount,0);
+      return out.filter(x=>x.amount>0);
+    }
+
+    function restoreSplitInputsForRecord(r){
+      const shares=parseShares(r), entries=Object.entries(shares).filter(([,v])=>Number(v)>0), total=Math.round(finiteNumber(r?.twdAmount,0));
+      if(!entries.length){setSplitMode("equal");return;}
+      const vals=entries.map(([,v])=>Number(v));
+      if(vals.length>0&&Math.max(...vals)-Math.min(...vals)<=1&&Math.abs(vals.reduce((a,b)=>a+b,0)-total)<=1){
+        setSplitMode("equal");
+        document.querySelectorAll(".member-cb").forEach(cb=>cb.checked=Object.prototype.hasOwnProperty.call(shares,cb.value));
+        return;
+      }
+      // 編輯時優先還原實際金額，避免百分比反推造成四捨五入漂移。
+      setSplitMode("custom");
+      const cur=document.getElementById("customSplitCurrency"); if(cur) cur.value="TWD";
+      document.querySelectorAll(".custom-split-input").forEach(i=>{i.value=Object.prototype.hasOwnProperty.call(shares,i.dataset.member)?String(Math.round(shares[i.dataset.member])):"";});
+      updateSplitStatus();
+    }
+
+    window.startEditRecord=function(id){
+      const r=cachedRecords.find(x=>x.id===id); if(!r)return;
+      editingRecordId=r.id; document.getElementById("editModeBanner")?.classList.remove("hidden");
+      const sb=document.getElementById("saveBtnText"); if(sb)sb.textContent="儲存修改 (Enter)";
+      ["title","originalAmount","currency","category","date","type"].forEach(k=>{const el=document.getElementById(k);if(el)el.value=r[k]??"";});
+      setRecordType(r.type);
+      const payers=parsePayers(r), names=Object.keys(payers);
+      if(names.length>1){
+        toggleMultiPayerMode(true);
+        setTimeout(()=>{names.forEach(name=>{const input=Array.from(document.querySelectorAll(".multi-payer-input")).find(x=>x.dataset.member===name);const cb=Array.from(document.querySelectorAll(".multi-payer-cb")).find(x=>x.dataset.member===name);if(input){input.value=payers[name];}if(cb)cb.checked=true;});checkMultiPayerTotal();},0);
+      }else{toggleMultiPayerMode(false);const sel=document.getElementById("payer");if(sel&&names[0])sel.value=names[0];}
+      setReceiptPreview(r.receipt||"");
+      setTimeout(()=>restoreSplitInputsForRecord(r),0);
+      updateTwdPreview();
+    };
+
+    function updateSplitStatus(){
+      const total=Math.round(finiteNumber(calculateTwd().twd,0));
+      const cc=document.getElementById("customSplitCurrency")?.value||"auto", rate=cc==="TWD"?1:getSplitRate();
+      const inputs=Array.from(document.querySelectorAll(".custom-split-input")), sum=inputs.reduce((a,i)=>a+Math.max(0,finiteNumber(i.value,0)),0);
+      const cs=document.getElementById("customSumStatus"); if(cs){const display=cc==="TWD"?sum:sum*rate;cs.textContent=`${Math.round(display).toLocaleString()} / ${total.toLocaleString()} TWD`;cs.className=`font-mono ${Math.abs(Math.round(display)-total)<=1?"text-emerald-600":"text-gray-400"}`;}
+      const rs=Array.from(document.querySelectorAll(".ratio-split-input")).reduce((a,i)=>a+Math.max(0,finiteNumber(i.value,0)),0),re=document.getElementById("ratioSumStatus");if(re)re.textContent=`總份額: ${rs.toLocaleString()}`;
+      const ps=Array.from(document.querySelectorAll(".percent-split-input")).reduce((a,i)=>a+Math.max(0,finiteNumber(i.value,0)),0),pe=document.getElementById("percentSumStatus");if(pe){pe.textContent=`${ps.toFixed(2).replace(/\.00$/,'')}% / 100%`;pe.className=`font-mono ${Math.abs(ps-100)<=0.01?"text-emerald-600":"text-red-500"}`;}
+      if(isMultiPayerMode)checkMultiPayerTotal();
+    }
+    window.updateSplitStatus=updateSplitStatus;
+    ["customSplitCurrency","multiPayerCurrency"].forEach(id=>{const el=document.getElementById(id);if(el&&!el.dataset.splitRepairBound){el.dataset.splitRepairBound="1";el.addEventListener("change",()=>{updateSplitStatus();if(id==="multiPayerCurrency"&&isMultiPayerMode)renderMultiPayerList();});}});
+
     // -------- 儲存：快照 + 結構化 payers/shares + receipt --------
     async function saveRecord() {
       const title = String(document.getElementById("title")?.value || "").trim();
@@ -3178,11 +3282,338 @@
       sel.value=members.includes(old)?old:"all";
     };
 
+
+    // 最終分攤編輯修復：此段放在所有舊版 startEditRecord 之後，確保真正生效。
+    window.startEditRecord = function(id) {
+      const r = cachedRecords.find(x => x.id === id); if (!r) return;
+      editingRecordId = r.id;
+      document.getElementById("editModeBanner")?.classList.remove("hidden");
+      const saveText = document.getElementById("saveBtnText"); if (saveText) saveText.textContent = "儲存修改 (Enter)";
+      ["title","originalAmount","currency","category","date","type"].forEach(k => { const el=document.getElementById(k); if(el) el.value=r[k] ?? ""; });
+      setRecordType(r.type);
+      const payers=parsePayers(r), names=Object.keys(payers);
+      if(names.length>1){
+        toggleMultiPayerMode(true);
+        setTimeout(()=>{ names.forEach(name=>{
+          const input=Array.from(document.querySelectorAll(".multi-payer-input")).find(x=>x.dataset.member===name);
+          const cb=Array.from(document.querySelectorAll(".multi-payer-cb")).find(x=>x.dataset.member===name);
+          if(input) input.value=payers[name]; if(cb) cb.checked=true;
+        }); checkMultiPayerTotal(); },0);
+      }else{
+        toggleMultiPayerMode(false);
+        const sel=document.getElementById("payer"); if(sel&&names[0]) sel.value=names[0];
+      }
+      setReceiptPreview(r.receipt||"");
+      setTimeout(()=>restoreSplitInputsForRecord(r),0);
+      updateTwdPreview();
+    };
+
     // normalize old local data once after all functions are available
     try { cachedRecords = normalizeAllRecords(cachedRecords); } catch(e) { console.warn("資料正規化失敗",e); cachedRecords=[]; }
     bindRepairEvents();
     repairFilterMemberSelect();
     renderMultiPayerList();
+
+
+    // ============================================================
+    // 修復層 v3：帳本 + 群組結算總覽 + 成員對帳單
+    // 必須放在所有舊版函式之後，確保不再被歷史重複函式覆蓋。
+    // ============================================================
+    let ledgerLoadToken = 0;
+    let ledgerSwitchBusy = false;
+
+    function hasOwn(obj, key) {
+      return Object.prototype.hasOwnProperty.call(obj, key);
+    }
+
+    // 最終版解析器：優先讀結構化 payers/shares，舊 splitMembers/payer 完全相容。
+    function parseShares(record) {
+      const out = Object.create(null);
+      const add = (name, amount) => {
+        name = String(name ?? '').trim();
+        amount = Math.round(finiteNumber(amount, 0));
+        if (name && amount > 0) out[name] = (out[name] || 0) + amount;
+      };
+      if (Array.isArray(record?.shares)) {
+        record.shares.forEach(x => add(x?.member ?? x?.name, x?.amount));
+        return out;
+      }
+      if (Array.isArray(record?.splitMembers)) {
+        record.splitMembers.forEach(s => {
+          const p = parseDelimitedAmountString(s);
+          if (p) add(p.name, p.amount);
+        });
+      }
+      return out;
+    }
+
+    function parsePayers(record) {
+      const out = Object.create(null);
+      const add = (name, amount) => {
+        name = String(name ?? '').trim();
+        amount = Math.round(finiteNumber(amount, 0));
+        if (name && amount > 0) out[name] = (out[name] || 0) + amount;
+      };
+      if (Array.isArray(record?.payers)) {
+        record.payers.forEach(x => add(x?.member ?? x?.name, x?.amount));
+        return out;
+      }
+      const raw = String(record?.payer ?? '').trim();
+      if (!raw) return out;
+      if (raw.includes(';')) {
+        raw.split(';').forEach(s => {
+          const p = parseDelimitedAmountString(s);
+          if (p) add(p.name, p.amount);
+        });
+      } else {
+        add(raw, record?.twdAmount);
+      }
+      return out;
+    }
+
+    function getSettlementBalances(records) {
+      const balances = Object.create(null);
+      const ensure = name => {
+        name = String(name || '').trim();
+        if (name && !hasOwn(balances, name)) balances[name] = 0;
+        return name;
+      };
+      members.forEach(ensure);
+      ensure('公費');
+
+      (Array.isArray(records) ? records : []).forEach(r => {
+        if (!r || r.deleted) return;
+        const type = String(r.type || 'expense');
+        const payers = parsePayers(r);
+        const shares = parseShares(r);
+        Object.keys(payers).forEach(ensure);
+        Object.keys(shares).forEach(ensure);
+
+        if (type === 'expense' || type === 'personal' || type === 'settlement') {
+          Object.entries(payers).forEach(([name, amount]) => { balances[name] += amount; });
+          Object.entries(shares).forEach(([name, amount]) => { balances[name] -= amount; });
+        } else if (type === 'income') {
+          // 收入歸屬給 shares 中的成員，因此增加其結餘。
+          Object.entries(shares).forEach(([name, amount]) => { balances[name] += amount; });
+        }
+      });
+      return balances;
+    }
+
+    function buildSettlementTransfers(balances) {
+      const debts = [], credits = [];
+      Object.entries(balances).forEach(([name, value]) => {
+        const bal = Math.round(finiteNumber(value, 0));
+        if (bal < 0) debts.push({ name, amt: Math.abs(bal) });
+        else if (bal > 0) credits.push({ name, amt: bal });
+      });
+      const transfers = [];
+      let di = 0, ci = 0;
+      while (di < debts.length && ci < credits.length) {
+        const amount = Math.min(debts[di].amt, credits[ci].amt);
+        if (amount > 0) transfers.push({ from: debts[di].name, to: credits[ci].name, amt: amount });
+        debts[di].amt -= amount;
+        credits[ci].amt -= amount;
+        if (debts[di].amt <= 0) di++;
+        if (credits[ci].amt <= 0) ci++;
+      }
+      return transfers;
+    }
+
+    function renderSettlement(records) {
+      const balances = getSettlementBalances(records);
+      const grid = document.getElementById('settlementGrid');
+      const tBox = document.getElementById('settlementTransfers');
+      if (!grid || !tBox) return;
+
+      const entries = Object.entries(balances);
+      grid.innerHTML = entries.map(([name, bal]) => {
+        const amount = Math.round(bal);
+        const color = amount >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-500 dark:text-red-400';
+        const sign = amount > 0 ? '+' : '';
+        return `<button type="button" data-settlement-member="${escapeHtml(name)}" class="bg-white dark:bg-gray-800 p-2 rounded-xl border border-blue-100 dark:border-gray-700 shadow-sm cursor-pointer hover:border-blue-400 hover:shadow active:scale-95 transition text-left focus:outline-none focus:ring-2 focus:ring-blue-400">
+          <div class="text-[0.65rem] text-gray-500 font-bold truncate">${escapeHtml(name)}</div>
+          <div class="font-mono font-bold ${color}">${sign}${amount.toLocaleString()} TWD</div>
+          <div class="text-[0.58rem] text-gray-400 mt-0.5">點擊查看對帳單</div>
+        </button>`;
+      }).join('') || '<div class="col-span-full text-center py-4 text-gray-400">尚無成員資料</div>';
+
+      grid.querySelectorAll('[data-settlement-member]').forEach(btn => {
+        btn.addEventListener('click', () => openMemberDrilldown(btn.dataset.settlementMember));
+      });
+
+      const transfers = buildSettlementTransfers(balances);
+      tBox.innerHTML = transfers.length
+        ? `<div class="text-[0.68rem] text-gray-500 font-bold mb-1.5">💸 建議轉帳路徑</div>` + transfers.map(t => `
+          <div class="flex items-center justify-between gap-2 p-2 bg-white/50 dark:bg-gray-800/50 rounded-lg mb-1 border border-blue-50 dark:border-gray-700">
+            <span class="font-bold truncate">${escapeHtml(t.from)} <span class="text-gray-400 mx-1">➔</span> ${escapeHtml(t.to)}</span>
+            <span class="font-mono font-bold text-blue-600 dark:text-blue-400 whitespace-nowrap">$${t.amt.toLocaleString()}</span>
+          </div>`).join('')
+        : `<div class="text-center text-emerald-600 dark:text-emerald-400 font-bold py-2">✅ 帳目已平，無需轉帳</div>`;
+
+      // 總覽統計：只統計實際支出／收入，不把平帳還款重複算成消費。
+      const expense = records.filter(r => r.type === 'expense' || r.type === 'personal')
+        .reduce((sum, r) => sum + Math.max(0, Math.round(finiteNumber(r.twdAmount, 0))), 0);
+      const income = records.filter(r => r.type === 'income')
+        .reduce((sum, r) => sum + Math.max(0, Math.round(finiteNumber(r.twdAmount, 0))), 0);
+      const net = expense - income;
+      const statsBar = document.getElementById('summaryStatsBar');
+      if (statsBar) statsBar.classList.toggle('hidden', records.length === 0);
+      const setStat = (id, value) => { const el = document.getElementById(id); if (el) el.textContent = `$${Math.round(value).toLocaleString()} TWD`; };
+      setStat('statTotalExpense', expense);
+      setStat('statTotalIncome', income);
+      setStat('statNetExpense', net);
+    }
+
+    // 最終版成員對帳單：與總覽使用同一套資料引擎，避免「總覽數字」與「個人明細」不一致。
+    window.openMemberDrilldown = function(name) {
+      name = String(name || '').trim();
+      const modal = document.getElementById('memberDrilldownModal');
+      const nameDisplay = document.getElementById('drillMemberName');
+      const summaryBox = document.getElementById('drillSummaryBox');
+      const contentList = document.getElementById('drillContentList');
+      if (!modal || !nameDisplay || !summaryBox || !contentList || !name) return;
+
+      const records = getActiveRecords();
+      let totalPaid = 0, totalOwed = 0, details = [];
+      records.forEach(r => {
+        const paid = Math.round(finiteNumber(parsePayers(r)[name], 0));
+        const owed = Math.round(finiteNumber(parseShares(r)[name], 0));
+        if (paid || owed) {
+          totalPaid += paid;
+          totalOwed += owed;
+          details.push({ id: r.id, date: r.date || '', title: r.title || '未命名', category: r.category || '其他', type: r.type, paid, owed, net: paid - owed });
+        }
+      });
+
+      const net = totalPaid - totalOwed;
+      const memberColor = typeof getMemberColor === 'function' ? getMemberColor(name) : { bg: 'bg-blue-100', text: 'text-blue-700' };
+      nameDisplay.textContent = name;
+      nameDisplay.className = `px-2.5 py-0.5 rounded-lg text-xs font-bold ${memberColor.bg} ${memberColor.text}`;
+      summaryBox.innerHTML = `
+        <div class="bg-emerald-50 dark:bg-emerald-900/20 p-2 rounded-xl border border-emerald-100 dark:border-emerald-800">
+          <div class="text-[0.6rem] text-gray-500">總代墊</div><div class="font-mono font-bold text-emerald-600">$${totalPaid.toLocaleString()}</div>
+        </div>
+        <div class="bg-rose-50 dark:bg-rose-900/20 p-2 rounded-xl border border-rose-100 dark:border-rose-800">
+          <div class="text-[0.6rem] text-gray-500">總應攤</div><div class="font-mono font-bold text-rose-500">$${totalOwed.toLocaleString()}</div>
+        </div>
+        <div class="bg-blue-50 dark:bg-blue-900/20 p-2 rounded-xl border border-blue-100 dark:border-blue-800">
+          <div class="text-[0.6rem] text-gray-500">最終結餘</div><div class="font-mono font-bold ${net >= 0 ? 'text-emerald-600' : 'text-red-500'}">${net > 0 ? '+' : ''}${net.toLocaleString()} TWD</div>
+        </div>`;
+
+      contentList.innerHTML = details.sort((a,b) => String(b.date).localeCompare(String(a.date))).map(d => `
+        <button type="button" data-drill-id="${escapeHtml(String(d.id))}" class="w-full flex items-center justify-between gap-2 p-2 bg-gray-50 dark:bg-gray-700/50 rounded-xl border border-gray-100 dark:border-gray-600 cursor-pointer hover:bg-blue-50 dark:hover:bg-blue-900/30 transition text-left">
+          <div class="flex flex-col overflow-hidden min-w-0">
+            <span class="font-bold truncate">${escapeHtml(d.title)}</span>
+            <span class="text-[0.6rem] text-gray-400">${escapeHtml(d.date)} · ${escapeHtml(d.category)} · ${escapeHtml(d.type)}</span>
+          </div>
+          <div class="flex items-center gap-1.5 font-mono text-[0.7rem] whitespace-nowrap">
+            ${d.paid ? `<span class="text-emerald-600">+$${d.paid.toLocaleString()}</span>` : ''}
+            ${d.owed ? `<span class="text-rose-500">-$${d.owed.toLocaleString()}</span>` : ''}
+            <span class="font-bold ${d.net >= 0 ? 'text-blue-600' : 'text-gray-500'}">${d.net > 0 ? '+' : ''}$${d.net.toLocaleString()}</span>
+          </div>
+        </button>`).join('') || '<div class="text-center py-6 text-gray-400 text-xs">目前無相關紀錄</div>';
+
+      contentList.querySelectorAll('[data-drill-id]').forEach(btn => {
+        btn.addEventListener('click', () => window.jumpToEdit(btn.dataset.drillId));
+      });
+      modal.classList.remove('hidden');
+    };
+
+    // 帳本切換：每次切換產生 token，舊帳本的慢速 Drive response 不得覆蓋新帳本。
+    async function switchLedgerSafely(sheetName) {
+      const next = String(sheetName || '').trim();
+      if (!next || ledgerSwitchBusy && next === currentSheet) return;
+      currentSheet = next;
+      safeSetLocalStorage('app_active_sheet', currentSheet);
+      const token = ++ledgerLoadToken;
+      ledgerSwitchBusy = true;
+      setSyncBadge('讀取中', true);
+      try {
+        if (!accessToken || !driveFolderId) {
+          const local = loadLocalSheetMirror(currentSheet);
+          if (token !== ledgerLoadToken) return;
+          cachedRecords = normalizeAllRecords(local);
+        } else {
+          const fileId = sheetFileMap[currentSheet];
+          if (!fileId) {
+            cachedRecords = normalizeAllRecords(loadLocalSheetMirror(currentSheet));
+          } else {
+            const res = await driveApi(`https://www.googleapis.com/drive/v3/files/${fileId}?alt=media`);
+            const data = await res.json();
+            if (token !== ledgerLoadToken || currentSheet !== next) return;
+            cachedRecords = normalizeAllRecords(Array.isArray(data) ? data : []);
+            saveLocalSheetMirror(currentSheet, cachedRecords);
+          }
+        }
+        if (token !== ledgerLoadToken) return;
+        renderSheetSelector();
+        renderAllViews();
+        setSyncBadge('已同步', false);
+      } catch (e) {
+        if (token !== ledgerLoadToken) return;
+        cachedRecords = normalizeAllRecords(loadLocalSheetMirror(currentSheet));
+        renderAllViews();
+        setSyncBadge('離線資料', false, true);
+        showToast('雲端讀取失敗，已使用本機帳本資料', 'error');
+      } finally {
+        if (token === ledgerLoadToken) ledgerSwitchBusy = false;
+      }
+    }
+
+    function renderSheetSelector() {
+      const selector = document.getElementById('sheetSelector');
+      if (!selector) return;
+      // 預設帳本永遠保留，避免 Drive 沒有 json 時選單變空。
+      if (!sheetFileMap || typeof sheetFileMap !== 'object' || Array.isArray(sheetFileMap)) sheetFileMap = {};
+      if (!hasOwn(sheetFileMap, '預設帳本')) sheetFileMap['預設帳本'] = null;
+      if (!hasOwn(sheetFileMap, currentSheet)) sheetFileMap[currentSheet] = null;
+      const names = Object.keys(sheetFileMap).sort((a,b) => a === '預設帳本' ? -1 : b === '預設帳本' ? 1 : a.localeCompare(b, 'zh-Hant'));
+      selector.innerHTML = '';
+      names.forEach(name => {
+        const opt = document.createElement('option');
+        opt.value = name;
+        opt.textContent = name;
+        opt.selected = name === currentSheet;
+        selector.appendChild(opt);
+      });
+      safeSetLocalStorage('app_sheet_map', JSON.stringify(sheetFileMap));
+    }
+
+    // 覆蓋兩份歷史帳本事件綁定。
+    const finalSheetSelector = document.getElementById('sheetSelector');
+    if (finalSheetSelector) {
+      finalSheetSelector.onchange = () => switchLedgerSafely(finalSheetSelector.value);
+    }
+
+    const finalAddSheetBtn = document.getElementById('addSheetBtn');
+    if (finalAddSheetBtn) {
+      finalAddSheetBtn.onclick = async function() {
+        if (!accessToken) return showToast('請先登入 Google 帳號', 'error');
+        const raw = prompt('請輸入新帳本名稱：', '旅行帳本');
+        const name = String(raw || '').trim().replace(/[\\/:*?"<>|]/g, '_').slice(0, 80);
+        if (!name) return;
+        if (hasOwn(sheetFileMap, name)) return showToast('帳本名稱已存在', 'error');
+        try {
+          setSyncBadge('創建中', true);
+          const fileId = await saveJsonFileToDrive(`${name}.json`, null, []);
+          sheetFileMap[name] = fileId;
+          safeSetLocalStorage('app_sheet_map', JSON.stringify(sheetFileMap));
+          renderSheetSelector();
+          await switchLedgerSafely(name);
+          showToast(`✅ 帳本「${name}」創建成功！`);
+        } catch (e) {
+          console.error(e);
+          setSyncBadge('同步失敗', false, true);
+          showToast('帳本建立失敗：' + (e.message || '未知錯誤'), 'error');
+        }
+      };
+    }
+
+    // 初次載入時確保目前帳本存在於選單，並以本機鏡像先顯示，再由 Drive 更新。
+    renderSheetSelector();
+    cachedRecords = normalizeAllRecords(loadLocalSheetMirror(currentSheet));
+    renderAllViews();
 
   </script>
 </body>
