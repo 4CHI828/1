@@ -729,9 +729,13 @@
 
         function writeLocalJson(key, value) {
             try {
-                localStorage.setItem(key, JSON.stringify(value));
+                const serialized = JSON.stringify(value);
+                localStorage.setItem(key, serialized);
+                // 寫入後立即驗證，避免配額或瀏覽器限制造成「假成功」。
+                return localStorage.getItem(key) === serialized;
             } catch (e) {
-                showToast("⚠️ 本機儲存空間已滿或受限", "error");
+                showToast("⚠️ 本機儲存空間已滿或受限，資料未完成儲存", "error");
+                return false;
             }
         }
 
@@ -866,7 +870,8 @@
         }
 
         async function executeBatchInChunks(items, operationCallback) {
-            if (!db || !items.length) return;
+            if (!items.length) return;
+            if (!db) throw new Error('尚未連線到雲端資料庫');
             const CHUNK_SIZE = 450;
             for (let i = 0; i < items.length; i += CHUNK_SIZE) {
                 const chunk = items.slice(i, i + CHUNK_SIZE);
@@ -1006,7 +1011,7 @@
                     const i = a.findIndex(x => x.id === existing.id);
                     if (i > -1) {
                         a[i] = { ...a[i], ...updates };
-                        writeLocalJson('my_links', a);
+                        if(!writeLocalJson('my_links', a)) throw new Error('本機儲存失敗，重複連結未更新');
                     }
                     loadLinks();
                 } else if (currentUser && db) {
@@ -1057,7 +1062,7 @@
 
             try {
                 if (isLocalMode) {
-                    writeLocalJson('my_links', Array.from(urlMap.values()));
+                    if(!writeLocalJson('my_links', Array.from(urlMap.values()))) throw new Error('本機儲存失敗，重複連結未清理');
                 } else if (currentUser && db) {
                     await executeBatchInChunks(toUpdate, (batch, item) => {
                         const { id, ...cleanObj } = item;
@@ -1115,7 +1120,7 @@
                 };
 
                 if (isLocalMode) {
-                    saveToLocal(data);
+                    if (!saveToLocal(data)) throw new Error('本機儲存失敗，可能已達 localStorage 容量上限');
                 } else if (currentUser && db) {
                     await db.collection('users').doc(currentUser.uid).collection('links').add(data);
                 }
@@ -1132,11 +1137,14 @@
 
         function saveToLocal(data) {
             const links = readLocalJson('my_links', []);
-            if (!links.some(l => l.url === data.url && (Date.now() - l.createdAt < 3000))) {
-                data.id = 'loc_' + Date.now(); 
-                links.unshift(data);
-                writeLocalJson('my_links', links);
-            }
+            if (links.some(l => cleanUrl(l.url) === cleanUrl(data.url) && (Date.now() - (l.createdAt || 0) < 3000))) return true;
+            const usedIds = new Set(links.map(l => safeId(l.id)).filter(Boolean));
+            const baseId = 'loc_' + Date.now();
+            let id = baseId, n = 1;
+            while (usedIds.has(id)) id = `${baseId}_${n++}`;
+            data.id = id;
+            links.unshift(data);
+            return writeLocalJson('my_links', links);
         }
 
         function handleAutoSave() {
@@ -1164,25 +1172,48 @@
             const localLinks = readLocalJson('my_links', []);
             if (!localLinks.length) return;
 
-            const cloudUrlSet = new Set(cloudLinks.map(x => cleanUrl(x.url) || x.url));
+            const cloudUrlSet = new Set(cloudLinks.map(x => cleanUrl(x.url) || x.url).filter(Boolean));
+            const seenSyncUrls = new Set();
             const unsynced = localLinks.filter(x => {
                 const cu = cleanUrl(x.url);
-                return cu && !cloudUrlSet.has(cu);
+                if (!cu || cloudUrlSet.has(cu) || seenSyncUrls.has(cu)) return false;
+                seenSyncUrls.add(cu);
+                return true;
             });
 
             if (!unsynced.length) return;
-            if (confirm(`🔄 偵測到您在本機模式有 ${unsynced.length} 筆尚未同步的連結，是否一併合併至目前的 Google 雲端帳號？（合併後將清空本機暫存）`)) {
-                try {
-                    await executeBatchInChunks(unsynced, (batch, x, i) => {
-                        const docId = safeId(x.id) || ('sync_' + Date.now() + '_' + i);
-                        const { id, ...cleanObj } = x;
-                        batch.set(db.collection('users').doc(currentUser.uid).collection('links').doc(docId), cleanObj);
-                    });
-                    localStorage.removeItem('my_links');
-                    showToast(`✅ 已將 ${unsynced.length} 筆本機連結同步至雲端`, "success");
-                } catch (e) {
-                    showToast("❌ 同步本機連結失敗：" + e.message, "error");
-                }
+            if (!confirm(`🔄 偵測到您在本機模式有 ${unsynced.length} 筆尚未同步的連結，是否一併合併至目前的 Google 雲端帳號？\n\n⚠️ 只有確認寫入雲端成功的資料才會從本機暫存移除。`)) return;
+
+            try {
+                const linkCol = db.collection('users').doc(currentUser.uid).collection('links');
+                const usedIds = new Set(cloudLinks.map(x => safeId(x.id)).filter(Boolean));
+                const syncItems = [];
+                const now = Date.now();
+
+                unsynced.forEach((x, i) => {
+                    let docId = safeId(x.id);
+                    if (!docId || usedIds.has(docId)) {
+                        docId = `sync_${now}_${i}`;
+                        let n = 1;
+                        while (usedIds.has(docId)) docId = `sync_${now}_${i}_${n++}`;
+                    }
+                    usedIds.add(docId);
+                    const { id, ...cleanObj } = x;
+                    syncItems.push({ id: docId, data: { ...cleanObj, url: cleanUrl(x.url) || x.url } });
+                });
+
+                await executeBatchInChunks(syncItems, (batch, item) => {
+                    batch.set(linkCol.doc(item.id), item.data);
+                });
+
+                // 僅移除本次已成功同步的資料；其他本機資料完整保留。
+                const syncedObjectSet = new Set(unsynced);
+                const remaining = localLinks.filter(x => !syncedObjectSet.has(x));
+                writeLocalJson('my_links', remaining);
+                showToast(`✅ 已將 ${unsynced.length} 筆本機連結同步至雲端，本機暫存已安全保留其餘資料`, "success");
+            } catch (e) {
+                // Firestore batch commit 失敗時，絕不清除 localStorage。
+                showToast("❌ 同步本機連結失敗，原本的本機資料未刪除：" + e.message, "error");
             }
         }
 
@@ -1372,7 +1403,7 @@
                             l.categories = [...new Set(arr.map(x => x === oldTag ? newTag : x))];
                         }
                     });
-                    writeLocalJson('my_links', a);
+                    if(!writeLocalJson('my_links', a)) throw new Error('本機儲存失敗，標籤未完成改名');
                 } else {
                     await executeBatchInChunks(affected, (batch, l) => {
                         const arr = Array.isArray(l.categories) ? l.categories : (l.categories ? [l.categories] : []);
@@ -1408,7 +1439,7 @@
                             l.categories = arr.filter(x => x !== targetTag);
                         }
                     });
-                    writeLocalJson('my_links', a);
+                    if(!writeLocalJson('my_links', a)) throw new Error('本機儲存失敗，標籤未完成移除');
                 } else {
                     await executeBatchInChunks(affected, (batch, l) => {
                         const arr = Array.isArray(l.categories) ? l.categories : (l.categories ? [l.categories] : []);
@@ -1512,8 +1543,11 @@
             try {
                 if(isLocalMode){
                     const f=readLocalJson('my_folders', []);
-                    f.push({id:'f_'+Date.now(),name:n,icon:ic,order:nextOrder});
-                    writeLocalJson('my_folders', f);
+                    let fid='f_'+Date.now(), nId=1;
+                    const usedFolderIds=new Set(f.map(x=>safeId(x.id)).filter(Boolean));
+                    while(usedFolderIds.has(fid)) fid=`f_${Date.now()}_${nId++}`;
+                    f.push({id:fid,name:n,icon:ic,order:nextOrder});
+                    if(!writeLocalJson('my_folders', f)) throw new Error('本機儲存失敗，資料夾未建立');
                 }else{
                     await db.collection('users').doc(currentUser.uid).collection('folders').add({name:n,icon:ic,order:nextOrder});
                 }
@@ -1530,24 +1564,32 @@
             if(!confirm("確定刪除此資料夾？（內含的連結將移回「未分類」）"))return;
             try {
                 if(isLocalMode){
-                    let f=readLocalJson('my_folders', []).filter(x=>x.id!==id);
-                    writeLocalJson('my_folders', f);
-                    let l=readLocalJson('my_links', []);
+                    const f=readLocalJson('my_folders', []).filter(x=>x.id!==id);
+                    const l=readLocalJson('my_links', []);
                     l.forEach(x=>{if(x.folderId===id)x.folderId='default';});
-                    writeLocalJson('my_links', l);
+                    // 一次寫入，避免資料夾已刪除但連結尚未移回未分類。
+                    // 先寫入連結的「未分類」狀態，再移除資料夾；若第二步失敗，至少不會留下孤兒連結。
+                    const linksOk = writeLocalJson('my_links', l);
+                    if (!linksOk) throw new Error('本機儲存失敗，資料夾刪除未完成');
+                    const foldersOk = writeLocalJson('my_folders', f);
+                    if (!foldersOk) throw new Error('本機儲存失敗，連結已移回未分類，但資料夾仍保留');
                 }else{
-                    await db.collection('users').doc(currentUser.uid).collection('folders').doc(id).delete();
-                    const s=await db.collection('users').doc(currentUser.uid).collection('links').where('folderId','==',id).get();
-                    await executeBatchInChunks(s.docs, (batch, doc) => {
+                    if(!currentUser || !db) throw new Error('尚未連線到雲端資料庫');
+                    const linksRef=db.collection('users').doc(currentUser.uid).collection('links');
+                    const folderRef=db.collection('users').doc(currentUser.uid).collection('folders').doc(id);
+                    // 先處理連結，再刪除資料夾。若更新失敗，原資料夾仍存在，不會形成孤兒連結。
+                    const snap=await linksRef.where('folderId','==',id).get();
+                    await executeBatchInChunks(snap.docs, (batch, doc) => {
                         batch.update(doc.ref, { folderId: 'default' });
                     });
+                    await folderRef.delete();
                 }
                 if(activeFolder===id) activeFolder='all';
                 await renderFolderChips();
                 openFolderModal();
                 loadLinks();
             } catch (e) {
-                showToast("❌ 刪除資料夾失敗：" + e.message, "error");
+                showToast("❌ 刪除資料夾失敗，原資料仍會盡量保留：" + e.message, "error");
             }
         }
 
@@ -1632,8 +1674,11 @@
                 if(info.account&&!ft.includes(info.account))ft=`${info.account} - ${ft}`;
                 const tf=activeFolder!=='all'?activeFolder:'default';
                 const data={url:u,title:ft,categories:info.categories,description:info.description,image:info.image||"",folderId:tf,createdAt:Date.now(),pinned:false,isRead:false,isDead:false,clicks:0};
-                if(isLocalMode){saveToLocal(data);}
-                else{await db.collection('users').doc(currentUser.uid).collection('links').add(data);}
+                if(isLocalMode){
+                    if (!saveToLocal(data)) throw new Error('本機儲存失敗，可能已達 localStorage 容量上限');
+                } else {
+                    await db.collection('users').doc(currentUser.uid).collection('links').add(data);
+                }
                 showToast("✅ 儲存成功","success");
                 inp.value='';
                 loadLinks();
@@ -1801,7 +1846,12 @@
             if (shouldMarkRead) target.isRead = true;
 
             if (isLocalMode) {
-                writeLocalJson('my_links', rawLinksCache);
+                if(!writeLocalJson('my_links', rawLinksCache)){
+                    target.clicks = Math.max(0, (target.clicks || 1) - 1);
+                    if (shouldMarkRead) target.isRead = false;
+                    showToast('⚠️ 本機儲存失敗，點擊紀錄未保存', 'error');
+                    return;
+                }
                 if (currentSort === 'clicks' || shouldMarkRead) {
                     renderCurrentView(rawLinksCache);
                 } else {
@@ -1998,7 +2048,10 @@
                 if(isLocalMode){
                     const a=readLocalJson('my_links', []);
                     const i=a.findIndex(x=>x.id===id);
-                    if(i>-1){a[i][p]=v;writeLocalJson('my_links', a);}
+                    if(i>-1){
+                        a[i][p]=v;
+                        if(!writeLocalJson('my_links', a)) throw new Error('本機儲存失敗，資料未更新');
+                    }
                     loadLinks();
                 }else{
                     await db.collection('users').doc(currentUser.uid).collection('links').doc(id).update({[p]:v});
@@ -2015,7 +2068,7 @@
             try {
                 if(isLocalMode){
                     let l=readLocalJson('my_links', []);
-                    writeLocalJson('my_links', l.filter(i=>i.id!==id));
+                    if(!writeLocalJson('my_links', l.filter(i=>i.id!==id))) throw new Error('本機儲存失敗，連結未刪除');
                     loadLinks();
                 }else{
                     await db.collection('users').doc(currentUser.uid).collection('links').doc(id).delete();
@@ -2033,7 +2086,7 @@
                     const l = readLocalJson('my_links', []);
                     if (!l.some(x => x.id === itemToRestore.id)) {
                         l.unshift(itemToRestore);
-                        writeLocalJson('my_links', l);
+                        if(!writeLocalJson('my_links', l)) throw new Error('本機儲存失敗，無法復原連結');
                         loadLinks();
                     }
                 } else if (currentUser && db) {
@@ -2112,7 +2165,7 @@
                 if(isLocalMode){
                     let l=readLocalJson('my_links', []);
                     const i=l.findIndex(x=>x.id===id);
-                    if(i>-1){l[i]={...l[i],...u};writeLocalJson('my_links', l);loadLinks();}
+                    if(i>-1){l[i]={...l[i],...u};if(!writeLocalJson('my_links', l)) throw new Error('本機儲存失敗，修改未完成');loadLinks();}
                 }else{
                     await db.collection('users').doc(currentUser.uid).collection('links').doc(id).update(u);
                 }
@@ -2199,7 +2252,7 @@
                             if(isLocalMode){
                                 const a=readLocalJson('my_links', []);
                                 const i=a.findIndex(x=>x.id===iid);
-                                if(i>-1){a[i].pinned=ns.pinned;a[i].isRead=ns.isRead;writeLocalJson('my_links', a);}
+                                if(i>-1){a[i].pinned=ns.pinned;a[i].isRead=ns.isRead;if(!writeLocalJson('my_links', a)) throw new Error('本機儲存失敗，狀態未更新');}
                                 loadLinks();
                             }else{
                                 await db.collection('users').doc(currentUser.uid).collection('links').doc(iid).update(ns);
@@ -2348,7 +2401,7 @@
             return { links: parsedLinks, folders: newFolders };
         }
         
-        function importData(ev){
+        async function importData(ev){
             const f=ev.target.files[0];if(!f)return;
             const isHtmlFile = /\.(html?|htm)$/i.test(f.name);
             const r=new FileReader();
@@ -2367,10 +2420,40 @@
                         incomingFolders = Array.isArray(d.folders) ? d.folders : [];
                     }
 
-                    const existingUrlSet = new Set(rawLinksCache.map(x => cleanUrl(x.url) || x.url));
+                    const existingUrlSet = new Set(rawLinksCache.map(x => cleanUrl(x.url) || x.url).filter(Boolean));
+                    const existingLinkIds = new Set(rawLinksCache.map(x => safeId(x.id)).filter(Boolean));
+                    const existingFolderIds = new Set(allFoldersCache.map(fo => safeId(fo.id)).filter(Boolean));
+                    const folderIdMap = new Map();
                     let skippedCount = 0;
                     const uniqueNewLinks = [];
+                    const uniqueNewFolders = [];
+                    const now = Date.now();
 
+                    // 先建立「匯入資料夾舊 ID → 實際新 ID」映射。
+                    incomingFolders.forEach((fo, i) => {
+                        const originalId = String(fo?.id || '');
+                        let fid = safeId(originalId);
+
+                        if (fid && existingFolderIds.has(fid)) {
+                            // 與既有資料夾同 ID 時沿用既有資料夾，避免覆蓋。
+                            folderIdMap.set(originalId, fid);
+                            return;
+                        }
+
+                        if (!fid) fid = `imp_folder_${now}_${i}`;
+                        let candidate = fid, n = 1;
+                        while (existingFolderIds.has(candidate)) candidate = `${fid}_${n++}`;
+                        existingFolderIds.add(candidate);
+                        folderIdMap.set(originalId, candidate);
+                        uniqueNewFolders.push({
+                            ...fo,
+                            id: candidate,
+                            icon: safeIcon(fo.icon),
+                            order: typeof fo.order === 'number' ? fo.order : (allFoldersCache.length + uniqueNewFolders.length)
+                        });
+                    });
+
+                    // 匯入連結時同時防止「URL 重複」與「文件 ID 衝突」。
                     incomingLinks.forEach((x, idx) => {
                         const cu = cleanUrl(x.url);
                         if (!cu) return;
@@ -2379,31 +2462,58 @@
                             return;
                         }
                         existingUrlSet.add(cu);
+
+                        const originalId = String(x?.id || '');
+                        let linkId = safeId(originalId);
+                        if (!linkId || existingLinkIds.has(linkId)) linkId = `imp_${now}_${idx}`;
+                        let candidate = linkId, n = 1;
+                        while (existingLinkIds.has(candidate)) candidate = `${linkId}_${n++}`;
+                        existingLinkIds.add(candidate);
+
+                        const importedFolderId = String(x?.folderId || '');
+                        const mappedFolderId = folderIdMap.get(importedFolderId);
                         uniqueNewLinks.push({
                             ...x,
                             url: cu,
-                            id: safeId(x.id) || ('imp_' + Date.now() + '_' + idx)
+                            id: candidate,
+                            folderId: mappedFolderId || 'default'
                         });
                     });
-
-                    const existingFolderIds = new Set(allFoldersCache.map(fo => fo.id));
-                    const uniqueNewFolders = incomingFolders.filter(fo => {
-                        const fid = safeId(fo.id);
-                        if (!fid || existingFolderIds.has(fid)) return false;
-                        existingFolderIds.add(fid);
-                        return true;
-                    }).map((fo, i) => ({
-                        ...fo,
-                        id: safeId(fo.id) || ('f_' + Date.now() + '_' + i),
-                        icon: safeIcon(fo.icon),
-                        order: typeof fo.order === 'number' ? fo.order : (allFoldersCache.length + i)
-                    }));
 
                     if (isLocalMode) {
                         const curLinks = readLocalJson('my_links', []);
                         const curFolders = readLocalJson('my_folders', []);
-                        writeLocalJson('my_links', [...uniqueNewLinks, ...curLinks]);
-                        if (uniqueNewFolders.length) writeLocalJson('my_folders', [...curFolders, ...uniqueNewFolders]);
+                        const localLinkIds = new Set(curLinks.map(x => safeId(x.id)).filter(Boolean));
+                        const localFolderIds = new Set(curFolders.map(x => safeId(x.id)).filter(Boolean));
+
+                        // 本機模式再次檢查 ID，避免舊 localStorage 中已有相同 ID。
+                        uniqueNewLinks.forEach((x, i) => {
+                            let id = safeId(x.id) || `imp_${now}_${i}`;
+                            let n = 1, base = id;
+                            while (localLinkIds.has(id)) id = `${base}_${n++}`;
+                            localLinkIds.add(id);
+                            x.id = id;
+                        });
+                        const folderIdRemap = new Map();
+                        uniqueNewFolders.forEach((x, i) => {
+                            const oldId = x.id;
+                            let id = safeId(x.id) || `f_${now}_${i}`;
+                            let n = 1, base = id;
+                            while (localFolderIds.has(id)) id = `${base}_${n++}`;
+                            localFolderIds.add(id);
+                            x.id = id;
+                            if (oldId !== id) folderIdRemap.set(oldId, id);
+                        });
+                        // 資料夾 ID 若因本機既有資料而重新命名，連結也必須同步改指向新 ID。
+                        if (folderIdRemap.size) {
+                            uniqueNewLinks.forEach(x => {
+                                if (folderIdRemap.has(x.folderId)) x.folderId = folderIdRemap.get(x.folderId);
+                            });
+                        }
+
+                        const linksOk = writeLocalJson('my_links', [...uniqueNewLinks, ...curLinks]);
+                        const foldersOk = !uniqueNewFolders.length || writeLocalJson('my_folders', [...curFolders, ...uniqueNewFolders]);
+                        if (!linksOk || !foldersOk) throw new Error('本機儲存失敗，可能已達 localStorage 容量上限');
                     } else {
                         await executeBatchInChunks(uniqueNewFolders, (batch, x) => {
                             const { id, ...cleanFolder } = x;
@@ -2417,7 +2527,7 @@
 
                     await renderFolderChips();
                     loadLinks();
-                    showToast(`✅ 新增 ${uniqueNewLinks.length} 筆連結${skippedCount > 0 ? ` (已略過 ${skippedCount} 筆重複)` : ''}`, "success");
+                    showToast(`✅ 新增 ${uniqueNewLinks.length} 筆連結${uniqueNewFolders.length ? `、${uniqueNewFolders.length} 個資料夾` : ''}${skippedCount > 0 ? ` (已略過 ${skippedCount} 筆重複)` : ''}`, "success");
                 }catch(err){
                     showToast("❌ 匯入失敗：" + err.message,"error");
                 }
@@ -2523,7 +2633,7 @@
                         const i = a.findIndex(x => x.id === id);
                         if (i > -1) a[i].isRead = nextReadState;
                     });
-                    writeLocalJson('my_links', a);
+                    if(!writeLocalJson('my_links', a)) throw new Error('本機儲存失敗，批次已讀狀態未更新');
                 } else {
                     await executeBatchInChunks(ids, (batch, id) => {
                         batch.update(db.collection('users').doc(currentUser.uid).collection('links').doc(id), { isRead: nextReadState });
@@ -2560,7 +2670,7 @@
                             a[i].categories = [...new Set([...cur, ...newTags])];
                         }
                     });
-                    writeLocalJson('my_links', a);
+                    if(!writeLocalJson('my_links', a)) throw new Error('本機儲存失敗，批次標籤未更新');
                 } else {
                     await executeBatchInChunks(ids, (batch, id) => {
                         const item = rawLinksCache.find(x => x.id === id);
@@ -2598,7 +2708,7 @@
                         const i = a.findIndex(x => x.id === id);
                         if (i > -1) a[i].folderId = targetFolderId;
                     });
-                    writeLocalJson('my_links', a);
+                    if(!writeLocalJson('my_links', a)) throw new Error('本機儲存失敗，批次移動未完成');
                 } else {
                     await executeBatchInChunks(ids, (batch, id) => {
                         batch.update(db.collection('users').doc(currentUser.uid).collection('links').doc(id), { folderId: targetFolderId });
@@ -2622,7 +2732,7 @@
                 if(isLocalMode){
                     let a=readLocalJson('my_links', []);
                     a=a.filter(i=>!selectedIds.has(i.id));
-                    writeLocalJson('my_links', a);
+                    if(!writeLocalJson('my_links', a)) throw new Error('本機儲存失敗，批次刪除未完成');
                 }else{
                     await executeBatchInChunks(ids, (batch, id) => {
                         batch.delete(db.collection('users').doc(currentUser.uid).collection('links').doc(id));
@@ -2678,7 +2788,7 @@
                         else if (d.data && d.data.statusCode && d.data.statusCode >= 400) dead = true;
                         if (dead !== (l.isDead || false)) { ups.push({ id: l.id, isDead: dead }); if (dead) dc++; }
                     } catch (e) {
-                        if (!l.isDead) { ups.push({ id: l.id, isDead: true }); dc++; }
+                        // 網路逾時、Microlink 異常或代理失敗不等於網址失效，避免誤標記。
                     }
                 }));
                 cc += chunk.length;
@@ -2691,7 +2801,7 @@
                     if(isLocalMode){
                         const a=readLocalJson('my_links', []);
                         ups.forEach(u=>{const i=a.findIndex(x=>x.id===u.id);if(i>-1)a[i].isDead=u.isDead;});
-                        writeLocalJson('my_links', a);
+                        if(!writeLocalJson('my_links', a)) throw new Error('本機儲存失敗，失效狀態未更新');
                     }else{
                         await executeBatchInChunks(ups, (batch, u) => {
                             batch.update(db.collection('users').doc(currentUser.uid).collection('links').doc(u.id), { isDead: u.isDead });
@@ -2878,8 +2988,12 @@
                     }).then(async (user) => {
                         if (user) {
                             try { const { id, ...cloudData } = finalData; await db.collection('users').doc(user.uid).collection('links').add(cloudData); } 
-                            catch (e) { saveToLocal(finalData); }
-                        } else { saveToLocal(finalData); }
+                            catch (e) {
+                                if (!saveToLocal(finalData)) showToast('⚠️ 雲端與本機儲存都失敗', 'error');
+                            }
+                        } else {
+                            if (!saveToLocal(finalData)) showToast('⚠️ 本機儲存失敗，可能已達 localStorage 容量上限', 'error');
+                        }
                     });
                     
                     setTimeout(() => window.close(), 1200);
