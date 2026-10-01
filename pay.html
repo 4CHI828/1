@@ -519,7 +519,7 @@
         </div>
       </div>
       <footer class="text-center text-[0.75rem] text-gray-400 dark:text-gray-500 flex flex-wrap items-center justify-center gap-2 pt-4 pb-2">
-        <div>最後更新時間 <span id="lastUpdatedDisplay" class="font-mono">2026-10-01 13:27:35</span></div>
+        <div>最後更新時間 <span id="lastUpdatedDisplay" class="font-mono">2026-10-01 13:34:23</span></div>
         <span>|</span>
         <a href="https://v.douyin.com/XmUkpVat8Lg/" target="_blank" class="font-bold text-blue-500 hover:text-blue-600 transition flex items-center gap-0.5">奇奇828 <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path></svg></a>
       </footer>
@@ -879,8 +879,7 @@
       if (idx !== -1) {
         cachedRecords[idx].deleted = true;
         renderAllViews();
-        saveRecordsToDrive();
-        showToast("紀錄已移至回收桶");
+        saveRecordsToDrive().then(ok => showToast(ok ? "紀錄已移至回收桶並同步雲端" : "紀錄已移至回收桶，等待雲端同步", ok ? "success" : "info"));
       }
     }
 
@@ -893,24 +892,24 @@
       balances["公費"] = 0;
 
       records.forEach(r => {
-        if (r.type === "expense" || r.type === "personal" || r.type === "settlement") {
+        if (r.type === "personal") return;
+        if (r.type === "expense" || r.type === "settlement") {
           const payers = parsePayers(r);
           Object.entries(payers).forEach(([name, amt]) => { if (balances.hasOwnProperty(name)) balances[name] += amt; });
           const shares = parseShares(r);
           Object.entries(shares).forEach(([name, amt]) => { if (balances.hasOwnProperty(name)) balances[name] -= amt; });
         } else if (r.type === "income") {
-          // 收入在群組結算中視為「收到款項」，由 payers / payer 指定收款人。
           const payers = parsePayers(r);
-          Object.entries(payers).forEach(([name, amt]) => {
-            if (balances.hasOwnProperty(name)) balances[name] += amt;
-          });
+          Object.entries(payers).forEach(([name, amt]) => { if (balances.hasOwnProperty(name)) balances[name] += amt; });
+          const shares = parseShares(r);
+          Object.entries(shares).forEach(([name, amt]) => { if (balances.hasOwnProperty(name)) balances[name] -= amt; });
         }
       });
 
       const grid = document.getElementById("settlementGrid");
       grid.innerHTML = Object.entries(balances).map(([name, bal]) => {
         const color = bal >= 0 ? "text-emerald-600" : "text-red-500";
-        return `<div onclick="openMemberDrilldown('${escapeJsStr(name)}')" class="bg-white dark:bg-gray-800 p-2 rounded-xl border border-blue-100 dark:border-gray-700 shadow-sm cursor-pointer hover:border-blue-400 active:scale-95 transition">
+        return `<div onclick="openMemberDrilldown('${escapeHtml(escapeJsStr(name))}')" class="bg-white dark:bg-gray-800 p-2 rounded-xl border border-blue-100 dark:border-gray-700 shadow-sm cursor-pointer hover:border-blue-400 active:scale-95 transition">
                   <div class="text-[0.65rem] text-gray-500 font-bold truncate">${escapeHtml(name)}</div>
                   <div class="font-mono font-bold ${color}">${bal >= 0 ? '+' : ''}${Math.round(bal).toLocaleString()}</div>
                 </div>`;
@@ -945,7 +944,10 @@
       const target = document.getElementById("personalStatsMemberSelect").value || members[0];
       const stats = { own: 0, share: 0, paid: 0 };
       records.forEach(r => {
-        if (r.type === "personal" && r.payer === target) stats.own += r.twdAmount;
+        if (r.type === "personal") {
+          const personalPayers = parsePayers(r);
+          stats.own += personalPayers[target] || 0;
+        }
         const shares = parseShares(r);
         if (shares[target]) stats.share += shares[target];
         const payers = parsePayers(r);
@@ -1119,8 +1121,7 @@
         cachedRecords[idx].deleted = false;
         renderAllViews();
         renderTrash();
-        saveRecordsToDrive();
-        showToast("紀錄已恢復！");
+        saveRecordsToDrive().then(ok => showToast(ok ? "紀錄已恢復並同步雲端！" : "紀錄已恢復，等待雲端同步", ok ? "success" : "info"));
       }
     };
 
@@ -1128,8 +1129,7 @@
       cachedRecords = cachedRecords.filter(r => !r.deleted);
       renderAllViews();
       renderTrash();
-      saveRecordsToDrive();
-      showToast("回收桶已清空");
+      saveRecordsToDrive().then(ok => showToast(ok ? "回收桶已清空並同步雲端" : "回收桶已清空，等待雲端同步", ok ? "success" : "info"));
     };
 
     // ==========================================
@@ -1176,6 +1176,11 @@
     }
 
     document.getElementById("googleAuthBtn").onclick = () => {
+      if (!tokenClient) {
+        showToast("Google 登入元件尚未載入，請稍候再試", "error");
+        if (window.google?.accounts?.oauth2) initGoogleClient();
+        return;
+      }
       tokenClient.requestAccessToken({ prompt: 'select_account' });
     };
 
@@ -1219,9 +1224,9 @@
       safeSetLocalStorage("app_active_sheet", currentSheet);
       showToast(`切換至帳本：${currentSheet}`);
       setSyncBadge("讀取中", true);
-      await loadRecordsFromDrive();
+      const loaded = await loadRecordsFromDrive();
       renderAllViews();
-      setSyncBadge("已同步", false);
+      setSyncBadge(loaded === false ? "離線快取" : "已同步", false, loaded === false);
     };
 
     
@@ -1275,10 +1280,14 @@
       try {
         const res = await fetch("https://open.er-api.com/v6/latest/USD");
         const data = await res.json();
-        const rates = data.rates;
-        const usdToTwd = rates.TWD;
+        const rates = data?.rates;
+        const usdToTwd = Number(rates?.TWD);
+        if (!Number.isFinite(usdToTwd) || usdToTwd <= 0) throw new Error("匯率資料格式異常");
         const currenciesToTrack = ["JPY", "THB", "HKD", "USD", "EUR", "CNY", "KRW"];
-        currenciesToTrack.forEach(cur => { if (rates[cur]) exchangeRates[cur] = usdToTwd / rates[cur]; });
+        currenciesToTrack.forEach(cur => {
+          const usdRate = Number(rates?.[cur]);
+          if (Number.isFinite(usdRate) && usdRate > 0) exchangeRates[cur] = usdToTwd / usdRate;
+        });
         exchangeRates.TWD = 1;
         safeSetLocalStorage("app_exchange_rates", JSON.stringify(exchangeRates));
         renderRateChips();
@@ -1483,8 +1492,8 @@
           cachedRecords = normalizeAllRecords([...importedRecords, ...cachedRecords]);
           renderAllViews();
           renderTrash();
-          await saveRecordsToDrive();
-          showToast(`✅ 匯入成功：${importedRecords.length} 筆${invalidMsg}`);
+          const cloudSynced = await saveRecordsToDrive();
+          showToast(`${cloudSynced ? "✅ 匯入並同步成功" : "💾 匯入成功，等待雲端同步"}：${importedRecords.length} 筆${invalidMsg}`, cloudSynced ? "success" : "info");
         }
       } catch (e) {
         showToast("匯入失敗: " + (e?.message || "格式錯誤"), "error");
@@ -1619,7 +1628,15 @@
       document.getElementById("originalAmount").addEventListener("input", updateTwdPreview);
       document.getElementById("overrideTwdInput").addEventListener("input", updateTwdPreview);
       document.getElementById("currency").addEventListener("change", updateTwdPreview);
-      if (window.google) initGoogleClient();
+      if (window.google?.accounts?.oauth2) initGoogleClient();
+      else {
+        let attempts = 0;
+        const timer = setInterval(() => {
+          attempts++;
+          if (window.google?.accounts?.oauth2) { clearInterval(timer); initGoogleClient(); }
+          else if (attempts >= 20) { clearInterval(timer); showToast("Google 登入元件載入逾時", "error"); }
+        }, 250);
+      }
     };
 
     async function softRefresh() {
@@ -1764,20 +1781,22 @@
       if (customContainer) customContainer.innerHTML = members.map(m => `
         <div class="flex items-center justify-between gap-2 bg-white dark:bg-gray-800 p-2 rounded-xl border border-gray-100 dark:border-gray-700">
           <span class="text-xs font-bold">${escapeHtml(m)}</span><div class="flex items-center gap-2">
-            <input type="number" data-member="${escapeJsStr(m)}" class="custom-split-input w-24 text-right border border-gray-200 dark:border-gray-600 rounded-lg px-2 py-1 text-xs font-mono focus:ring-1 focus:ring-blue-500 outline-none" placeholder="0" value="${escapeHtml(previousValues[`custom-split-input:${m}`] || "")}" oninput="updateTwdPreview()">
-            <span class="text-[0.6rem] text-gray-400">TWD</span></div></div>`).join("");
+            <input type="number" data-member="${escapeHtml(m)}" class="custom-split-input w-24 text-right border border-gray-200 dark:border-gray-600 rounded-lg px-2 py-1 text-xs font-mono focus:ring-1 focus:ring-blue-500 outline-none" placeholder="0" value="${escapeHtml(previousValues[`custom-split-input:${m}`] || "")}" oninput="updateTwdPreview()">
+            <span class="custom-split-unit text-[0.6rem] text-gray-400">原幣</span></div></div>`).join("");
       const ratioContainer = document.getElementById("ratioMembersList");
       if (ratioContainer) ratioContainer.innerHTML = members.map(m => `
         <div class="flex items-center justify-between gap-2 bg-white dark:bg-gray-800 p-2 rounded-xl border border-gray-100 dark:border-gray-700">
           <span class="text-xs font-bold">${escapeHtml(m)}</span><div class="flex items-center gap-2">
-            <input type="number" data-member="${escapeJsStr(m)}" class="ratio-split-input w-24 text-right border border-gray-200 dark:border-gray-600 rounded-lg px-2 py-1 text-xs font-mono focus:ring-1 focus:ring-blue-500 outline-none" placeholder="1" value="${escapeHtml(previousValues[`ratio-split-input:${m}`] || "")}" oninput="updateTwdPreview()">
+            <input type="number" data-member="${escapeHtml(m)}" class="ratio-split-input w-24 text-right border border-gray-200 dark:border-gray-600 rounded-lg px-2 py-1 text-xs font-mono focus:ring-1 focus:ring-blue-500 outline-none" placeholder="1" value="${escapeHtml(previousValues[`ratio-split-input:${m}`] || "")}" oninput="updateTwdPreview()">
             <span class="text-[0.6rem] text-gray-400">份額</span></div></div>`).join("");
       const percentContainer = document.getElementById("percentMembersList");
       if (percentContainer) percentContainer.innerHTML = members.map(m => `
         <div class="flex items-center justify-between gap-2 bg-white dark:bg-gray-800 p-2 rounded-xl border border-gray-100 dark:border-gray-700">
           <span class="text-xs font-bold">${escapeHtml(m)}</span><div class="flex items-center gap-2">
-            <input type="number" data-member="${escapeJsStr(m)}" class="percent-split-input w-24 text-right border border-gray-200 dark:border-gray-600 rounded-lg px-2 py-1 text-xs font-mono focus:ring-1 focus:ring-blue-500 outline-none" placeholder="0" value="${escapeHtml(previousValues[`percent-split-input:${m}`] || "")}" oninput="updateTwdPreview()">
+            <input type="number" data-member="${escapeHtml(m)}" class="percent-split-input w-24 text-right border border-gray-200 dark:border-gray-600 rounded-lg px-2 py-1 text-xs font-mono focus:ring-1 focus:ring-blue-500 outline-none" placeholder="0" value="${escapeHtml(previousValues[`percent-split-input:${m}`] || "")}" oninput="updateTwdPreview()">
             <span class="text-[0.6rem] text-gray-400">%</span></div></div>`).join("");
+      const customUnit = document.getElementById("customSplitCurrency")?.value === "TWD" ? "TWD" : (document.getElementById("currency")?.value || "原幣");
+      document.querySelectorAll(".custom-split-unit").forEach(el => { el.textContent = customUnit; });
       updateEqualPreview();
     }
 
@@ -1882,7 +1901,7 @@
       if (type === 'group') {
         const balances = {}; members.forEach(m => balances[m] = 0); balances["公費"] = 0;
         records.forEach(r => {
-          if (r.type === "expense" || r.type === "personal" || r.type === "settlement") {
+          if (r.type === "expense" || r.type === "settlement") {
             const payers = parsePayers(r); Object.entries(payers).forEach(([name, amt]) => { if (balances.hasOwnProperty(name)) balances[name] += amt; });
             const shares = parseShares(r); Object.entries(shares).forEach(([name, amt]) => { if (balances.hasOwnProperty(name)) balances[name] -= amt; });
           } else if (r.type === "income") {
@@ -2046,13 +2065,24 @@
     function renderMultiPayerList() {
       const box = document.getElementById("multiPayerList");
       if (!box) return;
+      // 重繪前保留目前的勾選與金額，避免修改原始金額/幣別時清空已輸入的付款資料。
+      const previous = new Map();
+      box.querySelectorAll(".multi-payer-input").forEach(input => {
+        const key = String(input.dataset.member || "");
+        const cb = box.querySelector(`.multi-payer-cb[data-member="${CSS.escape(key)}"]`);
+        previous.set(key, { value: input.value, checked: cb?.checked === true });
+      });
       const currency = document.getElementById("multiPayerCurrency")?.value || "auto";
       const unit = currency === "TWD" ? "TWD" : (document.getElementById("currency")?.value || "原幣");
-      box.innerHTML = members.map(m => `
+      box.innerHTML = members.map(m => {
+        const old = previous.get(m) || { value: "", checked: false };
+        const checked = old.checked || finiteNumber(old.value, 0) > 0;
+        return `
         <div class="flex items-center justify-between gap-2 bg-white dark:bg-gray-700 rounded-lg p-1.5 border border-blue-100 dark:border-gray-600">
-          <label class="flex items-center gap-1.5 min-w-0"><input type="checkbox" class="multi-payer-cb" data-member="${escapeHtml(m)}"><span class="truncate">${escapeHtml(m)}</span></label>
-          <div class="flex items-center gap-1"><input type="number" min="0" step="0.01" class="multi-payer-input w-24 text-right bg-transparent border border-gray-200 dark:border-gray-500 rounded px-1.5 py-1" data-member="${escapeHtml(m)}" placeholder="0"><span class="text-[0.6rem] text-gray-400">${escapeHtml(unit)}</span></div>
-        </div>`).join("");
+          <label class="flex items-center gap-1.5 min-w-0"><input type="checkbox" class="multi-payer-cb" data-member="${escapeHtml(m)}" ${checked ? "checked" : ""}><span class="truncate">${escapeHtml(m)}</span></label>
+          <div class="flex items-center gap-1"><input type="number" min="0" step="0.01" class="multi-payer-input w-24 text-right bg-transparent border border-gray-200 dark:border-gray-500 rounded px-1.5 py-1" data-member="${escapeHtml(m)}" placeholder="0" value="${escapeHtml(old.value)}" ${checked ? "" : "disabled"}><span class="text-[0.6rem] text-gray-400">${escapeHtml(unit)}</span></div>
+        </div>`;
+      }).join("");
       box.querySelectorAll(".multi-payer-cb").forEach(cb => cb.addEventListener("change", () => {
         const input = box.querySelector(`.multi-payer-input[data-member="${CSS.escape(cb.dataset.member)}"]`);
         if (input) input.disabled = !cb.checked;
@@ -2105,6 +2135,7 @@
       const recordCur = document.getElementById("currency")?.value || "TWD";
       const rate = cur === "TWD" ? 1 : getSplitRate();
       return Array.from(document.querySelectorAll(".multi-payer-input"))
+        .filter(i => document.querySelector(`.multi-payer-cb[data-member="${CSS.escape(i.dataset.member || "")}"]`)?.checked === true)
         .map(i => ({ member: String(i.dataset.member || "").trim(), amount: Math.round(Math.max(0, finiteNumber(i.value, 0)) * rate) }))
         .filter(x => x.member && x.amount > 0);
     }
@@ -2248,7 +2279,7 @@
         payers = getMultiPayersAsTwd();
         if (!payers.length) throw new Error("請選擇付款人");
         const payerSum = payers.reduce((a, x) => a + x.amount, 0);
-        if (Math.abs(payerSum - twd) > 1 && (type === "expense" || type === "settlement")) throw new Error(`付款人合計需等於 ${twd.toLocaleString()} TWD`);
+        if (Math.abs(payerSum - twd) > 1) throw new Error(`付款人合計需等於 ${twd.toLocaleString()} TWD`);
       } catch (e) { return showToast(e.message, "error"); }
       const record = normalizeRecord({
         id: editingRecordId || generateUUID(), title, amount,
@@ -2266,9 +2297,9 @@
       document.getElementById("editModeBanner")?.classList.add("hidden");
       document.getElementById("saveBtnText").textContent = "儲存紀錄 (Enter)";
       renderAllViews();
-      await saveRecordsToDrive();
+      const cloudSynced = await saveRecordsToDrive();
       cancelEdit();
-      showToast("儲存成功");
+      showToast(cloudSynced ? "儲存成功，已同步雲端" : "已儲存本機，等待雲端同步", cloudSynced ? "success" : "info");
     }
 
     // -------- Drive：以帳本名稱快照，避免 await 後 currentSheet 改變造成寫錯帳本 --------
@@ -2276,7 +2307,11 @@
       const sheetName = currentSheet;
       const recordsSnapshot = structuredClone(normalizeAllRecords(cachedRecords));
       saveLocalSheetMirror(sheetName, recordsSnapshot);
-      if (!accessToken || !driveFolderId) return;
+      if (!accessToken || !driveFolderId) {
+        setSyncBadge("待同步", false, true);
+        return false;
+      }
+      let synced = true;
       driveSaveQueue = driveSaveQueue.then(async () => {
         setSyncBadge("同步中", true);
         try {
@@ -2286,11 +2321,18 @@
           safeSetLocalStorage("app_sheet_map", JSON.stringify(sheetFileMap));
           setSyncBadge("已同步", false);
         } catch (e) {
-          console.error(e); setSyncBadge("同步失敗", false, true);
+          synced = false;
+          console.error("雲端同步失敗", e);
+          setSyncBadge("同步失敗", false, true);
           showToast("雲端同步失敗，資料仍保留在本機", "error");
         }
-      }).catch(e => console.error(e));
-      return driveSaveQueue;
+      }).catch(e => {
+        synced = false;
+        console.error("雲端同步佇列失敗", e);
+        setSyncBadge("同步失敗", false, true);
+      });
+      await driveSaveQueue;
+      return synced;
     }
 
     // Drive 建檔避免同一名稱重複：查詢後若有多筆取第一筆，建立仍由單一 queue 序列化。
@@ -2423,8 +2465,29 @@
 
     function cancelEdit() {
       ["title","originalAmount","overrideTwdInput"].forEach(id=>{const el=document.getElementById(id); if(el) el.value="";});
-      editingRecordId=null; isMultiPayerMode=false; toggleMultiPayerMode(false); setReceiptPreview("");
+      // 完整清除上一筆紀錄留下的分攤/付款人狀態，避免下一筆新帳誤用舊資料。
+      document.querySelectorAll(".member-cb").forEach(cb=>{ cb.checked = true; });
+      document.querySelectorAll(".custom-split-input,.ratio-split-input,.percent-split-input").forEach(input=>{ input.value=""; });
+      document.querySelectorAll(".multi-payer-input").forEach(input=>{ input.value=""; input.disabled=true; });
+      document.querySelectorAll(".multi-payer-cb").forEach(cb=>{ cb.checked=false; });
+      editingRecordId=null;
+      isMultiPayerMode=false;
+      toggleMultiPayerMode(false);
+      currentSplitMode="equal";
+      const type=document.getElementById("type"); if(type) type.value="expense";
+      const currency=document.getElementById("currency"); if(currency) currency.value="TWD";
+      const override=document.getElementById("overrideTwdInput"); if(override) override.value="";
+      const category=document.getElementById("category"); if(category && categories.length && !categories.includes(category.value)) category.value=categories[0];
+      const payer=document.getElementById("payer"); if(payer && members.length) payer.value=members[0];
+      const customCurrency=document.getElementById("customSplitCurrency"); if(customCurrency) customCurrency.value="auto";
+      const multiCurrency=document.getElementById("multiPayerCurrency"); if(multiCurrency) multiCurrency.value="auto";
+      setRecordType("expense");
+      setReceiptPreview("");
       const date=document.getElementById("date"); if(date) date.value=getTodayString();
+      const banner=document.getElementById("editModeBanner"); if(banner) banner.classList.add("hidden");
+      const saveText=document.getElementById("saveBtnText"); if(saveText) saveText.textContent="儲存紀錄 (Enter)";
+      renderSplitInputs();
+      updateTwdPreview();
     }
 
     // -------- 主題 / Enter / 初始化 --------
@@ -2492,7 +2555,7 @@
       if(title===null) return;
       const payer=action==='contribute'?(prompt("繳款人",members[0]||"")||members[0]||"公費"):"公費";
       const r=normalizeRecord({id:generateUUID(),title:title.trim()||"公費",amount:Math.round(amount),currency:"TWD",twdAmount:Math.round(amount),rate:1,category:"公費",type:action==='contribute'?"income":"expense",date:getTodayString(),payer,payers:[{member:payer,amount:Math.round(amount)}],shares:[{member:"公費",amount:Math.round(amount)}],splitMembers:[`公費:${Math.round(amount)}`],deleted:false});
-      cachedRecords.unshift(r); renderAllViews(); renderTrash(); saveRecordsToDrive(); showToast(action==='contribute'?"公費已入帳":"公費支出已入帳");
+      cachedRecords.unshift(r); renderAllViews(); renderTrash(); saveRecordsToDrive().then(ok => showToast(ok ? (action==='contribute'?"公費已入帳並同步雲端":"公費支出已入帳並同步雲端") : (action==='contribute'?"公費已入帳，等待雲端同步":"公費支出已入帳，等待雲端同步"), ok ? "success" : "info"));
     }
     window.quickPoolAction=quickPoolAction;
 
@@ -2536,6 +2599,8 @@
       document.getElementById("editModeBanner")?.classList.remove("hidden");
       const saveText = document.getElementById("saveBtnText"); if (saveText) saveText.textContent = "儲存修改 (Enter)";
       ["title","originalAmount","currency","category","date","type"].forEach(k => { const el=document.getElementById(k); if(el) el.value=r[k] ?? ""; });
+      const override = document.getElementById("overrideTwdInput");
+      if (override) override.value = r.currency !== "TWD" && Number(r.twdAmount) > 0 ? String(Math.round(r.twdAmount)) : "";
       setRecordType(r.type);
       const payers=parsePayers(r), names=Object.keys(payers);
       if(names.length>1){
