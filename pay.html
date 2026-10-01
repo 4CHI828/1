@@ -67,7 +67,7 @@
       </div>
       <div class="flex items-center gap-1.5 flex-shrink-0 ml-auto">
         <button type="button" id="syncIndicator" onclick="retryPendingSync()" class="hidden shrink-0 text-[0.7rem] px-2 py-1 rounded-lg bg-blue-100 text-blue-700 dark:bg-blue-900/50 dark:text-blue-300 font-mono shadow-sm whitespace-nowrap">已同步</button>
-        <button type="button" id="refreshBtn" onclick="softRefresh()" class="shrink-0 inline-flex items-center gap-1.5 px-2.5 py-1.5 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 rounded-xl transition active:scale-95 shadow-sm text-xs font-bold text-gray-700 dark:text-gray-100" title="重新整理雲端資料" aria-label="重新整理雲端資料">
+        <button type="button" id="refreshBtn" onclick="window.location.reload()" class="shrink-0 inline-flex items-center gap-1.5 px-2.5 py-1.5 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 rounded-xl transition active:scale-95 shadow-sm text-xs font-bold text-gray-700 dark:text-gray-100" title="重新整理網頁" aria-label="重新整理網頁">
           <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 11a8.1 8.1 0 0 0-15.5-2M4 5v4h4M4 13a8.1 8.1 0 0 0 15.5 2M20 19v-4h-4"></path>
           </svg>
@@ -493,7 +493,7 @@
       <div class="bg-white/80 dark:bg-slate-900/60 border border-gray-200/50 dark:border-gray-700/50 rounded-2xl p-4 space-y-3 shadow-sm">
         <div class="text-xs font-bold text-gray-700 dark:text-gray-300 flex items-center gap-1.5">
           <span>📁 資料備份與還原</span>
-          <button type="button" onclick="document.getElementById('trashContainerSettings').classList.toggle('hidden')" class="ml-auto text-[0.7rem] bg-red-50 text-red-500 dark:bg-red-900/30 px-2 py-1 rounded-lg">🗑️ 回收桶 (<span id="trashCountDisplaySettings">0</span>)</button>
+          <button type="button" onclick="document.getElementById('trashContainerSettings').classList.toggle('hidden')" class="ml-auto text-[0.7rem] bg-red-50 text-red-500 dark:bg-red-900/30 px-2 py-1 rounded-lg">🗑️️ 回收桶 (<span id="trashCountDisplaySettings">0</span>)</button>
         </div>
         <div id="trashContainerSettings" class="hidden mb-3 bg-red-50/70 dark:bg-red-950/30 border border-red-200 dark:border-red-900/60 rounded-xl p-3 space-y-2">
           <div class="flex justify-between items-center text-[0.7rem] font-bold text-red-700 dark:text-red-300">
@@ -627,8 +627,11 @@
     let currentSheet = localStorage.getItem("app_active_sheet") || "預設帳本";
     let members = loadJSON("split_members", ["奇奇", "鼻涕"]);
     if (!Array.isArray(members) || !members.length) members = ["奇奇", "鼻涕"];
-    let categories = loadJSON("app_categories", ["餐飲", "交通", "住宿", "購物", "門票", "娛樂", "生活", "公費", "平帳還款", "其他"]);
-    if (!Array.isArray(categories) || !categories.length) categories = ["餐飲", "交通", "住宿", "購物", "門票", "娛樂", "生活", "公費", "平帳還款", "其他"];
+    
+    // 👇 此處為您加入了預設類別「進貨」與「薪水」作為範例
+    let categories = loadJSON("app_categories", ["餐飲", "交通", "住宿", "購物", "門票", "娛樂", "生活", "公費", "平帳還款", "其他", "進貨", "薪水"]);
+    if (!Array.isArray(categories) || !categories.length) categories = ["餐飲", "交通", "住宿", "購物", "門票", "娛樂", "生活", "公費", "平帳還款", "其他", "進貨", "薪水"];
+    
     const DEFAULT_TEMPLATES = [
       { icon: "☕", title: "超商咖啡", category: "餐飲", amount: 65, currency: "TWD" },
       { icon: "🚆", title: "地鐵交通", category: "交通", amount: 200, currency: "TWD" },
@@ -744,7 +747,7 @@
       if (!el) return;
       el.textContent = text;
       el.classList.toggle("hidden", text === "");
-      el.className = `text-[0.7rem] px-2 py-1 rounded-lg font-mono shadow-sm ${warning ? 'bg-red-100 text-red-700' : 'bg-blue-100 text-blue-700'}`;
+      el.className = `shrink-0 whitespace-nowrap text-[0.7rem] px-2 py-1 rounded-lg font-mono shadow-sm ${warning ? 'bg-red-100 text-red-700 dark:bg-red-900/50 dark:text-red-300' : 'bg-blue-100 text-blue-700 dark:bg-blue-900/50 dark:text-blue-300'}`;
       if (loading) el.textContent += "...";
     }
 
@@ -808,28 +811,37 @@
       } catch (e) { console.error("Config sync error", e); }
     }
 
-    async function loadRecordsFromDrive() {
-      if (!accessToken || !driveFolderId) { cachedRecords = normalizeAllRecords(loadLocalSheetMirror(currentSheet)); return; }
+    let recordsLoadRequestId = 0;
+    async function loadRecordsFromDrive(sheetName = currentSheet) {
+      const requestId = ++recordsLoadRequestId;
+      if (!accessToken || !driveFolderId) {
+        if (sheetName !== currentSheet || requestId !== recordsLoadRequestId) return true;
+        cachedRecords = normalizeAllRecords(loadLocalSheetMirror(sheetName));
+        renderAllViews();
+        return true;
+      }
       try {
-        const fileId = sheetFileMap[currentSheet];
-        if (!fileId) { cachedRecords = loadLocalSheetMirror(currentSheet); }
-        else {
+        const fileId = sheetFileMap[sheetName];
+        let records;
+        if (!fileId) {
+          records = loadLocalSheetMirror(sheetName);
+        } else {
           const res = await driveApi(`https://www.googleapis.com/drive/v3/files/${fileId}?alt=media`);
-          cachedRecords = normalizeAllRecords(await res.json());
+          records = await res.json();
         }
-        cachedRecords = normalizeAllRecords(cachedRecords);
-        saveLocalSheetMirror(currentSheet, cachedRecords);
+        if (sheetName !== currentSheet || requestId !== recordsLoadRequestId) return true;
+        cachedRecords = normalizeAllRecords(records);
+        saveLocalSheetMirror(sheetName, cachedRecords);
         renderAllViews();
         return true;
       } catch (e) {
         console.error("雲端帳本讀取失敗，改用本機資料", e);
-        cachedRecords = loadLocalSheetMirror(currentSheet);
+        if (sheetName !== currentSheet || requestId !== recordsLoadRequestId) return false;
+        cachedRecords = normalizeAllRecords(loadLocalSheetMirror(sheetName));
         renderAllViews();
         return false;
       }
     }
-
-    
 
     function saveLocalSheetMirror(name, data) { safeSetLocalStorage(`local_records_${name}`, JSON.stringify(data)); }
     function loadLocalSheetMirror(name) {
@@ -840,7 +852,6 @@
     // ==========================================
     // 核心運算與分攤引擎 (Calculation & Split Engine)
     // ==========================================
-    
 
     function calculateTwd() {
       const amount = evaluateMathInput(document.getElementById("originalAmount").value);
@@ -850,10 +861,6 @@
       const rate = cur === "TWD" ? 1 : (exchangeRates[cur] || 1);
       return { rate, twd: Math.round(amount * rate) };
     }
-
-    
-
-    
 
     // ==========================================
     // 渲染引擎 (Rendering Engine)
@@ -868,8 +875,6 @@
 
     function getActiveRecords() { return cachedRecords.filter(r => !r.deleted); }
 
-    
-
     function softDeleteRecord(id) {
       const idx = cachedRecords.findIndex(r => r.id === id);
       if (idx !== -1) {
@@ -880,27 +885,70 @@
     }
 
     // ==========================================
+    // 統一帳本摘要運算 (Transaction Summary Engine)
+    // ==========================================
+    function calculateTransactionSummary(records) {
+      const list = Array.isArray(records) ? records : [];
+      let expense = 0, income = 0;
+      list.forEach(r => {
+        const amount = Math.max(0, Number(r?.twdAmount) || 0);
+        if (r?.type === "expense" || r?.type === "personal") expense += amount;
+        else if (r?.type === "income") income += amount;
+      });
+      return {
+        count: list.length,
+        expense,
+        income,
+        net: income - expense
+      };
+    }
+
+    function renderSettlementSummary(records) {
+      const summary = calculateTransactionSummary(records);
+      const expenseEl = document.getElementById("statTotalExpense");
+      const incomeEl = document.getElementById("statTotalIncome");
+      const netEl = document.getElementById("statNetExpense");
+      const bar = document.getElementById("summaryStatsBar");
+      if (expenseEl) expenseEl.textContent = `$${Math.round(summary.expense).toLocaleString()}`;
+      if (incomeEl) incomeEl.textContent = `$${Math.round(summary.income).toLocaleString()}`;
+      if (netEl) {
+        netEl.textContent = `$${Math.round(summary.net).toLocaleString()}`;
+        netEl.classList.toggle("text-red-500", summary.net > 0);
+        netEl.classList.toggle("dark:text-red-400", summary.net > 0);
+        netEl.classList.toggle("text-blue-600", summary.net <= 0);
+        netEl.classList.toggle("dark:text-blue-400", summary.net <= 0);
+      }
+      if (bar) bar.classList.remove("hidden");
+      return summary;
+    }
+
+    // ==========================================
     // 結算算法 (Settlement Engine)
     // ==========================================
-    function renderSettlement(records) {
+    function calculateSettlementBalances(records) {
       const balances = {};
       members.forEach(m => balances[m] = 0);
       balances["公費"] = 0;
 
-      records.forEach(r => {
-        if (r.type === "personal") return;
-        if (r.type === "expense" || r.type === "settlement") {
+      (Array.isArray(records) ? records : []).forEach(r => {
+        if (r?.type === "personal") return;
+        if (r?.type === "expense" || r?.type === "settlement" || r?.type === "income") {
           const payers = parsePayers(r);
-          Object.entries(payers).forEach(([name, amt]) => { if (balances.hasOwnProperty(name)) balances[name] += amt; });
+          Object.entries(payers).forEach(([name, amt]) => {
+            if (Object.prototype.hasOwnProperty.call(balances, name)) balances[name] += Number(amt) || 0;
+          });
           const shares = parseShares(r);
-          Object.entries(shares).forEach(([name, amt]) => { if (balances.hasOwnProperty(name)) balances[name] -= amt; });
-        } else if (r.type === "income") {
-          const payers = parsePayers(r);
-          Object.entries(payers).forEach(([name, amt]) => { if (balances.hasOwnProperty(name)) balances[name] += amt; });
-          const shares = parseShares(r);
-          Object.entries(shares).forEach(([name, amt]) => { if (balances.hasOwnProperty(name)) balances[name] -= amt; });
+          Object.entries(shares).forEach(([name, amt]) => {
+            if (Object.prototype.hasOwnProperty.call(balances, name)) balances[name] -= Number(amt) || 0;
+          });
         }
       });
+      return balances;
+    }
+
+    function renderSettlement(records) {
+      renderSettlementSummary(records);
+      const balances = calculateSettlementBalances(records);
 
       const grid = document.getElementById("settlementGrid");
       grid.innerHTML = Object.entries(balances).map(([name, bal]) => {
@@ -937,31 +985,38 @@
     }
 
     function renderPersonalStats(records) {
-      const target = document.getElementById("personalStatsMemberSelect").value || members[0];
+      const select = document.getElementById("personalStatsMemberSelect");
+      const target = select?.value || members[0];
       const stats = { own: 0, share: 0, paid: 0 };
-      records.forEach(r => {
-        if (r.type === "personal") {
+      (Array.isArray(records) ? records : []).forEach(r => {
+        if (r?.type === "personal") {
           const personalPayers = parsePayers(r);
-          stats.own += personalPayers[target] || 0;
+          stats.own += Math.max(0, Number(personalPayers[target]) || 0);
         }
-        const shares = parseShares(r);
-        if (shares[target]) stats.share += shares[target];
-        const payers = parsePayers(r);
-        if (payers[target]) stats.paid += payers[target];
+        if (r?.type === "expense") {
+          const shares = parseShares(r);
+          stats.share += Math.max(0, Number(shares[target]) || 0);
+          const payers = parsePayers(r);
+          stats.paid += Math.max(0, Number(payers[target]) || 0);
+        }
       });
-      document.getElementById("statPersonalOwnExpense").textContent = `$${stats.own.toLocaleString()}`;
-      document.getElementById("statPersonalSplitShare").textContent = `$${stats.share.toLocaleString()}`;
-      document.getElementById("statPersonalTotalBurden").textContent = `$${(stats.own + stats.share).toLocaleString()}`;
-      document.getElementById("statPersonalPaidTotal").textContent = `$${stats.paid.toLocaleString()}`;
+      const ownEl = document.getElementById("statPersonalOwnExpense");
+      const shareEl = document.getElementById("statPersonalSplitShare");
+      const burdenEl = document.getElementById("statPersonalTotalBurden");
+      const paidEl = document.getElementById("statPersonalPaidTotal");
+      if (ownEl) ownEl.textContent = `$${Math.round(stats.own).toLocaleString()}`;
+      if (shareEl) shareEl.textContent = `$${Math.round(stats.share).toLocaleString()}`;
+      if (burdenEl) burdenEl.textContent = `$${Math.round(stats.own + stats.share).toLocaleString()}`;
+      if (paidEl) paidEl.textContent = `$${Math.round(stats.paid).toLocaleString()}`;
     }
 
     function renderPoolStats(records) {
       let pin = 0, pout = 0;
       records.forEach(r => {
-        if (r.category === "公費") {
-          if (r.type === "income") pin += r.twdAmount;
-          else pout += r.twdAmount;
-        }
+        if (r.category !== "公費") return;
+        const amount = Math.max(0, Number(r?.twdAmount) || 0);
+        if (r.type === "income") pin += amount;
+        else if (r.type === "expense") pout += amount;
       });
       document.getElementById("poolInStat").textContent = `$${pin.toLocaleString()}`;
       document.getElementById("poolOutStat").textContent = `$${pout.toLocaleString()}`;
@@ -978,10 +1033,6 @@
       container.classList.toggle("hidden");
       if (!container.classList.contains("hidden")) drawCharts();
     }
-
-    
-
-
 
     // ==========================================
     // AI 輔助模塊 (OCR & Voice)
@@ -1045,10 +1096,6 @@
     // ==========================================
     // 設定與管理 (Settings & Data)
     // ==========================================
-    
-
-;
-
     document.getElementById("addMemberBtn").onclick = function() {
       const name = document.getElementById("newMemberName").value.trim();
       if (name && !members.includes(name)) {
@@ -1057,10 +1104,6 @@
         renderMemberControls(); syncConfigToDrive();
       }
     };
-
-    
-
-;
 
     document.getElementById("addCategoryBtn").onclick = function() {
       const name = document.getElementById("newCategoryName").value.trim();
@@ -1087,23 +1130,13 @@
     };
 
     // ==========================================
-    // 分攤元件渲染 (Split Rendering Engine)
-    // ==========================================
-    // 最終版：保留使用者目前的均分勾選與各模式輸入，避免切換模式時被重置。
-    
-
-    // ==========================================
     // 數據備份與匯入 (Export & Import)
     // ==========================================
-    // CSV / JSON 匯入與 CSV 匯出由下方「匯入/匯出修復」單一綁定點負責。
     const exportTxtButton = document.getElementById("exportTxtBtn");
     if (exportTxtButton) exportTxtButton.onclick = function() {
-      let txt = `帳本: ${currentSheet}
-====================
-`;
+      let txt = `帳本: ${currentSheet}\n====================\n`;
       getActiveRecords().forEach(r => {
-        txt += `[${r.date}] ${r.title} | ${r.twdAmount}TWD (${r.payer})
-`;
+        txt += `[${r.date}] ${r.title} | ${r.twdAmount}TWD (${r.payer})\n`;
       });
       const blob = new Blob([txt], { type: 'text/plain;charset=utf-8' });
       const url = URL.createObjectURL(blob);
@@ -1130,22 +1163,6 @@
     };
 
     // ==========================================
-    // 匯率模組 (Exchange Rates)
-    // ==========================================
-    
-
-    
-
-;
-
-    // ==========================================
-    // 字體大小模組 (Font Size)
-    // ==========================================
-    
-
-    
-
-    // ==========================================
     // Google 認證 (Auth)
     // ==========================================
     function initGoogleClient() {
@@ -1156,7 +1173,6 @@
           if (tokenResponse.error) return showToast("授權失敗", "error");
           accessToken = tokenResponse.access_token;
           tokenExpiry = Date.now() + (tokenResponse.expires_in * 1000);
-          // Token 僅留在記憶體，避免 XSS 直接讀取 bearer token。
           localStorage.removeItem("gdrive_access_token");
           localStorage.removeItem("gdrive_token_expiry");
           updateGoogleUI(true);
@@ -1205,7 +1221,6 @@
       const trimmedName = sheetName.trim().replace(/[\\/:*?"<>|]/g, "-").slice(0, 120);
       if (!trimmedName) return showToast("帳本名稱無效", "error");
       try {
-        // 先刷新雲端檔案清單，避免本機 sheetFileMap 過期而建立同名檔案。
         await fetchSheetFilesFromDrive();
         if (sheetFileMap[trimmedName]) return showToast("帳本名稱已存在", "error");
         setSyncBadge("創建中", true);
@@ -1299,57 +1314,15 @@
 
     document.getElementById("sheetSelector").onchange = async function() {
       currentSheet = this.value;
-      safeSetLocalStorage("app_active_sheet", currentSheet);
-      showToast(`切換至帳本：${currentSheet}`);
+      const selectedSheet = currentSheet;
+      safeSetLocalStorage("app_active_sheet", selectedSheet);
+      showToast(`切換至帳本：${selectedSheet}`);
       setSyncBadge("讀取中", true);
-      const loaded = await loadRecordsFromDrive();
+      const loaded = await loadRecordsFromDrive(selectedSheet);
+      if (selectedSheet !== currentSheet) return;
       renderAllViews();
       setSyncBadge(loaded === false ? "離線快取" : "已同步", false, loaded === false);
     };
-
-    
-
-    // ==========================================
-    // 頁面初始化與生命週期 (Lifecycle)
-    // ==========================================
-    ;
-
-    
-
-    
-
-;
-
-
-    
-
-;
-
-;
-
-    
-
-;
-
-;
-
-;
-
-;
-
-    // ==========================================
-    // 成員對帳單與 LINE 分享 (Detail & Share)
-    // ==========================================
-;
-
-;
-;
-
-;
-
-;
-
-    
 
     // ==========================================
     // 匯率與字體修復 (Exchange & Font Fixes)
@@ -1428,7 +1401,6 @@
     // ==========================================
     // 匯入/匯出修復 (Import/Export)
     // ==========================================
-    // -------- RFC 4180 / JSON normalize + validation 匯入 --------
     function parseCSV(text, delimiter = ",") {
       const rows = [];
       let row = [], field = "", quoted = false;
@@ -1455,12 +1427,10 @@
       return rows;
     }
 
-
     function detectCSVDelimiter(text) {
       const firstLine = String(text).split(/\r\n|\n|\r/, 1)[0] || "";
       return firstLine.includes("|") && !firstLine.includes(",") ? "|" : ",";
     }
-
 
     function headerIndexMap(header) {
       const aliases = {
@@ -1482,7 +1452,6 @@
       const normalized = [], invalid = [];
       records.forEach((raw, index) => {
         try {
-          // 先驗證輸入本身，再做 normalize；避免錯誤值被預設值掩蓋。
           if (!raw || typeof raw !== "object" || Array.isArray(raw)) throw new Error("不是物件");
           if (raw.title != null && !String(raw.title).trim()) throw new Error("缺少項目");
           if (raw.date != null && !isValidDateString(raw.date)) throw new Error("日期格式錯誤");
@@ -1590,6 +1559,7 @@
       const textColor = isDark ? '#fff' : '#333';
       const expenses = active.filter(r => r.type === 'expense' || r.type === 'personal');
       const income = active.filter(r => r.type === 'income');
+      const summary = calculateTransactionSummary(active);
       if (expenses.length === 0 && income.length === 0) {
         document.getElementById("emptyChartMsg").classList.remove("hidden");
         canvas.style.display = "none";
@@ -1650,20 +1620,17 @@
           options: { ...commonOptions, scales: { y: { beginAtZero: true, ticks: { color: textColor } }, x: { ticks: { color: textColor } } } }
         });
       } else if (currentChartMode === 'net') {
+        const settlementBalances = calculateSettlementBalances(active);
         const netData = {};
-        members.forEach(m => netData[m] = 0);
-        active.forEach(r => {
-          const payers = parsePayers(r); Object.entries(payers).forEach(([name, amt]) => { if (netData.hasOwnProperty(name)) netData[name] += amt; });
-          const shares = parseShares(r); Object.entries(shares).forEach(([name, amt]) => { if (netData.hasOwnProperty(name)) netData[name] -= amt; });
-        });
+        members.forEach(m => netData[m] = settlementBalances[m] || 0);
         chartInstance = new Chart(canvas, {
           type: 'bar',
           data: { labels: Object.keys(netData), datasets: [{ label: '結餘', data: Object.values(netData), backgroundColor: Object.values(netData).map(v => v >= 0 ? '#10b981' : '#ef4444'), borderRadius: 6 }] },
           options: { ...commonOptions, indexAxis: 'y', scales: { x: { ticks: { color: textColor } }, y: { ticks: { color: textColor } } } }
         });
       } else if (currentChartMode === 'balance') {
-        const totalExp = expenses.reduce((sum, r) => sum + r.twdAmount, 0);
-        const totalInc = income.reduce((sum, r) => sum + r.twdAmount, 0);
+        const totalExp = summary.expense;
+        const totalInc = summary.income;
         chartInstance = new Chart(canvas, {
           type: 'pie',
           data: { labels: ['總支出', '總收入'], datasets: [{ data: [totalExp, totalInc], backgroundColor: ['#ef4444', '#10b981'], borderWidth: 0 }] },
@@ -1672,11 +1639,29 @@
       }
 
       chartInstance.options.onClick = (event, elements) => {
-        if (elements.length > 0) {
-          const label = chartInstance.data.labels[elements[0].index];
-          document.getElementById("searchInput").value = label;
-          switchTab('history'); renderRecordsList(); showToast(`已過濾顯示: ${label}`);
+        if (!elements.length) return;
+        const label = String(chartInstance.data.labels[elements[0].index] ?? "");
+        const searchEl = document.getElementById("searchInput");
+        const typeEl = document.getElementById("filterTypeSelect");
+        const catEl = document.getElementById("filterCategorySelect");
+        const memEl = document.getElementById("filterMemberSelect");
+        const startEl = document.getElementById("filterStartDate");
+        const endEl = document.getElementById("filterEndDate");
+        if (searchEl) searchEl.value = "";
+        if (currentChartMode === "pie") {
+          if (catEl) catEl.value = label;
+        } else if (currentChartMode === "bar") {
+          if (startEl) startEl.value = label;
+          if (endEl) endEl.value = label;
+        } else if (currentChartMode === "member" || currentChartMode === "net") {
+          if (memEl) memEl.value = members.includes(label) ? label : "all";
+        } else if (currentChartMode === "balance") {
+          if (typeEl) typeEl.value = label === "總收入" ? "income" : "all";
+          if (label === "總支出" && typeEl) typeEl.value = "expense";
         }
+        switchTab('history');
+        renderRecordsList();
+        showToast(`已套用圖表篩選：${label}`);
       };
     }
 
@@ -1685,6 +1670,71 @@
     document.getElementById("chartTypeMemberBtn").onclick = () => { currentChartMode = 'member'; drawCharts(); };
     document.getElementById("chartTypeNetBtn").onclick = () => { currentChartMode = 'net'; drawCharts(); };
     document.getElementById("chartTypeBalanceBtn").onclick = () => { currentChartMode = 'balance'; drawCharts(); };
+
+    // ==========================================
+    // 補齊遺失的核心函數 (修復代碼截斷問題)
+    // ==========================================
+    function switchTab(tabId) {
+      const views = ["record", "history", "settle", "settings"];
+      views.forEach(v => {
+        const el = document.getElementById("view-" + v);
+        if (el) el.classList.toggle("hidden", v !== tabId);
+        const nav = document.getElementById("nav-" + v);
+        if (nav) {
+          const isActive = (v === tabId);
+          nav.className = isActive
+            ? "flex flex-col items-center justify-center w-full py-1 text-blue-600 dark:text-blue-400 font-bold transition active:scale-95 rounded-xl bg-blue-50 dark:bg-blue-900/30"
+            : "flex flex-col items-center justify-center w-full py-1 text-gray-500 dark:text-gray-400 font-medium hover:text-blue-500 transition active:scale-95 rounded-xl";
+        }
+      });
+      if (tabId === "history") {
+        renderRecordsList();
+        if(!document.getElementById("mainChartContainer").classList.contains("hidden")) drawCharts();
+      } else if (tabId === "settle") {
+        const records = getActiveRecords();
+        renderSettlement(records);
+        renderPersonalStats(records);
+        renderPoolStats(records);
+      }
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+    window.switchTab = switchTab;
+
+    function updateTwdPreview() {
+      const previewEl = document.getElementById("previewTwd");
+      if (!previewEl) return;
+      try {
+        const { twd } = calculateTwd();
+        previewEl.textContent = Math.round(twd).toLocaleString();
+        if (typeof updateSplitStatus === 'function') updateSplitStatus();
+        if (typeof updateEqualPerPersonPreview === 'function') updateEqualPerPersonPreview();
+      } catch (e) {
+        previewEl.textContent = "0";
+      }
+    }
+    window.updateTwdPreview = updateTwdPreview;
+
+    function adjustFormDate(days) {
+      const dateInput = document.getElementById("date");
+      if (!dateInput) return;
+      let d = dateInput.value ? new Date(dateInput.value) : new Date();
+      if (isNaN(d.getTime())) d = new Date();
+      d.setDate(d.getDate() + days);
+      dateInput.value = getDateStringFromDate(d);
+    }
+    window.adjustFormDate = adjustFormDate;
+
+    function setFormDateToday() {
+      const dateInput = document.getElementById("date");
+      if (dateInput) dateInput.value = getTodayString();
+    }
+    window.setFormDateToday = setFormDateToday;
+
+    async function retryPendingSync() {
+      if (!accessToken) return showToast("請先登入 Google 帳號", "error");
+      await saveRecordsToDrive();
+    }
+    window.retryPendingSync = retryPendingSync;
 
     // ==========================================
     // 初始化 (Initialization)
@@ -1715,195 +1765,6 @@
           else if (attempts >= 20) { clearInterval(timer); showToast("Google 登入元件載入逾時", "error"); }
         }, 250);
       }
-    };
-
-    async function softRefresh() {
-      if (!accessToken || !driveFolderId) {
-        showToast("請先登入 Google，才能重新整理雲端資料", "info");
-        setSyncBadge("尚未連結", false, true);
-        return;
-      }
-      setSyncBadge("同步中", true);
-      try {
-        await fetchSheetFilesFromDrive();
-        const configLoaded = await loadCloudConfigFromDrive();
-        const recordsLoaded = await loadRecordsFromDrive();
-        if (configLoaded === false || recordsLoaded === false) {
-          throw new Error("部分雲端資料讀取失敗，已保留本機資料");
-        }
-        resetAllFilters();
-        renderAllViews();
-        showToast("✨ 雲端資料已重新整理");
-        setSyncBadge("已同步", false);
-      } catch (e) {
-        console.error("雲端重新整理失敗", e);
-        showToast(e?.message || "同步失敗，已保留本機資料", "error");
-        setSyncBadge("同步失敗", false, true);
-      }
-    }
-
-    function resetAllFilters() {
-      document.getElementById("searchInput").value = "";
-      document.getElementById("filterTypeSelect").value = "all";
-      document.getElementById("filterCategorySelect").value = "all";
-      document.getElementById("filterMemberSelect").value = "all";
-      document.getElementById("filterStartDate").value = "";
-      document.getElementById("filterEndDate").value = "";
-      document.getElementById("sortOrderSelect").value = "input";
-      document.getElementById("filteredSubtotalBanner").classList.add("hidden");
-    }
-
-    window.setFormDateToday = function() { document.getElementById("date").value = getTodayString(); };
-    window.adjustFormDate = function(days) {
-      const dateEl = document.getElementById("date");
-      const d = new Date(dateEl.value || getTodayString());
-      d.setDate(d.getDate() + days);
-      dateEl.value = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
-    };
-
-    
-
-    
-
-;
-
-;
-
-    function updateTwdPreview() {
-      const { twd } = calculateTwd();
-      const preview = document.getElementById("previewTwd");
-      if (preview) preview.textContent = twd.toLocaleString();
-      updateEqualPreview();
-      if (typeof updateSplitStatus === "function") updateSplitStatus();
-    }
-
-    window.switchTab = function(tabId) {
-      ['record', 'history', 'settle', 'settings'].forEach(id => {
-        document.getElementById(`view-${id}`).classList.add('hidden');
-        const navBtn = document.getElementById(`nav-${id}`);
-        if(navBtn) {
-          navBtn.classList.remove('text-blue-600', 'dark:text-blue-400', 'bg-blue-50', 'dark:bg-blue-900/30');
-          navBtn.classList.add('text-gray-500', 'dark:text-gray-400');
-        }
-      });
-      document.getElementById(`view-${tabId}`).classList.remove('hidden');
-      const activeNav = document.getElementById(`nav-${tabId}`);
-      if(activeNav) {
-        activeNav.classList.remove('text-gray-500', 'dark:text-gray-400');
-        activeNav.classList.add('text-blue-600', 'dark:text-blue-400', 'bg-blue-50', 'dark:bg-blue-900/30');
-      }
-      if (tabId === 'history') renderRecordsList();
-      if (tabId === 'settle') {
-        const active = getActiveRecords();
-        renderSettlement(active);
-        renderPersonalStats(active);
-        renderPoolStats(active);
-      }
-    };
-
-    window.setRecordType = function(type) {
-      document.getElementById("type").value = type;
-      const bExp = document.getElementById("btnTypeExpense"), bPer = document.getElementById("btnTypePersonal"), bInc = document.getElementById("btnTypeIncome");
-      const normalClass = "flex-1 text-xs font-bold py-1.5 rounded-lg text-gray-500 dark:text-gray-400 hover:text-gray-800 transition";
-      bExp.className = normalClass; bPer.className = normalClass; bInc.className = normalClass;
-      if(type === 'expense' || type === 'settlement') bExp.className = "flex-1 text-xs font-bold py-1.5 rounded-lg bg-white dark:bg-gray-600 text-blue-600 dark:text-blue-300 shadow-sm";
-      if(type === 'personal') bPer.className = "flex-1 text-xs font-bold py-1.5 rounded-lg bg-white dark:bg-gray-600 text-purple-600 dark:text-purple-300 shadow-sm";
-      if(type === 'income') bInc.className = "flex-1 text-xs font-bold py-1.5 rounded-lg bg-white dark:bg-gray-600 text-emerald-600 dark:text-emerald-300 shadow-sm";
-    };
-
-    window.setSplitMode = function(mode) {
-      currentSplitMode = mode;
-      const modes = ['equal', 'custom', 'ratio', 'percent'];
-      modes.forEach(m => {
-        const btn = document.getElementById(`mode${m.charAt(0).toUpperCase() + m.slice(1)}Btn`);
-        const box = document.getElementById(`splitMode${m.charAt(0).toUpperCase() + m.slice(1)}Container`);
-        if (m === mode) {
-          btn.className = "px-2.5 py-1 rounded-lg bg-white dark:bg-gray-600 font-bold text-blue-600 shadow-sm transition";
-          box.classList.remove("hidden");
-        } else {
-          btn.className = "px-2.5 py-1 rounded-lg text-gray-500 dark:text-gray-400 font-medium hover:text-gray-800 transition";
-          box.classList.add("hidden");
-        }
-      });
-      renderSplitInputs();
-    };
-
-    window.selectAllMembers = function(check) {
-      document.querySelectorAll(".member-cb").forEach(cb => { cb.checked = !!check; });
-      updateEqualPreview();
-    };
-
-    function renderSplitInputs() {
-      // 保留目前的成員勾選與各模式輸入，切換模式時不再把均分成員重置。
-      const previousChecked = new Set(Array.from(document.querySelectorAll(".member-cb:checked")).map(cb => String(cb.value)));
-      const hadCheckboxes = document.querySelectorAll(".member-cb").length > 0;
-      const previousValues = {};
-      ["custom-split-input", "ratio-split-input", "percent-split-input"].forEach(cls => {
-        document.querySelectorAll(`.${cls}`).forEach(input => {
-          previousValues[`${cls}:${input.dataset.member}`] = input.value;
-        });
-      });
-      const selectedMembers = hadCheckboxes ? previousChecked : new Set(members);
-
-      const cbContainer = document.getElementById("membersCheckboxes");
-      if (cbContainer) {
-        cbContainer.innerHTML = members.map(m => `
-          <label class="flex items-center gap-1 bg-white dark:bg-gray-700 px-2 py-1 rounded-lg border border-gray-200 dark:border-gray-600 cursor-pointer hover:bg-blue-50 transition">
-            <input type="checkbox" class="member-cb accent-blue-600" value="${escapeHtml(m)}" ${selectedMembers.has(m) ? "checked" : ""}>
-            <span class="text-xs">${escapeHtml(m)}</span>
-          </label>
-        `).join("");
-        cbContainer.querySelectorAll(".member-cb").forEach(cb => cb.addEventListener("change", updateEqualPreview));
-      }
-      const customContainer = document.getElementById("customMembersList");
-      if (customContainer) customContainer.innerHTML = members.map(m => `
-        <div class="flex items-center justify-between gap-2 bg-white dark:bg-gray-800 p-2 rounded-xl border border-gray-100 dark:border-gray-700">
-          <span class="text-xs font-bold">${escapeHtml(m)}</span><div class="flex items-center gap-2">
-            <input type="number" data-member="${escapeHtml(m)}" class="custom-split-input w-24 text-right border border-gray-200 dark:border-gray-600 rounded-lg px-2 py-1 text-xs font-mono focus:ring-1 focus:ring-blue-500 outline-none" placeholder="0" value="${escapeHtml(previousValues[`custom-split-input:${m}`] || "")}" oninput="updateTwdPreview()">
-            <span class="custom-split-unit text-[0.6rem] text-gray-400">原幣</span></div></div>`).join("");
-      const ratioContainer = document.getElementById("ratioMembersList");
-      if (ratioContainer) ratioContainer.innerHTML = members.map(m => `
-        <div class="flex items-center justify-between gap-2 bg-white dark:bg-gray-800 p-2 rounded-xl border border-gray-100 dark:border-gray-700">
-          <span class="text-xs font-bold">${escapeHtml(m)}</span><div class="flex items-center gap-2">
-            <input type="number" data-member="${escapeHtml(m)}" class="ratio-split-input w-24 text-right border border-gray-200 dark:border-gray-600 rounded-lg px-2 py-1 text-xs font-mono focus:ring-1 focus:ring-blue-500 outline-none" placeholder="1" value="${escapeHtml(previousValues[`ratio-split-input:${m}`] || "")}" oninput="updateTwdPreview()">
-            <span class="text-[0.6rem] text-gray-400">份額</span></div></div>`).join("");
-      const percentContainer = document.getElementById("percentMembersList");
-      if (percentContainer) percentContainer.innerHTML = members.map(m => `
-        <div class="flex items-center justify-between gap-2 bg-white dark:bg-gray-800 p-2 rounded-xl border border-gray-100 dark:border-gray-700">
-          <span class="text-xs font-bold">${escapeHtml(m)}</span><div class="flex items-center gap-2">
-            <input type="number" data-member="${escapeHtml(m)}" class="percent-split-input w-24 text-right border border-gray-200 dark:border-gray-600 rounded-lg px-2 py-1 text-xs font-mono focus:ring-1 focus:ring-blue-500 outline-none" placeholder="0" value="${escapeHtml(previousValues[`percent-split-input:${m}`] || "")}" oninput="updateTwdPreview()">
-            <span class="text-[0.6rem] text-gray-400">%</span></div></div>`).join("");
-      const customUnit = document.getElementById("customSplitCurrency")?.value === "TWD" ? "TWD" : (document.getElementById("currency")?.value || "原幣");
-      document.querySelectorAll(".custom-split-unit").forEach(el => { el.textContent = customUnit; });
-      updateEqualPreview();
-    }
-
-    function updateEqualPreview() {
-      const el = document.getElementById("equalPerPersonPreview");
-      if (!el) return;
-      const total = Math.max(0, Math.round(finiteNumber(calculateTwd().twd, 0)));
-      const selected = Array.from(document.querySelectorAll(".member-cb:checked"));
-      if (currentSplitMode !== "equal" || !selected.length || total <= 0) {
-        el.classList.add("hidden"); el.textContent = ""; return;
-      }
-      const n=selected.length, base=Math.floor(total/n), rem=total-base*n;
-      el.textContent = rem===0 ? `每人 $${base.toLocaleString()}` : `每人約 $${base.toLocaleString()}～$${(base+1).toLocaleString()}（${rem} 人補尾差）`;
-      el.classList.remove("hidden");
-    }
-
-    function renderSheetSelector() {
-      const selector = document.getElementById("sheetSelector");
-      if (!selector) return;
-      const sortedSheets = Object.keys(sheetFileMap).sort((a, b) => a === "預設帳本" ? -1 : b === "預設帳本" ? 1 : a.localeCompare(b));
-      selector.innerHTML = sortedSheets.map(s => `<option value="${escapeHtml(s)}" ${s === currentSheet ? 'selected' : ''}>${escapeHtml(s)}</option>`).join("");
-    }
-
-    window.retryPendingSync = async function() {
-      if (!accessToken) {
-        if (tokenClient) tokenClient.requestAccessToken({ prompt: 'select_account' });
-        return;
-      }
-      await saveRecordsToDrive();
     };
 
     // ==========================================
@@ -1977,16 +1838,7 @@
       let text = "";
       const records = getActiveRecords();
       if (type === 'group') {
-        const balances = {}; members.forEach(m => balances[m] = 0); balances["公費"] = 0;
-        records.forEach(r => {
-          if (r.type === "expense" || r.type === "settlement") {
-            const payers = parsePayers(r); Object.entries(payers).forEach(([name, amt]) => { if (balances.hasOwnProperty(name)) balances[name] += amt; });
-            const shares = parseShares(r); Object.entries(shares).forEach(([name, amt]) => { if (balances.hasOwnProperty(name)) balances[name] -= amt; });
-          } else if (r.type === "income") {
-            // 收入的正向結算歸屬於實際收款人。
-            const payers = parsePayers(r); Object.entries(payers).forEach(([name, amt]) => { if (balances.hasOwnProperty(name)) balances[name] += amt; });
-          }
-        });
+        const balances = calculateSettlementBalances(records);
         text = `📅 【${currentSheet}】結算總覽\n--------------------------\n💰 成員結餘 (正=領回 / 負=應付):\n`;
         Object.entries(balances).forEach(([name, bal]) => { text += `${bal >= 0 ? '🟢' : '🔴'} ${name}: ${Math.round(bal).toLocaleString()} TWD\n`; });
         const debts = [], credits = [];
@@ -2021,7 +1873,6 @@
 
     // ============================================================
     // 修復層 v2：資料一致性 / 多人合付 / 收據 / 安全 / 同步 / UX
-    // 以向後相容為原則：舊 splitMembers / payer 字串仍可讀，新資料另存結構化欄位。
     // ============================================================
     function finiteNumber(v, fallback = 0) {
       const n = Number(v);
@@ -2090,7 +1941,6 @@
     function evaluateMathInput(rawStr) {
       const s = String(rawStr || "").replace(/,/g, "").trim();
       if (!s || s.length > 80 || !/^[0-9.+\-*/()\s]+$/.test(s)) return 0;
-      // 僅允許數字與四則運算；拒絕空運算元、重複小數點等明顯無效輸入。
       try {
         const result = Function(`"use strict"; return (${s})`)();
         return Number.isFinite(result) && Math.abs(result) <= Number.MAX_SAFE_INTEGER ? result : 0;
@@ -2139,11 +1989,9 @@
       return (Array.isArray(records) ? records : []).map(normalizeRecord).filter(validateRecord);
     }
 
-    // -------- 多人合付 --------
     function renderMultiPayerList() {
       const box = document.getElementById("multiPayerList");
       if (!box) return;
-      // 重繪前保留目前的勾選與金額，避免修改原始金額/幣別時清空已輸入的付款資料。
       const previous = new Map();
       box.querySelectorAll(".multi-payer-input").forEach(input => {
         const key = String(input.dataset.member || "");
@@ -2218,7 +2066,6 @@
         .filter(x => x.member && x.amount > 0);
     }
 
-    // -------- 收據 --------
     async function compressReceiptFile(file) {
       if (!file || !file.type.startsWith("image/")) throw new Error("請選擇圖片檔");
       const dataUrl = await new Promise((resolve, reject) => {
@@ -2256,10 +2103,6 @@
     window.clearReceiptPhoto = clearReceiptPhoto;
     window.openCurrentReceiptModal = openCurrentReceiptModal;
 
-    // -------- 分攤引擎：所有正數輸入中的最後一人吃餘數，避免 0 份額吃掉尾差 --------
-    
-
-
     // ============================================================
     // 分攤修復層 v3：精確尾差 + 原幣換算 + 編輯還原
     // ============================================================
@@ -2279,6 +2122,137 @@
       if(out[out.length-1].amount<0) throw new Error("分攤換算結果異常，請重新確認金額與匯率");
       return out.filter(x=>x.amount>0);
     }
+    function renderSplitInputs() {
+      const equalBox = document.getElementById("membersCheckboxes");
+      const customBox = document.getElementById("customMembersList");
+      const ratioBox = document.getElementById("ratioMembersList");
+      const percentBox = document.getElementById("percentMembersList");
+      const oldChecks = new Map();
+      document.querySelectorAll(".member-cb").forEach(cb => oldChecks.set(String(cb.value), cb.checked));
+      const oldValues = cls => {
+        const map = new Map();
+        document.querySelectorAll(cls).forEach(i => map.set(String(i.dataset.member || ""), i.value));
+        return map;
+      };
+      const customOld = oldValues(".custom-split-input");
+      const ratioOld = oldValues(".ratio-split-input");
+      const percentOld = oldValues(".percent-split-input");
+      const safeMembers = Array.isArray(members) && members.length ? members : ["奇奇"];
+
+      if (equalBox) {
+        equalBox.innerHTML = safeMembers.map((m, i) => {
+          const checked = oldChecks.has(m) ? oldChecks.get(m) : true;
+          const c = MEMBER_PALETTE[i % MEMBER_PALETTE.length];
+          return `<label class="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl ${c.bg} ${c.text} border ${c.border} cursor-pointer select-none hover:opacity-80 transition">
+            <input type="checkbox" class="member-cb" value="${escapeHtml(m)}" ${checked ? "checked" : ""}>
+            <span class="font-bold">${escapeHtml(m)}</span>
+          </label>`;
+        }).join("");
+        equalBox.querySelectorAll(".member-cb").forEach(cb => cb.addEventListener("change", updateSplitStatus));
+      }
+      if (customBox) {
+        customBox.innerHTML = safeMembers.map(m => `<div class="flex items-center justify-between gap-2 bg-white dark:bg-gray-700 rounded-lg p-1.5 border border-gray-200 dark:border-gray-600">
+          <span class="text-xs font-bold truncate">${escapeHtml(m)}</span>
+          <input type="number" min="0" step="0.01" class="custom-split-input w-28 text-right bg-transparent border border-gray-200 dark:border-gray-500 rounded px-1.5 py-1" data-member="${escapeHtml(m)}" placeholder="0" value="${escapeHtml(customOld.get(m) ?? "")}">
+        </div>`).join("");
+        customBox.querySelectorAll(".custom-split-input").forEach(i => i.addEventListener("input", updateSplitStatus));
+      }
+      if (ratioBox) {
+        ratioBox.innerHTML = safeMembers.map(m => `<div class="flex items-center justify-between gap-2 bg-white dark:bg-gray-700 rounded-lg p-1.5 border border-gray-200 dark:border-gray-600">
+          <span class="text-xs font-bold truncate">${escapeHtml(m)}</span>
+          <input type="number" min="0" step="0.1" class="ratio-split-input w-28 text-right bg-transparent border border-gray-200 dark:border-gray-500 rounded px-1.5 py-1" data-member="${escapeHtml(m)}" placeholder="1" value="${escapeHtml(ratioOld.get(m) ?? "")}">
+        </div>`).join("");
+        ratioBox.querySelectorAll(".ratio-split-input").forEach(i => i.addEventListener("input", updateSplitStatus));
+      }
+      if (percentBox) {
+        percentBox.innerHTML = safeMembers.map(m => `<div class="flex items-center justify-between gap-2 bg-white dark:bg-gray-700 rounded-lg p-1.5 border border-gray-200 dark:border-gray-600">
+          <span class="text-xs font-bold truncate">${escapeHtml(m)}</span>
+          <div class="flex items-center gap-1"><input type="number" min="0" max="100" step="0.01" class="percent-split-input w-24 text-right bg-transparent border border-gray-200 dark:border-gray-500 rounded px-1.5 py-1" data-member="${escapeHtml(m)}" placeholder="0" value="${escapeHtml(percentOld.get(m) ?? "")}"><span class="text-xs text-gray-400">%</span></div>
+        </div>`).join("");
+        percentBox.querySelectorAll(".percent-split-input").forEach(i => i.addEventListener("input", updateSplitStatus));
+      }
+      updateSplitStatus();
+      updateEqualPerPersonPreview();
+    }
+
+    function updateEqualPerPersonPreview() {
+      const el = document.getElementById("equalPerPersonPreview");
+      if (!el) return;
+      const total = Math.round(finiteNumber(calculateTwd().twd, 0));
+      const selected = Array.from(document.querySelectorAll(".member-cb:checked"));
+      if (currentSplitMode !== "equal" || !selected.length || total <= 0) {
+        el.classList.add("hidden");
+        return;
+      }
+      const base = Math.floor(total / selected.length), rem = total - base * selected.length;
+      el.textContent = `每人 $${base.toLocaleString()}${rem ? `（最後一人 +$${rem}）` : ""}`;
+      el.classList.remove("hidden");
+    }
+
+    function setSplitMode(mode) {
+      const allowed = ["equal", "custom", "ratio", "percent"];
+      if (!allowed.includes(mode)) mode = "equal";
+      currentSplitMode = mode;
+      const containers = {
+        equal: "splitModeEqualContainer",
+        custom: "splitModeCustomContainer",
+        ratio: "splitModeRatioContainer",
+        percent: "splitModePercentContainer"
+      };
+      Object.entries(containers).forEach(([key, id]) => document.getElementById(id)?.classList.toggle("hidden", key !== mode));
+      allowed.forEach(key => {
+        const btn = document.getElementById(`mode${key[0].toUpperCase()}${key.slice(1)}Btn`);
+        if (!btn) return;
+        btn.classList.toggle("bg-white", key === mode);
+        btn.classList.toggle("dark:bg-gray-600", key === mode);
+        btn.classList.toggle("font-bold", key === mode);
+        btn.classList.toggle("text-blue-600", key === mode);
+        btn.classList.toggle("dark:text-blue-300", key === mode);
+        btn.classList.toggle("shadow-sm", key === mode);
+        btn.classList.toggle("text-gray-500", key !== mode);
+        btn.classList.toggle("dark:text-gray-400", key !== mode);
+      });
+      updateSplitStatus();
+      updateEqualPerPersonPreview();
+    }
+    window.setSplitMode = setSplitMode;
+
+    function selectAllMembers(checked) {
+      document.querySelectorAll(".member-cb").forEach(cb => { cb.checked = !!checked; });
+      updateSplitStatus();
+      updateEqualPerPersonPreview();
+    }
+    window.selectAllMembers = selectAllMembers;
+
+    function setRecordType(type) {
+      const allowed = ["expense", "personal", "income", "settlement"];
+      type = allowed.includes(type) ? type : "expense";
+      const hidden = document.getElementById("type");
+      if (hidden) hidden.value = type;
+      const active = (type === "expense" || type === "settlement") ? "btnTypeExpense" : type === "personal" ? "btnTypePersonal" : "btnTypeIncome";
+      ["btnTypeExpense", "btnTypePersonal", "btnTypeIncome"].forEach(id => {
+        const b = document.getElementById(id);
+        if (!b) return;
+        const on = id === active;
+        b.classList.toggle("bg-white", on);
+        b.classList.toggle("dark:bg-gray-600", on);
+        b.classList.toggle("text-blue-600", on);
+        b.classList.toggle("dark:text-blue-300", on);
+        b.classList.toggle("shadow-sm", on);
+        b.classList.toggle("text-gray-500", !on);
+        b.classList.toggle("dark:text-gray-400", !on);
+      });
+      const splitSection = document.getElementById("splitSection");
+      const algorithm = document.getElementById("splitAlgorithmBox");
+      const label = document.getElementById("payerLabelText");
+      if (splitSection) splitSection.classList.remove("hidden");
+      if (algorithm) algorithm.classList.toggle("hidden", type !== "expense");
+      if (label) label.textContent = type === "income" ? "收入來源：" : type === "personal" ? "付款人：" : "付款人 (代墊)：";
+      if (type !== "expense" && type !== "settlement") setSplitMode("equal");
+      updateTwdPreview();
+    }
+    window.setRecordType = setRecordType;
+
     function buildSplitData(twd){
       const total=Math.max(0,Math.round(finiteNumber(twd,0)));
       if(total<=0) throw new Error("分攤總額必須大於 0");
@@ -2322,14 +2296,11 @@
         document.querySelectorAll(".member-cb").forEach(cb=>cb.checked=Object.prototype.hasOwnProperty.call(shares,cb.value));
         return;
       }
-      // 編輯時優先還原實際金額，避免百分比反推造成四捨五入漂移。
       setSplitMode("custom");
       const cur=document.getElementById("customSplitCurrency"); if(cur) cur.value="TWD";
       document.querySelectorAll(".custom-split-input").forEach(i=>{i.value=Object.prototype.hasOwnProperty.call(shares,i.dataset.member)?String(Math.round(shares[i.dataset.member])):"";});
       updateSplitStatus();
     }
-
-;
 
     function updateSplitStatus(){
       const total=Math.round(finiteNumber(calculateTwd().twd,0));
@@ -2343,7 +2314,6 @@
     window.updateSplitStatus=updateSplitStatus;
     ["customSplitCurrency","multiPayerCurrency"].forEach(id=>{const el=document.getElementById(id);if(el&&!el.dataset.splitRepairBound){el.dataset.splitRepairBound="1";el.addEventListener("change",()=>{updateSplitStatus();if(id==="multiPayerCurrency"&&isMultiPayerMode)renderMultiPayerList();});}});
 
-    // -------- 儲存：快照 + 結構化 payers/shares + receipt --------
     async function saveRecord() {
       const title = String(document.getElementById("title")?.value || "").trim();
       const amount = evaluateMathInput(document.getElementById("originalAmount")?.value || "");
@@ -2380,7 +2350,6 @@
       showToast(cloudSynced ? "儲存成功，已同步雲端" : "已儲存本機，等待雲端同步", cloudSynced ? "success" : "info");
     }
 
-    // -------- Drive：以帳本名稱快照，避免 await 後 currentSheet 改變造成寫錯帳本 --------
     async function saveRecordsToDrive() {
       const sheetName = currentSheet;
       const recordsSnapshot = structuredClone(normalizeAllRecords(cachedRecords));
@@ -2413,13 +2382,19 @@
       return synced;
     }
 
-    // Drive 建檔避免同一名稱重複：查詢後若有多筆取第一筆，建立仍由單一 queue 序列化。
-    // -------- 成員 / 類別：不用使用者文字拼進 onclick --------
     function renderMemberControls() {
       const selPayer = document.getElementById("payer"), selStats = document.getElementById("personalStatsMemberSelect"), tagList = document.getElementById("memberTagList");
       const options = members.map(m => `<option value="${escapeHtml(m)}">${escapeHtml(m)}</option>`).join("");
       if (selPayer) selPayer.innerHTML = options;
-      if (selStats) selStats.innerHTML = options;
+      if (selStats) {
+        const previous = selStats.value;
+        selStats.innerHTML = options;
+        if (members.includes(previous)) selStats.value = previous;
+        if (!selStats.dataset.statsBound) {
+          selStats.dataset.statsBound = "1";
+          selStats.addEventListener("change", () => renderPersonalStats(getActiveRecords()));
+        }
+      }
       if (tagList) {
         tagList.innerHTML = "";
         members.forEach(m => {
@@ -2453,7 +2428,20 @@
     }
     window.removeCategory = function(name) { categories = categories.filter(c => c !== name); if (!categories.length) categories = ["其他"]; safeSetLocalStorage("app_categories", JSON.stringify(categories)); renderCategoryControls(); syncConfigToDrive(); };
 
-    // -------- 篩選：輸入即時更新 --------
+    function resetAllFilters() {
+      ["searchInput","filterStartDate","filterEndDate"].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.value = "";
+      });
+      ["filterTypeSelect","filterCategorySelect","filterMemberSelect","sortOrderSelect"].forEach(id => {
+        const el = document.getElementById(id);
+        if (!el) return;
+        if (id === "filterTypeSelect" || id === "filterCategorySelect" || id === "filterMemberSelect") el.value = "all";
+        else el.value = "input";
+      });
+    }
+    window.resetAllFilters = resetAllFilters;
+
     function bindFilterEvents() {
       ["searchInput","filterTypeSelect","filterCategorySelect","filterMemberSelect","filterStartDate","filterEndDate","sortOrderSelect"].forEach(id => {
         const el = document.getElementById(id); if (!el || el.dataset.filterBound) return;
@@ -2463,13 +2451,7 @@
       if (reset && !reset.dataset.filterBound) { reset.dataset.filterBound = "1"; reset.addEventListener("click", () => { resetAllFilters(); renderRecordsList(); }); }
     }
 
-    // -------- CSV：RFC4180 基本相容 --------
     function csvEscape(v) { const s = String(v ?? ""); return /[",\r\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s; }
-    function parseCSVLine(line, delimiter = ",") {
-      const out = []; let cur = "", quoted = false;
-      for (let i=0; i<line.length; i++) { const ch=line[i]; if (ch==='"') { if (quoted && line[i+1]==='"') { cur+='"'; i++; } else quoted=!quoted; } else if (ch===delimiter && !quoted) { out.push(cur); cur=""; } else cur+=ch; }
-      out.push(cur); return out;
-    }
     function exportCsvFixed() {
       const header = ["Date","Title","Category","Amount","Currency","TWD","Payer","Payers","Shares","Type"].map(csvEscape).join(",");
       const rows = getActiveRecords().map(r => {
@@ -2484,7 +2466,6 @@
     }
     const exportCsvButton = document.getElementById("exportCsvBtn"); if (exportCsvButton) exportCsvButton.onclick = exportCsvFixed;
 
-    // -------- 回收桶 / 安全渲染補強 --------
     function renderTrash() {
       const trashList = document.getElementById("trashListSettings"); if (!trashList) return;
       const deleted = cachedRecords.filter(r => r.deleted);
@@ -2492,39 +2473,29 @@
       trashList.innerHTML = deleted.map(r => `<div class="flex items-center justify-between p-2 bg-white dark:bg-gray-800 rounded-lg text-xs"><span>${escapeHtml(r.title)} ($${Math.round(r.twdAmount||0).toLocaleString()})</span><button type="button" onclick="restoreRecord('${escapeJsStr(r.id)}')" class="text-blue-500 font-bold">恢復</button></div>`).join("");
     }
 
-    // -------- 編輯 / 複製：同步載入 receipt 與付款人 --------
-;
-
     window.duplicateRecordToForm = function(id) {
       const r = cachedRecords.find(x => x.id === id);
       if (!r) return;
-
-      // 複製是完整資料快照載入新表單，而不是只複製基本欄位。
       editingRecordId = null;
       document.getElementById("editModeBanner")?.classList.add("hidden");
       const saveText = document.getElementById("saveBtnText");
       if (saveText) saveText.textContent = "儲存紀錄 (Enter)";
-
       ["title","originalAmount","currency","category","date","type"].forEach(k => {
         const el = document.getElementById(k);
         if (el) el.value = r[k] ?? "";
       });
       const override = document.getElementById("overrideTwdInput");
       if (override) override.value = r.twdAmount ? String(Math.round(r.twdAmount)) : "";
-
       setRecordType(r.type);
       setReceiptPreview(r.receipt || "");
-
       const payers = parsePayers(r);
       const names = Object.keys(payers);
       if (names.length > 1) {
         toggleMultiPayerMode(true);
         setTimeout(() => {
           names.forEach(name => {
-            const input = Array.from(document.querySelectorAll(".multi-payer-input"))
-              .find(x => x.dataset.member === name);
-            const cb = Array.from(document.querySelectorAll(".multi-payer-cb"))
-              .find(x => x.dataset.member === name);
+            const input = Array.from(document.querySelectorAll(".multi-payer-input")).find(x => x.dataset.member === name);
+            const cb = Array.from(document.querySelectorAll(".multi-payer-cb")).find(x => x.dataset.member === name);
             if (input) { input.value = String(Math.round(payers[name])); input.disabled = false; }
             if (cb) cb.checked = true;
           });
@@ -2535,7 +2506,6 @@
         const payerSelect = document.getElementById("payer");
         if (payerSelect && names[0]) payerSelect.value = names[0];
       }
-
       setTimeout(() => restoreSplitInputsForRecord(r), 0);
       updateTwdPreview();
       showToast("已完整複製紀錄至表單");
@@ -2543,7 +2513,6 @@
 
     function cancelEdit() {
       ["title","originalAmount","overrideTwdInput"].forEach(id=>{const el=document.getElementById(id); if(el) el.value="";});
-      // 完整清除上一筆紀錄留下的分攤/付款人狀態，避免下一筆新帳誤用舊資料。
       document.querySelectorAll(".member-cb").forEach(cb=>{ cb.checked = true; });
       document.querySelectorAll(".custom-split-input,.ratio-split-input,.percent-split-input").forEach(input=>{ input.value=""; });
       document.querySelectorAll(".multi-payer-input").forEach(input=>{ input.value=""; input.disabled=true; });
@@ -2568,10 +2537,9 @@
       updateTwdPreview();
     }
 
-    // -------- 主題 / Enter / 初始化 --------
     function toggleThemeFixed() {
       const dark = document.documentElement.classList.toggle("dark"); safeSetLocalStorage("theme", dark ? "dark" : "light");
-      const btn=document.getElementById("themeToggleBtn"); if(btn) btn.textContent=dark?"☀️":"🌙";
+      const btn=document.getElementById("themeToggleBtn"); if(btn) btn.textContent=dark?"☀️️":"🌙";
     }
     function bindRepairEvents() {
       const theme=document.getElementById("themeToggleBtn"); if(theme && !theme.dataset.bound){theme.dataset.bound="1";theme.addEventListener("click",toggleThemeFixed);}
@@ -2582,8 +2550,6 @@
       const modal=document.getElementById("imageModal"); if(modal && !modal.dataset.bound){modal.dataset.bound="1";modal.addEventListener("click",e=>{if(e.target===modal)modal.classList.add("hidden");});}
     }
 
-
-    // -------- 補齊原介面缺少的工具按鈕 --------
     function applyTaxRate(rate) {
       const el=document.getElementById("originalAmount"); if(!el) return;
       const value=evaluateMathInput(el.value); if(value<=0) return showToast("請先輸入金額","error");
@@ -2637,7 +2603,6 @@
     }
     window.quickPoolAction=quickPoolAction;
 
-    // -------- 更安全的歷史清單：支援 >1000 / <1000 搜尋並完整 escape --------
     function renderRecordsList(){
       const list=document.getElementById("recordList"); if(!list) return;
       const search=(document.getElementById("searchInput")?.value||"").trim().toLowerCase();
@@ -2646,21 +2611,31 @@
       let filtered=getActiveRecords();
       const op=search.match(/^(>=|<=|>|<)\s*(\d+(?:\.\d+)?)$/);
       if(op){const n=Number(op[2]); filtered=filtered.filter(r=>{const v=Number(r.twdAmount)||0;return op[1]==='>'?v>n:op[1]==='<'?v<n:op[1]==='>='?v>=n:v<=n;});}
-      else if(search) filtered=filtered.filter(r=>`${r.title||""} ${r.category||""} ${r.currency||""} ${r.payer||""}`.toLowerCase().includes(search)||String(r.twdAmount).includes(search));
+      else if(search) filtered=filtered.filter(r=>{
+        const payerNames=Object.keys(parsePayers(r));
+        const shareNames=Object.keys(parseShares(r));
+        const haystack=`${r.title||""} ${r.category||""} ${r.currency||""} ${r.payer||""} ${payerNames.join(" ")} ${shareNames.join(" ")}`.toLowerCase();
+        return haystack.includes(search)||String(r.twdAmount).includes(search);
+      });
       if(fType!=="all") filtered=filtered.filter(r=>r.type===fType);
       if(fCat!=="all") filtered=filtered.filter(r=>r.category===fCat);
       if(fMem!=="all") filtered=filtered.filter(r=>Object.prototype.hasOwnProperty.call(parsePayers(r),fMem)||Object.prototype.hasOwnProperty.call(parseShares(r),fMem));
       if(sDate) filtered=filtered.filter(r=>r.date>=sDate); if(eDate) filtered=filtered.filter(r=>r.date<=eDate);
       if(sort==='dateDesc') filtered.sort((a,b)=>String(b.date).localeCompare(String(a.date))); else if(sort==='dateAsc') filtered.sort((a,b)=>String(a.date).localeCompare(String(b.date))); else if(sort==='amtDesc') filtered.sort((a,b)=>(b.twdAmount||0)-(a.twdAmount||0)); else if(sort==='amtAsc') filtered.sort((a,b)=>(a.twdAmount||0)-(b.twdAmount||0));
       const count=document.getElementById("recordCountDisplay"); if(count) count.textContent=filtered.length;
-      const subExpense=filtered.reduce((s,r)=>s+((r.type==='expense'||r.type==='personal')?(r.twdAmount||0):0),0), subIncome=filtered.reduce((s,r)=>s+(r.type==='income'?(r.twdAmount||0):0),0);
-      const ids={filterSubCount:filtered.length,filterSubExpense:subExpense.toLocaleString(),filterSubIncome:subIncome.toLocaleString(),filterSubNet:(subIncome-subExpense).toLocaleString()}; Object.entries(ids).forEach(([id,v])=>{const e=document.getElementById(id);if(e)e.textContent=v;}); const banner=document.getElementById("filteredSubtotalBanner"); if(banner)banner.classList.remove("hidden");
+      const summary = calculateTransactionSummary(filtered);
+      const ids={
+        filterSubCount:summary.count,
+        filterSubExpense:Math.round(summary.expense).toLocaleString(),
+        filterSubIncome:Math.round(summary.income).toLocaleString(),
+        filterSubNet:Math.round(summary.net).toLocaleString()
+      };
+      Object.entries(ids).forEach(([id,v])=>{const e=document.getElementById(id);if(e)e.textContent=v;});
+      const banner=document.getElementById("filteredSubtotalBanner"); if(banner)banner.classList.remove("hidden");
       list.innerHTML=filtered.map(r=>{const color=getMemberColor(Object.keys(parsePayers(r))[0]||r.payer); const id=escapeJsStr(r.id); return `<div class="record-card bg-white dark:bg-gray-800 p-3 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-sm flex items-center justify-between group transition hover:border-blue-300"><div class="flex items-center gap-3 overflow-hidden"><div class="w-10 h-10 rounded-xl flex items-center justify-center text-lg shadow-inner ${color.bg} ${color.text}">${escapeHtml((r.category||'其')[0])}</div><div class="overflow-hidden"><div class="text-xs font-bold truncate">${escapeHtml(r.title)} <span class="text-gray-400 font-normal ml-1">${escapeHtml(getWeekdayLabel(r.date))}</span></div><div class="text-[0.65rem] text-gray-400">${escapeHtml(r.date)} · ${escapeHtml(r.category||'其他')}</div></div></div><div class="flex items-center gap-3"><div class="text-right"><div class="text-sm font-mono font-bold ${r.type==='income'?'text-emerald-600':'text-gray-700 dark:text-gray-200'}">${r.type==='income'?'+':''}$${Math.round(r.twdAmount||0).toLocaleString()}</div><div class="text-[0.6rem] text-gray-400 font-mono">${escapeHtml(r.amount)} ${escapeHtml(r.currency)}</div></div><div class="flex opacity-0 group-hover:opacity-100 transition gap-1"><button onclick="startEditRecord('${id}')" class="p-1.5 bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-100">✏️</button><button onclick="duplicateRecordToForm('${id}')" class="p-1.5 bg-gray-50 text-gray-600 rounded-lg hover:bg-gray-100">📋</button><button onclick="softDeleteRecord('${id}')" class="p-1.5 bg-red-50 text-red-600 rounded-lg hover:bg-red-100">🗑️</button></div></div></div>`;}).join("")||`<div class="text-center py-10 text-gray-400 text-xs">無符合條件的紀錄</div>`;
     }
 
-    // 成員篩選選單同步更新（避免包裝函式造成遞迴）
     const repairRenderMemberControlsBase = renderMemberControls;
-    // 直接補上 filterMemberSelect；保留既有安全 DOM 渲染邏輯。
     const repairFilterMemberSelect = () => {
       const sel=document.getElementById("filterMemberSelect");
       if(!sel) return;
@@ -2669,12 +2644,13 @@
       sel.value=members.includes(old)?old:"all";
     };
 
-
-    // 最終分攤編輯修復：此段放在所有舊版 startEditRecord 之後，確保真正生效。
     window.startEditRecord = function(id) {
       const r = cachedRecords.find(x => x.id === id); if (!r) return;
       editingRecordId = r.id;
       document.getElementById("editModeBanner")?.classList.remove("hidden");
+      
+      const idText = document.getElementById("editingIdText"); if(idText) idText.textContent = id;
+      
       const saveText = document.getElementById("saveBtnText"); if (saveText) saveText.textContent = "儲存修改 (Enter)";
       ["title","originalAmount","currency","category","date","type"].forEach(k => { const el=document.getElementById(k); if(el) el.value=r[k] ?? ""; });
       const override = document.getElementById("overrideTwdInput");
@@ -2697,7 +2673,6 @@
       updateTwdPreview();
     };
 
-    // normalize old local data once after all functions are available
     try { cachedRecords = normalizeAllRecords(cachedRecords); } catch(e) { console.warn("資料正規化失敗",e); cachedRecords=[]; }
     bindRepairEvents();
     repairFilterMemberSelect();
