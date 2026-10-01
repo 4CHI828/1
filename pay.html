@@ -21,8 +21,6 @@ document.documentElement.classList.remove("dark");
 })();
 </script>
 <script src="https://cdn.tailwindcss.com"></script>
-<script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.8"></script>
 <script src="https://accounts.google.com/gsi/client" async defer></script>
 <style>
 .glass { backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); }
@@ -497,6 +495,7 @@ let configFileId = null;
 let sheetFileMap = loadJSON("app_sheet_map", { "預設帳本": null });
 if (!sheetFileMap || typeof sheetFileMap !== "object" || Array.isArray(sheetFileMap)) sheetFileMap = { "預設帳本": null };
 let driveSaveQueue = Promise.resolve();
+let configSaveQueue = Promise.resolve();
 let currentSheet = localStorage.getItem("app_active_sheet") || "預設帳本";
 let members = loadJSON("split_members", ["我", "他"]);
 if (!Array.isArray(members) || !members.length) members = ["我", "他"];
@@ -518,6 +517,8 @@ let uploadedReceiptBase64 = "";
 let editingRecordId = null;
 let chartInstance = null;
 let currentChartMode = 'pie';
+let chartLoadPromise = null;
+let tesseractLoadPromise = null;
 
 const MEMBER_PALETTE = [
     { bg: "bg-blue-100 dark:bg-blue-900/50", text: "text-blue-700 dark:text-blue-300", border: "border-blue-200 dark:border-blue-700" },
@@ -530,7 +531,12 @@ const MEMBER_PALETTE = [
 // ==========================================
 // 工具函式 (Utilities) - 修復換行截斷問題
 // ==========================================
-function generateUUID() { return Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15); }
+function generateUUID() {
+    try {
+        if (globalThis.crypto?.randomUUID) return globalThis.crypto.randomUUID();
+    } catch (_) {}
+    return Math.random().toString(36).slice(2, 15) + Math.random().toString(36).slice(2, 15);
+}
 function escapeHtml(str) { if (!str) return ""; return String(str).replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":"&#039;"}[m])); }
 function escapeJsStr(str) { 
     if (!str) return ""; 
@@ -538,8 +544,35 @@ function escapeJsStr(str) {
 }
 function escapeDriveQueryString(str) { return String(str || "").replace(/\\/g, "\\\\").replace(/'/g, "\\'"); }
 
+function loadExternalScript(src, globalName) {
+    if (window[globalName]) return Promise.resolve(window[globalName]);
+    if (window.__dynamicScriptPromises?.[src]) return window.__dynamicScriptPromises[src];
+    window.__dynamicScriptPromises = window.__dynamicScriptPromises || {};
+    const promise = new Promise((resolve, reject) => {
+        const script = document.createElement("script");
+        script.src = src;
+        script.async = true;
+        script.onload = () => window[globalName] ? resolve(window[globalName]) : reject(new Error(`${globalName} 載入失敗`));
+        script.onerror = () => reject(new Error(`${globalName} 載入失敗`));
+        document.head.appendChild(script);
+    });
+    window.__dynamicScriptPromises[src] = promise;
+    return promise;
+}
+function ensureChartJs() {
+    if (window.Chart) return Promise.resolve(window.Chart);
+    if (!chartLoadPromise) chartLoadPromise = loadExternalScript("https://cdn.jsdelivr.net/npm/chart.js@4.4.8", "Chart").catch(e => { chartLoadPromise = null; throw e; });
+    return chartLoadPromise;
+}
+function ensureTesseract() {
+    if (window.Tesseract) return Promise.resolve(window.Tesseract);
+    if (!tesseractLoadPromise) tesseractLoadPromise = loadExternalScript("https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js", "Tesseract").catch(e => { tesseractLoadPromise = null; throw e; });
+    return tesseractLoadPromise;
+}
+
 function showToast(msg, type = "success") {
     const container = document.getElementById("toastContainer");
+    if (!container) return;
     const toast = document.createElement("div");
     const colors = { success: "bg-emerald-600", error: "bg-red-600", info: "bg-blue-600" };
     toast.className = `${colors[type]} text-white px-4 py-2 rounded-xl shadow-lg text-xs font-bold toast-anim pointer-events-none`;
@@ -735,17 +768,29 @@ async function loadCloudConfigFromDrive() {
 }
 
 async function syncConfigToDrive(interactive = false) {
-    if (!driveFolderId) return;
+    if (!driveFolderId) return false;
     if (!accessToken && interactive && googleSessionLinked) {
         const ok = await ensureGoogleAccessToken(true);
-        if (!ok) return;
+        if (!ok) return false;
     }
-    if (!accessToken) return;
-    try {
-        configFileId = await saveJsonFileToDrive(CONFIG_FILE_NAME, configFileId, {
-            members, categories, quickTemplates, updatedAt: new Date().toISOString()
-        });
-    } catch (e) { console.error("Config sync error", e); }
+    if (!accessToken) return false;
+
+    let synced = true;
+    configSaveQueue = configSaveQueue.then(async () => {
+        try {
+            configFileId = await saveJsonFileToDrive(CONFIG_FILE_NAME, configFileId, {
+                members, categories, quickTemplates, updatedAt: new Date().toISOString()
+            });
+        } catch (e) {
+            synced = false;
+            console.error("Config sync error", e);
+        }
+    }).catch(e => {
+        synced = false;
+        console.error("Config sync queue error", e);
+    });
+    await configSaveQueue;
+    return synced;
 }
 
 let recordsLoadRequestId = 0;
@@ -818,11 +863,13 @@ function calculateTwd() {
 }
 
 function renderAllViews() {
+    const active = getActiveRecords();
     renderRecordsList();
-    renderSettlement(getActiveRecords());
-    renderPersonalStats(getActiveRecords());
-    renderPoolStats(getActiveRecords());
-    if(!document.getElementById("mainChartContainer").classList.contains("hidden")) drawCharts();
+    renderSettlement(active);
+    renderPersonalStats(active);
+    renderPoolStats(active);
+    const chartContainer = document.getElementById("mainChartContainer");
+    if (chartContainer && !chartContainer.classList.contains("hidden")) drawCharts();
 }
 
 function getActiveRecords() { return cachedRecords.filter(r => !r.deleted); }
@@ -1399,8 +1446,16 @@ document.getElementById("sheetSelector").onchange = async function() {
 // 匯率與字體修復 (Exchange & Font Fixes)
 // ==========================================
 async function fetchExchangeRates(manual = false) {
+    const CACHE_MS = 6 * 60 * 60 * 1000;
+    const cachedAt = Number(localStorage.getItem("app_exchange_rates_updated_at") || 0);
+    if (!manual && cachedAt && Date.now() - cachedAt < CACHE_MS) {
+        renderRateChips();
+        const t = document.getElementById("rateUpdateTime");
+        if (t) t.textContent = new Date(cachedAt).toLocaleTimeString();
+        return true;
+    }
     try {
-        const res = await fetch("https://open.er-api.com/v6/latest/USD");
+        const res = await fetch("https://open.er-api.com/v6/latest/USD", { cache: "no-store" });
         const data = await res.json();
         const rates = data?.rates;
         const usdToTwd = Number(rates?.TWD);
@@ -1412,10 +1467,17 @@ async function fetchExchangeRates(manual = false) {
         });
         exchangeRates.TWD = 1;
         safeSetLocalStorage("app_exchange_rates", JSON.stringify(exchangeRates));
+        safeSetLocalStorage("app_exchange_rates_updated_at", String(Date.now()));
         renderRateChips();
-        document.getElementById("rateUpdateTime").textContent = new Date().toLocaleTimeString();
+        const t = document.getElementById("rateUpdateTime");
+        if (t) t.textContent = new Date().toLocaleTimeString();
         if(manual) showToast("匯率已同步至最新");
-    } catch (e) { showToast("匯率更新失敗", "error"); }
+        return true;
+    } catch (e) {
+        renderRateChips();
+        if (manual) showToast("匯率更新失敗，已保留上次匯率", "error");
+        return false;
+    }
 }
 
 function renderRateChips() {
@@ -2335,12 +2397,13 @@ async function saveRecord() {
     const idx = cachedRecords.findIndex(r => r.id === record.id);
     if (idx >= 0) cachedRecords[idx] = record; else cachedRecords.unshift(record);
     cachedRecords = normalizeAllRecords(cachedRecords);
+    saveLocalSheetMirror(currentSheet, cachedRecords);
     editingRecordId = null;
     document.getElementById("editModeBanner")?.classList.add("hidden");
     document.getElementById("saveBtnText").textContent = "儲存紀錄 (Enter)";
     renderAllViews();
-    // 儲存紀錄本身仍可離線完成；若已連結 Google，利用這次「儲存」的使用者操作直接取得有效 token，避免背景 popup 被瀏覽器擋掉。
-    if (googleSessionLinked && !accessToken) { await ensureGoogleAccessToken(true); }
+    // 儲存紀錄本身可離線完成；若已連結 Google，利用這次「儲存」操作取得有效 token。
+    if (googleSessionLinked && !accessToken) await ensureGoogleAccessToken(true);
     const cloudSynced = await saveRecordsToDrive(true);
     cancelEdit();
     showToast(cloudSynced ? "儲存成功，已同步雲端" : "已儲存本機，等待雲端同步", cloudSynced ? "success" : "info");
@@ -2348,8 +2411,9 @@ async function saveRecord() {
 
 async function saveRecordsToDrive(interactive = false) {
     const sheetName = currentSheet;
-    // 先保存本機鏡像；真正寫入 Drive 時再取得最新 cachedRecords，避免快速連續儲存使用舊 snapshot。
-    saveLocalSheetMirror(sheetName, normalizeAllRecords(cachedRecords));
+    // 先保存本機鏡像；佇列執行時再抓最新資料，避免連續操作遺失最後一次修改。
+    const localSnapshot = normalizeAllRecords(cachedRecords);
+    saveLocalSheetMirror(sheetName, localSnapshot);
     if (!accessToken && interactive && googleSessionLinked) {
         const ok = await ensureGoogleAccessToken(true);
         if (!ok) { setSyncBadge("待授權", false, true); return false; }
@@ -2451,13 +2515,23 @@ function resetAllFilters() {
 }
 window.resetAllFilters = resetAllFilters;
 
+let filterRenderTimer = null;
+function scheduleRecordListRender(delay = 80) {
+    clearTimeout(filterRenderTimer);
+    filterRenderTimer = setTimeout(() => renderRecordsList(), delay);
+}
 function bindFilterEvents() {
     ["searchInput","filterTypeSelect","filterCategorySelect","filterMemberSelect","filterStartDate","filterEndDate","sortOrderSelect"].forEach(id => {
         const el = document.getElementById(id); if (!el || el.dataset.filterBound) return;
         el.dataset.filterBound = "1";
-        el.addEventListener(el.tagName === "INPUT" ? "input" : "change", () => {
-            renderRecordsList();
-            if (id === "searchInput") document.getElementById("clearSearchBtn")?.classList.toggle("hidden", !String(el.value || "").trim());
+        const eventName = el.tagName === "INPUT" ? "input" : "change";
+        el.addEventListener(eventName, () => {
+            if (id === "searchInput") {
+                document.getElementById("clearSearchBtn")?.classList.toggle("hidden", !String(el.value || "").trim());
+                scheduleRecordListRender(80);
+            } else {
+                renderRecordsList();
+            }
         });
     });
     const clearSearch = document.getElementById("clearSearchBtn");
