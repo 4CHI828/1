@@ -552,12 +552,20 @@ function loadExternalScript(src, globalName) {
         const script = document.createElement("script");
         script.src = src;
         script.async = true;
-        script.onload = () => window[globalName] ? resolve(window[globalName]) : reject(new Error(`${globalName} 載入失敗`));
+        script.onload = () => {
+            if (window[globalName]) resolve(window[globalName]);
+            else reject(new Error(`${globalName} 載入失敗`));
+        };
         script.onerror = () => reject(new Error(`${globalName} 載入失敗`));
         document.head.appendChild(script);
     });
-    window.__dynamicScriptPromises[src] = promise;
-    return promise;
+    // 失敗時清掉快取，讓使用者下次按鈕操作可以重新嘗試載入。
+    const wrapped = promise.catch(err => {
+        if (window.__dynamicScriptPromises?.[src] === wrapped) delete window.__dynamicScriptPromises[src];
+        throw err;
+    });
+    window.__dynamicScriptPromises[src] = wrapped;
+    return wrapped;
 }
 function ensureChartJs() {
     if (window.Chart) return Promise.resolve(window.Chart);
@@ -869,7 +877,7 @@ function renderAllViews() {
     renderPersonalStats(active);
     renderPoolStats(active);
     const chartContainer = document.getElementById("mainChartContainer");
-    if (chartContainer && !chartContainer.classList.contains("hidden")) drawCharts();
+    if (chartContainer && !chartContainer.classList.contains("hidden")) void drawCharts();
 }
 
 function getActiveRecords() { return cachedRecords.filter(r => !r.deleted); }
@@ -1023,16 +1031,16 @@ function renderPoolStats(records) {
 // 專業圖表分析模組 (Chart Engine Pro)
 // ==========================================
 const CHART_COLORS = ['#6366f1', '#ec4899', '#10b981', '#f59e0b', '#8b5cf6', '#06b6d4', '#f97316', '#64748b', '#ef4444', '#a855f7'];
-function toggleMainChart() {
+async function toggleMainChart() {
     const container = document.getElementById("mainChartContainer");
+    if (!container) return;
     container.classList.toggle("hidden");
-    if (!container.classList.contains("hidden")) drawCharts();
+    if (!container.classList.contains("hidden")) await drawCharts();
 }
 
-function drawCharts() {
+async function drawCharts() {
     const canvas = document.getElementById("expenseChart");
     if (!canvas) return;
-    if (chartInstance) chartInstance.destroy();
     const active = getActiveRecords();
     const isDark = document.documentElement.classList.contains("dark");
     const textColor = isDark ? '#fff' : '#333';
@@ -1043,10 +1051,19 @@ function drawCharts() {
     if (expenses.length === 0 && income.length === 0) {
         document.getElementById("emptyChartMsg").classList.remove("hidden");
         canvas.style.display = "none";
+        if (chartInstance) { chartInstance.destroy(); chartInstance = null; }
         return;
     }
     document.getElementById("emptyChartMsg").classList.add("hidden");
     canvas.style.display = "block";
+
+    try {
+        await ensureChartJs();
+    } catch (e) {
+        showToast("圖表模組載入失敗，請確認網路後再試", "error");
+        return;
+    }
+    if (chartInstance) chartInstance.destroy();
 
     const commonOptions = {
         responsive: true, maintainAspectRatio: false,
@@ -1119,11 +1136,11 @@ function drawCharts() {
     }
 }
 
-document.getElementById("chartTypePieBtn").onclick = () => { currentChartMode = 'pie'; drawCharts(); };
-document.getElementById("chartTypeBarBtn").onclick = () => { currentChartMode = 'bar'; drawCharts(); };
-document.getElementById("chartTypeMemberBtn").onclick = () => { currentChartMode = 'member'; drawCharts(); };
-document.getElementById("chartTypeNetBtn").onclick = () => { currentChartMode = 'net'; drawCharts(); };
-document.getElementById("chartTypeBalanceBtn").onclick = () => { currentChartMode = 'balance'; drawCharts(); };
+document.getElementById("chartTypePieBtn").onclick = async () => { currentChartMode = 'pie'; await drawCharts(); };
+document.getElementById("chartTypeBarBtn").onclick = async () => { currentChartMode = 'bar'; await drawCharts(); };
+document.getElementById("chartTypeMemberBtn").onclick = async () => { currentChartMode = 'member'; await drawCharts(); };
+document.getElementById("chartTypeNetBtn").onclick = async () => { currentChartMode = 'net'; await drawCharts(); };
+document.getElementById("chartTypeBalanceBtn").onclick = async () => { currentChartMode = 'balance'; await drawCharts(); };
 
 // ==========================================
 // AI 輔助模塊 (OCR & Voice)
@@ -1132,8 +1149,10 @@ async function handleOCR(file) {
     if (!file) return;
     const notice = document.getElementById("aiStatusNotice");
     notice.classList.remove("hidden");
-    notice.textContent = "AI 正在辨識收據文字...";
+    notice.textContent = "AI OCR 模組載入中...";
     try {
+        await ensureTesseract();
+        notice.textContent = "AI 正在辨識收據文字...";
         const { data: { text } } = await Tesseract.recognize(file, 'chi_tra+eng');
         notice.textContent = "AI 正在提取金額...";
         const amountRegex = /(?:Total|總計|合計|Amount|金額)\s*[:：]?\s*([0-9,.]+)/;
@@ -1759,7 +1778,7 @@ function switchTab(tabId) {
     });
     if (tabId === "history") {
         renderRecordsList();
-        if(!document.getElementById("mainChartContainer").classList.contains("hidden")) drawCharts();
+        if(!document.getElementById("mainChartContainer").classList.contains("hidden")) void drawCharts();
     } else if (tabId === "settle") {
         const records = getActiveRecords();
         renderSettlement(records); renderPersonalStats(records); renderPoolStats(records);
@@ -2418,7 +2437,17 @@ async function saveRecordsToDrive(interactive = false) {
         const ok = await ensureGoogleAccessToken(true);
         if (!ok) { setSyncBadge("待授權", false, true); return false; }
     }
-    if (!accessToken || !driveFolderId) { setSyncBadge("待同步", false, true); return false; }
+    if (!accessToken) { setSyncBadge("待同步", false, true); return false; }
+    // F5 後 access token 重新取得了，但 driveFolderId 仍可能只有舊快取或為空。
+    // 在真正的儲存操作內補做一次 Drive 初始化，避免「已取得授權卻只存本機」。
+    if (!driveFolderId && interactive) {
+        const ready = await setupDriveEnvironment();
+        if (!ready || !driveFolderId) {
+            setSyncBadge("待同步", false, true);
+            return false;
+        }
+    }
+    if (!driveFolderId) { setSyncBadge("待同步", false, true); return false; }
     let synced = true;
     driveSaveQueue = driveSaveQueue.then(async () => {
         setSyncBadge("同步中", true);
