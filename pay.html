@@ -593,7 +593,7 @@ async function requestGoogleAccessToken(interactive = true) {
 async function driveApi(url, options = {}, allowRetry = true) {
     if (!accessToken || (tokenExpiry && Date.now() >= tokenExpiry)) {
         updateGoogleUI(false);
-        setSyncBadge(googleSessionLinked ? "Google 已連結，等待操作授權" : "請登入", false, false);
+        setSyncBadge(googleSessionLinked ? "Google 已連結" : "請登入", false, false);
         throw new Error(googleSessionLinked ? "Google 授權尚未取得，請先按 Google 授權或執行一次雲端操作" : "請先登入 Google 帳號");
     }
     const headers = new Headers(options.headers || {});
@@ -609,7 +609,7 @@ async function driveApi(url, options = {}, allowRetry = true) {
         accessToken = null; tokenExpiry = 0;
         googleAuthNeedsReauth = false;
         updateGoogleUI(false);
-        setSyncBadge(googleSessionLinked ? "Google 已連結，等待操作授權" : "請登入", false, false);
+        setSyncBadge(googleSessionLinked ? "Google 已連結" : "請登入", false, false);
         throw new Error(googleSessionLinked ? "Google 授權已失效，請再次點擊 Google 授權後再操作" : "請先登入 Google 帳號");
     }
     if (!res.ok) {
@@ -663,7 +663,7 @@ async function ensureGoogleAccessToken(interactive = false) {
     } catch (e) {
         googleAuthNeedsReauth = false;
         updateGoogleUI(false);
-        setSyncBadge(googleSessionLinked ? "Google 已連結，等待操作授權" : "尚未連結", false, false);
+        setSyncBadge(googleSessionLinked ? "Google 已連結" : "尚未連結", false, false);
         return false;
     }
 }
@@ -734,8 +734,13 @@ async function loadCloudConfigFromDrive() {
     } catch (e) { console.error("Config load error", e); return false; }
 }
 
-async function syncConfigToDrive() {
-    if (!accessToken || !driveFolderId) return;
+async function syncConfigToDrive(interactive = false) {
+    if (!driveFolderId) return;
+    if (!accessToken && interactive && googleSessionLinked) {
+        const ok = await ensureGoogleAccessToken(true);
+        if (!ok) return;
+    }
+    if (!accessToken) return;
     try {
         configFileId = await saveJsonFileToDrive(CONFIG_FILE_NAME, configFileId, {
             members, categories, quickTemplates, updatedAt: new Date().toISOString()
@@ -822,13 +827,15 @@ function renderAllViews() {
 
 function getActiveRecords() { return cachedRecords.filter(r => !r.deleted); }
 
-function softDeleteRecord(id) {
+async function softDeleteRecord(id) {
     const idx = cachedRecords.findIndex(r => r.id === id);
     if (idx !== -1) {
         cachedRecords[idx].deleted = true;
         cachedRecords[idx].updatedAt = new Date().toISOString();
         renderAllViews();
-        saveRecordsToDrive().then(ok => showToast(ok ? "紀錄已移至回收桶並同步雲端" : "紀錄已移至回收桶，等待雲端同步", ok ? "success" : "info"));
+        if (googleSessionLinked && !accessToken) await ensureGoogleAccessToken(true);
+        const ok = await saveRecordsToDrive(true);
+        showToast(ok ? "紀錄已移至回收桶並同步雲端" : "紀錄已移至回收桶，等待雲端同步", ok ? "success" : "info");
     }
 }
 
@@ -1138,7 +1145,7 @@ document.getElementById("addMemberBtn").onclick = function() {
     if (name && !members.includes(name)) {
         members.push(name); safeSetLocalStorage("split_members", JSON.stringify(members));
         document.getElementById("newMemberName").value = "";
-        renderMemberControls(); syncConfigToDrive();
+        renderMemberControls(); syncConfigToDrive(true);
     }
 };
 document.getElementById("addCategoryBtn").onclick = function() {
@@ -1146,7 +1153,7 @@ document.getElementById("addCategoryBtn").onclick = function() {
     if (name && !categories.includes(name)) {
         categories.push(name); safeSetLocalStorage("app_categories", JSON.stringify(categories));
         document.getElementById("newCategoryName").value = "";
-        renderCategoryControls(); syncConfigToDrive();
+        renderCategoryControls(); syncConfigToDrive(true);
     }
 };
 
@@ -1180,20 +1187,24 @@ if (exportTxtButton) exportTxtButton.onclick = function() {
     setTimeout(() => URL.revokeObjectURL(url), 1000);
 };
 
-window.restoreRecord = function(id) {
+window.restoreRecord = async function(id) {
     const idx = cachedRecords.findIndex(r => r.id === id);
     if (idx !== -1) {
         cachedRecords[idx].deleted = false;
         cachedRecords[idx].updatedAt = new Date().toISOString();
         renderAllViews(); renderTrash();
-        saveRecordsToDrive().then(ok => showToast(ok ? "紀錄已恢復並同步雲端！" : "紀錄已恢復，等待雲端同步", ok ? "success" : "info"));
+        if (googleSessionLinked && !accessToken) await ensureGoogleAccessToken(true);
+        const ok = await saveRecordsToDrive(true);
+        showToast(ok ? "紀錄已恢復並同步雲端！" : "紀錄已恢復，等待雲端同步", ok ? "success" : "info");
     }
 };
-window.emptyTrash = function() {
+window.emptyTrash = async function() {
     const now = new Date().toISOString();
     cachedRecords.forEach(r => { if (r.deleted) r.updatedAt = now; });
     renderAllViews(); renderTrash();
-    saveRecordsToDrive().then(ok => showToast(ok ? "回收桶已清空並同步雲端" : "回收桶已清空，等待雲端同步", ok ? "success" : "info"));
+    if (googleSessionLinked && !accessToken) await ensureGoogleAccessToken(true);
+    const ok = await saveRecordsToDrive(true);
+    showToast(ok ? "回收桶已清空並同步雲端" : "回收桶已清空，等待雲端同步", ok ? "success" : "info");
 };
 
 // ==========================================
@@ -1232,10 +1243,11 @@ function initGoogleClient() {
 function updateGoogleUI(isLoggedIn) {
     const status=document.getElementById("googleAccountStatus"), login=document.getElementById("googleAuthBtn"), logout=document.getElementById("googleLogoutBtn");
     const hasActiveToken = !!accessToken && (!tokenExpiry || Date.now() < tokenExpiry);
-    if(status) status.textContent = hasActiveToken ? "已連結 Google 雲端" : (googleSessionLinked ? "Google 已連結，等待操作授權" : "尚未連結 Google 帳號");
+    if(status) status.textContent = hasActiveToken ? "已連結 Google 雲端" : (googleSessionLinked ? "Google 已連結" : "尚未連結 Google 帳號");
     if(login) {
+        // 已連結但目前沒有可用 token 時，保留一個可由使用者主動觸發的重新授權入口。
         login.classList.toggle("hidden", hasActiveToken);
-        login.textContent = googleSessionLinked ? "啟用 Google 雲端" : "登入 Google 授權";
+        login.textContent = googleSessionLinked ? "重新取得 Google 授權" : "登入 Google 授權";
     }
     if(logout) logout.classList.toggle("hidden", !googleSessionLinked);
 }
@@ -1248,7 +1260,7 @@ document.getElementById("googleAuthBtn").onclick = async () => {
     } catch (e) {
         googleAuthNeedsReauth = false;
         updateGoogleUI(false);
-        setSyncBadge(googleSessionLinked ? "Google 已連結，等待操作授權" : "尚未連結", false, false);
+        setSyncBadge(googleSessionLinked ? "Google 已連結" : "尚未連結", false, false);
         showToast(e?.message || "Google 授權失敗，請再點一次 Google 授權", "error");
     }
 };
@@ -1429,7 +1441,7 @@ window.handleRateChipClick = function(cur) {
             if (!isNaN(parsedRate) && parsedRate > 0) {
                 exchangeRates[cur] = parsedRate;
                 safeSetLocalStorage("app_exchange_rates", JSON.stringify(exchangeRates));
-                renderRateChips(); showToast(`${cur} 匯率已更新`); syncConfigToDrive();
+                renderRateChips(); showToast(`${cur} 匯率已更新`); syncConfigToDrive(true);
             }
         }
     }
@@ -1659,7 +1671,7 @@ document.getElementById("importBtn").onclick = async function() {
         if (confirm(`確認匯入 ${importedRecords.length} 筆紀錄${invalidMsg}？`)) {
             cachedRecords = normalizeAllRecords([...importedRecords, ...cachedRecords]);
             renderAllViews(); renderTrash();
-            const cloudSynced = await saveRecordsToDrive();
+            const cloudSynced = await saveRecordsToDrive(true);
             showToast(`${cloudSynced ? "✅ 匯入並同步成功" : "💾 匯入成功，等待雲端同步"}：${importedRecords.length} 筆${invalidMsg}`, cloudSynced ? "success" : "info");
         }
     } catch (e) {
@@ -2329,15 +2341,19 @@ async function saveRecord() {
     renderAllViews();
     // 儲存紀錄本身仍可離線完成；若已連結 Google，利用這次「儲存」的使用者操作直接取得有效 token，避免背景 popup 被瀏覽器擋掉。
     if (googleSessionLinked && !accessToken) { await ensureGoogleAccessToken(true); }
-    const cloudSynced = await saveRecordsToDrive();
+    const cloudSynced = await saveRecordsToDrive(true);
     cancelEdit();
     showToast(cloudSynced ? "儲存成功，已同步雲端" : "已儲存本機，等待雲端同步", cloudSynced ? "success" : "info");
 }
 
-async function saveRecordsToDrive() {
+async function saveRecordsToDrive(interactive = false) {
     const sheetName = currentSheet;
     // 先保存本機鏡像；真正寫入 Drive 時再取得最新 cachedRecords，避免快速連續儲存使用舊 snapshot。
     saveLocalSheetMirror(sheetName, normalizeAllRecords(cachedRecords));
+    if (!accessToken && interactive && googleSessionLinked) {
+        const ok = await ensureGoogleAccessToken(true);
+        if (!ok) { setSyncBadge("待授權", false, true); return false; }
+    }
     if (!accessToken || !driveFolderId) { setSyncBadge("待同步", false, true); return false; }
     let synced = true;
     driveSaveQueue = driveSaveQueue.then(async () => {
@@ -2406,7 +2422,7 @@ function renderMemberControls() {
 }
 window.removeMember = function(name) {
     if (members.length <= 1) return showToast("至少保留一位成員", "error");
-    members = members.filter(m => m !== name); safeSetLocalStorage("split_members", JSON.stringify(members)); renderMemberControls(); syncConfigToDrive();
+    members = members.filter(m => m !== name); safeSetLocalStorage("split_members", JSON.stringify(members)); renderMemberControls(); syncConfigToDrive(true);
 };
 
 function renderCategoryControls() {
@@ -2423,7 +2439,7 @@ function renderCategoryControls() {
         });
     }
 }
-window.removeCategory = function(name) { categories = categories.filter(c => c !== name); if (!categories.length) categories = ["其他"]; safeSetLocalStorage("app_categories", JSON.stringify(categories)); renderCategoryControls(); syncConfigToDrive(); };
+window.removeCategory = function(name) { categories = categories.filter(c => c !== name); if (!categories.length) categories = ["其他"]; safeSetLocalStorage("app_categories", JSON.stringify(categories)); renderCategoryControls(); syncConfigToDrive(true); };
 
 function resetAllFilters() {
     ["searchInput","filterStartDate","filterEndDate"].forEach(id => { const el = document.getElementById(id); if (el) el.value = ""; });
@@ -2438,10 +2454,25 @@ window.resetAllFilters = resetAllFilters;
 function bindFilterEvents() {
     ["searchInput","filterTypeSelect","filterCategorySelect","filterMemberSelect","filterStartDate","filterEndDate","sortOrderSelect"].forEach(id => {
         const el = document.getElementById(id); if (!el || el.dataset.filterBound) return;
-        el.dataset.filterBound = "1"; el.addEventListener(el.tagName === "INPUT" ? "input" : "change", renderRecordsList);
+        el.dataset.filterBound = "1";
+        el.addEventListener(el.tagName === "INPUT" ? "input" : "change", () => {
+            renderRecordsList();
+            if (id === "searchInput") document.getElementById("clearSearchBtn")?.classList.toggle("hidden", !String(el.value || "").trim());
+        });
     });
+    const clearSearch = document.getElementById("clearSearchBtn");
+    if (clearSearch && !clearSearch.dataset.filterBound) {
+        clearSearch.dataset.filterBound = "1";
+        clearSearch.addEventListener("click", () => {
+            const input = document.getElementById("searchInput");
+            if (input) input.value = "";
+            clearSearch.classList.add("hidden");
+            renderRecordsList();
+            input?.focus();
+        });
+    }
     const reset = document.getElementById("resetFilterBtn");
-    if (reset && !reset.dataset.filterBound) { reset.dataset.filterBound = "1"; reset.addEventListener("click", () => { resetAllFilters(); renderRecordsList(); }); }
+    if (reset && !reset.dataset.filterBound) { reset.dataset.filterBound = "1"; reset.addEventListener("click", () => { resetAllFilters(); renderRecordsList(); document.getElementById("clearSearchBtn")?.classList.add("hidden"); }); }
 }
 
 function csvEscape(v) { const s = String(v ?? ""); return /[",\r\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s; }
@@ -2570,14 +2601,17 @@ function distributeRemainingProportionally(){
 }
 window.distributeRemainingEqually=distributeRemainingEqually; window.distributeRemainingProportionally=distributeRemainingProportionally;
 
-function quickPoolAction(action){
+async function quickPoolAction(action){
     const amount=Number(prompt(action==='contribute'?"繳交公費金額 (TWD)":"公費支出金額 (TWD)","0"));
     if(!Number.isFinite(amount)||amount<=0) return;
     const title=prompt(action==='contribute'?"備註（例如：我繳公費）":"支出用途（例如：聚餐）", action==='contribute'?"繳交公費":"公費支出");
     if(title===null) return;
     const payer=action==='contribute'?(prompt("繳款人",members[0]||"")||members[0]||"公費"):"公費";
     const r=normalizeRecord({id:generateUUID(),title:title.trim()||"公費",amount:Math.round(amount),currency:"TWD",twdAmount:Math.round(amount),rate:1,category:"公費",type:action==='contribute'?"income":"expense",date:getTodayString(),payer,payers:[{member:payer,amount:Math.round(amount)}],shares:[{member:"公費",amount:Math.round(amount)}],splitMembers:[`公費:${Math.round(amount)}`],deleted:false,updatedAt:new Date().toISOString()});
-    cachedRecords.unshift(r); renderAllViews(); renderTrash(); saveRecordsToDrive().then(ok => showToast(ok ? (action==='contribute'?"公費已入帳並同步雲端":"公費支出已入帳並同步雲端") : (action==='contribute'?"公費已入帳，等待雲端同步":"公費支出已入帳，等待雲端同步"), ok ? "success" : "info"));
+    cachedRecords.unshift(r); renderAllViews(); renderTrash();
+    if (googleSessionLinked && !accessToken) await ensureGoogleAccessToken(true);
+    const ok = await saveRecordsToDrive(true);
+    showToast(ok ? (action==='contribute'?"公費已入帳並同步雲端":"公費支出已入帳並同步雲端") : (action==='contribute'?"公費已入帳，等待雲端同步":"公費支出已入帳，等待雲端同步"), ok ? "success" : "info");
 }
 window.quickPoolAction=quickPoolAction;
 
@@ -2736,13 +2770,18 @@ window.onload = function() {
     const restoreGoogleSession = async () => {
         if (!window.google?.accounts?.oauth2) return;
         initGoogleClient();
-        // 單檔前端模式不再於頁面載入時偷偷要求 access token。
-        // Google 的 token model 要求過期 token 透過使用者操作重新取得；
-        // 重新整理後只保留「已連結」記憶，第一次雲端操作時再取得有效 token。
         accessToken = null; tokenExpiry = 0;
         googleAuthNeedsReauth = false;
+
+        // 單檔版不在重新整理時背景索取 OAuth token。
+        // 只記住「曾經連結過」的狀態，真正需要 Drive 的按鈕操作時，
+        // 直接在使用者手勢內取得 access token，避免 silent OAuth 失敗造成反覆登入。
         updateGoogleUI(false);
-        setSyncBadge(googleSessionLinked ? "Google 已連結，等待操作授權" : "尚未連結", false, false);
+        if (googleSessionLinked) {
+            setSyncBadge("Google 已連結", false, false);
+        } else {
+            setSyncBadge("尚未連結", false, false);
+        }
     };
     if (window.google?.accounts?.oauth2) {
         restoreGoogleSession();
