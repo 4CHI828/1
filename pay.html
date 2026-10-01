@@ -810,7 +810,8 @@ async function loadRecordsFromDrive(sheetName = currentSheet) {
         cachedRecords = localRecords;
         saveLocalSheetMirror(sheetName, cachedRecords);
         renderAllViews();
-        return true;
+        // 沒有有效 OAuth token 時只是使用本機快取，不能回報成「已同步」。
+        return false;
     }
     try {
         const fileId = sheetFileMap[sheetName];
@@ -1265,11 +1266,14 @@ window.restoreRecord = async function(id) {
     }
 };
 window.emptyTrash = async function() {
-    const now = new Date().toISOString();
-    cachedRecords.forEach(r => { if (r.deleted) r.updatedAt = now; });
+    const deletedIds = new Set(cachedRecords.filter(r => r.deleted).map(r => r.id));
+    if (!deletedIds.size) return showToast("回收桶目前是空的", "info");
+    if (!confirm(`確定要永久刪除回收桶中的 ${deletedIds.size} 筆紀錄嗎？\n此操作無法復原。`)) return;
+    cachedRecords = cachedRecords.filter(r => !deletedIds.has(r.id));
+    saveLocalSheetMirror(currentSheet, cachedRecords);
     renderAllViews(); renderTrash();
     if (googleSessionLinked && !accessToken) await ensureGoogleAccessToken(true);
-    const ok = await saveRecordsToDrive(true);
+    const ok = await saveRecordsToDrive(true, deletedIds);
     showToast(ok ? "回收桶已清空並同步雲端" : "回收桶已清空，等待雲端同步", ok ? "success" : "info");
 };
 
@@ -2428,7 +2432,7 @@ async function saveRecord() {
     showToast(cloudSynced ? "儲存成功，已同步雲端" : "已儲存本機，等待雲端同步", cloudSynced ? "success" : "info");
 }
 
-async function saveRecordsToDrive(interactive = false) {
+async function saveRecordsToDrive(interactive = false, purgeIds = null) {
     const sheetName = currentSheet;
     // 先保存本機鏡像；佇列執行時再抓最新資料，避免連續操作遺失最後一次修改。
     const localSnapshot = normalizeAllRecords(cachedRecords);
@@ -2452,7 +2456,9 @@ async function saveRecordsToDrive(interactive = false) {
     driveSaveQueue = driveSaveQueue.then(async () => {
         setSyncBadge("同步中", true);
         try {
-            let recordsSnapshot = normalizeAllRecords(cachedRecords);
+            // 佇列真正執行時，從該帳本自己的本機鏡像讀取最新資料，
+            // 避免使用者快速切換帳本時，global cachedRecords 被另一個帳本覆蓋。
+            let recordsSnapshot = normalizeAllRecords(loadLocalSheetMirror(sheetName));
             const fileIdBefore = sheetFileMap[sheetName] || null;
             let remoteRecords = [];
             if (fileIdBefore) {
@@ -2463,14 +2469,16 @@ async function saveRecordsToDrive(interactive = false) {
                 } catch (e) { console.warn("雲端舊版本讀取失敗，改為直接寫入", e); }
             }
             const byId = new Map();
-            remoteRecords.forEach(r => byId.set(r.id, r));
+            remoteRecords.forEach(r => {
+                if (!(purgeIds instanceof Set && purgeIds.has(r.id))) byId.set(r.id, r);
+            });
             recordsSnapshot.forEach(local => {
                 const remote = byId.get(local.id);
                 if (!remote || Date.parse(local.updatedAt) >= Date.parse(remote.updatedAt)) byId.set(local.id, local);
             });
             recordsSnapshot = normalizeAllRecords(Array.from(byId.values()));
-            cachedRecords = recordsSnapshot;
             saveLocalSheetMirror(sheetName, recordsSnapshot);
+            if (currentSheet === sheetName) cachedRecords = recordsSnapshot;
             const fileId = await saveJsonFileToDrive(`${sheetName}.json`, fileIdBefore, recordsSnapshot);
             sheetFileMap[sheetName] = fileId;
             safeSetLocalStorage("app_sheet_map", JSON.stringify(sheetFileMap));
@@ -2602,6 +2610,8 @@ function renderTrash() {
 
 window.duplicateRecordToForm = function(id) {
     const r = cachedRecords.find(x => x.id === id); if (!r) return;
+    // 從歷史明細複製時直接跳回記帳頁，避免表單已填好卻仍停留在歷史頁。
+    switchTab("record");
     editingRecordId = null;
     document.getElementById("editModeBanner")?.classList.add("hidden");
     const saveText = document.getElementById("saveBtnText"); if (saveText) saveText.textContent = "儲存紀錄 (Enter)";
@@ -2741,7 +2751,9 @@ function renderRecordsList(){
     const summary = calculateTransactionSummary(filtered);
     const ids={filterSubCount:summary.count,filterSubExpense:Math.round(summary.expense).toLocaleString(),filterSubIncome:Math.round(summary.income).toLocaleString(),filterSubNet:Math.round(summary.net).toLocaleString()};
     Object.entries(ids).forEach(([id,v])=>{const e=document.getElementById(id);if(e)e.textContent=v;});
-    const banner=document.getElementById("filteredSubtotalBanner"); if(banner)banner.classList.remove("hidden");
+    const banner=document.getElementById("filteredSubtotalBanner");
+    const hasFilter = Boolean(search || fType!=="all" || fCat!=="all" || fMem!=="all" || sDate || eDate);
+    if(banner) banner.classList.toggle("hidden", !hasFilter);
     
     list.innerHTML=filtered.map(r=>{
         const color=getMemberColor(Object.keys(parsePayers(r))[0]||r.payer); const id=escapeJsStr(r.id); 
