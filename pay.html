@@ -486,6 +486,7 @@ function loadJSON(key, fallback) {
 let tokenClient = null;
 let accessToken = null;
 let tokenExpiry = 0;
+let googleSessionLinked = localStorage.getItem("google_session_linked") === "1";
 let tokenRequestPromise = null;
 let pendingTokenResolve = null;
 let pendingTokenReject = null;
@@ -577,8 +578,10 @@ async function requestGoogleAccessToken(interactive = false) {
     tokenRequestPromise = new Promise((resolve, reject) => {
         pendingTokenResolve = resolve;
         pendingTokenReject = reject;
-        try { tokenClient.requestAccessToken({ prompt: interactive ? "select_account" : "" }); }
-        catch (e) { pendingTokenResolve = pendingTokenReject = null; reject(e); }
+        try {
+            // 互動登入才要求選擇帳號；重新整理/續期使用非互動模式。
+            tokenClient.requestAccessToken({ prompt: interactive ? "select_account" : "none" });
+        } catch (e) { pendingTokenResolve = pendingTokenReject = null; reject(e); }
     }).finally(() => { tokenRequestPromise = null; });
     return tokenRequestPromise;
 }
@@ -1200,12 +1203,14 @@ function initGoogleClient() {
             }
             accessToken = tokenResponse.access_token;
             tokenExpiry = Date.now() + Math.max(30, Number(tokenResponse.expires_in || 3600) - 60) * 1000;
+            googleSessionLinked = true;
+            safeSetLocalStorage("google_session_linked", "1");
             updateGoogleUI(true);
             const resolve = pendingTokenResolve; pendingTokenResolve = pendingTokenReject = null;
             if (resolve) resolve(accessToken);
         }
     });
-    updateGoogleUI(!!accessToken);
+    updateGoogleUI(!!accessToken || googleSessionLinked);
     return true;
 }
 function updateGoogleUI(isLoggedIn) {
@@ -1227,6 +1232,8 @@ document.getElementById("googleLogoutBtn").onclick = () => {
         google.accounts.oauth2.revoke(accessToken, () => {});
     }
     accessToken = null; tokenExpiry = 0; driveFolderId = null; configFileId = null;
+    googleSessionLinked = false;
+    safeSetLocalStorage("google_session_linked", "0");
     safeSetLocalStorage("gdrive_folder_id", "");
     setSyncBadge("離線", false, true);
     updateGoogleUI(false);
@@ -1458,9 +1465,12 @@ function detectCSVDelimiter(text) {
 function headerIndexMap(header) {
     const aliases = {
         date: ["Date","日期"], title: ["Title","項目","項目名稱"],
-        category: ["Category","類別"], amount: ["Amount","金額"],
-        currency: ["Currency","幣別"], twdAmount: ["TWD","TWD金額","台幣"],
-        payer: ["Payer","付款人","收款人"], payers: ["Payers","付款人明細","付款人分攤"], shares: ["Shares","分攤","分攤明細"], type: ["Type","類型"]
+        category: ["Category","類別"], amount: ["Amount","金額","原始金額"],
+        currency: ["Currency","幣別"], rate: ["Rate","匯率"],
+        twdAmount: ["TWD","TWD金額","台幣","折合台幣"],
+        payer: ["Payer","付款人","收款人"],
+        payers: ["Payers","付款人明細","付款人分攤"],
+        shares: ["Shares","分攤","分攤明細","分攤成員/金額"], type: ["Type","類型"]
     };
     const map = {};
     Object.entries(aliases).forEach(([key, names]) => {
@@ -1562,17 +1572,20 @@ document.getElementById("importBtn").onclick = async function() {
             const rows = parseCSV(text, delimiter);
             if (!rows.length) throw new Error("CSV 沒有有效資料");
             const header = rows[0].map(v => String(v).replace(/^﻿/, "").trim());
-            const hasHeader = ["Date","日期","Title","項目","Amount","金額"].some(x => header.includes(x));
+            const hasHeader = ["Date","日期","Title","項目","Amount","金額","原始金額","折合台幣","分攤成員/金額"].some(x => header.includes(x));
             const dataRows = hasHeader ? rows.slice(1) : rows;
             const map = hasHeader ? headerIndexMap(header) : { date:0, title:1, category:2, amount:3, currency:4, twdAmount:5, payer:6, type:7 };
             dataRows.forEach(cols => {
                 const amount = finiteNumber(cols[map.amount], 0);
                 const currency = String(cols[map.currency] ?? "TWD").trim() || "TWD";
-                const rate = currency === "TWD" ? 1 : finiteNumber(exchangeRates[currency], 0);
+                const importedRate = finiteNumber(cols[map.rate], 0);
+                const rate = currency === "TWD" ? 1 : (importedRate > 0 ? importedRate : finiteNumber(exchangeRates[currency], 0));
                 const computedTwd = Math.round(amount * rate);
                 const importedTwd = finiteNumber(cols[map.twdAmount], computedTwd);
-                const payer = String(cols[map.payer] ?? members[0] ?? "").trim();
                 const type = String(cols[map.type] ?? "expense").trim() || "expense";
+                const payerRaw = String(cols[map.payer] ?? "").trim();
+                // 匯入的「個人支出」若 CSV 沒有付款人，依使用者選擇 A：歸給奇奇。
+                const payer = payerRaw || (type === "personal" ? (members.includes("奇奇") ? "奇奇" : (members[0] || "奇奇")) : (members[0] || ""));
                 rawRecords.push({
                     id: generateUUID(), title: String(cols[map.title] ?? "").trim(),
                     amount, currency,
@@ -1584,10 +1597,18 @@ document.getElementById("importBtn").onclick = async function() {
                 });
                 const raw = rawRecords[rawRecords.length - 1];
                 const parsePairs = value => String(value || "").split(";").map(x => {
-                    const idx = x.lastIndexOf(":");
-                    if (idx <= 0) return null;
-                    const member = x.slice(0, idx).trim();
-                    const amount = finiteNumber(x.slice(idx + 1), 0);
+                    const part = x.trim();
+                    if (!part) return null;
+                    let member = "", amount = 0;
+                    const colonIdx = part.lastIndexOf(":");
+                    const paren = part.match(/^(.*?)\s*\(\$?\s*([+-]?[\d,，.]+)\s*\)$/);
+                    if (colonIdx > 0) {
+                        member = part.slice(0, colonIdx).trim();
+                        amount = finiteNumber(part.slice(colonIdx + 1), 0);
+                    } else if (paren) {
+                        member = paren[1].trim();
+                        amount = finiteNumber(paren[2], 0);
+                    } else return null;
                     return member && amount > 0 ? { member, amount: Math.round(amount) } : null;
                 }).filter(Boolean);
                 const payerPairs = map.payers != null ? parsePairs(cols[map.payers]) : parsePairs(payer);
@@ -2651,8 +2672,11 @@ window.onload = function() {
             await requestGoogleAccessToken(false);
             await setupDriveEnvironment();
         } catch (e) {
-            // 無既有 Google 授權時保持離線，不跳出互動式登入視窗。
-            accessToken = null; tokenExpiry = 0; updateGoogleUI(false);
+            // 重新整理時若 Google 暫時無法 silent 授權，不把「已連結」狀態誤判成登出。
+            // access token 不持久化；下一次操作仍會再嘗試取得。
+            accessToken = null; tokenExpiry = 0;
+            updateGoogleUI(googleSessionLinked);
+            if (googleSessionLinked) setSyncBadge("等待 Google 授權", false, true);
         }
     };
     if (window.google?.accounts?.oauth2) {
