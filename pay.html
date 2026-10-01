@@ -487,6 +487,7 @@ let tokenClient = null;
 let accessToken = null;
 let tokenExpiry = 0;
 let googleSessionLinked = localStorage.getItem("google_session_linked") === "1";
+let googleAuthNeedsReauth = false;
 let tokenRequestPromise = null;
 let pendingTokenResolve = null;
 let pendingTokenReject = null;
@@ -580,7 +581,7 @@ async function requestGoogleAccessToken(interactive = false) {
         pendingTokenReject = reject;
         try {
             // 互動登入才要求選擇帳號；重新整理/續期使用非互動模式。
-            tokenClient.requestAccessToken({ prompt: interactive ? "select_account" : "none" });
+            tokenClient.requestAccessToken({ prompt: interactive ? "select_account" : "" });
         } catch (e) { pendingTokenResolve = pendingTokenReject = null; reject(e); }
     }).finally(() => { tokenRequestPromise = null; });
     return tokenRequestPromise;
@@ -591,8 +592,11 @@ async function driveApi(url, options = {}, allowRetry = true) {
         try {
             await requestGoogleAccessToken(false);
         } catch (e) {
-            accessToken = null; tokenExpiry = 0; updateGoogleUI(false); setSyncBadge("請重新授權", false, true);
-            throw new Error("Google 授權已失效，請按「登入 Google 授權」重新授權");
+            // 保留「已連結」狀態；真正需要互動時再由使用者觸發授權。
+            googleAuthNeedsReauth = true;
+            updateGoogleUI(false);
+            setSyncBadge("需要授權", false, true);
+            throw new Error(googleSessionLinked ? "Google 授權需要重新確認，請按「Google 登入」完成授權" : "請先登入 Google 帳號");
         }
     }
     const headers = new Headers(options.headers || {});
@@ -610,8 +614,10 @@ async function driveApi(url, options = {}, allowRetry = true) {
             await requestGoogleAccessToken(false);
             return driveApi(url, options, false);
         } catch (e) {
-            accessToken = null; tokenExpiry = 0; updateGoogleUI(false); setSyncBadge("請重新授權", false, true);
-            throw new Error("Google 授權已失效，請重新授權後再同步");
+            googleAuthNeedsReauth = true;
+            updateGoogleUI(false);
+            setSyncBadge("需要授權", false, true);
+            throw new Error(googleSessionLinked ? "Google 授權需要重新確認，請按「Google 登入」完成授權" : "請先登入 Google 帳號");
         }
     }
     if (!res.ok) {
@@ -651,6 +657,31 @@ function setSyncBadge(text, loading, warning = false) {
     el.classList.toggle("hidden", text === "");
     el.className = `shrink-0 whitespace-nowrap text-[0.7rem] px-2 py-1 rounded-lg font-mono shadow-sm ${warning ? 'bg-red-100 text-red-700 dark:bg-red-900/50 dark:text-red-300' : 'bg-blue-100 text-blue-700 dark:bg-blue-900/50 dark:text-blue-300'}`;
     if (loading) el.textContent += "...";
+}
+
+async function ensureGoogleAccessToken(interactive = false) {
+    if (accessToken && (!tokenExpiry || Date.now() < tokenExpiry)) return true;
+    // 先嘗試不打擾使用者的既有 Google session；只有明確的使用者操作才升級成互動授權。
+    try {
+        await requestGoogleAccessToken(false);
+        return !!accessToken;
+    } catch (silentError) {
+        if (!interactive) {
+            googleAuthNeedsReauth = true;
+            updateGoogleUI(false);
+            setSyncBadge(googleSessionLinked ? "需要授權" : "請登入", false, true);
+            return false;
+        }
+        try {
+            await requestGoogleAccessToken(true);
+            return !!accessToken;
+        } catch (e) {
+            googleAuthNeedsReauth = true;
+            updateGoogleUI(false);
+            setSyncBadge("需要授權", false, true);
+            return false;
+        }
+    }
 }
 
 async function setupDriveEnvironment() {
@@ -1204,6 +1235,7 @@ function initGoogleClient() {
             accessToken = tokenResponse.access_token;
             tokenExpiry = Date.now() + Math.max(30, Number(tokenResponse.expires_in || 3600) - 60) * 1000;
             googleSessionLinked = true;
+            googleAuthNeedsReauth = false;
             safeSetLocalStorage("google_session_linked", "1");
             updateGoogleUI(true);
             const resolve = pendingTokenResolve; pendingTokenResolve = pendingTokenReject = null;
@@ -1215,9 +1247,14 @@ function initGoogleClient() {
 }
 function updateGoogleUI(isLoggedIn) {
     const status=document.getElementById("googleAccountStatus"), login=document.getElementById("googleAuthBtn"), logout=document.getElementById("googleLogoutBtn");
-    if(status) status.textContent = isLoggedIn ? "已連結 Google 雲端" : "尚未連結 Google 帳號";
-    if(login) login.classList.toggle("hidden", isLoggedIn);
-    if(logout) logout.classList.toggle("hidden", !isLoggedIn);
+    const authorized = !!accessToken || (isLoggedIn && !googleAuthNeedsReauth);
+    if(status) status.textContent = authorized ? "已連結 Google 雲端" : (googleSessionLinked ? "需要重新授權 Google" : "尚未連結 Google 帳號");
+    if(login) {
+        login.classList.toggle("hidden", authorized);
+        if (googleAuthNeedsReauth) login.textContent = "重新授權 Google";
+        else login.textContent = "Google 登入";
+    }
+    if(logout) logout.classList.toggle("hidden", !googleSessionLinked);
 }
 document.getElementById("googleAuthBtn").onclick = async () => {
     if (!window.google?.accounts?.oauth2) return showToast("Google 登入元件尚未載入，請重新整理頁面", "error");
@@ -1233,6 +1270,7 @@ document.getElementById("googleLogoutBtn").onclick = () => {
     }
     accessToken = null; tokenExpiry = 0; driveFolderId = null; configFileId = null;
     googleSessionLinked = false;
+    googleAuthNeedsReauth = false;
     safeSetLocalStorage("google_session_linked", "0");
     safeSetLocalStorage("gdrive_folder_id", "");
     setSyncBadge("離線", false, true);
@@ -1244,7 +1282,7 @@ document.getElementById("googleLogoutBtn").onclick = () => {
 // 帳本管理 (Ledger Mgmt)
 // ==========================================
 document.getElementById("addSheetBtn").onclick = async function() {
-    if (!accessToken) return showToast("請先登入 Google 帳號", "error");
+    if (!(await ensureGoogleAccessToken(true))) return showToast("請先完成 Google 授權", "error");
     if (!driveFolderId) {
         await setupDriveEnvironment();
         if (!driveFolderId) return showToast("Google Drive 尚未初始化完成", "error");
@@ -1272,7 +1310,9 @@ document.getElementById("addSheetBtn").onclick = async function() {
 };
 
 async function renameCurrentSheet() {
-    if (!accessToken || !driveFolderId) return showToast("請先登入 Google 帳號", "error");
+    if (!(await ensureGoogleAccessToken(true))) return showToast("請先完成 Google 授權", "error");
+    if (!driveFolderId) await setupDriveEnvironment();
+    if (!driveFolderId) return showToast("Google Drive 尚未初始化完成", "error");
     if (currentSheet === "預設帳本") return showToast("預設帳本不能重新命名", "info");
     const oldName = currentSheet;
     const input = prompt("請輸入新的帳本名稱：", oldName);
@@ -1308,7 +1348,9 @@ async function renameCurrentSheet() {
 }
 
 async function deleteCurrentSheet() {
-    if (!accessToken || !driveFolderId) return showToast("請先登入 Google 帳號", "error");
+    if (!(await ensureGoogleAccessToken(true))) return showToast("請先完成 Google 授權", "error");
+    if (!driveFolderId) await setupDriveEnvironment();
+    if (!driveFolderId) return showToast("Google Drive 尚未初始化完成", "error");
     if (currentSheet === "預設帳本") return showToast("預設帳本不能刪除", "info");
     const targetName = currentSheet;
     if (!confirm(`確定要刪除帳本「${targetName}」嗎？\n雲端帳本與本機快取都會刪除，此操作無法復原。`)) return;
@@ -1696,7 +1738,9 @@ function setFormDateToday() {
 window.setFormDateToday = setFormDateToday;
 
 async function retryPendingSync() {
-    if (!accessToken) return showToast("請先登入 Google 帳號", "error");
+    if (!(await ensureGoogleAccessToken(true))) return showToast("請先完成 Google 授權", "error");
+    if (!driveFolderId) await setupDriveEnvironment();
+    if (!driveFolderId) return showToast("Google Drive 尚未初始化完成", "error");
     await saveRecordsToDrive();
 }
 window.retryPendingSync = retryPendingSync;
@@ -2668,15 +2712,18 @@ window.onload = function() {
     const restoreGoogleSession = async () => {
         if (!window.google?.accounts?.oauth2) return;
         initGoogleClient();
+        // 純前端模式不能保存 access token；重新整理時先嘗試 Google 已存在的登入/授權 session。
+        // silent 失敗時不要立刻把使用者標成「需要重新授權」，避免初始化期間的暫時失敗造成假警報。
         try {
             await requestGoogleAccessToken(false);
+            googleAuthNeedsReauth = false;
+            updateGoogleUI(true);
             await setupDriveEnvironment();
         } catch (e) {
-            // 重新整理時若 Google 暫時無法 silent 授權，不把「已連結」狀態誤判成登出。
-            // access token 不持久化；下一次操作仍會再嘗試取得。
             accessToken = null; tokenExpiry = 0;
-            updateGoogleUI(googleSessionLinked);
-            if (googleSessionLinked) setSyncBadge("等待 Google 授權", false, true);
+            googleAuthNeedsReauth = true;
+            updateGoogleUI(false);
+            setSyncBadge(googleSessionLinked ? "Google 已連結，等待操作授權" : "尚未連結", false, false);
         }
     };
     if (window.google?.accounts?.oauth2) {
