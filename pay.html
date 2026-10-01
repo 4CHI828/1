@@ -2771,6 +2771,8 @@ const repairFilterMemberSelect = () => {
 
 window.startEditRecord = function(id) {
     const r = cachedRecords.find(x => x.id === id); if (!r) return;
+    // 從歷史紀錄編輯時，自動切換到記帳頁面，直接進入編輯狀態。
+    switchTab("record");
     editingRecordId = r.id;
     document.getElementById("editModeBanner")?.classList.remove("hidden");
     const idText = document.getElementById("editingIdText"); if(idText) idText.textContent = id;
