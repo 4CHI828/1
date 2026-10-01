@@ -571,7 +571,7 @@ function getMemberColor(name) {
 // ==========================================
 // 雲端同步引擎 (Google Drive API)
 // ==========================================
-async function requestGoogleAccessToken(interactive = false) {
+async function requestGoogleAccessToken(interactive = true) {
     if (!window.google?.accounts?.oauth2) throw new Error("Google 登入元件尚未載入");
     if (!tokenClient) initGoogleClient();
     if (!tokenClient) throw new Error("Google 授權元件初始化失敗");
@@ -580,8 +580,11 @@ async function requestGoogleAccessToken(interactive = false) {
         pendingTokenResolve = resolve;
         pendingTokenReject = reject;
         try {
-            // 互動登入才要求選擇帳號；重新整理/續期使用非互動模式。
-            tokenClient.requestAccessToken({ prompt: interactive ? "select_account" : "" });
+            // 單檔前端模式：需要 access token 時，務必由使用者操作觸發。
+            // prompt 空字串代表只有第一次需要同意，之後沿用既有授權。
+            // 非互動呼叫僅保留給內部防呆，不再拿來做背景續權。
+            const prompt = interactive ? "" : "none";
+            tokenClient.requestAccessToken({ prompt });
         } catch (e) { pendingTokenResolve = pendingTokenReject = null; reject(e); }
     }).finally(() => { tokenRequestPromise = null; });
     return tokenRequestPromise;
@@ -589,15 +592,9 @@ async function requestGoogleAccessToken(interactive = false) {
 
 async function driveApi(url, options = {}, allowRetry = true) {
     if (!accessToken || (tokenExpiry && Date.now() >= tokenExpiry)) {
-        try {
-            await requestGoogleAccessToken(false);
-        } catch (e) {
-            // 保留「已連結」狀態；真正需要互動時再由使用者觸發授權。
-            googleAuthNeedsReauth = true;
-            updateGoogleUI(false);
-            setSyncBadge("需要授權", false, true);
-            throw new Error(googleSessionLinked ? "Google 授權需要重新確認，請按「Google 登入」完成授權" : "請先登入 Google 帳號");
-        }
+        updateGoogleUI(false);
+        setSyncBadge(googleSessionLinked ? "Google 已連結，等待操作授權" : "請登入", false, false);
+        throw new Error(googleSessionLinked ? "Google 授權尚未取得，請先按 Google 授權或執行一次雲端操作" : "請先登入 Google 帳號");
     }
     const headers = new Headers(options.headers || {});
     headers.set("Authorization", `Bearer ${accessToken}`);
@@ -610,15 +607,10 @@ async function driveApi(url, options = {}, allowRetry = true) {
     }
     if (res.status === 401 && allowRetry) {
         accessToken = null; tokenExpiry = 0;
-        try {
-            await requestGoogleAccessToken(false);
-            return driveApi(url, options, false);
-        } catch (e) {
-            googleAuthNeedsReauth = true;
-            updateGoogleUI(false);
-            setSyncBadge("需要授權", false, true);
-            throw new Error(googleSessionLinked ? "Google 授權需要重新確認，請按「Google 登入」完成授權" : "請先登入 Google 帳號");
-        }
+        googleAuthNeedsReauth = false;
+        updateGoogleUI(false);
+        setSyncBadge(googleSessionLinked ? "Google 已連結，等待操作授權" : "請登入", false, false);
+        throw new Error(googleSessionLinked ? "Google 授權已失效，請再次點擊 Google 授權後再操作" : "請先登入 Google 帳號");
     }
     if (!res.ok) {
         let detail = "";
@@ -661,26 +653,18 @@ function setSyncBadge(text, loading, warning = false) {
 
 async function ensureGoogleAccessToken(interactive = false) {
     if (accessToken && (!tokenExpiry || Date.now() < tokenExpiry)) return true;
-    // 先嘗試不打擾使用者的既有 Google session；只有明確的使用者操作才升級成互動授權。
+    // 單檔前端的 access token 只能在使用者操作時重新取得。
+    // 因此互動操作直接 requestAccessToken，不先做 silent request，避免失去 popup 的使用者手勢。
+    if (!interactive) return false;
     try {
-        await requestGoogleAccessToken(false);
+        await requestGoogleAccessToken(true);
+        googleAuthNeedsReauth = false;
         return !!accessToken;
-    } catch (silentError) {
-        if (!interactive) {
-            googleAuthNeedsReauth = true;
-            updateGoogleUI(false);
-            setSyncBadge(googleSessionLinked ? "需要授權" : "請登入", false, true);
-            return false;
-        }
-        try {
-            await requestGoogleAccessToken(true);
-            return !!accessToken;
-        } catch (e) {
-            googleAuthNeedsReauth = true;
-            updateGoogleUI(false);
-            setSyncBadge("需要授權", false, true);
-            return false;
-        }
+    } catch (e) {
+        googleAuthNeedsReauth = false;
+        updateGoogleUI(false);
+        setSyncBadge(googleSessionLinked ? "Google 已連結，等待操作授權" : "尚未連結", false, false);
+        return false;
     }
 }
 
@@ -1247,12 +1231,11 @@ function initGoogleClient() {
 }
 function updateGoogleUI(isLoggedIn) {
     const status=document.getElementById("googleAccountStatus"), login=document.getElementById("googleAuthBtn"), logout=document.getElementById("googleLogoutBtn");
-    const authorized = !!accessToken || (isLoggedIn && !googleAuthNeedsReauth);
-    if(status) status.textContent = authorized ? "已連結 Google 雲端" : (googleSessionLinked ? "需要重新授權 Google" : "尚未連結 Google 帳號");
+    const hasActiveToken = !!accessToken && (!tokenExpiry || Date.now() < tokenExpiry);
+    if(status) status.textContent = hasActiveToken ? "已連結 Google 雲端" : (googleSessionLinked ? "Google 已連結，等待操作授權" : "尚未連結 Google 帳號");
     if(login) {
-        login.classList.toggle("hidden", authorized);
-        if (googleAuthNeedsReauth) login.textContent = "重新授權 Google";
-        else login.textContent = "Google 登入";
+        login.classList.toggle("hidden", hasActiveToken);
+        login.textContent = googleSessionLinked ? "啟用 Google 雲端" : "登入 Google 授權";
     }
     if(logout) logout.classList.toggle("hidden", !googleSessionLinked);
 }
@@ -1262,7 +1245,12 @@ document.getElementById("googleAuthBtn").onclick = async () => {
         if (!tokenClient) initGoogleClient();
         await requestGoogleAccessToken(true);
         await setupDriveEnvironment();
-    } catch (e) { showToast(e?.message || "Google 授權失敗", "error"); }
+    } catch (e) {
+        googleAuthNeedsReauth = false;
+        updateGoogleUI(false);
+        setSyncBadge(googleSessionLinked ? "Google 已連結，等待操作授權" : "尚未連結", false, false);
+        showToast(e?.message || "Google 授權失敗，請再點一次 Google 授權", "error");
+    }
 };
 document.getElementById("googleLogoutBtn").onclick = () => {
     if (accessToken && window.google?.accounts?.oauth2?.revoke) {
@@ -1813,7 +1801,25 @@ async function executeLineShare(type) {
             d.amt -= amount; c.amt -= amount;
             if (d.amt <= 0.1) dIdx++; if (c.amt <= 0.1) cIdx++;
         }
-        text += `\n💸 轉帳路徑:\n${transfers.length > 0 ? transfers.join("\n") : "✅ 已平帳"}\n--------------------------\n`;
+        text += `\n💸 轉帳路徑:\n${transfers.length > 0 ? transfers.join("\n") : "✅ 已平帳"}\n`;
+
+        // 逐筆分攤明細：把每筆群組支出的付款人與每位成員實際應攤額完整列出
+        const expenseDetails = records.filter(r => r?.type === "expense");
+        text += `\n🧾 逐筆分攤明細:\n`;
+        if (expenseDetails.length === 0) {
+            text += "目前沒有群組分帳支出\n";
+        } else {
+            expenseDetails.forEach((r, i) => {
+                const payers = parsePayers(r);
+                const shares = parseShares(r);
+                const payerText = Object.entries(payers).map(([name, amt]) => `${name} 代墊 $${Math.round(amt).toLocaleString()}`).join("、") || "未記錄付款人";
+                const shareText = Object.entries(shares).map(([name, amt]) => `${name} $${Math.round(amt).toLocaleString()}`).join("、") || "未記錄分攤";
+                text += `${i + 1}. ${r.date || ""}｜${r.title || "未命名項目"}｜總額 $${Math.round(finiteNumber(r.twdAmount, 0)).toLocaleString()}\n`;
+                text += `   付款：${payerText}\n`;
+                text += `   分攤：${shareText}\n`;
+            });
+        }
+        text += `--------------------------\n`;
     } else if (type === 'personal') {
         const member = document.getElementById("lineShareMemberSelect").value;
         let tp = 0, to = 0, det = [];
@@ -2321,6 +2327,8 @@ async function saveRecord() {
     document.getElementById("editModeBanner")?.classList.add("hidden");
     document.getElementById("saveBtnText").textContent = "儲存紀錄 (Enter)";
     renderAllViews();
+    // 儲存紀錄本身仍可離線完成；若已連結 Google，利用這次「儲存」的使用者操作直接取得有效 token，避免背景 popup 被瀏覽器擋掉。
+    if (googleSessionLinked && !accessToken) { await ensureGoogleAccessToken(true); }
     const cloudSynced = await saveRecordsToDrive();
     cancelEdit();
     showToast(cloudSynced ? "儲存成功，已同步雲端" : "已儲存本機，等待雲端同步", cloudSynced ? "success" : "info");
@@ -2630,7 +2638,20 @@ window.startEditRecord = function(id) {
     document.getElementById("editModeBanner")?.classList.remove("hidden");
     const idText = document.getElementById("editingIdText"); if(idText) idText.textContent = id;
     const saveText = document.getElementById("saveBtnText"); if (saveText) saveText.textContent = "儲存修改 (Enter)";
-    ["title","originalAmount","currency","date","type"].forEach(k => { const el=document.getElementById(k); if(el) el.value=r[k] ?? ""; });
+    // 編輯歷史紀錄時，優先還原「當時」保存的原始金額與幣別；兼容舊資料欄位名稱。
+    const editOriginalAmount = r.amount ?? r.originalAmount ?? r.twdAmount ?? "";
+    const editCurrency = String(r.currency ?? r.currencyCode ?? "TWD").trim().toUpperCase() || "TWD";
+    const editDate = r.date ?? "";
+    const editType = r.type ?? "expense";
+    const titleEl = document.getElementById("title"); if (titleEl) titleEl.value = r.title ?? "";
+    const amountEl = document.getElementById("originalAmount"); if (amountEl) amountEl.value = editOriginalAmount === "" ? "" : String(editOriginalAmount);
+    const currencyEl = document.getElementById("currency");
+    if (currencyEl) {
+        if (!Array.from(currencyEl.options).some(opt => opt.value === editCurrency)) currencyEl.add(new Option(`⚠️ 舊資料: ${editCurrency}`, editCurrency));
+        currencyEl.value = editCurrency;
+    }
+    const dateEl = document.getElementById("date"); if (dateEl) dateEl.value = editDate;
+    const typeEl = document.getElementById("type"); if (typeEl) typeEl.value = editType;
     const catEl = document.getElementById("category");
     if (catEl && r.category) {
         if (!Array.from(catEl.options).some(opt => opt.value === r.category)) catEl.add(new Option(`⚠️️ 舊資料: ${r.category}`, r.category));
@@ -2638,7 +2659,10 @@ window.startEditRecord = function(id) {
     }
     const override = document.getElementById("overrideTwdInput");
     if (override) override.value = r.currency !== "TWD" && Number(r.twdAmount) > 0 ? String(Math.round(r.twdAmount)) : "";
-    setRecordType(r.type);
+    setRecordType(editType);
+    // setRecordType 會更新預覽，再次明確還原歷史金額／幣別，避免舊資料被預設值覆蓋。
+    if (amountEl) amountEl.value = editOriginalAmount === "" ? "" : String(editOriginalAmount);
+    if (currencyEl) currencyEl.value = editCurrency;
     const payers=parsePayers(r), names=Object.keys(payers);
     if(names.length>1){
         toggleMultiPayerMode(true);
@@ -2712,19 +2736,13 @@ window.onload = function() {
     const restoreGoogleSession = async () => {
         if (!window.google?.accounts?.oauth2) return;
         initGoogleClient();
-        // 純前端模式不能保存 access token；重新整理時先嘗試 Google 已存在的登入/授權 session。
-        // silent 失敗時不要立刻把使用者標成「需要重新授權」，避免初始化期間的暫時失敗造成假警報。
-        try {
-            await requestGoogleAccessToken(false);
-            googleAuthNeedsReauth = false;
-            updateGoogleUI(true);
-            await setupDriveEnvironment();
-        } catch (e) {
-            accessToken = null; tokenExpiry = 0;
-            googleAuthNeedsReauth = true;
-            updateGoogleUI(false);
-            setSyncBadge(googleSessionLinked ? "Google 已連結，等待操作授權" : "尚未連結", false, false);
-        }
+        // 單檔前端模式不再於頁面載入時偷偷要求 access token。
+        // Google 的 token model 要求過期 token 透過使用者操作重新取得；
+        // 重新整理後只保留「已連結」記憶，第一次雲端操作時再取得有效 token。
+        accessToken = null; tokenExpiry = 0;
+        googleAuthNeedsReauth = false;
+        updateGoogleUI(false);
+        setSyncBadge(googleSessionLinked ? "Google 已連結，等待操作授權" : "尚未連結", false, false);
     };
     if (window.google?.accounts?.oauth2) {
         restoreGoogleSession();
