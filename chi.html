@@ -5,9 +5,9 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>奇奇｜個人生活工作站</title>
   <style>
-    /* 五款主題色票變數設定 */
+    /* 主題色票變數設定 */
     :root,
-    [data-theme="obsidian"] {
+    [data-theme="default"] {
       --top-bg: #1e293b;
       --bottom-bg: #0f172a;
       --border-color: #334155;
@@ -15,9 +15,7 @@
       --text-main: #f1f5f9;
       --hover-bg: rgba(255, 255, 255, 0.08);
       --accent: #38bdf8;
-      --accent-glow: rgba(56, 189, 248, 0.25);
       --drawer-bg: rgba(30, 41, 59, 0.96);
-      --card-bg: rgba(15, 23, 42, 0.7);
     }
 
     [data-theme="emerald"] {
@@ -28,9 +26,7 @@
       --text-main: #ecfdf5;
       --hover-bg: rgba(255, 255, 255, 0.1);
       --accent: #34d399;
-      --accent-glow: rgba(52, 211, 153, 0.25);
       --drawer-bg: rgba(6, 78, 59, 0.96);
-      --card-bg: rgba(2, 44, 34, 0.7);
     }
 
     [data-theme="cyber"] {
@@ -41,9 +37,7 @@
       --text-main: #faf5ff;
       --hover-bg: rgba(255, 255, 255, 0.1);
       --accent: #c084fc;
-      --accent-glow: rgba(192, 132, 252, 0.25);
       --drawer-bg: rgba(46, 16, 101, 0.96);
-      --card-bg: rgba(26, 11, 54, 0.7);
     }
 
     [data-theme="sunset"] {
@@ -54,9 +48,7 @@
       --text-main: #fff7ed;
       --hover-bg: rgba(255, 255, 255, 0.1);
       --accent: #fb923c;
-      --accent-glow: rgba(251, 146, 60, 0.25);
       --drawer-bg: rgba(67, 20, 7, 0.96);
-      --card-bg: rgba(28, 25, 23, 0.7);
     }
 
     [data-theme="light"] {
@@ -67,252 +59,106 @@
       --text-main: #0f172a;
       --hover-bg: rgba(0, 0, 0, 0.05);
       --accent: #2563eb;
-      --accent-glow: rgba(37, 99, 235, 0.18);
       --drawer-bg: rgba(255, 255, 255, 0.96);
-      --card-bg: rgba(241, 245, 249, 0.9);
     }
 
     * {
       margin: 0;
       padding: 0;
       box-sizing: border-box;
-      -webkit-font-smoothing: antialiased;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "PingFang TC", "Noto Sans TC", sans-serif;
     }
 
-    html, body {
-      width: 100%;
-      height: 100vh;
-      height: 100dvh;
-      overflow: hidden;
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "PingFang TC", "Noto Sans TC", sans-serif;
+    body {
       background-color: var(--bottom-bg);
       color: var(--text-main);
+      overflow: hidden;
       transition: background-color 0.3s ease;
     }
 
-    /* 嚴格 5% / 95% 上下分割框架 */
+    /* 5% / 95% Grid 架構 */
     .app-layout {
       display: grid;
-      grid-template-rows: minmax(44px, 5vh) 1fr;
+      grid-template-rows: minmax(44px, 5%) 1fr;
       width: 100%;
       height: 100vh;
       height: 100dvh;
-      position: relative;
-      transition: grid-template-rows 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      transition: grid-template-rows 0.3s ease;
     }
 
-    /* 專注全螢幕模式：收合頂部 5%，讓下方 100% 滿版 */
     .app-layout.focus-mode {
       grid-template-rows: 0px 1fr;
     }
 
-    .app-layout.focus-mode .top-bar {
-      opacity: 0;
-      pointer-events: none;
-      transform: translateY(-100%);
-      border-bottom: none;
-    }
-
-    .top-bar {
+    .nav-bar {
       background-color: var(--top-bg);
       border-bottom: 1px solid var(--border-color);
       display: flex;
       align-items: center;
       justify-content: space-between;
-      padding: 0 14px;
-      gap: 12px;
-      z-index: 50;
-      position: relative;
-      transition: background-color 0.3s ease, border-color 0.3s ease, transform 0.3s ease, opacity 0.2s ease;
-      overflow-x: auto;
-      overflow-y: hidden;
-      user-select: none;
-    }
-
-    .top-bar::-webkit-scrollbar {
-      display: none;
-    }
-
-    /* 頂部下緣平滑載入進度條 */
-    .loading-bar {
-      position: absolute;
-      bottom: 0;
-      left: 0;
-      height: 2px;
-      width: 0%;
-      background: linear-gradient(90deg, var(--accent), #f43f5e);
-      z-index: 60;
-      opacity: 0;
-      transition: width 0.35s ease, opacity 0.3s ease;
-      box-shadow: 0 0 8px var(--accent-glow);
-      pointer-events: none;
-    }
-
-    .loading-bar.active {
-      width: 78%;
-      opacity: 1;
-    }
-
-    .loading-bar.done {
-      width: 100%;
-      opacity: 0;
-    }
-
-    /* 左側品牌與導覽頁籤區 */
-    .nav-left-section {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      flex-shrink: 0;
-      height: 100%;
-    }
-
-    .brand-box {
-      display: flex;
-      align-items: center;
-      gap: 7px;
-      cursor: pointer;
-      padding: 4px 6px;
-      border-radius: 6px;
-      transition: background-color 0.2s ease;
-    }
-
-    .brand-box:hover {
-      background-color: var(--hover-bg);
-    }
-
-    .brand-icon {
-      width: 19px;
-      height: 19px;
-      stroke: var(--accent);
-      stroke-width: 2.2;
-      stroke-linecap: round;
-      stroke-linejoin: round;
-      fill: none;
-      filter: drop-shadow(0 0 6px var(--accent-glow));
-    }
-
-    .brand-title {
-      font-weight: 700;
-      font-size: 0.95rem;
-      letter-spacing: 0.5px;
-      color: var(--text-main);
+      padding: 0 16px;
+      overflow: hidden;
+      transition: background-color 0.3s ease, border-color 0.3s ease;
       white-space: nowrap;
     }
 
-    .nav-separator {
-      width: 1px;
-      height: 16px;
-      background-color: var(--border-color);
-      flex-shrink: 0;
-    }
-
-    .tabs-container {
+    .nav-left, .nav-right {
       display: flex;
       align-items: center;
-      gap: 5px;
+      gap: 12px;
       height: 100%;
     }
 
-    .nav-tab {
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-weight: 700;
+      color: var(--text-main);
+      margin-right: 8px;
+    }
+
+    .nav-item {
       display: inline-flex;
       align-items: center;
       gap: 6px;
       color: var(--text-muted);
       text-decoration: none;
-      font-size: 0.84rem;
-      font-weight: 500;
-      padding: 5px 11px;
+      font-size: 0.85rem;
+      padding: 6px 12px;
       border-radius: 6px;
-      cursor: pointer;
-      border: 1px solid transparent;
       transition: all 0.2s ease;
-      white-space: nowrap;
-      background: transparent;
+      cursor: pointer;
     }
 
-    .nav-tab:hover {
+    .nav-item:hover {
       background-color: var(--hover-bg);
       color: var(--text-main);
     }
 
-    .nav-tab.active {
+    .nav-item.active {
       color: var(--accent);
       background-color: var(--hover-bg);
-      border-color: rgba(255, 255, 255, 0.08);
       font-weight: 600;
-      box-shadow: inset 0 0 10px var(--accent-glow);
     }
 
-    .tab-icon {
-      width: 15px;
-      height: 15px;
+    .icon {
+      width: 16px;
+      height: 16px;
       stroke: currentColor;
       stroke-width: 2;
       stroke-linecap: round;
       stroke-linejoin: round;
       fill: none;
-      flex-shrink: 0;
     }
 
-    .tab-close {
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      width: 15px;
-      height: 15px;
-      opacity: 0.55;
-      font-size: 13px;
-      margin-left: 2px;
-      border-radius: 4px;
-      transition: all 0.15s ease;
+    .nav-separator {
+      width: 1px;
+      height: 18px;
+      background-color: var(--border-color);
     }
 
-    .tab-close:hover {
-      opacity: 1;
-      background-color: rgba(239, 68, 68, 0.22);
-      color: #ef4444;
-    }
-
-    .btn-add-tab {
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      width: 26px;
-      height: 26px;
-      border-radius: 6px;
-      border: 1px dashed var(--border-color);
-      background: transparent;
-      color: var(--text-muted);
-      cursor: pointer;
-      font-size: 15px;
-      line-height: 1;
-      transition: all 0.2s ease;
-      flex-shrink: 0;
-    }
-
-    .btn-add-tab:hover {
-      color: var(--accent);
-      border-color: var(--accent);
-      background: var(--hover-bg);
-      transform: scale(1.06);
-    }
-
-    .nav-right-section {
-      display: flex;
-      align-items: center;
-      gap: 11px;
-      flex-shrink: 0;
-      height: 100%;
-    }
-
-    .action-group {
-      display: flex;
-      align-items: center;
-      gap: 4px;
-    }
-
-    .action-btn {
+    .btn-icon {
       display: inline-flex;
       align-items: center;
       justify-content: center;
@@ -326,769 +172,364 @@
       transition: all 0.2s ease;
     }
 
-    .action-btn:hover {
+    .btn-icon:hover {
       background-color: var(--hover-bg);
       color: var(--text-main);
     }
 
-    .action-btn.active {
-      color: var(--accent);
-      background-color: var(--hover-bg);
-    }
-
-    .action-icon {
-      width: 15px;
-      height: 15px;
-      stroke: currentColor;
-      stroke-width: 2;
-      stroke-linecap: round;
-      stroke-linejoin: round;
-      fill: none;
-    }
-
-    /* 即時時間與星期 */
-    .live-clock {
-      display: flex;
-      align-items: center;
-      gap: 5px;
-      font-size: 0.8rem;
-      color: var(--text-muted);
+    .clock {
+      font-size: 0.85rem;
+      color: var(--text-main);
       font-variant-numeric: tabular-nums;
-      white-space: nowrap;
+      font-weight: 500;
     }
 
-    .live-clock-time {
-      font-weight: 600;
-      color: var(--text-main);
-    }
-
-    /* 5 款純色圓點主題切換器 */
-    .theme-palette {
+    .theme-dots {
       display: flex;
       align-items: center;
-      gap: 7px;
+      gap: 8px;
     }
 
-    .color-dot {
+    .dot {
       width: 12px;
       height: 12px;
       border-radius: 50%;
-      border: 1.5px solid rgba(255, 255, 255, 0.45);
+      border: 1px solid rgba(255,255,255,0.2);
       cursor: pointer;
-      padding: 0;
-      outline: none;
-      transition: transform 0.2s ease, box-shadow 0.2s ease;
+      transition: transform 0.2s;
     }
 
-    .color-dot:hover {
-      transform: scale(1.28);
-    }
-
-    .color-dot.active {
+    .dot:hover {
       transform: scale(1.2);
-      box-shadow: 0 0 0 2px var(--accent);
     }
 
-    .workspace-area {
+    .content-area {
       position: relative;
       width: 100%;
       height: 100%;
-      background-color: var(--bottom-bg);
+      background-color: #fff; /* iframe default background */
       overflow: hidden;
     }
 
-    .app-frame {
+    iframe {
       width: 100%;
       height: 100%;
       border: none;
       display: block;
-      background-color: #ffffff;
     }
 
-    /* 右上角半透明微型浮動膠囊按鈕 (專注模式恢復頂部列) */
-    .focus-exit-pill {
-      position: fixed;
+    .exit-focus {
+      position: absolute;
       top: 12px;
       right: 16px;
-      transform: translateY(-80px);
       background: var(--drawer-bg);
-      border: 1px solid var(--border-color);
       color: var(--text-main);
-      padding: 5px 12px;
-      border-radius: 999px;
-      font-size: 0.76rem;
-      font-weight: 500;
+      border: 1px solid var(--border-color);
+      padding: 6px 12px;
+      border-radius: 20px;
+      font-size: 0.8rem;
       cursor: pointer;
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      box-shadow: 0 6px 20px rgba(0, 0, 0, 0.35);
-      z-index: 100;
-      transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.25s ease, background-color 0.2s ease;
-      backdrop-filter: blur(10px);
       opacity: 0;
       pointer-events: none;
+      transform: translateY(-20px);
+      transition: all 0.3s ease;
+      z-index: 100;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.2);
     }
 
-    .focus-exit-pill:hover {
-      border-color: var(--accent);
-      color: var(--accent);
-    }
-
-    .app-layout.focus-mode .focus-exit-pill {
-      transform: translateY(0);
-      opacity: 0.88;
-      pointer-events: auto;
-    }
-
-    .app-layout.focus-mode .focus-exit-pill:hover {
+    .app-layout.focus-mode .exit-focus {
       opacity: 1;
+      pointer-events: auto;
+      transform: translateY(0);
     }
 
     .scratchpad-drawer {
       position: absolute;
       top: 0;
-      right: 0;
-      width: 330px;
-      max-width: 90vw;
+      right: -320px;
+      width: 320px;
       height: 100%;
       background: var(--drawer-bg);
       border-left: 1px solid var(--border-color);
-      box-shadow: -8px 0 30px rgba(0, 0, 0, 0.35);
-      backdrop-filter: blur(14px);
-      z-index: 45;
-      transform: translateX(100%);
-      transition: transform 0.32s cubic-bezier(0.4, 0, 0.2, 1);
       display: flex;
       flex-direction: column;
+      transition: right 0.3s ease;
+      z-index: 90;
+      box-shadow: -4px 0 15px rgba(0,0,0,0.1);
     }
 
     .scratchpad-drawer.open {
-      transform: translateX(0);
+      right: 0;
     }
 
     .scratchpad-header {
       padding: 12px 16px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
       border-bottom: 1px solid var(--border-color);
-    }
-
-    .scratchpad-title {
-      font-size: 0.86rem;
-      font-weight: 600;
       display: flex;
+      justify-content: space-between;
       align-items: center;
-      gap: 6px;
+      font-weight: 600;
+      color: var(--text-main);
+      font-size: 0.9rem;
     }
 
-    .scratchpad-status {
-      font-size: 0.72rem;
-      color: var(--accent);
-    }
-
-    .scratchpad-textarea {
+    .scratchpad-body {
       flex: 1;
+      padding: 16px;
+    }
+
+    .scratchpad-body textarea {
       width: 100%;
-      padding: 14px 16px;
+      height: 100%;
       background: transparent;
       border: none;
-      outline: none;
-      resize: none;
       color: var(--text-main);
-      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      resize: none;
+      outline: none;
       font-size: 0.85rem;
-      line-height: 1.6;
+      line-height: 1.5;
     }
 
     .scratchpad-footer {
-      padding: 9px 14px;
-      font-size: 0.72rem;
-      color: var(--text-muted);
+      padding: 12px 16px;
       border-top: 1px solid var(--border-color);
       display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
-
-    .drawer-btn-group {
-      display: flex;
-      align-items: center;
-      gap: 6px;
-    }
-
-    /* 彈出對話框 (新增頁籤) */
-    .modal-overlay {
-      position: fixed;
-      inset: 0;
-      background: rgba(0, 0, 0, 0.62);
-      backdrop-filter: blur(4px);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      z-index: 200;
-      opacity: 0;
-      pointer-events: none;
-      transition: opacity 0.2s ease;
-    }
-
-    .modal-overlay.active {
-      opacity: 1;
-      pointer-events: auto;
-    }
-
-    .modal-card {
-      background: var(--top-bg);
-      border: 1px solid var(--border-color);
-      border-radius: 12px;
-      width: 90%;
-      max-width: 380px;
-      padding: 20px;
-      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5);
-    }
-
-    .modal-title {
-      font-size: 0.98rem;
-      font-weight: 600;
-      margin-bottom: 14px;
-      color: var(--text-main);
-    }
-
-    .modal-input-group {
-      margin-bottom: 12px;
-    }
-
-    .modal-label {
-      font-size: 0.75rem;
-      color: var(--text-muted);
-      display: block;
-      margin-bottom: 5px;
-    }
-
-    .modal-input {
-      width: 100%;
-      padding: 8px 12px;
-      background: var(--card-bg);
-      border: 1px solid var(--border-color);
-      border-radius: 6px;
-      color: var(--text-main);
-      outline: none;
-      font-size: 0.85rem;
-    }
-
-    .modal-input:focus {
-      border-color: var(--accent);
-    }
-
-    .modal-actions {
-      display: flex;
-      justify-content: flex-end;
       gap: 8px;
-      margin-top: 16px;
     }
 
-    .btn-secondary, .btn-primary {
-      padding: 6px 13px;
-      border-radius: 6px;
-      font-size: 0.8rem;
-      cursor: pointer;
-      font-weight: 500;
-      border: 1px solid transparent;
-      transition: all 0.2s ease;
-    }
-
-    .btn-secondary {
+    .btn-action {
+      flex: 1;
+      padding: 6px 0;
       background: var(--hover-bg);
-      color: var(--text-muted);
-      border-color: var(--border-color);
-    }
-
-    .btn-secondary:hover {
+      border: 1px solid var(--border-color);
       color: var(--text-main);
-      border-color: var(--text-muted);
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 0.8rem;
     }
 
-    .btn-primary {
-      background: var(--accent);
-      color: #0f172a;
-      font-weight: 600;
-    }
-
-    .btn-primary:hover {
-      filter: brightness(1.1);
+    .btn-action:hover {
+      background: var(--border-color);
     }
   </style>
 </head>
-<body data-theme="obsidian">
+<body>
 
   <div class="app-layout" id="appLayout">
-    <!-- 頂部 5% 導覽列 -->
-    <header class="top-bar" id="topBar">
-      <!-- 左側：品牌區 + 導覽頁籤 -->
-      <div class="nav-left-section">
-        <div class="brand-box" onclick="reloadCurrentTab()" title="奇奇｜個人生活工作站 (點擊重新載入目前分頁)">
-          <svg class="brand-icon" viewBox="0 0 24 24">
+    
+    <header class="nav-bar">
+      <div class="nav-left">
+        <!-- 品牌區 -->
+        <div class="brand">
+          <svg class="icon" style="stroke: var(--accent)" viewBox="0 0 24 24">
             <rect x="3" y="3" width="7" height="7" rx="1.5"></rect>
             <rect x="14" y="3" width="7" height="7" rx="1.5"></rect>
             <rect x="14" y="14" width="7" height="7" rx="1.5"></rect>
             <rect x="3" y="14" width="7" height="7" rx="1.5"></rect>
           </svg>
-          <span class="brand-title">奇奇</span>
+          奇奇
         </div>
-
         <div class="nav-separator"></div>
 
-        <!-- 導覽頁籤容器 -->
-        <nav class="tabs-container" id="tabsContainer">
-          <!-- 🔗 智能連結 (Alt+1) -->
-          <a href="smart_link_manager.html" target="content-frame" class="nav-tab active" data-url="smart_link_manager.html" onclick="handleTabClick(event, this)" title="智能連結 (快速鍵 Alt+1)">
-            <svg class="tab-icon" viewBox="0 0 24 24">
-              <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path>
-              <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path>
-            </svg>
-            <span>智能連結</span>
-          </a>
+        <!-- 導覽連結 -->
+        <a href="smart_link_manager.html" target="content-frame" class="nav-item active" onclick="setActiveLink(this)" id="link-1" title="Alt+1">
+          <svg class="icon" viewBox="0 0 24 24"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg>
+          智能連結
+        </a>
 
-          <!-- 💳 記帳 (Alt+2) -->
-          <a href="pay.html" target="content-frame" class="nav-tab" data-url="pay.html" onclick="handleTabClick(event, this)" title="記帳 (快速鍵 Alt+2)">
-            <svg class="tab-icon" viewBox="0 0 24 24">
-              <rect x="2" y="5" width="20" height="14" rx="2"></rect>
-              <line x1="2" y1="10" x2="22" y2="10"></line>
-            </svg>
-            <span>記帳</span>
-          </a>
+        <a href="pay.html" target="content-frame" class="nav-item" onclick="setActiveLink(this)" id="link-2" title="Alt+2">
+          <svg class="icon" viewBox="0 0 24 24"><rect x="2" y="5" width="20" height="14" rx="2"></rect><line x1="2" y1="10" x2="22" y2="10"></line></svg>
+          記帳
+        </a>
 
-          <!-- 📥 脆下載 (Alt+3) -->
-          <a href="https://postcopilot.ai/zh-tw/download" target="content-frame" class="nav-tab" data-url="https://postcopilot.ai/zh-tw/download" onclick="handleTabClick(event, this)" title="脆下載 (快速鍵 Alt+3)">
-            <svg class="tab-icon" viewBox="0 0 24 24">
-              <circle cx="12" cy="12" r="4"></circle>
-              <path d="M16 8v5a3 3 0 0 0 6 0v-1a10 10 0 1 0-3.92 7.94"></path>
-            </svg>
-            <span>脆下載</span>
-          </a>
+        <a href="https://chi.xo.je/PIC/" target="content-frame" class="nav-item" onclick="setActiveLink(this)" id="link-3" title="Alt+3">
+          <svg class="icon" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>
+          上傳圖片
+        </a>
 
-          <!-- 📸 ig下載 (Alt+4) -->
-          <a href="https://saveclip.app/zh-tw9" target="content-frame" class="nav-tab" data-url="https://saveclip.app/zh-tw9" onclick="handleTabClick(event, this)" title="ig下載 (快速鍵 Alt+4)">
-            <svg class="tab-icon" viewBox="0 0 24 24">
-              <rect x="2" y="2" width="20" height="20" rx="5" ry="5"></rect>
-              <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path>
-              <line x1="17.5" y1="6.5" x2="17.51" y2="6.5"></line>
-            </svg>
-            <span>ig下載</span>
-          </a>
+        <a href="https://postcopilot.ai/zh-tw/download" target="content-frame" class="nav-item" onclick="setActiveLink(this)" id="link-4" title="Alt+4">
+          <svg class="icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"></circle><path d="M16 8v5a3 3 0 0 0 6 0v-1a10 10 0 1 0-3.92 7.94"></path></svg>
+          脆下載
+        </a>
 
-          <!-- ✈️ 福岡 (Alt+5) -->
-          <a href="f.html" target="content-frame" class="nav-tab" data-url="f.html" onclick="handleTabClick(event, this)" title="福岡 (快速鍵 Alt+5)">
-            <svg class="tab-icon" viewBox="0 0 24 24">
-              <path d="M17.8 19.2 16 11l3.5-3.5C21 6 21.5 4 21 3c-1-.5-3 0-4.5 1.5L13 8 4.8 6.2c-.5-.1-.9.1-1.1.5l-.3.5c-.2.5-.1 1 .3 1.3L9 12l-2 3H4l-1 1 3 2 2 3 1-1v-3l3-2 3.5 5.3c.3.4.8.5 1.3.3l.5-.2c.4-.3.6-.7.5-1.2z"></path>
-            </svg>
-            <span>福岡</span>
-          </a>
-        </nav>
+        <!-- ig下載：唯一在新分頁開啟，沒有 setActiveLink -->
+        <a href="https://saveclip.app/zh-tw9" target="_blank" class="nav-item" id="link-5" title="Alt+5 (新分頁)">
+          <svg class="icon" viewBox="0 0 24 24"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"></rect><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"></line></svg>
+          ig下載
+        </a>
 
-        <!-- 動態新增自訂頁籤按鈕 -->
-        <button class="btn-add-tab" onclick="openAddTabModal()" title="新增自訂頁籤">+</button>
+        <a href="f.html" target="content-frame" class="nav-item" onclick="setActiveLink(this)" id="link-6" title="Alt+6">
+          <svg class="icon" viewBox="0 0 24 24"><path d="M17.8 19.2 16 11l3.5-3.5C21 6 21.5 4 21 3c-1-.5-3 0-4.5 1.5L13 8 4.8 6.2c-.5-.1-.9.1-1.1.5l-.3.5c-.2.5-.1 1 .3 1.3L9 12l-2 3H4l-1 1 3 2 2 3 1-1v-3l3-2 3.5 5.3c.3.4.8.5 1.3.3l.5-.2c.4-.3.6-.7.5-1.2z"></path></svg>
+          福岡
+        </a>
       </div>
 
-      <!-- 右側：工具區 + 即時時間 + 純色主題切換器 -->
-      <div class="nav-right-section">
-        <div class="action-group">
-          <!-- 🔄 重新整理下方 iframe -->
-          <button class="action-btn" onclick="reloadCurrentTab()" title="重新整理目前畫面">
-            <svg class="action-icon" viewBox="0 0 24 24">
-              <path d="M21.5 2v6h-6M2.5 22v-6h6M2 11.5a10 10 0 0 1 18.8-4.3M22 12.5a10 10 0 0 1-18.8 4.3"></path>
-            </svg>
-          </button>
-
-          <!-- ↗ 在新分頁開啟目前 iframe 網址 -->
-          <button class="action-btn" onclick="openInNewWindow()" title="在新分頁開啟目前網頁">
-            <svg class="action-icon" viewBox="0 0 24 24">
-              <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>
-              <polyline points="15 3 21 3 21 9"></polyline>
-              <line x1="10" y1="14" x2="21" y2="3"></line>
-            </svg>
-          </button>
-
-          <!-- ⛶ 專注全螢幕模式切換 -->
-          <button class="action-btn" id="focusBtn" onclick="toggleFocusMode()" title="專注全螢幕模式 (快速鍵 F / Esc 退出)">
-            <svg class="action-icon" viewBox="0 0 24 24">
-              <path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"></path>
-            </svg>
-          </button>
-
-          <!-- 📝 隨手備忘錄按鈕 -->
-          <button class="action-btn" id="scratchpadToggle" onclick="toggleScratchpad()" title="隨手備忘錄">
-            <svg class="action-icon" viewBox="0 0 24 24">
-              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
-              <polyline points="14 2 14 8 20 8"></polyline>
-              <line x1="16" y1="13" x2="8" y2="13"></line>
-              <line x1="16" y1="17" x2="8" y2="17"></line>
-            </svg>
-          </button>
-        </div>
+      <div class="nav-right">
+        <!-- 重新整理 -->
+        <button class="btn-icon" onclick="refreshIframe()" title="重新整理">
+          <svg class="icon" viewBox="0 0 24 24"><polyline points="23 4 23 10 17 10"></polyline><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path></svg>
+        </button>
+        <!-- 在新分頁開啟 -->
+        <button class="btn-icon" onclick="openNewTab()" title="在新分頁開啟目前內容">
+          <svg class="icon" viewBox="0 0 24 24"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg>
+        </button>
+        <!-- 專注模式 -->
+        <button class="btn-icon" onclick="toggleFocus()" title="專注模式 (隱藏頂部)">
+          <svg class="icon" viewBox="0 0 24 24"><path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"></path></svg>
+        </button>
+        <!-- 隨手備忘錄 -->
+        <button class="btn-icon" onclick="toggleScratchpad()" title="隨手備忘錄">
+          <svg class="icon" viewBox="0 0 24 24"><path d="M12 20h9"></path><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path></svg>
+        </button>
 
         <div class="nav-separator"></div>
 
-        <!-- ⏰ 即時時間與星期顯示 -->
-        <div class="live-clock">
-          <span class="live-clock-time" id="liveTime">00:00</span>
-          <span id="liveDay">週日</span>
-        </div>
+        <!-- 時鐘 -->
+        <div class="clock" id="clockDisplay">00:00 週一</div>
 
         <div class="nav-separator"></div>
 
-        <!-- 🎨 5 款純色圓點主題切換器 -->
-        <div class="theme-palette">
-          <button class="color-dot active" data-theme-btn="obsidian" style="background: #38bdf8;" onclick="changeTheme('obsidian')"></button>
-          <button class="color-dot" data-theme-btn="emerald" style="background: #34d399;" onclick="changeTheme('emerald')"></button>
-          <button class="color-dot" data-theme-btn="cyber" style="background: #c084fc;" onclick="changeTheme('cyber')"></button>
-          <button class="color-dot" data-theme-btn="sunset" style="background: #fb923c;" onclick="changeTheme('sunset')"></button>
-          <button class="color-dot" data-theme-btn="light" style="background: #64748b;" onclick="changeTheme('light')"></button>
+        <!-- 主題色票 -->
+        <div class="theme-dots">
+          <div class="dot" style="background-color: #38bdf8;" onclick="setTheme('default')"></div>
+          <div class="dot" style="background-color: #34d399;" onclick="setTheme('emerald')"></div>
+          <div class="dot" style="background-color: #c084fc;" onclick="setTheme('cyber')"></div>
+          <div class="dot" style="background-color: #fb923c;" onclick="setTheme('sunset')"></div>
+          <div class="dot" style="background-color: #64748b;" onclick="setTheme('light')"></div>
         </div>
       </div>
-
-      <!-- 頂部下緣平滑載入進度條 -->
-      <div class="loading-bar" id="loadingBar"></div>
     </header>
 
-    <!-- 下方 95% 內容區 -->
-    <main class="workspace-area">
-      <iframe 
-        name="content-frame" 
-        id="content-frame" 
-        class="app-frame" 
-        src="smart_link_manager.html"
-        allowfullscreen>
-      </iframe>
+    <main class="content-area">
+      <!-- 內容 iframe -->
+      <iframe id="content-frame" name="content-frame" src="smart_link_manager.html"></iframe>
+      
+      <!-- 專注模式離開按鈕 -->
+      <button class="exit-focus" onclick="toggleFocus()">退出專注模式</button>
 
-      <!-- 右側滑出半透明隨手備忘錄抽屜 -->
-      <aside class="scratchpad-drawer" id="scratchpadDrawer">
+      <!-- 隨手備忘錄抽屜 -->
+      <div class="scratchpad-drawer" id="scratchpad">
         <div class="scratchpad-header">
-          <div class="scratchpad-title">
-            <svg style="width:15px;height:15px;stroke:var(--accent);fill:none;stroke-width:2;" viewBox="0 0 24 24">
-              <path d="M12 20h9"></path>
-              <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path>
-            </svg>
-            <span>隨手備忘錄</span>
-          </div>
-          <span class="scratchpad-status" id="scratchpadStatus">已自動儲存</span>
+          <span>隨手備忘錄</span>
+          <span style="font-size:0.75rem; color:var(--text-muted);" id="saveStatus">自動儲存中...</span>
         </div>
-        <textarea 
-          class="scratchpad-textarea" 
-          id="scratchpadInput" 
-          placeholder="在此輸入臨時筆記、連結或待辦事項，內容將即時自動儲存於瀏覽器..."></textarea>
+        <div class="scratchpad-body">
+          <textarea id="scratchpadInput" placeholder="在這裡輸入筆記..."></textarea>
+        </div>
         <div class="scratchpad-footer">
-          <span>LocalStorage 即時同步</span>
-          <div class="drawer-btn-group">
-            <button class="btn-secondary" style="padding:3px 9px; font-size:0.73rem;" onclick="copyScratchpad()">一鍵複製</button>
-            <button class="btn-secondary" style="padding:3px 9px; font-size:0.73rem;" onclick="clearScratchpad()">清空</button>
-          </div>
+          <button class="btn-action" onclick="copyScratchpad()">複製內容</button>
+          <button class="btn-action" onclick="clearScratchpad()">清空</button>
         </div>
-      </aside>
-
-      <!-- 右上角半透明微型浮動膠囊按鈕 (專注模式時顯示) -->
-      <button class="focus-exit-pill" onclick="toggleFocusMode()" title="退出全螢幕 (Esc)">
-        <svg style="width:13px;height:13px;stroke:currentColor;fill:none;stroke-width:2;" viewBox="0 0 24 24">
-          <polyline points="4 14 10 14 10 20"></polyline>
-          <polyline points="20 10 14 10 14 4"></polyline>
-          <line x1="14" y1="10" x2="21" y2="3"></line>
-          <line x1="3" y1="21" x2="10" y2="14"></line>
-        </svg>
-        <span>退出全螢幕</span>
-      </button>
+      </div>
     </main>
-  </div>
 
-  <!-- 新增自訂頁籤對話框 -->
-  <div class="modal-overlay" id="modalOverlay">
-    <div class="modal-card">
-      <h3 class="modal-title">新增自訂頁籤</h3>
-      <div class="modal-input-group">
-        <label class="modal-label">名稱</label>
-        <input type="text" id="tabNameInput" class="modal-input" placeholder="例如：行事曆、筆記" maxlength="16">
-      </div>
-      <div class="modal-input-group">
-        <label class="modal-label">網址 / 相對路徑</label>
-        <input type="text" id="tabUrlInput" class="modal-input" placeholder="例如：calendar.html 或 https://...">
-      </div>
-      <div class="modal-actions">
-        <button class="btn-secondary" onclick="closeAddTabModal()">取消</button>
-        <button class="btn-primary" onclick="confirmAddTab()">儲存新增</button>
-      </div>
-    </div>
   </div>
 
   <script>
-    // LocalStorage 儲存鍵值
-    const STORAGE_KEY_THEME = 'chichi_theme';
-    const STORAGE_KEY_LAST_TAB = 'chichi_last_tab';
-    const STORAGE_KEY_CUSTOM_TABS = 'chichi_custom_tabs';
-    const STORAGE_KEY_NOTES = 'chichi_scratchpad_notes';
-
-    const iframeEl = document.getElementById('content-frame');
-    const loadingBar = document.getElementById('loadingBar');
-    let currentUrl = 'smart_link_manager.html';
-
-    // 頂部進度條動畫控制
-    function startLoadingBar() {
-      loadingBar.className = 'loading-bar active';
+    /* ================= 導覽列與 iframe 邏輯 ================= */
+    const iframe = document.getElementById('content-frame');
+    
+    // 切換活動標籤樣式 (除了ig下載)
+    function setActiveLink(element) {
+      document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+      element.classList.add('active');
     }
 
-    iframeEl.addEventListener('load', () => {
-      loadingBar.className = 'loading-bar done';
-      setTimeout(() => {
-        loadingBar.className = 'loading-bar';
-      }, 350);
-    });
-
-    // 點擊或切換頁籤
-    function handleTabClick(e, tabElement) {
-      if (e) e.preventDefault();
-      const targetUrl = tabElement.getAttribute('data-url');
-      if (!targetUrl) return;
-
-      document.querySelectorAll('.nav-tab').forEach(item => item.classList.remove('active'));
-      tabElement.classList.add('active');
-
-      startLoadingBar();
-      iframeEl.src = targetUrl;
-      currentUrl = targetUrl;
-      localStorage.setItem(STORAGE_KEY_LAST_TAB, targetUrl);
+    // 重新整理 iframe
+    function refreshIframe() {
+      // 確保跨域限制不會讓 src 讀取失敗，直接重新指派現有 src
+      iframe.src = iframe.src;
     }
 
-    // 重新整理目前下方 iframe
-    function reloadCurrentTab() {
-      startLoadingBar();
-      try {
-        iframeEl.src = currentUrl || iframeEl.getAttribute('src');
-      } catch (err) {
-        iframeEl.src = currentUrl;
+    // 在新分頁開啟目前的 iframe 來源
+    function openNewTab() {
+      if(iframe.src) {
+        window.open(iframe.src, '_blank');
       }
     }
 
-    // 在新分頁開啟目前 iframe 網址
-    function openInNewWindow() {
-      const target = currentUrl || iframeEl.getAttribute('src') || 'smart_link_manager.html';
-      window.open(target, '_blank');
-    }
-
-    // 專注全螢幕模式切換
-    function toggleFocusMode() {
-      const layout = document.getElementById('appLayout');
+    // 專注全螢幕模式
+    const layout = document.getElementById('appLayout');
+    function toggleFocus() {
       layout.classList.toggle('focus-mode');
     }
 
-    function loadCustomTabs() {
-      try {
-        const savedTabs = JSON.parse(localStorage.getItem(STORAGE_KEY_CUSTOM_TABS) || '[]');
-        savedTabs.forEach(tab => createCustomTabDOM(tab.name, tab.url));
-      } catch (e) {
-        localStorage.removeItem(STORAGE_KEY_CUSTOM_TABS);
+    /* ================= 鍵盤快捷鍵 (Alt+1 ~ Alt+6) ================= */
+    document.addEventListener('keydown', (e) => {
+      // 確保用戶按下 Alt 鍵且按鍵是 1 到 6
+      if (e.altKey && e.key >= '1' && e.key <= '6') {
+        e.preventDefault(); // 阻止瀏覽器預設行為
+        const link = document.getElementById(`link-${e.key}`);
+        if (link) {
+          link.click();
+        }
       }
+    });
+
+    /* ================= 時鐘邏輯 ================= */
+    const clockDisplay = document.getElementById('clockDisplay');
+    const days = ['週日', '週一', '週二', '週三', '週四', '週五', '週六'];
+
+    function updateClock() {
+      const now = new Date();
+      const h = String(now.getHours()).padStart(2, '0');
+      const m = String(now.getMinutes()).padStart(2, '0');
+      const d = days[now.getDay()];
+      clockDisplay.textContent = `${h}:${m} ${d}`;
     }
+    setInterval(updateClock, 1000);
+    updateClock(); // 初始呼叫
 
-    function createCustomTabDOM(name, url) {
-      const container = document.getElementById('tabsContainer');
-      const link = document.createElement('a');
-      link.href = url;
-      link.target = 'content-frame';
-      link.className = 'nav-tab';
-      link.setAttribute('data-url', url);
-      link.setAttribute('data-custom', 'true');
-      link.onclick = (e) => handleTabClick(e, link);
-
-      link.innerHTML = `
-        <svg class="tab-icon" viewBox="0 0 24 24">
-          <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
-        </svg>
-        <span>${escapeHtml(name)}</span>
-        <span class="tab-close" title="刪除此自訂頁籤">&times;</span>
-      `;
-
-      const closeBtn = link.querySelector('.tab-close');
-      closeBtn.addEventListener('click', (ev) => {
-        ev.preventDefault();
-        ev.stopPropagation();
-        deleteCustomTab(url, link);
-      });
-
-      container.appendChild(link);
-    }
-
-    function openAddTabModal() {
-      document.getElementById('modalOverlay').classList.add('active');
-      setTimeout(() => document.getElementById('tabNameInput').focus(), 50);
-    }
-
-    function closeAddTabModal() {
-      document.getElementById('modalOverlay').classList.remove('active');
-      document.getElementById('tabNameInput').value = '';
-      document.getElementById('tabUrlInput').value = '';
-    }
-
-    function confirmAddTab() {
-      const name = document.getElementById('tabNameInput').value.trim();
-      const url = document.getElementById('tabUrlInput').value.trim();
-      if (!name || !url) return;
-
-      const savedTabs = JSON.parse(localStorage.getItem(STORAGE_KEY_CUSTOM_TABS) || '[]');
-      savedTabs.push({ name, url });
-      localStorage.setItem(STORAGE_KEY_CUSTOM_TABS, JSON.stringify(savedTabs));
-
-      createCustomTabDOM(name, url);
-      closeAddTabModal();
-
-      const allCustom = document.querySelectorAll('.nav-tab[data-custom="true"]');
-      const newestTab = allCustom[allCustom.length - 1];
-      if (newestTab) handleTabClick(null, newestTab);
-    }
-
-    function deleteCustomTab(url, tabDom) {
-      let savedTabs = JSON.parse(localStorage.getItem(STORAGE_KEY_CUSTOM_TABS) || '[]');
-      savedTabs = savedTabs.filter(t => t.url !== url);
-      localStorage.setItem(STORAGE_KEY_CUSTOM_TABS, JSON.stringify(savedTabs));
-
-      const wasActive = tabDom.classList.contains('active');
-      tabDom.remove();
-
-      if (wasActive) {
-        const firstTab = document.querySelector('.nav-tab');
-        if (firstTab) handleTabClick(null, firstTab);
-      }
-    }
-
-    function escapeHtml(str) {
-      return String(str).replace(/[&<>"']/g, m => ({
-        '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
-      }[m]));
-    }
-
-    function initLiveClock() {
-      const timeEl = document.getElementById('liveTime');
-      const dayEl = document.getElementById('liveDay');
-      const weekDays = ['週日', '週一', '週二', '週三', '週四', '週五', '週六'];
-
-      function updateClock() {
-        const now = new Date();
-        const hours = String(now.getHours()).padStart(2, '0');
-        const minutes = String(now.getMinutes()).padStart(2, '0');
-        timeEl.textContent = `${hours}:${minutes}`;
-        dayEl.textContent = weekDays[now.getDay()];
-      }
-
-      updateClock();
-      setInterval(updateClock, 1000);
-    }
-
-    // 隨手備忘錄控制
-    const scratchpadDrawer = document.getElementById('scratchpadDrawer');
-    const scratchpadInput = document.getElementById('scratchpadInput');
-    const scratchpadStatus = document.getElementById('scratchpadStatus');
+    /* ================= 隨手備忘錄 (LocalStorage) ================= */
+    const scratchpad = document.getElementById('scratchpad');
+    const scratchInput = document.getElementById('scratchpadInput');
+    const saveStatus = document.getElementById('saveStatus');
+    let saveTimeout;
 
     function toggleScratchpad() {
-      const isOpen = scratchpadDrawer.classList.toggle('open');
-      document.getElementById('scratchpadToggle').classList.toggle('active', isOpen);
-      if (isOpen) scratchpadInput.focus();
+      scratchpad.classList.toggle('open');
     }
 
-    function initScratchpad() {
-      scratchpadInput.value = localStorage.getItem(STORAGE_KEY_NOTES) || '';
-      let timer;
-      scratchpadInput.addEventListener('input', () => {
-        scratchpadStatus.textContent = '儲存中...';
-        clearTimeout(timer);
-        timer = setTimeout(() => {
-          localStorage.setItem(STORAGE_KEY_NOTES, scratchpadInput.value);
-          scratchpadStatus.textContent = '已自動儲存';
-        }, 250);
-      });
-    }
+    // 讀取紀錄
+    scratchInput.value = localStorage.getItem('chichi_scratchpad') || '';
+
+    // 自動儲存
+    scratchInput.addEventListener('input', () => {
+      saveStatus.textContent = "儲存中...";
+      clearTimeout(saveTimeout);
+      saveTimeout = setTimeout(() => {
+        localStorage.setItem('chichi_scratchpad', scratchInput.value);
+        saveStatus.textContent = "已自動儲存";
+      }, 500);
+    });
 
     function copyScratchpad() {
-      if (!scratchpadInput.value) {
-        scratchpadStatus.textContent = '無內容可複製';
-        return;
-      }
-      scratchpadInput.select();
-      document.execCommand('copy');
-      scratchpadStatus.textContent = '已複製到剪貼簿！';
-      setTimeout(() => {
-        scratchpadStatus.textContent = '已自動儲存';
-      }, 1800);
+      if(!scratchInput.value) return;
+      navigator.clipboard.writeText(scratchInput.value).then(() => {
+        saveStatus.textContent = "已複製！";
+        setTimeout(() => saveStatus.textContent = "已自動儲存", 2000);
+      });
     }
 
     function clearScratchpad() {
-      scratchpadInput.value = '';
-      localStorage.removeItem(STORAGE_KEY_NOTES);
-      scratchpadStatus.textContent = '已清空備忘錄';
-      setTimeout(() => {
-        scratchpadStatus.textContent = '已自動儲存';
-      }, 1800);
+      if(confirm('確定要清空備忘錄嗎？')) {
+        scratchInput.value = '';
+        localStorage.removeItem('chichi_scratchpad');
+        saveStatus.textContent = "已清空";
+      }
     }
 
-    // 主題切換與記憶
-    function changeTheme(themeName) {
-      document.body.setAttribute('data-theme', themeName);
-      localStorage.setItem(STORAGE_KEY_THEME, themeName);
-      document.querySelectorAll('.color-dot').forEach(dot => {
-        dot.classList.toggle('active', dot.getAttribute('data-theme-btn') === themeName);
-      });
+    /* ================= 佈景主題切換 ================= */
+    function setTheme(theme) {
+      document.body.setAttribute('data-theme', theme);
+      localStorage.setItem('chichi_theme', theme);
     }
-
-    function loadSavedTheme() {
-      const savedTheme = localStorage.getItem(STORAGE_KEY_THEME) || 'obsidian';
-      changeTheme(savedTheme);
+    
+    // 初始化載入主題
+    const savedTheme = localStorage.getItem('chichi_theme');
+    if(savedTheme) {
+      setTheme(savedTheme);
     }
-
-    // 全域鍵盤快速鍵 (Alt+1~5, F 專注模式, Esc 退出)
-    window.addEventListener('keydown', (e) => {
-      const isInputFocused = ['INPUT', 'TEXTAREA'].includes(document.activeElement.tagName);
-
-      if (e.key === 'Escape') {
-        const layout = document.getElementById('appLayout');
-        if (layout.classList.contains('focus-mode')) layout.classList.remove('focus-mode');
-        if (scratchpadDrawer.classList.contains('open')) toggleScratchpad();
-        closeAddTabModal();
-      }
-
-      if ((e.key === 'f' || e.key === 'F') && !isInputFocused && !e.ctrlKey && !e.metaKey && !e.altKey) {
-        e.preventDefault();
-        toggleFocusMode();
-      }
-
-      if (e.altKey && ['1', '2', '3', '4', '5'].includes(e.key)) {
-        e.preventDefault();
-        const index = parseInt(e.key, 10) - 1;
-        const tabs = document.querySelectorAll('.nav-tab');
-        if (tabs[index]) handleTabClick(null, tabs[index]);
-      }
-    });
-
-    // 支援於對話框按 Enter 直接新增頁籤
-    document.getElementById('tabUrlInput').addEventListener('keydown', (e) => {
-      if (e.key === 'Enter') confirmAddTab();
-    });
-
-    // 啟動初始化
-    window.addEventListener('DOMContentLoaded', () => {
-      initLiveClock();
-      initScratchpad();
-      loadCustomTabs();
-      loadSavedTheme();
-
-      const savedUrl = localStorage.getItem(STORAGE_KEY_LAST_TAB) || 'smart_link_manager.html';
-      const targetTab = Array.from(document.querySelectorAll('.nav-tab')).find(
-        tab => tab.getAttribute('data-url') === savedUrl
-      );
-
-      if (targetTab) {
-        handleTabClick(null, targetTab);
-      } else {
-        const defaultTab = document.querySelector('.nav-tab');
-        if (defaultTab) handleTabClick(null, defaultTab);
-      }
-    });
   </script>
 </body>
 </html>
