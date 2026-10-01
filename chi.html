@@ -428,23 +428,25 @@
   <script>
     /* ================= 導覽列與 iframe 邏輯 ================= */
     const iframe = document.getElementById('content-frame');
+    let currentIframeUrl = 'smart_link_manager.html';
     
     // 切換活動標籤樣式 (除了ig下載)
     function setActiveLink(element) {
       document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
       element.classList.add('active');
+      // 更新當前 iframe 網址紀錄，避免 CORS 錯誤
+      currentIframeUrl = element.getAttribute('href');
     }
 
     // 重新整理 iframe
     function refreshIframe() {
-      // 確保跨域限制不會讓 src 讀取失敗，直接重新指派現有 src
-      iframe.src = iframe.src;
+      iframe.src = currentIframeUrl;
     }
 
     // 在新分頁開啟目前的 iframe 來源
     function openNewTab() {
-      if(iframe.src) {
-        window.open(iframe.src, '_blank');
+      if(currentIframeUrl) {
+        window.open(currentIframeUrl, '_blank');
       }
     }
 
