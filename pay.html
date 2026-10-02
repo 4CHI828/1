@@ -132,47 +132,69 @@ body { padding-bottom: 80px; }
   footer { padding-bottom: 6px !important; }
 }
 
-/* Mobile UX v3 */
+/* Mobile UX v4 - preserve all original controls and functionality */
 @media (max-width: 640px) {
-  body { padding-bottom: calc(82px + env(safe-area-inset-bottom)); }
+  body { padding-bottom: calc(78px + env(safe-area-inset-bottom)); }
   header > div { min-height: 58px; }
-  header > div > div:first-child { max-width: calc(100vw - 16px); }
-  #sheetSelector { width: 128px; min-width: 128px; max-width: 128px; text-overflow: ellipsis; }
-  main { padding-top: 76px !important; }
-  main > div { width: 100%; max-width: 100%; }
-  #view-record, #view-history, #view-settle, #view-settings { width: 100%; }
+  #sheetSelector { width: 138px; min-width: 138px; max-width: 138px; text-overflow: ellipsis; overflow: hidden; }
+  main { padding-top: 78px !important; }
+  main > div { width: 100%; max-width: 100%; min-width: 0; }
+  #view-record, #view-history, #view-settle, #view-settings { width: 100%; min-width: 0; }
   #view-record .grid, #view-history .grid, #view-settle .grid, #view-settings .grid { min-width: 0; }
-  #view-record .grid.grid-cols-2, #view-history .grid.grid-cols-2, #view-settle .grid.grid-cols-2, #view-settings .grid.grid-cols-2 { grid-template-columns: minmax(0,1fr) minmax(0,1fr); }
-  #view-record input, #view-record select, #view-record textarea, #view-history input, #view-history select, #view-settle select, #view-settings input, #view-settings select { max-width: 100%; }
-  #view-record .bg-white\/80, #view-history .bg-white\/80, #view-settle .bg-white\/80, #view-settings .bg-white\/80 { min-width: 0; }
-  #quickTemplatesBar, #rateChipsContainer, #membersCheckboxes, #categoryTagList, #memberTagList {
-    display: flex; flex-wrap: nowrap !important; overflow-x: auto; overscroll-behavior-x: contain; padding-bottom: 4px;
+  #view-record input, #view-record select, #view-record textarea,
+  #view-history input, #view-history select, #view-settle select,
+  #view-settings input, #view-settings select { max-width: 100%; min-width: 0; }
+  #quickTemplatesBar, #rateChipsContainer {
+    max-width: 100%; overflow-x: auto; overscroll-behavior-x: contain;
+    scrollbar-width: none; -webkit-overflow-scrolling: touch;
   }
-  #quickTemplatesBar > *, #rateChipsContainer > * { flex: 0 0 auto; }
-  #membersCheckboxes { flex-wrap: wrap !important; overflow-x: visible; max-height: 132px; overflow-y: auto; }
-  #recordList { display: flex; flex-direction: column; gap: 8px; }
-  #recordList > * { min-width: 0; }
-  #recordList button { min-height: 40px; }
-  #mainChartContainer canvas { max-height: 300px !important; }
-  #settlementTransfers { max-width: 100%; white-space: normal; }
-  #poolConfigPanel { overflow: hidden; }
-  nav { height: calc(68px + env(safe-area-inset-bottom)); }
-  nav > div { max-width: 100%; height: 68px; }
-  nav button { border-radius: 14px; }
+  #quickTemplatesBar::-webkit-scrollbar, #rateChipsContainer::-webkit-scrollbar { display:none; }
+  #quickTemplatesBar > *, #rateChipsContainer > * { flex-shrink: 0; }
+  #membersCheckboxes { max-width: 100%; overflow-y: auto; overflow-x: hidden; }
+  #categoryTagList, #memberTagList { max-width: 100%; overflow-x: auto; }
+  #recordList > * { min-width: 0; max-width: 100%; }
+  #mainChartContainer { max-width: 100%; overflow: hidden; }
+  #mainChartContainer canvas { max-width: 100%; }
+  #settlementTransfers { max-width: 100%; overflow-x: auto; }
+  nav { min-height: 58px; padding-bottom: env(safe-area-inset-bottom) !important; }
+  nav > div { max-width: 100%; }
+  nav button { min-height: 58px; border-radius: 14px; }
   nav button span:last-child { line-height: 1.1; }
   [id$="Modal"] { padding: 10px !important; }
-  [id$="Modal"] > div { width: 100%; max-width: 100%; border-radius: 22px; padding: 16px !important; }
-  #memberDrilldownModal > div, #lineShareModal > div { max-height: calc(100vh - 20px); }
+  [id$="Modal"] > div { max-width: calc(100vw - 20px); box-sizing: border-box; }
+  #memberDrilldownModal > div, #lineShareModal > div { max-height: 88vh; }
   #lineShareText { max-height: 45vh; overflow-y: auto; }
-  .overflow-x-auto { max-width: 100%; }
 }
 @media (max-width: 380px) {
-  #sheetSelector { width: 112px; min-width: 112px; max-width: 112px; }
+  #sheetSelector { width: 124px; min-width: 124px; max-width: 124px; }
   main { padding-left: 8px !important; padding-right: 8px !important; }
-  .p-4 { padding: 0.8rem !important; }
-  .gap-4 { gap: 0.75rem !important; }
   nav button span:first-child { font-size: 1.1rem; }
   nav button span:last-child { font-size: 0.65rem; }
+}
+
+/* Mobile history actions: touch devices have no hover, so keep record actions visible. */
+@media (max-width: 640px) {
+  #recordList .record-card > div:last-child { min-width: 0; }
+  #recordList .record-card > div:last-child > div:last-child {
+    opacity: 1 !important;
+    visibility: visible !important;
+    display: flex !important;
+    flex-shrink: 0;
+  }
+  #recordList .record-card > div:last-child > div:last-child button {
+    min-width: 36px;
+    min-height: 36px;
+    padding: 7px !important;
+    touch-action: manipulation;
+  }
+}
+@media (max-width: 380px) {
+  #recordList .record-card { padding: 9px !important; }
+  #recordList .record-card > div:last-child { gap: 5px !important; }
+  #recordList .record-card > div:last-child > div:last-child { gap: 2px !important; }
+  #recordList .record-card > div:last-child > div:last-child button {
+    min-width: 34px; min-height: 34px; padding: 6px !important;
+  }
 }
 </style>
 <script>
@@ -615,6 +637,19 @@ tailwind.config = { darkMode: 'class' };
 <button type="button" onclick="executeLineShare('all')" class="w-full bg-gray-50 dark:bg-gray-700/40 hover:bg-gray-100 dark:hover:bg-gray-700/70 p-3 rounded-2xl text-left border border-gray-200 dark:border-gray-600 transition active:scale-95 flex flex-col gap-0.5">
 <span class="font-bold text-gray-700 dark:text-gray-200 text-sm">📑 完整帳本匯總</span>
 </button>
+</div>
+</div>
+</div>
+<div id="recordDetailModal" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 transition-opacity" onclick="if(event.target===this)closeRecordDetail()">
+<div class="bg-white dark:bg-gray-800 rounded-3xl p-5 max-w-md w-full max-h-[88vh] overflow-y-auto shadow-2xl space-y-4">
+<div class="flex items-center justify-between gap-3">
+<div class="font-bold text-gray-800 dark:text-gray-100 text-base">📋 紀錄詳細資料</div>
+<button type="button" onclick="closeRecordDetail()" class="w-9 h-9 rounded-xl bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-200 font-bold text-lg">×</button>
+</div>
+<div id="recordDetailContent" class="space-y-3 text-sm"></div>
+<div class="flex gap-2 pt-1">
+<button type="button" id="detailEditBtn" class="flex-1 min-h-[44px] rounded-xl bg-blue-600 text-white font-bold">✏️ 修改</button>
+<button type="button" id="detailDuplicateBtn" class="flex-1 min-h-[44px] rounded-xl bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-100 font-bold">📋 複製</button>
 </div>
 </div>
 </div>
@@ -3297,7 +3332,7 @@ function renderRecordsList(){
     
     list.innerHTML=filtered.map(r=>{
         const color=getMemberColor(Object.keys(parsePayers(r))[0]||r.payer); const id=escapeJsStr(r.id); 
-        return `<div class="record-card bg-white dark:bg-gray-800 p-3 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-sm flex items-center justify-between group transition hover:border-blue-300">
+        return `<div class="record-card bg-white dark:bg-gray-800 p-3 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-sm flex items-center justify-between group transition hover:border-blue-300 cursor-pointer" role="button" tabindex="0" onclick="openRecordDetail('${id}')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openRecordDetail('${id}')}" aria-label="查看 ${escapeHtml(r.title)} 詳細紀錄">
             <div class="flex items-center gap-3 overflow-hidden">
                 <div class="w-10 h-10 rounded-xl flex items-center justify-center text-lg shadow-inner ${color.bg} ${color.text}">${escapeHtml((r.category||'其')[0])}</div>
                 <div class="overflow-hidden"><div class="text-xs font-bold truncate">${escapeHtml(r.title)} <span class="text-gray-400 font-normal ml-1">${escapeHtml(getWeekdayLabel(r.date))}</span></div><div class="text-[0.65rem] text-gray-400">${escapeHtml(r.date)} · ${escapeHtml(r.category||'其他')}</div></div>
@@ -3305,14 +3340,41 @@ function renderRecordsList(){
             <div class="flex items-center gap-3">
                 <div class="text-right"><div class="text-sm font-mono font-bold ${r.type==='income'?'text-emerald-600':'text-gray-700 dark:text-gray-200'}">${r.type==='income'?'+':''}$${Math.round(r.twdAmount||0).toLocaleString()}</div><div class="text-[0.6rem] text-gray-400 font-mono">${escapeHtml(r.amount)} ${escapeHtml(r.currency)}</div></div>
                 <div class="flex opacity-0 group-hover:opacity-100 transition gap-1">
-                    <button onclick="startEditRecord('${id}')" class="p-1.5 bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-100">✏️</button>
-                    <button onclick="duplicateRecordToForm('${id}')" class="p-1.5 bg-gray-50 text-gray-600 rounded-lg hover:bg-gray-100">📋</button>
-                    <button onclick="softDeleteRecord('${id}')" class="p-1.5 bg-red-50 text-red-600 rounded-lg hover:bg-red-100">🗑️</button>
+                    <button onclick="event.stopPropagation();startEditRecord('${id}')" class="p-1.5 bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-100">✏️</button>
+                    <button onclick="event.stopPropagation();duplicateRecordToForm('${id}')" class="p-1.5 bg-gray-50 text-gray-600 rounded-lg hover:bg-gray-100">📋</button>
+                    <button onclick="event.stopPropagation();softDeleteRecord('${id}')" class="p-1.5 bg-red-50 text-red-600 rounded-lg hover:bg-red-100">🗑️</button>
                 </div>
             </div>
         </div>`;
     }).join("")||`<div class="text-center py-10 text-gray-400 text-xs">無符合條件的紀錄</div>`;
 }
+
+window.openRecordDetail = function(id) {
+    const r = cachedRecords.find(x => x.id === id);
+    const modal = document.getElementById("recordDetailModal");
+    const box = document.getElementById("recordDetailContent");
+    if (!r || !modal || !box) return;
+    const typeLabels = { expense:"👥 分帳支出", personal:"👤 個人支出", income:"💰 收入", settlement:"🤝 平帳還款" };
+    const payerMap = parsePayers(r);
+    const shareMap = parseShares(r);
+    const row = (label, value, cls="") => `<div class="flex items-start justify-between gap-3 py-2 border-b border-gray-100 dark:border-gray-700 last:border-0"><span class="text-gray-500 dark:text-gray-400 flex-shrink-0">${label}</span><span class="text-right font-medium ${cls}">${value}</span></div>`;
+    const payerText = Object.entries(payerMap).map(([n,a]) => `${escapeHtml(n)} $${Math.round(a).toLocaleString()}`).join("、") || escapeHtml(r.payer || "—");
+    const shareText = Object.entries(shareMap).map(([n,a]) => `${escapeHtml(n)} $${Math.round(a).toLocaleString()}`).join("、") || "—";
+    const receipt = r.receipt ? `<button type="button" onclick="openRecordReceipt('${escapeJsStr(r.id)}')" class="text-blue-600 dark:text-blue-400 underline">查看收據照片</button>` : "無";
+    const ocr = r.receiptOcr ? [r.receiptOcr.merchant, r.receiptOcr.invoiceNo, r.receiptOcr.date, r.receiptOcr.currency, r.receiptOcr.amount ? `$${r.receiptOcr.amount}` : ""].filter(Boolean).map(escapeHtml).join(" · ") : "無";
+    box.innerHTML = `<div class="bg-gray-50 dark:bg-gray-900/50 rounded-2xl p-3">${row("項目", escapeHtml(r.title), "font-bold text-gray-800 dark:text-gray-100")}${row("日期", escapeHtml(r.date || "—"))}${row("類型", escapeHtml(typeLabels[r.type] || r.type || "—"))}${row("類別", escapeHtml(r.category || "其他"))}${row("原始金額", `${escapeHtml(r.amount)} ${escapeHtml(r.currency || "TWD")}`)}${row("TWD 金額", `$${Math.round(r.twdAmount || 0).toLocaleString()}`, "font-mono font-bold")}${row("匯率", escapeHtml(String(r.rate ?? 1)))}${row("付款人", payerText)}${row("分攤", shareText)}${row("分攤模式", escapeHtml(r.splitMode || "—"))}${row("收據", receipt)}${row("OCR", ocr)}</div>`;
+    const edit = document.getElementById("detailEditBtn"), dup = document.getElementById("detailDuplicateBtn");
+    if (edit) edit.onclick = () => { closeRecordDetail(); startEditRecord(id); };
+    if (dup) dup.onclick = () => { closeRecordDetail(); duplicateRecordToForm(id); };
+    modal.classList.remove("hidden");
+};
+window.closeRecordDetail = function() { document.getElementById("recordDetailModal")?.classList.add("hidden"); };
+window.openRecordReceipt = function(id) {
+    const r = cachedRecords.find(x => x.id === id);
+    if (!r?.receipt) return showToast("這筆紀錄沒有收據照片", "info");
+    const modal = document.getElementById("imageModal"), img = document.getElementById("modalImg");
+    if (modal && img) { img.src = r.receipt; modal.classList.remove("hidden"); }
+};
 
 const repairFilterMemberSelect = () => {
     const sel=document.getElementById("filterMemberSelect"); if(!sel) return;
