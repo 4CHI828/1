@@ -15,10 +15,16 @@
       --text-main: #f1f5f9;
       --hover-bg: rgba(255, 255, 255, 0.08);
       --accent: #38bdf8;
-      --drawer-bg: rgba(30, 41, 59, 0.96);
+      --drawer-bg: rgba(30, 41, 59, 0.97);
+      --nav-height: 58px;
+      --radius-sm: 10px;
+      --shadow-soft: 0 8px 28px rgba(0,0,0,.16);
     }
 
     [data-theme="emerald"] {
+      --nav-height: 58px;
+      --radius-sm: 10px;
+      --shadow-soft: 0 8px 28px rgba(0,0,0,.16);
       --top-bg: #064e3b;
       --bottom-bg: #022c22;
       --border-color: #047857;
@@ -74,6 +80,7 @@
       color: var(--text-main);
       overflow: hidden;
       transition: background-color 0.3s ease;
+      padding-bottom: env(safe-area-inset-bottom);
     }
 
     /* 5% / 95% Grid 架構 */
@@ -245,21 +252,31 @@
 
     .scratchpad-drawer {
       position: absolute;
-      top: 0;
-      right: -320px;
-      width: 320px;
-      height: 100%;
+      top: 64px;
+      right: 14px;
+      width: 340px;
+      height: min(520px, calc(100% - 78px));
       background: var(--drawer-bg);
-      border-left: 1px solid var(--border-color);
+      border: 1px solid var(--border-color);
+      border-radius: 14px;
       display: flex;
       flex-direction: column;
-      transition: right 0.3s ease;
+      opacity: 0;
+      visibility: hidden;
+      pointer-events: none;
+      transform: translateY(-8px) scale(0.98);
+      transform-origin: top right;
+      transition: opacity 0.2s ease, transform 0.2s ease, visibility 0.2s ease;
       z-index: 90;
-      box-shadow: -4px 0 15px rgba(0,0,0,0.1);
+      box-shadow: 0 12px 32px rgba(0,0,0,0.28);
+      overflow: hidden;
     }
 
     .scratchpad-drawer.open {
-      right: 0;
+      opacity: 1;
+      visibility: visible;
+      pointer-events: auto;
+      transform: translateY(0) scale(1);
     }
 
     .scratchpad-header {
@@ -311,6 +328,384 @@
     .btn-action:hover {
       background: var(--border-color);
     }
+  
+    /* ================= 整體介面精修 ================= */
+    .nav-bar {
+      min-height: var(--nav-height);
+      padding-left: clamp(10px, 1.5vw, 22px);
+      padding-right: clamp(10px, 1.5vw, 22px);
+      box-shadow: 0 1px 0 rgba(255,255,255,.02);
+      position: relative;
+      z-index: 120;
+    }
+
+    .nav-left, .nav-right { gap: 6px; }
+
+    .brand {
+      min-width: max-content;
+      padding: 7px 9px;
+      border-radius: var(--radius-sm);
+      margin-right: 2px;
+    }
+
+    .nav-item {
+      position: relative;
+      min-height: 40px;
+      padding: 7px 11px;
+      border: 1px solid transparent;
+      border-radius: var(--radius-sm);
+    }
+
+    .nav-item.active {
+      border-color: color-mix(in srgb, var(--accent) 24%, transparent);
+      box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--accent) 8%, transparent);
+    }
+
+    .nav-item.active::after {
+      content: "";
+      position: absolute;
+      left: 12px;
+      right: 12px;
+      bottom: 2px;
+      height: 2px;
+      border-radius: 99px;
+      background: var(--accent);
+      opacity: .9;
+    }
+
+    .btn-icon {
+      width: 38px;
+      height: 38px;
+      border-radius: var(--radius-sm);
+    }
+
+    .btn-icon:focus-visible,
+    .nav-item:focus-visible,
+    .btn-action:focus-visible,
+    .dot:focus-visible {
+      outline: 2px solid var(--accent);
+      outline-offset: 2px;
+    }
+
+    .theme-dots { gap: 7px; padding: 0 3px; }
+
+    .dot {
+      width: 14px;
+      height: 14px;
+      box-shadow: 0 0 0 2px transparent;
+    }
+
+    .dot:hover { box-shadow: 0 0 0 2px var(--hover-bg); }
+    .dot[aria-pressed="true"] { box-shadow: 0 0 0 2px var(--text-main); }
+
+    .content-area { background: var(--bottom-bg); }
+
+    .scratchpad-drawer {
+      width: min(380px, 92vw);
+      box-shadow: -12px 0 35px rgba(0,0,0,.22);
+    }
+
+    .scratchpad-header {
+      min-height: 54px;
+      padding: 10px 12px 10px 16px;
+    }
+
+    .scratchpad-title {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .scratchpad-close {
+      width: 34px;
+      height: 34px;
+      border: 0;
+      border-radius: 9px;
+      background: var(--hover-bg);
+      color: var(--text-main);
+      cursor: pointer;
+      font-size: 18px;
+      line-height: 1;
+    }
+
+    .scratchpad-close:hover { background: var(--border-color); }
+
+    .scratchpad-body textarea::placeholder { color: var(--text-muted); opacity: .8; }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after {
+        scroll-behavior: auto !important;
+        transition-duration: .01ms !important;
+        animation-duration: .01ms !important;
+        animation-iteration-count: 1 !important;
+      }
+    }
+
+
+    .scratchpad-header {
+      min-height: 52px;
+      padding: 9px 8px 9px 14px;
+      border-bottom: 1px solid var(--border-color);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .scratchpad-close {
+      flex: 0 0 34px;
+      width: 34px;
+      height: 34px;
+      border-radius: 8px;
+    }
+
+    /* ================= 手機介面優化 ================= */
+    @media (max-width: 768px) {
+      html, body {
+        width: 100%;
+        min-width: 0;
+        height: 100%;
+        height: 100dvh;
+        overflow: hidden;
+        overscroll-behavior: none;
+      }
+
+      .app-layout {
+        grid-template-rows: auto 1fr;
+        height: 100dvh;
+      }
+
+      .app-layout.focus-mode {
+        grid-template-rows: 0 1fr;
+      }
+
+      .nav-bar {
+        min-height: 58px;
+        height: auto;
+        padding: 6px 8px;
+        gap: 6px;
+        align-items: center;
+        overflow: hidden;
+      }
+
+      .nav-left {
+        min-width: 0;
+        flex: 1 1 auto;
+        gap: 5px;
+        overflow-x: auto;
+        overflow-y: hidden;
+        scrollbar-width: none;
+        -webkit-overflow-scrolling: touch;
+        overscroll-behavior-x: contain;
+      }
+
+      .nav-left::-webkit-scrollbar {
+        display: none;
+      }
+
+      .brand {
+        flex: 0 0 auto;
+        margin-right: 2px;
+        gap: 5px;
+        font-size: 0.9rem;
+      }
+
+      .brand .icon {
+        width: 17px;
+        height: 17px;
+      }
+
+      .nav-separator {
+        flex: 0 0 auto;
+        height: 22px;
+        margin: 0 2px;
+      }
+
+      .nav-item {
+        flex: 0 0 auto;
+        min-height: 44px;
+        padding: 8px 10px;
+        gap: 5px;
+        border-radius: 9px;
+        font-size: 0.82rem;
+        -webkit-tap-highlight-color: transparent;
+        touch-action: manipulation;
+      }
+
+      .nav-item .icon {
+        width: 17px;
+        height: 17px;
+      }
+
+      .nav-right {
+        flex: 0 0 auto;
+        gap: 2px;
+      }
+
+      .nav-right > .nav-separator,
+      .nav-right > .clock,
+      .theme-dots {
+        display: none;
+      }
+
+      .btn-icon {
+        flex: 0 0 42px;
+        width: 42px;
+        height: 44px;
+        border-radius: 9px;
+        -webkit-tap-highlight-color: transparent;
+        touch-action: manipulation;
+      }
+
+      .btn-icon .icon {
+        width: 19px;
+        height: 19px;
+      }
+
+      .content-area {
+        min-height: 0;
+      }
+
+      iframe {
+        width: 100%;
+        height: 100%;
+        min-height: 0;
+        -webkit-overflow-scrolling: touch;
+      }
+
+      .exit-focus {
+        top: max(10px, env(safe-area-inset-top));
+        right: 10px;
+        min-height: 42px;
+        padding: 8px 14px;
+        font-size: 0.85rem;
+        border-radius: 22px;
+        -webkit-tap-highlight-color: transparent;
+      }
+
+      .scratchpad-drawer {
+        top: 0;
+        right: -100%;
+        width: min(100%, 420px);
+        max-width: 100%;
+        height: 100%;
+        height: 100dvh;
+        border-left: none;
+        box-shadow: -8px 0 24px rgba(0,0,0,0.25);
+      }
+
+      .scratchpad-header {
+        min-height: 58px;
+        padding: 10px 14px;
+        padding-top: max(10px, env(safe-area-inset-top));
+        font-size: 0.95rem;
+      }
+
+      .scratchpad-body {
+        padding: 12px 14px;
+      }
+
+      .scratchpad-body textarea {
+        font-size: 16px; /* 避免 iOS Safari 聚焦時自動放大 */
+        line-height: 1.6;
+        padding: 4px 2px;
+      }
+
+      .scratchpad-footer {
+        padding: 10px 14px;
+        padding-bottom: max(10px, env(safe-area-inset-bottom));
+        gap: 8px;
+      }
+
+      .btn-action {
+        min-height: 44px;
+        padding: 9px 0;
+        border-radius: 8px;
+        font-size: 0.9rem;
+        -webkit-tap-highlight-color: transparent;
+        touch-action: manipulation;
+      }
+    }
+
+    /* 超窄手機：保留主要操作，讓導覽列可左右滑動 */
+    @media (max-width: 420px) {
+      .nav-bar {
+        padding-left: 6px;
+        padding-right: 6px;
+      }
+
+      .nav-left {
+        gap: 3px;
+      }
+
+      .brand {
+        font-size: 0.82rem;
+      }
+
+      .nav-item {
+        padding-left: 9px;
+        padding-right: 9px;
+        font-size: 0.78rem;
+      }
+
+      .nav-right {
+        gap: 0;
+      }
+
+      .btn-icon {
+        flex-basis: 40px;
+        width: 40px;
+      }
+    }
+
+    /* 橫向手機：縮小導覽列高度，增加內容空間 */
+    @media (max-width: 900px) and (orientation: landscape) {
+      .nav-bar {
+        min-height: 50px;
+        padding-top: 3px;
+        padding-bottom: 3px;
+      }
+
+      .nav-item,
+      .btn-icon {
+        min-height: 40px;
+        height: 40px;
+      }
+    }
+
+    /* 觸控裝置：取消 hover 造成的黏住效果 */
+    @media (hover: none) and (pointer: coarse) {
+      .nav-item:hover,
+      .btn-icon:hover,
+      .btn-action:hover,
+      .dot:hover {
+        background-color: transparent;
+        color: inherit;
+        transform: none;
+      }
+
+      .nav-item.active {
+        color: var(--accent);
+        background-color: var(--hover-bg);
+      }
+
+      .nav-item.active::after {
+        left: 10px;
+        right: 10px;
+        bottom: 1px;
+      }
+
+      .scratchpad-close {
+        flex: 0 0 40px;
+        width: 40px;
+        height: 40px;
+      }
+
+      button, a, .dot {
+        -webkit-tap-highlight-color: transparent;
+      }
+    }
+
   </style>
 </head>
 <body>
@@ -391,11 +786,11 @@
 
         <!-- 主題色票 -->
         <div class="theme-dots">
-          <div class="dot" style="background-color: #38bdf8;" onclick="setTheme('default')"></div>
-          <div class="dot" style="background-color: #34d399;" onclick="setTheme('emerald')"></div>
-          <div class="dot" style="background-color: #c084fc;" onclick="setTheme('cyber')"></div>
-          <div class="dot" style="background-color: #fb923c;" onclick="setTheme('sunset')"></div>
-          <div class="dot" style="background-color: #64748b;" onclick="setTheme('light')"></div>
+          <button class="dot" type="button" style="background-color: #38bdf8;" onclick="setTheme('default')" aria-label="深藍主題" title="深藍"></button>
+          <button class="dot" type="button" style="background-color: #34d399;" onclick="setTheme('emerald')" aria-label="翡翠主題" title="翡翠"></button>
+          <button class="dot" type="button" style="background-color: #c084fc;" onclick="setTheme('cyber')" aria-label="紫色主題" title="紫色"></button>
+          <button class="dot" type="button" style="background-color: #fb923c;" onclick="setTheme('sunset')" aria-label="夕陽主題" title="夕陽"></button>
+          <button class="dot" type="button" style="background-color: #64748b;" onclick="setTheme('light')" aria-label="淺色主題" title="淺色"></button>
         </div>
       </div>
     </header>
@@ -410,8 +805,18 @@
       <!-- 隨手備忘錄抽屜 -->
       <div class="scratchpad-drawer" id="scratchpad">
         <div class="scratchpad-header">
-          <span>隨手備忘錄</span>
-          <span style="font-size:0.75rem; color:var(--text-muted);" id="saveStatus">自動儲存中...</span>
+          <div style="display:flex;align-items:center;gap:10px;min-width:0;">
+            <span>隨手備忘錄</span>
+            <span style="font-size:0.75rem;color:var(--text-muted);" id="saveStatus">自動儲存中...</span>
+          </div>
+          <button class="btn-icon scratchpad-close" onclick="toggleScratchpad()" title="關閉備忘錄" aria-label="關閉備忘錄">
+            <svg class="icon" viewBox="0 0 24 24">
+              <line x1="18" y1="6" x2="6" y2="18"></line>
+              <line x1="6" y1="6" x2="18" y2="18"></line>
+            </svg>
+          </button>
+        </div>
+        <button class="scratchpad-close" type="button" onclick="toggleScratchpad()" aria-label="關閉備忘錄" title="關閉">×</button>
         </div>
         <div class="scratchpad-body">
           <textarea id="scratchpadInput" placeholder="在這裡輸入筆記..."></textarea>
@@ -525,6 +930,9 @@
     function setTheme(theme) {
       document.body.setAttribute('data-theme', theme);
       localStorage.setItem('chichi_theme', theme);
+      document.querySelectorAll('.theme-dots .dot').forEach(dot => {
+        dot.setAttribute('aria-pressed', dot.getAttribute('onclick')?.includes(`'${theme}'`) ? 'true' : 'false');
+      });
     }
     
     // 初始化載入主題
