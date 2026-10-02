@@ -131,6 +131,49 @@ body { padding-bottom: 80px; }
 
   footer { padding-bottom: 6px !important; }
 }
+
+/* Mobile UX v3 */
+@media (max-width: 640px) {
+  body { padding-bottom: calc(82px + env(safe-area-inset-bottom)); }
+  header > div { min-height: 58px; }
+  header > div > div:first-child { max-width: calc(100vw - 16px); }
+  #sheetSelector { width: 128px; min-width: 128px; max-width: 128px; text-overflow: ellipsis; }
+  main { padding-top: 76px !important; }
+  main > div { width: 100%; max-width: 100%; }
+  #view-record, #view-history, #view-settle, #view-settings { width: 100%; }
+  #view-record .grid, #view-history .grid, #view-settle .grid, #view-settings .grid { min-width: 0; }
+  #view-record .grid.grid-cols-2, #view-history .grid.grid-cols-2, #view-settle .grid.grid-cols-2, #view-settings .grid.grid-cols-2 { grid-template-columns: minmax(0,1fr) minmax(0,1fr); }
+  #view-record input, #view-record select, #view-record textarea, #view-history input, #view-history select, #view-settle select, #view-settings input, #view-settings select { max-width: 100%; }
+  #view-record .bg-white\/80, #view-history .bg-white\/80, #view-settle .bg-white\/80, #view-settings .bg-white\/80 { min-width: 0; }
+  #quickTemplatesBar, #rateChipsContainer, #membersCheckboxes, #categoryTagList, #memberTagList {
+    display: flex; flex-wrap: nowrap !important; overflow-x: auto; overscroll-behavior-x: contain; padding-bottom: 4px;
+  }
+  #quickTemplatesBar > *, #rateChipsContainer > * { flex: 0 0 auto; }
+  #membersCheckboxes { flex-wrap: wrap !important; overflow-x: visible; max-height: 132px; overflow-y: auto; }
+  #recordList { display: flex; flex-direction: column; gap: 8px; }
+  #recordList > * { min-width: 0; }
+  #recordList button { min-height: 40px; }
+  #mainChartContainer canvas { max-height: 300px !important; }
+  #settlementTransfers { max-width: 100%; white-space: normal; }
+  #poolConfigPanel { overflow: hidden; }
+  nav { height: calc(68px + env(safe-area-inset-bottom)); }
+  nav > div { max-width: 100%; height: 68px; }
+  nav button { border-radius: 14px; }
+  nav button span:last-child { line-height: 1.1; }
+  [id$="Modal"] { padding: 10px !important; }
+  [id$="Modal"] > div { width: 100%; max-width: 100%; border-radius: 22px; padding: 16px !important; }
+  #memberDrilldownModal > div, #lineShareModal > div { max-height: calc(100vh - 20px); }
+  #lineShareText { max-height: 45vh; overflow-y: auto; }
+  .overflow-x-auto { max-width: 100%; }
+}
+@media (max-width: 380px) {
+  #sheetSelector { width: 112px; min-width: 112px; max-width: 112px; }
+  main { padding-left: 8px !important; padding-right: 8px !important; }
+  .p-4 { padding: 0.8rem !important; }
+  .gap-4 { gap: 0.75rem !important; }
+  nav button span:first-child { font-size: 1.1rem; }
+  nav button span:last-child { font-size: 0.65rem; }
+}
 </style>
 <script>
 tailwind.config = { darkMode: 'class' };
