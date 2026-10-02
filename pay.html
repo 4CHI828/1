@@ -756,8 +756,12 @@ async function requestGoogleAccessToken(interactive = true) {
     return tokenRequestPromise;
 }
 
+function hasValidAccessToken() {
+    return !!accessToken && (!tokenExpiry || Date.now() < tokenExpiry);
+}
+
 async function driveApi(url, options = {}, allowRetry = true) {
-    if (!accessToken || (tokenExpiry && Date.now() >= tokenExpiry)) {
+    if (!hasValidAccessToken()) {
         // 優先使用 prompt: 'none' 靜默恢復；真正需要時才由使用者操作取得 token。
         const restored = googleSessionLinked ? await ensureGoogleAccessToken(false) : false;
         if (!restored) {
@@ -841,7 +845,7 @@ async function ensureGoogleAccessToken(interactive = false) {
 }
 
 async function setupDriveEnvironment() {
-    if (!accessToken) return false;
+    if (!hasValidAccessToken()) return false;
     if (driveInitPromise) return driveInitPromise;
     driveInitPromise = (async () => {
     try {
@@ -922,15 +926,15 @@ async function loadCloudConfigFromDrive() {
 }
 
 async function syncConfigToDrive(interactive = false) {
-    if (!accessToken && interactive && googleSessionLinked) {
+    if (!hasValidAccessToken() && interactive && googleSessionLinked) {
         const ok = await ensureGoogleAccessToken(true);
         if (!ok) return false;
     }
-    if (!driveFolderId && interactive && accessToken) {
+    if (!driveFolderId && interactive && hasValidAccessToken()) {
         const ready = await setupDriveEnvironment();
         if (!ready || !driveFolderId) return false;
     }
-    if (!driveFolderId || !accessToken) return false;
+    if (!driveFolderId || !hasValidAccessToken()) return false;
 
     let synced = true;
     configSaveQueue = configSaveQueue.then(async () => {
@@ -1902,6 +1906,15 @@ document.getElementById("sheetSelector").onchange = async function() {
     const selectedSheet = currentSheet;
     safeSetLocalStorage("app_active_sheet", selectedSheet);
     showToast(`切換至帳本：${selectedSheet}`);
+    if (googleSessionLinked && !hasValidAccessToken()) {
+        await ensureGoogleAccessToken(true);
+        if (!hasValidAccessToken()) {
+            setSyncBadge("Google 已連結", false, false);
+            await loadRecordsFromDrive(selectedSheet);
+            renderAllViews();
+            return;
+        }
+    }
     setSyncBadge("讀取中", true);
     const loaded = await loadRecordsFromDrive(selectedSheet);
     if (selectedSheet !== currentSheet) return;
@@ -2895,7 +2908,7 @@ async function saveRecord() {
     document.getElementById("saveBtnText").textContent = "儲存紀錄 (Enter)";
     renderAllViews();
     // 儲存紀錄本身可離線完成；若已連結 Google，利用這次「儲存」操作取得有效 token。
-    if (googleSessionLinked && !accessToken) await ensureGoogleAccessToken(true);
+    if (googleSessionLinked && !hasValidAccessToken()) await ensureGoogleAccessToken(true);
     const cloudSynced = await saveRecordsToDrive(true);
     cancelEdit();
     showToast(cloudSynced ? "儲存成功，已同步雲端" : "已儲存本機，等待雲端同步", cloudSynced ? "success" : "info");
@@ -2906,7 +2919,7 @@ async function saveRecordsToDrive(interactive = false, purgeIds = null) {
     // 先保存本機鏡像；佇列執行時再抓最新資料，避免連續操作遺失最後一次修改。
     const localSnapshot = normalizeAllRecords(cachedRecords);
     saveLocalSheetMirror(sheetName, localSnapshot);
-    if (!accessToken && interactive && googleSessionLinked) {
+    if (!hasValidAccessToken() && interactive && googleSessionLinked) {
         const ok = await ensureGoogleAccessToken(true);
         if (!ok) { setSyncBadge("待授權", false, true); return false; }
     }
