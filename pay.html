@@ -196,6 +196,29 @@ body { padding-bottom: 80px; }
     min-width: 34px; min-height: 34px; padding: 6px !important;
   }
 }
+
+/* =========================================================
+   History mobile batch / swipe UX
+   ========================================================= */
+#historyQuickFilters, #historyBatchBar { min-width: 0; }
+#historyQuickFilters button, #historyBatchBar button { min-height: 40px; touch-action: manipulation; }
+#historyQuickFilters button.active { background: rgb(37 99 235); color: white; border-color: rgb(37 99 235); }
+.record-card { position: relative; user-select: none; -webkit-user-select: none; touch-action: pan-y; }
+.record-card .batch-select-box { display:none; }
+body.batch-mode .record-card { cursor: pointer; }
+body.batch-mode .record-card .batch-select-box { display:flex; }
+body.batch-mode .record-card .record-action-buttons { display:none !important; }
+.record-card.batch-selected { border-color: rgb(37 99 235) !important; box-shadow: 0 0 0 2px rgb(37 99 235 / .18); }
+@media (max-width: 640px) {
+  #historyQuickFilters { overflow-x:auto; flex-wrap:nowrap; -webkit-overflow-scrolling:touch; }
+  #historyQuickFilters button { flex:0 0 auto; padding:8px 12px; }
+  #historyBatchBar { position:sticky; top:70px; z-index:20; }
+  #historyBatchBar .batch-actions { display:grid; grid-template-columns:repeat(5,minmax(0,1fr)); gap:6px; }
+  #historyBatchBar .batch-actions button { min-width:0; padding:7px 4px; font-size:.72rem; }
+  .record-card { min-height:68px; }
+  .record-card .batch-select-box { width:22px; height:22px; flex:0 0 22px; border:2px solid rgb(156 163 175); border-radius:7px; align-items:center; justify-content:center; }
+  .record-card.batch-selected .batch-select-box { background:rgb(37 99 235); border-color:rgb(37 99 235); color:white; }
+}
 </style>
 <script>
 tailwind.config = { darkMode: 'class' };
@@ -431,6 +454,27 @@ tailwind.config = { darkMode: 'class' };
 <span class="text-emerald-600">收入 $<span id="filterSubIncome">0</span></span>
 <span class="text-blue-600 dark:text-blue-400">淨額 $<span id="filterSubNet">0</span></span>
 </div>
+</div>
+<div id="historyQuickFilters" class="flex items-center gap-1.5 pt-1.5 overflow-x-auto" aria-label="歷史紀錄快速日期篩選">
+  <span class="text-[0.72rem] text-gray-500 font-bold flex-shrink-0">⚡ 快速：</span>
+  <button type="button" data-history-range="today" class="px-2.5 py-1 rounded-lg border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 text-xs font-bold">今天</button>
+  <button type="button" data-history-range="7d" class="px-2.5 py-1 rounded-lg border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 text-xs font-bold">7天</button>
+  <button type="button" data-history-range="month" class="px-2.5 py-1 rounded-lg border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 text-xs font-bold">本月</button>
+  <button type="button" data-history-range="prevMonth" class="px-2.5 py-1 rounded-lg border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 text-xs font-bold">上月</button>
+  <button type="button" data-history-range="year" class="px-2.5 py-1 rounded-lg border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 text-xs font-bold">今年</button>
+</div>
+<div id="historyBatchBar" class="hidden bg-blue-50/95 dark:bg-blue-950/50 border border-blue-200 dark:border-blue-800/60 rounded-xl px-3 py-2 mt-2 shadow-sm">
+  <div class="flex items-center justify-between gap-2 mb-2">
+    <span class="text-xs font-bold text-blue-800 dark:text-blue-200">☑ 批次模式 · 已選 <span id="batchSelectedCount">0</span> 筆</span>
+    <button type="button" id="batchCancelBtn" class="text-xs font-bold text-gray-500 dark:text-gray-300 px-2 py-1">取消</button>
+  </div>
+  <div class="batch-actions">
+    <button type="button" id="batchSelectAllBtn" class="rounded-lg bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 font-bold">☑ 全選</button>
+    <button type="button" id="batchDeleteBtn" class="rounded-lg bg-red-50 dark:bg-red-950/40 text-red-600 border border-red-200 dark:border-red-900/50 font-bold">🗑️ 刪除</button>
+    <button type="button" id="batchCategoryBtn" class="rounded-lg bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 font-bold">🏷️ 分類</button>
+    <button type="button" id="batchExportBtn" class="rounded-lg bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 font-bold">📤 匯出</button>
+    <button type="button" id="batchCopyBtn" class="rounded-lg bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 font-bold">📋 複製</button>
+  </div>
 </div>
 <div id="mainChartContainer" class="hidden bg-white/60 dark:bg-slate-900/60 border border-gray-200/50 dark:border-gray-700/50 rounded-2xl p-4 shadow-sm">
 <div class="flex justify-between items-center text-xs font-bold text-gray-700 dark:text-gray-300 mb-2 flex-wrap gap-1">
@@ -3122,6 +3166,7 @@ function resetAllFilters() {
         if (id === "filterTypeSelect" || id === "filterCategorySelect" || id === "filterMemberSelect") el.value = "all";
         else el.value = "input";
     });
+    document.querySelectorAll('#historyQuickFilters [data-history-range]').forEach(b=>b.classList.remove('active'));
 }
 window.resetAllFilters = resetAllFilters;
 
@@ -3131,6 +3176,7 @@ function scheduleRecordListRender(delay = 80) {
     filterRenderTimer = setTimeout(() => renderRecordsList(), delay);
 }
 function bindFilterEvents() {
+    bindHistoryBatchControls();
     ["searchInput","filterTypeSelect","filterCategorySelect","filterMemberSelect","filterStartDate","filterEndDate","sortOrderSelect"].forEach(id => {
         const el = document.getElementById(id); if (!el || el.dataset.filterBound) return;
         el.dataset.filterBound = "1";
@@ -3332,14 +3378,15 @@ function renderRecordsList(){
     
     list.innerHTML=filtered.map(r=>{
         const color=getMemberColor(Object.keys(parsePayers(r))[0]||r.payer); const id=escapeJsStr(r.id); 
-        return `<div class="record-card bg-white dark:bg-gray-800 p-3 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-sm flex items-center justify-between group transition hover:border-blue-300 cursor-pointer" role="button" tabindex="0" onclick="openRecordDetail('${id}')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openRecordDetail('${id}')}" aria-label="查看 ${escapeHtml(r.title)} 詳細紀錄">
+        return `<div class="record-card bg-white dark:bg-gray-800 p-3 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-sm flex items-center justify-between group transition hover:border-blue-300 cursor-pointer" data-record-id="${id}" role="button" tabindex="0" onclick="handleRecordCardClick('${id}')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();handleRecordCardClick('${id}')}" aria-label="查看 ${escapeHtml(r.title)} 詳細紀錄">
             <div class="flex items-center gap-3 overflow-hidden">
+                <div class="batch-select-box" aria-hidden="true">✓</div>
                 <div class="w-10 h-10 rounded-xl flex items-center justify-center text-lg shadow-inner ${color.bg} ${color.text}">${escapeHtml((r.category||'其')[0])}</div>
                 <div class="overflow-hidden"><div class="text-xs font-bold truncate">${escapeHtml(r.title)} <span class="text-gray-400 font-normal ml-1">${escapeHtml(getWeekdayLabel(r.date))}</span></div><div class="text-[0.65rem] text-gray-400">${escapeHtml(r.date)} · ${escapeHtml(r.category||'其他')}</div></div>
             </div>
             <div class="flex items-center gap-3">
                 <div class="text-right"><div class="text-sm font-mono font-bold ${r.type==='income'?'text-emerald-600':'text-gray-700 dark:text-gray-200'}">${r.type==='income'?'+':''}$${Math.round(r.twdAmount||0).toLocaleString()}</div><div class="text-[0.6rem] text-gray-400 font-mono">${escapeHtml(r.amount)} ${escapeHtml(r.currency)}</div></div>
-                <div class="flex opacity-0 group-hover:opacity-100 transition gap-1">
+                <div class="record-action-buttons flex opacity-0 group-hover:opacity-100 transition gap-1">
                     <button onclick="event.stopPropagation();startEditRecord('${id}')" class="p-1.5 bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-100">✏️</button>
                     <button onclick="event.stopPropagation();duplicateRecordToForm('${id}')" class="p-1.5 bg-gray-50 text-gray-600 rounded-lg hover:bg-gray-100">📋</button>
                     <button onclick="event.stopPropagation();softDeleteRecord('${id}')" class="p-1.5 bg-red-50 text-red-600 rounded-lg hover:bg-red-100">🗑️</button>
@@ -3347,8 +3394,177 @@ function renderRecordsList(){
             </div>
         </div>`;
     }).join("")||`<div class="text-center py-10 text-gray-400 text-xs">無符合條件的紀錄</div>`;
+    bindRecordTouchGestures();
+    updateBatchSelectionUI();
 }
 
+let historyBatchMode = false;
+const historySelectedIds = new Set();
+let historyLongPressTimer = null;
+let historySuppressClick = false;
+
+function getRenderedRecordIds() {
+    return Array.from(document.querySelectorAll('#recordList .record-card[data-record-id]')).map(el => el.dataset.recordId).filter(Boolean);
+}
+function updateBatchSelectionUI() {
+    const bar = document.getElementById('historyBatchBar');
+    const count = document.getElementById('batchSelectedCount');
+    if (bar) bar.classList.toggle('hidden', !historyBatchMode);
+    if (count) count.textContent = historySelectedIds.size;
+    document.body.classList.toggle('batch-mode', historyBatchMode);
+    document.querySelectorAll('#recordList .record-card[data-record-id]').forEach(card => {
+        const selected = historySelectedIds.has(card.dataset.recordId);
+        card.classList.toggle('batch-selected', selected);
+        const box = card.querySelector('.batch-select-box'); if (box) box.textContent = selected ? '✓' : '';
+    });
+    const selectAll = document.getElementById('batchSelectAllBtn');
+    if (selectAll) {
+        const ids = getRenderedRecordIds();
+        selectAll.textContent = ids.length && ids.every(id => historySelectedIds.has(id)) ? '☐ 取消全選' : '☑ 全選';
+    }
+}
+function enterHistoryBatchMode(id) {
+    historyBatchMode = true;
+    historySelectedIds.clear();
+    if (id) historySelectedIds.add(id);
+    historySuppressClick = true;
+    updateBatchSelectionUI();
+    showToast('已進入批次模式，可繼續點選紀錄', 'info');
+}
+function exitHistoryBatchMode() {
+    historyBatchMode = false;
+    historySelectedIds.clear();
+    historySuppressClick = false;
+    updateBatchSelectionUI();
+}
+window.handleRecordCardClick = function(id) {
+    if (historySuppressClick) { historySuppressClick = false; return; }
+    if (historyBatchMode) {
+        if (historySelectedIds.has(id)) historySelectedIds.delete(id); else historySelectedIds.add(id);
+        updateBatchSelectionUI();
+        return;
+    }
+    openRecordDetail(id);
+};
+
+function bindRecordTouchGestures() {
+    document.querySelectorAll('#recordList .record-card[data-record-id]').forEach(card => {
+        if (card.dataset.touchBound) return;
+        card.dataset.touchBound = '1';
+        let startX = 0, startY = 0, startAt = 0, moved = false, longPressed = false;
+        card.addEventListener('touchstart', e => {
+            if (!e.touches?.[0]) return;
+            const t = e.touches[0]; startX = t.clientX; startY = t.clientY; startAt = Date.now(); moved = false; longPressed = false;
+            clearTimeout(historyLongPressTimer);
+            historyLongPressTimer = setTimeout(() => {
+                if (!moved && !historyBatchMode) {
+                    longPressed = true;
+                    enterHistoryBatchMode(card.dataset.recordId);
+                }
+            }, 560);
+        }, {passive:true});
+        card.addEventListener('touchmove', e => {
+            const t = e.touches?.[0]; if (!t) return;
+            if (Math.abs(t.clientX-startX) > 12 || Math.abs(t.clientY-startY) > 12) { moved = true; clearTimeout(historyLongPressTimer); }
+        }, {passive:true});
+        card.addEventListener('touchend', async e => {
+            clearTimeout(historyLongPressTimer);
+            const t = e.changedTouches?.[0]; if (!t) return;
+            const dx = t.clientX-startX, dy = t.clientY-startY, elapsed = Date.now()-startAt;
+            if (Math.abs(dx) > 70 && Math.abs(dx) > Math.abs(dy)*1.25 && !historyBatchMode) {
+                historySuppressClick = true;
+                if (dx < 0) {
+                    await softDeleteRecord(card.dataset.recordId);
+                    showToast('已左滑刪除紀錄', 'success');
+                } else {
+                    duplicateRecordToForm(card.dataset.recordId);
+                    showToast('已右滑複製到記帳表單', 'success');
+                }
+                setTimeout(() => { historySuppressClick = false; }, 120);
+                return;
+            }
+            if (longPressed || (elapsed > 450 && historyBatchMode)) {
+                historySuppressClick = true;
+                setTimeout(() => { historySuppressClick = false; }, 120);
+            }
+        }, {passive:true});
+    });
+}
+
+function getSelectedActiveRecords() {
+    return cachedRecords.filter(r => !r.deleted && historySelectedIds.has(r.id));
+}
+async function batchDeleteSelected() {
+    const rows = getSelectedActiveRecords(); if (!rows.length) return showToast('請先選擇紀錄', 'info');
+    if (!confirm(`確定要把 ${rows.length} 筆紀錄移至回收桶嗎？`)) return;
+    createLocalSnapshot('批次刪除前');
+    const now = new Date().toISOString();
+    rows.forEach(r => { r.deleted = true; r.updatedAt = now; });
+    historySelectedIds.clear();
+    renderAllViews();
+    if (googleSessionLinked && !accessToken) await ensureGoogleAccessToken(true);
+    const ok = await saveRecordsToDrive(true);
+    showToast(ok ? `已刪除 ${rows.length} 筆並同步雲端` : `已刪除 ${rows.length} 筆，等待雲端同步`, ok ? 'success' : 'info');
+    exitHistoryBatchMode();
+}
+function batchSetCategory() {
+    const rows = getSelectedActiveRecords(); if (!rows.length) return showToast('請先選擇紀錄', 'info');
+    const choices = Array.isArray(categories) ? categories.filter(Boolean) : [];
+    const value = prompt(`將 ${rows.length} 筆紀錄改成哪個分類？\n可用分類：${choices.join('、')}`, rows[0].category || choices[0] || '其他');
+    if (value === null) return;
+    const category = String(value).trim(); if (!category) return;
+    createLocalSnapshot('批次分類前');
+    const now = new Date().toISOString();
+    rows.forEach(r => { r.category = category; r.updatedAt = now; });
+    saveLocalSheetMirror(currentSheet, cachedRecords);
+    renderAllViews();
+    void saveRecordsToDrive(true);
+    showToast(`已將 ${rows.length} 筆分類為「${category}」`, 'success');
+    exitHistoryBatchMode();
+}
+function batchExportSelected() {
+    const rows = getSelectedActiveRecords(); if (!rows.length) return showToast('請先選擇紀錄', 'info');
+    const header = ['Date','Title','Category','Amount','Currency','TWD','Payer','Payers','Shares','Type'];
+    const csvEscapeLocal = v => { const x=String(v ?? ''); return /[",\r\n]/.test(x) ? `"${x.replace(/"/g,'""')}"` : x; };
+    const lines = [header.map(csvEscapeLocal).join(',')];
+    rows.forEach(r => { const payers=parsePayers(r), shares=parseShares(r); lines.push([r.date,r.title,r.category,r.amount,r.currency,r.twdAmount,r.payer,Object.entries(payers).map(([m,a])=>`${m}:${Math.round(a)}`).join(';'),Object.entries(shares).map(([m,a])=>`${m}:${Math.round(a)}`).join(';'),r.type].map(csvEscapeLocal).join(',')); });
+    const blob = new Blob(['\ufeff'+lines.join('\r\n')], {type:'text/csv;charset=utf-8'});
+    const url=URL.createObjectURL(blob), a=document.createElement('a'); a.href=url; a.download=`歷史紀錄_選取${rows.length}筆_${new Date().toISOString().slice(0,10)}.csv`; a.click(); setTimeout(()=>URL.revokeObjectURL(url),1000);
+    showToast(`已匯出 ${rows.length} 筆紀錄`, 'success');
+}
+async function batchCopySelected() {
+    const rows = getSelectedActiveRecords(); if (!rows.length) return showToast('請先選擇紀錄', 'info');
+    createLocalSnapshot('批次複製前');
+    const now = new Date().toISOString();
+    const copies = rows.map(r => ({...r, id:(crypto.randomUUID ? crypto.randomUUID() : `rec_${Date.now()}_${Math.random().toString(36).slice(2)}`), title:`${r.title || '未命名'}（副本）`, updatedAt:now, deleted:false}));
+    cachedRecords.push(...copies);
+    saveLocalSheetMirror(currentSheet, cachedRecords);
+    renderAllViews();
+    if (googleSessionLinked && !accessToken) await ensureGoogleAccessToken(true);
+    const ok = await saveRecordsToDrive(true);
+    showToast(ok ? `已複製 ${copies.length} 筆並同步雲端` : `已複製 ${copies.length} 筆，等待雲端同步`, ok ? 'success' : 'info');
+    exitHistoryBatchMode();
+}
+
+function bindHistoryBatchControls() {
+    const bind=(id,fn)=>{const el=document.getElementById(id);if(el&&!el.dataset.batchBound){el.dataset.batchBound='1';el.addEventListener('click',fn);}};
+    bind('batchCancelBtn', exitHistoryBatchMode);
+    bind('batchSelectAllBtn', ()=>{const ids=getRenderedRecordIds(), all=ids.length&&ids.every(id=>historySelectedIds.has(id));ids.forEach(id=>all?historySelectedIds.delete(id):historySelectedIds.add(id));updateBatchSelectionUI();});
+    bind('batchDeleteBtn', batchDeleteSelected); bind('batchCategoryBtn', batchSetCategory); bind('batchExportBtn', batchExportSelected); bind('batchCopyBtn', batchCopySelected);
+    document.querySelectorAll('#historyQuickFilters [data-history-range]').forEach(btn=>{if(btn.dataset.rangeBound)return;btn.dataset.rangeBound='1';btn.addEventListener('click',()=>applyHistoryQuickRange(btn.dataset.historyRange));});
+}
+function localDateString(d) { const y=d.getFullYear(), m=String(d.getMonth()+1).padStart(2,'0'), day=String(d.getDate()).padStart(2,'0'); return `${y}-${m}-${day}`; }
+function applyHistoryQuickRange(range) {
+    const end=new Date(); const start=new Date(end);
+    if(range==='today') {} else if(range==='7d') start.setDate(end.getDate()-6);
+    else if(range==='month') { start.setDate(1); }
+    else if(range==='prevMonth') { start.setMonth(end.getMonth()-1,1); end.setDate(0); }
+    else if(range==='year') { start.setMonth(0,1); }
+    const s=document.getElementById('filterStartDate'), e=document.getElementById('filterEndDate');
+    if(s) s.value=localDateString(start); if(e) e.value=localDateString(end);
+    document.querySelectorAll('#historyQuickFilters [data-history-range]').forEach(b=>b.classList.toggle('active',b.dataset.historyRange===range));
+    renderRecordsList();
+}
 window.openRecordDetail = function(id) {
     const r = cachedRecords.find(x => x.id === id);
     const modal = document.getElementById("recordDetailModal");
