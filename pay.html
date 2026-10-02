@@ -131,47 +131,6 @@ body { padding-bottom: 80px; }
 
   footer { padding-bottom: 6px !important; }
 }
-
-/* ===== 歷史紀錄詳細資料面板 ===== */
-.record-card{cursor:pointer;}
-.record-card:active{transform:scale(.995);}
-.history-detail-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;}
-.history-detail-item{padding:10px;border:1px solid #e5e7eb;border-radius:14px;background:rgba(248,250,252,.8);min-width:0;}
-.dark .history-detail-item{border-color:#374151;background:rgba(31,41,55,.72);}
-.history-detail-label{font-size:.68rem;color:#6b7280;font-weight:700;margin-bottom:3px;}
-.dark .history-detail-label{color:#9ca3af;}
-.history-detail-value{font-size:.82rem;font-weight:700;word-break:break-word;}
-.history-detail-section{border:1px solid #e5e7eb;border-radius:16px;padding:12px;background:rgba(255,255,255,.72);}
-.dark .history-detail-section{border-color:#374151;background:rgba(17,24,39,.62);}
-.history-detail-row{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:7px 0;border-bottom:1px dashed #e5e7eb;font-size:.76rem;}
-.dark .history-detail-row{border-color:#374151;}
-.history-detail-row:last-child{border-bottom:0;padding-bottom:0;}
-.history-detail-row:first-child{padding-top:0;}
-.history-detail-receipt{width:100%;max-height:280px;object-fit:contain;border-radius:14px;background:#111827;cursor:zoom-in;}
-@media(max-width:640px){
-  #historyDetailModal{align-items:flex-end;padding:0;}
-  #historyDetailModal > div{max-height:94vh;border-radius:24px 24px 0 0;padding:14px;}
-  #historyDetailContent{max-height:72vh;overflow-y:auto;padding-right:2px;}
-  .history-detail-grid{grid-template-columns:1fr 1fr;gap:7px;}
-  .history-detail-item{padding:9px;}
-  .history-detail-value{font-size:.78rem;}
-  .history-detail-section{padding:10px;}
-}
-
-/* ===== ①～⑥ 全面優化層 ===== */
-#optimizationDashboard{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}
-.opt-card{border:1px solid rgba(148,163,184,.25);border-radius:16px;padding:10px;background:rgba(255,255,255,.78);box-shadow:0 2px 8px rgba(15,23,42,.04)}
-.dark .opt-card{background:rgba(30,41,59,.72);border-color:rgba(71,85,105,.55)}
-.opt-label{font-size:.65rem;font-weight:800;color:#64748b}.opt-value{font-size:1rem;font-weight:900;margin-top:2px;font-family:ui-monospace,SFMono-Regular,Menlo,monospace}
-#historyBatchBar{position:sticky;top:84px;z-index:25}.selection-mode .record-select{display:flex!important}
-.record-select{display:none;align-items:center;justify-content:center;flex:0 0 auto}.record-select input{width:20px;height:20px;accent-color:#2563eb}
-.record-card.is-selected{outline:2px solid #3b82f6;outline-offset:1px;background:rgba(239,246,255,.9)}
-.dark .record-card.is-selected{background:rgba(30,64,175,.18)}
-#recentRecordsBar{scrollbar-width:none}.touch-action{touch-action:manipulation}
-@media(max-width:700px){#optimizationDashboard{grid-template-columns:repeat(2,minmax(0,1fr));gap:6px}.opt-card{padding:9px}.opt-value{font-size:.9rem}#historyBatchBar{top:78px}.record-card{min-height:62px}.record-card button{min-width:38px;min-height:38px}.record-select input{width:22px;height:22px}}
-@media(orientation:landscape) and (max-height:600px){nav button{min-height:48px!important}.record-card{padding:8px!important}main{padding-bottom:78px!important}}
-@media (pointer:coarse){button,select,input[type="checkbox"],input[type="date"]{touch-action:manipulation}.record-card{user-select:none;-webkit-user-select:none}.record-card button{opacity:1!important}}
-body.keyboard-open nav{display:none!important}body.keyboard-open main{padding-bottom:12px!important}
 </style>
 <script>
 tailwind.config = { darkMode: 'class' };
@@ -376,7 +335,6 @@ tailwind.config = { darkMode: 'class' };
 <option value="input">🕒 依輸入順序</option><option value="dateDesc">📅 日期 (新➔舊)</option><option value="dateAsc">📅 日期 (舊➔新)</option><option value="amtDesc">💰 金額 (高➔低)</option><option value="amtAsc">💰 金額 (低➔高)</option>
 </select>
 </div>
-<button type="button" id="historySelectModeBtn" class="text-[0.75rem] bg-gray-100 hover:bg-gray-200 text-gray-700 dark:bg-gray-700 dark:text-gray-200 font-bold px-2.5 py-1 rounded-lg transition shadow-sm">☑️ 批次</button>
 <button type="button" id="mainChartToggleBtn" onclick="toggleMainChart()" class="text-[0.75rem] bg-indigo-50 hover:bg-indigo-100 text-indigo-600 dark:bg-indigo-900/30 dark:hover:bg-indigo-900/50 dark:text-indigo-300 font-bold px-2.5 py-1 rounded-lg transition shadow-sm border border-indigo-100 dark:border-indigo-800/50">📊 顯示圖表</button>
 </div>
 <div class="bg-gray-50/80 dark:bg-gray-700/30 p-2.5 rounded-2xl border border-gray-200/60 dark:border-gray-700/50 space-y-2 shadow-sm">
@@ -408,19 +366,6 @@ tailwind.config = { darkMode: 'class' };
 <span class="text-emerald-600">收入 $<span id="filterSubIncome">0</span></span>
 <span class="text-blue-600 dark:text-blue-400">淨額 $<span id="filterSubNet">0</span></span>
 </div>
-</div>
-<div id="optimizationDashboard" class="mt-1">
-<div class="opt-card"><div class="opt-label">📅 本月支出</div><div id="optMonthExpense" class="opt-value text-red-500">$0</div></div>
-<div class="opt-card"><div class="opt-label">💰 本月收入</div><div id="optMonthIncome" class="opt-value text-emerald-600">$0</div></div>
-<div class="opt-card"><div class="opt-label">📈 本月淨額</div><div id="optMonthNet" class="opt-value">$0</div></div>
-<div class="opt-card"><div class="opt-label">🧾 本月筆數</div><div id="optMonthCount" class="opt-value">0</div></div>
-</div>
-<div id="historyBatchBar" class="hidden bg-white/95 dark:bg-slate-900/95 backdrop-blur border border-blue-200 dark:border-blue-800 rounded-2xl px-3 py-2 shadow-lg flex flex-wrap items-center gap-2">
-<span class="text-xs font-black text-blue-700 dark:text-blue-300">☑️ 已選 <b id="batchSelectedCount">0</b> 筆</span>
-<button type="button" id="batchAllBtn" class="text-xs font-bold px-2.5 py-1.5 rounded-lg bg-gray-100 dark:bg-gray-700">全選</button>
-<button type="button" id="batchDeleteBtn" class="text-xs font-bold px-2.5 py-1.5 rounded-lg bg-red-50 text-red-600 dark:bg-red-900/30 dark:text-red-300">🗑️ 批次回收</button>
-<button type="button" id="batchExportBtn" class="text-xs font-bold px-2.5 py-1.5 rounded-lg bg-emerald-50 text-emerald-600 dark:bg-emerald-900/30 dark:text-emerald-300">⬇️ 匯出</button>
-<button type="button" id="batchCancelBtn" class="text-xs font-bold px-2.5 py-1.5 rounded-lg bg-gray-100 dark:bg-gray-700">取消</button>
 </div>
 <div id="mainChartContainer" class="hidden bg-white/60 dark:bg-slate-900/60 border border-gray-200/50 dark:border-gray-700/50 rounded-2xl p-4 shadow-sm">
 <div class="flex justify-between items-center text-xs font-bold text-gray-700 dark:text-gray-300 mb-2 flex-wrap gap-1">
@@ -563,14 +508,16 @@ tailwind.config = { darkMode: 'class' };
 <button type="button" id="exportCsvBtn" class="bg-emerald-500 hover:bg-emerald-600 text-white py-2 rounded-xl font-bold shadow transition active:scale-95">匯出 CSV</button>
 <button type="button" id="exportTxtBtn" class="bg-indigo-500 hover:bg-indigo-600 text-white py-2 rounded-xl font-bold shadow transition active:scale-95">匯出 TXT</button>
 </div>
+<div class="grid grid-cols-1 sm:grid-cols-3 gap-2 text-xs pt-2">
+<button type="button" id="exportFullJsonBtn" class="bg-slate-800 hover:bg-slate-900 dark:bg-slate-700 dark:hover:bg-slate-600 text-white py-2 rounded-xl font-bold shadow transition active:scale-95">💾 完整 JSON 備份</button>
+<button type="button" id="undoLastActionBtn" class="bg-amber-500 hover:bg-amber-600 text-white py-2 rounded-xl font-bold shadow transition active:scale-95">↩️ 復原上一步</button>
+<button type="button" id="showSnapshotsBtn" class="bg-blue-500 hover:bg-blue-600 text-white py-2 rounded-xl font-bold shadow transition active:scale-95">🕘 備份版本</button>
+</div>
+<div id="snapshotPanel" class="hidden mt-2 bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 rounded-xl p-3 space-y-2">
+<div class="flex items-center justify-between text-xs font-bold text-slate-600 dark:text-slate-300"><span>本機自動備份（最近 8 版）</span><span id="snapshotCountDisplay">0</span></div>
+<div id="snapshotList" class="space-y-1 max-h-48 overflow-y-auto"></div>
+</div>
 <div class="pt-3 border-t border-gray-200/50 dark:border-gray-700/50">
-<div class="text-[0.75rem] font-bold text-gray-500 dark:text-gray-400 mb-2">完整資料備份</div>
-<div id="fullJsonBackupArea" class="bg-amber-50/80 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-900/50 rounded-xl p-3 mb-3">
-<div class="flex flex-col sm:flex-row sm:items-center gap-2">
-<button type="button" id="fullJsonExportBtn" class="bg-amber-500 hover:bg-amber-600 text-white px-4 py-2 rounded-xl text-xs font-black shadow active:scale-95 transition">💾 完整 JSON 備份</button>
-<div class="text-[0.68rem] text-amber-700 dark:text-amber-300 leading-relaxed">包含目前帳本、刪除紀錄、成員、類別與匯率</div>
-</div>
-</div>
 <div class="text-[0.75rem] font-bold text-gray-500 dark:text-gray-400 mb-2">匯入帳本</div>
 <div class="flex gap-2 flex-wrap">
 <input type="file" id="importFileInput" accept=".csv,.txt,.json" class="flex-1 text-xs text-slate-500 file:mr-2 file:py-1 file:px-3 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-gray-100 dark:file:bg-gray-700 file:text-gray-700 dark:file:text-gray-200 hover:file:bg-gray-200 cursor-pointer min-w-[150px]">
@@ -626,25 +573,6 @@ tailwind.config = { darkMode: 'class' };
 <span class="font-bold text-gray-700 dark:text-gray-200 text-sm">📑 完整帳本匯總</span>
 </button>
 </div>
-</div>
-</div>
-
-<div id="historyDetailModal" class="hidden fixed inset-0 bg-slate-900/65 backdrop-blur-sm z-[60] flex items-center justify-center p-4" onclick="if(event.target===this)closeHistoryDetail()">
-<div class="bg-white dark:bg-gray-800 rounded-3xl p-5 max-w-lg w-full max-h-[92vh] shadow-2xl border border-gray-100 dark:border-gray-700 flex flex-col">
-  <div class="flex items-start justify-between gap-3 border-b border-gray-200 dark:border-gray-700 pb-3 mb-3">
-    <div class="min-w-0">
-      <div class="text-[0.68rem] text-blue-500 font-bold mb-0.5">📊 歷史紀錄詳細資料</div>
-      <h3 id="historyDetailTitle" class="font-black text-lg truncate">紀錄詳細</h3>
-      <div id="historyDetailMeta" class="text-[0.68rem] text-gray-400 mt-0.5"></div>
-    </div>
-    <button type="button" onclick="closeHistoryDetail()" class="shrink-0 w-10 h-10 rounded-xl bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-200 font-bold text-xl">×</button>
-  </div>
-  <div id="historyDetailContent" class="space-y-3 overflow-y-auto flex-1"></div>
-  <div class="grid grid-cols-3 gap-2 pt-3 mt-3 border-t border-gray-200 dark:border-gray-700">
-    <button type="button" id="historyDetailEditBtn" class="rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold py-2.5 text-xs">✏️ 編輯</button>
-    <button type="button" id="historyDetailDuplicateBtn" class="rounded-xl bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-100 font-bold py-2.5 text-xs">📋 複製</button>
-    <button type="button" id="historyDetailDeleteBtn" class="rounded-xl bg-red-50 dark:bg-red-900/30 hover:bg-red-100 dark:hover:bg-red-900/50 text-red-600 dark:text-red-300 font-bold py-2.5 text-xs">🗑️ 回收</button>
-  </div>
 </div>
 </div>
 <div id="imageModal" class="hidden fixed inset-0 bg-slate-900/90 backdrop-blur-sm z-50 flex items-center justify-center p-4 transition-opacity" onclick="closeImageModal()">
@@ -1118,6 +1046,7 @@ function renderAllViews() {
 function getActiveRecords() { return cachedRecords.filter(r => !r.deleted); }
 
 async function softDeleteRecord(id) {
+    createLocalSnapshot("刪除紀錄前");
     const idx = cachedRecords.findIndex(r => r.id === id);
     if (idx !== -1) {
         cachedRecords[idx].deleted = true;
@@ -1784,6 +1713,7 @@ if (exportTxtButton) exportTxtButton.onclick = function() {
 };
 
 window.restoreRecord = async function(id) {
+    createLocalSnapshot("恢復紀錄前");
     const idx = cachedRecords.findIndex(r => r.id === id);
     if (idx !== -1) {
         cachedRecords[idx].deleted = false;
@@ -1795,6 +1725,7 @@ window.restoreRecord = async function(id) {
     }
 };
 window.emptyTrash = async function() {
+    createLocalSnapshot("清空回收桶前");
     const deletedIds = new Set(cachedRecords.filter(r => r.deleted).map(r => r.id));
     if (!deletedIds.size) return showToast("回收桶目前是空的", "info");
     if (!confirm(`確定要永久刪除回收桶中的 ${deletedIds.size} 筆紀錄嗎？\n此操作無法復原。`)) return;
@@ -2969,6 +2900,7 @@ async function saveRecord() {
         if (Math.abs(payerSum - twd) > 1) throw new Error(`付款人合計需等於 ${twd.toLocaleString()} TWD`);
     } catch (e) { return showToast(e.message, "error"); }
     
+    createLocalSnapshot(editingRecordId ? "編輯紀錄前" : "新增紀錄前");
     const record = normalizeRecord({
         id: editingRecordId || generateUUID(), title, amount,
         currency: document.getElementById("currency").value, twdAmount: twd, rate,
@@ -3322,8 +3254,7 @@ function renderRecordsList(){
     
     list.innerHTML=filtered.map(r=>{
         const color=getMemberColor(Object.keys(parsePayers(r))[0]||r.payer); const id=escapeJsStr(r.id); 
-        return `<div class="record-card bg-white dark:bg-gray-800 p-3 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-sm flex items-center justify-between group transition hover:border-blue-300" data-record-id="${id}" onclick="handleRecordCardClick(event,'${id}')">
-            <div class="record-select"><input type="checkbox" aria-label="選取紀錄" onclick="event.stopPropagation();toggleRecordSelection('${id}',this.checked)"></div>
+        return `<div class="record-card bg-white dark:bg-gray-800 p-3 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-sm flex items-center justify-between group transition hover:border-blue-300">
             <div class="flex items-center gap-3 overflow-hidden">
                 <div class="w-10 h-10 rounded-xl flex items-center justify-center text-lg shadow-inner ${color.bg} ${color.text}">${escapeHtml((r.category||'其')[0])}</div>
                 <div class="overflow-hidden"><div class="text-xs font-bold truncate">${escapeHtml(r.title)} <span class="text-gray-400 font-normal ml-1">${escapeHtml(getWeekdayLabel(r.date))}</span></div><div class="text-[0.65rem] text-gray-400">${escapeHtml(r.date)} · ${escapeHtml(r.category||'其他')}</div></div>
@@ -3331,84 +3262,14 @@ function renderRecordsList(){
             <div class="flex items-center gap-3">
                 <div class="text-right"><div class="text-sm font-mono font-bold ${r.type==='income'?'text-emerald-600':'text-gray-700 dark:text-gray-200'}">${r.type==='income'?'+':''}$${Math.round(r.twdAmount||0).toLocaleString()}</div><div class="text-[0.6rem] text-gray-400 font-mono">${escapeHtml(r.amount)} ${escapeHtml(r.currency)}</div></div>
                 <div class="flex opacity-0 group-hover:opacity-100 transition gap-1">
-                    <button onclick="event.stopPropagation();startEditRecord('${id}')" class="p-1.5 bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-100">✏️</button>
-                    <button onclick="event.stopPropagation();duplicateRecordToForm('${id}')" class="p-1.5 bg-gray-50 text-gray-600 rounded-lg hover:bg-gray-100">📋</button>
-                    <button onclick="event.stopPropagation();softDeleteRecord('${id}')" class="p-1.5 bg-red-50 text-red-600 rounded-lg hover:bg-red-100">🗑️</button>
+                    <button onclick="startEditRecord('${id}')" class="p-1.5 bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-100">✏️</button>
+                    <button onclick="duplicateRecordToForm('${id}')" class="p-1.5 bg-gray-50 text-gray-600 rounded-lg hover:bg-gray-100">📋</button>
+                    <button onclick="softDeleteRecord('${id}')" class="p-1.5 bg-red-50 text-red-600 rounded-lg hover:bg-red-100">🗑️</button>
                 </div>
             </div>
         </div>`;
     }).join("")||`<div class="text-center py-10 text-gray-400 text-xs">無符合條件的紀錄</div>`;
 }
-
-
-// ==========================================
-// 歷史紀錄詳細資料面板
-// ==========================================
-function historyDetailMoney(v, currency="TWD") {
-    const n=Number(v);
-    if(!Number.isFinite(n)) return "—";
-    return `${currency === "TWD" ? "$" : ""}${n.toLocaleString(undefined,{maximumFractionDigits:2})}${currency !== "TWD" ? ` ${escapeHtml(currency)}` : ""}`;
-}
-function historyDetailType(type){
-    return ({expense:"群組支出",personal:"個人支出",income:"收入",settlement:"結算"}[type]||type||"未分類");
-}
-function historyDetailSplitMode(mode){
-    return ({equal:"平均分攤",custom:"自訂金額",ratio:"比例分攤",percent:"百分比分攤"}[mode]||mode||"未設定");
-}
-function historyDetailPairsHtml(obj, empty="無資料") {
-    const entries=Object.entries(obj||{}).filter(([,v])=>Number(v)>0);
-    if(!entries.length) return `<div class="text-xs text-gray-400">${empty}</div>`;
-    return entries.map(([name,value])=>`<div class="history-detail-row"><span class="font-bold truncate">${escapeHtml(name)}</span><span class="font-mono font-bold">$${Math.round(Number(value)||0).toLocaleString()}</span></div>`).join("");
-}
-function historyDetailSplitValuesHtml(r){
-    const values=r?.splitValues && typeof r.splitValues === "object" ? Object.entries(r.splitValues).filter(([k])=>k!=="currency") : [];
-    if(!values.length) return `<div class="text-xs text-gray-400">無額外分攤設定</div>`;
-    const unit=r.splitValues?.currency === "TWD" ? "TWD" : (r.splitMode === "percent" ? "%" : "份");
-    return values.map(([name,value])=>`<div class="history-detail-row"><span class="font-bold truncate">${escapeHtml(name)}</span><span class="font-mono font-bold">${escapeHtml(String(value))}${unit}</span></div>`).join("");
-}
-window.openHistoryDetail=function(id){
-    const r=cachedRecords.find(x=>String(x.id)===String(id)); if(!r) return;
-    const modal=document.getElementById("historyDetailModal"),content=document.getElementById("historyDetailContent");
-    if(!modal||!content) return;
-    const payers=parsePayers(r), shares=parseShares(r);
-    const payerNames=Object.keys(payers), shareNames=Object.keys(shares);
-    const title=document.getElementById("historyDetailTitle"),meta=document.getElementById("historyDetailMeta");
-    if(title) title.textContent=r.title||"未命名紀錄";
-    if(meta) meta.textContent=`${r.date||"無日期"} · ${historyDetailType(r.type)} · ID ${String(r.id||"").slice(0,8)}`;
-    const receipt=r.receipt ? `<img class="history-detail-receipt" src="${escapeHtml(r.receipt)}" alt="收據照片" onclick="event.stopPropagation();openHistoryReceipt('${escapeJsStr(r.receipt)}')">` : `<div class="text-xs text-gray-400">未附收據照片</div>`;
-    const o=r.receiptOcr||null;
-    const ocr = o ? (()=>{
-        const fields=[["店家",o.merchant],["OCR金額",o.amount!=null?Number(o.amount).toLocaleString():""],["OCR幣別",o.currency],["OCR日期",o.date],["發票號碼",o.invoiceNo]].filter(([,v])=>v!==undefined&&v!==null&&String(v)!=="");
-        const fieldHtml=fields.map(([k,v])=>`<div class="history-detail-item"><div class="history-detail-label">${escapeHtml(k)}</div><div class="history-detail-value">${escapeHtml(String(v))}</div></div>`).join("");
-        const itemsHtml=Array.isArray(o.items)&&o.items.length ? `<div class="mt-2 text-xs text-gray-500 dark:text-gray-300"><b>可能品項：</b>${o.items.map(escapeHtml).join("、")}</div>` : "";
-        return `<div class="history-detail-grid">${fieldHtml}</div>${itemsHtml}`;
-    })() : `<div class="text-xs text-gray-400">沒有 OCR 資料</div>`;
-    content.innerHTML=`
-      <section class="history-detail-grid">
-        <div class="history-detail-item"><div class="history-detail-label">日期</div><div class="history-detail-value">${escapeHtml(r.date||"—")} ${escapeHtml(getWeekdayLabel(r.date)||"")}</div></div>
-        <div class="history-detail-item"><div class="history-detail-label">類別</div><div class="history-detail-value">${escapeHtml(r.category||"其他")}</div></div>
-        <div class="history-detail-item"><div class="history-detail-label">原始金額</div><div class="history-detail-value font-mono">${historyDetailMoney(r.amount,r.currency||"TWD")}</div></div>
-        <div class="history-detail-item"><div class="history-detail-label">折合台幣</div><div class="history-detail-value font-mono text-blue-600 dark:text-blue-400">$${Math.round(Number(r.twdAmount)||0).toLocaleString()}</div></div>
-        <div class="history-detail-item"><div class="history-detail-label">匯率</div><div class="history-detail-value font-mono">${Number(r.rate||0).toLocaleString(undefined,{maximumFractionDigits:6})}</div></div>
-        <div class="history-detail-item"><div class="history-detail-label">紀錄類型</div><div class="history-detail-value">${escapeHtml(historyDetailType(r.type))}</div></div>
-      </section>
-      <section class="history-detail-section"><div class="font-bold text-sm mb-2">💳 付款明細</div>${historyDetailPairsHtml(payers, r.payer?escapeHtml(r.payer):"無付款資料")}</section>
-      <section class="history-detail-section"><div class="font-bold text-sm mb-2">👥 分攤明細</div>${historyDetailPairsHtml(shares,"此紀錄沒有分攤資料")}</section>
-      ${(r.type==="expense"||r.type==="settlement")?`<section class="history-detail-section"><div class="font-bold text-sm mb-2">⚖️ 分攤設定</div><div class="history-detail-row"><span>分攤方式</span><b>${escapeHtml(historyDetailSplitMode(r.splitMode))}</b></div>${historyDetailSplitValuesHtml(r)}</section>`:""}
-      <section class="history-detail-section"><div class="font-bold text-sm mb-2">🧾 收據</div>${receipt}</section>
-      <section class="history-detail-section"><div class="font-bold text-sm mb-2">🔎 收據 OCR</div>${ocr}</section>
-      <section class="history-detail-grid"><div class="history-detail-item"><div class="history-detail-label">紀錄 ID</div><div class="history-detail-value font-mono text-[.68rem]">${escapeHtml(String(r.id||"—"))}</div></div><div class="history-detail-item"><div class="history-detail-label">最後修改</div><div class="history-detail-value">${escapeHtml(formatHistoryUpdatedAt(r.updatedAt))}</div></div></section>`;
-    const edit=document.getElementById("historyDetailEditBtn"),dup=document.getElementById("historyDetailDuplicateBtn"),del=document.getElementById("historyDetailDeleteBtn");
-    if(edit) edit.onclick=()=>{closeHistoryDetail();startEditRecord(r.id);};
-    if(dup) dup.onclick=()=>{closeHistoryDetail();duplicateRecordToForm(r.id);};
-    if(del) del.onclick=async()=>{closeHistoryDetail();await softDeleteRecord(r.id);};
-    modal.classList.remove("hidden");
-    document.body.classList.add("overflow-hidden");
-};
-window.closeHistoryDetail=function(){const m=document.getElementById("historyDetailModal");if(m)m.classList.add("hidden");document.body.classList.remove("overflow-hidden");};
-window.openHistoryReceipt=function(dataUrl){const img=document.getElementById("modalImg"),m=document.getElementById("imageModal");if(img&&m){img.src=dataUrl;m.classList.remove("hidden");}};
-function formatHistoryUpdatedAt(value){if(!value)return "未記錄";const d=new Date(value);return Number.isNaN(d.getTime())?String(value):d.toLocaleString("zh-TW",{year:"numeric",month:"2-digit",day:"2-digit",hour:"2-digit",minute:"2-digit"});}
-document.addEventListener("keydown",e=>{if(e.key==="Escape")closeHistoryDetail();});
 
 const repairFilterMemberSelect = () => {
     const sel=document.getElementById("filterMemberSelect"); if(!sel) return;
@@ -3568,148 +3429,218 @@ window.onload = function() {
     }
 };
 
-/* ================================================================
-   ①～⑥ 全面優化：安全同步、快速記帳、歷史批次、儀表板、備份匯入、手機體驗
-   ================================================================ */
-(function(){
-  const PENDING_KEY='app_pending_sync_v2';
-  const RECENT_KEY='app_recent_records_v2';
-  const IMPORT_BACKUP_KEY='app_import_backup_v2';
-  let selectionMode=false, selectedIds=new Set(), syncRetryTimer=null, importBackup=null;
-  const $=id=>document.getElementById(id);
-  const money=n=>`$${Math.round(Number(n)||0).toLocaleString()}`;
-  const active=()=>getActiveRecords();
 
-  function setPendingSync(flag){
-    safeSetLocalStorage(PENDING_KEY,flag?'1':'0');
-    const badge=$('syncBadge')||$('syncStatus');
-    if(flag){
-      const text='⏳ 待同步';
-      if(badge) badge.title='本機資料已保存，等待 Google Drive 同步';
-      const btn=$('refreshBtn'); if(btn) btn.title=text;
-    } else if(badge) badge.title='資料已同步或目前不需同步';
-  }
-  function hasPendingSync(){return localStorage.getItem(PENDING_KEY)==='1';}
+// ==========================================
+// 全面資料安全層 / Backup / Undo / Restore
+// ==========================================
+const SAFETY_BACKUP_VERSION = "2.0";
+const SAFETY_MAX_SNAPSHOTS = 8;
 
-  // ① 同步安全：包住既有 Drive 儲存流程，不改動原有同步核心。
-  const originalSave=window.saveRecordsToDrive;
-  if(typeof originalSave==='function'){
-    window.saveRecordsToDrive=async function(...args){
-      setPendingSync(true);
-      try{
-        const result=await originalSave.apply(this,args);
-        if(result!==false) setPendingSync(false);
-        return result;
-      }catch(e){setPendingSync(true);throw e;}
+function safetyNowLabel(iso) {
+    try { return new Date(iso || Date.now()).toLocaleString("zh-TW", { hour12:false }); }
+    catch (_) { return String(iso || ""); }
+}
+function safetySnapshotKey(sheetName = currentSheet) { return `app_snapshots_v2_${sheetName}`; }
+function safetyLoadSnapshots(sheetName = currentSheet) {
+    const list = loadJSON(safetySnapshotKey(sheetName), []);
+    return Array.isArray(list) ? list.filter(x => x && Array.isArray(x.records)) : [];
+}
+function safetySaveSnapshots(list, sheetName = currentSheet) {
+    try { safeSetLocalStorage(safetySnapshotKey(sheetName), JSON.stringify(list.slice(0, SAFETY_MAX_SNAPSHOTS))); return true; }
+    catch (e) { console.warn("自動備份儲存失敗", e); return false; }
+}
+function createLocalSnapshot(reason = "操作前", sheetName = currentSheet, records = cachedRecords) {
+    try {
+        const snapshot = {
+            version: SAFETY_BACKUP_VERSION,
+            id: generateUUID(),
+            reason: String(reason || "操作前"),
+            createdAt: new Date().toISOString(),
+            sheetName,
+            records: normalizeAllRecords(Array.isArray(records) ? records : []),
+            members: Array.isArray(members) ? members.slice() : [],
+            categories: Array.isArray(categories) ? categories.slice() : [],
+            quickTemplates: Array.isArray(quickTemplates) ? JSON.parse(JSON.stringify(quickTemplates)) : [],
+            exchangeRates: exchangeRates && typeof exchangeRates === "object" ? JSON.parse(JSON.stringify(exchangeRates)) : {},
+            activeSheet: currentSheet
+        };
+        let list = safetyLoadSnapshots(sheetName);
+        list.unshift(snapshot);
+        list = list.filter((x,i) => i === 0 || x.records.length !== snapshot.records.length || x.createdAt !== snapshot.createdAt);
+        if (!safetySaveSnapshots(list, sheetName)) {
+            // 若 localStorage 空間不足，保留較少版本再嘗試一次。
+            safetySaveSnapshots(list.slice(0, 3), sheetName);
+        }
+        renderSnapshotPanel();
+        return snapshot;
+    } catch (e) { console.warn("建立自動備份失敗", e); return null; }
+}
+window.createLocalSnapshot = createLocalSnapshot;
+
+function downloadBlobFile(filename, content, type = "application/json;charset=utf-8") {
+    const blob = new Blob([content], { type });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url; a.download = filename; document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+}
+
+function buildFullBackupPayload() {
+    const localWorkbooks = {};
+    const names = Array.from(new Set([...Object.keys(sheetFileMap || {}), currentSheet || "預設帳本"]));
+    names.forEach(name => { localWorkbooks[name] = normalizeAllRecords(name === currentSheet ? cachedRecords : loadLocalSheetMirror(name)); });
+    return {
+        backupType: "雲端全能分帳記帳 Pro 完整備份",
+        backupVersion: SAFETY_BACKUP_VERSION,
+        exportedAt: new Date().toISOString(),
+        currentSheet,
+        sheetFileMap: JSON.parse(JSON.stringify(sheetFileMap || {})),
+        workbooks: localWorkbooks,
+        records: normalizeAllRecords(cachedRecords),
+        deletedRecords: normalizeAllRecords(cachedRecords.filter(r => r.deleted)),
+        members: Array.isArray(members) ? members.slice() : [],
+        categories: Array.isArray(categories) ? categories.slice() : [],
+        quickTemplates: Array.isArray(quickTemplates) ? JSON.parse(JSON.stringify(quickTemplates)) : [],
+        exchangeRates: exchangeRates && typeof exchangeRates === "object" ? JSON.parse(JSON.stringify(exchangeRates)) : {},
+        settings: {
+            fontSize: localStorage.getItem("app_custom_font_size") || "16",
+            theme: localStorage.getItem("theme") || "light"
+        }
     };
-  }
-  async function retryPendingSync(){
-    if(!hasPendingSync()||!navigator.onLine||!googleSessionLinked||!accessToken) return;
-    try{const ok=await window.saveRecordsToDrive(false);if(ok!==false)setPendingSync(false);}catch(e){console.info('背景同步等待下次重試',e?.message||e);}
-  }
-  window.addEventListener('online',()=>{clearTimeout(syncRetryTimer);syncRetryTimer=setTimeout(retryPendingSync,1200);showToast('🌐 網路已恢復，準備同步','info');});
-  setInterval(()=>{if(hasPendingSync())retryPendingSync();},45000);
+}
 
-  // ② 快速記帳：最近使用紀錄，保留原紀錄不修改。
-  function getRecentIds(){try{return JSON.parse(localStorage.getItem(RECENT_KEY)||'[]').filter(Boolean).slice(0,8);}catch{return[];}}
-  function rememberRecent(id){let ids=getRecentIds().filter(x=>String(x)!==String(id));ids.unshift(id);safeSetLocalStorage(RECENT_KEY,JSON.stringify(ids.slice(0,8)));renderRecentRecords();}
-  function renderRecentRecords(){
-    const bar=$('recentRecordsBar');if(!bar)return;
-    const rs=getRecentIds().map(id=>cachedRecords.find(r=>String(r.id)===String(id))).filter(r=>r&&!r.deleted).slice(0,8);
-    bar.innerHTML=rs.length?'<span class="text-[.65rem] text-gray-400 font-bold self-center flex-shrink-0">最近：</span>'+rs.map(r=>`<button type="button" class="flex-shrink-0 text-[.68rem] font-bold px-2 py-1 rounded-lg border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 touch-action" onclick="duplicateRecordToForm('${escapeJsStr(r.id)}')">↻ ${escapeHtml(r.title||'未命名')}</button>`).join(''):'';
-  }
-  window.rememberRecentRecord=rememberRecent;
+function exportFullJsonBackup() {
+    try {
+        const payload = buildFullBackupPayload();
+        downloadBlobFile(`accounting_full_backup_${currentSheet}_${new Date().toISOString().slice(0,10)}.json`, JSON.stringify(payload, null, 2));
+        showToast("✅ 完整 JSON 備份已建立", "success");
+    } catch (e) { showToast("完整備份失敗：" + (e?.message || "未知錯誤"), "error"); }
+}
 
-  // ③ 歷史批次選取。
-  window.handleRecordCardClick=function(e,id){
-    if(selectionMode){
-      if(e.target.closest('button,input'))return;
-      toggleRecordSelection(id,!selectedIds.has(String(id)));return;
+function restoreSafetySnapshot(snapshot, ask = true) {
+    if (!snapshot || !Array.isArray(snapshot.records)) return false;
+    if (ask && !confirm(`確定恢復 ${safetyNowLabel(snapshot.createdAt)} 的備份？\n目前「${currentSheet}」資料將回到該版本。`)) return false;
+    createLocalSnapshot("還原前", currentSheet, cachedRecords);
+    cachedRecords = normalizeAllRecords(snapshot.records);
+    if (Array.isArray(snapshot.members) && snapshot.members.length) {
+        members = snapshot.members.slice(); safeSetLocalStorage("split_members", JSON.stringify(members));
     }
-    openHistoryDetail(id);
-  };
-  window.toggleRecordSelection=function(id,checked){
-    id=String(id);if(checked)selectedIds.add(id);else selectedIds.delete(id);updateSelectionUI();
-  };
-  function updateSelectionUI(){
-    document.body.classList.toggle('selection-mode',selectionMode);
-    document.querySelectorAll('.record-card').forEach(card=>{
-      const id=String(card.dataset.recordId||'');const yes=selectedIds.has(id);card.classList.toggle('is-selected',yes);const cb=card.querySelector('.record-select input');if(cb)cb.checked=yes;
-    });
-    const bar=$('historyBatchBar');if(bar)bar.classList.toggle('hidden',!selectionMode);
-    const n=$('batchSelectedCount');if(n)n.textContent=selectedIds.size;
-  }
-  function enterSelectionMode(){selectionMode=true;selectedIds.clear();updateSelectionUI();showToast('已進入批次模式，點選紀錄即可多選','info');}
-  function exitSelectionMode(){selectionMode=false;selectedIds.clear();updateSelectionUI();}
-  async function batchDelete(){
-    const ids=[...selectedIds];if(!ids.length)return showToast('請先選擇紀錄','info');
-    if(!confirm(`確定把 ${ids.length} 筆紀錄移到回收桶？`))return;
-    const now=new Date().toISOString();cachedRecords.forEach(r=>{if(ids.includes(String(r.id))){r.deleted=true;r.updatedAt=now;}});
-    exitSelectionMode();renderAllViews();renderTrash();
-    try{const ok=await saveRecordsToDrive(true);showToast(ok!==false?'已批次回收並同步':'已批次回收，等待同步',ok!==false?'success':'info');}catch(e){showToast('已回收，但雲端同步失敗，會稍後重試','info');}
-  }
-  function batchExport(){
-    const rs=active().filter(r=>selectedIds.has(String(r.id)));if(!rs.length)return showToast('請先選擇紀錄','info');
-    downloadJson(`accounting_${currentSheet}_selected_${new Date().toISOString().slice(0,10)}.json`,{version:2,exportedAt:new Date().toISOString(),sheet:currentSheet,records:rs});
-  }
-  function selectAllVisible(){
-    document.querySelectorAll('.record-card').forEach(c=>{const id=c.dataset.recordId;if(id)selectedIds.add(String(id));});updateSelectionUI();
-  }
+    if (Array.isArray(snapshot.categories) && snapshot.categories.length) {
+        categories = snapshot.categories.slice(); safeSetLocalStorage("app_categories", JSON.stringify(categories));
+    }
+    if (snapshot.quickTemplates) { quickTemplates = snapshot.quickTemplates; safeSetLocalStorage("app_quick_templates", JSON.stringify(quickTemplates)); }
+    if (snapshot.exchangeRates) { exchangeRates = snapshot.exchangeRates; safeSetLocalStorage("app_exchange_rates", JSON.stringify(exchangeRates)); }
+    saveLocalSheetMirror(currentSheet, cachedRecords);
+    renderMemberControls(); renderCategoryControls(); renderQuickTemplates(); renderAllViews(); renderTrash(); renderRateChips();
+    void saveRecordsToDrive(true);
+    showToast("↩️ 已恢復備份版本，並保留還原前版本", "success");
+    renderSnapshotPanel();
+    return true;
+}
 
-  // ④ 儀表板：本月支出/收入/淨額/筆數，依既有 TWD 資料計算。
-  function renderOptimizationDashboard(){
-    const now=new Date(), ym=`${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`;
-    const rs=active().filter(r=>String(r.date||'').slice(0,7)===ym);const sum=calculateTransactionSummary(rs);
-    [['optMonthExpense',money(sum.expense)],['optMonthIncome',money(sum.income)],['optMonthNet',money(sum.net)],['optMonthCount',String(sum.count)]].forEach(([id,v])=>{const e=$(id);if(e)e.textContent=v;});
-    const net=$('optMonthNet');if(net)net.className='opt-value '+(sum.net<0?'text-red-500':sum.net>0?'text-emerald-600':'text-gray-700 dark:text-gray-200');
-  }
+function renderSnapshotPanel() {
+    const panel = document.getElementById("snapshotPanel");
+    const listEl = document.getElementById("snapshotList");
+    const countEl = document.getElementById("snapshotCountDisplay");
+    if (!panel || !listEl) return;
+    const list = safetyLoadSnapshots(currentSheet);
+    if (countEl) countEl.textContent = list.length;
+    listEl.innerHTML = list.length ? list.map((s,i) => `
+        <div class="flex items-center gap-2 p-2 rounded-lg bg-white dark:bg-gray-900 border border-slate-200 dark:border-slate-700 text-[0.7rem]">
+          <div class="min-w-0 flex-1"><div class="font-bold truncate">${escapeHtml(s.reason || "自動備份")}</div><div class="text-slate-500">${escapeHtml(safetyNowLabel(s.createdAt))} · ${s.records.length} 筆</div></div>
+          <button type="button" onclick="restoreSafetySnapshotByIndex(${i})" class="shrink-0 px-2 py-1 rounded-lg bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300 font-bold">恢復</button>
+        </div>`).join("") : '<div class="text-slate-400 text-center py-2">目前還沒有自動備份</div>';
+}
+window.restoreSafetySnapshotByIndex = function(index) {
+    const list = safetyLoadSnapshots(currentSheet);
+    if (list[index]) restoreSafetySnapshot(list[index], true);
+};
+window.showSafetySnapshots = function() {
+    const panel = document.getElementById("snapshotPanel");
+    if (panel) panel.classList.toggle("hidden");
+    renderSnapshotPanel();
+};
+window.undoLastSafetyAction = function() {
+    const list = safetyLoadSnapshots(currentSheet);
+    const target = list[0];
+    if (!target) return showToast("目前沒有可復原的操作", "info");
+    restoreSafetySnapshot(target, true);
+};
 
-  // ⑤ 完整 JSON 備份。
-  function downloadJson(name,obj){const blob=new Blob([JSON.stringify(obj,null,2)],{type:'application/json;charset=utf-8'});const url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download=name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1000);}
-  function exportFullJson(){
-    downloadJson(`accounting_${currentSheet}_full_backup_${new Date().toISOString().replace(/[:.]/g,'-')}.json`,{version:2,app:'雲端全能分帳記帳 Pro',exportedAt:new Date().toISOString(),sheet:currentSheet,members,categories,exchangeRates,records:cachedRecords});
-    showToast('完整 JSON 備份已匯出');
-  }
-  function countDuplicates(rs){const keys=new Set(cachedRecords.map(r=>`${r.date}|${r.title}|${Number(r.twdAmount)||0}|${r.type||''}`));return rs.filter(r=>keys.has(`${r.date}|${r.title}|${Number(r.twdAmount)||0}|${r.type||''}`)).length;}
-  async function enhancedImport(file){
-    const text=await file.text(),name=file.name.toLowerCase();let raw=[];
-    if(name.endsWith('.json')){const parsed=JSON.parse(text);raw=Array.isArray(parsed)?parsed:(Array.isArray(parsed?.records)?parsed.records:[parsed]);}
-    else {const delim=detectCSVDelimiter(text),rows=parseCSV(text,delim);if(!rows.length)throw new Error('檔案沒有有效資料');const header=rows[0].map(v=>String(v).replace(/^﻿/,'').trim());const hasHeader=['Date','日期','Title','項目','Amount','金額','原始金額','折合台幣'].some(x=>header.includes(x));const data=hasHeader?rows.slice(1):rows;const map=hasHeader?headerIndexMap(header):{date:0,title:1,category:2,amount:3,currency:4,twdAmount:5,payer:6,type:7};data.forEach(cols=>{const amount=finiteNumber(cols[map.amount],0),currency=String(cols[map.currency]||'TWD').trim()||'TWD',rate=currency==='TWD'?1:finiteNumber(cols[map.rate],exchangeRates[currency]||0),twd=finiteNumber(cols[map.twdAmount],Math.round(amount*rate)),type=normalizeImportType(cols[map.type]||'expense'),payer=String(cols[map.payer]||'').trim()||(type==='personal'?(members[0]||''):(members[0]||''));raw.push({id:generateUUID(),title:String(cols[map.title]||'').trim(),amount,currency,twdAmount:twd,rate,category:String(cols[map.category]||'其他').trim()||'其他',type,date:String(cols[map.date]||'').trim(),payer,payers:payer?[{member:payer,amount:twd}]:[],shares:[],splitMembers:[],deleted:false});});}
-    const normalized=normalizeImportedRecords(raw,name.endsWith('.json')?'JSON':'CSV');if(!normalized.records.length)throw new Error('沒有通過驗證的有效紀錄');
-    const dup=countDuplicates(normalized.records),invalid=normalized.invalid.length;
-    const preview=`準備匯入 ${normalized.records.length} 筆\n重複疑似 ${dup} 筆\n格式錯誤 ${invalid} 筆\n\n按「確定」後才會寫入。\n系統會先建立目前帳本的自動備份。`;
-    if(!confirm(preview))return;
-    importBackup=JSON.parse(JSON.stringify(cachedRecords));
-    try{safeSetLocalStorage(IMPORT_BACKUP_KEY,JSON.stringify({sheet:currentSheet,createdAt:new Date().toISOString(),records:importBackup}));}catch(e){console.info('自動匯入備份因容量限制未寫入 localStorage');}
-    const existingKeys=new Set(cachedRecords.map(r=>`${r.date}|${r.title}|${Number(r.twdAmount)||0}|${r.type||''}`));
-    const unique=normalized.records.filter(r=>!existingKeys.has(`${r.date}|${r.title}|${Number(r.twdAmount)||0}|${r.type||''}`));
-    if(!unique.length)return showToast('全部都是疑似重複資料，未匯入','info');
-    cachedRecords=normalizeAllRecords([...unique,...cachedRecords]);saveLocalSheetMirror(currentSheet,cachedRecords);renderAllViews();renderTrash();
-    try{const ok=await saveRecordsToDrive(true);showToast(ok!==false?`匯入成功：新增 ${unique.length} 筆`:`匯入完成：新增 ${unique.length} 筆，等待同步`,ok!==false?'success':'info');}
-    catch(e){cachedRecords=importBackup;saveLocalSheetMirror(currentSheet,cachedRecords);renderAllViews();try{safeSetLocalStorage(IMPORT_BACKUP_KEY,JSON.stringify({sheet:currentSheet,createdAt:new Date().toISOString(),records:cachedRecords}));}catch(_){}throw new Error('雲端同步失敗，已自動回復匯入前資料');}
-  }
+document.getElementById("exportFullJsonBtn")?.addEventListener("click", exportFullJsonBackup);
+document.getElementById("undoLastActionBtn")?.addEventListener("click", () => window.undoLastSafetyAction());
+document.getElementById("showSnapshotsBtn")?.addEventListener("click", () => window.showSafetySnapshots());
 
-  function addOptimizationControls(){
-    const history=$('view-history');if(history&&!$('historyBackupHint')){const hint=document.createElement('div');hint.id='historyBackupHint';hint.className='text-[.68rem] text-gray-400 dark:text-gray-500 px-1';hint.textContent='💾 本機資料會先保存；網路恢復後自動重試雲端同步。';const dash=$('optimizationDashboard');if(dash)dash.insertAdjacentElement('afterend',hint);}
-    const fullJsonBtn=$('fullJsonExportBtn');if(fullJsonBtn&&!fullJsonBtn.dataset.bound){fullJsonBtn.dataset.bound='1';fullJsonBtn.onclick=exportFullJson;}
-    const record=$('view-record');if(record&&!$('recentRecordsBar')){const bar=document.createElement('div');bar.id='recentRecordsBar';bar.className='flex gap-1.5 overflow-x-auto py-1';const anchor=record.querySelector('#quickTemplatesBar');(anchor?.parentElement||record).insertBefore(bar,anchor||null);}
-  }
+// 匯入完整備份：保留舊資料快照，支援帳本、回收桶、成員、類別、範本與匯率一起還原。
+const originalImportHandlerForSafety = document.getElementById("importBtn")?.onclick;
+if (document.getElementById("importBtn")) document.getElementById("importBtn").onclick = async function() {
+    const fileInput = document.getElementById("importFileInput");
+    const file = fileInput?.files?.[0];
+    if (!file) return showToast("請先選擇檔案", "error");
+    const before = createLocalSnapshot("匯入前");
+    try {
+        const fileName = file.name.toLowerCase();
+        const text = await file.text();
+        let parsed = null;
+        if (fileName.endsWith(".json")) parsed = JSON.parse(text);
+        const isFullBackup = parsed && parsed.backupType && (parsed.workbooks || parsed.records) && Array.isArray(parsed.members);
+        if (isFullBackup) {
+            const backupRecords = Array.isArray(parsed.records) ? parsed.records : (Array.isArray(parsed.workbooks?.[parsed.currentSheet]) ? parsed.workbooks[parsed.currentSheet] : []);
+            const normalized = normalizeAllRecords(backupRecords);
+            if (!normalized.length && backupRecords.length) throw new Error("完整備份的紀錄驗證失敗");
+            const msg = `完整備份時間：${safetyNowLabel(parsed.exportedAt)}\n帳本：${parsed.currentSheet || currentSheet}\n紀錄：${normalized.length} 筆\n成員：${parsed.members.length} 人\n\n確定要還原嗎？`;
+            if (!confirm(msg)) return;
+            createLocalSnapshot("完整備份還原前");
+            const targetSheet = String(parsed.currentSheet || currentSheet);
+            currentSheet = targetSheet;
+            safeSetLocalStorage("app_active_sheet", currentSheet);
+            if (parsed.sheetFileMap && typeof parsed.sheetFileMap === "object") {
+                sheetFileMap = parsed.sheetFileMap;
+                safeSetLocalStorage("app_sheet_map", JSON.stringify(sheetFileMap));
+            }
+            members = Array.isArray(parsed.members) && parsed.members.length ? parsed.members.slice() : members;
+            categories = Array.isArray(parsed.categories) && parsed.categories.length ? parsed.categories.slice() : categories;
+            quickTemplates = Array.isArray(parsed.quickTemplates) ? parsed.quickTemplates : quickTemplates;
+            exchangeRates = parsed.exchangeRates && typeof parsed.exchangeRates === "object" ? parsed.exchangeRates : exchangeRates;
+            safeSetLocalStorage("split_members", JSON.stringify(members));
+            safeSetLocalStorage("app_categories", JSON.stringify(categories));
+            safeSetLocalStorage("app_quick_templates", JSON.stringify(quickTemplates));
+            safeSetLocalStorage("app_exchange_rates", JSON.stringify(exchangeRates));
+            const workbooks = parsed.workbooks && typeof parsed.workbooks === "object" ? parsed.workbooks : {};
+            Object.entries(workbooks).forEach(([name, rows]) => saveLocalSheetMirror(name, normalizeAllRecords(Array.isArray(rows) ? rows : [])));
+            cachedRecords = normalizeAllRecords(workbooks[currentSheet] || normalized);
+            saveLocalSheetMirror(currentSheet, cachedRecords);
+            renderSheetSelector();
+            renderMemberControls(); renderCategoryControls(); renderQuickTemplates(); renderAllViews(); renderTrash(); renderRateChips();
+            fileInput.value = "";
+            const synced = await saveRecordsToDrive(true);
+            showToast(synced ? "✅ 完整備份已還原並同步雲端" : "💾 完整備份已還原到本機，等待雲端同步", synced ? "success" : "info");
+            return;
+        }
+        // 非完整 JSON/CSV/TXT 仍交給原有穩定匯入器，保持原功能完全相容。
+        if (typeof originalImportHandlerForSafety === "function") {
+            return await originalImportHandlerForSafety.call(this);
+        }
+        throw new Error("找不到一般匯入處理器");
+    } catch (e) {
+        if (before) renderSnapshotPanel();
+        showToast("匯入失敗：" + (e?.message || "格式錯誤"), "error");
+    }
+};
 
-  function init(){
-    addOptimizationControls();renderRecentRecords();renderOptimizationDashboard();
-    const mode=$('historySelectModeBtn');if(mode)mode.onclick=()=>selectionMode?exitSelectionMode():enterSelectionMode();
-    $('batchCancelBtn')?.addEventListener('click',exitSelectionMode);$('batchDeleteBtn')?.addEventListener('click',batchDelete);$('batchExportBtn')?.addEventListener('click',batchExport);$('batchAllBtn')?.addEventListener('click',selectAllVisible);
-    const importBtn=$('importBtn');if(importBtn)importBtn.onclick=async function(){const f=$('importFileInput')?.files?.[0];if(!f)return showToast('請先選擇檔案','error');try{await enhancedImport(f);}catch(e){showToast(e?.message||'匯入失敗','error');console.error(e);}};
-    const saveBtn=$('saveRecordBtn');if(saveBtn&&!saveBtn.dataset.recentHook){saveBtn.dataset.recentHook='1';saveBtn.addEventListener('click',()=>setTimeout(()=>{if(editingRecordId)rememberRecent(editingRecordId);else{const latest=cachedRecords[0];if(latest)rememberRecent(latest.id);}},500));}
-    renderAllViews();renderOptimizationDashboard();renderRecentRecords();
-  }
-  if(window.visualViewport){window.visualViewport.addEventListener('resize',()=>{const open=window.innerHeight-window.visualViewport.height>140;document.body.classList.toggle('keyboard-open',open);});}
-  document.addEventListener('focusin',e=>{if(e.target.matches('input,textarea,select')&&window.matchMedia('(pointer:coarse)').matches){setTimeout(()=>e.target.scrollIntoView({block:'center',behavior:'smooth'}),180);}});
-  window.addEventListener('load',()=>setTimeout(init,250));
-  const oldRenderAll=window.renderAllViews;
-  if(typeof oldRenderAll==='function')window.renderAllViews=function(...args){const r=oldRenderAll.apply(this,args);setTimeout(()=>{renderOptimizationDashboard();if(selectionMode)updateSelectionUI();renderRecentRecords();},0);return r;};
-})();
+// 每次寫入前保留一版；網路恢復時自動重試待同步資料。
+const _safetyOriginalSaveRecordsToDrive = saveRecordsToDrive;
+window.addEventListener("online", () => {
+    try { showToast("🌐 網路已恢復，正在檢查待同步資料", "info"); void retryPendingSync(); }
+    catch (_) {}
+});
+window.addEventListener("offline", () => setSyncBadge("離線待同步", false, true));
 
+// 啟動時顯示最近備份數，並建立初始快照（不重複建立）。
+try {
+    if (!safetyLoadSnapshots(currentSheet).length && Array.isArray(cachedRecords)) createLocalSnapshot("啟動初始備份");
+    renderSnapshotPanel();
+} catch (_) {}
 </script>
 </body>
 </html>
