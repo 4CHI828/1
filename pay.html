@@ -182,6 +182,18 @@ tailwind.config = { darkMode: 'class' };
 <div class="flex items-center gap-1.5 overflow-x-auto pb-1 text-xs" id="quickTemplatesBar"></div>
 </div>
 <div id="aiStatusNotice" class="hidden text-center text-xs text-blue-600 bg-blue-50 dark:bg-blue-900/30 dark:text-blue-300 font-bold py-1.5 rounded-lg animate-pulse shadow-sm">AI 正在分析中...</div>
+<div id="receiptOcrResult" class="hidden rounded-xl border border-emerald-200/70 dark:border-emerald-800/60 bg-emerald-50/70 dark:bg-emerald-900/20 p-2.5 text-xs">
+  <div class="flex items-center justify-between gap-2 mb-1.5">
+    <span class="font-bold text-emerald-800 dark:text-emerald-300">🧾 收據辨識結果</span>
+    <span id="receiptOcrFieldCount" class="text-[0.65rem] text-emerald-600 dark:text-emerald-400"></span>
+  </div>
+  <div id="receiptOcrSummary" class="grid grid-cols-2 gap-1.5 text-[0.7rem] text-gray-700 dark:text-gray-200"></div>
+  <div id="receiptOcrItems" class="hidden mt-1.5 text-[0.68rem] text-gray-500 dark:text-gray-400"></div>
+  <div class="flex flex-wrap gap-1.5 mt-2">
+    <button type="button" id="applyReceiptOcrBtn" class="px-2.5 py-1.5 rounded-lg bg-emerald-600 text-white font-bold active:scale-95 transition">套用辨識結果</button>
+    <button type="button" id="applyReceiptOcrBlankBtn" class="px-2.5 py-1.5 rounded-lg bg-white dark:bg-gray-700 border border-emerald-200 dark:border-emerald-700 text-emerald-700 dark:text-emerald-300 font-bold active:scale-95 transition">只補空白欄位</button>
+  </div>
+</div>
 <div class="bg-white/80 dark:bg-gray-800/90 border border-gray-100 dark:border-gray-700 shadow-xl rounded-2xl p-4 space-y-4 glass">
 <div class="flex gap-1.5 mb-1 bg-gray-100/80 dark:bg-gray-800/80 p-1.5 rounded-xl shadow-inner">
 <button type="button" onclick="setRecordType('expense')" id="btnTypeExpense" class="flex-1 text-xs font-bold py-1.5 rounded-lg bg-white dark:bg-gray-600 text-blue-600 dark:text-blue-300 shadow-sm transition">👥 群組分帳</button>
@@ -608,11 +620,13 @@ let cachedRecords = [];
 let currentSplitMode = "equal";
 let isMultiPayerMode = false;
 let uploadedReceiptBase64 = "";
+let receiptOcrMeta = null;
 let editingRecordId = null;
 let chartInstance = null;
 let currentChartMode = 'pie';
 let chartLoadPromise = null;
 let tesseractLoadPromise = null;
+let tesseractWorkerPromise = null;
 
 const MEMBER_PALETTE = [
     { bg: "bg-blue-100 dark:bg-blue-900/50", text: "text-blue-700 dark:text-blue-300", border: "border-blue-200 dark:border-blue-700" },
@@ -671,6 +685,23 @@ function ensureTesseract() {
     if (!tesseractLoadPromise) tesseractLoadPromise = loadExternalScript("https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js", "Tesseract").catch(e => { tesseractLoadPromise = null; throw e; });
     return tesseractLoadPromise;
 }
+async function ensureTesseractWorker(logger) {
+    await ensureTesseract();
+    if (tesseractWorkerPromise) return tesseractWorkerPromise;
+    tesseractWorkerPromise = (async () => {
+        if (!window.Tesseract?.createWorker) throw new Error("OCR worker 初始化失敗");
+        try {
+            const worker = await window.Tesseract.createWorker(["chi_tra", "eng"], 1, {
+                logger: m => { try { logger?.(m); } catch (_) {} }
+            });
+            return worker;
+        } catch (e) {
+            tesseractWorkerPromise = null;
+            throw e;
+        }
+    })();
+    return tesseractWorkerPromise;
+}
 
 function showToast(msg, type = "success") {
     const container = document.getElementById("toastContainer");
@@ -727,7 +758,7 @@ async function requestGoogleAccessToken(interactive = true) {
 
 async function driveApi(url, options = {}, allowRetry = true) {
     if (!accessToken || (tokenExpiry && Date.now() >= tokenExpiry)) {
-        // 優先使用 prompt: 'none' 靜默恢復；只有真正需要時才讓使用者主動授權。
+        // 優先使用 prompt: 'none' 靜默恢復；真正需要時才由使用者操作取得 token。
         const restored = googleSessionLinked ? await ensureGoogleAccessToken(false) : false;
         if (!restored) {
             updateGoogleUI(false);
@@ -745,7 +776,10 @@ async function driveApi(url, options = {}, allowRetry = true) {
         throw new Error("無法連線 Google Drive，請檢查網路連線");
     }
     if (res.status === 401 && allowRetry) {
+        // access token 可能在請求途中過期；先自動用 prompt:none 重取一次，成功後原請求重試一次。
         accessToken = null; tokenExpiry = 0;
+        const restored = googleSessionLinked ? await ensureGoogleAccessToken(false) : false;
+        if (restored) return driveApi(url, options, false);
         googleAuthNeedsReauth = false;
         updateGoogleUI(false);
         setSyncBadge(googleSessionLinked ? "Google 已連結" : "請登入", false, false);
@@ -849,6 +883,10 @@ async function fetchSheetFilesFromDrive() {
         else if (f.name.endsWith(".json")) sheetFileMap[f.name.replace(".json", "")] = f.id;
     });
     if (!sheetFileMap["預設帳本"]) sheetFileMap["預設帳本"] = null;
+    if (!sheetFileMap[currentSheet] && currentSheet !== "預設帳本") {
+        currentSheet = "預設帳本";
+        safeSetLocalStorage("app_active_sheet", currentSheet);
+    }
     safeSetLocalStorage("app_sheet_map", JSON.stringify(sheetFileMap));
     renderSheetSelector();
 }
@@ -884,12 +922,15 @@ async function loadCloudConfigFromDrive() {
 }
 
 async function syncConfigToDrive(interactive = false) {
-    if (!driveFolderId) return false;
     if (!accessToken && interactive && googleSessionLinked) {
         const ok = await ensureGoogleAccessToken(true);
         if (!ok) return false;
     }
-    if (!accessToken) return false;
+    if (!driveFolderId && interactive && accessToken) {
+        const ready = await setupDriveEnvironment();
+        if (!ready || !driveFolderId) return false;
+    }
+    if (!driveFolderId || !accessToken) return false;
 
     let synced = true;
     configSaveQueue = configSaveQueue.then(async () => {
@@ -1254,62 +1295,357 @@ document.getElementById("chartTypeBalanceBtn").onclick = async () => { currentCh
 // ==========================================
 // AI 輔助模塊 (OCR & Voice)
 // ==========================================
+async function readImageDataUrl(file) {
+    if (!file) throw new Error("沒有收到圖片");
+    return await new Promise((resolve, reject) => {
+        const fr = new FileReader();
+        fr.onload = () => resolve(String(fr.result || ""));
+        fr.onerror = () => reject(new Error("圖片讀取失敗"));
+        fr.readAsDataURL(file);
+    });
+}
+
+async function createReceiptOcrImages(file) {
+    const dataUrl = await readImageDataUrl(file);
+    const img = await new Promise((resolve, reject) => {
+        const im = new Image();
+        im.onload = () => resolve(im);
+        im.onerror = () => reject(new Error("圖片載入失敗"));
+        im.src = dataUrl;
+    });
+    const max = 2400;
+    const scale = Math.min(1.6, max / Math.max(img.width, img.height));
+    const w = Math.max(1, Math.round(img.width * scale));
+    const h = Math.max(1, Math.round(img.height * scale));
+    const canvas = document.createElement("canvas");
+    canvas.width = w; canvas.height = h;
+    const ctx = canvas.getContext("2d", { willReadFrequently: true });
+    if (!ctx) throw new Error("瀏覽器不支援圖片處理");
+    ctx.drawImage(img, 0, 0, w, h);
+    const imageData = ctx.getImageData(0, 0, w, h);
+    const d = imageData.data;
+    // 輕度灰階 + 對比提升，避免過度二值化造成中文細字遺失。
+    for (let i = 0; i < d.length; i += 4) {
+        const y = 0.299 * d[i] + 0.587 * d[i + 1] + 0.114 * d[i + 2];
+        const v = Math.max(0, Math.min(255, (y - 128) * 1.28 + 128));
+        d[i] = d[i + 1] = d[i + 2] = v;
+    }
+    ctx.putImageData(imageData, 0, 0);
+    return [dataUrl, canvas.toDataURL("image/jpeg", 0.9)];
+}
+
+function cleanOcrText(text) {
+    return String(text || "")
+        .replace(/\r/g, "")
+        .replace(/[\u200B-\u200D\uFEFF]/g, "")
+        .replace(/[ \t]+/g, " ")
+        .split("\n")
+        .map(s => s.trim())
+        .filter(Boolean)
+        .join("\n");
+}
+
+function normalizeOcrAmount(raw) {
+    let s = String(raw || "").trim()
+        .replace(/[，,\s]/g, "")
+        .replace(/[Oo]/g, "0");
+    // 常見 OCR 把結尾的小數點誤認成逗號/句點；保留數字與一個小數點。
+    s = s.replace(/[^0-9.]/g, "");
+    const dots = (s.match(/\./g) || []).length;
+    if (dots > 1) {
+        const parts = s.split(".");
+        s = parts.slice(0, -1).join("") + "." + parts[parts.length - 1];
+    }
+    const n = Number(s);
+    return Number.isFinite(n) && n > 0 ? n : null;
+}
+
+function parseReceiptDate(text) {
+    const s = String(text || "");
+    // 先判斷四位數西元，避免 2026 被切成「026 年」後誤轉成民國。
+    const western = s.match(/(20\d{2}|19\d{2})\s*[年\/\-.]\s*(\d{1,2})\s*[月\/\-.]\s*(\d{1,2})\s*日?/i);
+    if (western) {
+        const iso = `${western[1]}-${String(Number(western[2])).padStart(2,"0")}-${String(Number(western[3])).padStart(2,"0")}`;
+        if (isValidDateString(iso)) return iso;
+    }
+    const mdy = s.match(/(\d{1,2})[\/\-](\d{1,2})[\/\-](20\d{2}|19\d{2})/i);
+    if (mdy) {
+        const iso = `${mdy[3]}-${String(Number(mdy[1])).padStart(2,"0")}-${String(Number(mdy[2])).padStart(2,"0")}`;
+        if (isValidDateString(iso)) return iso;
+    }
+    const roc = s.match(/(?:民國\s*)?(\d{2,3})\s*[年\/\-.]\s*(\d{1,2})\s*[月\/\-.]\s*(\d{1,2})\s*日?/i);
+    if (roc) {
+        const y = Number(roc[1]) + 1911;
+        const iso = `${String(y).padStart(4,"0")}-${String(Number(roc[2])).padStart(2,"0")}-${String(Number(roc[3])).padStart(2,"0")}`;
+        if (isValidDateString(iso)) return iso;
+    }
+    return "";
+}
+
+function detectReceiptCurrency(text) {
+    const s = String(text || "");
+    const rules = [
+        [/\b(?:TWD|NTD)\b|NT\$|新台幣|台幣/i, "TWD"],
+        [/\bUSD\b|US\$|美元|美金/i, "USD"],
+        [/\bJPY\b|日圓|日元|日円|円/i, "JPY"],
+        [/\bTHB\b|泰銖|฿/i, "THB"],
+        [/\bHKD\b|HK\$|港幣/i, "HKD"],
+        [/\bKRW\b|韓元|₩|WON/i, "KRW"],
+        [/\bEUR\b|歐元|€|\bEURO\b/i, "EUR"],
+        [/\bCNY\b|\bRMB\b|人民幣|人民币/i, "CNY"]
+    ];
+    for (const [re, cur] of rules) if (re.test(s)) return cur;
+    return "";
+}
+
+function extractReceiptInvoiceNo(text) {
+    const s = String(text || "").toUpperCase().replace(/\s+/g, " ");
+    const m = s.match(/\b[A-Z]{2}\s?\d{8}\b/);
+    return m ? m[0].replace(/\s+/g, "") : "";
+}
+
+function scoreReceiptLineForMerchant(line) {
+    const s = String(line || "").trim();
+    if (s.length < 2 || s.length > 40) return -999;
+    if (/總計|合計|應付|實付|小計|稅額|找零|發票|統編|日期|電話|地址|TEL|TOTAL|AMOUNT|INVOICE|TAX|CHANGE/i.test(s)) return -999;
+    const digitCount = (s.match(/\d/g) || []).length;
+    if (digitCount > Math.max(5, Math.floor(s.length * 0.35))) return -999;
+    const zh = (s.match(/[\u4e00-\u9fff]/g) || []).length;
+    const alpha = (s.match(/[A-Za-z]/g) || []).length;
+    let score = 0;
+    if (zh >= 2) score += 5;
+    if (alpha >= 3) score += 3;
+    if (s.length <= 24) score += 2;
+    if (/股份|有限公司|商店|超商|超級市場|餐廳|咖啡|飯店|旅館|百貨|便利商店|店|公司|MART|STORE|CAFE|HOTEL|SHOP/i.test(s)) score += 3;
+    return score;
+}
+
+function extractReceiptMerchant(lines) {
+    const candidates = lines.slice(0, 12).map((line, idx) => ({ line: String(line).trim(), idx, score: scoreReceiptLineForMerchant(line) }))
+        .filter(x => x.score > -100);
+    candidates.forEach(x => { x.score += Math.max(0, 4 - x.idx) * 0.5; });
+    candidates.sort((a,b) => b.score - a.score || a.idx - b.idx);
+    return candidates[0]?.line || "";
+}
+
+function extractReceiptTotal(lines, text) {
+    const totalKeywords = /總計|合計|應付|實付|應收|Grand\s*Total|Total\s*(?:Due|Amount)?|Amount\s*(?:Due)?|請款金額/i;
+    const negativeKeywords = /小計|稅額|折扣|找零|訂金|押金|折抵|subtotal|tax|discount|change|deposit/i;
+    const numberRe = /(?:NT\$|US\$|HK\$|RMB|TWD|USD|JPY|THB|HKD|KRW|EUR|CNY|¥|€|₩|\$)?\s*([0-9]{1,3}(?:[\s,，][0-9]{3})*(?:\.\d{1,2})?|[0-9]+(?:\.\d{1,2})?)/gi;
+    const candidates = [];
+    lines.forEach((line, idx) => {
+        const clean = line.replace(/[，]/g, ",");
+        let m;
+        while ((m = numberRe.exec(clean))) {
+            const value = normalizeOcrAmount(m[1]);
+            if (!value || value > 100000000) continue;
+            let score = 0;
+            if (totalKeywords.test(clean)) score += 100;
+            if (negativeKeywords.test(clean)) score -= 35;
+            if (/(?:NT\$|US\$|HK\$|RMB|TWD|USD|JPY|THB|HKD|KRW|EUR|CNY|¥|€|₩|\$)/i.test(m[0])) score += 12;
+            if (idx >= Math.max(0, lines.length - 6)) score += 5;
+            score += Math.min(20, Math.log10(value + 1) * 4);
+            candidates.push({ value, score, line: clean });
+        }
+    });
+    if (!candidates.length) return null;
+    candidates.sort((a,b) => b.score - a.score || b.value - a.value);
+    const keywordCandidate = candidates.find(c => totalKeywords.test(c.line) && !negativeKeywords.test(c.line));
+    return keywordCandidate?.value || candidates[0].value;
+}
+
+function extractReceiptItems(lines, merchant, invoiceNo) {
+    const ignored = /總計|合計|應付|實付|小計|稅額|折扣|找零|統編|電話|地址|日期|發票|invoice|total|amount|tax|discount|change/i;
+    const out = [];
+    for (const raw of lines) {
+        const line = String(raw).trim();
+        if (!line || line === merchant || line.replace(/\s/g, "") === String(invoiceNo || "")) continue;
+        if (ignored.test(line)) continue;
+        if (/^(?:TWD|NTD|USD|JPY|THB|HKD|KRW|EUR|CNY|RMB|NT\$|US\$|HK\$|[¥€₩])$/i.test(line)) continue;
+        const nums = (line.match(/\d+(?:[.,]\d+)?/g) || []).length;
+        const zh = (line.match(/[\u4e00-\u9fff]/g) || []).length;
+        const alpha = (line.match(/[A-Za-z]/g) || []).length;
+        if (line.length >= 2 && line.length <= 40 && (zh >= 2 || alpha >= 3) && nums <= 4) out.push(line);
+        if (out.length >= 8) break;
+    }
+    return [...new Set(out)];
+}
+
+function scoreOcrText(text) {
+    const s = cleanOcrText(text);
+    const lines = s.split("\n");
+    const keywordHits = (s.match(/總計|合計|應付|實付|日期|發票|統編|NT\$|TWD|USD|JPY|HKD|KRW|EUR|CNY|Total|Amount/gi) || []).length;
+    const numberHits = (s.match(/\d[\d,\.]{1,}/g) || []).length;
+    return s.length + keywordHits * 30 + numberHits * 8 + lines.length * 2;
+}
+
+function parseReceiptOcr(text) {
+    const cleaned = cleanOcrText(text);
+    const lines = cleaned.split("\n").filter(Boolean);
+    const merchant = extractReceiptMerchant(lines);
+    const invoiceNo = extractReceiptInvoiceNo(cleaned);
+    const date = parseReceiptDate(cleaned);
+    const currency = detectReceiptCurrency(cleaned);
+    const total = extractReceiptTotal(lines, cleaned);
+    const items = extractReceiptItems(lines, merchant, invoiceNo);
+    return {
+        merchant, invoiceNo, date, currency, amount: total,
+        items, recognizedAt: new Date().toISOString(),
+        source: "tesseract"
+    };
+}
+
+function renderReceiptOcrResult() {
+    const box = document.getElementById("receiptOcrResult");
+    const summary = document.getElementById("receiptOcrSummary");
+    const items = document.getElementById("receiptOcrItems");
+    const count = document.getElementById("receiptOcrFieldCount");
+    if (!box || !summary || !items || !count) return;
+    if (!receiptOcrMeta) { box.classList.add("hidden"); return; }
+    const fields = [receiptOcrMeta.merchant, receiptOcrMeta.amount, receiptOcrMeta.currency, receiptOcrMeta.date, receiptOcrMeta.invoiceNo].filter(Boolean).length;
+    count.textContent = `辨識 ${fields}/5 項`;
+    const rows = [
+        ["店家", receiptOcrMeta.merchant || "未辨識"],
+        ["金額", receiptOcrMeta.amount != null ? Number(receiptOcrMeta.amount).toLocaleString() : "未辨識"],
+        ["幣別", receiptOcrMeta.currency || "未辨識"],
+        ["日期", receiptOcrMeta.date || "未辨識"],
+        ["發票號碼", receiptOcrMeta.invoiceNo || "未辨識"]
+    ];
+    summary.innerHTML = rows.map(([k,v]) => `<div class="rounded-lg bg-white/70 dark:bg-gray-800/60 px-2 py-1"><span class="text-gray-400">${escapeHtml(k)}</span><div class="font-bold break-all">${escapeHtml(v)}</div></div>`).join("");
+    if (Array.isArray(receiptOcrMeta.items) && receiptOcrMeta.items.length) {
+        items.classList.remove("hidden");
+        items.innerHTML = `<span class="font-bold text-gray-600 dark:text-gray-300">可能品項：</span>${receiptOcrMeta.items.map(escapeHtml).join("、")}`;
+    } else {
+        items.classList.add("hidden");
+        items.textContent = "";
+    }
+    box.classList.remove("hidden");
+}
+
+function applyReceiptOcrMeta(force = true) {
+    if (!receiptOcrMeta) return;
+    const title = document.getElementById("title");
+    const amount = document.getElementById("originalAmount");
+    const currency = document.getElementById("currency");
+    const date = document.getElementById("date");
+    if (receiptOcrMeta.merchant && title && (force || !String(title.value || "").trim())) title.value = receiptOcrMeta.merchant;
+    if (receiptOcrMeta.amount != null && amount && (force || !evaluateMathInput(amount.value || ""))) {
+        amount.value = String(receiptOcrMeta.amount);
+        amount.dispatchEvent(new Event("input"));
+    }
+    if (receiptOcrMeta.currency && currency) {
+        if (!Array.from(currency.options).some(o => o.value === receiptOcrMeta.currency)) currency.add(new Option(receiptOcrMeta.currency, receiptOcrMeta.currency));
+        if (force || currency.value === "TWD") currency.value = receiptOcrMeta.currency;
+    }
+    if (receiptOcrMeta.date && date && (force || !date.value || date.value === getTodayString())) date.value = receiptOcrMeta.date;
+    updateTwdPreview();
+    showToast(force ? "已套用收據辨識結果" : "已補入空白欄位", "success");
+}
+window.applyReceiptOcrMeta = applyReceiptOcrMeta;
+window.addEventListener("pagehide", () => {
+    const workerPromise = tesseractWorkerPromise;
+    if (workerPromise) workerPromise.then(worker => worker?.terminate?.()).catch(() => {});
+    tesseractWorkerPromise = null;
+});
+
 async function handleOCR(file) {
     if (!file) return;
     const notice = document.getElementById("aiStatusNotice");
-    notice.classList.remove("hidden");
-    notice.textContent = "AI OCR 模組載入中...";
+    if (notice) { notice.classList.remove("hidden"); notice.textContent = "AI OCR 模組載入中..."; }
     try {
-        await ensureTesseract();
-        notice.textContent = "AI 正在辨識收據文字...";
-        const { data: { text } } = await Tesseract.recognize(file, 'chi_tra+eng');
-        notice.textContent = "AI 正在提取金額...";
-        const amountRegex = /(?:Total|總計|合計|Amount|金額)\s*[:：]?\s*([0-9,.]+)/;
-        const match = text.match(amountRegex);
-        if (match && match[1]) {
-            const val = match[1].replace(/,/g, "");
-            document.getElementById("originalAmount").value = val;
-            document.getElementById("originalAmount").dispatchEvent(new Event('input'));
-            updateTwdPreview();
-            showToast("AI 已成功提取金額！");
-        } else {
-            showToast("未能自動提取金額，請手動輸入", "info");
+        if (notice) notice.textContent = "正在準備收據影像...";
+        const images = await createReceiptOcrImages(file);
+        const texts = [];
+        const worker = await ensureTesseractWorker(m => {
+            if (!notice || !m) return;
+            if (m.status === "recognizing text" && Number.isFinite(m.progress)) notice.textContent = `正在辨識收據 ${(m.progress * 100).toFixed(0)}%`;
+            else if (m.status === "loading language traineddata") notice.textContent = "正在下載繁中／英文辨識資料...";
+        });
+        for (let i = 0; i < images.length; i++) {
+            if (notice) notice.textContent = `正在辨識收據（${i + 1}/${images.length}）...`;
+            const result = await worker.recognize(images[i], { rotateAuto: true });
+            texts.push(String(result?.data?.text || ""));
         }
+        const bestText = texts.sort((a,b) => scoreOcrText(b) - scoreOcrText(a))[0] || "";
+        if (!bestText.trim()) throw new Error("沒有辨識到可用文字");
+        if (notice) notice.textContent = "正在整理店家、日期、幣別與金額...";
+        receiptOcrMeta = parseReceiptOcr(bestText);
+        renderReceiptOcrResult();
+        // 安全的預設策略：自動補入，不覆蓋已輸入的項目／金額；幣別與日期若有明確辨識則套用。
+        applyReceiptOcrMeta(false);
+        const found = [receiptOcrMeta.merchant, receiptOcrMeta.amount, receiptOcrMeta.currency, receiptOcrMeta.date, receiptOcrMeta.invoiceNo].filter(Boolean).length;
+        showToast(found ? `收據辨識完成：取得 ${found}/5 項資料` : "已辨識文字，但未抓到結構化欄位", found ? "success" : "info");
     } catch (e) {
+        receiptOcrMeta = null;
+        renderReceiptOcrResult();
         showToast("OCR 辨識失敗: " + e.message, "error");
     } finally {
-        notice.classList.add("hidden");
+        if (notice) notice.classList.add("hidden");
+        const input = document.getElementById("ocrReceiptInput");
+        if (input) input.value = "";
     }
 }
 
 function handleVoice() {
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-    if (!SpeechRecognition) return showToast("您的瀏覽器不支持語音識別", "error");
+    if (!SpeechRecognition) return showToast("此瀏覽器不支援語音識別，請改用 Chrome / Edge / Safari 支援版本", "error");
+    const notice = document.getElementById("aiStatusNotice");
     const recognition = new SpeechRecognition();
     recognition.lang = 'zh-TW';
+    recognition.continuous = false;
+    recognition.interimResults = false;
+    recognition.maxAlternatives = 1;
     recognition.onstart = () => {
-        document.getElementById("aiStatusNotice").classList.remove("hidden");
-        document.getElementById("aiStatusNotice").textContent = "正在聆聽中... (請說：項目 金額)";
+        notice?.classList.remove("hidden");
+        if (notice) notice.textContent = "正在聆聽中... (請說：項目 金額)";
     };
     recognition.onresult = (event) => {
-        const transcript = event.results[0][0].transcript;
+        const transcript = String(event.results?.[0]?.[0]?.transcript || '').trim();
+        if (!transcript) return;
         showToast(`識別到：${transcript}`);
-        const parts = transcript.split(/\s+/);
+        const amountMatch = transcript.match(/(?:\$|NT\$|NTD|TWD)?\s*([0-9][0-9,]*(?:\.[0-9]+)?)/i);
+        const parts = transcript.split(/\s+/).filter(Boolean);
         if (parts.length >= 2) {
-            document.getElementById("title").value = parts[0];
-            const amtMatch = transcript.match(/\d+/);
-            if (amtMatch) {
-                document.getElementById("originalAmount").value = amtMatch[0];
-                document.getElementById("originalAmount").dispatchEvent(new Event('input'));
-                updateTwdPreview();
+            const titleEl = document.getElementById("title");
+            if (titleEl) titleEl.value = parts[0];
+        }
+        if (amountMatch) {
+            const amountEl = document.getElementById("originalAmount");
+            if (amountEl) {
+                amountEl.value = amountMatch[1].replace(/,/g, "");
+                amountEl.dispatchEvent(new Event('input'));
             }
+            updateTwdPreview();
+        } else {
+            showToast("沒有辨識到數字金額，請手動確認", "info");
         }
     };
-    recognition.onend = () => { document.getElementById("aiStatusNotice").classList.add("hidden"); };
-    recognition.start();
+    recognition.onerror = (event) => {
+        const messages = {
+            'not-allowed': '麥克風權限被拒絕，請在瀏覽器設定允許麥克風',
+            'service-not-allowed': '目前瀏覽器不允許語音服務',
+            'audio-capture': '找不到可用的麥克風',
+            'no-speech': '沒有聽到語音，請再試一次',
+            'network': '語音服務連線失敗，請檢查網路'
+        };
+        showToast(messages[event?.error] || `語音辨識失敗：${event?.error || '未知錯誤'}`, "error");
+    };
+    recognition.onend = () => { notice?.classList.add("hidden"); };
+    try {
+        recognition.start();
+    } catch (e) {
+        notice?.classList.add("hidden");
+        showToast("無法啟動語音辨識，請再試一次", "error");
+    }
 }
 
-document.getElementById("ocrReceiptInput").onchange = (e) => handleOCR(e.target.files[0]);
+document.getElementById("ocrReceiptInput").onchange = async (e) => {
+    const input = e.target;
+    try { await handleOCR(input.files?.[0]); }
+    finally { input.value = ""; }
+};
+document.getElementById("applyReceiptOcrBtn")?.addEventListener("click", () => applyReceiptOcrMeta(true));
+document.getElementById("applyReceiptOcrBlankBtn")?.addEventListener("click", () => applyReceiptOcrMeta(false));
 document.getElementById("voiceInputBtn").onclick = handleVoice;
 
 // ==========================================
@@ -2130,16 +2466,31 @@ function normalizeRecord(r) {
     const out = { ...r };
     out.id = String(out.id || generateUUID());
     out.title = String(out.title || "").trim().slice(0, 200);
-    out.amount = Math.max(0, finiteNumber(out.amount, 0));
-    out.twdAmount = Math.round(Math.max(0, finiteNumber(out.twdAmount, 0)));
-    out.rate = finiteNumber(out.rate, out.currency === "TWD" ? 1 : 0);
-    out.currency = String(out.currency || "TWD");
+    // 舊版／CSV 資料可能使用 originalAmount / currencyCode；正規化時要保留，避免歷史編輯變成 0/TWD。
+    const legacyAmount = out.amount ?? out.originalAmount ?? out.value;
+    const legacyCurrency = out.currency ?? out.currencyCode ?? out.currency_code;
+    out.amount = Math.max(0, finiteNumber(legacyAmount, 0));
+    out.twdAmount = Math.round(Math.max(0, finiteNumber(out.twdAmount ?? out.TWD ?? out.taiwanAmount, 0)));
+    out.currency = String(legacyCurrency || "TWD").trim().toUpperCase() || "TWD";
+    out.rate = finiteNumber(out.rate ?? out.exchangeRate, out.currency === "TWD" ? 1 : 0);
     out.category = String(out.category || "其他").slice(0, 100);
     out.type = /^(expense|personal|income|settlement)$/.test(String(out.type || "")) ? out.type : "expense";
     // 匯入資料的錯誤日期不再偷偷改成今天；只有舊資料缺日期時才補今天。
     out.date = out.date == null || String(out.date).trim() === "" ? getTodayString() : String(out.date).trim();
     out.updatedAt = Number.isFinite(Date.parse(out.updatedAt)) ? new Date(out.updatedAt).toISOString() : new Date(0).toISOString();
     out.deleted = Boolean(out.deleted);
+    if (out.receiptOcr && typeof out.receiptOcr === "object" && !Array.isArray(out.receiptOcr)) {
+        out.receiptOcr = {
+            merchant: String(out.receiptOcr.merchant || "").slice(0, 120),
+            invoiceNo: String(out.receiptOcr.invoiceNo || "").slice(0, 30),
+            date: isValidDateString(out.receiptOcr.date) ? out.receiptOcr.date : "",
+            currency: String(out.receiptOcr.currency || "").toUpperCase().slice(0, 8),
+            amount: finiteNumber(out.receiptOcr.amount, 0) || null,
+            items: Array.isArray(out.receiptOcr.items) ? out.receiptOcr.items.map(x => String(x || "").trim().slice(0, 80)).filter(Boolean).slice(0, 8) : [],
+            recognizedAt: Number.isFinite(Date.parse(out.receiptOcr.recognizedAt)) ? new Date(out.receiptOcr.recognizedAt).toISOString() : "",
+            source: "tesseract"
+        };
+    } else out.receiptOcr = null;
     out.splitMode = ["equal","custom","ratio","percent"].includes(out.splitMode) ? out.splitMode : null;
     out.splitMembers = Array.isArray(out.splitMembers) ? out.splitMembers : [];
     out.splitValues = out.splitValues && typeof out.splitValues === "object" && !Array.isArray(out.splitValues) ? out.splitValues : {};
@@ -2260,8 +2611,18 @@ async function handleReceiptFile(file) {
     if (!file) return;
     try { setReceiptPreview(await compressReceiptFile(file)); showToast("收據照片已附加"); }
     catch (e) { showToast("收據圖片處理失敗", "error"); }
+    finally {
+        // 同一張照片再次選取時仍要觸發 change
+        const input = document.getElementById("receiptPhotoInput");
+        if (input) input.value = "";
+    }
 }
-function clearReceiptPhoto() { setReceiptPreview(""); const input = document.getElementById("receiptPhotoInput"); if (input) input.value = ""; }
+function clearReceiptPhoto() {
+    setReceiptPreview("");
+    receiptOcrMeta = null;
+    renderReceiptOcrResult();
+    const input = document.getElementById("receiptPhotoInput"); if (input) input.value = "";
+}
 function openCurrentReceiptModal() {
     if (!uploadedReceiptBase64) return;
     const modal = document.getElementById("imageModal"), img = document.getElementById("modalImg");
@@ -2523,7 +2884,7 @@ async function saveRecord() {
         payers, shares, splitMembers: shares.map(x => `${x.member}:${x.amount}`),
         splitMode: (type === "expense" || type === "settlement") ? currentSplitMode : null,
         splitValues: (type === "expense" || type === "settlement") ? captureSplitValues() : {},
-        receipt: uploadedReceiptBase64 || "", deleted: false, updatedAt: new Date().toISOString()
+        receipt: uploadedReceiptBase64 || "", receiptOcr: receiptOcrMeta ? { ...receiptOcrMeta, items: Array.isArray(receiptOcrMeta.items) ? receiptOcrMeta.items.slice(0, 8) : [] } : null, deleted: false, updatedAt: new Date().toISOString()
     });
     const idx = cachedRecords.findIndex(r => r.id === record.id);
     if (idx >= 0) cachedRecords[idx] = record; else cachedRecords.unshift(record);
@@ -2732,6 +3093,8 @@ window.duplicateRecordToForm = function(id) {
     const override = document.getElementById("overrideTwdInput");
     if (override) override.value = r.twdAmount ? String(Math.round(r.twdAmount)) : "";
     setRecordType(r.type); setReceiptPreview(r.receipt || "");
+    receiptOcrMeta = r.receiptOcr ? { ...r.receiptOcr, items: Array.isArray(r.receiptOcr.items) ? r.receiptOcr.items.slice(0, 8) : [] } : null;
+    renderReceiptOcrResult();
     const payers = parsePayers(r); const names = Object.keys(payers);
     if (names.length > 1) {
         toggleMultiPayerMode(true);
@@ -2770,7 +3133,7 @@ function cancelEdit() {
     const payer=document.getElementById("payer"); if(payer && members.length) payer.value=members[0];
     const customCurrency=document.getElementById("customSplitCurrency"); if(customCurrency) customCurrency.value="auto";
     const multiCurrency=document.getElementById("multiPayerCurrency"); if(multiCurrency) multiCurrency.value="auto";
-    setRecordType("expense"); setReceiptPreview("");
+    setRecordType("expense"); clearReceiptPhoto();
     const date=document.getElementById("date"); if(date) date.value=getTodayString();
     const banner=document.getElementById("editModeBanner"); if(banner) banner.classList.add("hidden");
     const saveText=document.getElementById("saveBtnText"); if(saveText) saveText.textContent="儲存紀錄 (Enter)";
@@ -2939,6 +3302,8 @@ window.startEditRecord = function(id) {
         }
     }
     setReceiptPreview(r.receipt||"");
+    receiptOcrMeta = r.receiptOcr ? { ...r.receiptOcr, items: Array.isArray(r.receiptOcr.items) ? r.receiptOcr.items.slice(0, 8) : [] } : null;
+    renderReceiptOcrResult();
     setTimeout(()=>restoreSplitInputsForRecord(r),0);
     updateTwdPreview();
 };
