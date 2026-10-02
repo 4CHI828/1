@@ -2,7 +2,7 @@
 <html lang="zh-TW" style="font-size: 16px;">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes, viewport-fit=cover">
 <title>雲端全能分帳記帳 Pro - 最終版</title>
 <link rel="manifest" href="data:application/manifest+json;base64,eyJuYW1lIjoi6Zuy56uv5YWo6IO95YiG5biz6KiY5bizIiwic2hvcnRfbmFtZSI6Iumbsuerr+iomOW4syIsImRlc2NyaXB0aW9uIjoi6Zuy56uv6KiY5biz44CB5YiG5biz6IiH5aSa5Lq65ZCI5LuYIiwic3RhcnRfdXJsIjoiLi8iLCJkaXNwbGF5Ijoic3RhbmRhbG9uZSIsImJhY2tncm91bmRfY29sb3IiOiIjMTExODI3IiwidGhlbWVfY29sb3IiOiIjMjU2M2ViIiwiaWNvbnMiOlt7InNyYyI6Imh0dHBzOi8vY2RuLWljb25zLXBuZy5mbGF0aWNvbi5jb20vNTEyLzI5MzYvMjkzNjc1OC5wbmciLCJzaXplcyI6IjE5MngxOTIiLCJ0eXBlIjoiaW1hZ2UvcG5nIiwicHVycG9zZSI6ImFueSBtYXNrYWJsZSJ9XX0=">
 <meta name="theme-color" content="#3b82f6">
@@ -36,7 +36,101 @@ document.documentElement.classList.remove("dark");
 }
 .toast-anim { animation: slideDown 4.5s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
 .record-card { user-select: none; -webkit-user-select: none; }
+
 body { padding-bottom: 80px; }
+
+/* Mobile UI optimization */
+@media (max-width: 640px) {
+  html, body { -webkit-text-size-adjust: 100%; }
+  body { padding-bottom: calc(76px + env(safe-area-inset-bottom)); overflow-x: hidden; }
+  .glass { backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); }
+  header { padding-top: env(safe-area-inset-top); }
+  header > div {
+    max-width: none !important;
+    padding: 8px 10px !important;
+    gap: 6px !important;
+    flex-wrap: nowrap !important;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+  header > div::-webkit-scrollbar { display: none; }
+  header > div > div:first-child {
+    flex: 0 0 auto !important;
+    flex-wrap: nowrap !important;
+  }
+  #sheetSelector { width: 138px; min-width: 138px; }
+  #addSheetBtn, #renameSheetBtn, #deleteSheetBtn, #themeToggleBtn, #refreshBtn {
+    min-width: 42px;
+    min-height: 42px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+  #refreshBtn span { display: none; }
+  #refreshBtn { padding-left: 0.65rem !important; padding-right: 0.65rem !important; }
+  #syncIndicator { min-height: 36px; }
+
+  #toastContainer { top: calc(0.5rem + env(safe-area-inset-top)); width: calc(100% - 1rem); }
+  main { padding-top: 86px !important; padding-left: 10px !important; padding-right: 10px !important; }
+
+  input, select, textarea { min-height: 42px; }
+  button, label { -webkit-tap-highlight-color: transparent; touch-action: manipulation; }
+  button { min-height: 42px; }
+
+  #btnTypeExpense, #btnTypePersonal, #btnTypeIncome { min-height: 44px; }
+  #splitAlgorithmBox > div:first-child > div:last-child {
+    max-width: 100%;
+    overflow-x: auto;
+    flex-wrap: nowrap !important;
+    scrollbar-width: none;
+  }
+  #splitAlgorithmBox > div:first-child > div:last-child::-webkit-scrollbar { display: none; }
+  #splitAlgorithmBox > div:first-child > div:last-child button { flex: 0 0 auto; min-height: 40px; }
+
+  #rateChipsContainer, #quickTemplatesBar, #membersCheckboxes { scrollbar-width: none; }
+  #rateChipsContainer::-webkit-scrollbar, #quickTemplatesBar::-webkit-scrollbar, #membersCheckboxes::-webkit-scrollbar { display: none; }
+
+  #saveRecordBtn { min-height: 48px; font-size: 0.95rem; }
+  #voiceInputBtn, #clearReceiptBtn { min-height: 44px; }
+  label[for="receiptPhotoInput"], label[for="ocrReceiptInput"] { min-height: 44px; align-items: center; }
+
+  #view-history > div:first-child,
+  #view-settle .flex.items-center.justify-between,
+  #view-settings .flex.items-center.justify-between { align-items: stretch; }
+
+  #searchInput { min-height: 44px; font-size: 0.9rem; }
+  #clearSearchBtn { top: 0.7rem; right: 0.65rem; }
+  #recordList { padding-right: 0; }
+  #mainChartContainer { padding: 10px; }
+  #mainChartContainer .flex.bg-gray-200 { max-width: 100%; overflow-x: auto; flex-wrap: nowrap; scrollbar-width: none; }
+  #mainChartContainer .flex.bg-gray-200::-webkit-scrollbar { display: none; }
+  #mainChartContainer .flex.bg-gray-200 button { flex: 0 0 auto; min-height: 38px; }
+  #expenseChart { max-width: 100%; }
+
+  #settlementGrid, #summaryStatsBar { gap: 6px !important; }
+  #settlementTransfers { overflow-x: auto; }
+  #lineShareBtn { display: none !important; }
+  #poolConfigPanel .grid.grid-cols-3 > div { min-width: 0; }
+
+  nav {
+    padding-bottom: env(safe-area-inset-bottom) !important;
+    background-color: rgba(255,255,255,.96) !important;
+  }
+  .dark nav { background-color: rgba(31,41,55,.96) !important; }
+  nav > div { padding: 5px 6px !important; gap: 4px; }
+  nav button { min-height: 58px; padding-top: 6px !important; padding-bottom: 6px !important; }
+  nav button span:first-child { font-size: 1.25rem; }
+  nav button span:last-child { font-size: 0.72rem; }
+
+  [id$="Modal"] > div, #imageModal > img { max-width: calc(100vw - 20px); }
+  #memberDrilldownModal > div, #lineShareModal > div { max-height: 88vh; overflow: hidden; }
+  #drillContentList { max-height: 58vh; }
+
+  .overflow-x-auto { -webkit-overflow-scrolling: touch; }
+  .max-h-56, .max-h-40, .max-h-32 { scrollbar-width: thin; }
+
+  footer { padding-bottom: 6px !important; }
+}
 </style>
 <script>
 tailwind.config = { darkMode: 'class' };
@@ -633,9 +727,13 @@ async function requestGoogleAccessToken(interactive = true) {
 
 async function driveApi(url, options = {}, allowRetry = true) {
     if (!accessToken || (tokenExpiry && Date.now() >= tokenExpiry)) {
-        updateGoogleUI(false);
-        setSyncBadge(googleSessionLinked ? "Google 已連結" : "請登入", false, false);
-        throw new Error(googleSessionLinked ? "Google 授權尚未取得，請先按 Google 授權或執行一次雲端操作" : "請先登入 Google 帳號");
+        // 優先使用 prompt: 'none' 靜默恢復；只有真正需要時才讓使用者主動授權。
+        const restored = googleSessionLinked ? await ensureGoogleAccessToken(false) : false;
+        if (!restored) {
+            updateGoogleUI(false);
+            setSyncBadge(googleSessionLinked ? "Google 已連結" : "請登入", false, false);
+            throw new Error(googleSessionLinked ? "Google 授權尚未取得，請先按 Google 授權或執行一次雲端操作" : "請先登入 Google 帳號");
+        }
     }
     const headers = new Headers(options.headers || {});
     headers.set("Authorization", `Bearer ${accessToken}`);
@@ -694,11 +792,10 @@ function setSyncBadge(text, loading, warning = false) {
 
 async function ensureGoogleAccessToken(interactive = false) {
     if (accessToken && (!tokenExpiry || Date.now() < tokenExpiry)) return true;
-    // 單檔前端的 access token 只能在使用者操作時重新取得。
-    // 因此互動操作直接 requestAccessToken，不先做 silent request，避免失去 popup 的使用者手勢。
-    if (!interactive) return false;
     try {
-        await requestGoogleAccessToken(true);
+        // 方案 A：優先使用 Google GIS 的 prompt: 'none' 靜默授權。
+        // 互動操作才使用一般 prompt，避免靜默失敗後再失去使用者手勢。
+        await requestGoogleAccessToken(!interactive ? false : true);
         googleAuthNeedsReauth = false;
         return !!accessToken;
     } catch (e) {
@@ -770,6 +867,17 @@ async function loadCloudConfigFromDrive() {
         if (cfg.quickTemplates && Array.isArray(cfg.quickTemplates) && cfg.quickTemplates.length > 0) {
             quickTemplates = cfg.quickTemplates; safeSetLocalStorage("app_quick_templates", JSON.stringify(quickTemplates));
         }
+        if (cfg.exchangeRates && typeof cfg.exchangeRates === "object" && !Array.isArray(cfg.exchangeRates)) {
+            const loadedRates = { ...exchangeRates };
+            Object.entries(cfg.exchangeRates).forEach(([cur, val]) => {
+                const n = Number(val);
+                if (Number.isFinite(n) && n > 0) loadedRates[cur] = n;
+            });
+            loadedRates.TWD = 1;
+            exchangeRates = loadedRates;
+            safeSetLocalStorage("app_exchange_rates", JSON.stringify(exchangeRates));
+            renderRateChips();
+        }
         renderMemberControls(); renderCategoryControls(); renderQuickTemplates();
         return true;
     } catch (e) { console.error("Config load error", e); return false; }
@@ -787,7 +895,7 @@ async function syncConfigToDrive(interactive = false) {
     configSaveQueue = configSaveQueue.then(async () => {
         try {
             configFileId = await saveJsonFileToDrive(CONFIG_FILE_NAME, configFileId, {
-                members, categories, quickTemplates, updatedAt: new Date().toISOString()
+                members, categories, quickTemplates, exchangeRates, updatedAt: new Date().toISOString()
             });
         } catch (e) {
             synced = false;
@@ -2890,12 +2998,25 @@ window.onload = function() {
         accessToken = null; tokenExpiry = 0;
         googleAuthNeedsReauth = false;
 
-        // 單檔版不在重新整理時背景索取 OAuth token。
-        // 只記住「曾經連結過」的狀態，真正需要 Drive 的按鈕操作時，
-        // 直接在使用者手勢內取得 access token，避免 silent OAuth 失敗造成反覆登入。
+        // 重新整理後優先使用 Google GIS 的 prompt: 'none' 靜默授權。
+        // 成功就直接恢復 Drive；失敗也不誤判為登出，只保留手動授權入口。
         updateGoogleUI(false);
         if (googleSessionLinked) {
-            setSyncBadge("Google 已連結", false, false);
+            setSyncBadge("Google 靜默恢復中", true, false);
+            try {
+                const restored = await requestGoogleAccessToken(false);
+                if (restored) {
+                    await setupDriveEnvironment();
+                    setSyncBadge("已連結 Google 雲端", false, false);
+                } else {
+                    setSyncBadge("Google 已連結", false, false);
+                }
+            } catch (e) {
+                accessToken = null; tokenExpiry = 0;
+                updateGoogleUI(false);
+                setSyncBadge("Google 已連結", false, false);
+                console.info("Google 靜默授權未成功，保留手動授權入口：", e?.message || e);
+            }
         } else {
             setSyncBadge("尚未連結", false, false);
         }
