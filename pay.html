@@ -3202,7 +3202,7 @@ function bindFilterEvents() {
         });
     }
     const reset = document.getElementById("resetFilterBtn");
-    if (reset && !reset.dataset.filterBound) { reset.dataset.filterBound = "1"; reset.addEventListener("click", () => { resetAllFilters(); renderRecordsList(); document.getElementById("clearSearchBtn")?.classList.add("hidden"); }); }
+    if (reset && !reset.dataset.filterBound) { reset.dataset.filterBound = "1"; reset.addEventListener("click", () => { resetAllFilters(); document.querySelectorAll('#historyQuickFilters [data-history-range]').forEach(b=>b.classList.remove('active')); renderRecordsList(); document.getElementById("clearSearchBtn")?.classList.add("hidden"); }); }
 }
 
 function csvEscape(v) { const s = String(v ?? ""); return /[",\r\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s; }
@@ -3480,12 +3480,12 @@ function bindRecordTouchGestures() {
                     duplicateRecordToForm(card.dataset.recordId);
                     showToast('已右滑複製到記帳表單', 'success');
                 }
-                setTimeout(() => { historySuppressClick = false; }, 120);
+                setTimeout(() => { historySuppressClick = false; }, 800);
                 return;
             }
             if (longPressed || (elapsed > 450 && historyBatchMode)) {
                 historySuppressClick = true;
-                setTimeout(() => { historySuppressClick = false; }, 120);
+                setTimeout(() => { historySuppressClick = false; }, 800);
             }
         }, {passive:true});
     });
