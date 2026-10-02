@@ -219,6 +219,19 @@
         .req-msg-row { display: flex; gap: 8px; width: 100%; align-items: flex-start; }
         .req-msg-row textarea { flex: 1; }
         
+        /* 修復：手機回覆欄位避免過窄 */
+        @media (max-width: 600px) {
+            .reply-input-area { padding: 14px; }
+            .reply-input-area input, .reply-input-area textarea { width: 100%; box-sizing: border-box; }
+            .reply-btn-group { flex-wrap: wrap; }
+            .reply-btn-group button { flex: 1 1 120px; min-height: 42px; }
+            .req-header { gap: 8px; flex-wrap: wrap; }
+            .req-actions { gap: 8px; flex-wrap: wrap; }
+            .queue-item { padding: 12px 10px; gap: 8px; }
+            .queue-text { min-width: 0; overflow-wrap: anywhere; }
+            .fab-group { right: 15px; bottom: 15px; }
+            .fab-btn { padding: 13px 20px; font-size: 14px; }
+        }
         @media (max-width: 600px) {
             body { padding: 15px; }
             .add-form-container { width: 95vw; right: 2.5vw; bottom: 100px; }
@@ -502,7 +515,7 @@
                     }));
                     showToast('✅ 登入成功！', 'success');
                     updateAdminUI();
-                    renderAllData({ status: 'success', songs: allSongs, requests: [] }, false);
+                    renderQueuePanel(); applyFilters();
                     
                     if (pendingAdminCallback) {
                         const cb = pendingAdminCallback;
@@ -532,7 +545,7 @@
             }
             
             updateAdminUI();
-            renderAllData({ status: 'success', songs: allSongs, requests: [] }, false);
+            renderQueuePanel(); applyFilters();
             showToast('👋 已登出', 'info');
         }
 
@@ -619,7 +632,7 @@
 
         // 🔥 核心防護：加入 15 秒本地更新保護機制
         function renderAllData(data, isCache) {
-            if (data.status === 'success') {
+            if (data.status === 'success' && Array.isArray(data.songs)) {
                 const now = Date.now();
                 data.songs.forEach(function(newSong) {
                     const oldSong = allSongs.find(function(s) { return String(s.id) === String(newSong.id); });
@@ -628,9 +641,13 @@
                         if (oldSong.localUpdateTime && (now - oldSong.localUpdateTime < 15000)) {
                             newSong.status = oldSong.status;
                             newSong.queueTime = oldSong.queueTime;
+                            newSong.queueOrder = oldSong.queueOrder;
                             newSong.localUpdateTime = oldSong.localUpdateTime;
+                        }
+                        else if (oldSong.queueOrder != null && oldSong.status) {
+                            // 保留本機已建立的排序資訊，避免背景同步瞬間跳位
+                            newSong.queueOrder = oldSong.queueOrder;
                         } 
-                        // 向下相容備用機制：3 分鐘內加入排隊的保護
                         else if (oldSong.queueTime && (now - oldSong.queueTime < 180000) && !oldSong.localUpdateTime) {
                             newSong.status = oldSong.status;
                             newSong.queueTime = oldSong.queueTime;
@@ -644,7 +661,7 @@
                 }
                 const reqNickVal = document.getElementById('reqNick').value;
                 const reqMsgVal = document.getElementById('reqMessage').value;
-                renderRequests(data.requests || []);
+                if (Array.isArray(data.requests)) renderRequests(data.requests);
                 renderQueuePanel();
                 updateArtistFilter();
                 applyFilters();
@@ -670,6 +687,9 @@
                 const statusOrder = { 'singing': 0, 'queued': 1, 'done': 2 };
                 if (statusOrder[a.status] !== statusOrder[b.status]) return statusOrder[a.status] - statusOrder[b.status];
                 
+                const orderA = Number.isFinite(Number(a.queueOrder)) ? Number(a.queueOrder) : Number.MAX_SAFE_INTEGER;
+                const orderB = Number.isFinite(Number(b.queueOrder)) ? Number(b.queueOrder) : Number.MAX_SAFE_INTEGER;
+                if (orderA !== orderB) return orderA - orderB;
                 const timeA = Number(a.queueTime) || 0;
                 const timeB = Number(b.queueTime) || 0;
                 if (timeA !== timeB) return timeA - timeB;
@@ -779,26 +799,52 @@
             if (!queuedList) return;
             const ids = Array.from(queuedList.querySelectorAll('.queue-item')).map(function(item) { return item.getAttribute('data-id'); });
             if (ids.length === 0) return;
-            
+
+            // 備份原順序，API 失敗時完整回復
+            const backup = ids.map(function(id) {
+                const song = allSongs.find(function(s) { return String(s.id) === String(id); });
+                return song ? { id: song.id, queueOrder: song.queueOrder, queueTime: song.queueTime, localUpdateTime: song.localUpdateTime } : null;
+            }).filter(Boolean);
             const baseTime = Date.now();
             ids.forEach(function(id, index) {
                 const song = allSongs.find(function(s) { return String(s.id) === String(id); });
                 if (song) {
-                    song.queueTime = baseTime + (index * 100); 
-                    song.localUpdateTime = Date.now(); // 🔥 標記最後修改時間
+                    song.queueOrder = index;
+                    song.queueTime = baseTime + (index * 100);
+                    song.localUpdateTime = Date.now();
                 }
             });
+            renderQueuePanel();
 
             activeUpdatesCount++;
             fetchWithRetry(API_URL, { method: 'POST', headers: { 'Content-Type': 'text/plain' }, body: JSON.stringify({ action: 'update_queue_order', order: ids, token: getAdminToken() }) })
-            .then(function(result) { 
+            .then(function(result) {
                 activeUpdatesCount--;
-                handleApiResponse(result, function() { showToast('🔀 順序已同步至雲端', 'success', 2000); }); 
+                if (result.status !== 'success') {
+                    backup.forEach(function(b) {
+                        const song = allSongs.find(function(s) { return String(s.id) === String(b.id); });
+                        if (song) { song.queueOrder = b.queueOrder; song.queueTime = b.queueTime; song.localUpdateTime = b.localUpdateTime; }
+                    });
+                    renderQueuePanel();
+                }
+                handleApiResponse(result, function() { showToast('🔀 順序已同步至雲端', 'success', 2000); });
             })
-            .catch(function(err) { 
+            .catch(function(err) {
                 activeUpdatesCount--;
-                showToast('❌ 順序同步失敗', 'error'); console.error(err); 
+                backup.forEach(function(b) {
+                    const song = allSongs.find(function(s) { return String(s.id) === String(b.id); });
+                    if (song) { song.queueOrder = b.queueOrder; song.queueTime = b.queueTime; song.localUpdateTime = b.localUpdateTime; }
+                });
+                renderQueuePanel();
+                showToast('❌ 順序同步失敗，已還原', 'error');
+                console.error(err);
             });
+        }
+
+        function getNextQueueOrder() {
+            const orders = allSongs.filter(function(s) { return s.status === 'queued' && Number.isFinite(Number(s.queueOrder)); })
+                .map(function(s) { return Number(s.queueOrder); });
+            return orders.length ? Math.max.apply(null, orders) + 1 : 0;
         }
 
         function cycleQueueStatus(id) {
@@ -812,8 +858,8 @@
                 
                 song.status = nextStatus;
                 song.localUpdateTime = Date.now(); // 🔥 標記最後修改時間
-                if (nextStatus === 'queued') song.queueTime = Date.now();
-                else if (nextStatus === '') song.queueTime = 0;
+                if (nextStatus === 'queued') { song.queueTime = Date.now(); song.queueOrder = getNextQueueOrder(); }
+                else if (nextStatus === '') { song.queueTime = 0; song.queueOrder = null; }
                 
                 renderQueuePanel();
                 
@@ -830,6 +876,7 @@
                     showToast('❌ 更新失敗，請重試', 'error'); console.error(err);
                     song.status = originalStatus;
                     song.queueTime = originalQueueTime;
+                    song.queueOrder = originalQueueOrder;
                     renderQueuePanel();
                 });
             });
@@ -843,9 +890,9 @@
                 // 🔥 立即本地更新 UI 並備份
                 allSongs.forEach(function(s) { 
                     if(s.status === 'queued' || s.status === 'singing' || s.status === 'done') {
-                        backup.push({ id: s.id, status: s.status, queueTime: s.queueTime });
+                        backup.push({ id: s.id, status: s.status, queueTime: s.queueTime, queueOrder: s.queueOrder });
                         s.status = ''; 
-                        s.queueTime = 0; 
+                        s.queueTime = 0; s.queueOrder = null; 
                         s.localUpdateTime = Date.now(); // 🔥 標記最後修改時間
                     }
                 });
@@ -866,6 +913,7 @@
                         if (song) {
                             song.status = b.status;
                             song.queueTime = b.queueTime;
+                            song.queueOrder = b.queueOrder;
                             song.localUpdateTime = Date.now();
                         }
                     });
@@ -887,6 +935,9 @@
                 queueSongs.sort(function(a, b) {
                     const statusOrder = { 'singing': 0, 'queued': 1, 'done': 2 };
                     if (statusOrder[a.status] !== statusOrder[b.status]) return statusOrder[a.status] - statusOrder[b.status];
+                    const orderA = Number.isFinite(Number(a.queueOrder)) ? Number(a.queueOrder) : Number.MAX_SAFE_INTEGER;
+                    const orderB = Number.isFinite(Number(b.queueOrder)) ? Number(b.queueOrder) : Number.MAX_SAFE_INTEGER;
+                    if (orderA !== orderB) return orderA - orderB;
                     return (Number(a.queueTime) || 0) - (Number(b.queueTime) || 0);
                 });
                 
@@ -900,9 +951,11 @@
             
             const originalStatus = song.status;
             const originalQueueTime = song.queueTime;
+            const originalQueueOrder = song.queueOrder;
             
             song.status = 'queued';
             song.queueTime = Date.now();
+            song.queueOrder = getNextQueueOrder();
             song.localUpdateTime = Date.now(); // 🔥 標記最後修改時間
             renderQueuePanel();
             showToast('🎤 已加入待唱: ' + song.song, 'success');
@@ -930,6 +983,7 @@
                 showToast('❌ 加入失敗，請重試', 'error');
                 song.status = originalStatus;
                 song.queueTime = originalQueueTime;
+                song.queueOrder = originalQueueOrder;
                 renderQueuePanel();
             });
         }
@@ -939,6 +993,7 @@
                 const song = allSongs.find(function(s) { return String(s.id) === String(id); });
                 const originalStatus = song ? song.status : '';
                 const originalQueueTime = song ? song.queueTime : 0;
+                const originalQueueOrder = song ? song.queueOrder : null;
                 
                 if (song) { 
                     song.status = ''; 
@@ -959,6 +1014,7 @@
                     if (song) {
                         song.status = originalStatus;
                         song.queueTime = originalQueueTime;
+                        song.queueOrder = originalQueueOrder;
                         renderQueuePanel();
                     }
                 });
@@ -1283,7 +1339,14 @@
         }
 
         function recordClick(id) {
-            fetch(API_URL, { method: 'POST', headers: { 'Content-Type': 'text/plain' }, body: JSON.stringify({ action: 'click', id: String(id) }) }).catch(function() {});
+            const item = allSongs.find(function(s) { return String(s.id) === String(id); });
+            if (item) {
+                item.clicks = (Number(item.clicks) || 0) + 1;
+                applyFilters();
+            }
+            fetch(API_URL, { method: 'POST', headers: { 'Content-Type': 'text/plain' }, body: JSON.stringify({ action: 'click', id: String(id) }) }).catch(function() {
+                // 伺服器失敗時，下一次同步會以雲端實際數字校正
+            });
         }
 
         function addSong() {
@@ -1405,12 +1468,22 @@
         function exportCSV() {
             requireAdmin(function() {
                 if (filteredSongs.length === 0) { showToast('沒有資料！', 'error'); return; }
+                function csvCell(value) {
+                    let text = String(value == null ? '' : value);
+                    // 避免試算表開啟 CSV 時執行公式
+                    if (/^[=+\-@]/.test(text)) text = "'" + text;
+                    return '"' + text.replace(/"/g, '""') + '"';
+                }
                 let csvContent = '\uFEFF歌手,歌曲名稱,YouTube連結,點擊次數,標籤,狀態\n';
-                filteredSongs.forEach(function(item) { csvContent += '"' + item.artist + '","' + item.song + '","' + (item.link || '') + '",' + (item.clicks || 0) + ',"' + (item.tags || '') + '","' + (item.status || '') + '"\n'; });
+                filteredSongs.forEach(function(item) {
+                    csvContent += [item.artist, item.song, item.link || '', item.clicks || 0, item.tags || '', item.status || ''].map(csvCell).join(',') + '\n';
+                });
                 const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
                 const url = URL.createObjectURL(blob);
                 const a = document.createElement('a');
-                a.href = url; a.download = '歌單匯出_' + new Date().toISOString().slice(0, 10) + '.csv'; a.click();
+                a.href = url; a.download = '歌單匯出_' + new Date().toISOString().slice(0, 10) + '.csv';
+                document.body.appendChild(a); a.click(); a.remove();
+                setTimeout(function() { URL.revokeObjectURL(url); }, 1000);
                 showToast('📥 CSV 已匯出！');
             });
         }
@@ -1421,7 +1494,7 @@
                 if (document.visibilityState === 'visible' && activeUpdatesCount === 0) {
                     loadPlaylistData(false); 
                 }
-            }, 30000);
+            }, 10000);
         }
 
         function loadPlaylistData(isManual) {
@@ -1434,7 +1507,19 @@
             }
             fetchWithRetry(API_URL)
                 .then(function(result) { renderAllData(result, false); })
-                .catch(function(error) { hideAllSkeletons(); if (isManual) showToast('❌ 網路不穩或 API 錯誤，已顯示本地快取', 'error'); console.error('Fetch error:', error); });
+                .catch(function(error) {
+                    hideAllSkeletons();
+                    let restored = false;
+                    try {
+                        const cached = JSON.parse(localStorage.getItem(CACHE_KEY) || 'null');
+                        if (cached && cached.songs) {
+                            renderAllData(cached, true);
+                            restored = true;
+                        }
+                    } catch (e) { console.error('Cache fallback error:', e); }
+                    showToast(restored ? '⚠️ 網路暫時無法連線，已切換至本地快取' : '❌ 網路不穩或 API 錯誤', 'error');
+                    console.error('Fetch error:', error);
+                });
         }
 
         function manualRefresh() { showToast('🔄 正在重新整理...', 'info', 1500); loadPlaylistData(true); }
