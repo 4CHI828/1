@@ -564,6 +564,13 @@ tailwind.config = { darkMode: 'class' };
 <button type="button" id="exportTxtBtn" class="bg-indigo-500 hover:bg-indigo-600 text-white py-2 rounded-xl font-bold shadow transition active:scale-95">匯出 TXT</button>
 </div>
 <div class="pt-3 border-t border-gray-200/50 dark:border-gray-700/50">
+<div class="text-[0.75rem] font-bold text-gray-500 dark:text-gray-400 mb-2">完整資料備份</div>
+<div id="fullJsonBackupArea" class="bg-amber-50/80 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-900/50 rounded-xl p-3 mb-3">
+<div class="flex flex-col sm:flex-row sm:items-center gap-2">
+<button type="button" id="fullJsonExportBtn" class="bg-amber-500 hover:bg-amber-600 text-white px-4 py-2 rounded-xl text-xs font-black shadow active:scale-95 transition">💾 完整 JSON 備份</button>
+<div class="text-[0.68rem] text-amber-700 dark:text-amber-300 leading-relaxed">包含目前帳本、刪除紀錄、成員、類別與匯率</div>
+</div>
+</div>
 <div class="text-[0.75rem] font-bold text-gray-500 dark:text-gray-400 mb-2">匯入帳本</div>
 <div class="flex gap-2 flex-wrap">
 <input type="file" id="importFileInput" accept=".csv,.txt,.json" class="flex-1 text-xs text-slate-500 file:mr-2 file:py-1 file:px-3 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-gray-100 dark:file:bg-gray-700 file:text-gray-700 dark:file:text-gray-200 hover:file:bg-gray-200 cursor-pointer min-w-[150px]">
@@ -3684,9 +3691,7 @@ window.onload = function() {
 
   function addOptimizationControls(){
     const history=$('view-history');if(history&&!$('historyBackupHint')){const hint=document.createElement('div');hint.id='historyBackupHint';hint.className='text-[.68rem] text-gray-400 dark:text-gray-500 px-1';hint.textContent='💾 本機資料會先保存；網路恢復後自動重試雲端同步。';const dash=$('optimizationDashboard');if(dash)dash.insertAdjacentElement('afterend',hint);}
-    const settings=$('view-settings');if(settings&&!$('fullJsonExportBtn')){
-      const box=document.createElement('div');box.className='mt-2 flex flex-wrap gap-2';box.innerHTML='<button type="button" id="fullJsonExportBtn" class="bg-amber-500 hover:bg-amber-600 text-white px-3 py-2 rounded-xl text-xs font-black shadow">💾 完整 JSON 備份</button><span class="text-[.68rem] text-gray-400 self-center">包含目前帳本、刪除紀錄、成員、類別與匯率</span>';settings.appendChild(box);$('fullJsonExportBtn').onclick=exportFullJson;
-    }
+    const fullJsonBtn=$('fullJsonExportBtn');if(fullJsonBtn&&!fullJsonBtn.dataset.bound){fullJsonBtn.dataset.bound='1';fullJsonBtn.onclick=exportFullJson;}
     const record=$('view-record');if(record&&!$('recentRecordsBar')){const bar=document.createElement('div');bar.id='recentRecordsBar';bar.className='flex gap-1.5 overflow-x-auto py-1';const anchor=record.querySelector('#quickTemplatesBar');(anchor?.parentElement||record).insertBefore(bar,anchor||null);}
   }
 
