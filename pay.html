@@ -3478,6 +3478,8 @@ async function renameCurrentSheet() {
     if (input === null) return;
     const newName = input.trim().replace(/[\\/:*?"<>|]/g, "-").slice(0, 120);
     if (!newName || newName === oldName) return;
+    let renameNewCreated = false;
+    let renameOldDeleteStarted = false;
     try {
         setSyncBadge("重新命名", true);
         if (useFirestore) {
@@ -3490,13 +3492,22 @@ async function renameCurrentSheet() {
             const oldData = oldSnap.exists() ? oldSnap.data() : {};
             const oldRecordsSnap = await f.firestore.getDocs(f.firestore.collection(f.db, "users", getFirebaseUser().uid, "workbooks", firestoreWorkbookId(oldName), "records"));
             await f.firestore.setDoc(newRef, { ...oldData, name: newName, updatedAt: f.firestore.serverTimestamp(), renamedFrom: oldName }, { merge: true });
+            renameNewCreated = true;
             for (let i = 0; i < oldRecordsSnap.docs.length; i += 450) {
                 const batch = f.firestore.writeBatch(f.db);
                 oldRecordsSnap.docs.slice(i, i + 450).forEach(d => batch.set(f.firestore.doc(f.db, "users", getFirebaseUser().uid, "workbooks", firestoreWorkbookId(newName), "records", d.id), { ...d.data(), _sheetName: newName, _renamedFrom: oldName }, { merge: true }));
                 const chunk = oldRecordsSnap.docs.slice(i, i + 450);
                 if (chunk.length) await batch.commit();
             }
+            // 改名不是單一 Firestore transaction；刪舊帳本前先驗證新帳本完整複製。
+            const verifySnap = await f.firestore.getDocs(f.firestore.collection(f.db, "users", getFirebaseUser().uid, "workbooks", firestoreWorkbookId(newName), "records"));
+            const sourceIds = oldRecordsSnap.docs.map(d => String(d.id)).sort();
+            const targetIds = verifySnap.docs.map(d => String(d.id)).sort();
+            if (sourceIds.length !== targetIds.length || sourceIds.some((id, i) => id !== targetIds[i])) {
+                throw new Error("新帳本驗證失敗：紀錄數量或 ID 不一致，已停止刪除原帳本");
+            }
             stopFirestoreRealtimeListener();
+            renameOldDeleteStarted = true;
             await deleteFirestoreWorkbook(oldName);
             const localData = loadLocalSheetMirror(oldName);
             if (localData.length) saveLocalSheetMirror(newName, localData);
@@ -3533,8 +3544,12 @@ async function renameCurrentSheet() {
         setSyncBadge("已同步", false);
         showToast(`✅ 帳本已重新命名為「${newName}」`);
     } catch (e) {
+        // 舊帳本尚未開始刪除時，新帳本可以安全回滾；若已開始刪除則保留新帳本，避免二次操作造成資料損失。
+        if (useFirestore && renameNewCreated && !renameOldDeleteStarted) {
+            try { await deleteFirestoreWorkbook(newName); } catch (rollbackError) { console.warn("帳本改名回滾失敗，保留新帳本供人工檢查", rollbackError); }
+        }
         setSyncBadge("重新命名失敗", false, true);
-        showToast(e?.message || "帳本重新命名失敗", "error");
+        showToast(renameOldDeleteStarted ? `帳本改名中斷：${e?.message || "未知錯誤"}；為避免資料遺失，新帳本暫時保留` : (e?.message || "帳本重新命名失敗"), "error");
     }
 }
 
@@ -5124,7 +5139,10 @@ async function executeMoveCopyRecord() {
         const targetExisting = loadLocalSheetMirror(targetSheet).filter(r => String(r.id) !== targetId);
         targetExisting.push(targetRecord);
         const targetOk = await saveSpecificFirestoreSheet(targetSheet, targetExisting, true);
-        if (!targetOk) throw new Error("目標帳本同步失敗，來源資料未變更");
+        if (!targetOk) {
+            if (targetRecord.receiptStoragePath) await deleteReceiptFromFirebase(targetRecord, targetSheet);
+            throw new Error("目標帳本同步失敗，來源資料未變更");
+        }
         if (mode === "move") {
             const sourceRows = loadLocalSheetMirror(sourceSheet).map(r => String(r.id) === state.id ? { ...r, deleted: true, updatedAt: new Date().toISOString() } : r);
             const sourceRecord = sourceRows.find(r => String(r.id) === state.id);
@@ -5271,7 +5289,7 @@ async function batchDeleteSelected() {
     showToast(ok ? `已刪除 ${rows.length} 筆並同步雲端` : `已刪除 ${rows.length} 筆，等待雲端同步`, ok ? 'success' : 'info');
     exitHistoryBatchMode();
 }
-function batchSetCategory() {
+async function batchSetCategory() {
     const rows = getSelectedActiveRecords(); if (!rows.length) return showToast('請先選擇紀錄', 'info');
     const choices = Array.isArray(categories) ? categories.filter(Boolean) : [];
     const value = prompt(`將 ${rows.length} 筆紀錄改成哪個分類？\n可用分類：${choices.join('、')}`, rows[0].category || choices[0] || '其他');
@@ -5282,8 +5300,8 @@ function batchSetCategory() {
     rows.forEach(r => { r.category = category; r.updatedAt = now; if (isFirestoreMode() && getFirebaseUser()) markFirestoreRecordVersion(r, true); });
     saveLocalSheetMirror(currentSheet, cachedRecords);
     renderAllViews();
-    void saveRecordsToDrive(true);
-    showToast(`已將 ${rows.length} 筆分類為「${category}」`, 'success');
+    const ok = await saveRecordsToDrive(true);
+    showToast(ok ? `已將 ${rows.length} 筆分類為「${category}」並同步雲端` : `已將 ${rows.length} 筆分類為「${category}」，目前保留本機並等待同步`, ok ? 'success' : 'info');
     exitHistoryBatchMode();
 }
 function batchExportSelected() {
@@ -5300,14 +5318,39 @@ async function batchCopySelected() {
     const rows = getSelectedActiveRecords(); if (!rows.length) return showToast('請先選擇紀錄', 'info');
     createLocalSnapshot('批次複製前');
     const now = new Date().toISOString();
-    const copies = rows.map(r => ({...r, id:(crypto.randomUUID ? crypto.randomUUID() : `rec_${Date.now()}_${Math.random().toString(36).slice(2)}`), title:`${r.title || '未命名'}（副本）`, updatedAt:now, deleted:false}));
-    if (isFirestoreMode() && getFirebaseUser()) copies.forEach(r => markFirestoreRecordVersion(r, true));
-    cachedRecords.push(...copies);
-    saveLocalSheetMirror(currentSheet, cachedRecords);
-    renderAllViews();
-    if (!isFirestoreMode() && googleSessionLinked && !accessToken) await ensureGoogleAccessToken(true);
-    const ok = await saveRecordsToDrive(true);
-    showToast(ok ? `已複製 ${copies.length} 筆並同步雲端` : `已複製 ${copies.length} 筆，等待雲端同步`, ok ? 'success' : 'info');
+    const copies = [];
+    try {
+        // 每個副本都建立自己的 ID 與 Storage 收據路徑，避免原紀錄刪除時連帶刪掉副本收據。
+        for (const source of rows) {
+            const targetId = crypto.randomUUID ? crypto.randomUUID() : `rec_${Date.now()}_${Math.random().toString(36).slice(2)}`;
+            let copiedReceipt = { receipt: '', receiptStoragePath: '', receiptUrl: '', receiptStoredAt: '' };
+            if (isFirestoreMode() && getFirebaseUser() && (source.receiptStoragePath || source.receiptUrl || String(source.receipt || '').startsWith('data:image/'))) {
+                copiedReceipt = await cloneReceiptForWorkbook(source, currentSheet, targetId);
+            }
+            const copy = normalizeRecord({ ...source, id: targetId, title: `${source.title || '未命名'}（副本）`, updatedAt: now, deleted: false, _previousReceiptStoragePath: '', ...copiedReceipt });
+            if (isFirestoreMode() && getFirebaseUser()) markFirestoreRecordVersion(copy, true);
+            copies.push(copy);
+        }
+        cachedRecords.push(...copies);
+        saveLocalSheetMirror(currentSheet, cachedRecords);
+        renderAllViews();
+        if (!isFirestoreMode() && googleSessionLinked && !accessToken) await ensureGoogleAccessToken(true);
+        const ok = await saveRecordsToDrive(true);
+        if (!ok && isFirestoreMode() && getFirebaseUser()) {
+            // Firestore 寫入失敗時，刪除本次剛建立的 Storage 收據；失敗的刪除會進背景清理佇列。
+            for (const copy of copies) {
+                if (copy.receiptStoragePath) await deleteReceiptFromFirebase(copy, currentSheet);
+            }
+        }
+        showToast(ok ? `已複製 ${copies.length} 筆並同步雲端` : `已複製 ${copies.length} 筆，等待雲端同步`, ok ? 'success' : 'info');
+    } catch (e) {
+        // 建立副本過程中若收據已上傳但後續失敗，盡力回收本次新增的 Storage 檔案。
+        for (const copy of copies) {
+            if (copy.receiptStoragePath) await deleteReceiptFromFirebase(copy, currentSheet);
+        }
+        console.error('批次複製失敗', e);
+        showToast(`批次複製失敗：${e?.message || '未知錯誤'}`, 'error');
+    }
     exitHistoryBatchMode();
 }
 
