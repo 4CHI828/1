@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes, viewport-fit=cover">
 <title>雲端全能分帳記帳 Pro - 最終版</title>
-<link rel="manifest" href="data:application/manifest+json;base64,eyJuYW1lIjoi6Zuy56uv5YWo6IO95YiG5biz6KiY5bizIiwic2hvcnRfbmFtZSI6Iumbsuerr+iomOW4syIsImRlc2NyaXB0aW9uIjoi6Zuy56uv6KiY5biz44CB5YiG5biz6IiH5aSa5Lq65ZCI5LuYIiwic3RhcnRfdXJsIjoiLi8iLCJkaXNwbGF5Ijoic3RhbmRhbG9uZSIsImJhY2tncm91bmRfY29sb3IiOiIjMTExODI3IiwidGhlbWVfY29sb3IiOiIjMjU2M2ViIiwiaWNvbnMiOlt7InNyYyI6Imh0dHBzOi8vY2RuLWljb25zLXBuZy5mbGF0aWNvbi5jb20vNTEyLzI5MzYvMjkzNjc1OC5wbmciLCJzaXplcyI6IjE5MngxOTIiLCJ0eXBlIjoiaW1hZ2UvcG5nIiwicHVycG9zZSI6ImFueSBtYXNrYWJsZSJ9XX0=">
+<link rel="manifest" href="data:application/manifest+json;base64,eyJuYW1lIjoi6Zuy56uv5YWo6IO95YiG5biz6KiY5bizIiwic2hvcnRfbmFtZSI6Iumbsuerr+iomOW4syIsImRlc2NyaXB0aW9uIjoi6Zuy56uv6KiY5biz44CB5YiG5biz6IiH5aSa5Lq65ZCI5LuYIiwic3RhcnRfdXJsIjoiLi9wYXkuaHRtbCIsImRpc3BsYXkiOiJzdGFuZGFsb25lIiwiYmFja2dyb3VuZF9jb2xvciI6IiMxMTE4MjciLCJ0aGVtZV9jb2xvciI6IiMyNTYzZWIiLCJpY29ucyI6W3sic3JjIjoiaHR0cHM6Ly9jZG4taWNvbnMtcG5nLmZsYXRpY29uLmNvbS81MTIvMjkzNi8yOTM2NzU4LnBuZyIsInNpemVzIjoiMTkyeDE5MiIsInR5cGUiOiJpbWFnZS9wbmciLCJwdXJwb3NlIjoiYW55IG1hc2thYmxlIn1dLCJzY29wZSI6Ii4vIn0=">
 <meta name="theme-color" content="#3b82f6">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -2409,13 +2409,9 @@ function bindFirebaseAuth() {
             safeSetLocalStorage("firebase_uid", user.uid || "");
             safeSetLocalStorage("firebase_email", user.email || "");
             safeSetLocalStorage("firebase_display_name", user.displayName || "");
-            if (isFirestoreMode()) {
-                Promise.resolve(loadWorkbooksFromFirestore())
-                    .then(() => loadConfigFromFirestore())
-                    .then(() => loadRecordsFromFirestore(currentSheet))
-                    .then(() => { startFirestoreConfigRealtimeListener(); startFirestoreWorkbookRealtimeListener(); startFirestoreRealtimeListener(currentSheet); })
-                    .catch(e => console.warn("Firestore 自動載入失敗", e));
-            }
+            // Firestore 模式是帳號層級設定，不能只依賴本機 localStorage。
+            // 新裝置登入同一帳號時，先讀 users/{uid} 判斷是否已啟用雲端模式。
+            void startFirestoreSessionForUser().catch(e => console.warn("Firestore 自動載入失敗", e));
         } else {
             stopFirestoreMetaRealtimeListeners();
             stopFirestoreRealtimeListener();
@@ -2456,6 +2452,42 @@ function isFirestoreMode() {
 }
 function setFirestoreMode(enabled) {
     safeSetLocalStorage("app_cloud_backend", enabled ? "firestore" : "drive");
+}
+async function resolveFirestoreModeForUser() {
+    const user = getFirebaseUser();
+    if (!user?.uid || !window.__firebase?.db || !window.__firebase?.firestore) return false;
+    if (isFirestoreMode()) return true;
+    try {
+        const { f } = firestoreApi();
+        const userRef = f.firestore.doc(f.db, "users", user.uid);
+        const snap = await f.firestore.getDoc(userRef);
+        const data = snap.exists() ? (snap.data() || {}) : {};
+        const hasRemoteMarker = data.cloudBackend === "firestore" || !!data.migratedFromGoogleDriveAt;
+        let hasRemoteWorkbooks = false;
+        if (!hasRemoteMarker) {
+            const wbSnap = await f.firestore.getDocs(f.firestore.collection(f.db, "users", user.uid, "workbooks"));
+            hasRemoteWorkbooks = !wbSnap.empty;
+        }
+        if (hasRemoteMarker || hasRemoteWorkbooks) {
+            setFirestoreMode(true);
+            return true;
+        }
+    } catch (e) {
+        console.warn("無法判斷 Firebase 雲端模式，保留目前裝置模式：", e);
+    }
+    return false;
+}
+async function startFirestoreSessionForUser() {
+    if (!getFirebaseUser()) return false;
+    const enabled = await resolveFirestoreModeForUser();
+    if (!enabled) return false;
+    await loadWorkbooksFromFirestore();
+    await loadConfigFromFirestore();
+    await loadRecordsFromFirestore(currentSheet);
+    startFirestoreConfigRealtimeListener();
+    startFirestoreWorkbookRealtimeListener();
+    startFirestoreRealtimeListener(currentSheet);
+    return true;
 }
 function firestoreApi() {
     const f = window.__firebase;
@@ -3393,6 +3425,7 @@ async function migrateGoogleDriveToFirestore() {
         await f.firestore.setDoc(f.firestore.doc(f.db, "users", user.uid), {
             email: user.email || "",
             displayName: user.displayName || "",
+            cloudBackend: "firestore",
             migratedFromGoogleDriveAt: f.firestore.serverTimestamp(),
             migratedWorkbookCount: names.length,
             migratedRecordCount: total
