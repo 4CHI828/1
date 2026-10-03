@@ -135,6 +135,12 @@
         .card-actions .btn-delete:hover { color: var(--danger); border-color: var(--danger); }
 
         @media (hover: none) { .card-actions { opacity: 1; } .card-actions button { background: rgba(30, 41, 59, 0.9); border: 1px solid var(--border-color); } }
+        .link-card.swipe-active { transition: transform 0.08s linear; }
+        .link-card.swipe-right { box-shadow: inset 5px 0 0 var(--primary); }
+        .link-card.swipe-left { box-shadow: inset -5px 0 0 var(--danger); }
+        @media (max-width: 768px) {
+            .link-card { touch-action: pan-y; }
+        }
 
         .batch-checkbox { position: absolute; top: 0.5rem; left: 0.5rem; z-index: 15; width: 15px; height: 15px; cursor: pointer; accent-color: var(--primary); display: none; }
         body.batch-mode .batch-checkbox { display: block; } 
@@ -686,6 +692,9 @@
         let rawLinksCache=[],allLinksCache=[],allFoldersCache=[],randomWeightMap=new Map(),searchTimeout,batchMode=false,selectedIds=new Set();
         let lastBatchClickedId = null;
         let isCheckingLinks=false,abortDeadCheck=false,isSavingUrl=false,hasPromptedCloudSync=false;
+        // 縮圖寫回防抖：避免圖片 onload → Firestore snapshot → 整頁重繪 → hover 按鈕閃爍
+        const thumbnailPersistState = new Map();
+        const thumbnailRecoveryInFlight = new Set();
 
         // PWA 原生安裝提示
         let deferredPrompt;
@@ -787,6 +796,11 @@
                 url: cleanUrl(matchedUrl),
                 extractedTitle: (leftover.length >= 2 && leftover.length <= 80) ? leftover : ''
             };
+        }
+
+        function escapeHtml(str){
+            if(str === null || str === undefined) return '';
+            return String(str).replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]));
         }
 
         // 先對「原始字串」進行正則切分，再逐段執行 escapeHtml，徹底杜絕 &amp; / &quot; 等實體被切碎
@@ -1043,7 +1057,15 @@
                     primary.clicks = (primary.clicks || 0) + (l.clicks || 0);
                     primary.pinned = !!(primary.pinned || l.pinned);
                     primary.isRead = !!(primary.isRead || l.isRead);
-                    if (!primary.image && l.image) primary.image = l.image;
+                    const mergedThumb = mergeThumbnailData(primary, l.image || l.imageOriginal || l.imageBackup);
+                    primary.image = mergedThumb.image;
+                    primary.imageOriginal = mergedThumb.imageOriginal;
+                    primary.imageBackup = mergedThumb.imageBackup;
+                    primary.imageCandidates = uniqueThumbnailUrls([
+                        ...(Array.isArray(primary.imageCandidates) ? primary.imageCandidates : []),
+                        ...(Array.isArray(l.imageCandidates) ? l.imageCandidates : []),
+                        l.image, l.imageOriginal, l.imageBackup
+                    ]).slice(0,12);
                     toUpdate.push(primary);
                     toDeleteIds.push(safeId(l.id));
                 }
@@ -1115,7 +1137,7 @@
 
                 const data = {
                     url: u, title: ft, categories: tags, description: info.description,
-                    image: info.image || "", folderId: tf, createdAt: Date.now(),
+                    image: info.image || "", imageOriginal: info.image || "", imageBackup: "", imageCandidates: uniqueThumbnailUrls([info.image]), folderId: tf, createdAt: Date.now(),
                     pinned: false, isRead: false, isDead: false, clicks: 0
                 };
 
@@ -1126,7 +1148,7 @@
                 }
                 showToast("✅ 另存連結成功", "success");
                 closeModal('quick-add-modal');
-                loadLinks();
+                if (isLocalMode || !unsubscribeSnapshot) loadLinks();
             } catch (e) {
                 showToast("❌ " + e.message, "error");
             } finally {
@@ -1142,8 +1164,8 @@
             const baseId = 'loc_' + Date.now();
             let id = baseId, n = 1;
             while (usedIds.has(id)) id = `${baseId}_${n++}`;
-            data.id = id;
-            links.unshift(data);
+            const normalizedData = normalizeLinkThumbnailFields({...data, id});
+            links.unshift(normalizedData);
             return writeLocalJson('my_links', links);
         }
 
@@ -1615,6 +1637,247 @@
             }
         }
         
+        // ===== 縮圖防遺失 / 多層備援系統 =====
+        // image：目前主要縮圖；imageOriginal：第一次取得的縮圖，永不被空值覆蓋；
+        // imageBackup：曾經成功的備用縮圖；imageCandidates：所有已知候選網址。
+        function normalizeThumbnailUrl(value){
+            const s=String(value||'').trim();
+            if(!s)return '';
+            if(/^https?:\/\//i.test(s))return s;
+            if(/^data:image\//i.test(s))return s;
+            return '';
+        }
+
+        function uniqueThumbnailUrls(values){
+            const out=[]; const seen=new Set();
+            (values||[]).forEach(v=>{
+                const u=normalizeThumbnailUrl(v);
+                if(!u||seen.has(u))return;
+                seen.add(u); out.push(u);
+            });
+            return out;
+        }
+
+        function getYoutubeFallbackImage(url){
+            const v=getYouTubeVideoId(url||'');
+            return v ? `https://img.youtube.com/vi/${v}/hqdefault.jpg` : '';
+        }
+
+        function makeThumbnailPlaceholder(url){
+            let label='WEB';
+            try{
+                const host=new URL(url).hostname.replace(/^www\./i,'');
+                label=(host.split('.')[0]||'WEB').slice(0,8).toUpperCase();
+            }catch(e){}
+            const svg=`<svg xmlns="http://www.w3.org/2000/svg" width="800" height="450" viewBox="0 0 800 450"><rect width="800" height="450" fill="#e5e7eb"/><circle cx="400" cy="190" r="58" fill="#cbd5e1"/><path d="M370 190h60M400 160v60" stroke="#64748b" stroke-width="10" stroke-linecap="round"/><text x="400" y="315" text-anchor="middle" font-family="Arial,sans-serif" font-size="34" fill="#475569">${label}</text></svg>`;
+            return `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(svg)}`;
+        }
+
+        function getThumbnailCandidates(link, includeDomainFallback=false){
+            const l=link||{};
+            const list=uniqueThumbnailUrls([
+                l.image,
+                l.imageBackup,
+                l.imageOriginal,
+                ...(Array.isArray(l.imageCandidates)?l.imageCandidates:[]),
+                getYoutubeFallbackImage(l.url)
+            ]);
+            if(includeDomainFallback){
+                try{
+                    const host=new URL(l.url).hostname;
+                    list.push(`https://www.google.com/s2/favicons?domain=${encodeURIComponent(host)}&sz=256`);
+                }catch(e){}
+            }
+            return uniqueThumbnailUrls(list);
+        }
+
+        function mergeThumbnailData(existing, candidate){
+            const good=normalizeThumbnailUrl(candidate);
+            const old=existing||{};
+            if(!good)return {...old};
+            const candidates=uniqueThumbnailUrls([
+                old.image,
+                old.imageOriginal,
+                old.imageBackup,
+                ...(Array.isArray(old.imageCandidates)?old.imageCandidates:[]),
+                good
+            ]);
+            const first=normalizeThumbnailUrl(old.image);
+            const oldBackup=normalizeThumbnailUrl(old.imageBackup);
+            const backup = oldBackup && oldBackup !== first ? oldBackup : ((first && first !== good) ? good : (oldBackup || good));
+            return {
+                ...old,
+                image: first || good,
+                imageOriginal: normalizeThumbnailUrl(old.imageOriginal) || first || good,
+                imageBackup: backup,
+                imageCandidates: candidates.slice(0,12)
+            };
+        }
+
+        function normalizeLinkThumbnailFields(link){
+            if(!link)return link;
+            const merged=mergeThumbnailData(link, link.image);
+            if(!merged.imageCandidates)merged.imageCandidates=[];
+            return merged;
+        }
+
+        async function persistThumbnailCandidate(id, src, linkHint, promote=false){
+            const good=normalizeThumbnailUrl(src);
+            if(!good || /^data:image\//i.test(good))return;
+            const target=rawLinksCache.find(x=>safeId(x.id)===safeId(id)) || linkHint;
+            if(!target)return;
+
+            const before=normalizeThumbnailUrl(target.image);
+            const merged=mergeThumbnailData(target,good);
+            if(promote){
+                merged.image=good;
+                merged.imageOriginal=normalizeThumbnailUrl(target.imageOriginal) || before || good;
+                merged.imageBackup=(before && before!==good) ? before : normalizeThumbnailUrl(target.imageBackup);
+            }
+
+            const stateKey=JSON.stringify({
+                image: merged.image || '',
+                imageOriginal: merged.imageOriginal || '',
+                imageBackup: merged.imageBackup || '',
+                imageCandidates: merged.imageCandidates || []
+            });
+            const persistKey=`${safeId(id)}|${stateKey}`;
+            if(thumbnailPersistState.get(safeId(id))===persistKey){
+                target.image=merged.image;
+                target.imageBackup=merged.imageBackup;
+                target.imageOriginal=merged.imageOriginal;
+                target.imageCandidates=merged.imageCandidates;
+                return;
+            }
+
+            target.image=merged.image;
+            target.imageBackup=merged.imageBackup;
+            target.imageOriginal=merged.imageOriginal;
+            target.imageCandidates=merged.imageCandidates;
+
+            try{
+                if(isLocalMode){
+                    const a=readLocalJson('my_links',[]);
+                    const i=a.findIndex(x=>safeId(x.id)===safeId(id));
+                    if(i>-1){
+                        const m=mergeThumbnailData(a[i],good);
+                        const current=normalizeThumbnailUrl(a[i].image);
+                        if(promote){
+                            m.image=good;
+                            m.imageOriginal=normalizeThumbnailUrl(a[i].imageOriginal) || current || good;
+                            m.imageBackup=(current && current!==good) ? current : normalizeThumbnailUrl(a[i].imageBackup);
+                        }
+                        const nextKey=JSON.stringify({image:m.image||'',imageOriginal:m.imageOriginal||'',imageBackup:m.imageBackup||'',imageCandidates:m.imageCandidates||[]});
+                        if(nextKey!==JSON.stringify({image:a[i].image||'',imageOriginal:a[i].imageOriginal||'',imageBackup:a[i].imageBackup||'',imageCandidates:a[i].imageCandidates||[]})){
+                            a[i].image=m.image;
+                            a[i].imageOriginal=m.imageOriginal;
+                            a[i].imageBackup=m.imageBackup;
+                            a[i].imageCandidates=m.imageCandidates;
+                            writeLocalJson('my_links',a);
+                        }
+                    }
+                }else if(currentUser&&db){
+                    const update={
+                        imageOriginal: merged.imageOriginal,
+                        imageBackup: merged.imageBackup,
+                        imageCandidates: merged.imageCandidates
+                    };
+                    if(promote) update.image=merged.image;
+
+                    // 完全相同的縮圖資料不再 update，避免 Firestore snapshot 造成卡片反覆重建。
+                    const currentState={
+                        image: normalizeThumbnailUrl(target.image),
+                        imageOriginal: normalizeThumbnailUrl(target.imageOriginal),
+                        imageBackup: normalizeThumbnailUrl(target.imageBackup),
+                        imageCandidates: Array.isArray(target.imageCandidates)?target.imageCandidates:[]
+                    };
+                    const nextState={
+                        image: normalizeThumbnailUrl(update.image ?? target.image),
+                        imageOriginal: normalizeThumbnailUrl(update.imageOriginal),
+                        imageBackup: normalizeThumbnailUrl(update.imageBackup),
+                        imageCandidates: Array.isArray(update.imageCandidates)?update.imageCandidates:[]
+                    };
+                    // target 已經是 merged，這裡只用持久化狀態快取做去重；成功送出後標記。
+                    if(thumbnailPersistState.get(safeId(id))!==persistKey){
+                        await db.collection('users').doc(currentUser.uid).collection('links').doc(safeId(id)).update(update);
+                        thumbnailPersistState.set(safeId(id),persistKey);
+                    }
+                    return;
+                }
+                thumbnailPersistState.set(safeId(id),persistKey);
+            }catch(e){
+                // 寫入失敗不影響畫面；下一次成功載入仍可重新嘗試。
+            }
+        }
+
+        async function recoverThumbnail(img,id){
+            if(!img)return;
+            const target=rawLinksCache.find(x=>safeId(x.id)===safeId(id));
+            if(!target){img.src=makeThumbnailPlaceholder('');return;}
+            let candidates=img._thumbCandidates || getThumbnailCandidates(target,false);
+            img._thumbCandidates=candidates;
+            let idx=Number(img.dataset.thumbIndex||0)+1;
+            if(idx<candidates.length){
+                img.dataset.thumbIndex=String(idx);
+                img.src=candidates[idx];
+                return;
+            }
+            if(!img.dataset.thumbRefetched){
+                img.dataset.thumbRefetched='1';
+                try{
+                    const info=await fetchWebpageInfo(target.url);
+                    const fresh=normalizeThumbnailUrl(info?.image);
+                    if(fresh){
+                        const next=uniqueThumbnailUrls([...candidates,fresh]);
+                        img._thumbCandidates=next;
+                        const nextIdx=next.indexOf(fresh);
+                        await persistThumbnailCandidate(id,fresh,target,false);
+                        img.dataset.thumbIndex=String(nextIdx);
+                        img.src=fresh;
+                        return;
+                    }
+                }catch(e){}
+            }
+            // 最後一層：網域 favicon；再失敗才顯示穩定的 SVG 佔位圖。
+            if(!img.dataset.thumbFaviconTried){
+                img.dataset.thumbFaviconTried='1';
+                try{
+                    const host=new URL(target.url).hostname;
+                    const fav=`https://www.google.com/s2/favicons?domain=${encodeURIComponent(host)}&sz=256`;
+                    img.src=fav;
+                    return;
+                }catch(e){}
+            }
+            img.onerror=null;
+            img.src=makeThumbnailPlaceholder(target.url);
+        }
+
+        function scheduleMissingThumbnailRecovery(link){
+            if(!link || !link.id || !link.url) return;
+            const id=safeId(link.id);
+            if(!id || thumbnailRecoveryInFlight.has(id)) return;
+            const candidates=getThumbnailCandidates(link,false);
+            if(candidates.length) return;
+            thumbnailRecoveryInFlight.add(id);
+            setTimeout(async()=>{
+                try{
+                    const info=await fetchWebpageInfo(link.url);
+                    const fresh=normalizeThumbnailUrl(info?.image) || getYoutubeFallbackImage(link.url);
+                    if(fresh) await persistThumbnailCandidate(id,fresh,link,false);
+                }catch(e){}
+                finally{ thumbnailRecoveryInFlight.delete(id); }
+            },180);
+        }
+
+        function handleThumbnailLoad(img,id){
+            if(!img)return;
+            const src=normalizeThumbnailUrl(img.currentSrc||img.src);
+            if(!src || /^data:image\//i.test(src) || /google\.com\/s2\/favicons/i.test(src)) return;
+            const target=rawLinksCache.find(x=>safeId(x.id)===safeId(id));
+            if(target && normalizeThumbnailUrl(target.image)===src && Array.isArray(target.imageCandidates) && target.imageCandidates.includes(src)) return;
+            persistThumbnailCandidate(id,src,null,true);
+        }
+
         async function fetchWebpageInfo(u){
             let r={title:"未命名連結",description:"點擊查看",categories:["一般網站"],account:"",image:""};
             let tags=["一般網站"];
@@ -1673,7 +1936,7 @@
                 let ft = (info.title && info.title !== "未命名連結" && !["抖音", "Instagram", "Facebook", "X"].includes(info.title)) ? info.title : (extractedTitle || info.title);
                 if(info.account&&!ft.includes(info.account))ft=`${info.account} - ${ft}`;
                 const tf=activeFolder!=='all'?activeFolder:'default';
-                const data={url:u,title:ft,categories:info.categories,description:info.description,image:info.image||"",folderId:tf,createdAt:Date.now(),pinned:false,isRead:false,isDead:false,clicks:0};
+                const data={url:u,title:ft,categories:info.categories,description:info.description,image:info.image||"",imageOriginal:info.image||"",imageBackup:"",imageCandidates:uniqueThumbnailUrls([info.image]),folderId:tf,createdAt:Date.now(),pinned:false,isRead:false,isDead:false,clicks:0};
                 if(isLocalMode){
                     if (!saveToLocal(data)) throw new Error('本機儲存失敗，可能已達 localStorage 容量上限');
                 } else {
@@ -1681,7 +1944,7 @@
                 }
                 showToast("✅ 儲存成功","success");
                 inp.value='';
-                loadLinks();
+                if (isLocalMode || !unsubscribeSnapshot) loadLinks();
             } catch(e) {
                 showToast("❌ "+e.message,"error");
             } finally {
@@ -1701,6 +1964,12 @@
             }
         }
 
+        function sameLinkExceptThumbnail(a, b){
+            if(!a || !b) return false;
+            const strip = obj => { const x={...obj}; delete x.image; delete x.imageOriginal; delete x.imageBackup; delete x.imageCandidates; return x; };
+            try { return JSON.stringify(strip(a)) === JSON.stringify(strip(b)); } catch { return false; }
+        }
+
         function loadLinks(){
             if(isLocalMode){
                 let mutated = false;
@@ -1710,7 +1979,7 @@
                         mutated = true;
                         return { ...x, id: 'loc_' + Date.now() + '_' + i };
                     }
-                    return { ...x, id: validId };
+                    return normalizeLinkThumbnailFields({ ...x, id: validId });
                 });
                 if (mutated) writeLocalJson('my_links', rawLinksCache);
                 if (currentSort === 'random' && randomWeightMap.size === 0) refreshRandomWeights(rawLinksCache);
@@ -1720,10 +1989,19 @@
                 if(unsubscribeSnapshot)unsubscribeSnapshot();
                 unsubscribeSnapshot=db.collection('users').doc(currentUser.uid).collection('links').orderBy('createdAt','desc').onSnapshot(
                     s => {
-                        rawLinksCache=s.docs.map(d=>({id:safeId(d.id),...d.data()}));
+                        const incoming = s.docs.map(d=>normalizeLinkThumbnailFields({id:safeId(d.id),...d.data()}));
+                        const oldById = new Map(rawLinksCache.map(x => [safeId(x.id), x]));
+                        let needsRender = incoming.length !== rawLinksCache.length;
+                        incoming.forEach(next => {
+                            const prev = oldById.get(safeId(next.id));
+                            if (!prev || !sameLinkExceptThumbnail(prev, next)) needsRender = true;
+                        });
+                        rawLinksCache = incoming;
                         if (currentSort === 'random' && randomWeightMap.size === 0) refreshRandomWeights(rawLinksCache);
-                        renderFolderChips(true);
-                        renderCurrentView(rawLinksCache);
+                        if (needsRender) {
+                            renderFolderChips(true);
+                            renderCurrentView(rawLinksCache);
+                        }
                         checkAndMergeLocalToCloud(rawLinksCache);
                     },
                     err => {
@@ -1972,11 +2250,13 @@
                     timeText = date.toLocaleString('zh-TW', { month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', hour12: false });
                 }
                 const safeUrl = safeHref(l.url) || '#';
-                const safeImg = safeHref(l.image, true);
+                const thumbCandidates = getThumbnailCandidates(l, false);
+                if(!thumbCandidates.length) scheduleMissingThumbnailRecovery(l);
+                const safeImg = safeHref(thumbCandidates[0] || l.image, true);
                 const rawDomain = getDomain(l.url);
                 const domainHost = encodeURIComponent(rawDomain);
-                let ih = safeImg ? `<a href="${safeUrl}" target="_blank" rel="noopener noreferrer" class="link-image-preview" onclick="if(batchMode){event.preventDefault();return;}recordLinkClick('${lid}')"><img loading="lazy" src="${safeImg}" onerror="this.parentElement.style.display='none';this.closest('.link-card')?.classList.add('no-image')"></a>` : "";
-                let sh = safeImg ? `<a href="${safeUrl}" target="_blank" rel="noopener noreferrer" class="link-thumb-small" onclick="if(batchMode){event.preventDefault();return;}recordLinkClick('${lid}')"><img loading="lazy" src="${safeImg}" onerror="this.parentElement.style.display='none'"></a>` : "";
+                let ih = safeImg ? `<a href="${safeUrl}" target="_blank" rel="noopener noreferrer" class="link-image-preview" onclick="if(batchMode){event.preventDefault();return;}recordLinkClick('${lid}')"><img loading="lazy" data-thumb-index="0" src="${safeImg}" onload="handleThumbnailLoad(this,'${lid}')" onerror="recoverThumbnail(this,'${lid}')"></a>` : "";
+                let sh = safeImg ? `<a href="${safeUrl}" target="_blank" rel="noopener noreferrer" class="link-thumb-small" onclick="if(batchMode){event.preventDefault();return;}recordLinkClick('${lid}')"><img loading="lazy" data-thumb-index="0" src="${safeImg}" onload="handleThumbnailLoad(this,'${lid}')" onerror="recoverThumbnail(this,'${lid}')"></a>` : "";
                 const fo=allFoldersCache.find(f=>f.id===l.folderId)||allFoldersCache.find(f=>f.id==='default');
                 const fb=fo?`<div class="folder-badge" onclick="if(!batchMode){event.stopPropagation();setFolder('${safeId(fo.id)}');}" title="篩選此資料夾"><i class="fas ${safeIcon(fo.icon)}"></i> ${escapeHtml(fo.name)}</div>`:"";
                 const tg=(Array.isArray(l.categories)?l.categories:(l.categories?[l.categories]:[])).map(t=>`<span class="tag-badge" style="${getTagStyles(t)}" data-tag="${escapeHtml(t)}" onclick="if(!batchMode){event.stopPropagation();setTag(this.dataset.tag);}" title="點擊篩選標籤">${escapeHtml(t)}</span>`).join('');
@@ -2139,7 +2419,7 @@
                 document.getElementById('edit-url').value = u;
                 document.getElementById('edit-title').value = ft;
                 document.getElementById('edit-desc').value = info.description || '';
-                if (info.image) document.getElementById('edit-image').value = info.image;
+                if (info.image && !document.getElementById('edit-image').value.trim()) document.getElementById('edit-image').value = info.image;
                 const curCats = document.getElementById('edit-categories').value.split(/[,，]\s*/).map(t => t.trim()).filter(Boolean);
                 if (curCats.length === 0 && info.categories && info.categories.length) {
                     document.getElementById('edit-categories').value = info.categories.join(', ');
@@ -2159,8 +2439,17 @@
             const cleaned = cleanUrl(document.getElementById('edit-url').value);
             if (!cleaned) { showToast("請輸入有效的 http/https 網址", "error"); return; }
             const cats=document.getElementById('edit-categories').value.split(/[,，]\s*/).map(t=>t.trim()).filter(t=>t);
-            const imgVal=document.getElementById('edit-image').value;
-            const u={title:document.getElementById('edit-title').value,url:cleaned,categories:cats,description:document.getElementById('edit-desc').value,folderId:safeId(document.getElementById('edit-folder').value)||'default',image:imgVal};
+            const imgVal=document.getElementById('edit-image').value.trim();
+            const existing=rawLinksCache.find(x=>safeId(x.id)===id) || {};
+            const thumbMerged=imgVal ? mergeThumbnailData(existing,imgVal) : existing;
+            const u={title:document.getElementById('edit-title').value,url:cleaned,categories:cats,description:document.getElementById('edit-desc').value,folderId:safeId(document.getElementById('edit-folder').value)||'default'};
+            // 編輯時不再把空白 image 寫回資料庫；原縮圖與備份欄位完整保留。
+            if(imgVal){
+                u.image=imgVal;
+                u.imageOriginal=normalizeThumbnailUrl(existing.imageOriginal) || normalizeThumbnailUrl(existing.image) || imgVal;
+                u.imageBackup=normalizeThumbnailUrl(existing.image) && normalizeThumbnailUrl(existing.image)!==imgVal ? normalizeThumbnailUrl(existing.image) : normalizeThumbnailUrl(existing.imageBackup);
+                u.imageCandidates=uniqueThumbnailUrls([imgVal, existing.image, existing.imageOriginal, existing.imageBackup, ...(Array.isArray(existing.imageCandidates)?existing.imageCandidates:[])]).slice(0,12);
+            }
             try {
                 if(isLocalMode){
                     let l=readLocalJson('my_links', []);
@@ -2389,6 +2678,9 @@
                     description: `由瀏覽器書籤匯入：${u}`,
                     categories: categories,
                     image: '',
+                    imageOriginal: '',
+                    imageBackup: '',
+                    imageCandidates: [],
                     folderId: folderId,
                     createdAt: createdAt,
                     pinned: false,
@@ -2472,12 +2764,12 @@
 
                         const importedFolderId = String(x?.folderId || '');
                         const mappedFolderId = folderIdMap.get(importedFolderId);
-                        uniqueNewLinks.push({
+                        uniqueNewLinks.push(normalizeLinkThumbnailFields({
                             ...x,
                             url: cu,
                             id: candidate,
                             folderId: mappedFolderId || 'default'
-                        });
+                        }));
                     });
 
                     if (isLocalMode) {
@@ -2592,8 +2884,6 @@
                 callback();
             }
         }
-
-        function escapeHtml(u){return String(u||'').replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;").replace(/'/g,"&#039;");}
 
         function toggleBatchMode(){
             if (!batchMode && isKanbanMode) {
@@ -2822,6 +3112,56 @@
             loadLinks();
         }
 
+        // 手機滑動 / 長按批次操作：左滑刪除、右滑複製；長按進入批次選取。
+        let gestureState = null;
+        function isCardInteractiveTarget(target){
+            return !!(target && target.closest && target.closest('a,button,input,select,textarea,.tag-badge,.folder-badge'));
+        }
+        document.addEventListener('touchstart', e => {
+            if(batchMode || e.touches.length !== 1) return;
+            const card=e.target.closest?.('#links-container .link-card[data-id]');
+            if(!card || isCardInteractiveTarget(e.target)) return;
+            const t=e.touches[0];
+            const id=safeId(card.dataset.id);
+            gestureState={card,id,x:t.clientX,y:t.clientY,lastX:t.clientX,lastY:t.clientY,moved:false,longPressed:false};
+            gestureState.timer=setTimeout(()=>{
+                if(!gestureState || gestureState.card!==card || gestureState.moved) return;
+                gestureState.longPressed=true;
+                if(!batchMode) toggleBatchMode();
+                if(id) applyBatchSelection(id,true,false);
+                if(navigator.vibrate) try{navigator.vibrate(25);}catch(_){}
+            },500);
+        },{passive:true});
+        document.addEventListener('touchmove', e => {
+            const g=gestureState;
+            if(!g || e.touches.length!==1) return;
+            const t=e.touches[0]; g.lastX=t.clientX; g.lastY=t.clientY;
+            const dx=t.clientX-g.x, dy=t.clientY-g.y;
+            if(Math.abs(dx)>10 || Math.abs(dy)>10){
+                g.moved=true; clearTimeout(g.timer);
+            }
+            if(Math.abs(dx)>18 && Math.abs(dx)>Math.abs(dy)*1.35 && !g.longPressed){
+                g.card.classList.add('swipe-active', dx>0?'swipe-right':'swipe-left');
+                g.card.style.transform=`translateX(${Math.max(-72,Math.min(72,dx))}px)`;
+            }
+        },{passive:true});
+        document.addEventListener('touchend', async () => {
+            const g=gestureState; gestureState=null;
+            if(!g) return;
+            clearTimeout(g.timer);
+            g.card.classList.remove('swipe-active','swipe-right','swipe-left');
+            g.card.style.transform='';
+            if(g.longPressed || !g.moved || batchMode) return;
+            const dx=g.lastX-g.x, dy=g.lastY-g.y;
+            if(Math.abs(dx)<65 || Math.abs(dx)<=Math.abs(dy)*1.35) return;
+            if(dx>0) copyLinkById(g.id);
+            else await deleteLink(g.id);
+        },{passive:true});
+        document.addEventListener('touchcancel',()=>{
+            if(gestureState){ clearTimeout(gestureState.timer); gestureState.card.style.transform=''; gestureState.card.classList.remove('swipe-active','swipe-right','swipe-left'); }
+            gestureState=null;
+        },{passive:true});
+
         document.addEventListener('paste', e => {
             if (isSavingUrl) return;
             const activeEl = document.activeElement;
@@ -2950,6 +3290,9 @@
                         categories: ["擴充功能", "快速新增"],
                         description: "正在抓取網頁內容...",
                         image: "",
+                        imageOriginal: "",
+                        imageBackup: "",
+                        imageCandidates: [],
                         folderId: 'default',
                         createdAt: Date.now(),
                         pinned: false, isRead: false, isDead: false, clicks: 0
@@ -2974,10 +3317,12 @@
                         finalData.title = finalTitle;
                         finalData.description = finalDesc;
                         
-                        if (info.image) finalData.image = info.image;
+                        const quickThumb = normalizeThumbnailUrl(info.image) || getYoutubeFallbackImage(cleanedExtUrl);
+                        if (quickThumb) finalData.image = quickThumb;
                         if (info.categories && info.categories.length > 0 && info.categories[0] !== "一般網站") {
                             finalData.categories = [...new Set([...finalData.categories, ...info.categories])];
                         }
+                        finalData = normalizeLinkThumbnailFields(finalData);
                     } catch (e) {
                         finalData.title = extTitle || "未命名網頁";
                         finalData.description = `已保存連結：${cleanedExtUrl}`;
