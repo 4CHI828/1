@@ -124,6 +124,24 @@
       color: var(--text-main);
       margin-right: 8px;
     }
+    .brand-home {
+      border: 0;
+      padding: 6px 8px;
+      background: transparent;
+      cursor: pointer;
+      border-radius: 8px;
+      -webkit-tap-highlight-color: transparent;
+      color: var(--text-main);
+      transition: background-color 0.2s ease, color 0.2s ease;
+    }
+    .brand-home:hover {
+      background-color: var(--hover-bg);
+      color: var(--accent);
+    }
+    .brand-home:focus-visible {
+      outline: 2px solid var(--accent);
+      outline-offset: 2px;
+    }
 
     .nav-item {
       display: inline-flex;
@@ -509,6 +527,10 @@
         gap: 5px;
         font-size: 0.9rem;
       }
+      .brand-home {
+        min-height: 44px;
+        padding: 8px 9px;
+      }
 
       .brand .icon {
         width: 17px;
@@ -715,15 +737,15 @@
     <header class="nav-bar">
       <div class="nav-left">
         <!-- 品牌區 -->
-        <div class="brand">
+        <button class="brand brand-home" onclick="openHome()" title="開啟首頁 index.html" aria-label="開啟首頁">
           <svg class="icon" style="stroke: var(--accent)" viewBox="0 0 24 24">
             <rect x="3" y="3" width="7" height="7" rx="1.5"></rect>
             <rect x="14" y="3" width="7" height="7" rx="1.5"></rect>
             <rect x="14" y="14" width="7" height="7" rx="1.5"></rect>
             <rect x="3" y="14" width="7" height="7" rx="1.5"></rect>
           </svg>
-          奇奇
-        </div>
+          <span>奇奇</span>
+        </button>
         <div class="nav-separator"></div>
 
         <!-- 導覽連結 -->
@@ -841,6 +863,13 @@
       element.classList.add('active');
       // 更新當前 iframe 網址紀錄，避免 CORS 錯誤
       currentIframeUrl = element.getAttribute('href');
+    }
+
+    // 點擊「奇奇」：在下方內容區開啟 index.html
+    function openHome() {
+      document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+      currentIframeUrl = 'index.html';
+      iframe.src = currentIframeUrl;
     }
 
     // 重新整理 iframe
