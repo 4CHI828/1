@@ -1121,14 +1121,16 @@ async function loadCloudConfigFromDrive() {
     try {
         const res = await driveApi(`https://www.googleapis.com/drive/v3/files/${configFileId}?alt=media`);
         const cfg = await res.json();
-        if (cfg.members && Array.isArray(cfg.members) && cfg.members.length > 0) {
-            members = cfg.members; safeSetLocalStorage("split_members", JSON.stringify(members));
+        // 雲端設定即使是空陣列也代表使用者刻意清空，必須覆蓋本機舊設定，
+        // 否則不同裝置會出現「雲端已清空、本機仍保留」的不一致。
+        if (Array.isArray(cfg.members)) {
+            members = cfg.members.slice(); safeSetLocalStorage("split_members", JSON.stringify(members));
         }
-        if (cfg.categories && Array.isArray(cfg.categories) && cfg.categories.length > 0) {
-            categories = cfg.categories; safeSetLocalStorage("app_categories", JSON.stringify(categories));
+        if (Array.isArray(cfg.categories)) {
+            categories = cfg.categories.slice(); safeSetLocalStorage("app_categories", JSON.stringify(categories));
         }
-        if (cfg.quickTemplates && Array.isArray(cfg.quickTemplates) && cfg.quickTemplates.length > 0) {
-            quickTemplates = cfg.quickTemplates; safeSetLocalStorage("app_quick_templates", JSON.stringify(quickTemplates));
+        if (Array.isArray(cfg.quickTemplates)) {
+            quickTemplates = JSON.parse(JSON.stringify(cfg.quickTemplates)); safeSetLocalStorage("app_quick_templates", JSON.stringify(quickTemplates));
         }
         if (cfg.exchangeRates && typeof cfg.exchangeRates === "object" && !Array.isArray(cfg.exchangeRates)) {
             const loadedRates = { ...exchangeRates };
@@ -3538,11 +3540,31 @@ async function renameCurrentSheet() {
             const oldRecordsSnap = await f.firestore.getDocs(f.firestore.collection(f.db, "users", getFirebaseUser().uid, "workbooks", firestoreWorkbookId(oldName), "records"));
             await f.firestore.setDoc(newRef, { ...oldData, name: newName, updatedAt: f.firestore.serverTimestamp(), renamedFrom: oldName }, { merge: true });
             renameNewCreated = true;
+            // 改名會讓舊帳本被刪除，因此不能直接複製原 receiptStoragePath。
+            // 每筆收據都先複製到新帳本的新路徑，再驗證新帳本，最後才刪除舊帳本。
             for (let i = 0; i < oldRecordsSnap.docs.length; i += 450) {
-                const batch = f.firestore.writeBatch(f.db);
-                oldRecordsSnap.docs.slice(i, i + 450).forEach(d => batch.set(f.firestore.doc(f.db, "users", getFirebaseUser().uid, "workbooks", firestoreWorkbookId(newName), "records", d.id), { ...d.data(), _sheetName: newName, _renamedFrom: oldName }, { merge: true }));
                 const chunk = oldRecordsSnap.docs.slice(i, i + 450);
-                if (chunk.length) await batch.commit();
+                const copiedRecords = [];
+                for (const d of chunk) {
+                    const sourceRecord = d.data() || {};
+                    let receiptCopy = null;
+                    if (sourceRecord.receiptStoragePath || sourceRecord.receiptUrl || String(sourceRecord.receipt || "").startsWith("data:image/")) {
+                        receiptCopy = await cloneReceiptForWorkbook(sourceRecord, newName, d.id);
+                    }
+                    copiedRecords.push({
+                        ...sourceRecord,
+                        ...(receiptCopy || {}),
+                        _sheetName: newName,
+                        _renamedFrom: oldName
+                    });
+                }
+                const batch = f.firestore.writeBatch(f.db);
+                copiedRecords.forEach(record => batch.set(
+                    f.firestore.doc(f.db, "users", getFirebaseUser().uid, "workbooks", firestoreWorkbookId(newName), "records", String(record.id)),
+                    record,
+                    { merge: true }
+                ));
+                if (copiedRecords.length) await batch.commit();
             }
             // 改名不是單一 Firestore transaction；刪舊帳本前先驗證新帳本完整複製。
             const verifySnap = await f.firestore.getDocs(f.firestore.collection(f.db, "users", getFirebaseUser().uid, "workbooks", firestoreWorkbookId(newName), "records"));
@@ -5133,8 +5155,19 @@ async function cloneReceiptForWorkbook(record, targetSheet, targetRecordId) {
     if (!record?.receiptStoragePath && !record?.receiptUrl && !String(record?.receipt || "").startsWith("data:image/")) return { receipt: "", receiptStoragePath: "", receiptUrl: "" };
     if (!getFirebaseUser()) throw new Error("請先登入 Firebase 才能複製收據");
     let dataUrl = String(record.receipt || "");
-    if (!dataUrl.startsWith("data:image/") && record.receiptUrl) {
-        const response = await fetch(record.receiptUrl, { cache: "no-store" });
+    let sourceUrl = String(record.receiptUrl || "");
+    // Firestore 正常同步後通常只保留 Storage path；若沒有快取 URL，從原 Storage 路徑重新取得下載網址。
+    if (!dataUrl.startsWith("data:image/") && !sourceUrl && record.receiptStoragePath) {
+        const { f } = firebaseStorageApi();
+        try {
+            const sourceRef = f.storageApi.storageRef(f.storage, String(record.receiptStoragePath));
+            sourceUrl = await f.storageApi.getDownloadURL(sourceRef);
+        } catch (e) {
+            throw new Error(`原收據無法讀取：${e?.message || "Storage 檔案不存在"}`);
+        }
+    }
+    if (!dataUrl.startsWith("data:image/") && sourceUrl) {
+        const response = await fetch(sourceUrl, { cache: "no-store" });
         if (!response.ok) throw new Error(`收據下載失敗（HTTP ${response.status}）`);
         dataUrl = await dataUrlFromBlob(await response.blob());
     }
