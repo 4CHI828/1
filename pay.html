@@ -1549,15 +1549,32 @@ function getActiveRecords() { return cachedRecords.filter(r => !r.deleted); }
 
 async function softDeleteRecord(id) {
     createLocalSnapshot("刪除紀錄前");
-    const idx = cachedRecords.findIndex(r => r.id === id);
-    if (idx !== -1) {
-        cachedRecords[idx].deleted = true;
-        cachedRecords[idx].updatedAt = new Date().toISOString();
-        if (isFirestoreMode() && getFirebaseUser()) markFirestoreRecordVersion(cachedRecords[idx], true);
+    const idx = cachedRecords.findIndex(r => String(r.id) === String(id));
+    if (idx === -1) return showToast("找不到要刪除的紀錄，可能已被其他裝置刪除", "info");
+    try {
+        const record = cachedRecords[idx];
+        record.deleted = true;
+        record.updatedAt = new Date().toISOString();
+        if (isFirestoreMode() && getFirebaseUser()) {
+            // 先建立本機鏡像，再標記 dirty，確保即使同步入口正在忙也不會漏掉這次刪除。
+            markFirestoreRecordVersion(record, true);
+            saveLocalSheetMirror(currentSheet, cachedRecords);
+            markFirestorePending(currentSheet);
+        } else {
+            saveLocalSheetMirror(currentSheet, cachedRecords);
+        }
         renderAllViews();
         if (!isFirestoreMode() && googleSessionLinked && !accessToken) await ensureGoogleAccessToken(true);
         const ok = await saveRecordsToDrive(true);
         showToast(ok ? "紀錄已移至回收桶並同步雲端" : "紀錄已移至回收桶，等待雲端同步", ok ? "success" : "info");
+    } catch (e) {
+        // 刪除本機狀態不回滾；保留 dirty/pending，讓網路恢復後可以自動補同步。
+        if (isFirestoreMode() && getFirebaseUser()) {
+            markFirestorePending(currentSheet);
+            saveLocalSheetMirror(currentSheet, cachedRecords);
+        }
+        console.error("刪除紀錄失敗：", e);
+        showToast(`刪除已保留本機，雲端待同步：${e?.message || "未知錯誤"}`, "info");
     }
 }
 
@@ -2870,8 +2887,19 @@ async function _saveRecordsToFirestoreImpl(interactive = false, purgeIds = null)
 
 async function saveRecordsToFirestore(interactive = false, purgeIds = null) {
     // 避免登入、即時監聽、網路恢復等多個入口同時重寫整本帳本。
-    // 後進呼叫直接等待同一個同步工作，避免互相觸發造成「一直同步中」。
-    if (firestoreSaveInFlight) return firestoreSaveInFlight;
+    // 重要：如果前一個同步尚未完成，後續的刪除／修改不能只等待舊工作，
+    // 因為 dirtyIds 可能是在舊工作開始後才加入；舊工作完成後必須再補跑一次。
+    if (firestoreSaveInFlight) {
+        const running = firestoreSaveInFlight;
+        try { await running; } catch (_) {}
+        // 只有在舊同步結束後仍有 dirty / pending 時才補跑，避免無限遞迴。
+        if (getFirebaseUser() && isFirestoreMode() && (
+            loadFirestoreDirtyRecords(currentSheet).size > 0 || hasFirestorePending(currentSheet)
+        )) {
+            return saveRecordsToFirestore(interactive, purgeIds);
+        }
+        return true;
+    }
     firestoreSaveInFlight = _saveRecordsToFirestoreImpl(interactive, purgeIds);
     try {
         return await firestoreSaveInFlight;
@@ -5169,6 +5197,8 @@ async function batchDeleteSelected() {
     createLocalSnapshot('批次刪除前');
     const now = new Date().toISOString();
     rows.forEach(r => { r.deleted = true; r.updatedAt = now; if (isFirestoreMode() && getFirebaseUser()) markFirestoreRecordVersion(r, true); });
+    if (isFirestoreMode() && getFirebaseUser()) markFirestorePending(currentSheet);
+    saveLocalSheetMirror(currentSheet, cachedRecords);
     historySelectedIds.clear();
     renderAllViews();
     if (!isFirestoreMode() && googleSessionLinked && !accessToken) await ensureGoogleAccessToken(true);
