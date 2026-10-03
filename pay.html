@@ -840,6 +840,8 @@ let currentSplitMode = "equal";
 let isMultiPayerMode = false;
 let uploadedReceiptBase64 = "";
 let editingReceiptStoragePath = "";
+let editingReceiptStoragePathPendingDelete = "";
+let pendingReceiptCloneRecord = null;
 let editingReceiptUrl = "";
 let receiptOcrMeta = null;
 let editingRecordId = null;
@@ -1608,7 +1610,7 @@ function renderAllViews() {
     if (chartContainer && !chartContainer.classList.contains("hidden")) void drawCharts();
 }
 
-function getActiveRecords() { return cachedRecords.filter(r => !r.deleted); }
+function getActiveRecords() { return cachedRecords.filter(r => !r.deleted && !r.purged); }
 
 async function softDeleteRecord(id) {
     createLocalSnapshot("刪除紀錄前");
@@ -2310,7 +2312,7 @@ window.restoreRecord = async function(id) {
 };
 window.emptyTrash = async function() {
     createLocalSnapshot("清空回收桶前");
-    const deletedIds = new Set(cachedRecords.filter(r => r.deleted).map(r => r.id));
+    const deletedIds = new Set(cachedRecords.filter(r => r.deleted && !r.purged).map(r => r.id));
     if (!deletedIds.size) return showToast("回收桶目前是空的", "info");
     if (!confirm(`確定要永久刪除回收桶中的 ${deletedIds.size} 筆紀錄嗎？\n此操作無法復原。`)) return;
     cachedRecords = cachedRecords.filter(r => !deletedIds.has(r.id));
@@ -2987,9 +2989,11 @@ async function saveRecordsToFirestore(interactive = false, purgeIds = null) {
     if (firestoreSaveInFlight) {
         const running = firestoreSaveInFlight;
         try { await running; } catch (_) {}
-        // 只有在舊同步結束後仍有 dirty / pending 時才補跑，避免無限遞迴。
+        // purgeIds 是一次性的明確永久刪除命令；即使第一輪同步已清掉 dirty/pending，
+        // 也必須在第一輪結束後再執行一次，不能只因「目前沒有 dirty」就直接回傳 true。
+        const hasPurge = purgeIds instanceof Set && purgeIds.size > 0;
         if (getFirebaseUser() && isFirestoreMode() && (
-            loadFirestoreDirtyRecords(currentSheet).size > 0 || hasFirestorePending(currentSheet)
+            hasPurge || loadFirestoreDirtyRecords(currentSheet).size > 0 || hasFirestorePending(currentSheet)
         )) {
             return saveRecordsToFirestore(interactive, purgeIds);
         }
@@ -3321,9 +3325,19 @@ async function loadRecordsFromFirestore(sheetName = currentSheet) {
 async function syncConfigToFirestore(interactive = false, preserveLocalVersion = true) {
     if (!getFirebaseUser()) return false;
     if (firestoreConfigSaveInFlight) {
+        // 第一輪寫入期間若又有設定變更，單靠 pending flag 不夠：
+        // 第一輪完成時會清掉 pending，所以這裡另外記住「我這次排隊的設定版本」。
+        let queuedConfigVersion = "";
+        if (!firestoreConfigApplyingRemote) {
+            markFirestoreConfigPending();
+            queuedConfigVersion = localStorage.getItem(FIRESTORE_CONFIG_UPDATED_KEY) || "";
+        }
         const running = firestoreConfigSaveInFlight;
         try { await running; } catch (_) {}
-        if (getFirebaseUser() && hasFirestoreConfigPending()) return syncConfigToFirestore(interactive, false);
+        const latestConfigVersion = localStorage.getItem(FIRESTORE_CONFIG_UPDATED_KEY) || "";
+        if (getFirebaseUser() && (hasFirestoreConfigPending() || (queuedConfigVersion && latestConfigVersion === queuedConfigVersion))) {
+            return syncConfigToFirestore(interactive, false);
+        }
         return true;
     }
     if (!firestoreConfigApplyingRemote && preserveLocalVersion) markFirestoreConfigPending();
@@ -3410,7 +3424,7 @@ async function migrateGoogleDriveToFirestore() {
             await f.firestore.setDoc(firestoreWorkbookRef(sheetName), {
                 name: sheetName,
                 updatedAt: f.firestore.serverTimestamp(),
-                recordCount: records.length,
+                recordCount: records.filter(r => !r.deleted && !r.purged).length,
                 migratedFrom: "google-drive-json"
             }, { merge: true });
             for (let i = 0; i < records.length; i += 450) {
@@ -3538,7 +3552,7 @@ async function renameCurrentSheet() {
             const oldSnap = await f.firestore.getDoc(oldRef);
             const oldData = oldSnap.exists() ? oldSnap.data() : {};
             const oldRecordsSnap = await f.firestore.getDocs(f.firestore.collection(f.db, "users", getFirebaseUser().uid, "workbooks", firestoreWorkbookId(oldName), "records"));
-            await f.firestore.setDoc(newRef, { ...oldData, name: newName, updatedAt: f.firestore.serverTimestamp(), renamedFrom: oldName }, { merge: true });
+            await f.firestore.setDoc(newRef, { ...oldData, name: newName, recordCount: oldRecordsSnap.docs.filter(d => { const r = d.data() || {}; return !r.deleted && !r.purged; }).length, updatedAt: f.firestore.serverTimestamp(), renamedFrom: oldName }, { merge: true });
             renameNewCreated = true;
             // 改名會讓舊帳本被刪除，因此不能直接複製原 receiptStoragePath。
             // 每筆收據都先複製到新帳本的新路徑，再驗證新帳本，最後才刪除舊帳本。
@@ -4427,7 +4441,7 @@ function setReceiptPreview(dataUrl) {
 }
 async function handleReceiptFile(file) {
     if (!file) return;
-    try { setReceiptPreview(await compressReceiptFile(file)); showToast("收據照片已附加"); }
+    try { pendingReceiptCloneRecord = null; setReceiptPreview(await compressReceiptFile(file)); showToast("收據照片已附加"); }
     catch (e) { showToast("收據圖片處理失敗", "error"); }
     finally {
         // 同一張照片再次選取時仍要觸發 change
@@ -4436,6 +4450,10 @@ async function handleReceiptFile(file) {
     }
 }
 function clearReceiptPhoto() {
+    pendingReceiptCloneRecord = null;
+    // 編輯既有紀錄時，清除畫面上的收據不能遺失原 Storage path；
+    // 儲存時需要靠 _previousReceiptStoragePath 把舊檔一起清掉。
+    if (editingReceiptStoragePath) editingReceiptStoragePathPendingDelete = editingReceiptStoragePath;
     setReceiptPreview("");
     editingReceiptStoragePath = "";
     editingReceiptUrl = "";
@@ -4705,9 +4723,19 @@ async function saveRecord() {
         payers, shares, splitMembers: shares.map(x => `${x.member}:${x.amount}`),
         splitMode: (type === "expense" || type === "settlement") ? currentSplitMode : null,
         splitValues: (type === "expense" || type === "settlement") ? captureSplitValues() : {},
-        receipt: uploadedReceiptBase64 && String(uploadedReceiptBase64).startsWith("data:image/") ? uploadedReceiptBase64 : "", receiptUrl: editingReceiptUrl || "", receiptStoragePath: editingReceiptStoragePath || "", _previousReceiptStoragePath: editingReceiptStoragePath || "", receiptOcr: receiptOcrMeta ? { ...receiptOcrMeta, items: Array.isArray(receiptOcrMeta.items) ? receiptOcrMeta.items.slice(0, 8) : [] } : null, deleted: false, updatedAt: new Date().toISOString()
+        receipt: uploadedReceiptBase64 && String(uploadedReceiptBase64).startsWith("data:image/") ? uploadedReceiptBase64 : "", receiptUrl: uploadedReceiptBase64 ? (editingReceiptUrl || "") : "", receiptStoragePath: editingReceiptStoragePath || "", _previousReceiptStoragePath: editingReceiptStoragePath || editingReceiptStoragePathPendingDelete || "", receiptOcr: receiptOcrMeta ? { ...receiptOcrMeta, items: Array.isArray(receiptOcrMeta.items) ? receiptOcrMeta.items.slice(0, 8) : [] } : null, deleted: false, updatedAt: new Date().toISOString()
     });
     if (isFirestoreMode() && getFirebaseUser()) record = markFirestoreRecordVersion(record, true);
+    if (isFirestoreMode() && getFirebaseUser() && !editingRecordId && pendingReceiptCloneRecord && !record.receipt && !record.receiptStoragePath) {
+        try {
+            const cloned = await cloneReceiptForWorkbook(pendingReceiptCloneRecord, currentSheet, record.id);
+            record = normalizeRecord({ ...record, ...cloned, _previousReceiptStoragePath: "" });
+            record = markFirestoreRecordVersion(record, true);
+        } catch (e) {
+            showToast(`收據複製失敗：${e?.message || "未知錯誤"}，已停止儲存避免共用舊收據`, "error");
+            return;
+        }
+    }
     if (isFirestoreMode() && getFirebaseUser() && record.receipt) record = await uploadReceiptToFirebase(record, currentSheet);
     const idx = cachedRecords.findIndex(r => r.id === record.id);
     if (idx >= 0) cachedRecords[idx] = record; else cachedRecords.unshift(record);
@@ -4720,6 +4748,8 @@ async function saveRecord() {
     // Firestore 模式不再要求 Google Drive 授權；Drive 模式才需要舊的 Google token。
     if (!isFirestoreMode() && googleSessionLinked && !hasValidAccessToken()) await ensureGoogleAccessToken(true);
     const cloudSynced = await saveRecordsToDrive(true);
+    editingReceiptStoragePathPendingDelete = "";
+    pendingReceiptCloneRecord = null;
     cancelEdit();
     showToast(cloudSynced ? "儲存成功，已同步雲端" : "已儲存本機，等待雲端同步", cloudSynced ? "success" : "info");
 }
@@ -4899,7 +4929,7 @@ const exportCsvButton = document.getElementById("exportCsvBtn"); if (exportCsvBu
 
 function renderTrash() {
     const trashList = document.getElementById("trashListSettings"); if (!trashList) return;
-    const deleted = cachedRecords.filter(r => r.deleted);
+    const deleted = cachedRecords.filter(r => r.deleted && !r.purged);
     const count = document.getElementById("trashCountDisplaySettings"); if (count) count.textContent = deleted.length;
     trashList.innerHTML = deleted.map(r => `<div class="flex items-center justify-between p-2 bg-white dark:bg-gray-800 rounded-lg text-xs"><span>${escapeHtml(r.title)} ($${Math.round(r.twdAmount||0).toLocaleString()})</span><button type="button" onclick="restoreRecord('${escapeJsStr(r.id)}')" class="text-blue-500 font-bold">恢復</button></div>`).join("");
 }
@@ -4919,7 +4949,10 @@ window.duplicateRecordToForm = function(id) {
     }
     const override = document.getElementById("overrideTwdInput");
     if (override) override.value = r.twdAmount ? String(Math.round(r.twdAmount)) : "";
-    setRecordType(r.type); editingReceiptStoragePath = r.receiptStoragePath || ""; editingReceiptUrl = r.receiptUrl || ""; setReceiptPreview(r.receipt || r.receiptUrl || "");
+    setRecordType(r.type);
+    editingReceiptStoragePath = ""; editingReceiptStoragePathPendingDelete = ""; editingReceiptUrl = "";
+    pendingReceiptCloneRecord = (r.receiptStoragePath || r.receiptUrl) && !String(r.receipt || "").startsWith("data:image/") ? r : null;
+    setReceiptPreview(r.receipt || r.receiptUrl || "");
     receiptOcrMeta = r.receiptOcr ? { ...r.receiptOcr, items: Array.isArray(r.receiptOcr.items) ? r.receiptOcr.items.slice(0, 8) : [] } : null;
     renderReceiptOcrResult();
     const payers = parsePayers(r); const names = Object.keys(payers);
@@ -4960,7 +4993,7 @@ function cancelEdit() {
     const payer=document.getElementById("payer"); if(payer && members.length) payer.value=members[0];
     const customCurrency=document.getElementById("customSplitCurrency"); if(customCurrency) customCurrency.value="auto";
     const multiCurrency=document.getElementById("multiPayerCurrency"); if(multiCurrency) multiCurrency.value="auto";
-    setRecordType("expense"); clearReceiptPhoto();
+    setRecordType("expense"); clearReceiptPhoto(); editingReceiptStoragePathPendingDelete = ""; pendingReceiptCloneRecord = null;
     const date=document.getElementById("date"); if(date) date.value=getTodayString();
     const banner=document.getElementById("editModeBanner"); if(banner) banner.classList.add("hidden");
     const saveText=document.getElementById("saveBtnText"); if(saveText) saveText.textContent="儲存紀錄 (Enter)";
@@ -5352,7 +5385,7 @@ function bindRecordTouchGestures() {
 }
 
 function getSelectedActiveRecords() {
-    return cachedRecords.filter(r => !r.deleted && historySelectedIds.has(r.id));
+    return cachedRecords.filter(r => !r.deleted && !r.purged && historySelectedIds.has(r.id));
 }
 async function batchDeleteSelected() {
     const rows = getSelectedActiveRecords(); if (!rows.length) return showToast('請先選擇紀錄', 'info');
@@ -5495,7 +5528,7 @@ async function executeBatchMoveCopyToSheet() {
     if (!isFirestoreMode() || !getFirebaseUser()) return showToast('此功能目前需要登入 Firebase 並使用 Firestore 雲端模式', 'info');
     const sourceSheet = currentSheet;
     const idSet = new Set(state.ids.map(String));
-    const rows = cachedRecords.filter(r => !r.deleted && idSet.has(String(r.id)));
+    const rows = cachedRecords.filter(r => !r.deleted && !r.purged && idSet.has(String(r.id)));
     if (!rows.length) return showToast('選取的紀錄已不存在或已刪除', 'error');
     if (!confirm(`確定要${mode === 'move' ? '移動' : '複製'} ${rows.length} 筆紀錄到「${targetSheet}」嗎？`)) return;
     try {
@@ -5645,7 +5678,7 @@ window.startEditRecord = function(id) {
             sel.value=names[0];
         }
     }
-    editingReceiptStoragePath = r.receiptStoragePath || ""; editingReceiptUrl = r.receiptUrl || ""; setReceiptPreview(r.receipt || r.receiptUrl || "");
+    editingReceiptStoragePath = r.receiptStoragePath || ""; editingReceiptStoragePathPendingDelete = ""; editingReceiptUrl = r.receiptUrl || ""; setReceiptPreview(r.receipt || r.receiptUrl || "");
     receiptOcrMeta = r.receiptOcr ? { ...r.receiptOcr, items: Array.isArray(r.receiptOcr.items) ? r.receiptOcr.items.slice(0, 8) : [] } : null;
     renderReceiptOcrResult();
     setTimeout(()=>restoreSplitInputsForRecord(r),0);
@@ -5837,7 +5870,7 @@ function buildFullBackupPayload() {
         sheetFileMap: JSON.parse(JSON.stringify(sheetFileMap || {})),
         workbooks: localWorkbooks,
         records: normalizeAllRecords(cachedRecords),
-        deletedRecords: normalizeAllRecords(cachedRecords.filter(r => r.deleted)),
+        deletedRecords: normalizeAllRecords(cachedRecords.filter(r => r.deleted && !r.purged)),
         members: Array.isArray(members) ? members.slice() : [],
         categories: Array.isArray(categories) ? categories.slice() : [],
         quickTemplates: Array.isArray(quickTemplates) ? JSON.parse(JSON.stringify(quickTemplates)) : [],
