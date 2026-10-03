@@ -1278,6 +1278,66 @@ function markFirestoreRecordDirty(recordId, sheetName = currentSheet) {
 function markFirestoreRecordsDirty(recordIds, sheetName = currentSheet) {
     (Array.isArray(recordIds) || recordIds instanceof Set ? Array.from(recordIds) : []).forEach(id => markFirestoreRecordDirty(id, sheetName));
 }
+
+// 將一批本機資料標記為「這次操作明確要寫入 Firebase」。
+// 不依賴 currentSheet，避免還原多帳本時 dirty 被記到錯誤的帳本。
+function markFirestoreRecordsForSync(records, sheetName = currentSheet) {
+    if (!isFirestoreMode() || !getFirebaseUser()) return;
+    const list = Array.isArray(records) ? records : [];
+    const ids = [];
+    for (const record of list) {
+        if (!record?.id) continue;
+        touchFirestoreRecord(record, true);
+        ids.push(String(record.id));
+    }
+    if (ids.length) {
+        markFirestoreRecordsDirty(ids, sheetName);
+        markFirestorePending(sheetName);
+    }
+}
+
+// 完整還原：以指定資料集取代雲端該帳本，而不是只把本機資料增量寫上去。
+// 雲端存在、但還原資料沒有的紀錄會建立 purged tombstone，避免還原後又被其他裝置帶回。
+async function replaceFirestoreSheetFromRecords(sheetName, records, interactive = false) {
+    if (!isFirestoreMode() || !getFirebaseUser()) return false;
+    const normalized = normalizeAllRecords(Array.isArray(records) ? records : []);
+    try {
+        const { f, user } = firestoreApi();
+        const recordsCol = f.firestore.collection(f.db, 'users', user.uid, 'workbooks', firestoreWorkbookId(sheetName), 'records');
+        const remoteSnap = await f.firestore.getDocs(recordsCol);
+        const desiredIds = new Set(normalized.filter(r => r?.id).map(r => String(r.id)));
+        const purgeIds = new Set();
+        remoteSnap.docs.forEach(d => {
+            const id = String(d.data()?.id || d.id);
+            const remote = d.data() || {};
+            if (id && !desiredIds.has(id) && !remote.purged) purgeIds.add(id);
+        });
+        markFirestoreRecordsForSync(normalized, sheetName);
+        purgeIds.forEach(id => markFirestoreRecordDirty(id, sheetName));
+        if (purgeIds.size) markFirestorePending(sheetName);
+
+        // saveRecordsToFirestore 以 currentSheet 為目標，因此暫時切換；完成後完整還原 UI 狀態。
+        const previousSheet = currentSheet;
+        const previousCached = cachedRecords;
+        try {
+            stopFirestoreRealtimeListener();
+            currentSheet = sheetName;
+            cachedRecords = normalized;
+            saveLocalSheetMirror(sheetName, normalized);
+            return await saveRecordsToFirestore(interactive, purgeIds);
+        } finally {
+            currentSheet = previousSheet;
+            cachedRecords = previousCached;
+            safeSetLocalStorage('app_active_sheet', currentSheet);
+            startFirestoreRealtimeListener(currentSheet);
+        }
+    } catch (e) {
+        markFirestorePending(sheetName);
+        if (interactive) showToast(`Firestore 完整還原同步失敗：${e?.message || '未知錯誤'}`, 'error');
+        console.error('Firestore 完整帳本還原失敗：', e);
+        return false;
+    }
+}
 function clearFirestoreDirtyRecords(sheetName = currentSheet, ids = null) {
     const all = loadJSON(FIRESTORE_DIRTY_KEY, {});
     const key = String(sheetName);
@@ -3862,6 +3922,11 @@ document.getElementById("importBtn").onclick = async function() {
         const invalidMsg = invalid.length ? `，另略過 ${invalid.length} 筆無效資料` : "";
         if (confirm(`確認匯入 ${importedRecords.length} 筆紀錄${invalidMsg}？`)) {
             cachedRecords = normalizeAllRecords([...importedRecords, ...cachedRecords]);
+            if (isFirestoreMode() && getFirebaseUser()) {
+                // 一般匯入是「新增/覆蓋」操作，必須明確加入 dirty，否則已有 sync cursor 時會被跳過。
+                markFirestoreRecordsForSync(importedRecords, currentSheet);
+            }
+            saveLocalSheetMirror(currentSheet, cachedRecords);
             renderAllViews(); renderTrash();
             const cloudSynced = await saveRecordsToDrive(true);
             showToast(`${cloudSynced ? "✅ 匯入並同步成功" : "💾 匯入成功，等待雲端同步"}：${importedRecords.length} 筆${invalidMsg}`, cloudSynced ? "success" : "info");
@@ -5678,7 +5743,12 @@ function restoreSafetySnapshot(snapshot, ask = true) {
     if (snapshot.exchangeRates) { exchangeRates = snapshot.exchangeRates; safeSetLocalStorage("app_exchange_rates", JSON.stringify(exchangeRates)); }
     saveLocalSheetMirror(currentSheet, cachedRecords);
     renderMemberControls(); renderCategoryControls(); renderQuickTemplates(); renderAllViews(); renderTrash(); renderRateChips();
-    void saveRecordsToDrive(true);
+    if (isFirestoreMode() && getFirebaseUser()) {
+        // 快照還原是完整取代該帳本，不只同步快照內紀錄，也清理雲端多出的紀錄。
+        void replaceFirestoreSheetFromRecords(currentSheet, cachedRecords, true);
+    } else {
+        void saveRecordsToDrive(true);
+    }
     showToast("↩️ 已恢復備份版本，並保留還原前版本", "success");
     renderSnapshotPanel();
     return true;
@@ -5753,13 +5823,25 @@ if (document.getElementById("importBtn")) document.getElementById("importBtn").o
             safeSetLocalStorage("app_quick_templates", JSON.stringify(quickTemplates));
             safeSetLocalStorage("app_exchange_rates", JSON.stringify(exchangeRates));
             const workbooks = parsed.workbooks && typeof parsed.workbooks === "object" ? parsed.workbooks : {};
-            Object.entries(workbooks).forEach(([name, rows]) => saveLocalSheetMirror(name, normalizeAllRecords(Array.isArray(rows) ? rows : [])));
+            const restoredWorkbooks = Object.entries(workbooks).map(([name, rows]) => [name, normalizeAllRecords(Array.isArray(rows) ? rows : [])]);
+            restoredWorkbooks.forEach(([name, rows]) => saveLocalSheetMirror(name, rows));
             cachedRecords = normalizeAllRecords(workbooks[currentSheet] || normalized);
             saveLocalSheetMirror(currentSheet, cachedRecords);
             renderSheetSelector();
             renderMemberControls(); renderCategoryControls(); renderQuickTemplates(); renderAllViews(); renderTrash(); renderRateChips();
             fileInput.value = "";
-            const synced = await saveRecordsToDrive(true);
+            let synced = true;
+            if (isFirestoreMode() && getFirebaseUser()) {
+                // 完整備份可能包含多個帳本：逐一以備份內容取代 Firebase 對應帳本。
+                for (const [name, rows] of restoredWorkbooks) {
+                    const ok = await replaceFirestoreSheetFromRecords(name, rows, true);
+                    if (!ok) synced = false;
+                }
+                // 沒有 workbooks 欄位時，仍要同步目前帳本。
+                if (!restoredWorkbooks.length) synced = await replaceFirestoreSheetFromRecords(currentSheet, cachedRecords, true);
+            } else {
+                synced = await saveRecordsToDrive(true);
+            }
             showToast(synced ? "✅ 完整備份已還原並同步雲端" : "💾 完整備份已還原到本機，等待雲端同步", synced ? "success" : "info");
             return;
         }
