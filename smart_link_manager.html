@@ -1992,10 +1992,10 @@
 
         async function getAllLinks(){
             if(rawLinksCache.length > 0) return rawLinksCache;
-            if(isLocalMode) return readLocalJson('my_links', []);
+            if(isLocalMode) return readLocalJson('my_links', []).map(x => normalizeLinkThumbnailFields(x));
             if(!currentUser || !db) return [];
             try {
-                return (await db.collection('users').doc(currentUser.uid).collection('links').get()).docs.map(d=>({id:safeId(d.id),...d.data()}));
+                return (await db.collection('users').doc(currentUser.uid).collection('links').get()).docs.map(d=>normalizeLinkThumbnailFields({id:safeId(d.id),...d.data()}));
             } catch {
                 return [];
             }
@@ -2916,7 +2916,7 @@
                 }, 50);
             }
         }
-        function closeModal(id){document.getElementById(id).style.display='none';}
+        function closeModal(id){ const el=document.getElementById(id); if(el) el.style.display='none'; }
         
         function handleEnter(e, callback) {
             if (e.isComposing || e.keyCode === 229) return;
@@ -3295,6 +3295,7 @@
                 closeModal('font-modal');
                 closeModal('batch-move-modal');
                 closeModal('batch-tag-modal');
+                closeModal('extension-help-modal');
                 closeModal('help-modal');
                 if(batchMode)toggleBatchMode();
             }
