@@ -1253,6 +1253,7 @@ function markFirestoreRecordVersion(record, force = false) {
 let firestoreConfigRealtimeUnsubscribe = null;
 let firestoreWorkbookRealtimeUnsubscribe = null;
 let firestoreConfigApplyingRemote = false;
+let firestoreConfigSaveInFlight = null;
 const FIRESTORE_CONFIG_PENDING_KEY = "firestore_config_pending";
 const FIRESTORE_CONFIG_UPDATED_KEY = "firestore_config_updated_at";
 let firestoreSyncRetryTimer = null;
@@ -2529,10 +2530,10 @@ function stopFirestoreMetaRealtimeListeners() {
 function applyFirestoreConfigData(cfg = {}) {
     firestoreConfigApplyingRemote = true;
     try {
-        if (Array.isArray(cfg.members) && cfg.members.length) members = cfg.members.slice();
-        if (Array.isArray(cfg.categories) && cfg.categories.length) categories = cfg.categories.slice();
-        if (Array.isArray(cfg.quickTemplates) && cfg.quickTemplates.length) quickTemplates = JSON.parse(JSON.stringify(cfg.quickTemplates));
-        if (cfg.exchangeRates && typeof cfg.exchangeRates === "object" && !Array.isArray(cfg.exchangeRates)) exchangeRates = { ...exchangeRates, ...cfg.exchangeRates, TWD: 1 };
+        if (Array.isArray(cfg.members)) members = cfg.members.slice();
+        if (Array.isArray(cfg.categories)) categories = cfg.categories.slice();
+        if (Array.isArray(cfg.quickTemplates)) quickTemplates = JSON.parse(JSON.stringify(cfg.quickTemplates));
+        if (cfg.exchangeRates && typeof cfg.exchangeRates === "object" && !Array.isArray(cfg.exchangeRates)) exchangeRates = { ...cfg.exchangeRates, TWD: 1 };
         safeSetLocalStorage("split_members", JSON.stringify(members));
         safeSetLocalStorage("app_categories", JSON.stringify(categories));
         safeSetLocalStorage("app_quick_templates", JSON.stringify(quickTemplates));
@@ -3285,27 +3286,38 @@ async function loadRecordsFromFirestore(sheetName = currentSheet) {
 
 async function syncConfigToFirestore(interactive = false, preserveLocalVersion = true) {
     if (!getFirebaseUser()) return false;
-    if (!firestoreConfigApplyingRemote && preserveLocalVersion) markFirestoreConfigPending();
-    try {
-        const { f } = firestoreApi();
-        const clientUpdatedAt = localStorage.getItem(FIRESTORE_CONFIG_UPDATED_KEY) || new Date().toISOString();
-        await f.firestore.setDoc(firestoreConfigRef(), {
-            members: Array.isArray(members) ? members.slice() : [],
-            categories: Array.isArray(categories) ? categories.slice() : [],
-            quickTemplates: Array.isArray(quickTemplates) ? JSON.parse(JSON.stringify(quickTemplates)) : [],
-            exchangeRates: exchangeRates && typeof exchangeRates === "object" ? JSON.parse(JSON.stringify(exchangeRates)) : {},
-            activeSheet: currentSheet, clientUpdatedAt, updatedAt: f.firestore.serverTimestamp()
-        }, { merge: true });
-        clearFirestoreConfigPending();
-        setSyncBadge("Firestore 設定已同步", false);
+    if (firestoreConfigSaveInFlight) {
+        const running = firestoreConfigSaveInFlight;
+        try { await running; } catch (_) {}
+        if (getFirebaseUser() && hasFirestoreConfigPending()) return syncConfigToFirestore(interactive, false);
         return true;
-    } catch (e) {
-        if (!firestoreConfigApplyingRemote) markFirestoreConfigPending();
-        console.error("Firestore config sync error", e);
-        setSyncBadge("設定待同步", false, true);
-        if (interactive) showToast(`設定同步失敗：${e?.message || "未知錯誤"}`, "error");
-        return false;
     }
+    if (!firestoreConfigApplyingRemote && preserveLocalVersion) markFirestoreConfigPending();
+    firestoreConfigSaveInFlight = (async () => {
+        try {
+            const { f } = firestoreApi();
+            const clientUpdatedAt = localStorage.getItem(FIRESTORE_CONFIG_UPDATED_KEY) || new Date().toISOString();
+            await f.firestore.setDoc(firestoreConfigRef(), {
+                members: Array.isArray(members) ? members.slice() : [],
+                categories: Array.isArray(categories) ? categories.slice() : [],
+                quickTemplates: Array.isArray(quickTemplates) ? JSON.parse(JSON.stringify(quickTemplates)) : [],
+                exchangeRates: exchangeRates && typeof exchangeRates === "object" ? JSON.parse(JSON.stringify(exchangeRates)) : {},
+                activeSheet: currentSheet, clientUpdatedAt, updatedAt: f.firestore.serverTimestamp()
+            }, { merge: true });
+            clearFirestoreConfigPending();
+            setSyncBadge("Firestore 設定已同步", false);
+            return true;
+        } catch (e) {
+            if (!firestoreConfigApplyingRemote) markFirestoreConfigPending();
+            console.error("Firestore config sync error", e);
+            setSyncBadge("設定待同步", false, true);
+            if (interactive) showToast(`設定同步失敗：${e?.message || "未知錯誤"}`, "error");
+            return false;
+        } finally {
+            firestoreConfigSaveInFlight = null;
+        }
+    })();
+    return await firestoreConfigSaveInFlight;
 }
 
 async function loadConfigFromFirestore() {
@@ -5141,6 +5153,8 @@ async function executeMoveCopyRecord() {
         const targetOk = await saveSpecificFirestoreSheet(targetSheet, targetExisting, true);
         if (!targetOk) {
             if (targetRecord.receiptStoragePath) await deleteReceiptFromFirebase(targetRecord, targetSheet);
+            const cleanedTarget = targetExisting.map(r => String(r.id) === targetId ? { ...r, receipt: '', receiptStoragePath: '', receiptUrl: '', receiptStoredAt: '', _receiptUploadFailed: false } : r);
+            saveLocalSheetMirror(targetSheet, cleanedTarget);
             throw new Error("目標帳本同步失敗，來源資料未變更");
         }
         if (mode === "move") {
@@ -5337,17 +5351,23 @@ async function batchCopySelected() {
         if (!isFirestoreMode() && googleSessionLinked && !accessToken) await ensureGoogleAccessToken(true);
         const ok = await saveRecordsToDrive(true);
         if (!ok && isFirestoreMode() && getFirebaseUser()) {
-            // Firestore 寫入失敗時，刪除本次剛建立的 Storage 收據；失敗的刪除會進背景清理佇列。
+            // Firestore 寫入失敗時，刪除本次剛建立的 Storage 收據；同時清掉本機副本上的失效路徑，避免下次重試誤認為收據仍存在。
             for (const copy of copies) {
                 if (copy.receiptStoragePath) await deleteReceiptFromFirebase(copy, currentSheet);
+                const localCopy = cachedRecords.find(r => String(r.id) === String(copy.id));
+                if (localCopy) Object.assign(localCopy, { receipt: '', receiptStoragePath: '', receiptUrl: '', receiptStoredAt: '', _receiptUploadFailed: false });
             }
+            saveLocalSheetMirror(currentSheet, cachedRecords);
         }
         showToast(ok ? `已複製 ${copies.length} 筆並同步雲端` : `已複製 ${copies.length} 筆，等待雲端同步`, ok ? 'success' : 'info');
     } catch (e) {
         // 建立副本過程中若收據已上傳但後續失敗，盡力回收本次新增的 Storage 檔案。
         for (const copy of copies) {
             if (copy.receiptStoragePath) await deleteReceiptFromFirebase(copy, currentSheet);
+            const localCopy = cachedRecords.find(r => String(r.id) === String(copy.id));
+            if (localCopy) Object.assign(localCopy, { receipt: '', receiptStoragePath: '', receiptUrl: '', receiptStoredAt: '', _receiptUploadFailed: false });
         }
+        saveLocalSheetMirror(currentSheet, cachedRecords);
         console.error('批次複製失敗', e);
         showToast(`批次複製失敗：${e?.message || '未知錯誤'}`, 'error');
     }
@@ -5771,28 +5791,26 @@ function exportFullJsonBackup() {
     } catch (e) { showToast("完整備份失敗：" + (e?.message || "未知錯誤"), "error"); }
 }
 
-function restoreSafetySnapshot(snapshot, ask = true) {
+async function restoreSafetySnapshot(snapshot, ask = true) {
     if (!snapshot || !Array.isArray(snapshot.records)) return false;
     if (ask && !confirm(`確定恢復 ${safetyNowLabel(snapshot.createdAt)} 的備份？\n目前「${currentSheet}」資料將回到該版本。`)) return false;
     createLocalSnapshot("還原前", currentSheet, cachedRecords);
     cachedRecords = normalizeAllRecords(snapshot.records);
-    if (Array.isArray(snapshot.members) && snapshot.members.length) {
-        members = snapshot.members.slice(); safeSetLocalStorage("split_members", JSON.stringify(members));
-    }
-    if (Array.isArray(snapshot.categories) && snapshot.categories.length) {
-        categories = snapshot.categories.slice(); safeSetLocalStorage("app_categories", JSON.stringify(categories));
-    }
-    if (snapshot.quickTemplates) { quickTemplates = snapshot.quickTemplates; safeSetLocalStorage("app_quick_templates", JSON.stringify(quickTemplates)); }
-    if (snapshot.exchangeRates) { exchangeRates = snapshot.exchangeRates; safeSetLocalStorage("app_exchange_rates", JSON.stringify(exchangeRates)); }
+    if (Array.isArray(snapshot.members)) { members = snapshot.members.slice(); safeSetLocalStorage("split_members", JSON.stringify(members)); }
+    if (Array.isArray(snapshot.categories)) { categories = snapshot.categories.slice(); safeSetLocalStorage("app_categories", JSON.stringify(categories)); }
+    if (Array.isArray(snapshot.quickTemplates)) { quickTemplates = JSON.parse(JSON.stringify(snapshot.quickTemplates)); safeSetLocalStorage("app_quick_templates", JSON.stringify(quickTemplates)); }
+    if (snapshot.exchangeRates && typeof snapshot.exchangeRates === "object" && !Array.isArray(snapshot.exchangeRates)) { exchangeRates = { ...snapshot.exchangeRates, TWD: 1 }; safeSetLocalStorage("app_exchange_rates", JSON.stringify(exchangeRates)); }
     saveLocalSheetMirror(currentSheet, cachedRecords);
     renderMemberControls(); renderCategoryControls(); renderQuickTemplates(); renderAllViews(); renderTrash(); renderRateChips();
+    let synced = true;
     if (isFirestoreMode() && getFirebaseUser()) {
         // 快照還原是完整取代該帳本，不只同步快照內紀錄，也清理雲端多出的紀錄。
-        void replaceFirestoreSheetFromRecords(currentSheet, cachedRecords, true);
+        synced = await replaceFirestoreSheetFromRecords(currentSheet, cachedRecords, true);
+        if (synced) synced = await syncConfigToFirestore(true, true);
     } else {
-        void saveRecordsToDrive(true);
+        synced = await saveRecordsToDrive(true);
     }
-    showToast("↩️ 已恢復備份版本，並保留還原前版本", "success");
+    showToast(synced ? "↩️ 已恢復備份版本並同步雲端，且保留還原前版本" : "↩️ 已恢復備份版本；雲端同步失敗，已保留待同步狀態", synced ? "success" : "info");
     renderSnapshotPanel();
     return true;
 }
@@ -5857,10 +5875,10 @@ if (document.getElementById("importBtn")) document.getElementById("importBtn").o
                 sheetFileMap = parsed.sheetFileMap;
                 safeSetLocalStorage("app_sheet_map", JSON.stringify(sheetFileMap));
             }
-            members = Array.isArray(parsed.members) && parsed.members.length ? parsed.members.slice() : members;
-            categories = Array.isArray(parsed.categories) && parsed.categories.length ? parsed.categories.slice() : categories;
-            quickTemplates = Array.isArray(parsed.quickTemplates) ? parsed.quickTemplates : quickTemplates;
-            exchangeRates = parsed.exchangeRates && typeof parsed.exchangeRates === "object" ? parsed.exchangeRates : exchangeRates;
+            if (Array.isArray(parsed.members)) members = parsed.members.slice();
+            if (Array.isArray(parsed.categories)) categories = parsed.categories.slice();
+            if (Array.isArray(parsed.quickTemplates)) quickTemplates = JSON.parse(JSON.stringify(parsed.quickTemplates));
+            if (parsed.exchangeRates && typeof parsed.exchangeRates === "object" && !Array.isArray(parsed.exchangeRates)) exchangeRates = { ...parsed.exchangeRates, TWD: 1 };
             safeSetLocalStorage("split_members", JSON.stringify(members));
             safeSetLocalStorage("app_categories", JSON.stringify(categories));
             safeSetLocalStorage("app_quick_templates", JSON.stringify(quickTemplates));
@@ -5875,13 +5893,23 @@ if (document.getElementById("importBtn")) document.getElementById("importBtn").o
             fileInput.value = "";
             let synced = true;
             if (isFirestoreMode() && getFirebaseUser()) {
-                // 完整備份可能包含多個帳本：逐一以備份內容取代 Firebase 對應帳本。
-                for (const [name, rows] of restoredWorkbooks) {
+                // 完整備份 = 完整取代雲端帳本集合。備份不存在的舊帳本也要刪除；預設帳本永遠保留，缺少時以空帳本重建。
+                const backupMap = new Map(restoredWorkbooks.map(([name, rows]) => [String(name), rows]));
+                if (!backupMap.has("預設帳本")) backupMap.set("預設帳本", []);
+                const remoteListOk = await loadWorkbooksFromFirestore();
+                if (!remoteListOk) synced = false;
+                const remoteNames = Object.keys(sheetFileMap || {});
+                for (const name of remoteNames) {
+                    if (name !== "預設帳本" && !backupMap.has(name)) {
+                        try { await deleteFirestoreWorkbook(name); } catch (e) { synced = false; console.error("完整備份清理雲端多餘帳本失敗", name, e); }
+                    }
+                }
+                for (const [name, rows] of backupMap) {
                     const ok = await replaceFirestoreSheetFromRecords(name, rows, true);
                     if (!ok) synced = false;
                 }
-                // 沒有 workbooks 欄位時，仍要同步目前帳本。
-                if (!restoredWorkbooks.length) synced = await replaceFirestoreSheetFromRecords(currentSheet, cachedRecords, true);
+                if (synced) synced = await syncConfigToFirestore(true, true);
+                await loadWorkbooksFromFirestore();
             } else {
                 synced = await saveRecordsToDrive(true);
             }
