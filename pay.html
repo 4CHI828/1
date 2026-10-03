@@ -22,6 +22,76 @@ document.documentElement.classList.remove("dark");
 </script>
 <script src="https://cdn.tailwindcss.com"></script>
 <script src="https://accounts.google.com/gsi/client" async defer></script>
+<script type="module">
+// ==========================================
+// Firebase Authentication（第一階段）
+// Google 登入狀態由 Firebase 管理，使用 LOCAL persistence。
+// ==========================================
+import { initializeApp } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-app.js";
+import { getStorage, ref as storageRef, uploadString, getDownloadURL, deleteObject } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-storage.js";
+import {
+  getAuth,
+  GoogleAuthProvider,
+  signInWithPopup,
+  signOut,
+  onAuthStateChanged,
+  setPersistence,
+  browserLocalPersistence
+} from "https://www.gstatic.com/firebasejs/12.19.0/firebase-auth.js";
+import {
+  getFirestore, initializeFirestore, persistentLocalCache, persistentMultipleTabManager, doc, collection, setDoc, getDoc, getDocs, writeBatch, serverTimestamp, deleteDoc, onSnapshot, query, where
+} from "https://www.gstatic.com/firebasejs/12.19.0/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyBWsQtGurkhQzQwxKKWvZg2UnL2HqKeC_o",
+  authDomain: "pay-cloud-fd9d7.firebaseapp.com",
+  projectId: "pay-cloud-fd9d7",
+  storageBucket: "pay-cloud-fd9d7.firebasestorage.app",
+  messagingSenderId: "1062579691110",
+  appId: "1:1062579691110:web:67a90980e9c7f5ebded7a7",
+  measurementId: "G-65G6L1D24V"
+};
+
+try {
+  const firebaseApp = initializeApp(firebaseConfig);
+  const firebaseAuth = getAuth(firebaseApp);
+  let firebaseDb;
+try {
+  firebaseDb = initializeFirestore(firebaseApp, { localCache: persistentLocalCache({ tabManager: persistentMultipleTabManager() }) });
+} catch (e) {
+  console.warn("Firestore 離線快取初始化失敗，改用一般模式：", e);
+  firebaseDb = getFirestore(firebaseApp);
+}
+  const firebaseStorage = getStorage(firebaseApp);
+  const firebaseProvider = new GoogleAuthProvider();
+  firebaseProvider.setCustomParameters({ prompt: "select_account" });
+
+  // 明確指定 LOCAL：關閉瀏覽器後仍保留 Firebase 登入狀態，
+  // 直到使用者主動登出或瀏覽器無法提供持久儲存。
+  setPersistence(firebaseAuth, browserLocalPersistence).catch(err => {
+    console.warn("Firebase 登入持久化設定失敗：", err);
+  });
+
+  window.__firebase = {
+    app: firebaseApp,
+    auth: firebaseAuth,
+    db: firebaseDb,
+    storage: firebaseStorage,
+    storageApi: { storageRef, uploadString, getDownloadURL, deleteObject },
+    firestore: { doc, collection, setDoc, getDoc, getDocs, writeBatch, serverTimestamp, deleteDoc, onSnapshot, query, where },
+    provider: firebaseProvider,
+    signIn: () => signInWithPopup(firebaseAuth, firebaseProvider),
+    signOut: () => signOut(firebaseAuth),
+    onAuthStateChanged: callback => onAuthStateChanged(firebaseAuth, callback)
+  };
+
+  window.dispatchEvent(new CustomEvent("firebase-ready"));
+} catch (error) {
+  console.error("Firebase 初始化失敗：", error);
+  window.__firebaseError = error;
+  window.dispatchEvent(new CustomEvent("firebase-error", { detail: error }));
+}
+</script>
 <style>
 .glass { backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); }
 ::-webkit-scrollbar { width: 5px; height: 5px; }
@@ -213,8 +283,9 @@ body.batch-mode .record-card .record-action-buttons { display:none !important; }
   #historyQuickFilters { overflow-x:auto; flex-wrap:nowrap; -webkit-overflow-scrolling:touch; }
   #historyQuickFilters button { flex:0 0 auto; padding:8px 12px; }
   #historyBatchBar { position:sticky; top:70px; z-index:20; }
-  #historyBatchBar .batch-actions { display:grid; grid-template-columns:repeat(5,minmax(0,1fr)); gap:6px; }
+  #historyBatchBar .batch-actions { display:grid; grid-template-columns:repeat(6,minmax(0,1fr)); gap:6px; }
   #historyBatchBar .batch-actions button { min-width:0; padding:7px 4px; font-size:.72rem; }
+  #historyBatchBar .batch-actions { grid-template-columns:repeat(3,minmax(0,1fr)); }
   .record-card { min-height:68px; }
   .record-card .batch-select-box { width:22px; height:22px; flex:0 0 22px; border:2px solid rgb(156 163 175); border-radius:7px; align-items:center; justify-content:center; }
   .record-card.batch-selected .batch-select-box { background:rgb(37 99 235); border-color:rgb(37 99 235); color:white; }
@@ -420,7 +491,7 @@ tailwind.config = { darkMode: 'class' };
 <span class="text-sm">📝</span> 歷史紀錄 (<span id="recordCountDisplay">0</span>)
 </h2>
 <select id="sortOrderSelect" onchange="renderRecordsList()" class="bg-white/80 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg px-2 py-0.5 text-[0.7rem] font-bold text-gray-600 dark:text-gray-300 outline-none">
-<option value="input">🕒 依輸入順序</option><option value="dateDesc">📅 日期 (新➔舊)</option><option value="dateAsc">📅 日期 (舊➔新)</option><option value="amtDesc">💰 金額 (高➔低)</option><option value="amtAsc">💰 金額 (低➔高)</option>
+<option value="input">🕒 依輸入順序</option><option value="dateDesc" selected>📅 日期 (新➔舊)</option><option value="dateAsc">📅 日期 (舊➔新)</option><option value="amtDesc">💰 金額 (高➔低)</option><option value="amtAsc">💰 金額 (低➔高)</option>
 </select>
 </div>
 <button type="button" id="mainChartToggleBtn" onclick="toggleMainChart()" class="text-[0.75rem] bg-indigo-50 hover:bg-indigo-100 text-indigo-600 dark:bg-indigo-900/30 dark:hover:bg-indigo-900/50 dark:text-indigo-300 font-bold px-2.5 py-1 rounded-lg transition shadow-sm border border-indigo-100 dark:border-indigo-800/50">📊 顯示圖表</button>
@@ -474,6 +545,7 @@ tailwind.config = { darkMode: 'class' };
     <button type="button" id="batchCategoryBtn" class="rounded-lg bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 font-bold">🏷️ 分類</button>
     <button type="button" id="batchExportBtn" class="rounded-lg bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 font-bold">📤 匯出</button>
     <button type="button" id="batchCopyBtn" class="rounded-lg bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 font-bold">📋 複製</button>
+    <button type="button" id="batchMoveCopySheetBtn" class="rounded-lg bg-violet-50 dark:bg-violet-950/30 text-violet-700 dark:text-violet-300 border border-violet-200 dark:border-violet-800/60 font-bold">↗️ 到帳本</button>
   </div>
 </div>
 <div id="mainChartContainer" class="hidden bg-white/60 dark:bg-slate-900/60 border border-gray-200/50 dark:border-gray-700/50 rounded-2xl p-4 shadow-sm">
@@ -556,13 +628,59 @@ tailwind.config = { darkMode: 'class' };
 <img src="https://upload.wikimedia.org/wikipedia/commons/1/12/Google_Drive_icon_%282020%29.svg" class="w-8 h-8 flex-shrink-0" alt="Drive">
 <div class="flex flex-col">
 <div class="flex items-center gap-2 flex-wrap"><span class="text-sm font-bold text-gray-800 dark:text-gray-100" id="googleAccountStatus">尚未連結 Google 帳號</span></div>
-<span class="text-[0.75rem] text-gray-500 dark:text-gray-400">所有資料自動儲存於您的 Drive「雲端記帳」專屬資料夾</span>
+<span class="text-[0.75rem] text-gray-500 dark:text-gray-400">Firebase 登入狀態會自動保存；可將現有 Google Drive JSON 一次搬到 Firestore，之後改用 Firebase 雲端同步</span>
 </div>
 </div>
 <div class="flex items-center gap-2 w-full sm:w-auto justify-end mt-2 sm:mt-0">
-<button type="button" id="googleAuthBtn" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-xl text-sm font-bold shadow transition active:scale-95 flex items-center gap-1.5 w-full justify-center">登入 Google 授權</button>
-<button type="button" id="googleLogoutBtn" class="hidden text-xs text-red-500 hover:underline font-medium px-2 py-2">中斷連結</button>
+<button type="button" id="googleAuthBtn" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-xl text-sm font-bold shadow transition active:scale-95 flex items-center gap-1.5 w-full justify-center">Firebase Google 登入</button>
+<button type="button" id="googleLogoutBtn" class="hidden text-xs text-red-500 hover:underline font-medium px-2 py-2">登出 Firebase</button>
+<button type="button" id="migrateFirestoreBtn" class="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-xl text-sm font-bold shadow transition active:scale-95 flex items-center gap-1.5 w-full justify-center">☁️ 搬到 Firestore</button>
+<button type="button" id="firestoreIntegrityBtn" class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-xl text-sm font-bold shadow transition active:scale-95 flex items-center gap-1.5 w-full justify-center">🔎 雲端完整性檢查</button>
 </div>
+</div>
+<div id="firestoreIntegrityPanel" class="bg-white/80 dark:bg-slate-900/60 border border-indigo-200/60 dark:border-indigo-800/50 rounded-2xl p-4 space-y-3 shadow-sm">
+  <div class="flex items-center justify-between gap-2 flex-wrap">
+    <div>
+      <div class="text-sm font-bold text-gray-800 dark:text-gray-100 flex items-center gap-1.5">☁️ Firebase 雲端資料完整性</div>
+      <div id="firestoreIntegritySummary" class="text-[0.7rem] text-gray-500 dark:text-gray-400 mt-0.5">尚未檢查目前帳本</div>
+    </div>
+    <div class="flex gap-2">
+      <button type="button" id="firestoreIntegrityRunBtn" class="bg-indigo-600 hover:bg-indigo-700 text-white px-3 py-2 rounded-xl text-xs font-bold shadow active:scale-95">🔍 立即檢查</button>
+      <button type="button" id="firestoreIntegrityRepairBtn" class="hidden bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-2 rounded-xl text-xs font-bold shadow active:scale-95">🔄 重新同步</button>
+    </div>
+  </div>
+  <div id="firestoreIntegrityStatus" class="hidden rounded-xl px-3 py-2 text-xs font-bold"></div>
+  <div id="firestoreIntegrityCards" class="grid grid-cols-2 sm:grid-cols-4 gap-2"></div>
+  <div id="firestoreIntegrityDetails" class="hidden text-xs space-y-1.5 bg-gray-50/80 dark:bg-black/20 rounded-xl p-3"></div>
+</div>
+<div id="firestoreSharingPanel" class="bg-white/80 dark:bg-slate-900/60 border border-emerald-200/60 dark:border-emerald-800/50 rounded-2xl p-4 space-y-3 shadow-sm">
+  <div class="flex items-center justify-between gap-2 flex-wrap">
+    <div>
+      <div class="text-sm font-bold text-gray-800 dark:text-gray-100">👥 多人共享帳本</div>
+      <div id="firestoreSharingSummary" class="text-[0.7rem] text-gray-500 dark:text-gray-400 mt-0.5">目前帳本的共享與權限</div>
+    </div>
+    <span id="firestoreSharingRole" class="text-[0.7rem] font-bold px-2 py-1 rounded-lg bg-gray-100 dark:bg-gray-700">—</span>
+  </div>
+  <div id="firestoreOwnerInviteBox" class="space-y-2">
+    <div class="grid grid-cols-1 sm:grid-cols-[1fr_auto] gap-2">
+      <input id="firestoreInviteEmail" type="email" placeholder="對方 Google 帳號 Email（可留空）" class="border border-gray-300 dark:border-gray-600 rounded-xl px-3 py-2 text-xs bg-white dark:bg-gray-700 dark:text-white outline-none focus:ring-2 focus:ring-emerald-500">
+      <select id="firestoreInviteRole" class="border border-gray-300 dark:border-gray-600 rounded-xl px-3 py-2 text-xs bg-white dark:bg-gray-700 dark:text-white outline-none">
+        <option value="editor">✏️ 編輯者</option>
+        <option value="viewer">👀 查看者</option>
+      </select>
+    </div>
+    <button type="button" id="firestoreCreateInviteBtn" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white py-2 rounded-xl text-xs font-bold shadow active:scale-95">🔗 建立邀請連結</button>
+    <div id="firestoreInviteResult" class="hidden space-y-2"></div>
+  </div>
+  <div>
+    <div class="text-xs font-bold text-gray-700 dark:text-gray-300 mb-2">目前成員</div>
+    <div id="firestoreWorkbookMembers" class="space-y-1.5"></div>
+  </div>
+  <div id="firestorePendingInviteBox" class="hidden bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 rounded-xl p-3 space-y-2">
+    <div class="text-xs font-bold text-amber-800 dark:text-amber-300">📨 收到帳本邀請</div>
+    <div id="firestorePendingInviteText" class="text-[0.7rem] text-gray-600 dark:text-gray-300"></div>
+    <button type="button" id="firestoreAcceptInviteBtn" class="w-full bg-amber-600 hover:bg-amber-700 text-white py-2 rounded-xl text-xs font-bold">✅ 接受邀請</button>
+  </div>
 </div>
 <div class="bg-white/80 dark:bg-slate-900/60 border border-gray-200/50 dark:border-gray-700/50 rounded-2xl p-4 space-y-3 shadow-sm">
 <div class="flex items-center justify-between text-xs font-bold text-gray-700 dark:text-gray-300 flex-wrap gap-1">
@@ -751,6 +869,8 @@ let cachedRecords = [];
 let currentSplitMode = "equal";
 let isMultiPayerMode = false;
 let uploadedReceiptBase64 = "";
+let editingReceiptStoragePath = "";
+let editingReceiptUrl = "";
 let receiptOcrMeta = null;
 let editingRecordId = null;
 let chartInstance = null;
@@ -1057,6 +1177,7 @@ async function loadCloudConfigFromDrive() {
 }
 
 async function syncConfigToDrive(interactive = false) {
+    if (isFirestoreMode() && getFirebaseUser()) return syncConfigToFirestore();
     if (!hasValidAccessToken() && interactive && googleSessionLinked) {
         const ok = await ensureGoogleAccessToken(true);
         if (!ok) return false;
@@ -1086,7 +1207,224 @@ async function syncConfigToDrive(interactive = false) {
 }
 
 let recordsLoadRequestId = 0;
+let firestoreRealtimeUnsubscribe = null;
+let firestoreRealtimeSheet = "";
+const firestoreRemoteVersions = new Map();
+const FIRESTORE_DEVICE_ID_KEY = "firestore_device_id";
+const FIRESTORE_LOGICAL_CLOCK_KEY = "firestore_logical_clock";
+const FIRESTORE_CONFLICT_LOG_KEY = "firestore_conflict_log";
+function getFirestoreDeviceId() {
+    let id = localStorage.getItem(FIRESTORE_DEVICE_ID_KEY) || "";
+    if (!id) { id = (crypto?.randomUUID ? crypto.randomUUID() : `dev_${Date.now()}_${Math.random().toString(36).slice(2)}`); safeSetLocalStorage(FIRESTORE_DEVICE_ID_KEY, id); }
+    return id;
+}
+function getFirestoreLogicalClock() { return Math.max(0, Number(localStorage.getItem(FIRESTORE_LOGICAL_CLOCK_KEY)) || 0); }
+function nextFirestoreLogicalClock(observe = 0) {
+    const next = Math.max(getFirestoreLogicalClock(), Number(observe) || 0) + 1;
+    safeSetLocalStorage(FIRESTORE_LOGICAL_CLOCK_KEY, String(next));
+    return next;
+}
+function observeFirestoreLogicalClock(version) {
+    const n = Number(version) || 0;
+    if (n > getFirestoreLogicalClock()) safeSetLocalStorage(FIRESTORE_LOGICAL_CLOCK_KEY, String(n));
+}
+function touchFirestoreRecord(record, force = false) {
+    if (!record || !getFirebaseUser()) return record;
+    const now = new Date().toISOString();
+    const deviceId = getFirestoreDeviceId();
+    const currentVersion = Number(record._syncVersion) || 0;
+    if (!currentVersion || force) record._syncVersion = nextFirestoreLogicalClock(currentVersion);
+    record._syncDeviceId = deviceId;
+    if (force || !record.updatedAt || !Number.isFinite(Date.parse(record.updatedAt))) record.updatedAt = now;
+    record._updatedAtMs = Date.parse(record.updatedAt) || Date.now();
+    return record;
+}
+function prepareFirestoreRecords(records) {
+    return normalizeAllRecords(records).map(r => {
+        const out = { ...r };
+        if (!Number(out._syncVersion)) touchFirestoreRecord(out, true);
+        else { out._syncDeviceId = String(out._syncDeviceId || getFirestoreDeviceId()); out._updatedAtMs = Number(out._updatedAtMs) || (Date.parse(out.updatedAt) || 0); observeFirestoreLogicalClock(out._syncVersion); }
+        return out;
+    });
+}
+function firestoreRecordRevision(r) {
+    return { version: Number(r?._syncVersion) || 0, updatedMs: Number(r?._updatedAtMs) || Date.parse(r?.updatedAt || 0) || 0, deviceId: String(r?._syncDeviceId || "") };
+}
+function compareFirestoreRecords(a, b) {
+    const A = firestoreRecordRevision(a), B = firestoreRecordRevision(b);
+    if (A.version !== B.version) return A.version > B.version ? 1 : -1;
+    if (A.updatedMs !== B.updatedMs) return A.updatedMs > B.updatedMs ? 1 : -1;
+    if (A.deviceId !== B.deviceId) return A.deviceId > B.deviceId ? 1 : -1;
+    return 0;
+}
+function firestoreConflictKey(record, winner, loser) {
+    const rev = firestoreRecordRevision(loser);
+    return `${String(record?.id || "record").replace(/[^a-zA-Z0-9_-]/g, "_")}_${rev.version}_${String(rev.deviceId || "unknown").replace(/[^a-zA-Z0-9_-]/g, "_")}`.slice(0, 1500);
+}
+async function backupFirestoreConflict(sheetName, winner, loser, reason = "version-conflict") {
+    if (!getFirebaseUser() || !winner || !loser || String(winner.id) !== String(loser.id)) return;
+    try {
+        const { f, user } = firestoreApi();
+        const key = firestoreConflictKey(loser, winner, loser);
+        const ref = f.firestore.doc(f.db, "users", firestoreWorkbookOwner(sheetName), "workbooks", firestoreWorkbookId(sheetName), "conflicts", key);
+        await f.firestore.setDoc(ref, { recordId: loser.id, reason, winnerRevision: firestoreRecordRevision(winner), loserRevision: firestoreRecordRevision(loser), loserRecord: { ...loser, receipt: "" }, createdAt: f.firestore.serverTimestamp(), deviceId: getFirestoreDeviceId() }, { merge: true });
+        const log = loadJSON(FIRESTORE_CONFLICT_LOG_KEY, []);
+        log.unshift({ sheetName, recordId: loser.id, reason, at: new Date().toISOString() });
+        safeSetLocalStorage(FIRESTORE_CONFLICT_LOG_KEY, JSON.stringify(log.slice(0, 100)));
+    } catch (e) { console.warn("Firestore 衝突版本備份失敗：", e); }
+}
+function markFirestoreRecordVersion(record, force = false) { return touchFirestoreRecord(record, force); }
+let firestoreConfigRealtimeUnsubscribe = null;
+let firestoreWorkbookRealtimeUnsubscribe = null;
+let firestoreConfigApplyingRemote = false;
+const FIRESTORE_CONFIG_PENDING_KEY = "firestore_config_pending";
+const FIRESTORE_CONFIG_UPDATED_KEY = "firestore_config_updated_at";
+let firestoreSyncRetryTimer = null;
+let firestoreSyncRetrying = false;
+const FIRESTORE_PENDING_KEY = "firestore_pending_sync";
+const FIRESTORE_STORAGE_DELETE_KEY = "firestore_storage_delete_pending";
+const FIRESTORE_SYNC_CURSOR_PREFIX = "firestore_sync_cursor_";
+function firestoreSyncCursorKey(sheetName) { return FIRESTORE_SYNC_CURSOR_PREFIX + firestoreWorkbookId(sheetName); }
+function loadFirestoreSyncCursor(sheetName) {
+    const n = Number(localStorage.getItem(firestoreSyncCursorKey(sheetName)) || 0);
+    return Number.isFinite(n) && n > 0 ? n : 0;
+}
+function saveFirestoreSyncCursor(sheetName, ms) {
+    const n = Number(ms) || 0;
+    if (n > 0) safeSetLocalStorage(firestoreSyncCursorKey(sheetName), String(Math.floor(n)));
+}
+function clearFirestoreSyncCursor(sheetName) { try { localStorage.removeItem(firestoreSyncCursorKey(sheetName)); } catch (_) {} }
+function firestoreRecordSyncedAtMs(record) { return firestoreTimestampMs(record?._syncedAt); }
+function updateFirestoreSyncCursor(sheetName, records) {
+    let max = loadFirestoreSyncCursor(sheetName);
+    for (const r of (Array.isArray(records) ? records : [])) max = Math.max(max, firestoreRecordSyncedAtMs(r));
+    if (max > loadFirestoreSyncCursor(sheetName)) saveFirestoreSyncCursor(sheetName, max);
+    return max;
+}
+
+function loadFirestoreStorageDeleteQueue() {
+    const q = loadJSON(FIRESTORE_STORAGE_DELETE_KEY, []);
+    return Array.isArray(q) ? q.filter(x => x && x.path) : [];
+}
+function queueFirestoreStorageDelete(path, sheetName = currentSheet) {
+    if (!path) return;
+    const q = loadFirestoreStorageDeleteQueue();
+    if (!q.some(x => x.path === path)) q.push({ path: String(path), sheetName: String(sheetName || ""), queuedAt: new Date().toISOString() });
+    safeSetLocalStorage(FIRESTORE_STORAGE_DELETE_KEY, JSON.stringify(q.slice(-500)));
+}
+function clearFirestoreStorageDelete(path) {
+    if (!path) return;
+    const q = loadFirestoreStorageDeleteQueue().filter(x => x.path !== path);
+    safeSetLocalStorage(FIRESTORE_STORAGE_DELETE_KEY, JSON.stringify(q));
+}
+async function retryPendingFirestoreStorageDeletes() {
+    const q = loadFirestoreStorageDeleteQueue();
+    if (!q.length || !getFirebaseUser()) return;
+    for (const item of q.slice()) {
+        try {
+            const { f } = firebaseStorageApi();
+            await f.storageApi.deleteObject(f.storageApi.storageRef(f.storage, item.path));
+            clearFirestoreStorageDelete(item.path);
+        } catch (e) {
+            // not-found 代表檔案本來就已經不存在，可安全清掉佇列。
+            if (String(e?.code || "").includes("object-not-found")) clearFirestoreStorageDelete(item.path);
+        }
+    }
+}
+function markFirestorePending(sheetName = currentSheet) {
+    const pending = loadJSON(FIRESTORE_PENDING_KEY, {});
+    pending[String(sheetName)] = Date.now();
+    safeSetLocalStorage(FIRESTORE_PENDING_KEY, JSON.stringify(pending));
+}
+function clearFirestorePending(sheetName = currentSheet) {
+    const pending = loadJSON(FIRESTORE_PENDING_KEY, {});
+    delete pending[String(sheetName)];
+    safeSetLocalStorage(FIRESTORE_PENDING_KEY, JSON.stringify(pending));
+}
+function hasFirestorePending(sheetName = currentSheet) {
+    const pending = loadJSON(FIRESTORE_PENDING_KEY, {});
+    return Object.prototype.hasOwnProperty.call(pending, String(sheetName));
+}
+async function syncFirestoreNonCurrentSheet(sheetName) {
+    const user = getFirebaseUser();
+    if (!user) return false;
+    let local = prepareFirestoreRecords(loadLocalSheetMirror(sheetName));
+    const converted = [];
+    for (const r of local) converted.push(await uploadReceiptToFirebase(r, sheetName));
+    if (converted.some(r => r?._receiptUploadFailed)) return false;
+    local = prepareFirestoreRecords(converted);
+    const { f } = firestoreApi();
+    const col = firestoreWorkbookRecordsCollection(sheetName);
+    const snap = await f.firestore.getDocs(col);
+    const remote = snap.docs.map(d => d.data()).filter(r => r && r.id).map(normalizeRecord);
+    remote.forEach(r => observeFirestoreLogicalClock(r._syncVersion));
+    const byId = new Map(remote.map(r => [String(r.id), r]));
+    for (const localRecord of local) {
+        const old = byId.get(String(localRecord.id));
+        if (!old || compareFirestoreRecords(localRecord, old) >= 0) {
+            if (old && compareFirestoreRecords(localRecord, old) > 0) await backupFirestoreConflict(sheetName, localRecord, old, "offline-retry-local-newer");
+            byId.set(String(localRecord.id), localRecord);
+        } else {
+            await backupFirestoreConflict(sheetName, old, localRecord, "offline-retry-local-older");
+        }
+    }
+    const finalRecords = prepareFirestoreRecords(Array.from(byId.values())).map(r => {
+        const { _previousReceiptStoragePath, _receiptUploadFailed, receipt, ...clean } = r || {};
+        return clean;
+    });
+    saveLocalSheetMirror(sheetName, finalRecords);
+    await f.firestore.setDoc(firestoreWorkbookRef(sheetName), { name: sheetName, updatedAt: f.firestore.serverTimestamp(), recordCount: finalRecords.filter(r => !r.deleted && !r.purged).length, syncDeviceId: getFirestoreDeviceId(), syncClock: getFirestoreLogicalClock() }, { merge: true });
+    for (let i = 0; i < finalRecords.length; i += 450) {
+        const chunk = finalRecords.slice(i, i + 450), batch = f.firestore.writeBatch(f.db);
+        chunk.forEach(r => batch.set(firestoreRecordRef(sheetName, r.id), { ...r, _sheetName: sheetName, _syncedAt: f.firestore.serverTimestamp() }, { merge: true }));
+        if (chunk.length) await batch.commit();
+    }
+    return true;
+}
+async function retryPendingFirestoreSync(reason = "online") {
+    if (firestoreSyncRetrying || !navigator.onLine || !getFirebaseUser() || !isFirestoreMode()) return false;
+    firestoreSyncRetrying = true;
+    try {
+        const pending = loadJSON(FIRESTORE_PENDING_KEY, {});
+        const sheets = Object.keys(pending);
+        setSyncBadge("恢復網路，同步中", true);
+        if (hasFirestoreConfigPending()) await syncConfigToFirestore(false, false);
+        await retryPendingFirestoreStorageDeletes();
+        if (!sheets.length && !hasFirestoreConfigPending() && !loadFirestoreStorageDeleteQueue().length) return true;
+        for (const sheetName of sheets) {
+            if (!getFirebaseUser()) break;
+            const previous = currentSheet;
+            if (sheetName === previous) {
+                const ok = await saveRecordsToFirestore(false);
+                if (ok) clearFirestorePending(sheetName);
+            } else {
+                try {
+                    const ok = await syncFirestoreNonCurrentSheet(sheetName);
+                    if (ok) clearFirestorePending(sheetName);
+                } catch(e) { console.warn("待同步帳本重試失敗", sheetName, e); }
+            }
+        }
+        setSyncBadge(Object.keys(loadJSON(FIRESTORE_PENDING_KEY, {})).length ? "仍有待同步資料" : "Firestore 已同步", false, Object.keys(loadJSON(FIRESTORE_PENDING_KEY, {})).length > 0);
+        return true;
+    } finally { firestoreSyncRetrying = false; }
+}
+function scheduleFirestoreSyncRetry() {
+    clearTimeout(firestoreSyncRetryTimer);
+    if (!navigator.onLine || !getFirebaseUser() || !isFirestoreMode()) return;
+    firestoreSyncRetryTimer = setTimeout(() => { void retryPendingFirestoreSync("timer"); }, 1200);
+}
+window.addEventListener("online", () => {
+    if (isFirestoreMode() && getFirebaseUser()) {
+        setSyncBadge("網路已恢復", true);
+        scheduleFirestoreSyncRetry();
+        void loadRecordsFromFirestore(currentSheet).then(() => { startFirestoreConfigRealtimeListener(); startFirestoreWorkbookRealtimeListener(); startFirestoreRealtimeListener(currentSheet); });
+    }
+});
+window.addEventListener("offline", () => {
+    if (isFirestoreMode()) setSyncBadge("離線模式，資料保存在本機", false, true);
+});
 async function loadRecordsFromDrive(sheetName = currentSheet) {
+    if (isFirestoreMode() && getFirebaseUser()) return loadRecordsFromFirestore(sheetName);
     const requestId = ++recordsLoadRequestId;
     const localRecords = normalizeAllRecords(loadLocalSheetMirror(sheetName));
     if (!accessToken || !driveFolderId) {
@@ -1155,9 +1493,45 @@ function calculateTwd() {
     return { rate, twd: Math.round(amount * rate) };
 }
 
+let recordSearchIndexCache = new Map();
+let scheduledRealtimeRender = false;
+
+function getRecordSearchText(record) {
+    const r = record || {};
+    const key = `${String(r.id || "")}\u0000${String(r.updatedAt || "")}\u0000${String(r.title || "")}\u0000${String(r.category || "")}\u0000${String(r.currency || "")}\u0000${String(r.payer || "")}\u0000${String(r.splitMembers || "")}`;
+    const cacheKey = String(r.id || "") || key;
+    const cached = recordSearchIndexCache.get(cacheKey);
+    if (cached?.key === key) return cached.text;
+    const payerNames = Object.keys(parsePayers(r));
+    const shareNames = Object.keys(parseShares(r));
+    const text = `${r.title || ""} ${r.category || ""} ${r.currency || ""} ${r.payer || ""} ${payerNames.join(" ")} ${shareNames.join(" ")}`.toLowerCase();
+    recordSearchIndexCache.set(cacheKey, { key, text });
+    if (recordSearchIndexCache.size > 5000) {
+        const firstKey = recordSearchIndexCache.keys().next().value;
+        if (firstKey) recordSearchIndexCache.delete(firstKey);
+    }
+    return text;
+}
+
+function invalidateRecordSearchCache() {
+    recordSearchIndexCache.clear();
+}
+
+function scheduleRealtimeRenderAllViews() {
+    if (scheduledRealtimeRender) return;
+    scheduledRealtimeRender = true;
+    const run = () => {
+        scheduledRealtimeRender = false;
+        renderAllViews();
+    };
+    if (typeof requestAnimationFrame === "function") requestAnimationFrame(run);
+    else setTimeout(run, 0);
+}
+
 function renderAllViews() {
+    // 同一輪渲染共用 active records，避免大型帳本重複 filter 全部紀錄。
     const active = getActiveRecords();
-    renderRecordsList();
+    renderRecordsList(active);
     renderSettlement(active);
     renderPersonalStats(active);
     renderPoolStats(active);
@@ -1173,6 +1547,7 @@ async function softDeleteRecord(id) {
     if (idx !== -1) {
         cachedRecords[idx].deleted = true;
         cachedRecords[idx].updatedAt = new Date().toISOString();
+        if (isFirestoreMode() && getFirebaseUser()) markFirestoreRecordVersion(cachedRecords[idx], true);
         renderAllViews();
         if (googleSessionLinked && !accessToken) await ensureGoogleAccessToken(true);
         const ok = await saveRecordsToDrive(true);
@@ -1840,6 +2215,7 @@ window.restoreRecord = async function(id) {
     if (idx !== -1) {
         cachedRecords[idx].deleted = false;
         cachedRecords[idx].updatedAt = new Date().toISOString();
+        if (isFirestoreMode() && getFirebaseUser()) markFirestoreRecordVersion(cachedRecords[idx], true);
         renderAllViews(); renderTrash();
         if (googleSessionLinked && !accessToken) await ensureGoogleAccessToken(true);
         const ok = await saveRecordsToDrive(true);
@@ -1903,50 +2279,1042 @@ function updateGoogleUI(isLoggedIn) {
     }
     if(logout) logout.classList.toggle("hidden", !googleSessionLinked);
 }
+function updateFirebaseUI(user) {
+    const status = document.getElementById("googleAccountStatus");
+    const login = document.getElementById("googleAuthBtn");
+    const logout = document.getElementById("googleLogoutBtn");
+    const displayName = user?.displayName || user?.email || "Google 使用者";
+    if (status) status.textContent = user ? `已登入 Firebase：${displayName}` : "尚未登入 Firebase";
+    if (login) {
+        login.classList.toggle("hidden", !!user);
+        login.textContent = "Firebase Google 登入";
+    }
+    if (logout) logout.classList.toggle("hidden", !user);
+    const migrate = document.getElementById("migrateFirestoreBtn");
+    if (migrate) {
+        migrate.classList.toggle("hidden", !user);
+        migrate.textContent = isFirestoreMode() ? "☁️ Firestore 已啟用" : "☁️ 搬到 Firestore";
+        migrate.disabled = isFirestoreMode();
+        migrate.classList.toggle("opacity-60", isFirestoreMode());
+    }
+}
+
+async function firebaseLogin() {
+    if (!window.__firebase?.signIn) {
+        if (window.__firebaseError) throw window.__firebaseError;
+        throw new Error("Firebase 尚未載入完成，請稍候再試");
+    }
+    const result = await window.__firebase.signIn();
+    updateFirebaseUI(result?.user || null);
+    showToast(`已登入 Firebase：${result?.user?.displayName || result?.user?.email || "Google 使用者"}`, "success");
+    return result?.user || null;
+}
+
+async function firebaseLogout() {
+    if (!window.__firebase?.signOut) return;
+    await window.__firebase.signOut();
+    updateFirebaseUI(null);
+    showToast("已登出 Firebase", "info");
+}
+
+function bindFirebaseAuth() {
+    if (!window.__firebase?.onAuthStateChanged) return false;
+    window.__firebase.onAuthStateChanged(user => {
+        updateFirebaseUI(user);
+        if (user) {
+            safeSetLocalStorage("firebase_uid", user.uid || "");
+            safeSetLocalStorage("firebase_email", user.email || "");
+            safeSetLocalStorage("firebase_display_name", user.displayName || "");
+            if (isFirestoreMode()) {
+                Promise.resolve(processPendingFirestoreInvite()).catch(() => false).then(() => loadWorkbooksFromFirestore())
+                    .then(() => loadFirestoreWorkbookMeta(currentSheet))
+                    .then(() => loadConfigFromFirestore())
+                    .then(() => loadRecordsFromFirestore(currentSheet))
+                    .then(() => { startFirestoreConfigRealtimeListener(); startFirestoreWorkbookRealtimeListener(); startFirestoreRealtimeListener(currentSheet); })
+                    .catch(e => console.warn("Firestore 自動載入失敗", e));
+            }
+        } else {
+            stopFirestoreMetaRealtimeListeners();
+            stopFirestoreRealtimeListener();
+            safeSetLocalStorage("firebase_uid", "");
+            safeSetLocalStorage("firebase_email", "");
+            safeSetLocalStorage("firebase_display_name", "");
+        }
+    });
+    return true;
+}
+
 document.getElementById("googleAuthBtn").onclick = async () => {
-    if (!window.google?.accounts?.oauth2) return showToast("Google 登入元件尚未載入，請重新整理頁面", "error");
     try {
-        if (!tokenClient) initGoogleClient();
-        await requestGoogleAccessToken(true);
-        await setupDriveEnvironment();
+        await firebaseLogin();
     } catch (e) {
-        googleAuthNeedsReauth = false;
-        updateGoogleUI(false);
-        setSyncBadge(googleSessionLinked ? "Google 已連結" : "尚未連結", false, false);
-        showToast(e?.message || "Google 授權失敗，請再點一次 Google 授權", "error");
+        console.error("Firebase 登入失敗：", e);
+        const code = e?.code || "";
+        const message = code === "auth/popup-closed-by-user" ? "登入視窗已關閉"
+            : code === "auth/popup-blocked" ? "瀏覽器封鎖了登入視窗，請允許此網站開啟彈出視窗"
+            : code === "auth/unauthorized-domain" ? "目前網站網域尚未加入 Firebase Authentication 的授權網域"
+            : (e?.message || "Firebase 登入失敗");
+        showToast(message, "error");
     }
 };
-document.getElementById("googleLogoutBtn").onclick = () => {
-    if (accessToken && window.google?.accounts?.oauth2?.revoke) {
-        google.accounts.oauth2.revoke(accessToken, () => {});
+document.getElementById("googleLogoutBtn").onclick = firebaseLogout;
+document.getElementById("migrateFirestoreBtn").onclick = migrateGoogleDriveToFirestore;
+
+
+// ==========================================
+// Firebase Firestore 雲端資料層（第二階段）
+// Google Drive JSON → Firestore 遷移 + 雲端模式
+// ==========================================
+function getFirebaseUser() {
+    return window.__firebase?.auth?.currentUser || null;
+}
+function isFirestoreMode() {
+    return localStorage.getItem("app_cloud_backend") === "firestore";
+}
+function setFirestoreMode(enabled) {
+    safeSetLocalStorage("app_cloud_backend", enabled ? "firestore" : "drive");
+}
+function firestoreApi() {
+    const f = window.__firebase;
+    if (!f?.db || !f?.firestore) throw new Error("Firebase Firestore 尚未初始化");
+    const user = getFirebaseUser();
+    if (!user?.uid) throw new Error("請先登入 Firebase");
+    return { f, user };
+}
+function firestoreWorkbookId(sheetName) {
+    const raw = String(sheetName || "預設帳本");
+    try {
+        return btoa(unescape(encodeURIComponent(raw))).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/g, "").slice(0, 120) || "default";
+    } catch (_) {
+        return encodeURIComponent(raw).replace(/[^A-Za-z0-9_-]/g, "_").slice(0, 120) || "default";
     }
-    accessToken = null; tokenExpiry = 0; driveFolderId = null; configFileId = null;
-    googleSessionLinked = false;
-    googleAuthNeedsReauth = false;
-    safeSetLocalStorage("google_session_linked", "0");
-    safeSetLocalStorage("gdrive_folder_id", "");
-    setSyncBadge("離線", false, true);
-    updateGoogleUI(false);
-    showToast("已成功中斷雲端連結", "info");
-};
+}
+const FIRESTORE_SHARED_WORKBOOKS_KEY = "firestore_shared_workbooks_v1";
+const FIRESTORE_INVITE_QUERY = "invite";
+function loadSharedWorkbookRefs() {
+    try { const raw = JSON.parse(localStorage.getItem(FIRESTORE_SHARED_WORKBOOKS_KEY) || "{}"); return raw && typeof raw === "object" ? raw : {}; } catch (_) { return {}; }
+}
+function saveSharedWorkbookRefs(map) { safeSetLocalStorage(FIRESTORE_SHARED_WORKBOOKS_KEY, JSON.stringify(map || {})); }
+function getSharedWorkbookRef(sheetName) { return loadSharedWorkbookRefs()[String(sheetName)] || null; }
+function firestoreWorkbookOwner(sheetName) {
+    const user = getFirebaseUser();
+    const shared = getSharedWorkbookRef(sheetName);
+    return String(shared?.ownerUid || user?.uid || "");
+}
+function firestoreWorkbookRole(sheetName = currentSheet) {
+    const user = getFirebaseUser();
+    if (!user?.uid) return "none";
+    const shared = getSharedWorkbookRef(sheetName);
+    if (shared?.ownerUid && shared.ownerUid !== user.uid) return String(shared.role || "viewer");
+    return "owner";
+}
+function canEditCurrentWorkbook() { return ["owner", "editor"].includes(firestoreWorkbookRole(currentSheet)); }
+function canManageCurrentWorkbook() { return firestoreWorkbookRole(currentSheet) === "owner"; }
+function firestoreWorkbookPathArgs(sheetName) { return ["users", firestoreWorkbookOwner(sheetName), "workbooks", firestoreWorkbookId(sheetName)]; }
+function firestoreRecordRef(sheetName, recordId) {
+    const { f } = firestoreApi();
+    const wb = firestoreWorkbookId(sheetName), owner = firestoreWorkbookOwner(sheetName);
+    return f.firestore.doc(f.db, "users", owner, "workbooks", wb, "records", String(recordId));
+}
+function firestoreWorkbookRef(sheetName) {
+    const { f } = firestoreApi();
+    const wb = firestoreWorkbookId(sheetName), owner = firestoreWorkbookOwner(sheetName);
+    return f.firestore.doc(f.db, "users", owner, "workbooks", wb);
+}
+function firestoreWorkbookRecordsCollection(sheetName) {
+    const { f } = firestoreApi();
+    return f.firestore.collection(f.db, "users", firestoreWorkbookOwner(sheetName), "workbooks", firestoreWorkbookId(sheetName), "records");
+}
+function renderFirestoreSharingPanel(data = null) {
+    const role = firestoreWorkbookRole(currentSheet);
+    const roleEl = document.getElementById("firestoreSharingRole");
+    const summary = document.getElementById("firestoreSharingSummary");
+    const ownerBox = document.getElementById("firestoreOwnerInviteBox");
+    const list = document.getElementById("firestoreWorkbookMembers");
+    if (!roleEl || !summary || !list) return;
+    const labels = { owner: "👑 擁有者", editor: "✏️ 編輯者", viewer: "👀 查看者", none: "未共享" };
+    roleEl.textContent = labels[role] || role;
+    roleEl.className = "text-[0.7rem] font-bold px-2 py-1 rounded-lg " + (role === "owner" ? "bg-indigo-100 text-indigo-700 dark:bg-indigo-900/40 dark:text-indigo-300" : role === "editor" ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300" : "bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-300");
+    if (ownerBox) ownerBox.classList.toggle("hidden", role !== "owner");
+    const members = data?.members && typeof data.members === "object" ? data.members : {};
+    const entries = Object.entries(members);
+    summary.textContent = role === "owner" ? `你是擁有者，可邀請與管理成員（${entries.length || 1} 人）` : `你以「${labels[role] || role}」身分使用此帳本`;
+    list.innerHTML = entries.length ? entries.map(([uid, m]) => `<div class="flex items-center justify-between gap-2 rounded-xl border border-gray-200 dark:border-gray-700 px-3 py-2"><div class="min-w-0"><div class="text-xs font-bold truncate">${escapeHtml(m.displayName || m.email || uid)}</div><div class="text-[0.65rem] text-gray-500 truncate">${escapeHtml(m.email || "")}</div></div><div class="flex items-center gap-1"><span class="text-[0.65rem] px-2 py-1 rounded-lg bg-gray-100 dark:bg-gray-700">${m.role === "owner" ? "👑 擁有者" : m.role === "editor" ? "✏️ 編輯者" : "👀 查看者"}</span>${role === "owner" && uid !== getFirebaseUser()?.uid ? `<button type="button" data-member-uid="${escapeHtml(uid)}" class="firestore-remove-member text-[0.65rem] text-red-500 hover:underline">移除</button>` : ""}</div></div>`).join("") : `<div class="text-center text-xs text-gray-400 py-2">目前只有你自己</div>`;
+    list.querySelectorAll(".firestore-remove-member").forEach(btn => btn.addEventListener("click", () => removeFirestoreWorkbookMember(btn.dataset.memberUid)));
+}
+async function loadFirestoreWorkbookMeta(sheetName = currentSheet) {
+    try {
+        const { f, user } = firestoreApi();
+        const ref = firestoreWorkbookRef(sheetName), snap = await f.firestore.getDoc(ref);
+        let data = snap.exists() ? (snap.data() || {}) : {};
+        if (snap.exists() && firestoreWorkbookRole(sheetName) === "owner" && (!data.members || !data.members[user.uid])) {
+            const members = { ...(data.members || {}) };
+            members[user.uid] = { role: "owner", email: user.email || "", displayName: user.displayName || user.email || "擁有者" };
+            await f.firestore.setDoc(ref, { ownerUid: user.uid, members, updatedAt: f.firestore.serverTimestamp() }, { merge: true });
+            data = { ...data, ownerUid: user.uid, members };
+        }
+        renderFirestoreSharingPanel(data);
+        return data;
+    } catch (e) { console.warn("共享帳本資訊讀取失敗", e); return null; }
+}
+async function createFirestoreWorkbookInvite() {
+    if (!canManageCurrentWorkbook()) return showToast("只有帳本擁有者可以建立邀請", "error");
+    const email = String(document.getElementById("firestoreInviteEmail")?.value || "").trim().toLowerCase();
+    const role = document.getElementById("firestoreInviteRole")?.value === "viewer" ? "viewer" : "editor";
+    const { f, user } = firestoreApi();
+    const token = (crypto.randomUUID ? crypto.randomUUID() : `${Date.now()}-${Math.random().toString(36).slice(2)}`).replace(/-/g, "");
+    const wbId = firestoreWorkbookId(currentSheet);
+    const expiresAt = new Date(Date.now() + 7 * 86400000);
+    const invite = { token, ownerUid: user.uid, workbookId: wbId, workbookName: currentSheet, role, inviteeEmail: email, createdByUid: user.uid, createdByEmail: user.email || "", createdAt: f.firestore.serverTimestamp(), expiresAt: expiresAt.toISOString(), status: "pending" };
+    await f.firestore.setDoc(f.firestore.doc(f.db, "workbookInvites", token), invite);
+    const url = `${location.origin}${location.pathname}?${FIRESTORE_INVITE_QUERY}=${encodeURIComponent(token)}`;
+    const box = document.getElementById("firestoreInviteResult");
+    if (box) { box.classList.remove("hidden"); box.innerHTML = `<div class="text-[0.7rem] text-gray-600 dark:text-gray-300">邀請連結 7 天內有效：</div><div class="flex gap-2"><input readonly value="${escapeHtml(url)}" class="flex-1 min-w-0 border rounded-xl px-2 py-2 text-[0.65rem] bg-gray-50 dark:bg-gray-800"><button type="button" id="copyFirestoreInviteBtn" class="bg-blue-600 text-white px-3 rounded-xl text-xs font-bold">複製</button></div>`; document.getElementById("copyFirestoreInviteBtn")?.addEventListener("click", async () => { try { await navigator.clipboard.writeText(url); showToast("✅ 邀請連結已複製"); } catch (_) { showToast("請手動複製邀請連結", "info"); } }); }
+    showToast("✅ 邀請連結已建立", "success");
+}
+async function removeFirestoreWorkbookMember(uid) {
+    if (!canManageCurrentWorkbook() || !uid) return;
+    const { f } = firestoreApi();
+    const ref = firestoreWorkbookRef(currentSheet), snap = await f.firestore.getDoc(ref);
+    if (!snap.exists()) return;
+    const data = snap.data() || {}, members = { ...(data.members || {}) };
+    delete members[uid];
+    await f.firestore.setDoc(ref, { members, updatedAt: f.firestore.serverTimestamp() }, { merge: true });
+    await loadFirestoreWorkbookMeta(currentSheet); showToast("已移除共享成員", "success");
+}
+async function processPendingFirestoreInvite() {
+    const token = new URLSearchParams(location.search).get(FIRESTORE_INVITE_QUERY);
+    if (!token || !getFirebaseUser()) return false;
+    try {
+        const { f, user } = firestoreApi();
+        const inviteRef = f.firestore.doc(f.db, "workbookInvites", token), snap = await f.firestore.getDoc(inviteRef);
+        if (!snap.exists()) throw new Error("邀請不存在或已失效");
+        const inv = snap.data() || {};
+        if (inv.expiresAt && Date.parse(inv.expiresAt) < Date.now()) throw new Error("邀請已過期");
+        if (inv.inviteeEmail && String(inv.inviteeEmail).toLowerCase() !== String(user.email || "").toLowerCase()) throw new Error("此邀請指定給其他 Google 帳號");
+        const ownerUid = String(inv.ownerUid || ""), wbId = String(inv.workbookId || "");
+        if (!ownerUid || !wbId) throw new Error("邀請資料不完整");
+        const wbRef = f.firestore.doc(f.db, "users", ownerUid, "workbooks", wbId);
+        const wbSnap = await f.firestore.getDoc(wbRef);
+        if (!wbSnap.exists()) throw new Error("找不到共享帳本");
+        const wb = wbSnap.data() || {}, members = { ...(wb.members || {}) };
+        members[user.uid] = { role: inv.role === "viewer" ? "viewer" : "editor", email: user.email || "", displayName: user.displayName || user.email || "成員", joinedAt: new Date().toISOString() };
+        await f.firestore.setDoc(wbRef, { members, updatedAt: f.firestore.serverTimestamp() }, { merge: true });
+        await f.firestore.setDoc(inviteRef, { status: "accepted", acceptedByUid: user.uid, acceptedAt: f.firestore.serverTimestamp() }, { merge: true });
+        const shared = loadSharedWorkbookRefs(); shared[inv.workbookName] = { ownerUid, workbookId: wbId, role: members[user.uid].role }; saveSharedWorkbookRefs(shared);
+        const nextMap = { ...sheetFileMap, [inv.workbookName]: wbId }; sheetFileMap = nextMap; safeSetLocalStorage("app_sheet_map", JSON.stringify(sheetFileMap));
+        currentSheet = inv.workbookName; safeSetLocalStorage("app_active_sheet", currentSheet); renderSheetSelector();
+        showToast(`✅ 已加入共享帳本「${currentSheet}」`, "success");
+        history.replaceState({}, "", location.pathname);
+        await loadRecordsFromFirestore(currentSheet); await loadFirestoreWorkbookMeta(currentSheet); startFirestoreRealtimeListener(currentSheet); renderAllViews();
+        return true;
+    } catch (e) { showToast(`邀請處理失敗：${e?.message || "未知錯誤"}`, "error"); return false; }
+}
+
+async function loadWorkbooksFromFirestore() {
+    if (!getFirebaseUser()) return false;
+    try {
+        const { f, user } = firestoreApi();
+        const snap = await f.firestore.getDocs(f.firestore.collection(f.db, "users", user.uid, "workbooks"));
+        applyFirestoreWorkbookSnapshot(snap);
+        return true;
+    } catch (e) {
+        console.error("Firestore workbook list error", e);
+        return false;
+    }
+}
+
+function applyFirestoreWorkbookSnapshot(snap) {
+    const nextMap = {};
+    snap.docs.forEach(d => {
+        const data = d.data() || {};
+        const name = String(data.name || d.id || "").trim();
+        if (name) nextMap[name] = d.id;
+    });
+    const shared = loadSharedWorkbookRefs();
+    Object.entries(shared).forEach(([name, meta]) => { if (meta?.ownerUid && meta?.workbookId) nextMap[name] = meta.workbookId; });
+    if (!nextMap["預設帳本"]) nextMap["預設帳本"] = firestoreWorkbookId("預設帳本");
+    sheetFileMap = nextMap;
+    safeSetLocalStorage("app_sheet_map", JSON.stringify(sheetFileMap));
+    if (!sheetFileMap[currentSheet]) {
+        currentSheet = Object.keys(sheetFileMap)[0] || "預設帳本";
+        safeSetLocalStorage("app_active_sheet", currentSheet);
+    }
+    renderSheetSelector();
+    const selector = document.getElementById("sheetSelector");
+    if (selector) selector.value = currentSheet;
+}
+
+function stopFirestoreConfigRealtimeListener() {
+    if (typeof firestoreConfigRealtimeUnsubscribe === "function") { try { firestoreConfigRealtimeUnsubscribe(); } catch (_) {} }
+    firestoreConfigRealtimeUnsubscribe = null;
+}
+function stopFirestoreWorkbookRealtimeListener() {
+    if (typeof firestoreWorkbookRealtimeUnsubscribe === "function") { try { firestoreWorkbookRealtimeUnsubscribe(); } catch (_) {} }
+    firestoreWorkbookRealtimeUnsubscribe = null;
+}
+function stopFirestoreMetaRealtimeListeners() {
+    stopFirestoreConfigRealtimeListener();
+    stopFirestoreWorkbookRealtimeListener();
+}
+function applyFirestoreConfigData(cfg = {}) {
+    firestoreConfigApplyingRemote = true;
+    try {
+        if (Array.isArray(cfg.members) && cfg.members.length) members = cfg.members.slice();
+        if (Array.isArray(cfg.categories) && cfg.categories.length) categories = cfg.categories.slice();
+        if (Array.isArray(cfg.quickTemplates) && cfg.quickTemplates.length) quickTemplates = JSON.parse(JSON.stringify(cfg.quickTemplates));
+        if (cfg.exchangeRates && typeof cfg.exchangeRates === "object" && !Array.isArray(cfg.exchangeRates)) exchangeRates = { ...exchangeRates, ...cfg.exchangeRates, TWD: 1 };
+        safeSetLocalStorage("split_members", JSON.stringify(members));
+        safeSetLocalStorage("app_categories", JSON.stringify(categories));
+        safeSetLocalStorage("app_quick_templates", JSON.stringify(quickTemplates));
+        safeSetLocalStorage("app_exchange_rates", JSON.stringify(exchangeRates));
+        renderMemberControls(); renderCategoryControls(); renderQuickTemplates(); renderRateChips();
+    } finally { firestoreConfigApplyingRemote = false; }
+}
+function markFirestoreConfigPending() {
+    if (firestoreConfigApplyingRemote) return;
+    safeSetLocalStorage(FIRESTORE_CONFIG_PENDING_KEY, "1");
+    safeSetLocalStorage(FIRESTORE_CONFIG_UPDATED_KEY, new Date().toISOString());
+}
+function clearFirestoreConfigPending() { safeSetLocalStorage(FIRESTORE_CONFIG_PENDING_KEY, ""); }
+function hasFirestoreConfigPending() { return localStorage.getItem(FIRESTORE_CONFIG_PENDING_KEY) === "1"; }
+function firestoreTimestampMs(value) {
+    if (!value) return 0;
+    if (typeof value === "string" || typeof value === "number") { const n = typeof value === "number" ? value : Date.parse(value); return Number.isFinite(n) ? n : 0; }
+    if (typeof value.toMillis === "function") { try { return Number(value.toMillis()) || 0; } catch (_) {} }
+    if (typeof value.seconds === "number") return value.seconds * 1000 + Math.floor((value.nanoseconds || 0) / 1e6);
+    return 0;
+}
+function startFirestoreConfigRealtimeListener() {
+    if (!getFirebaseUser()) return false;
+    if (firestoreConfigRealtimeUnsubscribe) return true;
+    try {
+        const { f } = firestoreApi();
+        firestoreConfigRealtimeUnsubscribe = f.firestore.onSnapshot(firestoreConfigRef(), snapshot => {
+            void (async () => {
+                if (!snapshot.exists()) return;
+                const cfg = snapshot.data() || {};
+                const remoteMs = firestoreTimestampMs(cfg.clientUpdatedAt || cfg.updatedAt);
+                const localMs = Date.parse(localStorage.getItem(FIRESTORE_CONFIG_UPDATED_KEY) || "") || 0;
+                if (hasFirestoreConfigPending() && localMs >= remoteMs) { await syncConfigToFirestore(false, false); return; }
+                if (remoteMs && localMs > remoteMs) { markFirestoreConfigPending(); await syncConfigToFirestore(false, false); return; }
+                applyFirestoreConfigData(cfg);
+                if (remoteMs) safeSetLocalStorage(FIRESTORE_CONFIG_UPDATED_KEY, new Date(remoteMs).toISOString());
+                clearFirestoreConfigPending();
+                setSyncBadge("Firestore 設定即時同步", false);
+            })().catch(e => console.warn("Firestore 設定即時同步處理失敗", e));
+        }, error => { console.warn("Firestore config realtime listener error", error); setSyncBadge("設定同步中斷", false, true); });
+        return true;
+    } catch (e) { console.error("Firestore config realtime listener setup error", e); return false; }
+}
+function startFirestoreWorkbookRealtimeListener() {
+    if (!getFirebaseUser()) return false;
+    if (firestoreWorkbookRealtimeUnsubscribe) return true;
+    try {
+        const { f, user } = firestoreApi();
+        const workbooksCol = f.firestore.collection(f.db, "users", user.uid, "workbooks");
+        firestoreWorkbookRealtimeUnsubscribe = f.firestore.onSnapshot(workbooksCol, snapshot => {
+            const previousSheet = currentSheet;
+            applyFirestoreWorkbookSnapshot(snapshot);
+            if (previousSheet !== currentSheet) {
+                stopFirestoreRealtimeListener();
+                void loadRecordsFromFirestore(currentSheet).then(() => startFirestoreRealtimeListener(currentSheet));
+            }
+        }, error => { console.warn("Firestore workbook realtime listener error", error); setSyncBadge("帳本清單同步中斷", false, true); });
+        return true;
+    } catch (e) { console.error("Firestore workbook realtime listener setup error", e); return false; }
+}
+
+
+function stopFirestoreRealtimeListener() {
+    if (typeof firestoreRealtimeUnsubscribe === "function") {
+        try { firestoreRealtimeUnsubscribe(); } catch (_) {}
+    }
+    firestoreRealtimeUnsubscribe = null;
+    firestoreRealtimeSheet = "";
+    firestoreRemoteVersions.clear();
+}
+
+function startFirestoreRealtimeListener(sheetName = currentSheet) {
+    if (!getFirebaseUser()) return false;
+    if (firestoreRealtimeUnsubscribe && firestoreRealtimeSheet === sheetName) return true;
+    stopFirestoreRealtimeListener();
+    try {
+        const { f, user } = firestoreApi();
+        const recordsCol = firestoreWorkbookRecordsCollection(sheetName);
+        const cursorMs = hasFirestorePending(sheetName) ? 0 : loadFirestoreSyncCursor(sheetName);
+        // 有待同步資料時強制完整對帳；其餘情況只監聽游標之後變動的紀錄。
+        const recordsQuery = cursorMs > 0
+            ? f.firestore.query(recordsCol, f.firestore.where("_syncedAt", ">=", new Date(cursorMs)))
+            : recordsCol;
+        firestoreRealtimeSheet = sheetName;
+        firestoreRealtimeUnsubscribe = f.firestore.onSnapshot(recordsQuery, snapshot => {
+            void (async () => {
+                if (sheetName !== currentSheet || firestoreRealtimeSheet !== sheetName) return;
+                const remoteRecords = snapshot.docs.map(d => ({ ...d.data(), _firestoreDocId: d.id })).filter(r => r && r.id).map(normalizeRecord);
+                remoteRecords.forEach(r => observeFirestoreLogicalClock(r._syncVersion));
+                updateFirestoreSyncCursor(sheetName, snapshot.docs.map(d => d.data()));
+                const localRecords = prepareFirestoreRecords(loadLocalSheetMirror(sheetName));
+                const byId = new Map(remoteRecords.map(r => [String(r.id), r]));
+                let localWon = false;
+                for (const local of localRecords) {
+                    const remote = byId.get(String(local.id));
+                    if (!remote) { byId.set(String(local.id), local); localWon = true; continue; }
+                    const cmp = compareFirestoreRecords(local, remote);
+                    if (cmp > 0) { byId.set(String(local.id), local); localWon = true; await backupFirestoreConflict(sheetName, local, remote, "local-version-newer-realtime"); }
+                    else if (cmp < 0 && JSON.stringify(local) !== JSON.stringify(remote)) await backupFirestoreConflict(sheetName, remote, local, "local-version-older-realtime");
+                }
+                // 舊版資料若仍被其他端實體刪除，只有在沒有已知本機較新版本時才移除。
+                for (const change of snapshot.docChanges()) {
+                    if (change.type !== "removed") continue;
+                    const removedId = String(change.doc.id);
+                    if (!byId.has(removedId)) continue;
+                    const local = localRecords.find(r => String(r.id) === removedId);
+                    const knownRemote = firestoreRemoteVersions.get(removedId);
+                    if (!local || !knownRemote || compareFirestoreRecords(local, knownRemote) <= 0) byId.delete(removedId);
+                }
+                firestoreRemoteVersions.clear();
+                remoteRecords.forEach(r => firestoreRemoteVersions.set(String(r.id), r));
+                const merged = normalizeAllRecords(Array.from(byId.values()));
+                cachedRecords = merged;
+                invalidateRecordSearchCache();
+                saveLocalSheetMirror(sheetName, merged);
+                scheduleRealtimeRenderAllViews();
+                setSyncBadge(localWon ? "本機版本較新，正在同步" : "Firestore 即時同步", !!localWon);
+                if (localWon) await saveRecordsToFirestore(false);
+            })().catch(e => console.warn("Firestore 即時同步處理失敗", e));
+        }, error => {
+            console.warn("Firestore 即時同步中斷", error);
+            setSyncBadge("Firestore 即時同步失敗", false, true);
+        });
+        return true;
+    } catch (e) {
+        console.error("Firestore realtime listener error", e);
+        return false;
+    }
+}
+
+async function deleteFirestoreWorkbook(sheetName) {
+    const { f } = firestoreApi();
+    const user = getFirebaseUser();
+    if (!user) throw new Error("請先登入 Firebase");
+    const recordsCol = firestoreWorkbookRecordsCollection(sheetName);
+    const snap = await f.firestore.getDocs(recordsCol);
+    const docs = snap.docs;
+    // 先嘗試清理收據；Storage 暫時失敗不阻塞 Firestore 帳本刪除，路徑會進背景清理佇列。
+    for (const d of docs) {
+        const record = d.data() || {};
+        if (record.receiptStoragePath) await deleteReceiptFromFirebase(record, sheetName);
+    }
+    // Firestore 刪除採批次，避免刪到一半因單筆網路問題造成大量不一致。
+    for (let i = 0; i < docs.length; i += 450) {
+        const chunk = docs.slice(i, i + 450);
+        const batch = f.firestore.writeBatch(f.db);
+        chunk.forEach(d => batch.delete(d.ref));
+        if (chunk.length) await batch.commit();
+    }
+    await f.firestore.deleteDoc(firestoreWorkbookRef(sheetName));
+}
+function firestoreConfigRef() {
+    const { f, user } = firestoreApi();
+    return f.firestore.doc(f.db, "users", user.uid, "config", "app");
+}
+
+
+function firebaseStorageApi() {
+    const f = window.__firebase;
+    if (!f?.storage || !f?.storageApi) throw new Error("Firebase Storage 尚未初始化");
+    const user = getFirebaseUser();
+    if (!user?.uid) throw new Error("請先登入 Firebase");
+    return { f, user };
+}
+function receiptStoragePath(sheetName, recordId, ext = "jpg") {
+    firebaseStorageApi();
+    const ownerUid = firestoreWorkbookOwner(sheetName);
+    const safeExt = /^(jpg|jpeg|png|webp|gif)$/i.test(String(ext)) ? String(ext).toLowerCase() : "jpg";
+    return `receipts/${ownerUid}/${firestoreWorkbookId(sheetName)}/${String(recordId)}.${safeExt}`;
+}
+function receiptDataUrlMeta(dataUrl) {
+    const m = String(dataUrl || "").match(/^data:(image\/[a-zA-Z0-9.+-]+);base64,/);
+    if (!m) return null;
+    const mime = m[1].toLowerCase();
+    const ext = mime === "image/png" ? "png" : mime === "image/webp" ? "webp" : mime === "image/gif" ? "gif" : "jpg";
+    return { mime, ext };
+}
+async function uploadReceiptToFirebase(record, sheetName = currentSheet) {
+    // 已存在 Firebase Storage 的收據不重複上傳；只有真正帶有 Base64 新照片時才重新上傳。
+    // 這可避免每次儲存/即時同步都重寫同一張收據，降低 Storage 流量與失敗機率。
+    if (!record?.receipt || !String(record.receipt).startsWith("data:image/")) return record;
+    if (!getFirebaseUser()) return { ...record, _receiptUploadFailed: true };
+    try {
+        const { f } = firebaseStorageApi();
+        const meta = receiptDataUrlMeta(record.receipt);
+        if (!meta) return { ...record, _receiptUploadFailed: true };
+        const path = receiptStoragePath(sheetName, record.id, meta.ext);
+        const ref = f.storageApi.storageRef(f.storage, path);
+        await f.storageApi.uploadString(ref, String(record.receipt), "data_url", { contentType: meta.mime, cacheControl: "private,max-age=31536000" });
+        const url = await f.storageApi.getDownloadURL(ref);
+        return { ...record, receipt: "", receiptStoragePath: path, receiptUrl: url, receiptStoredAt: new Date().toISOString(), _receiptUploadFailed: false };
+    } catch (e) {
+        console.warn("收據上傳 Firebase Storage 失敗，本次不寫入含 Base64 的 Firestore 紀錄：", e);
+        return { ...record, _receiptUploadFailed: true };
+    }
+}
+async function deleteReceiptFromFirebase(record, sheetName = currentSheet) {
+    const path = record?.receiptStoragePath;
+    if (!path || !window.__firebase?.storageApi) return true;
+    try {
+        const { f } = firebaseStorageApi();
+        await f.storageApi.deleteObject(f.storageApi.storageRef(f.storage, path));
+        clearFirestoreStorageDelete(path);
+        return true;
+    } catch (e) {
+        if (String(e?.code || "").includes("object-not-found")) { clearFirestoreStorageDelete(path); return true; }
+        queueFirestoreStorageDelete(path, sheetName);
+        console.warn("刪除 Firebase 收據失敗，已加入背景清理佇列：", e);
+        return false;
+    }
+}
+function openReceiptSource(record) {
+    if (!record) return "";
+    return record.receiptUrl || record.receipt || "";
+}
+
+async function mapWithConcurrency(items, worker, concurrency = 4) {
+    const list = Array.isArray(items) ? items : [];
+    if (!list.length) return [];
+    const limit = Math.max(1, Math.min(Number(concurrency) || 4, list.length));
+    const results = new Array(list.length);
+    let cursor = 0;
+    async function runner() {
+        while (true) {
+            const index = cursor++;
+            if (index >= list.length) return;
+            results[index] = await worker(list[index], index);
+        }
+    }
+    await Promise.all(Array.from({ length: limit }, () => runner()));
+    return results;
+}
+
+/* ============================================================
+   Firebase 雲端資料完整性檢查器
+   - 只讀取並比對，不會自動修改資料
+   - 檢查目前帳本：本機快取 / Firestore 筆數 / 版本 / 待同步 / 收據
+   ============================================================ */
+let firestoreIntegrityRunning = false;
+let lastFirestoreIntegrityResult = null;
+
+function firestoreIntegrityCard(label, value, note = "") {
+    return `<div class="bg-white dark:bg-gray-800/90 border border-gray-200 dark:border-gray-700 rounded-xl p-2.5 text-center shadow-sm">
+        <div class="text-[0.68rem] text-gray-500 dark:text-gray-400 font-bold">${escapeHtml(label)}</div>
+        <div class="text-base sm:text-lg font-mono font-bold text-gray-800 dark:text-gray-100 mt-0.5">${escapeHtml(String(value))}</div>
+        ${note ? `<div class="text-[0.62rem] text-gray-400 dark:text-gray-500 mt-0.5">${escapeHtml(note)}</div>` : ""}
+    </div>`;
+}
+
+function firestoreIntegritySetStatus(type, title, detail = "") {
+    const el = document.getElementById("firestoreIntegrityStatus");
+    if (!el) return;
+    el.className = "rounded-xl px-3 py-2 text-xs font-bold";
+    const styles = {
+        ok: "bg-emerald-50 text-emerald-700 border border-emerald-200 dark:bg-emerald-950/30 dark:text-emerald-300 dark:border-emerald-800",
+        warn: "bg-amber-50 text-amber-700 border border-amber-200 dark:bg-amber-950/30 dark:text-amber-300 dark:border-amber-800",
+        error: "bg-red-50 text-red-700 border border-red-200 dark:bg-red-950/30 dark:text-red-300 dark:border-red-800",
+        loading: "bg-indigo-50 text-indigo-700 border border-indigo-200 dark:bg-indigo-950/30 dark:text-indigo-300 dark:border-indigo-800"
+    };
+    el.className += " " + (styles[type] || styles.loading);
+    el.innerHTML = `${escapeHtml(title)}${detail ? `<span class="font-normal opacity-80 ml-1">${escapeHtml(detail)}</span>` : ""}`;
+    el.classList.remove("hidden");
+}
+
+async function runFirestoreIntegrityCheck(options = {}) {
+    if (firestoreIntegrityRunning) return lastFirestoreIntegrityResult;
+    if (!getFirebaseUser()) {
+        firestoreIntegritySetStatus("error", "❌ 尚未登入 Firebase", "請先登入後再檢查");
+        showToast("請先登入 Firebase", "error");
+        return null;
+    }
+    if (!isFirestoreMode()) {
+        firestoreIntegritySetStatus("warn", "⚠️ 目前不是 Firestore 雲端模式", "請先切換到 Firebase / Firestore 模式");
+        return null;
+    }
+
+    firestoreIntegrityRunning = true;
+    const runBtn = document.getElementById("firestoreIntegrityRunBtn");
+    const repairBtn = document.getElementById("firestoreIntegrityRepairBtn");
+    if (runBtn) { runBtn.disabled = true; runBtn.textContent = "檢查中…"; }
+    if (repairBtn) repairBtn.classList.add("hidden");
+    firestoreIntegritySetStatus("loading", "⏳ 正在檢查 Firebase…", "會完整讀取目前帳本的 Firestore records");
+
+    try {
+        const { f, user } = firestoreApi();
+        const sheetName = currentSheet;
+        const localRecords = prepareFirestoreRecords(loadLocalSheetMirror(sheetName));
+        const recordsCol = firestoreWorkbookRecordsCollection(sheetName);
+        const snap = await f.firestore.getDocs(recordsCol);
+        const cloudRecords = snap.docs.map(d => d.data()).filter(r => r && r.id).map(normalizeRecord);
+        cloudRecords.forEach(r => observeFirestoreLogicalClock(r._syncVersion));
+
+        const localById = new Map(localRecords.map(r => [String(r.id), r]));
+        const cloudById = new Map(cloudRecords.map(r => [String(r.id), r]));
+        const localOnly = [], cloudOnly = [], localNewer = [], cloudNewer = [], mismatched = [];
+        for (const [id, local] of localById) {
+            const remote = cloudById.get(id);
+            if (!remote) { localOnly.push(local); continue; }
+            const cmp = compareFirestoreRecords(local, remote);
+            if (cmp > 0) localNewer.push({ local, remote });
+            else if (cmp < 0) cloudNewer.push({ local, remote });
+            if (cmp !== 0) mismatched.push({ local, remote, cmp });
+        }
+        for (const [id, remote] of cloudById) if (!localById.has(id)) cloudOnly.push(remote);
+
+        const pending = hasFirestorePending(sheetName);
+        const activeLocal = localRecords.filter(r => !r.deleted && !r.purged).length;
+        const activeCloud = cloudRecords.filter(r => !r.deleted && !r.purged).length;
+        const tombstoneLocal = localRecords.filter(r => r.deleted || r.purged).length;
+        const tombstoneCloud = cloudRecords.filter(r => r.deleted || r.purged).length;
+        const localBase64Receipts = localRecords.filter(r => String(r?.receipt || "").startsWith("data:image/")).length;
+        const cloudReceiptRefs = cloudRecords.filter(r => r?.receiptStoragePath || r?.receiptUrl).length;
+        const receiptTargets = cloudRecords.filter(r => r?.receiptStoragePath);
+        let receiptBroken = 0, receiptChecked = 0;
+        const receiptCheckEnabled = options.checkReceipts !== false;
+        if (receiptCheckEnabled && receiptTargets.length) {
+            const checks = await mapWithConcurrency(receiptTargets, async record => {
+                try {
+                    const ref = f.storageApi.storageRef(f.storage, record.receiptStoragePath);
+                    await f.storageApi.getDownloadURL(ref);
+                    return true;
+                } catch (_) { return false; }
+            }, 4);
+            receiptChecked = checks.length;
+            receiptBroken = checks.filter(ok => !ok).length;
+        }
+
+        const cursor = loadFirestoreSyncCursor(sheetName);
+        const cleanIds = localOnly.length === 0 && cloudOnly.length === 0;
+        const versionsMatch = mismatched.length === 0;
+        const receiptsOk = localBase64Receipts === 0 && receiptBroken === 0;
+        const fullyConsistent = cleanIds && versionsMatch && !pending && receiptsOk;
+        const needsRepair = !fullyConsistent;
+
+        const result = {
+            sheetName, localTotal: localRecords.length, cloudTotal: cloudRecords.length,
+            activeLocal, activeCloud, tombstoneLocal, tombstoneCloud,
+            localOnly, cloudOnly, localNewer, cloudNewer, mismatched,
+            pending, cursor, localBase64Receipts, cloudReceiptRefs, receiptChecked, receiptBroken,
+            fullyConsistent, checkedAt: new Date().toISOString()
+        };
+        lastFirestoreIntegrityResult = result;
+
+        const cards = document.getElementById("firestoreIntegrityCards");
+        if (cards) cards.innerHTML = [
+            firestoreIntegrityCard("本機紀錄", localRecords.length, `${activeLocal} 筆有效`),
+            firestoreIntegrityCard("Firebase 紀錄", cloudRecords.length, `${activeCloud} 筆有效`),
+            firestoreIntegrityCard("ID 差異", localOnly.length + cloudOnly.length, `本機缺 ${cloudOnly.length} / 雲端缺 ${localOnly.length}`),
+            firestoreIntegrityCard("版本差異", mismatched.length, `本機新 ${localNewer.length} / 雲端新 ${cloudNewer.length}`),
+            firestoreIntegrityCard("待同步", pending ? "是" : "否", pending ? "有同步佇列" : "無待同步"),
+            firestoreIntegrityCard("雲端收據", cloudReceiptRefs, receiptChecked ? `檢查 ${receiptChecked} / 異常 ${receiptBroken}` : "未執行檔案檢查"),
+            firestoreIntegrityCard("本機 Base64", localBase64Receipts, localBase64Receipts ? "仍有待上傳圖片" : "無"),
+            firestoreIntegrityCard("同步游標", cursor ? new Date(cursor).toLocaleString() : "尚未建立", cursor ? "增量同步" : "首次完整同步")
+        ].join("");
+
+        const detail = document.getElementById("firestoreIntegrityDetails");
+        if (detail) {
+            const issueRows = [];
+            if (localOnly.length) issueRows.push(`⚠️ 本機獨有：${localOnly.length} 筆（尚未存在於 Firebase）`);
+            if (cloudOnly.length) issueRows.push(`⚠️ Firebase 獨有：${cloudOnly.length} 筆（本機快取尚未包含）`);
+            if (localNewer.length) issueRows.push(`⚠️ 本機版本較新：${localNewer.length} 筆`);
+            if (cloudNewer.length) issueRows.push(`⚠️ Firebase 版本較新：${cloudNewer.length} 筆`);
+            if (pending) issueRows.push("⚠️ 同步佇列仍有待同步資料");
+            if (localBase64Receipts) issueRows.push(`⚠️ 有 ${localBase64Receipts} 筆收據仍以 Base64 留在本機，尚未完成 Storage 上傳`);
+            if (receiptBroken) issueRows.push(`❌ 有 ${receiptBroken} 個 Firebase Storage 收據路徑無法取得檔案`);
+            if (!issueRows.length) issueRows.push("✅ 本機與 Firebase 的紀錄 ID、版本與收據狀態目前一致。");
+            detail.innerHTML = `<div class="font-bold text-gray-700 dark:text-gray-200 mb-1">檢查結果</div>${issueRows.map(x => `<div>${escapeHtml(x)}</div>`).join("")}<div class="text-[0.65rem] text-gray-400 mt-2">檢查時間：${escapeHtml(new Date().toLocaleString())}｜帳本：${escapeHtml(sheetName)}</div>`;
+            detail.classList.remove("hidden");
+        }
+
+        if (fullyConsistent) firestoreIntegritySetStatus("ok", "✅ Firebase 雲端資料完整一致", "本機快取與雲端版本、ID、收據狀態均正常");
+        else firestoreIntegritySetStatus("warn", "⚠️ 發現資料需要同步或進一步處理", `${localOnly.length + cloudOnly.length + mismatched.length} 筆存在差異`);
+        if (repairBtn && needsRepair) repairBtn.classList.remove("hidden");
+        if (options.silent !== true) showToast(fullyConsistent ? "Firebase 完整性檢查完成：資料一致" : "Firebase 完整性檢查完成：發現差異", fullyConsistent ? "success" : "info");
+        return result;
+    } catch (e) {
+        console.error("Firestore integrity check error", e);
+        firestoreIntegritySetStatus("error", "❌ 完整性檢查失敗", e?.message || "無法讀取 Firebase");
+        showToast(`完整性檢查失敗：${e?.message || "未知錯誤"}`, "error");
+        return null;
+    } finally {
+        firestoreIntegrityRunning = false;
+        if (runBtn) { runBtn.disabled = false; runBtn.textContent = "🔍 立即檢查"; }
+    }
+}
+window.runFirestoreIntegrityCheck = runFirestoreIntegrityCheck;
+
+async function repairFirestoreIntegrity() {
+    if (!lastFirestoreIntegrityResult) return runFirestoreIntegrityCheck();
+    const ok = await saveRecordsToFirestore(true);
+    if (!ok) return;
+    showToast("同步完成，正在重新檢查…", "info");
+    await runFirestoreIntegrityCheck({ silent: true });
+}
+window.repairFirestoreIntegrity = repairFirestoreIntegrity;
+
+document.getElementById("firestoreIntegrityBtn")?.addEventListener("click", () => {
+    switchTab("settings");
+    setTimeout(() => document.getElementById("firestoreIntegrityPanel")?.scrollIntoView({ behavior: "smooth", block: "center" }), 50);
+    void runFirestoreIntegrityCheck();
+});
+document.getElementById("firestoreIntegrityRunBtn")?.addEventListener("click", () => void runFirestoreIntegrityCheck());
+document.getElementById("firestoreIntegrityRepairBtn")?.addEventListener("click", () => void repairFirestoreIntegrity());
+document.getElementById("firestoreCreateInviteBtn")?.addEventListener("click", () => void createFirestoreWorkbookInvite());
+
+
+async function saveRecordsToFirestore(interactive = false, purgeIds = null) {
+    if (!getFirebaseUser()) {
+        setSyncBadge("請先登入 Firebase", false, true);
+        return false;
+    }
+    const sheetName = currentSheet;
+    if (!canEditCurrentWorkbook()) {
+        setSyncBadge("僅可查看", false, true);
+        if (interactive) showToast("此共享帳本目前是唯讀權限，無法修改資料", "error");
+        return false;
+    }
+    let recordsSnapshot = prepareFirestoreRecords(loadLocalSheetMirror(sheetName));
+    if (getFirebaseUser()) {
+        // 收據上傳採受控並行，避免大量紀錄逐張等待；Firestore 寫入仍維持批次。
+        const converted = await mapWithConcurrency(recordsSnapshot, record => uploadReceiptToFirebase(record, sheetName), 4);
+        const failedReceipt = converted.some(r => r && r._receiptUploadFailed);
+        if (failedReceipt) {
+            markFirestorePending(sheetName);
+            saveLocalSheetMirror(sheetName, normalizeAllRecords(recordsSnapshot));
+            setSyncBadge("收據待上傳，資料保留本機", false, true);
+            if (interactive) showToast("收據尚未成功上傳，已保留本機資料，避免把 Base64 大檔寫入 Firestore", "info");
+            return false;
+        }
+        recordsSnapshot = prepareFirestoreRecords(converted);
+        for (const record of recordsSnapshot) {
+            const oldPath = record?._previousReceiptStoragePath;
+            if (oldPath && oldPath !== record.receiptStoragePath) await deleteReceiptFromFirebase({ receiptStoragePath: oldPath }, sheetName);
+        }
+        saveLocalSheetMirror(sheetName, recordsSnapshot);
+    } else {
+        saveLocalSheetMirror(sheetName, recordsSnapshot);
+    }
+    try {
+        setSyncBadge("Firestore 同步中", true);
+        const { f } = firestoreApi();
+        const purgeSet = purgeIds instanceof Set ? purgeIds : new Set();
+        const recordsCol = firestoreWorkbookRecordsCollection(sheetName);
+        const remoteSnap = await f.firestore.getDocs(recordsCol);
+        const remoteRecords = remoteSnap.docs.map(d => d.data()).filter(r => r && r.id).map(normalizeRecord);
+        remoteRecords.forEach(r => observeFirestoreLogicalClock(r._syncVersion));
+        const remoteById = new Map(remoteRecords.map(r => [String(r.id), r]));
+        const localById = new Map(recordsSnapshot.map(r => [String(r.id), r]));
+        const merged = new Map();
+
+        for (const [id, local] of localById) {
+            if (purgeSet.has(id)) continue;
+            const remote = remoteById.get(id);
+            if (!remote) { merged.set(id, local); continue; }
+            const cmp = compareFirestoreRecords(local, remote);
+            if (cmp >= 0) {
+                merged.set(id, local);
+                if (cmp > 0) await backupFirestoreConflict(sheetName, local, remote, "remote-version-overwritten");
+            } else {
+                merged.set(id, remote);
+                await backupFirestoreConflict(sheetName, remote, local, "local-version-lost");
+            }
+        }
+        for (const [id, remote] of remoteById) {
+            if (purgeSet.has(id)) continue;
+            if (!merged.has(id)) merged.set(id, remote);
+        }
+
+        // 永久刪除改為「墓碑」：保留版本資訊，避免其他離線裝置把舊紀錄復活。
+        for (const id of purgeSet) {
+            const oldRecord = cachedRecords.find(r => String(r.id) === String(id)) || remoteById.get(String(id));
+            if (oldRecord?.receiptStoragePath) await deleteReceiptFromFirebase(oldRecord, sheetName);
+            const tombstone = markFirestoreRecordVersion({
+                id: String(id), title: String(oldRecord?.title || ""), amount: Number(oldRecord?.amount || 0), currency: String(oldRecord?.currency || "TWD"),
+                twdAmount: Number(oldRecord?.twdAmount || 0), rate: Number(oldRecord?.rate || 1), category: String(oldRecord?.category || "其他"),
+                type: String(oldRecord?.type || "expense"), date: oldRecord?.date || getTodayString(), payer: oldRecord?.payer || "", payers: oldRecord?.payers || [],
+                shares: oldRecord?.shares || [], splitMembers: oldRecord?.splitMembers || [], splitMode: oldRecord?.splitMode || null, splitValues: oldRecord?.splitValues || {},
+                deleted: true, purged: true, updatedAt: new Date().toISOString()
+            }, true);
+            merged.set(String(id), tombstone);
+        }
+
+        const finalRecords = prepareFirestoreRecords(Array.from(merged.values()));
+        const cleanRecords = finalRecords.map(r => {
+            const { _previousReceiptStoragePath, _receiptUploadFailed, receipt, ...clean } = r || {};
+            return clean;
+        });
+        saveLocalSheetMirror(sheetName, cleanRecords);
+
+        await f.firestore.setDoc(firestoreWorkbookRef(sheetName), {
+            name: sheetName,
+            ownerUid: firestoreWorkbookOwner(sheetName),
+            updatedAt: f.firestore.serverTimestamp(),
+            recordCount: cleanRecords.filter(r => !r.deleted && !r.purged).length,
+            migratedFrom: "google-drive-json",
+            syncDeviceId: getFirestoreDeviceId(),
+            syncClock: getFirestoreLogicalClock()
+        }, { merge: true });
+
+        for (let i = 0; i < cleanRecords.length; i += 450) {
+            const chunk = cleanRecords.slice(i, i + 450), batch = f.firestore.writeBatch(f.db);
+            chunk.forEach(r => batch.set(firestoreRecordRef(sheetName, r.id), { ...r, _sheetName: sheetName, _syncedAt: f.firestore.serverTimestamp() }, { merge: true }));
+            if (chunk.length) await batch.commit();
+        }
+        clearFirestorePending(sheetName);
+        setSyncBadge("Firestore 已同步", false);
+        return true;
+    } catch (e) {
+        markFirestorePending(sheetName);
+        console.error("Firestore records sync error", e);
+        setSyncBadge("Firestore 同步失敗", false, true);
+        if (interactive) showToast(`Firestore 同步失敗：${e?.message || "未知錯誤"}`, "error");
+        return false;
+    }
+}
+
+async function loadRecordsFromFirestore(sheetName = currentSheet) {
+    if (!getFirebaseUser()) return false;
+    const requestId = ++recordsLoadRequestId;
+    const localRecords = prepareFirestoreRecords(loadLocalSheetMirror(sheetName));
+    // 先顯示本機快取，避免大型帳本等待 Firestore 網路回應才出畫面。
+    if (sheetName === currentSheet && requestId === recordsLoadRequestId && localRecords.length) {
+        cachedRecords = normalizeAllRecords(localRecords);
+        invalidateRecordSearchCache();
+        renderAllViews();
+    }
+    try {
+        const { f, user } = firestoreApi();
+        const recordsCol = firestoreWorkbookRecordsCollection(sheetName);
+        const cursorMs = hasFirestorePending(sheetName) ? 0 : loadFirestoreSyncCursor(sheetName);
+        setSyncBadge(cursorMs > 0 ? "Firestore 增量同步中" : "Firestore 首次載入中", true);
+        // 第一次需要完整資料；之後只抓 _syncedAt 游標之後的變更。
+        const recordsQuery = cursorMs > 0
+            ? f.firestore.query(recordsCol, f.firestore.where("_syncedAt", ">=", new Date(cursorMs)))
+            : recordsCol;
+        const snap = await f.firestore.getDocs(recordsQuery);
+        const remoteRecords = snap.docs.map(d => d.data()).filter(r => r && r.id).map(normalizeRecord);
+        remoteRecords.forEach(r => observeFirestoreLogicalClock(r._syncVersion));
+        updateFirestoreSyncCursor(sheetName, snap.docs.map(d => d.data()));
+
+        // 有增量游標時以本機完整快取為基礎；沒有游標才從空集合建立完整遠端快取。
+        const baseRecords = cursorMs > 0 ? localRecords : [];
+        const byId = new Map(baseRecords.map(r => [String(r.id), r]));
+        let localWon = false;
+        for (const remote of remoteRecords) {
+            const local = byId.get(String(remote.id));
+            if (!local) { byId.set(String(remote.id), remote); continue; }
+            const cmp = compareFirestoreRecords(local, remote);
+            if (cmp > 0) {
+                byId.set(String(remote.id), local);
+                localWon = true;
+                await backupFirestoreConflict(sheetName, local, remote, "local-version-newer-on-incremental-load");
+            } else if (cmp < 0) {
+                byId.set(String(remote.id), remote);
+                await backupFirestoreConflict(sheetName, remote, local, "local-version-older-on-incremental-load");
+            }
+        }
+        // 首次完整載入仍需保留本機尚未上雲的資料。
+        if (!cursorMs) {
+            for (const local of localRecords) {
+                const remote = byId.get(String(local.id));
+                if (!remote) { byId.set(String(local.id), local); localWon = true; }
+            }
+        }
+        const merged = normalizeAllRecords(Array.from(byId.values()));
+        if (sheetName !== currentSheet || requestId !== recordsLoadRequestId) return true;
+        cachedRecords = merged;
+        invalidateRecordSearchCache();
+        saveLocalSheetMirror(sheetName, merged);
+        renderAllViews();
+        if (localWon) await saveRecordsToFirestore(false);
+        setSyncBadge(localWon ? "本機版本較新，正在同步" : "Firestore 已同步", !!localWon);
+        return true;
+    } catch (e) {
+        console.error("Firestore records load error", e);
+        setSyncBadge(navigator.onLine ? "Firestore 載入失敗" : "離線快取", false, true);
+        if (requestId === recordsLoadRequestId) { cachedRecords = normalizeAllRecords(localRecords); renderAllViews(); }
+        return false;
+    }
+}
+
+async function syncConfigToFirestore(interactive = false, preserveLocalVersion = true) {
+    if (!getFirebaseUser()) return false;
+    if (!firestoreConfigApplyingRemote && preserveLocalVersion) markFirestoreConfigPending();
+    try {
+        const { f } = firestoreApi();
+        const clientUpdatedAt = localStorage.getItem(FIRESTORE_CONFIG_UPDATED_KEY) || new Date().toISOString();
+        await f.firestore.setDoc(firestoreConfigRef(), {
+            members: Array.isArray(members) ? members.slice() : [],
+            categories: Array.isArray(categories) ? categories.slice() : [],
+            quickTemplates: Array.isArray(quickTemplates) ? JSON.parse(JSON.stringify(quickTemplates)) : [],
+            exchangeRates: exchangeRates && typeof exchangeRates === "object" ? JSON.parse(JSON.stringify(exchangeRates)) : {},
+            activeSheet: currentSheet, clientUpdatedAt, updatedAt: f.firestore.serverTimestamp()
+        }, { merge: true });
+        clearFirestoreConfigPending();
+        setSyncBadge("Firestore 設定已同步", false);
+        return true;
+    } catch (e) {
+        if (!firestoreConfigApplyingRemote) markFirestoreConfigPending();
+        console.error("Firestore config sync error", e);
+        setSyncBadge("設定待同步", false, true);
+        if (interactive) showToast(`設定同步失敗：${e?.message || "未知錯誤"}`, "error");
+        return false;
+    }
+}
+
+async function loadConfigFromFirestore() {
+    if (!getFirebaseUser()) return false;
+    try {
+        const { f } = firestoreApi();
+        const snap = await f.firestore.getDoc(firestoreConfigRef());
+        if (!snap.exists()) return await syncConfigToFirestore(false, true);
+        const cfg = snap.data() || {};
+        const remoteMs = firestoreTimestampMs(cfg.clientUpdatedAt || cfg.updatedAt);
+        const localMs = Date.parse(localStorage.getItem(FIRESTORE_CONFIG_UPDATED_KEY) || "") || 0;
+        if (localMs > remoteMs && localMs) return await syncConfigToFirestore(false, false);
+        applyFirestoreConfigData(cfg);
+        if (remoteMs) safeSetLocalStorage(FIRESTORE_CONFIG_UPDATED_KEY, new Date(remoteMs).toISOString());
+        clearFirestoreConfigPending();
+        return true;
+    } catch (e) { console.error("Firestore config load error", e); setSyncBadge("設定離線快取", false, true); return false; }
+}
+
+
+async function migrateGoogleDriveToFirestore() {
+    const user = getFirebaseUser();
+    if (!user) return showToast("請先登入 Firebase Google 帳號", "error");
+    if (!(await ensureGoogleAccessToken(true))) return showToast("需要一次 Google Drive 授權，才能讀取舊 JSON", "error");
+    if (!driveFolderId) {
+        const ready = await setupDriveEnvironment();
+        if (!ready || !driveFolderId) return showToast("Google Drive 尚未初始化完成", "error");
+    }
+    const { f } = firestoreApi();
+    const oldBackend = localStorage.getItem("app_cloud_backend") || "drive";
+    try {
+        setSyncBadge("搬移中", true);
+        const config = configFileId ? await (await driveApi(`https://www.googleapis.com/drive/v3/files/${configFileId}?alt=media`)).json() : {
+            members, categories, quickTemplates, exchangeRates
+        };
+        await f.firestore.setDoc(firestoreConfigRef(), {
+            members: Array.isArray(config.members) ? config.members : members,
+            categories: Array.isArray(config.categories) ? config.categories : categories,
+            quickTemplates: Array.isArray(config.quickTemplates) ? config.quickTemplates : quickTemplates,
+            exchangeRates: config.exchangeRates && typeof config.exchangeRates === "object" ? config.exchangeRates : exchangeRates,
+            migratedFrom: "google-drive-json",
+            migratedAt: f.firestore.serverTimestamp()
+        }, { merge: true });
+
+        const names = Array.from(new Set([...Object.keys(sheetFileMap || {}), currentSheet || "預設帳本"]));
+        let total = 0;
+        for (const sheetName of names) {
+            let records = [];
+            const fileId = sheetFileMap[sheetName];
+            if (fileId) {
+                const res = await driveApi(`https://www.googleapis.com/drive/v3/files/${fileId}?alt=media`);
+                records = normalizeAllRecords(await res.json());
+            } else if (sheetName === currentSheet) {
+                records = normalizeAllRecords(loadLocalSheetMirror(sheetName));
+            }
+            await f.firestore.setDoc(firestoreWorkbookRef(sheetName), {
+                name: sheetName,
+                ownerUid: user.uid,
+                updatedAt: f.firestore.serverTimestamp(),
+                recordCount: records.length,
+                members: { [user.uid]: { role: "owner", email: user.email || "", displayName: user.displayName || user.email || "擁有者" } },
+                migratedFrom: "google-drive-json"
+            }, { merge: true });
+            for (let i = 0; i < records.length; i += 450) {
+                const chunk = records.slice(i, i + 450);
+                const batch = f.firestore.writeBatch(f.db);
+                for (const sourceRecord of chunk) {
+                    const r = await uploadReceiptToFirebase(sourceRecord, sheetName);
+                    batch.set(firestoreRecordRef(sheetName, r.id), { ...r, _sheetName: sheetName, _migratedAt: f.firestore.serverTimestamp() }, { merge: true });
+                }
+                if (chunk.length) await batch.commit();
+                total += chunk.length;
+            }
+        }
+        await f.firestore.setDoc(f.firestore.doc(f.db, "users", user.uid), {
+            email: user.email || "",
+            displayName: user.displayName || "",
+            migratedFromGoogleDriveAt: f.firestore.serverTimestamp(),
+            migratedWorkbookCount: names.length,
+            migratedRecordCount: total
+        }, { merge: true });
+        setFirestoreMode(true);
+        await loadConfigFromFirestore();
+        await loadRecordsFromFirestore(currentSheet);
+        startFirestoreConfigRealtimeListener();
+        startFirestoreWorkbookRealtimeListener();
+        startFirestoreRealtimeListener(currentSheet);
+        renderAllViews();
+        setSyncBadge("Firestore 已啟用", false);
+        showToast(`✅ 已將 ${names.length} 個帳本、${total} 筆紀錄搬到 Firestore`, "success");
+        return true;
+    } catch (e) {
+        setFirestoreMode(oldBackend === "firestore");
+        setSyncBadge("搬移失敗", false, true);
+        console.error("Google Drive → Firestore migration failed", e);
+        showToast(`搬移失敗：${e?.message || "未知錯誤"}`, "error");
+        return false;
+    }
+}
+
+async function saveRecordsToCloud(interactive = false, purgeIds = null) {
+    return isFirestoreMode() ? saveRecordsToFirestore(interactive, purgeIds) : saveRecordsToDrive(interactive, purgeIds);
+}
 
 // ==========================================
 // 帳本管理 (Ledger Mgmt)
 // ==========================================
 document.getElementById("addSheetBtn").onclick = async function() {
-    if (!(await ensureGoogleAccessToken(true))) return showToast("請先完成 Google 授權", "error");
-    if (!driveFolderId) {
-        await setupDriveEnvironment();
-        if (!driveFolderId) return showToast("Google Drive 尚未初始化完成", "error");
+    const useFirestore = isFirestoreMode() && getFirebaseUser();
+    if (!useFirestore) {
+        if (!(await ensureGoogleAccessToken(true))) return showToast("請先完成 Google 授權", "error");
+        if (!driveFolderId) {
+            await setupDriveEnvironment();
+            if (!driveFolderId) return showToast("Google Drive 尚未初始化完成", "error");
+        }
     }
     const sheetName = prompt("請輸入新帳本名稱：", "旅行帳本");
     if (!sheetName || sheetName.trim() === "") return;
     const trimmedName = sheetName.trim().replace(/[\\/:*?"<>|]/g, "-").slice(0, 120);
     if (!trimmedName) return showToast("帳本名稱無效", "error");
     try {
+        setSyncBadge("創建中", true);
+        if (useFirestore) {
+            await loadWorkbooksFromFirestore();
+            if (sheetFileMap[trimmedName]) return showToast("帳本名稱已存在", "error");
+            const { f } = firestoreApi();
+            await f.firestore.setDoc(firestoreWorkbookRef(trimmedName), {
+                name: trimmedName, recordCount: 0, createdAt: f.firestore.serverTimestamp(), updatedAt: f.firestore.serverTimestamp(), backend: "firestore"
+            }, { merge: true });
+            sheetFileMap[trimmedName] = firestoreWorkbookId(trimmedName);
+            safeSetLocalStorage("app_sheet_map", JSON.stringify(sheetFileMap));
+            currentSheet = trimmedName;
+            safeSetLocalStorage("app_active_sheet", currentSheet);
+            renderSheetSelector();
+            document.getElementById("sheetSelector").value = trimmedName;
+            cachedRecords = [];
+            saveLocalSheetMirror(currentSheet, cachedRecords);
+            startFirestoreConfigRealtimeListener();
+            startFirestoreWorkbookRealtimeListener();
+            startFirestoreRealtimeListener(currentSheet);
+            renderAllViews();
+            setSyncBadge("Firestore 已同步", false);
+            showToast(`✅ 帳本「${trimmedName}」創建成功！`);
+            return;
+        }
         await fetchSheetFilesFromDrive();
         if (sheetFileMap[trimmedName]) return showToast("帳本名稱已存在", "error");
-        setSyncBadge("創建中", true);
         const fileId = await saveJsonFileToDrive(`${trimmedName}.json`, null, []);
         sheetFileMap[trimmedName] = fileId;
         safeSetLocalStorage("app_sheet_map", JSON.stringify(sheetFileMap));
@@ -1958,13 +3326,16 @@ document.getElementById("addSheetBtn").onclick = async function() {
         renderAllViews();
         showToast(`✅ 帳本「${trimmedName}」創建成功！`);
         setSyncBadge("已同步", false);
-    } catch (e) { showToast("創建失敗", "error"); setSyncBadge("同步失敗", false, true); }
+    } catch (e) { showToast(e?.message || "創建失敗", "error"); setSyncBadge("同步失敗", false, true); }
 };
 
 async function renameCurrentSheet() {
-    if (!(await ensureGoogleAccessToken(true))) return showToast("請先完成 Google 授權", "error");
-    if (!driveFolderId) await setupDriveEnvironment();
-    if (!driveFolderId) return showToast("Google Drive 尚未初始化完成", "error");
+    const useFirestore = isFirestoreMode() && getFirebaseUser();
+    if (!useFirestore) {
+        if (!(await ensureGoogleAccessToken(true))) return showToast("請先完成 Google 授權", "error");
+        if (!driveFolderId) await setupDriveEnvironment();
+        if (!driveFolderId) return showToast("Google Drive 尚未初始化完成", "error");
+    }
     if (currentSheet === "預設帳本") return showToast("預設帳本不能重新命名", "info");
     const oldName = currentSheet;
     const input = prompt("請輸入新的帳本名稱：", oldName);
@@ -1973,17 +3344,50 @@ async function renameCurrentSheet() {
     if (!newName || newName === oldName) return;
     try {
         setSyncBadge("重新命名", true);
+        if (useFirestore) {
+            if (!canManageCurrentWorkbook()) return showToast("只有帳本擁有者可以重新命名", "error");
+            await loadWorkbooksFromFirestore();
+            if (sheetFileMap[newName]) return showToast("新的帳本名稱已存在", "error");
+            const { f } = firestoreApi();
+            const oldRef = firestoreWorkbookRef(oldName);
+            const newRef = firestoreWorkbookRef(newName);
+            const oldSnap = await f.firestore.getDoc(oldRef);
+            const oldData = oldSnap.exists() ? oldSnap.data() : {};
+            const oldRecordsSnap = await f.firestore.getDocs(f.firestore.collection(f.db, "users", firestoreWorkbookOwner(oldName), "workbooks", firestoreWorkbookId(oldName), "records"));
+            await f.firestore.setDoc(newRef, { ...oldData, name: newName, updatedAt: f.firestore.serverTimestamp(), renamedFrom: oldName }, { merge: true });
+            for (let i = 0; i < oldRecordsSnap.docs.length; i += 450) {
+                const batch = f.firestore.writeBatch(f.db);
+                oldRecordsSnap.docs.slice(i, i + 450).forEach(d => batch.set(f.firestore.doc(f.db, "users", firestoreWorkbookOwner(oldName), "workbooks", firestoreWorkbookId(newName), "records", d.id), { ...d.data(), _sheetName: newName, _renamedFrom: oldName }, { merge: true }));
+                const chunk = oldRecordsSnap.docs.slice(i, i + 450);
+                if (chunk.length) await batch.commit();
+            }
+            stopFirestoreRealtimeListener();
+            await deleteFirestoreWorkbook(oldName);
+            const localData = loadLocalSheetMirror(oldName);
+            if (localData.length) saveLocalSheetMirror(newName, localData);
+            localStorage.removeItem(`local_records_${oldName}`);
+            delete sheetFileMap[oldName];
+            sheetFileMap[newName] = firestoreWorkbookId(newName);
+            safeSetLocalStorage("app_sheet_map", JSON.stringify(sheetFileMap));
+            currentSheet = newName;
+            safeSetLocalStorage("app_active_sheet", currentSheet);
+            renderSheetSelector();
+            document.getElementById("sheetSelector").value = newName;
+            await loadRecordsFromFirestore(newName);
+            startFirestoreConfigRealtimeListener();
+            startFirestoreWorkbookRealtimeListener();
+            startFirestoreRealtimeListener(newName);
+            setSyncBadge("Firestore 已同步", false);
+            showToast(`✅ 帳本已重新命名為「${newName}」`);
+            return;
+        }
         await fetchSheetFilesFromDrive();
         const fileId = sheetFileMap[oldName];
         if (!fileId) throw new Error("找不到目前帳本的雲端檔案");
         if (sheetFileMap[newName]) { setSyncBadge("已同步", false); return showToast("新的帳本名稱已存在", "error"); }
-        await driveApi(`https://www.googleapis.com/drive/v3/files/${fileId}`, {
-            method: "PATCH", headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ name: `${newName}.json` })
-        });
+        await driveApi(`https://www.googleapis.com/drive/v3/files/${fileId}`, { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ name: `${newName}.json` }) });
         const localData = loadLocalSheetMirror(oldName);
-        delete sheetFileMap[oldName];
-        sheetFileMap[newName] = fileId;
+        delete sheetFileMap[oldName]; sheetFileMap[newName] = fileId;
         safeSetLocalStorage("app_sheet_map", JSON.stringify(sheetFileMap));
         if (localData.length) saveLocalSheetMirror(newName, localData);
         localStorage.removeItem(`local_records_${oldName}`);
@@ -2000,14 +3404,41 @@ async function renameCurrentSheet() {
 }
 
 async function deleteCurrentSheet() {
-    if (!(await ensureGoogleAccessToken(true))) return showToast("請先完成 Google 授權", "error");
-    if (!driveFolderId) await setupDriveEnvironment();
-    if (!driveFolderId) return showToast("Google Drive 尚未初始化完成", "error");
+    const useFirestore = isFirestoreMode() && getFirebaseUser();
+    if (!useFirestore) {
+        if (!(await ensureGoogleAccessToken(true))) return showToast("請先完成 Google 授權", "error");
+        if (!driveFolderId) await setupDriveEnvironment();
+        if (!driveFolderId) return showToast("Google Drive 尚未初始化完成", "error");
+    }
     if (currentSheet === "預設帳本") return showToast("預設帳本不能刪除", "info");
     const targetName = currentSheet;
     if (!confirm(`確定要刪除帳本「${targetName}」嗎？\n雲端帳本與本機快取都會刪除，此操作無法復原。`)) return;
     try {
         setSyncBadge("刪除中", true);
+        if (useFirestore) {
+            if (!canManageCurrentWorkbook()) return showToast("只有帳本擁有者可以刪除帳本", "error");
+            await loadWorkbooksFromFirestore();
+            await deleteFirestoreWorkbook(targetName);
+            stopFirestoreRealtimeListener();
+            delete sheetFileMap[targetName];
+            safeSetLocalStorage("app_sheet_map", JSON.stringify(sheetFileMap));
+            localStorage.removeItem(`local_records_${targetName}`);
+            currentSheet = sheetFileMap["預設帳本"] !== undefined ? "預設帳本" : Object.keys(sheetFileMap)[0] || "預設帳本";
+            if (!sheetFileMap[currentSheet]) sheetFileMap[currentSheet] = firestoreWorkbookId(currentSheet);
+            safeSetLocalStorage("app_sheet_map", JSON.stringify(sheetFileMap));
+            safeSetLocalStorage("app_active_sheet", currentSheet);
+            renderSheetSelector();
+            document.getElementById("sheetSelector").value = currentSheet;
+            cachedRecords = normalizeAllRecords(loadLocalSheetMirror(currentSheet));
+            await loadRecordsFromFirestore(currentSheet);
+            startFirestoreConfigRealtimeListener();
+            startFirestoreWorkbookRealtimeListener();
+            startFirestoreRealtimeListener(currentSheet);
+            renderAllViews();
+            setSyncBadge("Firestore 已同步", false);
+            showToast(`🗑️ 帳本「${targetName}」已刪除`);
+            return;
+        }
         await fetchSheetFilesFromDrive();
         const fileId = sheetFileMap[targetName];
         if (!fileId) throw new Error("找不到目前帳本的雲端檔案");
@@ -2016,10 +3447,8 @@ async function deleteCurrentSheet() {
         safeSetLocalStorage("app_sheet_map", JSON.stringify(sheetFileMap));
         localStorage.removeItem(`local_records_${targetName}`);
         currentSheet = sheetFileMap["預設帳本"] !== undefined ? "預設帳本" : Object.keys(sheetFileMap)[0] || "預設帳本";
-        if (!sheetFileMap[currentSheet]) {
-            sheetFileMap[currentSheet] = null;
-            safeSetLocalStorage("app_sheet_map", JSON.stringify(sheetFileMap));
-        }
+        if (!sheetFileMap[currentSheet]) sheetFileMap[currentSheet] = null;
+        safeSetLocalStorage("app_sheet_map", JSON.stringify(sheetFileMap));
         safeSetLocalStorage("app_active_sheet", currentSheet);
         renderSheetSelector();
         document.getElementById("sheetSelector").value = currentSheet;
@@ -2040,6 +3469,19 @@ document.getElementById("sheetSelector").onchange = async function() {
     const selectedSheet = currentSheet;
     safeSetLocalStorage("app_active_sheet", selectedSheet);
     showToast(`切換至帳本：${selectedSheet}`);
+    if (isFirestoreMode() && getFirebaseUser()) {
+        stopFirestoreRealtimeListener();
+        setSyncBadge("Firestore 讀取中", true);
+        const loaded = await loadRecordsFromFirestore(selectedSheet);
+        if (selectedSheet !== currentSheet) return;
+        startFirestoreConfigRealtimeListener();
+        startFirestoreWorkbookRealtimeListener();
+        startFirestoreRealtimeListener(selectedSheet);
+        void loadFirestoreWorkbookMeta(selectedSheet);
+        renderAllViews();
+        setSyncBadge(loaded === false ? "離線快取" : "Firestore 即時同步", false, loaded === false);
+        return;
+    }
     if (googleSessionLinked && !hasValidAccessToken()) {
         await ensureGoogleAccessToken(true);
         if (!hasValidAccessToken()) {
@@ -2085,6 +3527,7 @@ async function fetchExchangeRates(manual = false) {
         renderRateChips();
         const t = document.getElementById("rateUpdateTime");
         if (t) t.textContent = new Date().toLocaleTimeString();
+        if (isFirestoreMode() && getFirebaseUser()) await syncConfigToFirestore(false);
         if(manual) showToast("匯率已同步至最新");
         return true;
     } catch (e) {
@@ -2377,6 +3820,8 @@ function switchTab(tabId) {
     } else if (tabId === "settle") {
         const records = getActiveRecords();
         renderSettlement(records); renderPersonalStats(records); renderPoolStats(records);
+    } else if (tabId === "settings" && isFirestoreMode() && getFirebaseUser()) {
+        void loadFirestoreWorkbookMeta(currentSheet);
     }
     window.scrollTo({ top: 0, behavior: 'smooth' });
 }
@@ -2414,6 +3859,11 @@ function setFormDateToday() {
 window.setFormDateToday = setFormDateToday;
 
 async function retryPendingSync() {
+    if (isFirestoreMode() && getFirebaseUser()) {
+        const ok = await saveRecordsToFirestore(true);
+        showToast(ok ? "Firestore 已重新同步" : "目前仍無法同步，資料已保留在本機", ok ? "success" : "info");
+        return;
+    }
     if (!(await ensureGoogleAccessToken(true))) return showToast("請先完成 Google 授權", "error");
     if (!driveFolderId) await setupDriveEnvironment();
     if (!driveFolderId) return showToast("Google Drive 尚未初始化完成", "error");
@@ -2625,6 +4075,9 @@ function normalizeRecord(r) {
     // 匯入資料的錯誤日期不再偷偷改成今天；只有舊資料缺日期時才補今天。
     out.date = out.date == null || String(out.date).trim() === "" ? getTodayString() : String(out.date).trim();
     out.updatedAt = Number.isFinite(Date.parse(out.updatedAt)) ? new Date(out.updatedAt).toISOString() : new Date(0).toISOString();
+    out._syncVersion = Math.max(0, Number(out._syncVersion) || 0);
+    out._syncDeviceId = String(out._syncDeviceId || "");
+    out._updatedAtMs = Number(out._updatedAtMs) || (Date.parse(out.updatedAt) || 0);
     out.deleted = Boolean(out.deleted);
     if (out.receiptOcr && typeof out.receiptOcr === "object" && !Array.isArray(out.receiptOcr)) {
         out.receiptOcr = {
@@ -2766,6 +4219,8 @@ async function handleReceiptFile(file) {
 }
 function clearReceiptPhoto() {
     setReceiptPreview("");
+    editingReceiptStoragePath = "";
+    editingReceiptUrl = "";
     receiptOcrMeta = null;
     renderReceiptOcrResult();
     const input = document.getElementById("receiptPhotoInput"); if (input) input.value = "";
@@ -3023,7 +4478,7 @@ async function saveRecord() {
     } catch (e) { return showToast(e.message, "error"); }
     
     createLocalSnapshot(editingRecordId ? "編輯紀錄前" : "新增紀錄前");
-    const record = normalizeRecord({
+    let record = normalizeRecord({
         id: editingRecordId || generateUUID(), title, amount,
         currency: document.getElementById("currency").value, twdAmount: twd, rate,
         category: document.getElementById("category").value, type,
@@ -3032,8 +4487,10 @@ async function saveRecord() {
         payers, shares, splitMembers: shares.map(x => `${x.member}:${x.amount}`),
         splitMode: (type === "expense" || type === "settlement") ? currentSplitMode : null,
         splitValues: (type === "expense" || type === "settlement") ? captureSplitValues() : {},
-        receipt: uploadedReceiptBase64 || "", receiptOcr: receiptOcrMeta ? { ...receiptOcrMeta, items: Array.isArray(receiptOcrMeta.items) ? receiptOcrMeta.items.slice(0, 8) : [] } : null, deleted: false, updatedAt: new Date().toISOString()
+        receipt: uploadedReceiptBase64 && String(uploadedReceiptBase64).startsWith("data:image/") ? uploadedReceiptBase64 : "", receiptUrl: editingReceiptUrl || "", receiptStoragePath: editingReceiptStoragePath || "", _previousReceiptStoragePath: editingReceiptStoragePath || "", receiptOcr: receiptOcrMeta ? { ...receiptOcrMeta, items: Array.isArray(receiptOcrMeta.items) ? receiptOcrMeta.items.slice(0, 8) : [] } : null, deleted: false, updatedAt: new Date().toISOString()
     });
+    if (isFirestoreMode() && getFirebaseUser()) record = markFirestoreRecordVersion(record, true);
+    if (isFirestoreMode() && getFirebaseUser() && record.receipt) record = await uploadReceiptToFirebase(record, currentSheet);
     const idx = cachedRecords.findIndex(r => r.id === record.id);
     if (idx >= 0) cachedRecords[idx] = record; else cachedRecords.unshift(record);
     cachedRecords = normalizeAllRecords(cachedRecords);
@@ -3042,14 +4499,15 @@ async function saveRecord() {
     document.getElementById("editModeBanner")?.classList.add("hidden");
     document.getElementById("saveBtnText").textContent = "儲存紀錄 (Enter)";
     renderAllViews();
-    // 儲存紀錄本身可離線完成；若已連結 Google，利用這次「儲存」操作取得有效 token。
-    if (googleSessionLinked && !hasValidAccessToken()) await ensureGoogleAccessToken(true);
+    // Firestore 模式不再要求 Google Drive 授權；Drive 模式才需要舊的 Google token。
+    if (!isFirestoreMode() && googleSessionLinked && !hasValidAccessToken()) await ensureGoogleAccessToken(true);
     const cloudSynced = await saveRecordsToDrive(true);
     cancelEdit();
     showToast(cloudSynced ? "儲存成功，已同步雲端" : "已儲存本機，等待雲端同步", cloudSynced ? "success" : "info");
 }
 
 async function saveRecordsToDrive(interactive = false, purgeIds = null) {
+    if (isFirestoreMode() && getFirebaseUser()) return saveRecordsToFirestore(interactive, purgeIds);
     const sheetName = currentSheet;
     // 先保存本機鏡像；佇列執行時再抓最新資料，避免連續操作遺失最後一次修改。
     const localSnapshot = normalizeAllRecords(cachedRecords);
@@ -3164,12 +4622,13 @@ function resetAllFilters() {
     ["filterTypeSelect","filterCategorySelect","filterMemberSelect","sortOrderSelect"].forEach(id => {
         const el = document.getElementById(id); if (!el) return;
         if (id === "filterTypeSelect" || id === "filterCategorySelect" || id === "filterMemberSelect") el.value = "all";
-        else el.value = "input";
+        else el.value = "dateDesc";
     });
     document.querySelectorAll('#historyQuickFilters [data-history-range]').forEach(b=>b.classList.remove('active'));
 }
 window.resetAllFilters = resetAllFilters;
 
+let historyFilterSignature = '';
 let filterRenderTimer = null;
 function scheduleRecordListRender(delay = 80) {
     clearTimeout(filterRenderTimer);
@@ -3242,7 +4701,7 @@ window.duplicateRecordToForm = function(id) {
     }
     const override = document.getElementById("overrideTwdInput");
     if (override) override.value = r.twdAmount ? String(Math.round(r.twdAmount)) : "";
-    setRecordType(r.type); setReceiptPreview(r.receipt || "");
+    setRecordType(r.type); editingReceiptStoragePath = r.receiptStoragePath || ""; editingReceiptUrl = r.receiptUrl || ""; setReceiptPreview(r.receipt || r.receiptUrl || "");
     receiptOcrMeta = r.receiptOcr ? { ...r.receiptOcr, items: Array.isArray(r.receiptOcr.items) ? r.receiptOcr.items.slice(0, 8) : [] } : null;
     renderReceiptOcrResult();
     const payers = parsePayers(r); const names = Object.keys(payers);
@@ -3342,6 +4801,7 @@ async function quickPoolAction(action){
     if(title===null) return;
     const payer=action==='contribute'?(prompt("繳款人",members[0]||"")||members[0]||"公費"):"公費";
     const r=normalizeRecord({id:generateUUID(),title:title.trim()||"公費",amount:Math.round(amount),currency:"TWD",twdAmount:Math.round(amount),rate:1,category:"公費",type:action==='contribute'?"income":"expense",date:getTodayString(),payer,payers:[{member:payer,amount:Math.round(amount)}],shares:[{member:"公費",amount:Math.round(amount)}],splitMembers:[`公費:${Math.round(amount)}`],deleted:false,updatedAt:new Date().toISOString()});
+    if (isFirestoreMode() && getFirebaseUser()) markFirestoreRecordVersion(r, true);
     cachedRecords.unshift(r); renderAllViews(); renderTrash();
     if (googleSessionLinked && !accessToken) await ensureGoogleAccessToken(true);
     const ok = await saveRecordsToDrive(true);
@@ -3349,24 +4809,32 @@ async function quickPoolAction(action){
 }
 window.quickPoolAction=quickPoolAction;
 
-function renderRecordsList(){
+function renderRecordsList(activeRecords = null){
     const list=document.getElementById("recordList"); if(!list) return;
     const search=(document.getElementById("searchInput")?.value||"").trim().toLowerCase();
     const fType=document.getElementById("filterTypeSelect")?.value||"all", fCat=document.getElementById("filterCategorySelect")?.value||"all", fMem=document.getElementById("filterMemberSelect")?.value||"all";
-    const sDate=document.getElementById("filterStartDate")?.value||"", eDate=document.getElementById("filterEndDate")?.value||"", sort=document.getElementById("sortOrderSelect")?.value||"input";
-    let filtered=getActiveRecords();
+    const sDate=document.getElementById("filterStartDate")?.value||"", eDate=document.getElementById("filterEndDate")?.value||"", sort=document.getElementById("sortOrderSelect")?.value||"dateDesc";
+    const filterSignature = [search,fType,fCat,fMem,sDate,eDate,sort].join("\u001f");
+    if (filterSignature !== historyFilterSignature) { historyFilterSignature = filterSignature; historyRenderLimit = HISTORY_PAGE_SIZE; }
+    let filtered=Array.isArray(activeRecords) ? activeRecords.slice() : getActiveRecords();
     const op=search.match(/^(>=|<=|>|<)\s*(\d+(?:\.\d+)?)$/);
     if(op){const n=Number(op[2]); filtered=filtered.filter(r=>{const v=Number(r.twdAmount)||0;return op[1]==='>'?v>n:op[1]==='<'?v<n:op[1]==='>='?v>=n:v<=n;});}
     else if(search) filtered=filtered.filter(r=>{
-        const payerNames=Object.keys(parsePayers(r)); const shareNames=Object.keys(parseShares(r));
-        const haystack=`${r.title||""} ${r.category||""} ${r.currency||""} ${r.payer||""} ${payerNames.join(" ")} ${shareNames.join(" ")}`.toLowerCase();
+        const haystack = getRecordSearchText(r);
         return haystack.includes(search)||String(r.twdAmount).includes(search);
     });
     if(fType!=="all") filtered=filtered.filter(r=>r.type===fType);
     if(fCat!=="all") filtered=filtered.filter(r=>r.category===fCat);
     if(fMem!=="all") filtered=filtered.filter(r=>Object.prototype.hasOwnProperty.call(parsePayers(r),fMem)||Object.prototype.hasOwnProperty.call(parseShares(r),fMem));
     if(sDate) filtered=filtered.filter(r=>r.date>=sDate); if(eDate) filtered=filtered.filter(r=>r.date<=eDate);
-    if(sort==='dateDesc') filtered.sort((a,b)=>String(b.date).localeCompare(String(a.date))); else if(sort==='dateAsc') filtered.sort((a,b)=>String(a.date).localeCompare(String(b.date))); else if(sort==='amtDesc') filtered.sort((a,b)=>(b.twdAmount||0)-(a.twdAmount||0)); else if(sort==='amtAsc') filtered.sort((a,b)=>(a.twdAmount||0)-(b.twdAmount||0));
+    const compareDate = (a,b,desc) => {
+        const dateCmp = String(a.date || "").localeCompare(String(b.date || ""));
+        if (dateCmp) return desc ? -dateCmp : dateCmp;
+        const timeA = Date.parse(a.updatedAt || "") || 0, timeB = Date.parse(b.updatedAt || "") || 0;
+        if (timeA !== timeB) return desc ? timeB - timeA : timeA - timeB;
+        return desc ? String(b.id || "").localeCompare(String(a.id || "")) : String(a.id || "").localeCompare(String(b.id || ""));
+    };
+    if(sort==='dateDesc') filtered.sort((a,b)=>compareDate(a,b,true)); else if(sort==='dateAsc') filtered.sort((a,b)=>compareDate(a,b,false)); else if(sort==='amtDesc') filtered.sort((a,b)=>(b.twdAmount||0)-(a.twdAmount||0)); else if(sort==='amtAsc') filtered.sort((a,b)=>(a.twdAmount||0)-(b.twdAmount||0));
     
     const count=document.getElementById("recordCountDisplay"); if(count) count.textContent=filtered.length;
     const summary = calculateTransactionSummary(filtered);
@@ -3376,7 +4844,9 @@ function renderRecordsList(){
     const hasFilter = Boolean(search || fType!=="all" || fCat!=="all" || fMem!=="all" || sDate || eDate);
     if(banner) banner.classList.toggle("hidden", !hasFilter);
     
-    list.innerHTML=filtered.map(r=>{
+    const totalFiltered = filtered.length;
+    const visibleRecords = filtered.slice(0, Math.max(HISTORY_PAGE_SIZE, historyRenderLimit));
+    list.innerHTML=visibleRecords.map(r=>{
         const color=getMemberColor(Object.keys(parsePayers(r))[0]||r.payer); const id=escapeJsStr(r.id); 
         return `<div class="record-card bg-white dark:bg-gray-800 p-3 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-sm flex items-center justify-between group transition hover:border-blue-300 cursor-pointer" data-record-id="${id}" role="button" tabindex="0" onclick="handleRecordCardClick('${id}')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();handleRecordCardClick('${id}')}" aria-label="查看 ${escapeHtml(r.title)} 詳細紀錄">
             <div class="flex items-center gap-3 overflow-hidden">
@@ -3389,14 +4859,170 @@ function renderRecordsList(){
                 <div class="record-action-buttons flex opacity-0 group-hover:opacity-100 transition gap-1">
                     <button onclick="event.stopPropagation();startEditRecord('${id}')" class="p-1.5 bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-100">✏️</button>
                     <button onclick="event.stopPropagation();duplicateRecordToForm('${id}')" class="p-1.5 bg-gray-50 text-gray-600 rounded-lg hover:bg-gray-100">📋</button>
+                    <button onclick="event.stopPropagation();openMoveCopyRecordModal('${id}')" class="p-1.5 bg-violet-50 text-violet-600 rounded-lg hover:bg-violet-100" title="移動／複製到其他帳本">↗️</button>
                     <button onclick="event.stopPropagation();softDeleteRecord('${id}')" class="p-1.5 bg-red-50 text-red-600 rounded-lg hover:bg-red-100">🗑️</button>
                 </div>
             </div>
         </div>`;
     }).join("")||`<div class="text-center py-10 text-gray-400 text-xs">無符合條件的紀錄</div>`;
+    if (totalFiltered > visibleRecords.length) {
+        list.insertAdjacentHTML('beforeend', `<button type="button" id="loadMoreHistoryBtn" class="w-full mt-3 py-3 rounded-2xl border border-dashed border-gray-300 dark:border-gray-600 bg-white/70 dark:bg-gray-800/70 text-xs font-bold text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition">顯示更多（目前 ${visibleRecords.length.toLocaleString()} / ${totalFiltered.toLocaleString()} 筆）</button>`);
+        document.getElementById('loadMoreHistoryBtn')?.addEventListener('click', loadMoreHistoryRecords);
+    }
     bindRecordTouchGestures();
     updateBatchSelectionUI();
 }
+
+/* ==========================================================
+   單筆紀錄：移動／複製到其他帳本
+   - 複製：建立新 record ID，來源保留
+   - 移動：沿用 record ID 寫入目標後，來源建立 deleted tombstone
+   - 收據會複製到目標帳本自己的 Storage 路徑，避免來源刪除後收據失效
+   ========================================================== */
+let moveCopyRecordState = null;
+
+function closeMoveCopyRecordModal() {
+    document.getElementById("moveCopyRecordModal")?.remove();
+    moveCopyRecordState = null;
+}
+window.closeMoveCopyRecordModal = closeMoveCopyRecordModal;
+
+function openMoveCopyRecordModal(id) {
+    const record = cachedRecords.find(r => String(r.id) === String(id) && !r.deleted);
+    if (!record) return showToast("找不到這筆紀錄", "error");
+    const targets = Object.keys(sheetFileMap || {}).filter(name => name && name !== currentSheet);
+    if (!targets.length) return showToast("目前沒有其他帳本可供選擇，請先建立另一個帳本", "info");
+    closeMoveCopyRecordModal();
+    moveCopyRecordState = { id: String(id) };
+    const modal = document.createElement("div");
+    modal.id = "moveCopyRecordModal";
+    modal.className = "fixed inset-0 z-[120] flex items-center justify-center bg-black/50 p-4";
+    modal.innerHTML = `
+      <div class="w-full max-w-md bg-white dark:bg-gray-800 rounded-2xl shadow-2xl border border-gray-200 dark:border-gray-700 overflow-hidden" role="dialog" aria-modal="true" aria-label="移動或複製紀錄">
+        <div class="p-4 border-b border-gray-100 dark:border-gray-700 flex items-center justify-between">
+          <div><div class="font-black text-gray-800 dark:text-gray-100">↗️ 移動／複製到其他帳本</div><div class="text-xs text-gray-500 mt-1 truncate max-w-[300px]">${escapeHtml(record.title || "未命名紀錄")} · $${Math.round(record.twdAmount || 0).toLocaleString()}</div></div>
+          <button type="button" onclick="closeMoveCopyRecordModal()" class="text-gray-400 hover:text-gray-700 text-xl">×</button>
+        </div>
+        <div class="p-4 space-y-4">
+          <div class="grid grid-cols-2 gap-2">
+            <label class="cursor-pointer"><input type="radio" name="moveCopyMode" value="copy" checked class="sr-only peer"><div class="peer-checked:border-blue-500 peer-checked:bg-blue-50 dark:peer-checked:bg-blue-900/20 border rounded-xl p-3 text-center"><div class="font-bold">📋 複製</div><div class="text-[0.7rem] text-gray-500">原帳本保留</div></div></label>
+            <label class="cursor-pointer"><input type="radio" name="moveCopyMode" value="move" class="sr-only peer"><div class="peer-checked:border-violet-500 peer-checked:bg-violet-50 dark:peer-checked:bg-violet-900/20 border rounded-xl p-3 text-center"><div class="font-bold">📦 移動</div><div class="text-[0.7rem] text-gray-500">原帳本移至回收桶</div></div></label>
+          </div>
+          <div>
+            <label class="text-xs font-bold text-gray-600 dark:text-gray-300">目標帳本</label>
+            <select id="moveCopyTargetSheet" class="mt-1 w-full border rounded-xl px-3 py-2.5 bg-white dark:bg-gray-700 dark:border-gray-600">${targets.map(name => `<option value="${escapeHtml(name)}">${escapeHtml(name)}</option>`).join("")}</select>
+          </div>
+          <div class="text-[0.7rem] text-gray-500 bg-gray-50 dark:bg-gray-900/50 rounded-xl p-3">收據會一併複製到目標帳本。若目前離線，資料會先保留本機並等待同步。</div>
+        </div>
+        <div class="p-4 pt-0 flex gap-2">
+          <button type="button" onclick="closeMoveCopyRecordModal()" class="flex-1 px-3 py-2.5 rounded-xl border border-gray-200 dark:border-gray-600 font-bold">取消</button>
+          <button type="button" onclick="executeMoveCopyRecord()" class="flex-1 px-3 py-2.5 rounded-xl bg-blue-600 text-white font-bold">確認</button>
+        </div>
+      </div>`;
+    modal.addEventListener("click", e => { if (e.target === modal) closeMoveCopyRecordModal(); });
+    document.body.appendChild(modal);
+}
+window.openMoveCopyRecordModal = openMoveCopyRecordModal;
+
+function dataUrlFromBlob(blob) {
+    return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(String(reader.result || ""));
+        reader.onerror = reject;
+        reader.readAsDataURL(blob);
+    });
+}
+
+async function cloneReceiptForWorkbook(record, targetSheet, targetRecordId) {
+    if (!record?.receiptStoragePath && !record?.receiptUrl && !String(record?.receipt || "").startsWith("data:image/")) return { receipt: "", receiptStoragePath: "", receiptUrl: "" };
+    if (!getFirebaseUser()) throw new Error("請先登入 Firebase 才能複製收據");
+    let dataUrl = String(record.receipt || "");
+    if (!dataUrl.startsWith("data:image/") && record.receiptUrl) {
+        const response = await fetch(record.receiptUrl, { cache: "no-store" });
+        if (!response.ok) throw new Error(`收據下載失敗（HTTP ${response.status}）`);
+        dataUrl = await dataUrlFromBlob(await response.blob());
+    }
+    const meta = receiptDataUrlMeta(dataUrl);
+    if (!meta) throw new Error("原收據格式無法辨識");
+    const path = receiptStoragePath(targetSheet, targetRecordId, meta.ext);
+    const { f } = firebaseStorageApi();
+    const ref = f.storageApi.storageRef(f.storage, path);
+    await f.storageApi.uploadString(ref, dataUrl, "data_url", { contentType: meta.mime, cacheControl: "private,max-age=31536000" });
+    return { receipt: "", receiptStoragePath: path, receiptUrl: await f.storageApi.getDownloadURL(ref), receiptStoredAt: new Date().toISOString(), _receiptUploadFailed: false };
+}
+
+async function saveSpecificFirestoreSheet(sheetName, records, interactive = false) {
+    if (!getFirebaseUser()) throw new Error("請先登入 Firebase");
+    const previousSheet = currentSheet;
+    const previousCached = cachedRecords;
+    try {
+        stopFirestoreRealtimeListener();
+        currentSheet = sheetName;
+        cachedRecords = normalizeAllRecords(records);
+        saveLocalSheetMirror(sheetName, cachedRecords);
+        const ok = await saveRecordsToFirestore(interactive);
+        return ok;
+    } finally {
+        currentSheet = previousSheet;
+        cachedRecords = previousCached;
+        safeSetLocalStorage("app_active_sheet", currentSheet);
+        startFirestoreRealtimeListener(currentSheet);
+    }
+}
+
+async function executeMoveCopyRecord() {
+    const state = moveCopyRecordState;
+    const mode = document.querySelector('input[name="moveCopyMode"]:checked')?.value || "copy";
+    const targetSheet = String(document.getElementById("moveCopyTargetSheet")?.value || "").trim();
+    if (!state?.id || !targetSheet || targetSheet === currentSheet) return showToast("請選擇其他帳本", "error");
+    const sourceSheet = currentSheet;
+    const source = cachedRecords.find(r => String(r.id) === state.id && !r.deleted);
+    if (!source) return showToast("找不到這筆紀錄", "error");
+    if (!isFirestoreMode() || !getFirebaseUser()) return showToast("此功能目前需要登入 Firebase 並使用 Firestore 雲端模式", "info");
+    if (!confirm(`${mode === "move" ? "確定要移動" : "確定要複製"}「${source.title || "未命名紀錄"}」到「${targetSheet}」嗎？`)) return;
+    const targetId = mode === "move" ? String(source.id) : generateUUID();
+    try {
+        setSyncBadge(mode === "move" ? "移動紀錄同步中" : "複製紀錄同步中", true);
+        const copiedReceipt = await cloneReceiptForWorkbook(source, targetSheet, targetId);
+        const targetRecord = prepareFirestoreRecords([{ ...source, id: targetId, deleted: false, _previousReceiptStoragePath: "", ...copiedReceipt, updatedAt: new Date().toISOString() }])[0];
+        const targetExisting = loadLocalSheetMirror(targetSheet).filter(r => String(r.id) !== targetId);
+        targetExisting.push(targetRecord);
+        const targetOk = await saveSpecificFirestoreSheet(targetSheet, targetExisting, true);
+        if (!targetOk) throw new Error("目標帳本同步失敗，來源資料未變更");
+        if (mode === "move") {
+            const sourceRows = loadLocalSheetMirror(sourceSheet).map(r => String(r.id) === state.id ? { ...r, deleted: true, updatedAt: new Date().toISOString() } : r);
+            const sourceRecord = sourceRows.find(r => String(r.id) === state.id);
+            if (sourceRecord) markFirestoreRecordVersion(sourceRecord, true);
+            const sourceOk = await saveSpecificFirestoreSheet(sourceSheet, sourceRows, true);
+            if (!sourceOk) {
+                showToast("已複製到目標帳本，但來源刪除同步失敗；為避免遺失資料，來源先保留", "info");
+            } else {
+                const idx = cachedRecords.findIndex(r => String(r.id) === state.id); if (idx >= 0) cachedRecords[idx] = sourceRecord;
+                saveLocalSheetMirror(sourceSheet, cachedRecords); renderAllViews(); renderTrash();
+            }
+        }
+        closeMoveCopyRecordModal();
+        if (mode === "copy") {
+            showToast(`已複製到「${targetSheet}」`, "success");
+        } else {
+            showToast(`已移動到「${targetSheet}」，原帳本已移至回收桶`, "success");
+        }
+        setSyncBadge("Firestore 即時同步", false);
+    } catch (e) {
+        console.error("紀錄移動／複製失敗", e);
+        showToast(`操作失敗：${e?.message || "未知錯誤"}`, "error");
+    }
+}
+window.executeMoveCopyRecord = executeMoveCopyRecord;
+
+const HISTORY_PAGE_SIZE = 80;
+let historyRenderLimit = HISTORY_PAGE_SIZE;
+
+function loadMoreHistoryRecords() {
+    historyRenderLimit += HISTORY_PAGE_SIZE;
+    renderRecordsList();
+}
+window.loadMoreHistoryRecords = loadMoreHistoryRecords;
 
 let historyBatchMode = false;
 const historySelectedIds = new Set();
@@ -3499,7 +5125,7 @@ async function batchDeleteSelected() {
     if (!confirm(`確定要把 ${rows.length} 筆紀錄移至回收桶嗎？`)) return;
     createLocalSnapshot('批次刪除前');
     const now = new Date().toISOString();
-    rows.forEach(r => { r.deleted = true; r.updatedAt = now; });
+    rows.forEach(r => { r.deleted = true; r.updatedAt = now; if (isFirestoreMode() && getFirebaseUser()) markFirestoreRecordVersion(r, true); });
     historySelectedIds.clear();
     renderAllViews();
     if (googleSessionLinked && !accessToken) await ensureGoogleAccessToken(true);
@@ -3515,7 +5141,7 @@ function batchSetCategory() {
     const category = String(value).trim(); if (!category) return;
     createLocalSnapshot('批次分類前');
     const now = new Date().toISOString();
-    rows.forEach(r => { r.category = category; r.updatedAt = now; });
+    rows.forEach(r => { r.category = category; r.updatedAt = now; if (isFirestoreMode() && getFirebaseUser()) markFirestoreRecordVersion(r, true); });
     saveLocalSheetMirror(currentSheet, cachedRecords);
     renderAllViews();
     void saveRecordsToDrive(true);
@@ -3537,6 +5163,7 @@ async function batchCopySelected() {
     createLocalSnapshot('批次複製前');
     const now = new Date().toISOString();
     const copies = rows.map(r => ({...r, id:(crypto.randomUUID ? crypto.randomUUID() : `rec_${Date.now()}_${Math.random().toString(36).slice(2)}`), title:`${r.title || '未命名'}（副本）`, updatedAt:now, deleted:false}));
+    if (isFirestoreMode() && getFirebaseUser()) copies.forEach(r => markFirestoreRecordVersion(r, true));
     cachedRecords.push(...copies);
     saveLocalSheetMirror(currentSheet, cachedRecords);
     renderAllViews();
@@ -3546,11 +5173,113 @@ async function batchCopySelected() {
     exitHistoryBatchMode();
 }
 
+
+let batchMoveCopySheetState = null;
+function closeBatchMoveCopySheetModal() {
+    document.getElementById('batchMoveCopySheetModal')?.remove();
+    batchMoveCopySheetState = null;
+}
+window.closeBatchMoveCopySheetModal = closeBatchMoveCopySheetModal;
+
+function openBatchMoveCopySheetModal() {
+    const rows = getSelectedActiveRecords();
+    if (!rows.length) return showToast('請先選擇紀錄', 'info');
+    const targets = Object.keys(sheetFileMap || {}).filter(name => name && name !== currentSheet);
+    if (!targets.length) return showToast('目前沒有其他帳本可供選擇，請先建立另一個帳本', 'info');
+    closeBatchMoveCopySheetModal();
+    batchMoveCopySheetState = { ids: rows.map(r => String(r.id)) };
+    const modal = document.createElement('div');
+    modal.id = 'batchMoveCopySheetModal';
+    modal.className = 'fixed inset-0 z-[125] flex items-center justify-center bg-black/50 p-4';
+    const preview = rows.slice(0, 4).map(r => `<div class="flex items-center justify-between gap-2 py-1.5 border-b border-gray-100 dark:border-gray-700 last:border-0"><span class="truncate">${escapeHtml(r.title || '未命名紀錄')}</span><span class="font-mono text-xs text-gray-500 flex-shrink-0">$${Math.round(r.twdAmount || 0).toLocaleString()}</span></div>`).join('');
+    modal.innerHTML = `
+      <div class="w-full max-w-lg bg-white dark:bg-gray-800 rounded-2xl shadow-2xl border border-gray-200 dark:border-gray-700 overflow-hidden" role="dialog" aria-modal="true" aria-label="批次移動或複製到其他帳本">
+        <div class="p-4 border-b border-gray-100 dark:border-gray-700 flex items-center justify-between">
+          <div><div class="font-black text-gray-800 dark:text-gray-100">↗️ 批次移動／複製到其他帳本</div><div class="text-xs text-gray-500 mt-1">已選 ${rows.length} 筆紀錄</div></div>
+          <button type="button" onclick="closeBatchMoveCopySheetModal()" class="text-gray-400 hover:text-gray-700 text-xl">×</button>
+        </div>
+        <div class="p-4 space-y-4">
+          <div class="grid grid-cols-2 gap-2">
+            <label class="cursor-pointer"><input type="radio" name="batchMoveCopyMode" value="copy" checked class="sr-only peer"><div class="peer-checked:border-blue-500 peer-checked:bg-blue-50 dark:peer-checked:bg-blue-900/20 border rounded-xl p-3 text-center"><div class="font-bold">📋 複製到帳本</div><div class="text-[0.7rem] text-gray-500">原帳本保留全部紀錄</div></div></label>
+            <label class="cursor-pointer"><input type="radio" name="batchMoveCopyMode" value="move" class="sr-only peer"><div class="peer-checked:border-violet-500 peer-checked:bg-violet-50 dark:peer-checked:bg-violet-900/20 border rounded-xl p-3 text-center"><div class="font-bold">📦 移動到帳本</div><div class="text-[0.7rem] text-gray-500">原帳本移入回收桶</div></div></label>
+          </div>
+          <div>
+            <label class="text-xs font-bold text-gray-600 dark:text-gray-300">目標帳本</label>
+            <select id="batchMoveCopyTargetSheet" class="mt-1 w-full border rounded-xl px-3 py-2.5 bg-white dark:bg-gray-700 dark:border-gray-600">${targets.map(name => `<option value="${escapeHtml(name)}">${escapeHtml(name)}</option>`).join('')}</select>
+          </div>
+          <div class="bg-gray-50 dark:bg-gray-900/50 rounded-xl p-3 text-xs max-h-40 overflow-auto">${preview}${rows.length > 4 ? `<div class="pt-2 text-gray-400">其餘 ${rows.length - 4} 筆略</div>` : ''}</div>
+          <div class="text-[0.7rem] text-gray-500 bg-blue-50/70 dark:bg-blue-900/10 rounded-xl p-3">收據會逐筆複製到目標帳本；操作會沿用 Firebase 版本控制與離線同步機制。</div>
+        </div>
+        <div class="p-4 pt-0 flex gap-2">
+          <button type="button" onclick="closeBatchMoveCopySheetModal()" class="flex-1 px-3 py-2.5 rounded-xl border border-gray-200 dark:border-gray-600 font-bold">取消</button>
+          <button type="button" onclick="executeBatchMoveCopyToSheet()" class="flex-1 px-3 py-2.5 rounded-xl bg-violet-600 text-white font-bold">確認執行</button>
+        </div>
+      </div>`;
+    modal.addEventListener('click', e => { if (e.target === modal) closeBatchMoveCopySheetModal(); });
+    document.body.appendChild(modal);
+}
+window.openBatchMoveCopySheetModal = openBatchMoveCopySheetModal;
+
+async function executeBatchMoveCopyToSheet() {
+    const state = batchMoveCopySheetState;
+    const mode = document.querySelector('input[name="batchMoveCopyMode"]:checked')?.value || 'copy';
+    const targetSheet = String(document.getElementById('batchMoveCopyTargetSheet')?.value || '').trim();
+    if (!state?.ids?.length || !targetSheet || targetSheet === currentSheet) return showToast('請選擇其他帳本', 'error');
+    if (!isFirestoreMode() || !getFirebaseUser()) return showToast('此功能目前需要登入 Firebase 並使用 Firestore 雲端模式', 'info');
+    const sourceSheet = currentSheet;
+    const idSet = new Set(state.ids.map(String));
+    const rows = cachedRecords.filter(r => !r.deleted && idSet.has(String(r.id)));
+    if (!rows.length) return showToast('選取的紀錄已不存在或已刪除', 'error');
+    if (!confirm(`確定要${mode === 'move' ? '移動' : '複製'} ${rows.length} 筆紀錄到「${targetSheet}」嗎？`)) return;
+    try {
+        setSyncBadge(mode === 'move' ? '批次移動同步中' : '批次複製同步中', true);
+        const targetExisting = loadLocalSheetMirror(targetSheet).filter(r => !idSet.has(String(r.id)) || mode === 'copy');
+        // 收據採 4 路受控並行，並保留原選取順序。
+        const targetRows = await mapWithConcurrency(rows, async source => {
+            const targetId = mode === 'move' ? String(source.id) : generateUUID();
+            let copiedReceipt = { receipt: '', receiptStoragePath: '', receiptUrl: '' };
+            if (source.receiptStoragePath || source.receiptUrl || String(source.receipt || '').startsWith('data:image/')) {
+                copiedReceipt = await cloneReceiptForWorkbook(source, targetSheet, targetId);
+            }
+            const targetRecord = normalizeRecord({ ...source, id: targetId, deleted: false, _previousReceiptStoragePath: '', ...copiedReceipt, updatedAt: new Date().toISOString() });
+            if (isFirestoreMode() && getFirebaseUser()) markFirestoreRecordVersion(targetRecord, true);
+            return targetRecord;
+        }, 4);
+        const mergedTarget = [...targetExisting.filter(r => !targetRows.some(x => String(x.id) === String(r.id))), ...targetRows];
+        const targetOk = await saveSpecificFirestoreSheet(targetSheet, mergedTarget, true);
+        if (!targetOk) throw new Error('目標帳本同步失敗，來源資料未變更');
+
+        if (mode === 'move') {
+            const now = new Date().toISOString();
+            const sourceRows = loadLocalSheetMirror(sourceSheet).map(r => idSet.has(String(r.id)) && !r.deleted ? { ...r, deleted: true, updatedAt: now } : r);
+            sourceRows.filter(r => idSet.has(String(r.id))).forEach(r => markFirestoreRecordVersion(r, true));
+            const sourceOk = await saveSpecificFirestoreSheet(sourceSheet, sourceRows, true);
+            if (!sourceOk) {
+                closeBatchMoveCopySheetModal();
+                showToast(`已移動 ${rows.length} 筆到「${targetSheet}」，但原帳本刪除同步失敗；來源先保留`, 'info');
+                return;
+            }
+            cachedRecords = sourceRows;
+            saveLocalSheetMirror(sourceSheet, cachedRecords);
+            renderAllViews(); renderTrash();
+        }
+        historySelectedIds.clear();
+        closeBatchMoveCopySheetModal();
+        exitHistoryBatchMode();
+        setSyncBadge('Firestore 即時同步', false);
+        showToast(`已${mode === 'move' ? '移動' : '複製'} ${rows.length} 筆到「${targetSheet}」`, 'success');
+    } catch (e) {
+        console.error('批次移動／複製到其他帳本失敗', e);
+        showToast(`操作失敗：${e?.message || '未知錯誤'}`, 'error');
+    }
+}
+window.executeBatchMoveCopyToSheet = executeBatchMoveCopyToSheet;
+
 function bindHistoryBatchControls() {
     const bind=(id,fn)=>{const el=document.getElementById(id);if(el&&!el.dataset.batchBound){el.dataset.batchBound='1';el.addEventListener('click',fn);}};
     bind('batchCancelBtn', exitHistoryBatchMode);
     bind('batchSelectAllBtn', ()=>{const ids=getRenderedRecordIds(), all=ids.length&&ids.every(id=>historySelectedIds.has(id));ids.forEach(id=>all?historySelectedIds.delete(id):historySelectedIds.add(id));updateBatchSelectionUI();});
-    bind('batchDeleteBtn', batchDeleteSelected); bind('batchCategoryBtn', batchSetCategory); bind('batchExportBtn', batchExportSelected); bind('batchCopyBtn', batchCopySelected);
+    bind('batchDeleteBtn', batchDeleteSelected); bind('batchCategoryBtn', batchSetCategory); bind('batchExportBtn', batchExportSelected); bind('batchCopyBtn', batchCopySelected); bind('batchMoveCopySheetBtn', openBatchMoveCopySheetModal);
     document.querySelectorAll('#historyQuickFilters [data-history-range]').forEach(btn=>{if(btn.dataset.rangeBound)return;btn.dataset.rangeBound='1';btn.addEventListener('click',()=>applyHistoryQuickRange(btn.dataset.historyRange));});
 }
 function localDateString(d) { const y=d.getFullYear(), m=String(d.getMonth()+1).padStart(2,'0'), day=String(d.getDate()).padStart(2,'0'); return `${y}-${m}-${day}`; }
@@ -3576,7 +5305,7 @@ window.openRecordDetail = function(id) {
     const row = (label, value, cls="") => `<div class="flex items-start justify-between gap-3 py-2 border-b border-gray-100 dark:border-gray-700 last:border-0"><span class="text-gray-500 dark:text-gray-400 flex-shrink-0">${label}</span><span class="text-right font-medium ${cls}">${value}</span></div>`;
     const payerText = Object.entries(payerMap).map(([n,a]) => `${escapeHtml(n)} $${Math.round(a).toLocaleString()}`).join("、") || escapeHtml(r.payer || "—");
     const shareText = Object.entries(shareMap).map(([n,a]) => `${escapeHtml(n)} $${Math.round(a).toLocaleString()}`).join("、") || "—";
-    const receipt = r.receipt ? `<button type="button" onclick="openRecordReceipt('${escapeJsStr(r.id)}')" class="text-blue-600 dark:text-blue-400 underline">查看收據照片</button>` : "無";
+    const receipt = (r.receipt || r.receiptUrl) ? `<button type="button" onclick="openRecordReceipt('${escapeJsStr(r.id)}')" class="text-blue-600 dark:text-blue-400 underline">查看收據照片</button>` : "無";
     const ocr = r.receiptOcr ? [r.receiptOcr.merchant, r.receiptOcr.invoiceNo, r.receiptOcr.date, r.receiptOcr.currency, r.receiptOcr.amount ? `$${r.receiptOcr.amount}` : ""].filter(Boolean).map(escapeHtml).join(" · ") : "無";
     box.innerHTML = `<div class="bg-gray-50 dark:bg-gray-900/50 rounded-2xl p-3">${row("項目", escapeHtml(r.title), "font-bold text-gray-800 dark:text-gray-100")}${row("日期", escapeHtml(r.date || "—"))}${row("類型", escapeHtml(typeLabels[r.type] || r.type || "—"))}${row("類別", escapeHtml(r.category || "其他"))}${row("原始金額", `${escapeHtml(r.amount)} ${escapeHtml(r.currency || "TWD")}`)}${row("TWD 金額", `$${Math.round(r.twdAmount || 0).toLocaleString()}`, "font-mono font-bold")}${row("匯率", escapeHtml(String(r.rate ?? 1)))}${row("付款人", payerText)}${row("分攤", shareText)}${row("分攤模式", escapeHtml(r.splitMode || "—"))}${row("收據", receipt)}${row("OCR", ocr)}</div>`;
     const edit = document.getElementById("detailEditBtn"), dup = document.getElementById("detailDuplicateBtn");
@@ -3587,9 +5316,10 @@ window.openRecordDetail = function(id) {
 window.closeRecordDetail = function() { document.getElementById("recordDetailModal")?.classList.add("hidden"); };
 window.openRecordReceipt = function(id) {
     const r = cachedRecords.find(x => x.id === id);
-    if (!r?.receipt) return showToast("這筆紀錄沒有收據照片", "info");
+    const src = openReceiptSource(r);
+    if (!src) return showToast("這筆紀錄沒有收據照片", "info");
     const modal = document.getElementById("imageModal"), img = document.getElementById("modalImg");
-    if (modal && img) { img.src = r.receipt; modal.classList.remove("hidden"); }
+    if (modal && img) { img.src = src; modal.classList.remove("hidden"); }
 };
 
 const repairFilterMemberSelect = () => {
@@ -3648,7 +5378,7 @@ window.startEditRecord = function(id) {
             sel.value=names[0];
         }
     }
-    setReceiptPreview(r.receipt||"");
+    editingReceiptStoragePath = r.receiptStoragePath || ""; editingReceiptUrl = r.receiptUrl || ""; setReceiptPreview(r.receipt || r.receiptUrl || "");
     receiptOcrMeta = r.receiptOcr ? { ...r.receiptOcr, items: Array.isArray(r.receiptOcr.items) ? r.receiptOcr.items.slice(0, 8) : [] } : null;
     renderReceiptOcrResult();
     setTimeout(()=>restoreSplitInputsForRecord(r),0);
@@ -3687,6 +5417,14 @@ window.onload = function() {
     setSyncBadge("離線本機", false, false);
     fetchExchangeRates();
     renderTrash();
+    if (isFirestoreMode() && getFirebaseUser()) {
+        startFirestoreConfigRealtimeListener();
+        startFirestoreWorkbookRealtimeListener();
+        startFirestoreRealtimeListener(currentSheet);
+        if (hasFirestorePending(currentSheet) && navigator.onLine) scheduleFirestoreSyncRetry();
+        if (hasFirestoreConfigPending() && navigator.onLine) scheduleFirestoreSyncRetry();
+        if (!navigator.onLine) setSyncBadge("離線模式，資料保存在本機", false, true);
+    }
     
     const timeEl = document.getElementById("lastUpdatedDisplay");
     if(timeEl) {
@@ -3704,6 +5442,16 @@ window.onload = function() {
     repairFilterMemberSelect();
     renderMultiPayerList();
 
+    if (window.__firebase?.onAuthStateChanged) {
+        bindFirebaseAuth();
+    } else {
+        window.addEventListener("firebase-ready", bindFirebaseAuth, { once: true });
+        window.addEventListener("firebase-error", e => {
+            console.error("Firebase 初始化失敗：", e.detail || e);
+            updateFirebaseUI(null);
+        }, { once: true });
+    }
+
     const restoreGoogleSession = async () => {
         if (!window.google?.accounts?.oauth2) return;
         initGoogleClient();
@@ -3718,8 +5466,12 @@ window.onload = function() {
             try {
                 const restored = await requestGoogleAccessToken(false);
                 if (restored) {
-                    await setupDriveEnvironment();
-                    setSyncBadge("已連結 Google 雲端", false, false);
+                    if (isFirestoreMode()) {
+                        setSyncBadge("Firestore 雲端模式", false, false);
+                    } else {
+                        await setupDriveEnvironment();
+                        setSyncBadge("已連結 Google 雲端", false, false);
+                    }
                 } else {
                     setSyncBadge("Google 已連結", false, false);
                 }
@@ -3952,10 +5704,15 @@ if (document.getElementById("importBtn")) document.getElementById("importBtn").o
 // 每次寫入前保留一版；網路恢復時自動重試待同步資料。
 const _safetyOriginalSaveRecordsToDrive = saveRecordsToDrive;
 window.addEventListener("online", () => {
+    // Firestore 已有專用 online listener；這裡只處理舊版 Google Drive 模式，避免重複同步。
+    if (isFirestoreMode() && getFirebaseUser()) return;
     try { showToast("🌐 網路已恢復，正在檢查待同步資料", "info"); void retryPendingSync(); }
     catch (_) {}
 });
-window.addEventListener("offline", () => setSyncBadge("離線待同步", false, true));
+window.addEventListener("offline", () => {
+    if (isFirestoreMode()) return;
+    setSyncBadge("離線待同步", false, true);
+});
 
 // 啟動時顯示最近備份數，並建立初始快照（不重複建立）。
 try {
