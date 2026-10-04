@@ -353,7 +353,7 @@ tailwind.config = { darkMode: 'class' };
 <div class="flex items-center justify-between bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-slate-800 dark:to-indigo-900/30 p-2.5 rounded-xl border border-blue-100/50 dark:border-indigo-800/50 text-xs flex-wrap gap-2 shadow-sm">
 <span class="font-bold text-blue-900 dark:text-blue-200 flex items-center gap-1 flex-wrap">✨ 智慧記帳 <span class="text-[0.7rem] font-normal text-gray-400">(AI 輔助模式)</span></span>
 <div class="flex items-center gap-2 flex-wrap justify-end">
-<label class="flex items-center gap-1 bg-white/80 dark:bg-gray-700 shadow-sm border border-gray-200/50 dark:border-gray-600 px-2.5 py-1.5 rounded-lg text-gray-600 dark:text-gray-300 font-bold cursor-pointer hover:scale-105 transition">📎 附加照片<input type="file" id="receiptPhotoInput" accept="image/*" class="hidden"></label>
+<label id="receiptPhotoAttachWrap" class="hidden flex items-center gap-1 bg-white/80 dark:bg-gray-700 shadow-sm border border-gray-200/50 dark:border-gray-600 px-2.5 py-1.5 rounded-lg text-gray-600 dark:text-gray-300 font-bold cursor-pointer hover:scale-105 transition">📎 附加照片<input type="file" id="receiptPhotoInput" accept="image/*" class="hidden"></label>
 <div id="receiptPreviewThumb" onclick="openCurrentReceiptModal()" class="hidden w-8 h-8 rounded-lg border border-gray-300 shadow-sm bg-cover bg-center cursor-pointer"></div>
 <button type="button" id="clearReceiptBtn" onclick="clearReceiptPhoto()" class="hidden text-red-400 hover:text-red-600 font-bold">×</button>
 <button type="button" id="voiceInputBtn" class="flex items-center gap-1 bg-white/80 dark:bg-gray-700 shadow-sm border border-gray-200/50 dark:border-gray-600 px-2.5 py-1.5 rounded-lg text-blue-600 dark:text-blue-300 font-bold hover:scale-105 transition">🎤 語音</button>
@@ -2633,8 +2633,10 @@ async function firebaseLogout() {
 
 function bindFirebaseAuth() {
     if (!window.__firebase?.onAuthStateChanged) return false;
+    updateReceiptPhotoAccess();
     window.__firebase.onAuthStateChanged(user => {
         updateFirebaseUI(user);
+        updateReceiptPhotoAccess(user);
         if (user) {
             safeSetLocalStorage("firebase_uid", user.uid || "");
             safeSetLocalStorage("firebase_email", user.email || "");
@@ -2676,6 +2678,19 @@ document.getElementById("migrateFirestoreBtn").onclick = migrateGoogleDriveToFir
 // ==========================================
 function getFirebaseUser() {
     return window.__firebase?.auth?.currentUser || null;
+}
+
+// 收據「附加照片」僅開放給指定帳號：WU chi 或 chi828@gmail.com。
+// 以 Firebase 登入身分判斷，避免只靠本機 localStorage 造成權限誤判。
+function canAttachReceiptPhoto(user = getFirebaseUser()) {
+    const email = String(user?.email || "").trim().toLowerCase();
+    const displayName = String(user?.displayName || "").trim().toLowerCase();
+    return displayName === "wu chi" || email === "chi828@gmail.com";
+}
+function updateReceiptPhotoAccess(user = getFirebaseUser()) {
+    const wrap = document.getElementById("receiptPhotoAttachWrap");
+    if (!wrap) return;
+    wrap.classList.toggle("hidden", !canAttachReceiptPhoto(user));
 }
 function isFirestoreMode() {
     return localStorage.getItem("app_cloud_backend") === "firestore";
@@ -4666,6 +4681,10 @@ function setReceiptPreview(dataUrl) {
     else { thumb.style.backgroundImage = ""; thumb.classList.add("hidden"); clear.classList.add("hidden"); }
 }
 async function handleReceiptFile(file) {
+    if (!canAttachReceiptPhoto()) {
+        showToast("📎 附加照片僅限 WU chi 或 chi828@gmail.com 使用", "info");
+        return;
+    }
     if (!file) return;
     try { pendingReceiptCloneRecord = null; setReceiptPreview(await compressReceiptFile(file)); showToast("收據照片已附加"); }
     catch (e) { showToast("收據圖片處理失敗", "error"); }
