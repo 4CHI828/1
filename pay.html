@@ -1969,9 +1969,48 @@ async function drawCharts() {
         const catData = {};
         expenses.forEach(r => { const k = r.category || '其他'; catData[k] = (catData[k] || 0) + (Number(r.twdAmount) || 0); });
         const entries = Object.entries(catData).sort((a,b) => b[1]-a[1]);
+        const pieTotal = entries.reduce((sum, [,value]) => sum + (Number(value) || 0), 0);
+        const pieValueLabels = {
+            id: 'pieValueLabels',
+            afterDatasetsDraw(chart) {
+                const ctx = chart.ctx;
+                const meta = chart.getDatasetMeta(0);
+                if (!meta?.data?.length) return;
+                ctx.save();
+                meta.data.forEach((arc, index) => {
+                    const value = Number(chart.data.datasets[0].data[index]) || 0;
+                    if (value <= 0) return;
+                    const angle = (arc.startAngle + arc.endAngle) / 2;
+                    const radius = (arc.innerRadius + arc.outerRadius) / 2;
+                    const x = arc.x + Math.cos(angle) * radius;
+                    const y = arc.y + Math.sin(angle) * radius;
+                    const label = String(chart.data.labels[index] || '其他');
+                    const amount = formatChartMoney(value);
+                    const percent = pieTotal > 0 ? `${((value / pieTotal) * 100).toFixed(1)}%` : '0%';
+                    const fontSize = Math.max(10, Math.min(13, arc.outerRadius / 11));
+                    ctx.textAlign = 'center';
+                    ctx.textBaseline = 'middle';
+                    ctx.font = `700 ${fontSize}px system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif`;
+                    ctx.lineWidth = 3;
+                    ctx.strokeStyle = isDark ? 'rgba(15,23,42,.92)' : 'rgba(255,255,255,.92)';
+                    ctx.fillStyle = '#ffffff';
+                    ctx.strokeText(label, x, y - fontSize * .55);
+                    ctx.fillText(label, x, y - fontSize * .55);
+                    ctx.font = `700 ${Math.max(10, fontSize - 1)}px system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif`;
+                    ctx.strokeText(amount, x, y + fontSize * .55);
+                    ctx.fillText(amount, x, y + fontSize * .55);
+                    ctx.font = `600 ${Math.max(9, fontSize - 2)}px system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif`;
+                    ctx.fillStyle = '#ffffff';
+                    ctx.strokeText(percent, x, y + fontSize * 1.55);
+                    ctx.fillText(percent, x, y + fontSize * 1.55);
+                });
+                ctx.restore();
+            }
+        };
         chartInstance = new Chart(canvas, {
             type: 'doughnut',
             data: { labels: entries.map(x => x[0]), datasets: [{ data: entries.map(x => x[1]), backgroundColor: entries.map((_,i) => CHART_COLORS[i % CHART_COLORS.length]), borderWidth: 2, borderColor: isDark ? '#0f172a' : '#fff', hoverOffset: 6 }] },
+            plugins: [pieValueLabels],
             options: { ...commonOptions, cutout: '66%', plugins: { ...commonOptions.plugins, legend: { ...commonOptions.plugins.legend, position: 'right' } } }
         });
     } else if (currentChartMode === 'bar') {
