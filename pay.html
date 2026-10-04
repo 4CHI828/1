@@ -224,7 +224,29 @@ body { padding-bottom: 80px; }
   #categoryTagList, #memberTagList { max-width: 100%; overflow-x: auto; }
   #recordList > * { min-width: 0; max-width: 100%; }
   #mainChartContainer { max-width: 100%; overflow: hidden; }
-  #mainChartContainer canvas { max-width: 100%; }
+  #mainChartContainer .chart-visual {
+    position: relative; width: 100%; height: 320px; min-height: 260px;
+  }
+  #mainChartContainer canvas { max-width: 100%; width: 100% !important; height: 100% !important; }
+  #mainChartContainer .chart-range-btn { background: rgba(255,255,255,.75); border-color: rgba(148,163,184,.35); color: #64748b; }
+  #mainChartContainer .chart-range-btn.active { background: #2563eb; border-color: #2563eb; color: #fff; box-shadow: 0 2px 6px rgba(37,99,235,.22); }
+  .dark #mainChartContainer .chart-range-btn { background: rgba(30,41,59,.7); border-color: rgba(100,116,139,.45); color: #cbd5e1; }
+  .dark #mainChartContainer .chart-range-btn.active { background: #3b82f6; border-color: #3b82f6; color: #fff; }
+  #mainChartContainer .chart-mode-btn.is-active {
+    background: #fff !important; color: #2563eb !important; font-weight: 800 !important;
+    box-shadow: 0 1px 3px rgba(0,0,0,.12);
+  }
+  .dark #mainChartContainer .chart-mode-btn.is-active {
+    background: #475569 !important; color: #93c5fd !important;
+  }
+  #chartSummary { display: grid; grid-template-columns: repeat(3, minmax(0,1fr)); gap: 8px; margin-bottom: 10px; }
+  #chartSummary > div { min-width: 0; border-radius: 12px; padding: 8px 10px; background: rgba(248,250,252,.85); border: 1px solid rgba(226,232,240,.9); }
+  .dark #chartSummary > div { background: rgba(30,41,59,.72); border-color: rgba(71,85,105,.7); }
+  @media (max-width: 520px) {
+    #mainChartContainer .chart-visual { height: 285px; min-height: 250px; }
+    #chartSummary { grid-template-columns: 1fr 1fr; }
+    #chartSummary > div:last-child { grid-column: 1 / -1; }
+  }
   #settlementTransfers { max-width: 100%; overflow-x: auto; }
   nav { min-height: 58px; padding-bottom: env(safe-area-inset-bottom) !important; }
   nav > div { max-width: 100%; }
@@ -552,14 +574,26 @@ tailwind.config = { darkMode: 'class' };
 <div class="flex justify-between items-center text-xs font-bold text-gray-700 dark:text-gray-300 mb-2 flex-wrap gap-1">
 <span>📊 財務分析圖表 (TWD)</span>
 <div class="flex bg-gray-200 dark:bg-gray-800 p-0.5 rounded-lg shadow-inner">
-<button type="button" id="chartTypePieBtn" class="px-2 py-1 rounded-md bg-white dark:bg-gray-600 font-bold text-blue-600 shadow-sm transition">佔比</button>
-<button type="button" id="chartTypeBarBtn" class="px-2 py-1 rounded-md text-gray-500 dark:text-gray-400 font-medium hover:text-gray-800 transition">趨勢</button>
-<button type="button" id="chartTypeMemberBtn" class="px-2 py-1 rounded-md text-gray-500 dark:text-gray-400 font-medium hover:text-gray-800 transition">負擔</button>
-<button type="button" id="chartTypeNetBtn" class="px-2 py-1 rounded-md text-gray-500 dark:text-gray-400 font-medium hover:text-gray-800 transition">淨損益</button>
-<button type="button" id="chartTypeBalanceBtn" class="px-2 py-1 rounded-md text-gray-500 dark:text-gray-400 font-medium hover:text-gray-800 transition">收支比</button>
+<button type="button" id="chartTypePieBtn" class="chart-mode-btn is-active px-2 py-1 rounded-md bg-white dark:bg-gray-600 font-bold text-blue-600 shadow-sm transition">佔比</button>
+<button type="button" id="chartTypeBarBtn" class="chart-mode-btn px-2 py-1 rounded-md text-gray-500 dark:text-gray-400 font-medium hover:text-gray-800 transition">趨勢</button>
+<button type="button" id="chartTypeMemberBtn" class="chart-mode-btn px-2 py-1 rounded-md text-gray-500 dark:text-gray-400 font-medium hover:text-gray-800 transition">負擔</button>
+<button type="button" id="chartTypeNetBtn" class="chart-mode-btn px-2 py-1 rounded-md text-gray-500 dark:text-gray-400 font-medium hover:text-gray-800 transition">淨損益</button>
+<button type="button" id="chartTypeBalanceBtn" class="chart-mode-btn px-2 py-1 rounded-md text-gray-500 dark:text-gray-400 font-medium hover:text-gray-800 transition">收支比</button>
 </div>
 </div>
-<div class="relative w-full h-64 flex justify-center items-center">
+<div id="chartSummary">
+<div><div class="text-[0.65rem] text-gray-500 dark:text-gray-400 font-bold">支出</div><div id="chartSummaryExpense" class="text-sm font-black text-red-500 font-mono">$0</div></div>
+<div><div class="text-[0.65rem] text-gray-500 dark:text-gray-400 font-bold">收入</div><div id="chartSummaryIncome" class="text-sm font-black text-emerald-500 font-mono">$0</div></div>
+<div><div class="text-[0.65rem] text-gray-500 dark:text-gray-400 font-bold">淨額</div><div id="chartSummaryNet" class="text-sm font-black text-blue-600 dark:text-blue-400 font-mono">$0</div></div>
+</div>
+<div id="chartRangeBar" class="flex items-center gap-1.5 overflow-x-auto pb-1 mt-2" aria-label="圖表期間">
+<button type="button" data-chart-range="7d" class="chart-range-btn active px-2.5 py-1 rounded-lg border text-[0.68rem] font-bold whitespace-nowrap">7天</button>
+<button type="button" data-chart-range="month" class="chart-range-btn px-2.5 py-1 rounded-lg border text-[0.68rem] font-bold whitespace-nowrap">本月</button>
+<button type="button" data-chart-range="prevMonth" class="chart-range-btn px-2.5 py-1 rounded-lg border text-[0.68rem] font-bold whitespace-nowrap">上月</button>
+<button type="button" data-chart-range="year" class="chart-range-btn px-2.5 py-1 rounded-lg border text-[0.68rem] font-bold whitespace-nowrap">今年</button>
+<button type="button" data-chart-range="all" class="chart-range-btn px-2.5 py-1 rounded-lg border text-[0.68rem] font-bold whitespace-nowrap">全部</button>
+</div>
+<div class="chart-visual flex justify-center items-center">
 <canvas id="expenseChart"></canvas>
 <div id="emptyChartMsg" class="hidden absolute inset-0 flex items-center justify-center text-gray-400 text-xs font-medium bg-gray-50/80 dark:bg-slate-800/80 rounded-xl border border-dashed border-gray-300 dark:border-gray-600">尚無支出資料可供分析</div>
 </div>
@@ -1780,30 +1814,109 @@ function renderPoolStats(records) {
 // 專業圖表分析模組 (Chart Engine Pro)
 // ==========================================
 const CHART_COLORS = ['#6366f1', '#ec4899', '#10b981', '#f59e0b', '#8b5cf6', '#06b6d4', '#f97316', '#64748b', '#ef4444', '#a855f7'];
+let chartDrawToken = 0;
+
 async function toggleMainChart() {
     const container = document.getElementById("mainChartContainer");
+    const btn = document.getElementById("mainChartToggleBtn");
     if (!container) return;
+    const opening = container.classList.contains("hidden");
     container.classList.toggle("hidden");
-    if (!container.classList.contains("hidden")) await drawCharts();
+    if (btn) btn.textContent = opening ? "📊 隱藏圖表" : "📊 顯示圖表";
+    if (opening) await drawCharts();
+}
+
+function formatChartMoney(value) {
+    const n = Number(value) || 0;
+    return `$${n.toLocaleString('zh-TW', { maximumFractionDigits: 0 })}`;
+}
+
+function formatChartDate(dateText) {
+    const s = String(dateText || '');
+    const m = s.match(/^(\d{4})[-\/]?(\d{1,2})[-\/]?(\d{1,2})/);
+    return m ? `${Number(m[2])}/${Number(m[3])}` : s;
+}
+
+function setChartModeActive() {
+    const map = { pie: 'chartTypePieBtn', bar: 'chartTypeBarBtn', member: 'chartTypeMemberBtn', net: 'chartTypeNetBtn', balance: 'chartTypeBalanceBtn' };
+    Object.entries(map).forEach(([mode, id]) => {
+        const el = document.getElementById(id);
+        if (!el) return;
+        const active = mode === currentChartMode;
+        el.classList.toggle('is-active', active);
+        el.setAttribute('aria-pressed', active ? 'true' : 'false');
+    });
+}
+
+function updateChartSummary(summary) {
+    const exp = Number(summary?.expense) || 0;
+    const inc = Number(summary?.income) || 0;
+    const net = inc - exp;
+    const e = document.getElementById('chartSummaryExpense');
+    const i = document.getElementById('chartSummaryIncome');
+    const n = document.getElementById('chartSummaryNet');
+    if (e) e.textContent = formatChartMoney(exp);
+    if (i) i.textContent = formatChartMoney(inc);
+    if (n) {
+        n.textContent = `${net >= 0 ? '+' : ''}${formatChartMoney(net)}`;
+        n.className = `text-sm font-black font-mono ${net >= 0 ? 'text-emerald-500' : 'text-red-500'}`;
+    }
+}
+
+let chartRange = '7d';
+
+function getChartRangeBounds(range) {
+    const now = new Date();
+    const start = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    if (range === '7d') start.setDate(start.getDate() - 6);
+    else if (range === 'month') start.setDate(1);
+    else if (range === 'prevMonth') return { start: new Date(now.getFullYear(), now.getMonth()-1, 1), end: new Date(now.getFullYear(), now.getMonth(), 0, 23,59,59,999) };
+    else if (range === 'year') return { start: new Date(now.getFullYear(), 0, 1), end: now };
+    else return { start: null, end: null };
+    return { start, end: now };
+}
+
+function filterChartRecords(records) {
+    const bounds = getChartRangeBounds(chartRange);
+    if (!bounds.start) return records;
+    return records.filter(r => {
+        const raw = String(r?.date || '');
+        const d = new Date(raw.length <= 10 ? raw + 'T23:59:59' : raw);
+        return !Number.isNaN(d.getTime()) && d >= bounds.start && d <= bounds.end;
+    });
+}
+
+function setChartRangeActive() {
+    document.querySelectorAll('[data-chart-range]').forEach(el => {
+        const active = el.dataset.chartRange === chartRange;
+        el.classList.toggle('active', active);
+        el.setAttribute('aria-pressed', active ? 'true' : 'false');
+    });
 }
 
 async function drawCharts() {
     const canvas = document.getElementById("expenseChart");
     if (!canvas) return;
-    const active = getActiveRecords();
+    const drawToken = ++chartDrawToken;
+    const allActive = getActiveRecords();
+    const active = filterChartRecords(allActive);
     const isDark = document.documentElement.classList.contains("dark");
-    const textColor = isDark ? '#fff' : '#333';
+    const textColor = isDark ? '#e2e8f0' : '#334155';
+    const gridColor = isDark ? 'rgba(148,163,184,.14)' : 'rgba(100,116,139,.12)';
     const expenses = active.filter(r => r.type === 'expense' || r.type === 'personal');
     const income = active.filter(r => r.type === 'income');
     const summary = calculateTransactionSummary(active);
+    updateChartSummary(summary);
+    setChartModeActive();
+    setChartRangeActive();
 
     if (expenses.length === 0 && income.length === 0) {
-        document.getElementById("emptyChartMsg").classList.remove("hidden");
+        document.getElementById("emptyChartMsg")?.classList.remove("hidden");
         canvas.style.display = "none";
         if (chartInstance) { chartInstance.destroy(); chartInstance = null; }
         return;
     }
-    document.getElementById("emptyChartMsg").classList.add("hidden");
+    document.getElementById("emptyChartMsg")?.classList.add("hidden");
     canvas.style.display = "block";
 
     try {
@@ -1812,84 +1925,158 @@ async function drawCharts() {
         showToast("圖表模組載入失敗，請確認網路後再試", "error");
         return;
     }
+    if (drawToken !== chartDrawToken) return;
     if (chartInstance) chartInstance.destroy();
 
+    const moneyTooltip = (context) => {
+        const value = Number(context.parsed?.y ?? context.parsed?.x ?? context.parsed ?? 0) || 0;
+        const label = context.dataset?.label ? `${context.dataset.label}: ` : '';
+        return `${label}${formatChartMoney(value)}`;
+    };
     const commonOptions = {
-        responsive: true, maintainAspectRatio: false,
+        responsive: true,
+        maintainAspectRatio: false,
+        animation: { duration: 280 },
+        interaction: { mode: 'index', intersect: false },
+        onClick: (event, elements) => {
+            if (!elements?.length) return;
+            const hit = elements[0];
+            const chart = event?.chart || chartInstance;
+            const dataset = chart?.data?.datasets?.[hit.datasetIndex];
+            const index = hit.index;
+            let label = chart?.data?.labels?.[index] ?? '';
+            if (Array.isArray(dataset?.drilldownLabels)) label = dataset.drilldownLabels[index] ?? label;
+            applyChartDrilldown(currentChartMode, label);
+        },
+        layout: { padding: { top: 4, right: 8, bottom: 4, left: 8 } },
         plugins: {
-            legend: { position: 'bottom', labels: { color: textColor, font: { size: 11, weight: 'bold' }, padding: 20 } },
+            legend: { position: 'bottom', labels: { color: textColor, font: { size: 11, weight: 'bold' }, padding: 14, usePointStyle: true, boxWidth: 8 } },
             tooltip: {
-                backgroundColor: isDark ? 'rgba(30, 41, 59, 0.9)' : 'rgba(255, 255, 255, 0.9)',
+                backgroundColor: isDark ? 'rgba(15,23,42,.96)' : 'rgba(255,255,255,.96)',
                 titleColor: textColor, bodyColor: textColor,
-                callbacks: {
-                    label: function(context) {
-                        let label = context.label || '';
-                        let value = context.parsed;
-                        if (context.dataset.type === 'doughnut') {
-                            const total = context.dataset.data.reduce((a, b) => a + b, 0);
-                            return `${label}: $${value.toLocaleString()} (${((value / total) * 100).toFixed(1)}%)`;
-                        }
-                        return `${label}: $${value.toLocaleString()}`;
-                    }
-                }
+                borderColor: isDark ? 'rgba(148,163,184,.2)' : 'rgba(100,116,139,.15)', borderWidth: 1,
+                padding: 10,
+                callbacks: { label: moneyTooltip }
             }
         }
+    };
+    const axis = {
+        x: { ticks: { color: textColor, font: { size: 10 }, maxRotation: 0, autoSkip: true, autoSkipPadding: 12 }, grid: { display: false } },
+        y: { beginAtZero: true, ticks: { color: textColor, font: { size: 10 }, callback: v => formatChartMoney(v) }, grid: { color: gridColor } }
     };
 
     if (currentChartMode === 'pie') {
         const catData = {};
-        expenses.forEach(r => { catData[r.category || '其他'] = (catData[r.category || '其他'] || 0) + r.twdAmount; });
+        expenses.forEach(r => { const k = r.category || '其他'; catData[k] = (catData[k] || 0) + (Number(r.twdAmount) || 0); });
+        const entries = Object.entries(catData).sort((a,b) => b[1]-a[1]);
         chartInstance = new Chart(canvas, {
             type: 'doughnut',
-            data: { labels: Object.keys(catData), datasets: [{ data: Object.values(catData), backgroundColor: CHART_COLORS, borderWidth: 2, borderColor: isDark ? '#1e293b' : '#fff' }] },
-            options: { ...commonOptions, cutout: '65%' }
+            data: { labels: entries.map(x => x[0]), datasets: [{ data: entries.map(x => x[1]), backgroundColor: entries.map((_,i) => CHART_COLORS[i % CHART_COLORS.length]), borderWidth: 2, borderColor: isDark ? '#0f172a' : '#fff', hoverOffset: 6 }] },
+            options: { ...commonOptions, cutout: '66%', plugins: { ...commonOptions.plugins, legend: { ...commonOptions.plugins.legend, position: 'right' } } }
         });
     } else if (currentChartMode === 'bar') {
         const dateData = {};
-        expenses.forEach(r => { dateData[r.date] = (dateData[r.date] || 0) + r.twdAmount; });
+        expenses.forEach(r => { const d = String(r.date || '').slice(0,10); if (d) dateData[d] = (dateData[d] || 0) + (Number(r.twdAmount) || 0); });
         const sortedDates = Object.keys(dateData).sort();
         chartInstance = new Chart(canvas, {
-            type: 'bar',
-            data: { labels: sortedDates, datasets: [{ label: '日支出', data: sortedDates.map(d => dateData[d]), backgroundColor: '#6366f1', borderRadius: 6 }] },
-            options: { ...commonOptions, scales: { y: { beginAtZero: true, ticks: { color: textColor } }, x: { ticks: { color: textColor } } } }
+            type: 'line',
+            data: { labels: sortedDates.map(formatChartDate), datasets: [{ label: '每日支出', data: sortedDates.map(d => dateData[d]), drilldownLabels: sortedDates, borderColor: '#6366f1', backgroundColor: 'rgba(99,102,241,.12)', fill: true, tension: .3, pointRadius: sortedDates.length > 20 ? 2 : 3, pointHoverRadius: 5 }] },
+            options: { ...commonOptions, interaction: { mode: 'index', intersect: false }, scales: axis, plugins: { ...commonOptions.plugins, legend: { ...commonOptions.plugins.legend, display: false } } }
         });
     } else if (currentChartMode === 'member') {
         const memData = {};
         members.forEach(m => memData[m] = 0);
-        expenses.forEach(r => {
-            const shares = parseShares(r);
-            Object.entries(shares).forEach(([m, a]) => { if (memData.hasOwnProperty(m)) memData[m] += a; });
-        });
+        expenses.forEach(r => { const shares = parseShares(r); Object.entries(shares).forEach(([m,a]) => { if (Object.prototype.hasOwnProperty.call(memData,m)) memData[m] += Number(a)||0; }); });
+        const entries = Object.entries(memData).filter(([,v]) => v > 0).sort((a,b) => b[1]-a[1]);
         chartInstance = new Chart(canvas, {
-            type: 'bar',
-            data: { labels: Object.keys(memData), datasets: [{ label: '應攤總額', data: Object.values(memData), backgroundColor: CHART_COLORS, borderRadius: 6 }] },
-            options: { ...commonOptions, scales: { y: { beginAtZero: true, ticks: { color: textColor } }, x: { ticks: { color: textColor } } } }
+            type: 'bar', data: { labels: entries.map(x=>x[0]), datasets: [{ label: '應攤總額', data: entries.map(x=>x[1]), backgroundColor: entries.map((_,i)=>CHART_COLORS[i%CHART_COLORS.length]), borderRadius: 6, maxBarThickness: 38 }] },
+            options: { ...commonOptions, indexAxis: 'y', scales: { x: axis.y, y: { ticks: { color: textColor, font: { size: 10 } }, grid: { display: false } } } }
         });
     } else if (currentChartMode === 'net') {
         const settlementBalances = calculateSettlementBalances(active);
-        const netData = {};
-        members.forEach(m => netData[m] = settlementBalances[m] || 0);
+        const entries = members.map(m => [m, Number(settlementBalances[m] || 0)]).filter(([,v]) => Math.abs(v) > 0.0001).sort((a,b)=>b[1]-a[1]);
         chartInstance = new Chart(canvas, {
-            type: 'bar',
-            data: { labels: Object.keys(netData), datasets: [{ label: '結餘', data: Object.values(netData), backgroundColor: Object.values(netData).map(v => v >= 0 ? '#10b981' : '#ef4444'), borderRadius: 6 }] },
-            options: { ...commonOptions, indexAxis: 'y', scales: { x: { ticks: { color: textColor } }, y: { ticks: { color: textColor } } } }
+            type: 'bar', data: { labels: entries.map(x=>x[0]), datasets: [{ label: '淨結餘', data: entries.map(x=>x[1]), backgroundColor: entries.map(([_,v])=>v>=0?'#10b981':'#ef4444'), borderRadius: 6, maxBarThickness: 34 }] },
+            options: { ...commonOptions, indexAxis: 'y', scales: { x: { ...axis.y, ticks: { ...axis.y.ticks, callback: v => `${v >= 0 ? '+' : ''}${formatChartMoney(v)}` } }, y: { ticks: { color: textColor, font: { size: 10 } }, grid: { display: false } } } }
         });
     } else if (currentChartMode === 'balance') {
-        const totalExp = summary.expense;
-        const totalInc = summary.income;
         chartInstance = new Chart(canvas, {
-            type: 'pie',
-            data: { labels: ['總支出', '總收入'], datasets: [{ data: [totalExp, totalInc], backgroundColor: ['#ef4444', '#10b981'], borderWidth: 0 }] },
-            options: { ...commonOptions, cutout: '50%' }
+            type: 'doughnut', data: { labels: ['總支出','總收入'], datasets: [{ data: [Number(summary.expense)||0, Number(summary.income)||0], backgroundColor: ['#ef4444','#10b981'], borderWidth: 2, borderColor: isDark ? '#0f172a' : '#fff', hoverOffset: 6 }] },
+            options: { ...commonOptions, cutout: '55%' }
         });
     }
 }
 
-document.getElementById("chartTypePieBtn").onclick = async () => { currentChartMode = 'pie'; await drawCharts(); };
-document.getElementById("chartTypeBarBtn").onclick = async () => { currentChartMode = 'bar'; await drawCharts(); };
-document.getElementById("chartTypeMemberBtn").onclick = async () => { currentChartMode = 'member'; await drawCharts(); };
-document.getElementById("chartTypeNetBtn").onclick = async () => { currentChartMode = 'net'; await drawCharts(); };
-document.getElementById("chartTypeBalanceBtn").onclick = async () => { currentChartMode = 'balance'; await drawCharts(); };
+function applyChartDrilldown(mode, label) {
+    const value = String(label || '').trim();
+    if (!value) return;
+    const search = document.getElementById('searchInput');
+    const type = document.getElementById('filterTypeSelect');
+    const category = document.getElementById('filterCategorySelect');
+    const member = document.getElementById('filterMemberSelect');
+    const start = document.getElementById('filterStartDate');
+    const end = document.getElementById('filterEndDate');
+    if (!type || !category || !member || !start || !end) return;
+
+    if (search) { search.value = ''; document.getElementById('clearSearchBtn')?.classList.add('hidden'); }
+    type.value = 'all'; category.value = 'all'; member.value = 'all'; start.value = ''; end.value = '';
+
+    if (mode === 'pie') {
+        if (!Array.from(category.options).some(o => o.value === value)) return showToast(`找不到「${value}」類別`, 'info');
+        category.value = value;
+    } else if (mode === 'bar') {
+        const normalized = value.slice(0, 10);
+        start.value = normalized; end.value = normalized;
+    } else if (mode === 'member' || mode === 'net') {
+        if (!Array.from(member.options).some(o => o.value === value)) return showToast(`找不到成員「${value}」`, 'info');
+        member.value = value;
+    } else if (mode === 'balance') {
+        if (value === '總支出') type.value = 'expense';
+        else if (value === '總收入') type.value = 'income';
+        else return;
+    } else return;
+
+    document.querySelectorAll('#historyQuickFilters [data-history-range]').forEach(b => b.classList.remove('active'));
+    switchTab('history');
+    renderRecordsList();
+    document.getElementById('recordList')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+
+    // 圖表鑽取後若只剩一筆紀錄，直接開啟明細；多筆則保留清單讓使用者自行選擇。
+    const drillRecords = getActiveRecords().filter(r => {
+        if (mode === 'pie') return String(r.category || '其他') === value && (r.type === 'expense' || r.type === 'personal');
+        if (mode === 'bar') return String(r.date || '').slice(0, 10) === value && (r.type === 'expense' || r.type === 'personal');
+        if (mode === 'member' || mode === 'net') {
+            const payers = parsePayers(r), shares = parseShares(r);
+            return Object.prototype.hasOwnProperty.call(payers, value) || Object.prototype.hasOwnProperty.call(shares, value);
+        }
+        if (mode === 'balance') return value === '總收入' ? r.type === 'income' : (r.type === 'expense' || r.type === 'personal');
+        return false;
+    });
+    if (drillRecords.length === 1) {
+        setTimeout(() => openRecordDetail(drillRecords[0].id), 180);
+        showToast(`已找到唯一紀錄：${drillRecords[0].title || '未命名紀錄'}`, 'success');
+    } else {
+        showToast(`已套用圖表篩選：${value}${drillRecords.length ? `（${drillRecords.length} 筆）` : ''}`, 'success');
+    }
+}
+window.applyChartDrilldown = applyChartDrilldown;
+
+function bindChartMode(mode, id) {
+    const el = document.getElementById(id);
+    if (el) el.onclick = async () => { currentChartMode = mode; await drawCharts(); };
+}
+bindChartMode('pie', 'chartTypePieBtn');
+bindChartMode('bar', 'chartTypeBarBtn');
+bindChartMode('member', 'chartTypeMemberBtn');
+bindChartMode('net', 'chartTypeNetBtn');
+bindChartMode('balance', 'chartTypeBalanceBtn');
+
+document.querySelectorAll('[data-chart-range]').forEach(el => {
+    el.onclick = async () => {
+        chartRange = el.dataset.chartRange || '7d';
+        await drawCharts();
+    };
+});
 
 // ==========================================
 // AI 輔助模塊 (OCR & Voice)
