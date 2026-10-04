@@ -597,6 +597,7 @@ tailwind.config = { darkMode: 'class' };
 <canvas id="expenseChart"></canvas>
 <div id="emptyChartMsg" class="hidden absolute inset-0 flex items-center justify-center text-gray-400 text-xs font-medium bg-gray-50/80 dark:bg-slate-800/80 rounded-xl border border-dashed border-gray-300 dark:border-gray-600">尚無支出資料可供分析</div>
 </div>
+<div id="chartDiagnostic" class="hidden mt-3 rounded-xl border border-amber-200 dark:border-amber-800/60 bg-amber-50/70 dark:bg-amber-950/20 p-3 text-xs"></div>
 </div>
 <div id="recordList" class="space-y-2.5 overflow-y-auto pr-1">
 <div class="text-gray-400 dark:text-gray-500 text-center py-8 bg-white/50 dark:bg-gray-800/50 rounded-2xl border border-dashed border-gray-300 dark:border-gray-600">請先連結 Google 帳號</div>
@@ -1681,7 +1682,7 @@ function calculateTransactionSummary(records) {
     const list = Array.isArray(records) ? records : [];
     let expense = 0, income = 0;
     list.forEach(r => {
-        const amount = Math.max(0, Number(r?.twdAmount) || 0);
+        const amount = getChartTwdAmount(r);
         if (r?.type === "expense" || r?.type === "personal") expense += amount;
         else if (r?.type === "income") income += amount;
     });
@@ -1897,6 +1898,98 @@ function formatChartMoney(value) {
     return `$${n.toLocaleString('zh-TW', { maximumFractionDigits: 0 })}`;
 }
 
+// 財務分析統一使用「整筆紀錄的有效 TWD 金額」。
+// TWD/NTD 正常情況下 amount 與 twdAmount 應相同；若舊資料曾出現 280/360 不一致，
+// 不再擅自覆蓋欄位，而是以較大的有效值作為財務統計基準，避免已確認的 $360 被畫成 $280。
+function getChartTwdAmount(record) {
+    if (!record || typeof record !== 'object') return 0;
+    const currency = String(record.currency || 'TWD').trim().toUpperCase();
+    const amount = Number(record.amount);
+    const twd = Number(record.twdAmount);
+    const validAmount = Number.isFinite(amount) && amount >= 0 ? amount : 0;
+    const validTwd = Number.isFinite(twd) && twd >= 0 ? twd : 0;
+
+    // 財務圖表代表「整筆交易金額」，不是分攤金額。
+    // TWD/NTD 不應發生匯率換算；若舊資料兩欄不一致，使用較大的有效值，
+    // 例如 amount=360、twdAmount=280 時，圖表明確採用 $360。
+    if (currency === 'TWD' || currency === 'NTD') {
+        return Math.max(validAmount, validTwd);
+    }
+    // 外幣優先使用已保存的台幣折算值；舊資料沒有 twdAmount 才自行換算。
+    if (validTwd > 0) return validTwd;
+    const rate = Number(record.rate);
+    return validAmount > 0 && Number.isFinite(rate) && rate > 0 ? validAmount * rate : 0;
+}
+
+function getChartRecordDiagnostic(record) {
+    const amount = Number(record?.amount);
+    const twdAmount = Number(record?.twdAmount);
+    const shares = parseShares(record || {});
+    const payers = parsePayers(record || {});
+    const shareTotal = Object.values(shares || {}).reduce((sum, v) => sum + (Number(v) || 0), 0);
+    const paidTotal = Object.values(payers || {}).reduce((sum, v) => sum + (Number(v) || 0), 0);
+    return {
+        id: String(record?.id || ''),
+        title: String(record?.title || '未命名紀錄'),
+        date: String(record?.date || '').slice(0, 10),
+        category: String(record?.category || '其他'),
+        currency: String(record?.currency || 'TWD').toUpperCase(),
+        amount: Number.isFinite(amount) ? amount : null,
+        twdAmount: Number.isFinite(twdAmount) ? twdAmount : null,
+        chartAmount: getChartTwdAmount(record),
+        shareTotal,
+        paidTotal
+    };
+}
+
+function renderChartDiagnostic(records, expenses) {
+    const box = document.getElementById('chartDiagnostic');
+    if (!box) return;
+    const allRows = (Array.isArray(records) ? records : []).map(getChartRecordDiagnostic);
+    const expenseRows = (Array.isArray(expenses) ? expenses : []).map(getChartRecordDiagnostic);
+    if (!allRows.length) {
+        box.classList.add('hidden');
+        box.innerHTML = '';
+        return;
+    }
+    const expenseIds = new Set(expenseRows.map(r => r.id));
+    const excluded = allRows.filter(r => !expenseIds.has(r.id));
+    const mismatches = allRows.filter(r => r.amount != null && r.twdAmount != null && Math.abs(r.amount - r.twdAmount) > 0.0001);
+    const total = expenseRows.reduce((sum, r) => sum + r.chartAmount, 0);
+    const excludedAmount = excluded.reduce((sum, r) => sum + r.chartAmount, 0);
+    const mismatchText = mismatches.length
+        ? `⚠️ 發現 ${mismatches.length} 筆 amount / twdAmount 不一致；圖表採用有效整筆交易金額。`
+        : '✅ amount / twdAmount 沒有發現不一致。';
+    const excludedText = excluded.length
+        ? `🔍 目前期間共有 ${allRows.length} 筆紀錄，其中 ${expenseRows.length} 筆被視為支出、${excluded.length} 筆未計入支出圖表（合計 ${formatChartMoney(excludedAmount)}）。如果你預期圖表應為 $360，請特別檢查下面「未計入」紀錄的類型。`
+        : '✅ 所有目前期間的有效紀錄都已納入支出／收入分類。';
+    const detail = expenseRows.slice(0, 80).map(r => {
+        const fields = [
+            `整筆=${formatChartMoney(r.chartAmount)}`,
+            `amount=${r.amount == null ? '—' : formatChartMoney(r.amount)}`,
+            `twdAmount=${r.twdAmount == null ? '—' : formatChartMoney(r.twdAmount)}`,
+            `付款=${formatChartMoney(r.paidTotal)}`,
+            `應攤=${formatChartMoney(r.shareTotal)}`
+        ].join(' · ');
+        return `<div class="py-1.5 border-b border-amber-200/60 dark:border-amber-800/40 last:border-b-0"><div class="font-bold text-gray-800 dark:text-gray-100">${escapeHtml(r.date)} · ${escapeHtml(r.category)} · ${escapeHtml(r.title)}</div><div class="text-gray-600 dark:text-gray-300 mt-0.5">${fields}</div></div>`;
+    }).join('');
+    const excludedDetail = excluded.slice(0, 80).map(r => {
+        return `<div class="py-1.5 border-b border-red-200/60 dark:border-red-800/40 last:border-b-0"><div class="font-bold text-red-700 dark:text-red-300">❌ 未計入 · ${escapeHtml(r.date)} · ${escapeHtml(r.category)} · ${escapeHtml(r.title)}</div><div class="text-gray-600 dark:text-gray-300 mt-0.5">類型=${escapeHtml(String(r.type || '未知'))} · 整筆=${formatChartMoney(r.chartAmount)} · amount=${r.amount == null ? '—' : formatChartMoney(r.amount)} · twdAmount=${r.twdAmount == null ? '—' : formatChartMoney(r.twdAmount)}</div></div>`;
+    }).join('');
+    box.classList.remove('hidden');
+    box.innerHTML = `<div class="flex items-center justify-between gap-2 mb-1"><strong class="text-amber-800 dark:text-amber-300">🔎 圖表資料診斷</strong><span class="font-mono font-bold">圖表支出 ${formatChartMoney(total)}</span></div><div class="text-amber-800/90 dark:text-amber-200 mb-1">${mismatchText}</div><div class="text-amber-800/90 dark:text-amber-200 mb-2">${excludedText}</div><div class="text-xs font-bold text-gray-700 dark:text-gray-200 mb-1">✅ 已計入支出的紀錄</div><div class="max-h-56 overflow-y-auto rounded-lg bg-white/60 dark:bg-slate-900/40 px-2">${detail || '<div class="py-2 text-gray-500">沒有支出紀錄</div>'}</div>${excludedDetail ? `<div class="text-xs font-bold text-red-700 dark:text-red-300 mt-3 mb-1">❌ 未計入支出的紀錄</div><div class="max-h-56 overflow-y-auto rounded-lg bg-red-50/70 dark:bg-red-950/20 px-2">${excludedDetail}</div>` : ''}${allRows.length > 80 ? `<div class="mt-1 text-gray-500">僅顯示前 80 筆。</div>` : ''}`;
+}
+
+function calculateChartSummary(records) {
+    let expense = 0, income = 0;
+    (Array.isArray(records) ? records : []).forEach(r => {
+        const amount = getChartTwdAmount(r);
+        if (r?.type === 'expense' || r?.type === 'personal') expense += amount;
+        else if (r?.type === 'income') income += amount;
+    });
+    return { expense, income, net: income - expense };
+}
+
 function formatChartDate(dateText) {
     const s = String(dateText || '');
     const m = s.match(/^(\d{4})[-\/]?(\d{1,2})[-\/]?(\d{1,2})/);
@@ -1932,23 +2025,46 @@ function updateChartSummary(summary) {
 let chartRange = '7d';
 
 function getChartRangeBounds(range) {
-    const now = new Date();
-    const start = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-    if (range === '7d') start.setDate(start.getDate() - 6);
-    else if (range === 'month') start.setDate(1);
-    else if (range === 'prevMonth') return { start: new Date(now.getFullYear(), now.getMonth()-1, 1), end: new Date(now.getFullYear(), now.getMonth(), 0, 23,59,59,999) };
-    else if (range === 'year') return { start: new Date(now.getFullYear(), 0, 1), end: now };
-    else return { start: null, end: null };
-    return { start, end: now };
+    // 圖表以「帳務日期」而不是交易時間判斷範圍。
+    // 直接使用本機 YYYY-MM-DD 字串，可避免 new Date('YYYY-MM-DD') 的 UTC 時區偏移，
+    // 也避免今天的紀錄因儲存時間晚於目前時間而被排除。
+    const today = getTodayString();
+    const [y, m, d] = today.split('-').map(Number);
+    const todayDate = new Date(y, m - 1, d);
+    const makeDate = (date) => new Date(date.getFullYear(), date.getMonth(), date.getDate());
+    const endOfDay = (date) => new Date(date.getFullYear(), date.getMonth(), date.getDate(), 23, 59, 59, 999);
+
+    if (range === '7d') {
+        const start = makeDate(todayDate);
+        start.setDate(start.getDate() - 6);
+        return { start, end: endOfDay(todayDate) };
+    }
+    if (range === 'month') {
+        return { start: new Date(y, m - 1, 1), end: endOfDay(todayDate) };
+    }
+    if (range === 'prevMonth') {
+        return {
+            start: new Date(y, m - 2, 1),
+            end: new Date(y, m - 1, 0, 23, 59, 59, 999)
+        };
+    }
+    if (range === 'year') {
+        return { start: new Date(y, 0, 1), end: endOfDay(todayDate) };
+    }
+    return { start: null, end: null };
 }
 
 function filterChartRecords(records) {
     const bounds = getChartRangeBounds(chartRange);
     if (!bounds.start) return records;
+    const startKey = getDateStringFromDate(bounds.start);
+    const endKey = getDateStringFromDate(bounds.end);
     return records.filter(r => {
-        const raw = String(r?.date || '');
-        const d = new Date(raw.length <= 10 ? raw + 'T23:59:59' : raw);
-        return !Number.isNaN(d.getTime()) && d >= bounds.start && d <= bounds.end;
+        const raw = String(r?.date || '').trim();
+        const match = raw.match(/^(\d{4})[-\/]?(\d{1,2})[-\/]?(\d{1,2})/);
+        if (!match) return false;
+        const key = `${match[1]}-${String(match[2]).padStart(2, '0')}-${String(match[3]).padStart(2, '0')}`;
+        return key >= startKey && key <= endKey;
     });
 }
 
@@ -1971,8 +2087,9 @@ async function drawCharts() {
     const gridColor = isDark ? 'rgba(148,163,184,.14)' : 'rgba(100,116,139,.12)';
     const expenses = active.filter(r => r.type === 'expense' || r.type === 'personal');
     const income = active.filter(r => r.type === 'income');
-    const summary = calculateTransactionSummary(active);
+    const summary = calculateChartSummary(active);
     updateChartSummary(summary);
+    renderChartDiagnostic(active, expenses);
     setChartModeActive();
     setChartRangeActive();
 
@@ -2033,9 +2150,15 @@ async function drawCharts() {
 
     if (currentChartMode === 'pie') {
         const catData = {};
-        expenses.forEach(r => { const k = r.category || '其他'; catData[k] = (catData[k] || 0) + (Number(r.twdAmount) || 0); });
-        const entries = Object.entries(catData).sort((a,b) => b[1]-a[1]);
-        const pieTotal = entries.reduce((sum, [,value]) => sum + (Number(value) || 0), 0);
+        expenses.forEach(r => {
+            const k = r.category || '其他';
+            if (!catData[k]) catData[k] = { total: 0, records: [] };
+            const value = getChartTwdAmount(r);
+            catData[k].total += value;
+            catData[k].records.push(getChartRecordDiagnostic(r));
+        });
+        const entries = Object.entries(catData).sort((a,b) => b[1].total-a[1].total);
+        const pieTotal = entries.reduce((sum, [,value]) => sum + (Number(value.total) || 0), 0);
         const pieValueLabels = {
             id: 'pieValueLabels',
             afterDatasetsDraw(chart) {
@@ -2075,13 +2198,13 @@ async function drawCharts() {
         };
         chartInstance = new Chart(canvas, {
             type: 'doughnut',
-            data: { labels: entries.map(x => x[0]), datasets: [{ data: entries.map(x => x[1]), backgroundColor: entries.map((_,i) => CHART_COLORS[i % CHART_COLORS.length]), borderWidth: 2, borderColor: isDark ? '#0f172a' : '#fff', hoverOffset: 6 }] },
+            data: { labels: entries.map(x => x[0]), datasets: [{ label: '整筆支出', data: entries.map(x => x[1].total), recordDiagnostics: entries.map(x => x[1].records), backgroundColor: entries.map((_,i) => CHART_COLORS[i % CHART_COLORS.length]), borderWidth: 2, borderColor: isDark ? '#0f172a' : '#fff', hoverOffset: 6 }] },
             plugins: [pieValueLabels],
             options: { ...commonOptions, cutout: '66%', plugins: { ...commonOptions.plugins, legend: { ...commonOptions.plugins.legend, position: 'right' } } }
         });
     } else if (currentChartMode === 'bar') {
         const dateData = {};
-        expenses.forEach(r => { const d = String(r.date || '').slice(0,10); if (d) dateData[d] = (dateData[d] || 0) + (Number(r.twdAmount) || 0); });
+        expenses.forEach(r => { const d = String(r.date || '').slice(0,10); if (d) dateData[d] = (dateData[d] || 0) + getChartTwdAmount(r); });
         const sortedDates = Object.keys(dateData).sort();
         chartInstance = new Chart(canvas, {
             type: 'line',
@@ -2140,6 +2263,15 @@ function applyChartDrilldown(mode, label) {
         else if (value === '總收入') type.value = 'income';
         else return;
     } else return;
+
+    // 保留目前圖表的期間範圍，避免從「上月／本月／7天」鑽取後，
+    // 歷史清單突然變成全部日期，造成圖表與明細數字不一致。
+    if (mode !== 'bar' && chartRange !== 'all') {
+        const bounds = getChartRangeBounds(chartRange);
+        const toDateInput = d => d ? getDateStringFromDate(d) : '';
+        if (bounds.start) start.value = toDateInput(bounds.start);
+        if (bounds.end) end.value = toDateInput(bounds.end);
+    }
 
     document.querySelectorAll('#historyQuickFilters [data-history-range]').forEach(b => b.classList.remove('active'));
     switchTab('history');
@@ -4608,7 +4740,16 @@ function normalizeRecord(r) {
     out.amount = Math.max(0, finiteNumber(legacyAmount, 0));
     out.twdAmount = Math.round(Math.max(0, finiteNumber(out.twdAmount ?? out.TWD ?? out.taiwanAmount, 0)));
     out.currency = String(legacyCurrency || "TWD").trim().toUpperCase() || "TWD";
-    out.rate = finiteNumber(out.rate ?? out.exchangeRate, out.currency === "TWD" ? 1 : 0);
+    // TWD 不需要匯率換算。舊資料若 amount / twdAmount 不一致，不再直接覆蓋，
+    // 讓財務分析可以保留已確認的有效台幣金額（例如 280 / 360 → 360）。
+    if (out.currency === "TWD" || out.currency === "NTD") {
+        const a = Number.isFinite(Number(out.amount)) && Number(out.amount) >= 0 ? Number(out.amount) : 0;
+        const t = Number.isFinite(Number(out.twdAmount)) && Number(out.twdAmount) >= 0 ? Number(out.twdAmount) : 0;
+        out.twdAmount = Math.round(Math.max(a, t));
+        out.rate = 1;
+    } else {
+        out.rate = finiteNumber(out.rate ?? out.exchangeRate, 0);
+    }
     out.category = String(out.category || "其他").slice(0, 100);
     out.type = /^(expense|personal|income|settlement)$/.test(String(out.type || "")) ? out.type : "expense";
     // 匯入資料的錯誤日期不再偷偷改成今天；只有舊資料缺日期時才補今天。
@@ -5242,7 +5383,7 @@ function renderTrash() {
     const trashList = document.getElementById("trashListSettings"); if (!trashList) return;
     const deleted = cachedRecords.filter(r => r.deleted && !r.purged);
     const count = document.getElementById("trashCountDisplaySettings"); if (count) count.textContent = deleted.length;
-    trashList.innerHTML = deleted.map(r => `<div class="flex items-center justify-between p-2 bg-white dark:bg-gray-800 rounded-lg text-xs"><span>${escapeHtml(r.title)} ($${Math.round(r.twdAmount||0).toLocaleString()})</span><button type="button" onclick="restoreRecord('${escapeJsStr(r.id)}')" class="text-blue-500 font-bold">恢復</button></div>`).join("");
+    trashList.innerHTML = deleted.map(r => `<div class="flex items-center justify-between p-2 bg-white dark:bg-gray-800 rounded-lg text-xs"><span>${escapeHtml(r.title)} ($${Math.round(getChartTwdAmount(r)).toLocaleString()})</span><button type="button" onclick="restoreRecord('${escapeJsStr(r.id)}')" class="text-blue-500 font-bold">恢復</button></div>`).join("");
 }
 
 window.duplicateRecordToForm = function(id) {
@@ -5417,7 +5558,7 @@ function renderRecordsList(activeRecords = null){
                 <div class="overflow-hidden"><div class="text-xs font-bold truncate">${escapeHtml(r.title)} <span class="text-gray-400 font-normal ml-1">${escapeHtml(getWeekdayLabel(r.date))}</span></div><div class="text-[0.65rem] text-gray-400">${escapeHtml(r.date)} · ${escapeHtml(r.category||'其他')}</div></div>
             </div>
             <div class="flex items-center gap-3">
-                <div class="text-right"><div class="text-sm font-mono font-bold ${r.type==='income'?'text-emerald-600':'text-gray-700 dark:text-gray-200'}">${r.type==='income'?'+':''}$${Math.round(r.twdAmount||0).toLocaleString()}</div><div class="text-[0.6rem] text-gray-400 font-mono">${escapeHtml(r.amount)} ${escapeHtml(r.currency)}</div></div>
+                <div class="text-right"><div class="text-sm font-mono font-bold ${r.type==='income'?'text-emerald-600':'text-gray-700 dark:text-gray-200'}">${r.type==='income'?'+':''}$${Math.round(getChartTwdAmount(r)).toLocaleString()}</div><div class="text-[0.6rem] text-gray-400 font-mono">${escapeHtml(r.amount)} ${escapeHtml(r.currency)}</div></div>
                 <div class="record-action-buttons flex opacity-0 group-hover:opacity-100 transition gap-1">
                     <button type="button" onclick="event.stopPropagation();startEditRecord('${id}')" class="p-1.5 bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-100">✏️</button>
                     <button type="button" onclick="event.stopPropagation();duplicateRecordToForm('${id}')" class="p-1.5 bg-gray-50 text-gray-600 rounded-lg hover:bg-gray-100">📋</button>
@@ -5802,7 +5943,7 @@ function openBatchMoveCopySheetModal() {
     const modal = document.createElement('div');
     modal.id = 'batchMoveCopySheetModal';
     modal.className = 'fixed inset-0 z-[125] flex items-center justify-center bg-black/50 p-4';
-    const preview = rows.slice(0, 4).map(r => `<div class="flex items-center justify-between gap-2 py-1.5 border-b border-gray-100 dark:border-gray-700 last:border-0"><span class="truncate">${escapeHtml(r.title || '未命名紀錄')}</span><span class="font-mono text-xs text-gray-500 flex-shrink-0">$${Math.round(r.twdAmount || 0).toLocaleString()}</span></div>`).join('');
+    const preview = rows.slice(0, 4).map(r => `<div class="flex items-center justify-between gap-2 py-1.5 border-b border-gray-100 dark:border-gray-700 last:border-0"><span class="truncate">${escapeHtml(r.title || '未命名紀錄')}</span><span class="font-mono text-xs text-gray-500 flex-shrink-0">$${Math.round(getChartTwdAmount(r)).toLocaleString()}</span></div>`).join('');
     modal.innerHTML = `
       <div class="w-full max-w-lg bg-white dark:bg-gray-800 rounded-2xl shadow-2xl border border-gray-200 dark:border-gray-700 overflow-hidden" role="dialog" aria-modal="true" aria-label="批次移動或複製到其他帳本">
         <div class="p-4 border-b border-gray-100 dark:border-gray-700 flex items-center justify-between">
@@ -5918,7 +6059,7 @@ window.openRecordDetail = function(id) {
     const shareText = Object.entries(shareMap).map(([n,a]) => `${escapeHtml(n)} $${Math.round(a).toLocaleString()}`).join("、") || "—";
     const receipt = (r.receipt || r.receiptUrl) ? `<button type="button" onclick="openRecordReceipt('${escapeJsStr(r.id)}')" class="text-blue-600 dark:text-blue-400 underline">查看收據照片</button>` : "無";
     const ocr = r.receiptOcr ? [r.receiptOcr.merchant, r.receiptOcr.invoiceNo, r.receiptOcr.date, r.receiptOcr.currency, r.receiptOcr.amount ? `$${r.receiptOcr.amount}` : ""].filter(Boolean).map(escapeHtml).join(" · ") : "無";
-    box.innerHTML = `<div class="bg-gray-50 dark:bg-gray-900/50 rounded-2xl p-3">${row("項目", escapeHtml(r.title), "font-bold text-gray-800 dark:text-gray-100")}${row("日期", escapeHtml(r.date || "—"))}${row("類型", escapeHtml(typeLabels[r.type] || r.type || "—"))}${row("類別", escapeHtml(r.category || "其他"))}${row("原始金額", `${escapeHtml(r.amount)} ${escapeHtml(r.currency || "TWD")}`)}${row("TWD 金額", `$${Math.round(r.twdAmount || 0).toLocaleString()}`, "font-mono font-bold")}${row("匯率", escapeHtml(String(r.rate ?? 1)))}${row("付款人", payerText)}${row("分攤", shareText)}${row("分攤模式", escapeHtml(r.splitMode || "—"))}${row("收據", receipt)}${row("OCR", ocr)}</div>`;
+    box.innerHTML = `<div class="bg-gray-50 dark:bg-gray-900/50 rounded-2xl p-3">${row("項目", escapeHtml(r.title), "font-bold text-gray-800 dark:text-gray-100")}${row("日期", escapeHtml(r.date || "—"))}${row("類型", escapeHtml(typeLabels[r.type] || r.type || "—"))}${row("類別", escapeHtml(r.category || "其他"))}${row("原始金額", `${escapeHtml(r.amount)} ${escapeHtml(r.currency || "TWD")}`)}${row("TWD 金額", `$${Math.round(getChartTwdAmount(r)).toLocaleString()}`, "font-mono font-bold")}${row("匯率", escapeHtml(String(r.rate ?? 1)))}${row("付款人", payerText)}${row("分攤", shareText)}${row("分攤模式", escapeHtml(r.splitMode || "—"))}${row("收據", receipt)}${row("OCR", ocr)}</div>`;
     const edit = document.getElementById("detailEditBtn"), dup = document.getElementById("detailDuplicateBtn");
     if (edit) edit.onclick = () => { closeRecordDetail(); startEditRecord(id); };
     if (dup) dup.onclick = () => { closeRecordDetail(); duplicateRecordToForm(id); };
