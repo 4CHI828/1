@@ -1765,11 +1765,77 @@ function renderSettlement(records) {
     
     const tBox = document.getElementById("settlementTransfers");
     tBox.innerHTML = transfers.map(t => `
-        <div class="flex items-center justify-between p-2 bg-white/50 dark:bg-gray-800/50 rounded-lg mb-1 border border-blue-50 dark:border-gray-700">
+        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 p-2 bg-white/50 dark:bg-gray-800/50 rounded-lg mb-1 border border-blue-50 dark:border-gray-700">
             <span class="font-bold">${escapeHtml(t.from)} <span class="text-gray-400 mx-1">➔</span> ${escapeHtml(t.to)}</span>
-            <span class="font-mono font-bold text-blue-600">$${t.amt.toLocaleString()}</span>
+            <div class="flex items-center justify-between sm:justify-end gap-2">
+                <span class="font-mono font-bold text-blue-600">$${t.amt.toLocaleString()}</span>
+                <button type="button" onclick="markSettlementPaid('${escapeJsStr(t.from)}','${escapeJsStr(t.to)}',${Number(t.amt)})" class="shrink-0 bg-emerald-600 hover:bg-emerald-700 text-white px-2.5 py-1 rounded-lg text-[0.7rem] font-bold shadow-sm transition active:scale-95" title="記錄已給錢並從未結清款項扣除">💸 已給錢</button>
+            </div>
         </div>`).join("") || `<div class="text-center text-gray-400 py-2">帳目已平，無需轉帳</div>`;
 }
+
+// 將結算總覽中的一筆「應付款」直接記錄成已還款。
+// 還款本身使用既有 settlement 類型，因此會自動進入 Firebase / Drive 同步與歷史紀錄。
+window.markSettlementPaid = async function(from, to, amount) {
+    const payer = String(from || "").trim();
+    const receiver = String(to || "").trim();
+    const twd = Math.round(Number(amount) || 0);
+    if (!payer || !receiver || twd <= 0) return showToast("無效的結算金額", "error");
+    if (payer === receiver) return showToast("付款人與收款人不能相同", "error");
+
+    const key = `${currentSheet}\u0000${payer}\u0000${receiver}\u0000${twd}`;
+    window.__settlementPaymentInFlight = window.__settlementPaymentInFlight || new Set();
+    if (window.__settlementPaymentInFlight.has(key)) return;
+
+    const ok = confirm(`確認記錄已給錢？\n\n${payer} → ${receiver}\n金額：$${twd.toLocaleString()} TWD\n\n按「確定」後會新增一筆「平帳還款」紀錄。`);
+    if (!ok) return;
+
+    window.__settlementPaymentInFlight.add(key);
+    try {
+        createLocalSnapshot("記錄平帳還款前");
+        let record = normalizeRecord({
+            id: generateUUID(),
+            title: `平帳還款：${payer} → ${receiver}`,
+            amount: twd,
+            currency: "TWD",
+            twdAmount: twd,
+            rate: 1,
+            category: "結算",
+            type: "settlement",
+            date: getTodayString(),
+            payer,
+            payers: [{ member: payer, amount: twd }],
+            shares: [{ member: receiver, amount: twd }],
+            splitMembers: [receiver],
+            splitMode: "custom",
+            splitValues: { [receiver]: twd },
+            receipt: "",
+            receiptUrl: "",
+            receiptStoragePath: "",
+            deleted: false,
+            updatedAt: new Date().toISOString()
+        });
+        if (isFirestoreMode() && getFirebaseUser()) record = markFirestoreRecordVersion(record, true);
+
+        cachedRecords.unshift(record);
+        cachedRecords = normalizeAllRecords(cachedRecords);
+        saveLocalSheetMirror(currentSheet, cachedRecords);
+        renderAllViews();
+
+        const cloudSynced = await saveRecordsToDrive(true);
+        showToast(
+            cloudSynced
+                ? `✅ 已記錄：${payer} 已給 ${receiver} $${twd.toLocaleString()} TWD`
+                : `已記錄本機：${payer} 已給 ${receiver} $${twd.toLocaleString()}，等待雲端同步`,
+            cloudSynced ? "success" : "info"
+        );
+    } catch (e) {
+        console.error("記錄平帳還款失敗", e);
+        showToast(`記錄已給錢失敗：${e?.message || "未知錯誤"}`, "error");
+    } finally {
+        window.__settlementPaymentInFlight.delete(key);
+    }
+};
 
 function renderPersonalStats(records) {
     const select = document.getElementById("personalStatsMemberSelect");
