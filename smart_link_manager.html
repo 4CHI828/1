@@ -306,7 +306,7 @@
     <main id="app-screen">
         <div class="control-panel">
             <div class="input-section">
-                <input type="text" id="url-input" placeholder="貼上或拖入網址／分享文案，自動提取並存檔 (或直接按 Ctrl+V) [N]" onkeydown="handleEnter(event, processAndSaveUrl)" onpaste="handleAutoSave()">
+                <input type="text" id="url-input" placeholder="貼上或拖入網址／分享文案，自動提取並存檔 (或直接按 Ctrl+V) [N]" onkeydown="handleEnter(event, processAndSaveUrl)" onpaste="handleAutoSave(event)" oninput="handleUrlInput(event)">
                 <button type="button" class="btn-primary" id="btn-add-url" onclick="processAndSaveUrl()"><span class="btn-text">儲存</span><div class="loader" id="add-loader"></div></button>
             </div>
             <div>
@@ -1206,15 +1206,40 @@
             return writeLocalJson('my_links', links);
         }
 
-        function handleAutoSave() {
-            // Ctrl+V 貼上後才自動存檔；延遲一點讓瀏覽器完成 paste event。
-            setTimeout(() => {
+        let autoSaveTimer = null;
+        let lastAutoSavedUrl = '';
+
+        function scheduleUrlAutoSave(delay = 280) {
+            clearTimeout(autoSaveTimer);
+            autoSaveTimer = setTimeout(async () => {
                 if (isSavingUrl) return;
                 const input = document.getElementById('url-input');
                 if (!input) return;
                 const { url } = parseInputText(input.value);
-                if (url) processAndSaveUrl();
-            }, 350);
+                if (!url || url === lastAutoSavedUrl) return;
+
+                // 只有真正完成儲存後才記錄為已自動儲存，失敗時允許重新貼上／重試。
+                const before = isSavingUrl;
+                await processAndSaveUrl();
+                if (!before && !isSavingUrl) {
+                    lastAutoSavedUrl = url;
+                }
+            }, delay);
+        }
+
+        function handleAutoSave(event) {
+            // 桌面/手機的 paste 事件：等待瀏覽器把剪貼簿內容真正寫入 input 後再儲存。
+            // 不在這裡 preventDefault，避免部分手機瀏覽器貼上內容被攔截。
+            scheduleUrlAutoSave(280);
+        }
+
+        function handleUrlInput(event) {
+            // Android / iOS 部分瀏覽器可能不穩定觸發 inline paste，
+            // 但「貼上」仍會產生 input 事件，因此補上 insertFromPaste / insertFromDrop。
+            const inputType = event?.inputType || '';
+            if (inputType === 'insertFromPaste' || inputType === 'insertFromDrop') {
+                scheduleUrlAutoSave(180);
+            }
         }
         
         function updateHtmlSaveTime() {
@@ -3205,21 +3230,27 @@
 
         document.addEventListener('paste', e => {
             if (isSavingUrl) return;
-            const activeEl = document.activeElement;
-            if (activeEl && ['INPUT', 'TEXTAREA', 'SELECT'].includes(activeEl.tagName)) return;
             const anyModalOpen = Array.from(document.querySelectorAll('.modal-overlay')).some(m => m.style.display === 'flex');
             if (anyModalOpen) return;
             const appScreen = document.getElementById('app-screen');
             if (!appScreen || appScreen.style.display === 'none') return;
 
+            const activeEl = document.activeElement;
             const pasted = (e.clipboardData || window.clipboardData)?.getData('text') || '';
             const { url } = parseInputText(pasted);
-            if (url) {
+            if (!url) return;
+
+            // 如果目前不是輸入框，保留原本的「直接貼上網址即可儲存」功能。
+            if (!activeEl || !['INPUT', 'TEXTAREA', 'SELECT'].includes(activeEl.tagName)) {
                 e.preventDefault();
                 const inp = document.getElementById('url-input');
-                inp.value = pasted.trim();
-                processAndSaveUrl();
+                if (inp) {
+                    inp.value = pasted.trim();
+                    lastAutoSavedUrl = url;
+                    processAndSaveUrl();
+                }
             }
+            // 如果目前就是 url-input，交給 paste/input 兩條手機相容路徑處理，避免重複儲存。
         });
 
         let dragCounter = 0;
