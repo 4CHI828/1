@@ -353,19 +353,98 @@
 
     .scratchpad-body {
       flex: 1;
-      padding: 16px;
+      min-height: 0;
+      padding: 12px;
+      overflow-y: auto;
     }
 
-    .scratchpad-body textarea {
-      width: 100%;
-      height: 100%;
+    .scratchpad-blocks {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 10px;
+      align-content: start;
+    }
+
+    .scratchpad-block {
+      background: var(--hover-bg);
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: 0 2px 8px rgba(0,0,0,.06);
+    }
+
+    .scratchpad-block-head {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 10px;
+      border-bottom: 1px solid var(--border-color);
+    }
+
+    .scratchpad-block-title {
+      flex: 1;
+      min-width: 0;
       background: transparent;
-      border: none;
+      border: 0;
+      outline: 0;
       color: var(--text-main);
-      resize: none;
-      outline: none;
-      font-size: 0.85rem;
-      line-height: 1.5;
+      font-weight: 700;
+      font-size: .9rem;
+      padding: 3px 2px;
+    }
+
+    .scratchpad-block-title::placeholder,
+    .scratchpad-block-content::placeholder {
+      color: var(--text-muted);
+      opacity: .75;
+    }
+
+    .scratchpad-block-delete {
+      flex: 0 0 auto;
+      width: 30px;
+      height: 30px;
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      background: transparent;
+      color: var(--text-muted);
+      cursor: pointer;
+      font-size: 16px;
+    }
+
+    .scratchpad-block-delete:hover {
+      background: var(--border-color);
+      color: var(--text-main);
+    }
+
+    .scratchpad-block-content {
+      display: block;
+      width: 100%;
+      min-height: 110px;
+      padding: 10px;
+      background: transparent;
+      border: 0;
+      outline: 0;
+      resize: vertical;
+      color: var(--text-main);
+      font-size: .85rem;
+      line-height: 1.55;
+      box-sizing: border-box;
+    }
+
+    .scratchpad-add {
+      width: 100%;
+      padding: 10px;
+      border: 1px dashed var(--border-color);
+      border-radius: 10px;
+      background: transparent;
+      color: var(--text-muted);
+      cursor: pointer;
+      font-weight: 600;
+    }
+
+    .scratchpad-add:hover {
+      background: var(--hover-bg);
+      color: var(--text-main);
     }
 
     .scratchpad-footer {
@@ -675,13 +754,21 @@
       }
 
       .scratchpad-body {
-        padding: 12px 14px;
+        padding: 10px;
       }
 
-      .scratchpad-body textarea {
+      .scratchpad-blocks {
+        gap: 8px;
+      }
+
+      .scratchpad-block-title {
+        font-size: 16px;
+      }
+
+      .scratchpad-block-content {
         font-size: 16px; /* 避免 iOS Safari 聚焦時自動放大 */
+        min-height: 120px;
         line-height: 1.6;
-        padding: 4px 2px;
       }
 
       .scratchpad-footer {
@@ -919,12 +1006,12 @@
           </button>
         </div>
         <div class="scratchpad-body">
-          <textarea id="scratchpadInput" placeholder="在這裡輸入筆記..."></textarea>
+          <div class="scratchpad-blocks" id="scratchpadBlocks"></div>
+          <button class="scratchpad-add" type="button" onclick="addScratchBlock()">＋ 新增區塊</button>
         </div>
         <div class="scratchpad-footer">
           <button class="btn-action" type="button" onclick="selectAllScratchpad()">全選</button>
-          <button class="btn-action" type="button" onclick="cutScratchpad()">✂️ 剪下</button>
-          <button class="btn-action" type="button" onclick="copyScratchpad()">📋 複製</button>
+          <button class="btn-action" type="button" onclick="copyScratchpad()">📋 複製全部</button>
           <button class="btn-action" type="button" onclick="pasteScratchpad()">📌 貼上</button>
           <button class="btn-action" type="button" onclick="clearScratchpad()">清空</button>
         </div>
@@ -1016,97 +1103,193 @@
     setInterval(updateClock, 1000);
     updateClock(); // 初始呼叫
 
-    /* ================= 隨手備忘錄 (LocalStorage) ================= */
+    /* ================= 隨手備忘錄：分區塊 (LocalStorage) ================= */
     const scratchpad = document.getElementById('scratchpad');
-    const scratchInput = document.getElementById('scratchpadInput');
+    const scratchpadBlocks = document.getElementById('scratchpadBlocks');
     const saveStatus = document.getElementById('saveStatus');
+    const SCRATCH_BLOCKS_KEY = 'chichi_scratchpad_blocks';
+    const LEGACY_SCRATCH_KEY = 'chichi_scratchpad';
     let saveTimeout;
 
     function toggleScratchpad() {
       scratchpad.classList.toggle('open');
     }
 
-    // 讀取紀錄
-    scratchInput.value = localStorage.getItem('chichi_scratchpad') || '';
+    function makeScratchBlock(title = '', content = '') {
+      return {
+        id: 'block_' + Date.now() + '_' + Math.random().toString(36).slice(2, 8),
+        title,
+        content
+      };
+    }
 
-    // 自動儲存
-    scratchInput.addEventListener('input', () => {
-      saveStatus.textContent = "儲存中...";
-      clearTimeout(saveTimeout);
-      saveTimeout = setTimeout(() => {
-        localStorage.setItem('chichi_scratchpad', scratchInput.value);
-        saveStatus.textContent = "已自動儲存";
-      }, 500);
-    });
+    function getScratchBlocks() {
+      try {
+        const raw = localStorage.getItem(SCRATCH_BLOCKS_KEY);
+        if (raw) {
+          const data = JSON.parse(raw);
+          if (Array.isArray(data) && data.length) return data;
+        }
+      } catch (e) {}
 
-    function copyScratchpad() {
-      if(!scratchInput.value) return;
-      navigator.clipboard.writeText(scratchInput.value).then(() => {
-        saveStatus.textContent = "已複製！";
-        setTimeout(() => saveStatus.textContent = "已自動儲存", 2000);
+      // 舊版單一備忘錄自動轉成第一個區塊，不讓既有內容消失
+      const legacy = localStorage.getItem(LEGACY_SCRATCH_KEY) || '';
+      if (legacy) {
+        return [makeScratchBlock('一般', legacy)];
+      }
+
+      return [makeScratchBlock('我的備忘', '')];
+    }
+
+    let scratchBlocks = getScratchBlocks();
+
+    function renderScratchBlocks(focusNew = false) {
+      scratchpadBlocks.innerHTML = '';
+
+      scratchBlocks.forEach((block, index) => {
+        const card = document.createElement('div');
+        card.className = 'scratchpad-block';
+        card.dataset.id = block.id;
+
+        const head = document.createElement('div');
+        head.className = 'scratchpad-block-head';
+
+        const title = document.createElement('input');
+        title.className = 'scratchpad-block-title';
+        title.type = 'text';
+        title.placeholder = '區塊標題';
+        title.value = block.title || '';
+        title.setAttribute('aria-label', `第 ${index + 1} 個區塊標題`);
+        title.addEventListener('input', () => {
+          block.title = title.value;
+          scheduleScratchSave();
+        });
+
+        const del = document.createElement('button');
+        del.className = 'scratchpad-block-delete';
+        del.type = 'button';
+        del.textContent = '×';
+        del.title = '刪除這個區塊';
+        del.setAttribute('aria-label', '刪除這個區塊');
+        del.addEventListener('click', () => deleteScratchBlock(block.id));
+
+        head.appendChild(title);
+        head.appendChild(del);
+
+        const content = document.createElement('textarea');
+        content.className = 'scratchpad-block-content';
+        content.placeholder = '在這裡輸入內容...';
+        content.value = block.content || '';
+        content.setAttribute('aria-label', `${block.title || '備忘'} 內容`);
+        content.addEventListener('input', () => {
+          block.content = content.value;
+          scheduleScratchSave();
+        });
+
+        card.appendChild(head);
+        card.appendChild(content);
+        scratchpadBlocks.appendChild(card);
       });
-    }
 
-    function selectAllScratchpad() {
-      const input = document.getElementById('scratchpadInput');
-      input.focus();
-      input.select();
-      input.setSelectionRange(0, input.value.length);
-    }
-
-    async function cutScratchpad() {
-      const input = document.getElementById('scratchpadInput');
-      input.focus();
-
-      if (input.selectionStart === input.selectionEnd) {
-        input.select();
-      }
-
-      const selectedText = input.value.substring(input.selectionStart, input.selectionEnd);
-
-      try {
-        await navigator.clipboard.writeText(selectedText);
-      } catch (err) {
-        document.execCommand('copy');
-      }
-
-      const start = input.selectionStart;
-      const end = input.selectionEnd;
-      input.setRangeText('', start, end, 'start');
-      input.dispatchEvent(new Event('input', { bubbles: true }));
-      updateSaveStatus();
-    }
-
-    async function pasteScratchpad() {
-      const input = document.getElementById('scratchpadInput');
-      input.focus();
-
-      try {
-        const text = await navigator.clipboard.readText();
-        const start = input.selectionStart;
-        const end = input.selectionEnd;
-        input.setRangeText(text, start, end, 'end');
-        input.dispatchEvent(new Event('input', { bubbles: true }));
-        updateSaveStatus();
-      } catch (err) {
-        // 某些瀏覽器需要使用者允許剪貼簿權限；改用瀏覽器原生貼上
-        try {
-          document.execCommand('paste');
-          input.dispatchEvent(new Event('input', { bubbles: true }));
-          updateSaveStatus();
-        } catch (pasteErr) {
-          alert('瀏覽器未允許自動貼上，請使用鍵盤 Ctrl+V。');
+      if (focusNew) {
+        const cards = scratchpadBlocks.querySelectorAll('.scratchpad-block');
+        const last = cards[cards.length - 1];
+        if (last) {
+          const title = last.querySelector('.scratchpad-block-title');
+          title.focus();
+          title.select();
         }
       }
     }
 
-    function clearScratchpad() {
-      if(confirm('確定要清空備忘錄嗎？')) {
-        scratchInput.value = '';
-        localStorage.removeItem('chichi_scratchpad');
-        saveStatus.textContent = "已清空";
+    function scheduleScratchSave() {
+      saveStatus.textContent = '儲存中...';
+      clearTimeout(saveTimeout);
+      saveTimeout = setTimeout(saveScratchBlocks, 350);
+    }
+
+    function saveScratchBlocks() {
+      localStorage.setItem(SCRATCH_BLOCKS_KEY, JSON.stringify(scratchBlocks));
+      // 保留舊版 key 的相容性，但不再以它作為主要資料來源
+      localStorage.removeItem(LEGACY_SCRATCH_KEY);
+      saveStatus.textContent = '已自動儲存';
+    }
+
+    function addScratchBlock() {
+      scratchBlocks.push(makeScratchBlock(`區塊 ${scratchBlocks.length + 1}`, ''));
+      saveScratchBlocks();
+      renderScratchBlocks(true);
+    }
+
+    function deleteScratchBlock(id) {
+      if (scratchBlocks.length === 1) {
+        alert('至少保留一個區塊。');
+        return;
+      }
+
+      if (!confirm('確定要刪除這個區塊嗎？')) return;
+      scratchBlocks = scratchBlocks.filter(block => block.id !== id);
+      saveScratchBlocks();
+      renderScratchBlocks();
+    }
+
+    function selectAllScratchpad() {
+      const contents = scratchpadBlocks.querySelectorAll('.scratchpad-block-content');
+      if (!contents.length) return;
+      const first = contents[0];
+      first.focus();
+      first.select();
+      first.setSelectionRange(0, first.value.length);
+    }
+
+    function getAllScratchText() {
+      return scratchBlocks.map((block, i) => {
+        const title = (block.title || `區塊 ${i + 1}`).trim();
+        const content = block.content || '';
+        return `${title}\n${content}`.trim();
+      }).filter(Boolean).join('\n\n--------------------\n\n');
+    }
+
+    function copyScratchpad() {
+      const text = getAllScratchText();
+      if (!text) return;
+
+      navigator.clipboard.writeText(text).then(() => {
+        saveStatus.textContent = '已複製全部！';
+        setTimeout(() => saveStatus.textContent = '已自動儲存', 2000);
+      }).catch(() => {
+        alert('瀏覽器未允許複製，請手動選取內容。');
+      });
+    }
+
+    async function pasteScratchpad() {
+      try {
+        const text = await navigator.clipboard.readText();
+        if (!text) return;
+
+        // 貼到目前第一個區塊；如果有焦點中的區塊，貼到該區塊
+        const activeCard = document.activeElement?.closest('.scratchpad-block');
+        const targetId = activeCard?.dataset.id || scratchBlocks[0]?.id;
+        const target = scratchBlocks.find(block => block.id === targetId);
+        if (!target) return;
+
+        target.content = (target.content ? target.content + '\n' : '') + text;
+        saveScratchBlocks();
+        renderScratchBlocks();
+      } catch (err) {
+        alert('瀏覽器未允許自動貼上，請使用鍵盤 Ctrl+V。');
       }
     }
+
+    function clearScratchpad() {
+      if (!confirm('確定要清空全部備忘錄區塊嗎？')) return;
+      scratchBlocks = [makeScratchBlock('我的備忘', '')];
+      saveScratchBlocks();
+      renderScratchBlocks();
+      saveStatus.textContent = '已清空';
+    }
+
+    renderScratchBlocks();
 
     /* ================= 佈景主題切換 ================= */
     function setTheme(theme) {
