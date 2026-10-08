@@ -369,10 +369,17 @@
     }
 
     .scratchpad-footer {
-      padding: 12px 16px;
+      padding: 10px 12px;
       border-top: 1px solid var(--border-color);
       display: flex;
-      gap: 8px;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+
+    .scratchpad-footer .btn-action {
+      flex: 1 1 auto;
+      min-width: 58px;
+      white-space: nowrap;
     }
 
     .btn-action {
@@ -420,6 +427,17 @@
     .nav-item.active {
       border-color: color-mix(in srgb, var(--accent) 24%, transparent);
       box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--accent) 8%, transparent);
+    }
+
+    .memo-nav-button {
+      font: inherit;
+      color: var(--text-muted);
+      background: transparent;
+    }
+
+    .memo-nav-button:hover {
+      background-color: var(--hover-bg);
+      color: var(--text-main);
     }
 
     .nav-item.active::after {
@@ -842,6 +860,16 @@
           入境物品檢查
         </a>
 
+        <button class="nav-item memo-nav-button" type="button" onclick="toggleScratchpad()" id="memo-nav" title="隨手備忘錄">
+          <svg class="icon" viewBox="0 0 24 24">
+            <path d="M4 4h16v16H4z"></path>
+            <path d="M8 9h8"></path>
+            <path d="M8 13h6"></path>
+            <path d="M8 17h4"></path>
+          </svg>
+          📝 隨手備忘錄
+        </button>
+
         <a href="https://susugo.codlin.me/" target="content-frame" class="nav-item" onclick="setActiveLink(this)" id="link-9" title="Alt+9">
           <svg class="icon" viewBox="0 0 24 24">
             <rect x="4" y="4" width="16" height="16" rx="3"></rect>
@@ -910,14 +938,15 @@
             </svg>
           </button>
         </div>
-        <button class="scratchpad-close" type="button" onclick="toggleScratchpad()" aria-label="關閉備忘錄" title="關閉">×</button>
-        </div>
         <div class="scratchpad-body">
           <textarea id="scratchpadInput" placeholder="在這裡輸入筆記..."></textarea>
         </div>
         <div class="scratchpad-footer">
-          <button class="btn-action" onclick="copyScratchpad()">複製內容</button>
-          <button class="btn-action" onclick="clearScratchpad()">清空</button>
+          <button class="btn-action" type="button" onclick="selectAllScratchpad()">全選</button>
+          <button class="btn-action" type="button" onclick="cutScratchpad()">✂️ 剪下</button>
+          <button class="btn-action" type="button" onclick="copyScratchpad()">📋 複製</button>
+          <button class="btn-action" type="button" onclick="pasteScratchpad()">📌 貼上</button>
+          <button class="btn-action" type="button" onclick="clearScratchpad()">清空</button>
         </div>
       </div>
     </main>
@@ -1036,6 +1065,59 @@
         saveStatus.textContent = "已複製！";
         setTimeout(() => saveStatus.textContent = "已自動儲存", 2000);
       });
+    }
+
+    function selectAllScratchpad() {
+      const input = document.getElementById('scratchpadInput');
+      input.focus();
+      input.select();
+      input.setSelectionRange(0, input.value.length);
+    }
+
+    async function cutScratchpad() {
+      const input = document.getElementById('scratchpadInput');
+      input.focus();
+
+      if (input.selectionStart === input.selectionEnd) {
+        input.select();
+      }
+
+      const selectedText = input.value.substring(input.selectionStart, input.selectionEnd);
+
+      try {
+        await navigator.clipboard.writeText(selectedText);
+      } catch (err) {
+        document.execCommand('copy');
+      }
+
+      const start = input.selectionStart;
+      const end = input.selectionEnd;
+      input.setRangeText('', start, end, 'start');
+      input.dispatchEvent(new Event('input', { bubbles: true }));
+      updateSaveStatus();
+    }
+
+    async function pasteScratchpad() {
+      const input = document.getElementById('scratchpadInput');
+      input.focus();
+
+      try {
+        const text = await navigator.clipboard.readText();
+        const start = input.selectionStart;
+        const end = input.selectionEnd;
+        input.setRangeText(text, start, end, 'end');
+        input.dispatchEvent(new Event('input', { bubbles: true }));
+        updateSaveStatus();
+      } catch (err) {
+        // 某些瀏覽器需要使用者允許剪貼簿權限；改用瀏覽器原生貼上
+        try {
+          document.execCommand('paste');
+          input.dispatchEvent(new Event('input', { bubbles: true }));
+          updateSaveStatus();
+        } catch (pasteErr) {
+          alert('瀏覽器未允許自動貼上，請使用鍵盤 Ctrl+V。');
+        }
+      }
     }
 
     function clearScratchpad() {
