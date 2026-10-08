@@ -307,6 +307,7 @@
         <div class="control-panel">
             <div class="input-section">
                 <input type="text" id="url-input" placeholder="貼上或拖入網址／分享文案，自動提取並存檔 (或直接按 Ctrl+V) [N]" onkeydown="handleEnter(event, processAndSaveUrl)" onpaste="handleAutoSave(event)" oninput="handleUrlInput(event)">
+                <button type="button" class="btn-outline" id="btn-paste-url" onclick="pasteUrlFromClipboard()" title="從剪貼簿貼上網址"><i class="fas fa-paste"></i><span class="btn-text">貼上</span></button>
                 <button type="button" class="btn-primary" id="btn-add-url" onclick="processAndSaveUrl()"><span class="btn-text">儲存</span><div class="loader" id="add-loader"></div></button>
             </div>
             <div>
@@ -1218,13 +1219,47 @@
                 const { url } = parseInputText(input.value);
                 if (!url || url === lastAutoSavedUrl) return;
 
-                // 只有真正完成儲存後才記錄為已自動儲存，失敗時允許重新貼上／重試。
-                const before = isSavingUrl;
-                await processAndSaveUrl();
-                if (!before && !isSavingUrl) {
-                    lastAutoSavedUrl = url;
-                }
+                // 只有 processAndSaveUrl 明確回傳成功，才標記為已自動儲存。
+                // 失敗時保留網址，讓使用者可以重新貼上／按「貼上」重試。
+                const saved = await processAndSaveUrl();
+                if (saved) lastAutoSavedUrl = url;
             }, delay);
+        }
+
+        async function pasteUrlFromClipboard() {
+            const input = document.getElementById('url-input');
+            const btn = document.getElementById('btn-paste-url');
+            if (!input || isSavingUrl) return;
+
+            try {
+                if (!navigator.clipboard || !navigator.clipboard.readText) {
+                    showToast('此瀏覽器不支援直接讀取剪貼簿，請長按輸入框後選「貼上」', 'error');
+                    input.focus();
+                    return;
+                }
+                if (btn) btn.disabled = true;
+                const text = (await navigator.clipboard.readText()).trim();
+                if (!text) {
+                    showToast('剪貼簿目前沒有文字', 'error');
+                    return;
+                }
+                input.value = text;
+                input.dispatchEvent(new Event('input', { bubbles: true }));
+                const { url } = parseInputText(text);
+                if (!url) {
+                    showToast('剪貼簿內容沒有找到有效的 http/https 網址', 'error');
+                    input.focus();
+                    return;
+                }
+                const saved = await processAndSaveUrl();
+                if (saved) lastAutoSavedUrl = url;
+            } catch (e) {
+                // iOS/Android 可能因權限或非安全環境拒絕 Clipboard API。
+                showToast('無法讀取剪貼簿，請長按輸入框選「貼上」', 'error');
+                input.focus();
+            } finally {
+                if (btn) btn.disabled = false;
+            }
         }
 
         function handleAutoSave(event) {
@@ -1978,12 +2013,12 @@
         }
         
         async function processAndSaveUrl(){
-            if (isSavingUrl) return;
+            if (isSavingUrl) return false;
             const inp=document.getElementById('url-input');
             let raw=inp.value.trim();
-            if(!raw)return;
+            if(!raw)return false;
             const { url: u, extractedTitle } = parseInputText(raw);
-            if (!u) { showToast("請輸入有效的 http/https 網址", "error"); return; }
+            if (!u) { showToast("請輸入有效的 http/https 網址", "error"); return false; }
 
             isSavingUrl = true;
             const btn=document.getElementById('btn-add-url'),ld=document.getElementById('add-loader'),tx=btn.querySelector('.btn-text');
@@ -1992,7 +2027,7 @@
             try {
                 if (await checkDuplicateAndHandle(u)) {
                     inp.value = '';
-                    return;
+                    return true;
                 }
                 const info=await fetchWebpageInfo(u);
                 let ft = (info.title && info.title !== "未命名連結" && !["抖音", "Instagram", "Facebook", "X"].includes(info.title)) ? info.title : (extractedTitle || info.title);
@@ -2007,8 +2042,10 @@
                 showToast("✅ 儲存成功","success");
                 inp.value='';
                 if (isLocalMode || !unsubscribeSnapshot) loadLinks();
+                return true;
             } catch(e) {
                 showToast("❌ "+e.message,"error");
+                return false;
             } finally {
                 isSavingUrl = false;
                 btn.disabled=false;tx.style.display='inline';ld.style.display='none';
@@ -3246,8 +3283,9 @@
                 const inp = document.getElementById('url-input');
                 if (inp) {
                     inp.value = pasted.trim();
-                    lastAutoSavedUrl = url;
-                    processAndSaveUrl();
+                    processAndSaveUrl().then(saved => {
+                        if (saved) lastAutoSavedUrl = url;
+                    });
                 }
             }
             // 如果目前就是 url-input，交給 paste/input 兩條手機相容路徑處理，避免重複儲存。
