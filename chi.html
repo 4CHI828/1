@@ -746,6 +746,10 @@
         box-shadow: -8px 0 24px rgba(0,0,0,0.25);
       }
 
+      .scratchpad-drawer.open {
+        right: 0;
+      }
+
       .scratchpad-header {
         min-height: 58px;
         padding: 10px 14px;
@@ -1010,7 +1014,7 @@
           <button class="scratchpad-add" type="button" onclick="addScratchBlock()">＋ 新增區塊</button>
         </div>
         <div class="scratchpad-footer">
-          <button class="btn-action" type="button" onclick="selectAllScratchpad()">全選</button>
+          <button class="btn-action" type="button" onclick="selectAllScratchpad()">選取目前</button>
           <button class="btn-action" type="button" onclick="copyScratchpad()">📋 複製全部</button>
           <button class="btn-action" type="button" onclick="pasteScratchpad()">📌 貼上</button>
           <button class="btn-action" type="button" onclick="clearScratchpad()">清空</button>
@@ -1209,10 +1213,15 @@
     }
 
     function saveScratchBlocks() {
-      localStorage.setItem(SCRATCH_BLOCKS_KEY, JSON.stringify(scratchBlocks));
-      // 保留舊版 key 的相容性，但不再以它作為主要資料來源
-      localStorage.removeItem(LEGACY_SCRATCH_KEY);
-      saveStatus.textContent = '已自動儲存';
+      try {
+        localStorage.setItem(SCRATCH_BLOCKS_KEY, JSON.stringify(scratchBlocks));
+        // 保留舊版 key 的相容性，但不再以它作為主要資料來源
+        localStorage.removeItem(LEGACY_SCRATCH_KEY);
+        saveStatus.textContent = '已自動儲存';
+      } catch (err) {
+        saveStatus.textContent = '儲存失敗';
+        console.error('隨手備忘錄儲存失敗：', err);
+      }
     }
 
     function addScratchBlock() {
@@ -1234,12 +1243,13 @@
     }
 
     function selectAllScratchpad() {
-      const contents = scratchpadBlocks.querySelectorAll('.scratchpad-block-content');
-      if (!contents.length) return;
-      const first = contents[0];
-      first.focus();
-      first.select();
-      first.setSelectionRange(0, first.value.length);
+      const activeCard = document.activeElement?.closest('.scratchpad-block');
+      const target = activeCard?.querySelector('.scratchpad-block-content')
+        || scratchpadBlocks.querySelector('.scratchpad-block-content');
+      if (!target) return;
+      target.focus();
+      target.select();
+      target.setSelectionRange(0, target.value.length);
     }
 
     function getAllScratchText() {
