@@ -368,7 +368,7 @@ tailwind.config = { darkMode: 'class' };
 <div id="receiptPreviewThumb" onclick="openCurrentReceiptModal()" class="hidden w-8 h-8 rounded-lg border border-gray-300 shadow-sm bg-cover bg-center cursor-pointer"></div>
 <button type="button" id="clearReceiptBtn" onclick="clearReceiptPhoto()" class="hidden text-red-400 hover:text-red-600 font-bold">×</button>
 <button type="button" id="voiceInputBtn" class="flex items-center gap-1 bg-white/80 dark:bg-gray-700 shadow-sm border border-gray-200/50 dark:border-gray-600 px-2.5 py-1.5 rounded-lg text-blue-600 dark:text-blue-300 font-bold hover:scale-105 transition">🎤 語音</button>
-<label class="flex items-center gap-1 bg-white/80 dark:bg-gray-700 shadow-sm border border-gray-200/50 dark:border-gray-600 px-2.5 py-1.5 rounded-lg text-emerald-600 dark:text-emerald-400 font-bold cursor-pointer hover:scale-105 transition">📷 收據辨識<input type="file" id="ocrReceiptInput" accept="image/*" class="hidden"></label>
+<label class="flex items-center gap-1 bg-white/80 dark:bg-gray-700 shadow-sm border border-gray-200/50 dark:border-gray-600 px-2.5 py-1.5 rounded-lg text-emerald-600 dark:text-emerald-400 font-bold cursor-pointer hover:scale-105 transition">📷 收據辨識<input type="file" id="ocrReceiptInput" accept="image/*" capture="environment" multiple class="hidden"></label>
 </div>
 </div>
 <div class="flex items-center gap-1.5 overflow-x-auto pb-1 text-xs" id="quickTemplatesBar"></div>
@@ -381,10 +381,21 @@ tailwind.config = { darkMode: 'class' };
   </div>
   <div id="receiptOcrSummary" class="grid grid-cols-2 gap-1.5 text-[0.7rem] text-gray-700 dark:text-gray-200"></div>
   <div id="receiptOcrItems" class="hidden mt-1.5 text-[0.68rem] text-gray-500 dark:text-gray-400"></div>
+  <div class="grid grid-cols-2 gap-1.5 mt-2">
+    <label class="block"><span class="text-gray-500">小計</span><input id="receiptOcrSubtotal" type="number" min="0" step="0.01" class="w-full mt-1 rounded-lg border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 px-2 py-1.5" placeholder="未辨識"></label>
+    <label class="block"><span class="text-gray-500">折扣（正數）</span><input id="receiptOcrDiscount" type="number" min="0" step="0.01" class="w-full mt-1 rounded-lg border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 px-2 py-1.5" placeholder="未辨識"></label>
+    <label class="block"><span class="text-gray-500">稅額</span><input id="receiptOcrTax" type="number" min="0" step="0.01" class="w-full mt-1 rounded-lg border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 px-2 py-1.5" placeholder="未辨識"></label>
+    <label class="block"><span class="text-gray-500">實付總額（可手動修正）</span><input id="receiptOcrManualTotal" type="number" min="0" step="0.01" class="w-full mt-1 rounded-lg border border-emerald-300 dark:border-emerald-700 bg-white dark:bg-gray-800 px-2 py-1.5 font-bold" placeholder="輸入正確總額"></label>
+  </div>
+  <div id="receiptOcrAmountWarning" class="hidden mt-1 rounded-lg bg-amber-100 dark:bg-amber-900/30 text-amber-800 dark:text-amber-200 p-2"></div>
   <div class="flex flex-wrap gap-1.5 mt-2">
     <button type="button" id="applyReceiptOcrBtn" class="px-2.5 py-1.5 rounded-lg bg-emerald-600 text-white font-bold active:scale-95 transition">套用辨識結果</button>
     <button type="button" id="applyReceiptOcrBlankBtn" class="px-2.5 py-1.5 rounded-lg bg-white dark:bg-gray-700 border border-emerald-200 dark:border-emerald-700 text-emerald-700 dark:text-emerald-300 font-bold active:scale-95 transition">只補空白欄位</button>
   </div>
+</div>
+<div id="receiptOcrBatchResults" class="hidden rounded-xl border border-blue-200 dark:border-blue-800 bg-blue-50/70 dark:bg-blue-950/20 p-2.5 text-xs">
+  <div class="font-bold text-blue-800 dark:text-blue-200 mb-2">🗂️ 批次辨識結果（點選一張套用）</div>
+  <div id="receiptOcrBatchList" class="space-y-1.5"></div>
 </div>
 <div class="bg-white/80 dark:bg-gray-800/90 border border-gray-100 dark:border-gray-700 shadow-xl rounded-2xl p-4 space-y-4 glass">
 <div class="flex gap-1.5 mb-1 bg-gray-100/80 dark:bg-gray-800/80 p-1.5 rounded-xl shadow-inner">
@@ -2488,6 +2499,38 @@ function extractReceiptTotal(lines, text) {
     return keywordCandidate?.value || candidates[0].value;
 }
 
+function extractReceiptBreakdown(lines) {
+    const result = { subtotal: null, discount: null, tax: null, amount: null, amountWarnings: [] };
+    // 同一行可能同時有稅率/折扣率與金額，例如「營業稅 5% 50」；取最後一個數字，避免把 5% 當成稅額。
+    const numberPattern = /(?:NT\$|US\$|HK\$|TWD|USD|JPY|THB|HKD|KRW|EUR|CNY|RMB|[¥€₩$])?\s*(-?\d[\d,，]*(?:\.\d{1,2})?)/gi;
+    for (const line of lines) {
+        const matches = [...String(line).matchAll(numberPattern)];
+        if (!matches.length) continue;
+        const valueMatch = matches[matches.length - 1];
+        const value = Number(String(valueMatch[1]).replace(/[，,]/g, ""));
+        if (!Number.isFinite(value)) continue;
+        if (/小計|subtotal/i.test(line) && result.subtotal == null) result.subtotal = Math.abs(value);
+        else if (/折扣|折讓|折抵|discount|coupon/i.test(line) && result.discount == null) result.discount = Math.abs(value);
+        else if (/稅額|營業稅|tax\b|VAT/i.test(line) && result.tax == null) result.tax = Math.abs(value);
+        if (/(?:實付|應付|應收|總計|合計|grand\s*total|total\s*(?:due|amount)?|amount\s*due)/i.test(line)
+            && !/小計|subtotal|找零|change|折扣|discount/i.test(line)) {
+            if (result.amount == null || /實付|應付|grand\s*total|total\s*due/i.test(line)) result.amount = Math.abs(value);
+        }
+    }
+    if (result.amount == null) {
+        // 若收據明確列出小計/折扣/稅額但未找到總計，不能把小計誤當成實付總額。
+        const hasBreakdownOnly = lines.some(line => /小計|subtotal|折扣|折讓|折抵|discount|coupon|稅額|營業稅|tax\b|VAT/i.test(line));
+        if (!hasBreakdownOnly) result.amount = extractReceiptTotal(lines, lines.join("\n"));
+        else result.amountWarnings.push("未能可靠辨識實付總額，請手動輸入並核對收據。");
+    }
+    const expected = (result.subtotal ?? 0) - (result.discount ?? 0) + (result.tax ?? 0);
+    if (result.subtotal != null && result.amount != null &&
+        Math.abs(expected - result.amount) > Math.max(1, result.amount * 0.02)) {
+        result.amountWarnings.push(`小計－折扣＋稅額約為 ${expected.toLocaleString()}，與實付總額 ${result.amount.toLocaleString()} 不一致，請核對收據。`);
+    }
+    return result;
+}
+
 function extractReceiptItems(lines, merchant, invoiceNo) {
     const ignored = /總計|合計|應付|實付|小計|稅額|折扣|找零|統編|電話|地址|日期|發票|invoice|total|amount|tax|discount|change/i;
     const out = [];
@@ -2520,10 +2563,13 @@ function parseReceiptOcr(text) {
     const invoiceNo = extractReceiptInvoiceNo(cleaned);
     const date = parseReceiptDate(cleaned);
     const currency = detectReceiptCurrency(cleaned);
-    const total = extractReceiptTotal(lines, cleaned);
+    const breakdown = extractReceiptBreakdown(lines);
+    const total = breakdown.amount;
     const items = extractReceiptItems(lines, merchant, invoiceNo);
     return {
         merchant, invoiceNo, date, currency, amount: total,
+        subtotal: breakdown.subtotal, discount: breakdown.discount, tax: breakdown.tax,
+        amountWarnings: breakdown.amountWarnings,
         items, recognizedAt: new Date().toISOString(),
         source: "tesseract"
     };
@@ -2537,7 +2583,10 @@ function renderReceiptOcrResult() {
     if (!box || !summary || !items || !count) return;
     if (!receiptOcrMeta) { box.classList.add("hidden"); return; }
     const fields = [receiptOcrMeta.merchant, receiptOcrMeta.amount, receiptOcrMeta.currency, receiptOcrMeta.date, receiptOcrMeta.invoiceNo].filter(Boolean).length;
-    count.textContent = `辨識 ${fields}/5 項`;
+    const confidenceLabel = Number.isFinite(receiptOcrMeta.confidence)
+        ? ` · OCR 信心 ${Math.round(receiptOcrMeta.confidence)}%${receiptOcrMeta.confidence < 55 ? "（建議核對）" : ""}`
+        : "";
+    count.textContent = `辨識 ${fields}/5 項${confidenceLabel}`;
     const rows = [
         ["店家", receiptOcrMeta.merchant || "未辨識"],
         ["金額", receiptOcrMeta.amount != null ? Number(receiptOcrMeta.amount).toLocaleString() : "未辨識"],
@@ -2546,6 +2595,16 @@ function renderReceiptOcrResult() {
         ["發票號碼", receiptOcrMeta.invoiceNo || "未辨識"]
     ];
     summary.innerHTML = rows.map(([k,v]) => `<div class="rounded-lg bg-white/70 dark:bg-gray-800/60 px-2 py-1"><span class="text-gray-400">${escapeHtml(k)}</span><div class="font-bold break-all">${escapeHtml(v)}</div></div>`).join("");
+    for (const [id, key] of [["receiptOcrSubtotal","subtotal"],["receiptOcrDiscount","discount"],["receiptOcrTax","tax"],["receiptOcrManualTotal","amount"]]) {
+        const field = document.getElementById(id);
+        if (field) field.value = receiptOcrMeta[key] == null ? "" : String(receiptOcrMeta[key]);
+    }
+    const warning = document.getElementById("receiptOcrAmountWarning");
+    if (warning) {
+        const messages = Array.isArray(receiptOcrMeta.amountWarnings) ? receiptOcrMeta.amountWarnings : [];
+        warning.textContent = messages.join(" ");
+        warning.classList.toggle("hidden", !messages.length);
+    }
     if (Array.isArray(receiptOcrMeta.items) && receiptOcrMeta.items.length) {
         items.classList.remove("hidden");
         items.innerHTML = `<span class="font-bold text-gray-600 dark:text-gray-300">可能品項：</span>${receiptOcrMeta.items.map(escapeHtml).join("、")}`;
@@ -2562,6 +2621,33 @@ function applyReceiptOcrMeta(force = true) {
     const amount = document.getElementById("originalAmount");
     const currency = document.getElementById("currency");
     const date = document.getElementById("date");
+    const manualTotal = document.getElementById("receiptOcrManualTotal");
+    if (manualTotal) {
+        const raw = manualTotal.value.trim();
+        if (raw === "") receiptOcrMeta.amount = null;
+        else {
+            const n = Number(raw);
+            if (!Number.isFinite(n) || n <= 0) {
+                showToast("實付總額必須是大於 0 的有效數字，請重新確認。", "error");
+                manualTotal.focus();
+                return false;
+            }
+            receiptOcrMeta.amount = n;
+        }
+    }
+    for (const [id, key] of [["receiptOcrSubtotal","subtotal"],["receiptOcrDiscount","discount"],["receiptOcrTax","tax"]]) {
+        const field = document.getElementById(id);
+        if (field) {
+            const raw = field.value.trim();
+            if (raw === "") receiptOcrMeta[key] = null;
+            else if (Number.isFinite(Number(raw)) && Number(raw) >= 0) receiptOcrMeta[key] = Number(raw);
+            else {
+                showToast("小計、折扣與稅額必須是大於或等於 0 的數字。", "error");
+                field.focus();
+                return false;
+            }
+        }
+    }
     if (receiptOcrMeta.merchant && title && (force || !String(title.value || "").trim())) title.value = receiptOcrMeta.merchant;
     if (receiptOcrMeta.amount != null && amount && (force || !evaluateMathInput(amount.value || ""))) {
         amount.value = String(receiptOcrMeta.amount);
@@ -2573,7 +2659,16 @@ function applyReceiptOcrMeta(force = true) {
     }
     if (receiptOcrMeta.date && date && (force || !date.value || date.value === getTodayString())) date.value = receiptOcrMeta.date;
     updateTwdPreview();
+    if (receiptOcrSelectedBatchIndex !== null && receiptOcrBatchResults[receiptOcrSelectedBatchIndex]) {
+        receiptOcrBatchResults[receiptOcrSelectedBatchIndex].meta = {
+            ...receiptOcrMeta,
+            items: [...(receiptOcrMeta.items || [])],
+            amountWarnings: [...(receiptOcrMeta.amountWarnings || [])]
+        };
+        renderReceiptOcrBatchResults();
+    }
     showToast(force ? "已套用收據辨識結果" : "已補入空白欄位", "success");
+    return true;
 }
 window.applyReceiptOcrMeta = applyReceiptOcrMeta;
 window.addEventListener("pagehide", () => {
@@ -2582,28 +2677,94 @@ window.addEventListener("pagehide", () => {
     tesseractWorkerPromise = null;
 });
 
+let receiptOcrBatchResults = [];
+let receiptOcrSelectedBatchIndex = null;
+function syncReceiptOcrEditedFields() {
+    if (!receiptOcrMeta) return;
+    const totalField = document.getElementById("receiptOcrManualTotal");
+    if (totalField) {
+        const raw = totalField.value.trim();
+        receiptOcrMeta.amount = raw === "" ? null : (Number.isFinite(Number(raw)) && Number(raw) > 0 ? Number(raw) : receiptOcrMeta.amount);
+    }
+    for (const [id, key] of [["receiptOcrSubtotal","subtotal"],["receiptOcrDiscount","discount"],["receiptOcrTax","tax"]]) {
+        const field = document.getElementById(id);
+        if (field) {
+            const raw = field.value.trim();
+            receiptOcrMeta[key] = raw === "" ? null : (Number.isFinite(Number(raw)) && Number(raw) >= 0 ? Number(raw) : receiptOcrMeta[key]);
+        }
+    }
+}
+function renderReceiptOcrBatchResults() {
+    const box = document.getElementById("receiptOcrBatchResults");
+    const list = document.getElementById("receiptOcrBatchList");
+    if (!box || !list) return;
+    if (!receiptOcrBatchResults.length) { box.classList.add("hidden"); list.innerHTML = ""; return; }
+    box.classList.remove("hidden");
+    list.innerHTML = receiptOcrBatchResults.map((r, i) => `<div class="flex items-center justify-between gap-2 rounded-lg bg-white/80 dark:bg-gray-800/70 p-2"><div class="min-w-0"><div class="font-bold truncate">${escapeHtml(r.fileName)}</div><div class="text-gray-500">店家：${escapeHtml(r.meta.merchant || "未辨識")} · 金額：${r.meta.amount == null ? "未辨識" : Number(r.meta.amount).toLocaleString()}</div></div><button type="button" data-ocr-batch-index="${i}" class="shrink-0 rounded-lg bg-blue-600 text-white px-2.5 py-1.5 font-bold">選用</button></div>`).join("");
+    list.querySelectorAll("[data-ocr-batch-index]").forEach(btn => btn.addEventListener("click", () => {
+        const nextIndex = Number(btn.dataset.ocrBatchIndex);
+        const item = receiptOcrBatchResults[nextIndex];
+        if (!item) return;
+        if (receiptOcrSelectedBatchIndex !== null && receiptOcrMeta) {
+            syncReceiptOcrEditedFields();
+            receiptOcrBatchResults[receiptOcrSelectedBatchIndex].meta = {
+                ...receiptOcrMeta,
+                items: [...(receiptOcrMeta.items || [])],
+                amountWarnings: [...(receiptOcrMeta.amountWarnings || [])]
+            };
+        }
+        receiptOcrSelectedBatchIndex = nextIndex;
+        receiptOcrMeta = { ...item.meta, items: [...(item.meta.items || [])], amountWarnings: [...(item.meta.amountWarnings || [])] };
+        renderReceiptOcrResult();
+        applyReceiptOcrMeta(true);
+    }));
+}
+let receiptOcrRunning = false;
 async function handleOCR(file) {
-    if (!file) return;
+    if (!file || receiptOcrRunning) return;
+    if (!String(file.type || "").startsWith("image/")) {
+        showToast("請選擇 JPG、PNG 或其他圖片格式的收據", "error");
+        return;
+    }
+    const maxFileBytes = 20 * 1024 * 1024;
+    if (file.size > maxFileBytes) {
+        showToast("收據圖片過大，請先壓縮至 20 MB 以下", "error");
+        return;
+    }
+    receiptOcrRunning = true;
+    const ocrInput = document.getElementById("ocrReceiptInput");
+    if (ocrInput) ocrInput.disabled = true;
     const notice = document.getElementById("aiStatusNotice");
     if (notice) { notice.classList.remove("hidden"); notice.textContent = "AI OCR 模組載入中..."; }
     try {
         if (notice) notice.textContent = "正在準備收據影像...";
         const images = await createReceiptOcrImages(file);
-        const texts = [];
+        const results = [];
         const worker = await ensureTesseractWorker(m => {
             if (!notice || !m) return;
             if (m.status === "recognizing text" && Number.isFinite(m.progress)) notice.textContent = `正在辨識收據 ${(m.progress * 100).toFixed(0)}%`;
-            else if (m.status === "loading language traineddata") notice.textContent = "正在下載繁中／英文辨識資料...";
+            else if (m.status === "loading language traineddata") notice.textContent = "正在下載繁中／英文辨識資料（首次使用會較久）...";
         });
         for (let i = 0; i < images.length; i++) {
             if (notice) notice.textContent = `正在辨識收據（${i + 1}/${images.length}）...`;
             const result = await worker.recognize(images[i], { rotateAuto: true });
-            texts.push(String(result?.data?.text || ""));
+            const text = String(result?.data?.text || "");
+            const parsed = parseReceiptOcr(text);
+            const fields = [parsed.merchant, parsed.amount, parsed.currency, parsed.date, parsed.invoiceNo].filter(Boolean).length;
+            results.push({
+                text,
+                parsed,
+                confidence: Number.isFinite(result?.data?.confidence) ? result.data.confidence : null,
+                score: scoreOcrText(text) + fields * 45 + (parsed.amount != null ? 25 : 0) + (parsed.date ? 15 : 0)
+            });
         }
-        const bestText = texts.sort((a,b) => scoreOcrText(b) - scoreOcrText(a))[0] || "";
-        if (!bestText.trim()) throw new Error("沒有辨識到可用文字");
+        results.sort((a,b) => b.score - a.score || (b.confidence ?? 0) - (a.confidence ?? 0));
+        const best = results[0];
+        const bestText = best?.text || "";
+        if (!bestText.trim()) throw new Error("沒有辨識到可用文字，請改拍清晰、正面且光線充足的照片");
         if (notice) notice.textContent = "正在整理店家、日期、幣別與金額...";
-        receiptOcrMeta = parseReceiptOcr(bestText);
+        receiptOcrMeta = best.parsed;
+        receiptOcrMeta.confidence = best.confidence;
         renderReceiptOcrResult();
         // 安全的預設策略：自動補入，不覆蓋已輸入的項目／金額；幣別與日期若有明確辨識則套用。
         applyReceiptOcrMeta(false);
@@ -2616,7 +2777,11 @@ async function handleOCR(file) {
     } finally {
         if (notice) notice.classList.add("hidden");
         const input = document.getElementById("ocrReceiptInput");
-        if (input) input.value = "";
+        if (input) {
+            input.value = "";
+            input.disabled = false;
+        }
+        receiptOcrRunning = false;
     }
 }
 
@@ -2675,8 +2840,33 @@ function handleVoice() {
 
 document.getElementById("ocrReceiptInput").onchange = async (e) => {
     const input = e.target;
-    try { await handleOCR(input.files?.[0]); }
-    finally { input.value = ""; }
+    const files = Array.from(input.files || []);
+    if (!files.length) return;
+    receiptOcrBatchResults = [];
+    receiptOcrSelectedBatchIndex = null;
+    try {
+        for (let i = 0; i < files.length; i++) {
+            const file = files[i];
+            // 每張收據開始前清空前一張結果，避免格式錯誤或過大檔案沿用上一張金額。
+            receiptOcrMeta = null;
+            try {
+                await handleOCR(file);
+                if (receiptOcrMeta) {
+                    const meta = { ...receiptOcrMeta, items: [...(receiptOcrMeta.items || [])], amountWarnings: [...(receiptOcrMeta.amountWarnings || [])] };
+                    receiptOcrBatchResults.push({ fileName: file.name || `收據 ${i + 1}`, meta });
+                } else {
+                    receiptOcrBatchResults.push({ fileName: file.name || `收據 ${i + 1}`, meta: { merchant: "", amount: null, currency: "", date: "", invoiceNo: "", items: [], amountWarnings: ["此檔案未能完成辨識，請確認是有效圖片、檔案未超過 20 MB，並可手動輸入總額。"] } });
+                }
+            } catch (err) {
+                receiptOcrBatchResults.push({ fileName: file.name || `收據 ${i + 1}`, meta: { merchant: "", amount: null, currency: "", date: "", invoiceNo: "", items: [], amountWarnings: [`辨識失敗：${err.message || "未知錯誤"}`] } });
+            }
+            renderReceiptOcrBatchResults();
+        }
+        if (files.length > 1) {
+            const succeeded = receiptOcrBatchResults.filter(r => r.meta.amount != null || r.meta.merchant || r.meta.date).length;
+            showToast(`批次辨識完成：${succeeded}/${files.length} 張取得資料；可逐張選用並核對`, succeeded ? "success" : "info");
+        }
+    } finally { input.value = ""; }
 };
 document.getElementById("applyReceiptOcrBtn")?.addEventListener("click", () => applyReceiptOcrMeta(true));
 document.getElementById("applyReceiptOcrBlankBtn")?.addEventListener("click", () => applyReceiptOcrMeta(false));
