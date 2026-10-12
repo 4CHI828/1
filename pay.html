@@ -3,6 +3,16 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes, viewport-fit=cover">
+<link rel="dns-prefetch" href="//cdn.tailwindcss.com">
+<link rel="preconnect" href="https://cdn.tailwindcss.com">
+<link rel="dns-prefetch" href="//accounts.google.com">
+<link rel="preconnect" href="https://accounts.google.com">
+<link rel="dns-prefetch" href="//www.gstatic.com">
+<link rel="preconnect" href="https://www.gstatic.com" crossorigin>
+<link rel="dns-prefetch" href="//firestore.googleapis.com">
+<link rel="preconnect" href="https://firestore.googleapis.com" crossorigin>
+<link rel="dns-prefetch" href="//identitytoolkit.googleapis.com">
+<link rel="preconnect" href="https://identitytoolkit.googleapis.com" crossorigin>
 <title>雲端全能分帳記帳 Pro - 最終版</title>
 <link rel="manifest" href="data:application/manifest+json;base64,eyJuYW1lIjoi6Zuy56uv5YWo6IO95YiG5biz6KiY5bizIiwic2hvcnRfbmFtZSI6Iumbsuerr+iomOW4syIsImRlc2NyaXB0aW9uIjoi6Zuy56uv6KiY5biz44CB5YiG5biz6IiH5aSa5Lq65ZCI5LuYIiwic3RhcnRfdXJsIjoiLi9wYXkuaHRtbCIsImRpc3BsYXkiOiJzdGFuZGFsb25lIiwiYmFja2dyb3VuZF9jb2xvciI6IiMxMTE4MjciLCJ0aGVtZV9jb2xvciI6IiMyNTYzZWIiLCJpY29ucyI6W3sic3JjIjoiaHR0cHM6Ly9jZG4taWNvbnMtcG5nLmZsYXRpY29uLmNvbS81MTIvMjkzNi8yOTM2NzU4LnBuZyIsInNpemVzIjoiMTkyeDE5MiIsInR5cGUiOiJpbWFnZS9wbmciLCJwdXJwb3NlIjoiYW55IG1hc2thYmxlIn1dLCJzY29wZSI6Ii4vIn0=">
 <meta name="theme-color" content="#3b82f6">
@@ -353,7 +363,8 @@ tailwind.config = { darkMode: 'class' };
 <div class="flex items-center justify-between bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-slate-800 dark:to-indigo-900/30 p-2.5 rounded-xl border border-blue-100/50 dark:border-indigo-800/50 text-xs flex-wrap gap-2 shadow-sm">
 <span class="font-bold text-blue-900 dark:text-blue-200 flex items-center gap-1 flex-wrap">✨ 智慧記帳 <span class="text-[0.7rem] font-normal text-gray-400">(AI 輔助模式)</span></span>
 <div class="flex items-center gap-2 flex-wrap justify-end">
-<label id="receiptPhotoAttachWrap" class="hidden flex items-center gap-1 bg-white/80 dark:bg-gray-700 shadow-sm border border-gray-200/50 dark:border-gray-600 px-2.5 py-1.5 rounded-lg text-gray-600 dark:text-gray-300 font-bold cursor-pointer hover:scale-105 transition">📎 附加照片<input type="file" id="receiptPhotoInput" accept="image/*" class="hidden"></label>
+<button type="button" id="copyBankAccountBtn" onclick="copyBankAccount()" class="hidden items-center gap-1 bg-emerald-50 dark:bg-emerald-900/30 shadow-sm border border-emerald-200/70 dark:border-emerald-700/50 px-2.5 py-1.5 rounded-lg text-emerald-700 dark:text-emerald-300 font-bold hover:scale-105 transition">📋 複製帳號</button>
+        <label id="receiptPhotoAttachWrap" class="hidden flex items-center gap-1 bg-white/80 dark:bg-gray-700 shadow-sm border border-gray-200/50 dark:border-gray-600 px-2.5 py-1.5 rounded-lg text-gray-600 dark:text-gray-300 font-bold cursor-pointer hover:scale-105 transition">📎 附加照片<input type="file" id="receiptPhotoInput" accept="image/*" class="hidden"></label>
 <div id="receiptPreviewThumb" onclick="openCurrentReceiptModal()" class="hidden w-8 h-8 rounded-lg border border-gray-300 shadow-sm bg-cover bg-center cursor-pointer"></div>
 <button type="button" id="clearReceiptBtn" onclick="clearReceiptPhoto()" class="hidden text-red-400 hover:text-red-600 font-bold">×</button>
 <button type="button" id="voiceInputBtn" class="flex items-center gap-1 bg-white/80 dark:bg-gray-700 shadow-sm border border-gray-200/50 dark:border-gray-600 px-2.5 py-1.5 rounded-lg text-blue-600 dark:text-blue-300 font-bold hover:scale-105 transition">🎤 語音</button>
@@ -2886,9 +2897,48 @@ function canAttachReceiptPhoto(user = getFirebaseUser()) {
     return displayName === "wu chi" || email === "chi828@gmail.com";
 }
 function updateReceiptPhotoAccess(user = getFirebaseUser()) {
+    const allowed = canAttachReceiptPhoto(user);
     const wrap = document.getElementById("receiptPhotoAttachWrap");
-    if (!wrap) return;
-    wrap.classList.toggle("hidden", !canAttachReceiptPhoto(user));
+    const copyButton = document.getElementById("copyBankAccountBtn");
+    if (wrap) wrap.classList.toggle("hidden", !allowed);
+    if (copyButton) {
+        copyButton.classList.toggle("hidden", !allowed);
+        copyButton.classList.toggle("inline-flex", allowed);
+    }
+}
+
+async function copyBankAccount() {
+    if (!canAttachReceiptPhoto()) {
+        showToast("📋 複製帳號僅限指定帳號使用", "info");
+        updateReceiptPhotoAccess();
+        return;
+    }
+    const account = "808 玉山銀行  0495968118226";
+    try {
+        if (navigator.clipboard && window.isSecureContext) {
+            await navigator.clipboard.writeText(account);
+        } else {
+            const textarea = document.createElement("textarea");
+            textarea.value = account;
+            textarea.setAttribute("readonly", "");
+            textarea.setAttribute("aria-hidden", "true");
+            textarea.style.position = "fixed";
+            textarea.style.left = "-9999px";
+            textarea.style.top = "0";
+            textarea.style.opacity = "0";
+            document.body.appendChild(textarea);
+            try {
+                textarea.select();
+                const copied = document.execCommand("copy");
+                if (!copied) throw new Error("copy failed");
+            } finally {
+                textarea.remove();
+            }
+        }
+        showToast("✅ 已複製帳號：" + account, "success");
+    } catch (error) {
+        showToast("複製失敗，請確認瀏覽器剪貼簿權限", "error");
+    }
 }
 function isFirestoreMode() {
     return localStorage.getItem("app_cloud_backend") === "firestore";
