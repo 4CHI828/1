@@ -2,24 +2,39 @@
 <html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>智能連結 Smart Link Manager</title>
-    <script src="https://cdn.tailwindcss.com"></script>
+    <script>try{var __t=localStorage.getItem('theme');var __l=__t?__t==='light':(window.matchMedia&&matchMedia('(prefers-color-scheme: light)').matches);if(__l)document.documentElement.classList.add('light-mode');}catch(e){}</script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    <script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.7/Sortable.min.js"></script>
     <link rel="manifest" id="pwa-manifest">
     <meta name="theme-color" content="#0f172a">
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🔗</text></svg>">
 
     <style>
+        /* ---- v3: 取代 Tailwind CDN 的最小 reset（等同 preflight 的必要部分） ---- */
+        *, ::before, ::after { border-width: 0; border-style: solid; border-color: #e5e7eb; }
+        html { line-height: 1.5; -webkit-text-size-adjust: 100%; tab-size: 4; }
+        body { line-height: inherit; }
+        h1, h2, h3, h4, h5, h6 { font-size: inherit; font-weight: inherit; }
+        a { color: inherit; text-decoration: inherit; }
+        ol, ul { list-style: none; }
+        img, svg, video { display: block; vertical-align: middle; }
+        img, video { max-width: 100%; height: auto; }
+        button, input, select, textarea { font-family: inherit; font-size: 100%; line-height: inherit; color: inherit; }
+        button { background-color: transparent; background-image: none; -webkit-appearance: button; }
+        textarea { resize: vertical; }
+        input::placeholder, textarea::placeholder { opacity: 1; color: #9ca3af; }
+        [hidden] { display: none; }
+        code { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; font-size: 1em; }
         :root {
             --primary: #6366f1; --primary-hover: #4f46e5; --bg-dark: #0f172a;
             --card-dark: #1e293b; --text-main: #f8fafc; --text-muted: #94a3b8;
             --border-color: #334155; --danger: #ef4444; --success: #10b981;
             --warning: #f59e0b; --font-scale: 1; 
         }
-        body.light-mode {
+        html.light-mode body, body.light-mode {
             --bg-dark: #f1f5f9; --card-dark: #ffffff; --text-main: #0f172a;
             --text-muted: #64748b; --border-color: #e2e8f0;
         }
@@ -80,14 +95,11 @@
 
         mark.search-hl { background-color: rgba(245, 158, 11, 0.35); color: inherit; padding: 0 2px; border-radius: 3px; font-weight: inherit; }
 
-        .masonry-grid { column-count: 5; column-gap: 0.8rem; }
-        .masonry-grid .link-card { break-inside: avoid; margin-bottom: 0.8rem; display: block; width: 100%; }
-        body.large-font-layout .masonry-grid { column-count: 3; }
+        .masonry-grid { display: flex; align-items: flex-start; gap: 0.8rem; }
+        .masonry-col { flex: 1 1 0; min-width: 0; display: flex; flex-direction: column; gap: 0.8rem; }
+        .masonry-grid .link-card { display: block; width: 100%; }
+        .empty-state { flex: 1 1 100%; width: 100%; }
         body.large-font-layout .link-title { white-space: normal; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
-        @media (max-width: 1280px) { .masonry-grid { column-count: 4; } body.large-font-layout .masonry-grid { column-count: 3; } }
-        @media (max-width: 1024px) { .masonry-grid { column-count: 3; } body.large-font-layout .masonry-grid { column-count: 2; } }
-        @media (max-width: 768px) { .masonry-grid { column-count: 2; } body.large-font-layout .masonry-grid { column-count: 1; } }
-        @media (max-width: 480px) { .masonry-grid { column-count: 1; } }
 
         .list-view { display: flex; flex-direction: column; gap: 0.6rem; } 
         .list-view .link-card { width: 100%; max-width: 100%; }
@@ -111,28 +123,28 @@
 
         body.thumb-mode-small .link-image-preview, body.thumb-mode-none .link-image-preview { display: none; }
         body.thumb-mode-small .link-thumb-small { display: block; }
-        body.thumb-mode-small .link-card.has-folder .card-body-row, body.thumb-mode-none .link-card.has-folder .card-body-row, .link-card.no-image .card-body-row { padding-top: 1.1rem; }
+        body.thumb-mode-small .link-card.has-folder .card-body-row, body.thumb-mode-none .link-card.has-folder .card-body-row, .link-card.no-image .card-body-row { padding-top: 1.45rem; }
 
-        .link-desc { color: var(--text-muted); font-size: calc(0.7rem * var(--font-scale)); margin-bottom: 0.2rem; line-height: 1.3; display: -webkit-box; -webkit-line-clamp: 1; -webkit-box-orient: vertical; overflow: hidden; }
-        .link-title { font-size: calc(0.78rem * var(--font-scale)); font-weight: 700; margin-bottom: 0.1rem; line-height: 1.25; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .link-desc { color: var(--text-muted); font-size: calc(0.78rem * var(--font-scale)); margin-bottom: 0.2rem; line-height: 1.3; display: -webkit-box; -webkit-line-clamp: 1; -webkit-box-orient: vertical; overflow: hidden; }
+        .link-title { font-size: calc(0.88rem * var(--font-scale)); font-weight: 700; margin-bottom: 0.1rem; line-height: 1.3; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; word-break: break-word; }
         .link-title a { color: inherit; text-decoration: none; transition: color 0.15s; }
         .link-title a:hover { color: var(--primary); }
         .account-handle { color: var(--primary); font-weight: 800; }
-        .link-url-display { font-family: monospace; font-size: calc(0.55rem * var(--font-scale)); color: var(--primary); opacity: 0.55; margin-bottom: 0.2rem; display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; text-decoration: none; }
+        .link-url-display { font-family: monospace; font-size: calc(0.68rem * var(--font-scale)); color: var(--primary); opacity: 0.55; margin-bottom: 0.2rem; display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; text-decoration: none; }
         .link-url-display:hover { opacity: 1; text-decoration: underline; }
 
         .card-footer { display: flex; align-items: center; justify-content: space-between; margin-top: auto; padding-top: 0.3rem; border-top: 1px solid var(--border-color); }
-        .source-info { display: flex; align-items: center; gap: 0.35rem; } 
-        .favicon { width: 12px; height: 12px; border-radius: 2px; cursor: pointer; transition: transform 0.15s; }
+        .source-info { display: flex; align-items: center; flex-wrap: wrap; gap: 0.35rem; } 
+        .favicon { width: 14px; height: 14px; border-radius: 2px; cursor: pointer; transition: transform 0.15s; }
         .favicon:hover { transform: scale(1.25); }
-        .source-text { font-size: calc(0.6rem * var(--font-scale)); color: var(--text-muted); }
-        .click-count-badge { font-size: calc(0.55rem * var(--font-scale)); color: var(--warning); display: inline-flex; align-items: center; gap: 2px; font-weight: 600; }
+        .source-text { font-size: calc(0.7rem * var(--font-scale)); color: var(--text-muted); }
+        .click-count-badge { font-size: calc(0.68rem * var(--font-scale)); color: var(--warning); display: inline-flex; align-items: center; gap: 2px; font-weight: 600; }
 
         .tags-container { display: flex; flex-wrap: wrap; gap: 0.2rem; justify-content: flex-end; }
-        .tag-badge { padding: 0.1rem 0.35rem; border-radius: 3px; font-size: calc(0.55rem * var(--font-scale)); font-weight: 600; cursor: pointer; transition: transform 0.15s, opacity 0.15s; user-select: none; }
+        .tag-badge { padding: 0.12rem 0.4rem; border-radius: 3px; font-size: calc(0.68rem * var(--font-scale)); font-weight: 600; cursor: pointer; transition: transform 0.15s, opacity 0.15s; user-select: none; }
         .tag-badge:hover { transform: scale(1.06); opacity: 0.9; }
 
-        .folder-badge { position: absolute; top: 0.45rem; left: 0.5rem; z-index: 5; background: rgba(15, 23, 42, 0.85); backdrop-filter: blur(4px); color: #fff; padding: 0.1rem 0.35rem; border-radius: 4px; font-size: calc(0.55rem * var(--font-scale)); display: flex; align-items: center; gap: 0.2rem; cursor: pointer; }
+        .folder-badge { position: absolute; top: 0.45rem; left: 0.5rem; z-index: 5; background: rgba(15, 23, 42, 0.85); backdrop-filter: blur(4px); color: #fff; padding: 0.12rem 0.4rem; border-radius: 4px; font-size: calc(0.68rem * var(--font-scale)); display: flex; align-items: center; gap: 0.2rem; cursor: pointer; }
         
         .card-actions { position: absolute; top: 0.45rem; right: 0.5rem; z-index: 10; display: flex; gap: 0.2rem; opacity: 0; transition: opacity 0.2s; }
         .link-card:hover .card-actions { opacity: 1; }
@@ -193,7 +205,7 @@
         .modal-tab-btn { flex: 1; justify-content: center; font-size: 0.8rem !important; padding: 0.35rem 0.5rem !important; }
         .modal-tab-btn.active { background-color: var(--primary); color: #fff; border-color: var(--primary); }
 
-        .modal-tag-suggestions { display: flex; flex-wrap: wrap; gap: 0.3rem; margin-top: 0.4rem; max-height: 72px; overflow-y: auto; }
+        .modal-tag-suggestions { display: flex; flex-wrap: wrap; gap: 0.3rem; margin-top: 0.4rem; max-height: 110px; overflow-y: auto; }
         .modal-tag-pill { font-size: 0.7rem; padding: 0.15rem 0.45rem; border-radius: 10px; background: var(--bg-dark); border: 1px solid var(--border-color); color: var(--text-muted); cursor: pointer; user-select: none; transition: all 0.15s; }
         .modal-tag-pill:hover { border-color: var(--primary); color: var(--text-main); }
         .modal-tag-pill.selected { background: var(--primary); color: #fff; border-color: var(--primary); }
@@ -258,15 +270,93 @@
             .filter-section .flex.gap-1 { justify-content: space-between; width: 100%; flex-wrap: wrap; }
             .link-image-preview { height: 120px; } 
             .link-card { padding: 0.5rem; }
-            .link-title { font-size: calc(0.8rem * var(--font-scale)); margin-bottom: 0.1rem; }
-            .link-desc { font-size: calc(0.7rem * var(--font-scale)); -webkit-line-clamp: 1; margin-bottom: 0.1rem; }
-            .link-url-display { font-size: calc(0.6rem * var(--font-scale)); margin-bottom: 0.1rem; } 
-            .source-text { font-size: calc(0.65rem * var(--font-scale)); }
-            .tag-badge { font-size: calc(0.55rem * var(--font-scale)); padding: 0.1rem 0.3rem; }
+            .link-title { font-size: calc(0.92rem * var(--font-scale)); margin-bottom: 0.1rem; }
+            .link-desc { font-size: calc(0.8rem * var(--font-scale)); -webkit-line-clamp: 1; margin-bottom: 0.1rem; }
+            .link-url-display { font-size: calc(0.7rem * var(--font-scale)); margin-bottom: 0.1rem; } 
+            .source-text { font-size: calc(0.74rem * var(--font-scale)); }
+            .tag-badge { font-size: calc(0.7rem * var(--font-scale)); padding: 0.12rem 0.35rem; }
             .batch-toolbar { width: 96%; padding: 0.5rem; gap: 0.3rem; } 
             .kanban-column { min-width: 260px; }
             .help-icon-grid { grid-template-columns: 1fr; }
         }
+
+        /* ---- v2: 觸控 / 無障礙 / 主題補強 ---- */
+        button:focus-visible, a:focus-visible, select:focus-visible, input:focus-visible, textarea:focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; }
+        .link-card:focus-within .card-actions, .kanban-card:focus-within .k-actions { opacity: 1; }
+        body.batch-mode #toast-container { bottom: 7rem; }
+        body.batch-mode #back-to-top { bottom: 8rem; }
+        @media (pointer: coarse) {
+            .btn-icon-only { width: 34px; height: 34px; }
+            .card-actions { gap: 0.3rem; }
+            .card-actions button { width: 32px; height: 32px; font-size: 0.75rem; }
+            .kanban-card .k-actions button { width: 28px; height: 28px; font-size: 0.7rem; }
+            .kanban-card .k-title { padding-right: 5.5rem; }
+            /* 取消縮放鎖定後，避免 iOS 在輸入框聚焦時自動放大 */
+            input:not([type="checkbox"]):not([type="range"]), textarea, select { font-size: max(16px, calc(0.85rem * var(--font-scale))) !important; }
+        }
+
+        /* ---- v3: 取代 Tailwind 的 utility class（僅本頁用到的） ---- */
+        .flex { display: flex; } .grid { display: grid; }
+        .flex-col { flex-direction: column; } .flex-wrap { flex-wrap: wrap; } .flex-1 { flex: 1 1 0%; }
+        .items-center { align-items: center; }
+        .justify-between { justify-content: space-between; } .justify-center { justify-content: center; } .justify-end { justify-content: flex-end; }
+        .gap-1 { gap: 0.25rem; } .gap-1\.5 { gap: 0.375rem; } .gap-2 { gap: 0.5rem; }
+        .grid-cols-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+        .col-span-2 { grid-column: span 2 / span 2; } .col-span-full { grid-column: 1 / -1; }
+        .mb-2 { margin-bottom: 0.5rem; } .mb-3 { margin-bottom: 0.75rem; } .mb-4 { margin-bottom: 1rem; }
+        .mt-1 { margin-top: 0.25rem; } .mt-3 { margin-top: 0.75rem; } .mt-4 { margin-top: 1rem; } .mt-5 { margin-top: 1.25rem; }
+        .mr-1 { margin-right: 0.25rem; } .mr-1\.5 { margin-right: 0.375rem; } .mr-2 { margin-right: 0.5rem; }
+        .p-1\.5 { padding: 0.375rem; } .p-2 { padding: 0.5rem; } .pt-3 { padding-top: 0.75rem; }
+        .py-6 { padding-top: 1.5rem; padding-bottom: 1.5rem; } .py-10 { padding-top: 2.5rem; padding-bottom: 2.5rem; }
+        .w-full { width: 100%; } .min-h-screen { min-height: 100vh; }
+        .max-h-52 { max-height: 13rem; } .max-h-60 { max-height: 15rem; } .overflow-y-auto { overflow-y: auto; }
+        .rounded { border-radius: 0.25rem; } .border { border-width: 1px; } .cursor-pointer { cursor: pointer; }
+        .text-center { text-align: center; }
+        .text-xs { font-size: 0.75rem; line-height: 1rem; } .text-sm { font-size: 0.875rem; line-height: 1.25rem; }
+        .text-lg { font-size: 1.125rem; line-height: 1.75rem; } .text-xl { font-size: 1.25rem; line-height: 1.75rem; }
+        .font-medium { font-weight: 500; } .font-bold { font-weight: 700; }
+
+        /* ---- v3: 頂部「⋯」選單 ---- */
+        .btn-icon-only { position: relative; }
+        .menu-wrap { position: relative; display: inline-flex; }
+        .header-menu { position: absolute; right: 0; top: calc(100% + 8px); min-width: 250px; max-height: min(80vh, 600px); overflow-y: auto; background: var(--card-dark); border: 1px solid var(--border-color); border-radius: 12px; box-shadow: 0 14px 34px rgba(0,0,0,0.38); padding: 0.4rem; z-index: 300; }
+        .menu-item { width: 100%; justify-content: flex-start; gap: 0.7rem; padding: 0.6rem 0.7rem; border-radius: 8px; background: transparent; font-size: 0.86rem; text-align: left; }
+        .menu-item i { width: 1.1rem; text-align: center; color: var(--primary); }
+        .menu-item:hover, .menu-item:focus-visible { background: var(--border-color); }
+        .menu-item.btn-checking-active { border-radius: 8px !important; padding: 0.6rem 0.7rem !important; }
+        .menu-sep { height: 1px; background: var(--border-color); margin: 0.3rem 0.2rem; }
+        .menu-user { padding: 0.4rem 0.7rem; font-size: 0.75rem; color: var(--text-muted); word-break: break-all; }
+        .count-badge { position: absolute; top: -5px; right: -5px; min-width: 16px; height: 16px; padding: 0 4px; border-radius: 8px; background: var(--danger); color: #fff; font-size: 0.62rem; font-weight: 700; display: flex; align-items: center; justify-content: center; line-height: 1; pointer-events: none; }
+        .count-badge.warn { background: var(--warning); color: #1e293b; }
+
+        /* ---- v3: 稍後閱讀提醒 ---- */
+        .reminder-banner { display: flex; align-items: center; justify-content: space-between; gap: 0.6rem; flex-wrap: wrap; margin-bottom: 0.8rem; padding: 0.55rem 0.8rem; border-radius: 10px; border: 1px solid var(--warning); background: rgba(245, 158, 11, 0.12); font-size: 0.85rem; }
+        .reminder-banner i { color: var(--warning); margin-right: 0.35rem; }
+        .remind-badge { display: inline-flex; align-items: center; gap: 3px; font-size: calc(0.68rem * var(--font-scale)); color: var(--text-muted); border: 1px solid var(--border-color); border-radius: 10px; padding: 0 0.4rem; cursor: pointer; white-space: nowrap; }
+        .remind-badge:hover { border-color: var(--warning); color: var(--warning); }
+        .remind-badge.due { color: #1e293b; background: var(--warning); border-color: var(--warning); font-weight: 700; }
+        .link-card.is-due { border-color: var(--warning); box-shadow: 0 0 0 1px var(--warning) inset; }
+        .remind-quick { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0.5rem; }
+        .remind-quick button { justify-content: center; padding: 0.55rem 0.5rem; }
+
+        /* ---- v3: 巢狀資料夾 ---- */
+        #subfolder-chips { align-items: center; }
+        .chip-label { font-size: 0.72rem; color: var(--text-muted); padding: 0 0.2rem; }
+        .chip.ancestor { border-color: var(--primary); color: var(--primary); }
+        .chip.crumb::after { content: '›'; margin-left: 0.45rem; opacity: 0.6; }
+        .folder-group { min-height: 4px; }
+        .folder-group .folder-group { margin-left: 1.1rem; padding-left: 0.4rem; border-left: 1px dashed var(--border-color); }
+        .folder-node > .folder-row { border-bottom: 1px solid var(--border-color); background: var(--card-dark); }
+        .folder-count { margin-left: 0.4rem; font-size: 0.7rem; color: var(--text-muted); }
+        .folder-select { padding: 0.45rem; border-radius: 6px; border: 1px solid var(--border-color); background: var(--bg-dark); color: var(--text-main); font-size: 0.85rem; min-width: 0; flex: 1; }
+
+        /* ---- v3: 標籤建議、隱私模式 ---- */
+        .tag-suggest-row { flex-basis: 100%; display: flex; flex-wrap: wrap; align-items: center; gap: 0.3rem; padding-bottom: 0.3rem; margin-bottom: 0.2rem; border-bottom: 1px dashed var(--border-color); }
+        .tag-suggest-label { font-size: 0.7rem; color: var(--warning); font-weight: 700; }
+        .modal-tag-pill.suggest { border-color: var(--warning); color: var(--text-main); }
+        .favicon-letter { display: inline-flex; align-items: center; justify-content: center; font-size: 0.6rem; font-weight: 700; color: #fff; width: 14px; height: 14px; border-radius: 3px; }
+        .setting-row { display: flex; align-items: center; justify-content: space-between; gap: 0.6rem; cursor: pointer; padding: 0.5rem; border-radius: 0.25rem; background: var(--bg-dark); border: 1px solid var(--border-color); color: var(--text-main); }
+        .setting-row small { display: block; color: var(--text-muted); font-size: 0.68rem; margin-top: 2px; }
     </style>
 </head>
 <body class="flex flex-col min-h-screen">
@@ -282,23 +372,31 @@
             <span>智能連結 <span class="logo-en"><span class="highlight-letter">S</span>mart <span class="highlight-letter">L</span>ink <span class="highlight-letter">M</span>anager</span></span>
         </div>
         <div class="header-actions flex-wrap gap-1">
-            <span id="user-info" style="display:none;color:var(--text-muted);font-size:0.8rem;margin-right:6px;"></span>
-            <button type="button" class="btn-outline" id="btn-install-pwa" title="將本應用程式安裝至桌面或手機主畫面"><i class="fas fa-download mr-1"></i>安裝 App</button>
-            <button type="button" class="btn-outline btn-icon-only" onclick="openQuickAddModal()" title="快速新增 / 另存連結"><i class="fas fa-puzzle-piece"></i></button>
-            <button type="button" class="btn-outline btn-icon-only" onclick="openFolderModal()" title="管理資料夾、標籤與清理重複"><i class="fas fa-folder-plus"></i></button>
-            <button type="button" class="btn-outline btn-icon-only" onclick="toggleBatchMode()" title="批次管理 (B)"><i class="fas fa-check-square"></i></button>
-            <button type="button" class="btn-outline btn-icon-only" id="btn-dead-check" onclick="startDeadLinkCheck()" title="失效檢測 (檢測中再次點擊可停止)"><i class="fas fa-heartbeat" id="dead-check-icon"></i><span id="dead-check-text" style="display:none;font-size:0.7rem;margin-left:3px;"></span></button>
-            <button type="button" class="btn-outline btn-icon-only" onclick="openFontModal()" title="字體與顯示設置"><i class="fas fa-font"></i></button>
-            <button type="button" class="btn-outline btn-icon-only" onclick="exportAsMarkdown()" title="複製為 Markdown"><i class="fab fa-markdown"></i></button>
-            <button type="button" class="btn-outline btn-icon-only" id="btn-theme" onclick="toggleTheme()" title="切換主題"><i class="fas fa-sun" id="theme-icon"></i></button>
-            <button type="button" class="btn-outline btn-icon-only" id="btn-refresh" onclick="handleRefresh()" title="重新整理"><i class="fas fa-sync-alt" id="refresh-icon"></i></button>
-            <button type="button" class="btn-outline btn-icon-only" onclick="exportData()" title="匯出 JSON 完整備份"><i class="fas fa-download"></i></button>
-            <button type="button" class="btn-outline btn-icon-only" onclick="exportBookmarksHtml()" title="匯出瀏覽器通用 HTML 書籤檔"><i class="fas fa-file-code"></i></button>
-            <button type="button" class="btn-outline btn-icon-only" onclick="document.getElementById('import-file').click()" title="匯入 JSON 備份或瀏覽器 HTML 書籤 (自動去重)"><i class="fas fa-upload"></i></button>
-            <button type="button" class="btn-outline btn-icon-only" title="擴充功能安裝說明" onclick="openExtensionHelp()"><i class="fas fa-plug"></i></button>
-            <button type="button" class="btn-outline btn-icon-only" onclick="openModal('help-modal')" title="功能說明 (?)"><i class="fas fa-question"></i></button>
+            <button type="button" class="btn-outline btn-icon-only" id="btn-reminders" onclick="openReminderList()" title="稍後閱讀提醒" aria-label="稍後閱讀提醒"><i class="fas fa-bell"></i><span id="reminder-badge" class="count-badge" style="display:none;">0</span></button>
+            <button type="button" class="btn-outline btn-icon-only" onclick="openQuickAddModal()" title="快速新增 / 另存連結" aria-label="快速新增"><i class="fas fa-plus"></i></button>
+            <button type="button" class="btn-outline btn-icon-only" onclick="toggleBatchMode()" title="批次管理 (B)" aria-label="批次管理"><i class="fas fa-check-square"></i></button>
+            <button type="button" class="btn-outline btn-icon-only" id="btn-theme" onclick="toggleTheme()" title="切換主題" aria-label="切換主題"><i class="fas fa-sun" id="theme-icon"></i></button>
+            <div class="menu-wrap">
+                <button type="button" class="btn-outline btn-icon-only" id="btn-menu" aria-haspopup="true" aria-expanded="false" onclick="toggleHeaderMenu(event)" title="更多功能" aria-label="更多功能"><i class="fas fa-ellipsis"></i><span id="menu-progress" class="count-badge warn" style="display:none;"></span></button>
+                <div id="header-menu" class="header-menu" role="menu" style="display:none;">
+                    <div id="user-info" class="menu-user" style="display:none;"></div>
+                    <button type="button" class="menu-item" role="menuitem" onclick="openFolderModal()"><i class="fas fa-folder-plus"></i>管理資料夾與標籤</button>
+                    <button type="button" class="menu-item" role="menuitem" onclick="openFontModal()"><i class="fas fa-sliders-h"></i>顯示、閱讀與隱私設置</button>
+                    <button type="button" class="menu-item" role="menuitem" id="btn-refresh" onclick="handleRefresh()"><i class="fas fa-sync-alt" id="refresh-icon"></i>重新整理</button>
+                    <button type="button" class="menu-item" role="menuitem" id="btn-dead-check" onclick="startDeadLinkCheck()" title="失效檢測 (檢測中再次點擊可停止)"><i class="fas fa-heartbeat" id="dead-check-icon"></i>失效檢測<span id="dead-check-text" style="display:none;font-size:0.72rem;margin-left:auto;"></span></button>
+                    <div class="menu-sep"></div>
+                    <button type="button" class="menu-item" role="menuitem" onclick="exportData()"><i class="fas fa-download"></i>匯出 JSON 完整備份</button>
+                    <button type="button" class="menu-item" role="menuitem" onclick="exportBookmarksHtml()"><i class="fas fa-file-code"></i>匯出瀏覽器 HTML 書籤</button>
+                    <button type="button" class="menu-item" role="menuitem" onclick="document.getElementById('import-file').click()"><i class="fas fa-upload"></i>匯入 JSON / HTML 書籤</button>
+                    <button type="button" class="menu-item" role="menuitem" onclick="exportAsMarkdown()"><i class="fab fa-markdown"></i>複製為 Markdown</button>
+                    <div class="menu-sep"></div>
+                    <button type="button" class="menu-item" role="menuitem" id="btn-install-pwa" title="將本應用程式安裝至桌面或手機主畫面"><i class="fas fa-download"></i>安裝 App</button>
+                    <button type="button" class="menu-item" role="menuitem" onclick="openExtensionHelp()"><i class="fas fa-plug"></i>擴充功能安裝說明</button>
+                    <button type="button" class="menu-item" role="menuitem" onclick="openModal('help-modal')"><i class="fas fa-question"></i>功能說明 (?)</button>
+                    <button type="button" class="menu-item" role="menuitem" id="btn-logout" style="display:none;" onclick="handleLogout()"><i class="fas fa-sign-out-alt"></i>登出</button>
+                </div>
+            </div>
             <input type="file" id="import-file" style="display:none" accept=".json,.html,.htm" onchange="importData(event)">
-            <button type="button" class="btn-outline btn-icon-only" id="btn-logout" style="display:none;" onclick="handleLogout()" title="登出"><i class="fas fa-sign-out-alt"></i></button>
         </div>
     </header>
 
@@ -314,6 +412,7 @@
     </main>
 
     <main id="app-screen">
+        <div id="reminder-banner" class="reminder-banner" style="display:none;"></div>
         <div class="control-panel">
             <div class="input-section">
                 <div class="url-input-wrap">
@@ -324,6 +423,7 @@
             </div>
             <div>
                 <div class="chips-container" id="folder-chips"></div>
+                <div class="chips-container" id="subfolder-chips" style="display:none;"></div>
                 <div class="chips-container" id="tag-chips"></div>
                 <div class="filter-section">
                     <div class="search-box">
@@ -339,6 +439,8 @@
                             <option value="read" id="opt-status-read">✅ 僅看已讀</option>
                             <option value="pinned" id="opt-status-pinned">⭐ 僅看釘選</option>
                             <option value="dead" id="opt-status-dead">💔 僅看失效</option>
+                            <option value="due" id="opt-status-due">⏰ 提醒到期</option>
+                            <option value="reminder" id="opt-status-reminder">🔔 已設提醒</option>
                         </select>
                         <select id="sort-select" class="sort-select" onchange="handleSortChange(this.value)" title="排序方式">
                             <option value="newest">🕒 最新加入</option>
@@ -346,6 +448,7 @@
                             <option value="clicks">🔥 最常造訪</option>
                             <option value="title">🔤 標題 A-Z</option>
                             <option value="random">🎲 隨機靈感</option>
+                            <option value="remind">⏰ 提醒時間</option>
                         </select>
                         <button type="button" class="btn-outline btn-icon-only" onclick="toggleView()" title="切換瀑布流 / 列表視圖"><i class="fas fa-grip-vertical" id="view-icon"></i></button>
                         <button type="button" class="btn-outline" id="btn-kanban" onclick="toggleKanbanView()" title="看板模式" style="font-size:0.75rem;padding:0.4rem 0.6rem;"><i class="fas fa-columns"></i> 看板</button>
@@ -397,9 +500,11 @@
 
             <!-- 1. 頂部工具列圖示全覽 -->
             <div class="help-section">
-                <div class="help-section-title"><i class="fas fa-compass"></i> 1. 頂部工具列按鈕對照表（由左至右）</div>
+                <div class="help-section-title"><i class="fas fa-compass"></i> 1. 頂部工具列與「⋯」更多選單</div>
                 <div class="help-icon-grid">
-                    <div class="help-icon-item"><span class="help-icon-badge"><i class="fas fa-puzzle-piece"></i></span><span><strong>快速新增：</strong>自訂標題與點選標籤另存</span></div>
+                    <div class="help-icon-item"><span class="help-icon-badge"><i class="fas fa-bell"></i></span><span><strong>稍後閱讀提醒：</strong>徽章顯示已到期筆數，點擊檢視</span></div>
+                    <div class="help-icon-item"><span class="help-icon-badge"><i class="fas fa-plus"></i></span><span><strong>快速新增：</strong>自訂標題與點選標籤另存</span></div>
+                    <div class="help-icon-item"><span class="help-icon-badge"><i class="fas fa-ellipsis"></i></span><span><strong>更多選單：</strong>以下管理、顯示、匯出入、失效檢測等功能都收在這裡</span></div>
                     <div class="help-icon-item"><span class="help-icon-badge"><i class="fas fa-folder-plus"></i></span><span><strong>分類管理：</strong>資料夾排序、標籤改名、去重</span></div>
                     <div class="help-icon-item"><span class="help-icon-badge"><i class="fas fa-check-square"></i></span><span><strong>批次管理：</strong>多選移動、加標籤、標已讀</span></div>
                     <div class="help-icon-item"><span class="help-icon-badge"><i class="fas fa-heartbeat"></i></span><span><strong>失效檢測：</strong>巡檢死鏈（再次點擊可停止）</span></div>
@@ -480,6 +585,16 @@
                 </ul>
             </div>
 
+            <div class="help-section">
+                <div class="help-section-title"><i class="fas fa-folder-tree"></i> 7. 巢狀資料夾、稍後閱讀提醒、隱私模式與標籤建議</div>
+                <ul class="help-list">
+                    <li><span><strong>巢狀資料夾（最多 4 層）：</strong>在「管理資料夾與標籤」按 <i class="fas fa-folder-plus"></i> 新增子資料夾、<i class="fas fa-right-left"></i> 移動到其他資料夾；同層內可拖曳排序。點選上層資料夾會一併顯示所有子資料夾內的連結。刪除資料夾時，連結與子資料夾會移到上一層。</span></li>
+                    <li><span><strong>稍後閱讀提醒：</strong>卡片上的 <i class="fas fa-bell"></i> 或編輯視窗可設定提醒時間；到期後頂部鈴鐺會顯示筆數並出現橫幅。標為已讀後即視為完成。</span></li>
+                    <li><span><strong>隱私模式（不抓取預覽）：</strong>於「顯示、閱讀與隱私設置」開啟後，不會把網址送到 Microlink、YouTube、Google favicon 服務，也不載入縮圖；失效檢測與重抓資訊會停用。</span></li>
+                    <li><span><strong>標籤建議：</strong>依「同網域常用標籤」「既有標籤出現在標題內」「網域規則」「關鍵字」在新增與編輯時建議標籤；也可在設定中關閉儲存時自動套用。</span></li>
+                </ul>
+            </div>
+
             <div class="flex justify-end mt-5">
                 <button type="button" class="btn-primary" onclick="closeModal('help-modal')" style="width:100%;justify-content:center;">我知道了</button>
             </div>
@@ -490,7 +605,7 @@
     <div class="modal-overlay" id="font-modal" onclick="if(event.target===this)closeModal('font-modal')">
         <div class="modal">
             <div class="flex justify-between items-center mb-4">
-                <h3 class="text-lg font-bold"><i class="fas fa-sliders-h mr-2" style="color:var(--primary);"></i>顯示與閱讀設置</h3>
+                <h3 class="text-lg font-bold"><i class="fas fa-sliders-h mr-2" style="color:var(--primary);"></i>顯示、閱讀與隱私設置</h3>
                 <span id="font-percent-display" class="font-value-display" style="font-size:1.1rem;background:var(--bg-dark);padding:0.2rem 0.6rem;border-radius:6px;border:1px solid var(--border-color);">100%</span>
             </div>
 
@@ -499,7 +614,7 @@
                 <div style="font-size:0.7rem;color:var(--text-muted);margin-bottom:0.4rem;">即時預覽效果：</div>
                 <div class="link-card" style="pointer-events:none;margin:0;box-shadow:none;">
                     <div class="link-image-preview" style="height:80px;">
-                        <img src="https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=500&auto=format&fit=crop&q=60" alt="預覽圖">
+                        <div style="width:100%;height:100%;background:linear-gradient(135deg,#6366f1,#7c3aed,#ec4899);"></div>
                     </div>
                     <div class="card-body-row">
                         <div class="card-text-col">
@@ -508,7 +623,7 @@
                             <span class="link-url-display">https://example.com/preview-link</span>
                         </div>
                         <div class="link-thumb-small">
-                            <img src="https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=200&auto=format&fit=crop&q=60" alt="小縮圖">
+                            <div style="width:100%;height:100%;background:linear-gradient(135deg,#6366f1,#7c3aed,#ec4899);"></div>
                         </div>
                     </div>
                     <div class="card-footer">
@@ -541,6 +656,18 @@
                     <input type="checkbox" id="auto-read-checkbox" style="width:16px;height:16px;accent-color:var(--primary);cursor:pointer;" onchange="toggleAutoReadSetting(this.checked)">
                 </label>
             </div>
+            <div class="form-group mt-3">
+                <label class="setting-row">
+                    <span class="text-xs font-medium"><i class="fas fa-lightbulb mr-1.5" style="color:var(--warning);"></i>儲存連結時，自動套用建議標籤<small>依同網域常用標籤、關鍵字與既有標籤判斷，最多補 2 個</small></span>
+                    <input type="checkbox" id="auto-tag-checkbox" style="width:16px;height:16px;accent-color:var(--primary);cursor:pointer;" onchange="toggleAutoTagSetting(this.checked)">
+                </label>
+            </div>
+            <div class="form-group mt-3">
+                <label class="setting-row">
+                    <span class="text-xs font-medium"><i class="fas fa-user-shield mr-1.5" style="color:var(--success);"></i>隱私模式：不抓取預覽<small>不把網址送到 Microlink / YouTube / Google favicon，也不載入縮圖；失效檢測與重抓資訊會停用</small></span>
+                    <input type="checkbox" id="privacy-checkbox" style="width:16px;height:16px;accent-color:var(--primary);cursor:pointer;" onchange="setPrivacyMode(this.checked)">
+                </label>
+            </div>
 
             <div class="form-group mt-3">
                 <label>拖曳滑桿或點擊按鈕微調字體 (80% ~ 200%)</label>
@@ -570,11 +697,11 @@
             <h3 class="text-lg font-bold mb-3">🧩 快速新增 / 另存連結</h3>
             <div class="form-group">
                 <label>網址或分享文案 (必填，自動提取網址與清除追蹤碼)</label>
-                <input type="text" id="quick-add-url" placeholder="請貼上網址或帶文字的分享內容" onkeydown="handleEnter(event, executeQuickAdd)">
+                <input type="text" id="quick-add-url" placeholder="請貼上網址或帶文字的分享內容" oninput="renderModalTagSuggestions('quick-add-tags', 'quick-add-tag-suggestions')" onkeydown="handleEnter(event, executeQuickAdd)">
             </div>
             <div class="form-group">
                 <label>標題 (可留空，將自動抓取)</label>
-                <input type="text" id="quick-add-title" placeholder="自訂標題" onkeydown="handleEnter(event, executeQuickAdd)">
+                <input type="text" id="quick-add-title" placeholder="自訂標題" oninput="renderModalTagSuggestions('quick-add-tags', 'quick-add-tag-suggestions')" onkeydown="handleEnter(event, executeQuickAdd)">
             </div>
             <div class="form-group">
                 <label>標籤 (逗號分隔，或點擊下方現有標籤快速帶入)</label>
@@ -598,8 +725,12 @@
 
             <!-- 分頁 1：資料夾管理 -->
             <div id="manage-pane-folders">
-                <p class="text-xs mb-2" style="color:var(--text-muted);">按住左側 <i class="fas fa-grip-vertical"></i> 可上下拖曳調整資料夾排列順序：</p>
-                <div id="folder-list" class="mb-3 max-h-52 overflow-y-auto"></div>
+                <p class="text-xs mb-2" style="color:var(--text-muted);">按住 <i class="fas fa-grip-vertical"></i> 可在同一層內拖曳排序；<i class="fas fa-folder-plus"></i> 新增子資料夾、<i class="fas fa-right-left"></i> 移動到其他資料夾（最多 4 層）：</p>
+                <div id="folder-list" class="mb-3 overflow-y-auto" style="max-height:min(40vh,18rem);"></div>
+                <div class="flex gap-2 items-center mb-2">
+                    <span class="text-xs" style="color:var(--text-muted);white-space:nowrap;">建立在</span>
+                    <select id="new-folder-parent" class="folder-select" onchange="newFolderParentSel=this.value"></select>
+                </div>
                 <div class="flex gap-2 items-center">
                     <select id="new-folder-icon" style="width:70px;padding:0.5rem;border-radius:6px;border:1px solid var(--border-color);background:var(--bg-dark);color:var(--text-main);font-size:0.85rem;">
                         <option value="fa-folder">📁</option>
@@ -674,8 +805,15 @@
                     <button type="button" class="btn-outline btn-sm" id="btn-refetch-edit" onclick="refetchInEditModal()" title="重新抓取最新標題、摘要與預覽圖" style="white-space:nowrap;"><i class="fas fa-sync-alt" id="refetch-edit-icon"></i> 重抓資訊</button>
                 </div>
             </div>
-            <div class="form-group"><label>標題</label><input type="text" id="edit-title" onkeydown="handleEnter(event, saveEdit)"></div>
+            <div class="form-group"><label>標題</label><input type="text" id="edit-title" oninput="renderModalTagSuggestions('edit-categories', 'edit-tag-suggestions')" onkeydown="handleEnter(event, saveEdit)"></div>
             <div class="form-group"><label>資料夾</label><select id="edit-folder"></select></div>
+            <div class="form-group">
+                <label>稍後閱讀提醒 (可留空)</label>
+                <div class="flex gap-1.5">
+                    <input type="datetime-local" id="edit-remind" class="flex-1">
+                    <button type="button" class="btn-outline btn-sm" onclick="document.getElementById('edit-remind').value=''" style="white-space:nowrap;">清除</button>
+                </div>
+            </div>
             <div class="form-group">
                 <label>標籤 (逗號分隔，或點擊下方標籤增減)</label>
                 <input type="text" id="edit-categories" oninput="renderModalTagSuggestions('edit-categories', 'edit-tag-suggestions')" onkeydown="handleEnter(event, saveEdit)">
@@ -685,6 +823,50 @@
             <div class="flex justify-end gap-2 mt-3">
                 <button type="button" class="btn-outline" onclick="closeModal('edit-modal')">取消</button>
                 <button type="button" class="btn-primary" onclick="saveEdit()">儲存</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 移動資料夾 Modal -->
+    <div class="modal-overlay" id="folder-move-modal" onclick="if(event.target===this)closeModal('folder-move-modal')">
+        <div class="modal">
+            <h3 class="text-lg font-bold mb-3"><i class="fas fa-right-left mr-2" style="color:var(--primary);"></i>移動資料夾</h3>
+            <input type="hidden" id="folder-move-id">
+            <p class="text-sm mb-3">將「<strong id="folder-move-name"></strong>」（含其子資料夾）移到：</p>
+            <div class="form-group">
+                <label>新的上層資料夾</label>
+                <select id="folder-move-parent"></select>
+            </div>
+            <div class="flex justify-end gap-2 mt-4">
+                <button type="button" class="btn-outline" onclick="closeModal('folder-move-modal')">取消</button>
+                <button type="button" class="btn-primary" onclick="confirmFolderMove()">確認移動</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 稍後閱讀提醒 Modal -->
+    <div class="modal-overlay" id="remind-modal" onclick="if(event.target===this)closeModal('remind-modal')">
+        <div class="modal">
+            <h3 class="text-lg font-bold mb-3"><i class="fas fa-bell mr-2" style="color:var(--primary);"></i>稍後閱讀提醒</h3>
+            <input type="hidden" id="remind-link-id">
+            <p id="remind-link-title" class="text-xs mb-3" style="color:var(--text-muted);word-break:break-all;"></p>
+            <div class="remind-quick">
+                <button type="button" class="btn-outline" onclick="applyRemindPreset('hour')">⏱️ 1 小時後</button>
+                <button type="button" class="btn-outline" onclick="applyRemindPreset('tonight')">🌙 今晚 20:00</button>
+                <button type="button" class="btn-outline" onclick="applyRemindPreset('tomorrow')">🌅 明天 09:00</button>
+                <button type="button" class="btn-outline" onclick="applyRemindPreset('weekend')">🛋️ 週六 10:00</button>
+                <button type="button" class="btn-outline" onclick="applyRemindPreset('nextweek')">📅 下週一 09:00</button>
+            </div>
+            <div class="form-group mt-3">
+                <label>或自訂時間</label>
+                <input type="datetime-local" id="remind-custom">
+            </div>
+            <div class="flex justify-between gap-2 mt-4">
+                <button type="button" class="btn-outline" style="color:var(--danger);border-color:var(--danger);" onclick="clearRemind()">清除提醒</button>
+                <div class="flex gap-2">
+                    <button type="button" class="btn-outline" onclick="closeModal('remind-modal')">取消</button>
+                    <button type="button" class="btn-primary" onclick="saveCustomRemind()">設定</button>
+                </div>
             </div>
         </div>
     </div>
@@ -734,6 +916,16 @@
         let isKanbanMode=false,activeTag='all',activeFolder='all',isInitialRender=true;
         let rawLinksCache=[],allLinksCache=[],allFoldersCache=[],randomWeightMap=new Map(),searchTimeout,batchMode=false,selectedIds=new Set();
         let lastBatchClickedId = null;
+
+        // ---- v3 狀態 ----
+        let privacyNoPreview = localStorage.getItem('privacyNoPreview') === 'true';
+        let autoTagSuggest = localStorage.getItem('autoTagSuggest') !== 'false';
+        const MAX_FOLDER_DEPTH = 4;
+        let newFolderParentSel = '';
+        const cardCache = new Map();
+        let layoutKey = '', masonryCols = 0, masonryColEls = [];
+        let lastDueCount = -1, reminderBannerDismissedFor = '';
+        const BASE_TITLE = document.title;
         let isCheckingLinks=false,abortDeadCheck=false,isSavingUrl=false,hasPromptedCloudSync=false;
         let lastCloudErrorAt = 0;
         let lastCloudErrorCode = '';
@@ -753,6 +945,12 @@
             allFoldersCache = [];
             randomWeightMap.clear();
             hasPromptedCloudSync = false;
+            selectedIds.clear();
+            // 清掉畫面上的舊卡片，避免切換／登出後殘留上一位使用者的資料。
+            const lc = document.getElementById('links-container');
+            if (lc) { lc.innerHTML = ''; layoutKey = ''; masonryColEls = []; cardCache.clear(); }
+            const sentinel = document.getElementById('load-more-sentinel');
+            if (sentinel) sentinel.style.display = 'none';
         }
 
         // 統一呈現 Firestore 錯誤：保留詳細錯誤供除錯，並避免多個監聽器連續彈出相同提示。
@@ -781,6 +979,9 @@
         // 縮圖寫回防抖：避免圖片 onload → Firestore snapshot → 整頁重繪 → hover 按鈕閃爍
         const thumbnailPersistState = new Map();
         const thumbnailRecoveryInFlight = new Set();
+        const thumbnailRecoveryAttempted = new Set();
+        const thumbnailRecoveryQueue = [];
+        let thumbnailRecoveryActive = 0;
 
         // PWA 原生安裝提示
         let deferredPrompt;
@@ -863,7 +1064,16 @@
         function cleanUrl(rawUrl) {
             let u = String(rawUrl || '').trim();
             if (!u) return '';
-            if (!/^https?:\/\//i.test(u)) u = 'https://' + u;
+            if (!/^https?:\/\//i.test(u)) {
+                // 沒有 scheme 時，必須長得像網域／localhost／IP，避免把任何單字當成網址。
+                const looksLikeHost = !/\s/.test(u) && (
+                    /^[^\s\/?#]+\.[^\s\/?#.]{2,}([\/?#]|$)/.test(u) ||
+                    /^localhost(:\d+)?([\/?#]|$)/i.test(u) ||
+                    /^\d{1,3}(\.\d{1,3}){3}(:\d+)?([\/?#]|$)/.test(u)
+                );
+                if (!looksLikeHost) return '';
+                u = 'https://' + u;
+            }
             try {
                 const urlObj = new URL(u);
                 if (urlObj.protocol !== 'http:' && urlObj.protocol !== 'https:') return '';
@@ -871,7 +1081,7 @@
                     'utm_source', 'utm_medium', 'utm_campaign', 'utm_term', 'utm_content', 'utm_id',
                     'fbclid', 'igshid', 'igsh', 'gclid', 'msclkid', 'mc_cid', 'mc_eid',
                     '_ga', '_gl', 'twclid', 'ttclid', 'spm', 'spm_id_from', 'vd_source', 'from_source',
-                    'xmt', 'xhsshare', 'xsec_token', 'xsec_source', 'app_platform', 'share_from_user_hidden'
+                    'xmt', 'xhsshare', 'xsec_source', 'app_platform', 'share_from_user_hidden'
                 ];
                 stripParams.forEach(p => urlObj.searchParams.delete(p));
                 if (/(youtube\.com|youtu\.be|spotify\.com)$/i.test(urlObj.hostname)) {
@@ -884,6 +1094,52 @@
             }
         }
 
+
+        // 只用於「判斷是否重複」的比對鍵：忽略 http/https、www.、尾端斜線、hash 與參數順序。
+        function dedupeKey(rawUrl) {
+            const cu = cleanUrl(rawUrl) || String(rawUrl || '');
+            try {
+                const o = new URL(cu);
+                const host = o.hostname.replace(/^www\./i, '').toLowerCase();
+                const path = o.pathname.replace(/\/+$/, '');
+                const params = [...o.searchParams.entries()].sort((a, b) => a[0].localeCompare(b[0]) || a[1].localeCompare(b[1]));
+                const qs = params.length ? '?' + new URLSearchParams(params).toString() : '';
+                return host + (o.port ? ':' + o.port : '') + path + qs;
+            } catch {
+                return cu;
+            }
+        }
+
+        // 匯入資料白名單：只保留已知欄位並檢查型別與長度，避免任意欄位或超大內容寫入資料庫。
+        function sanitizeImportedLink(x, cleanedUrl, id, folderId, now, idx) {
+            const str = (v, max) => String(v == null ? '' : v).slice(0, max);
+            const httpThumb = v => { const t = normalizeThumbnailUrl(v); return (/^https?:\/\//i.test(t) && t.length <= 2048) ? t : ''; };
+            const cats = (Array.isArray(x?.categories) ? x.categories : (x?.categories ? [x.categories] : []))
+                .map(t => str(t, 40).trim()).filter(Boolean).slice(0, 30);
+            const created = Number(x?.createdAt);
+            const clicks = Number(x?.clicks);
+            const image = httpThumb(x?.image);
+            return {
+                id,
+                url: cleanedUrl,
+                title: str(x?.title, 300) || getDomain(cleanedUrl),
+                description: str(x?.description, 1000),
+                categories: [...new Set(cats)],
+                image,
+                imageOriginal: httpThumb(x?.imageOriginal) || image,
+                imageBackup: httpThumb(x?.imageBackup),
+                imageCandidates: uniqueThumbnailUrls([image, ...(Array.isArray(x?.imageCandidates) ? x.imageCandidates : [])].map(httpThumb)).slice(0, 12),
+                folderId,
+                // 缺少 createdAt 的文件不會出現在 orderBy('createdAt') 的雲端查詢結果中，必須補上。
+                createdAt: Number.isFinite(created) && created > 0 ? created : (now - idx),
+                pinned: !!x?.pinned,
+                isRead: !!x?.isRead,
+                isDead: !!x?.isDead,
+                clicks: Number.isFinite(clicks) && clicks > 0 ? Math.floor(clicks) : 0,
+                remindAt: (Number.isFinite(Number(x?.remindAt)) && Number(x?.remindAt) > 0) ? Number(x.remindAt) : 0
+            };
+        }
+
         // 自動從混合分享文案中提取 http/https 網址與備用標題
         function parseInputText(rawText) {
             const str = String(rawText || '').trim();
@@ -893,7 +1149,7 @@
                 return { url: cleanUrl(str), extractedTitle: '' };
             }
             const matchedUrl = urlMatch[0].replace(/[，。！？、）》」』】\]\)]+$/, '');
-            const leftover = str.replace(urlMatch[0], '').replace(/複製此連結.*|打開抖音.*|來看看.*|[【】\[\]「」]/g, ' ').replace(/\s+/g, ' ').trim();
+            const leftover = str.replace(urlMatch[0], '').replace(/複製此連結.*|打開抖音.*|來看看.*|复制打开.*|复制此链接.*|打开抖音.*|打开Dou音.*|来看看.*|[【】\[\]「」]/g, ' ').replace(/\s+/g, ' ').trim();
             return {
                 url: cleanUrl(matchedUrl),
                 extractedTitle: (leftover.length >= 2 && leftover.length <= 80) ? leftover : ''
@@ -1008,21 +1264,24 @@
             if (!container || !inp) return;
 
             const currentSelected = new Set(inp.value.split(/[,，]\s*/).map(t => t.trim()).filter(Boolean));
-            const tagCounts = new Map();
-            rawLinksCache.forEach(l => {
-                if (l.categories) {
-                    const arr = Array.isArray(l.categories) ? l.categories : [l.categories];
-                    arr.forEach(t => { if (t) tagCounts.set(t, (tagCounts.get(t) || 0) + 1); });
-                }
-            });
+            const tagCounts = getTagCounts();
 
-            if (tagCounts.size === 0) {
+            let suggestHtml = '';
+            const ctx = getSuggestionContext(inputId);
+            if (ctx && ctx.url) {
+                const sug = suggestTagsForLink(ctx.url, ctx.title, ctx.desc).filter(s => !currentSelected.has(s.tag)).slice(0, 6);
+                if (sug.length) {
+                    suggestHtml = `<div class="tag-suggest-row"><span class="tag-suggest-label">💡 建議</span>${sug.map(s => `<span class="modal-tag-pill suggest" data-tag="${escapeHtml(s.tag)}" title="${escapeHtml(s.why)}" onclick="toggleTagInInput('${inputId}', '${containerId}', this.dataset.tag)">+ ${escapeHtml(s.tag)}</span>`).join('')}</div>`;
+                }
+            }
+
+            if (tagCounts.size === 0 && !suggestHtml) {
                 container.innerHTML = '';
                 return;
             }
 
             const sortedTags = Array.from(tagCounts.entries()).sort((a, b) => (b[1] - a[1]) || a[0].localeCompare(b[0], 'zh-Hant'));
-            container.innerHTML = sortedTags.map(([t]) => {
+            container.innerHTML = suggestHtml + sortedTags.map(([t]) => {
                 const isSel = currentSelected.has(t);
                 return `<span class="modal-tag-pill ${isSel ? 'selected' : ''}" data-tag="${escapeHtml(t)}" onclick="toggleTagInInput('${inputId}', '${containerId}', this.dataset.tag)">+ ${escapeHtml(t)}</span>`;
             }).join('');
@@ -1048,6 +1307,10 @@
             setThumbMode(currentThumb);
             const cb = document.getElementById('auto-read-checkbox');
             if (cb) cb.checked = autoMarkReadOnClick;
+            const pcb = document.getElementById('privacy-checkbox');
+            if (pcb) pcb.checked = privacyNoPreview;
+            const tcb = document.getElementById('auto-tag-checkbox');
+            if (tcb) tcb.checked = autoTagSuggest;
             openModal('font-modal');
         }
 
@@ -1059,8 +1322,11 @@
         function setThumbMode(mode) {
             const defaultThumb = window.innerWidth <= 768 ? 'none' : 'large';
             const validMode = ['large', 'small', 'none'].includes(mode) ? mode : defaultThumb;
+            const prevThumbClass = Array.from(document.body.classList).find(c => c.startsWith('thumb-mode-'));
             document.body.classList.remove('thumb-mode-large', 'thumb-mode-small', 'thumb-mode-none');
             document.body.classList.add('thumb-mode-' + validMode);
+            // 從「無圖」切回有圖時，補抓先前被略過的縮圖。
+            if (prevThumbClass === 'thumb-mode-none' && validMode !== 'none' && rawLinksCache.length) renderCurrentView(rawLinksCache);
             localStorage.setItem('thumbMode', validMode);
 
             ['large', 'small', 'none'].forEach(m => {
@@ -1075,6 +1341,7 @@
             document.documentElement.style.setProperty('--font-scale', clamped);
             localStorage.setItem('fontScale', clamped);
             document.body.classList.toggle('large-font-layout', clamped >= 1.35);
+            scheduleMasonryRelayout();
             
             const slider = document.getElementById('font-slider');
             const display = document.getElementById('font-percent-display');
@@ -1108,7 +1375,8 @@
         // 重複連結檢查支援自動移入當前所在的特定資料夾
         async function checkDuplicateAndHandle(cleanedUrl) {
             const all = await getAllLinks();
-            const existing = all.find(l => l.url === cleanedUrl || cleanUrl(l.url) === cleanedUrl);
+            const dupKey = dedupeKey(cleanedUrl);
+            const existing = all.find(l => l.url === cleanedUrl || dedupeKey(l.url) === dupKey);
             if (!existing) return false;
 
             const existingFolder = allFoldersCache.find(f => f.id === existing.folderId) || { name: '未分類' };
@@ -1149,10 +1417,11 @@
             links.forEach(l => {
                 const cu = cleanUrl(l.url) || l.url;
                 if (!cu) return;
-                if (!urlMap.has(cu)) {
-                    urlMap.set(cu, { ...l, url: cu });
+                const dk = dedupeKey(cu);
+                if (!urlMap.has(dk)) {
+                    urlMap.set(dk, { ...l, url: cu });
                 } else {
-                    const primary = urlMap.get(cu);
+                    const primary = urlMap.get(dk);
                     const c1 = Array.isArray(primary.categories) ? primary.categories : (primary.categories ? [primary.categories] : []);
                     const c2 = Array.isArray(l.categories) ? l.categories : (l.categories ? [l.categories] : []);
                     primary.categories = [...new Set([...c1, ...c2])];
@@ -1234,7 +1503,7 @@
                 const info = await fetchWebpageInfo(u);
                 let ft = customTitle || extractedTitle || info.title;
                 if (info.account && !ft.includes(info.account)) ft = `${info.account} - ${ft}`;
-                const tags = customTags.length > 0 ? customTags : info.categories;
+                const tags = customTags.length > 0 ? customTags : mergeAutoTags(info.categories, u, ft, info.description);
                 const tf = activeFolder !== 'all' ? activeFolder : 'default';
 
                 const data = {
@@ -1286,7 +1555,7 @@
                 // 只有 processAndSaveUrl 明確回傳成功，才標記為已自動儲存。
                 // 失敗時保留網址，讓使用者可以重新貼上／按「貼上」重試。
                 const saved = await processAndSaveUrl();
-                if (saved) lastAutoSavedUrl = url;
+                if (saved) lastAutoSavedUrl = '';
             }, delay);
         }
 
@@ -1316,7 +1585,7 @@
                     return;
                 }
                 const saved = await processAndSaveUrl();
-                if (saved) lastAutoSavedUrl = url;
+                if (saved) lastAutoSavedUrl = '';
             } catch (e) {
                 // iOS/Android 可能因權限或非安全環境拒絕 Clipboard API。
                 showToast('無法讀取剪貼簿，請長按輸入框選「貼上」', 'error');
@@ -1346,7 +1615,7 @@
             if (displayEl) { const lastMod = document.lastModified; if (lastMod) { const date = new Date(lastMod); if (!isNaN(date.getTime())) displayEl.textContent = date.toLocaleString('zh-TW', { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false }); else displayEl.textContent = '無法讀取'; } }
         }
 
-        function showAppScreen(t){document.getElementById('login-screen').style.display='none';document.getElementById('app-screen').style.display='block';document.getElementById('btn-logout').style.display='inline-flex';document.getElementById('user-info').style.display='inline';document.getElementById('user-info').textContent=t;}
+        function showAppScreen(t){document.getElementById('login-screen').style.display='none';document.getElementById('app-screen').style.display='block';document.getElementById('btn-logout').style.display='inline-flex';document.getElementById('user-info').style.display='block';document.getElementById('user-info').textContent=t;}
         function showLoginScreen(){document.getElementById('login-screen').style.display='flex';document.getElementById('app-screen').style.display='none';document.getElementById('btn-logout').style.display='none';document.getElementById('user-info').style.display='none';}
         
         async function checkAndMergeLocalToCloud(cloudLinks) {
@@ -1357,12 +1626,14 @@
             const localLinks = readLocalJson('my_links', []);
             if (!localLinks.length) return;
 
-            const cloudUrlSet = new Set(cloudLinks.map(x => cleanUrl(x.url) || x.url).filter(Boolean));
+            const cloudUrlSet = new Set(cloudLinks.map(x => dedupeKey(x.url)).filter(Boolean));
             const seenSyncUrls = new Set();
             const unsynced = localLinks.filter(x => {
                 const cu = cleanUrl(x.url);
-                if (!cu || cloudUrlSet.has(cu) || seenSyncUrls.has(cu)) return false;
-                seenSyncUrls.add(cu);
+                if (!cu) return false;
+                const dk = dedupeKey(cu);
+                if (cloudUrlSet.has(dk) || seenSyncUrls.has(dk)) return false;
+                seenSyncUrls.add(dk);
                 return true;
             });
 
@@ -1491,6 +1762,463 @@
             }
         }
 
+        // ======================= v3：資料夾樹（巢狀資料夾） =======================
+        function folderParentOf(f) {
+            const p = safeId(f && f.parentId);
+            return (p && p !== safeId(f && f.id)) ? p : '';
+        }
+
+        // 回傳 { rows: 深度優先排序的列, parentOf, childrenOf }；自動修復孤兒與循環參照。
+        function getFolderTree(folders = allFoldersCache) {
+            const ids = new Set(folders.map(f => f.id));
+            const kids = new Map();
+            folders.forEach(f => {
+                let p = folderParentOf(f);
+                if (!p || !ids.has(p) || p === 'default' || f.id === 'default') p = '';
+                if (!kids.has(p)) kids.set(p, []);
+                kids.get(p).push(f);
+            });
+            const rows = [], parentOf = new Map(), seen = new Set();
+            const walk = (pid, depth) => {
+                sortFoldersArray((kids.get(pid) || []).slice()).forEach(f => {
+                    if (seen.has(f.id)) return;
+                    seen.add(f.id);
+                    parentOf.set(f.id, pid);
+                    rows.push({ folder: f, depth, parentId: pid });
+                    walk(f.id, depth + 1);
+                });
+            };
+            walk('', 0);
+            folders.forEach(f => {
+                if (!seen.has(f.id)) {
+                    seen.add(f.id);
+                    parentOf.set(f.id, '');
+                    rows.push({ folder: f, depth: 0, parentId: '' });
+                    walk(f.id, 1);
+                }
+            });
+            const childrenOf = new Map();
+            rows.forEach(r => {
+                if (!childrenOf.has(r.parentId)) childrenOf.set(r.parentId, []);
+                childrenOf.get(r.parentId).push(r.folder);
+            });
+            return { rows, parentOf, childrenOf };
+        }
+
+        function getFolderSubtreeIds(id, tree = getFolderTree()) {
+            const out = new Set([id]);
+            const stack = [id];
+            while (stack.length) {
+                const cur = stack.pop();
+                (tree.childrenOf.get(cur) || []).forEach(c => {
+                    if (!out.has(c.id)) { out.add(c.id); stack.push(c.id); }
+                });
+            }
+            return out;
+        }
+
+        // 由上到下的祖先 id（不含自己）
+        function getFolderAncestors(id, tree = getFolderTree()) {
+            const path = [], guard = new Set();
+            let cur = tree.parentOf.get(id) || '';
+            while (cur && !guard.has(cur)) {
+                guard.add(cur);
+                path.unshift(cur);
+                cur = tree.parentOf.get(cur) || '';
+            }
+            return path;
+        }
+
+        // 以此資料夾為根的子樹層數（單獨一個 = 1）
+        function getFolderHeight(id, tree = getFolderTree()) {
+            const kids = tree.childrenOf.get(id) || [];
+            return 1 + (kids.length ? Math.max(...kids.map(k => getFolderHeight(k.id, tree))) : 0);
+        }
+
+        // 可作為「上層」的選項：排除指定 id，且放入後不得超過 MAX_FOLDER_DEPTH 層
+        function buildParentOptions(selectedId, excludeIds, subtreeHeight) {
+            const tree = getFolderTree();
+            let h = `<option value="" ${!selectedId ? 'selected' : ''}>（頂層）</option>`;
+            tree.rows.forEach(({ folder, depth }) => {
+                if (excludeIds && excludeIds.has(folder.id)) return;
+                if (depth + subtreeHeight > MAX_FOLDER_DEPTH - 1) return;
+                const pad = depth ? '  '.repeat(depth) + '└ ' : '';
+                h += `<option value="${safeId(folder.id)}" ${selectedId === folder.id ? 'selected' : ''}>${pad}${escapeHtml(folder.name)}</option>`;
+            });
+            return h;
+        }
+
+        // 一般資料夾下拉（編輯連結、批次移動），以縮排顯示階層
+        function folderOptionsHtml(selectedId) {
+            const tree = getFolderTree();
+            return tree.rows.map(({ folder, depth }) => {
+                const pad = depth ? '  '.repeat(depth) + '└ ' : '';
+                return `<option value="${safeId(folder.id)}" ${selectedId === folder.id ? 'selected' : ''}>${pad}${escapeHtml(folder.name)}</option>`;
+            }).join('');
+        }
+
+        // ======================= v3：標籤建議 =======================
+        const GENERIC_TAGS = new Set(['一般網站', '書籤匯入', '擴充功能', '快速新增']);
+        const DOMAIN_TAGS = [
+            [/(^|\.)youtube\.com$|^youtu\.be$|(^|\.)bilibili\.com$|(^|\.)vimeo\.com$/, ['影片']],
+            [/(^|\.)github\.com$|(^|\.)gitlab\.com$|(^|\.)stackoverflow\.com$|(^|\.)npmjs\.com$|(^|\.)developer\.mozilla\.org$/, ['開發']],
+            [/(^|\.)(twitter|x|facebook|instagram|threads|reddit)\.(com|net)$/, ['社群']],
+            [/(^|\.)(figma|dribbble|behance)\.(com|net)$/, ['設計']],
+            [/(^|\.)(amazon|shopee|taobao|momoshop|pchome|ruten)\./, ['購物']],
+            [/(^|\.)(spotify|soundcloud)\.com$/, ['音樂']],
+            [/(^|\.)arxiv\.org$|(^|\.)scholar\.google\./, ['研究']],
+            [/(^|\.)wikipedia\.org$/, ['百科']],
+            [/(^|\.)notion\.(so|site)$/, ['筆記']],
+            [/(^|\.)medium\.com$|(^|\.)substack\.com$/, ['文章']]
+        ];
+        const TAG_KEYWORDS = [
+            ['AI', /\b(ai|gpt|chatgpt|openai|claude|gemini|llm|copilot|midjourney|machine learning|deep learning)\b|人工智慧|大型語言模型|生成式|機器學習|深度學習/i],
+            ['開發', /\b(github|api|sdk|javascript|typescript|python|java|rust|golang|react|vue|node\.?js|docker|kubernetes|programming|developer|npm|css|html|sql|linux)\b|程式|開發|前端|後端|演算法/i],
+            ['教學', /\b(tutorial|how to|how-to|guide|course|lesson|beginner|handbook)\b|教學|教程|入門|課程|學習|指南/i],
+            ['新聞', /\b(news|breaking|headline)\b|新聞|快訊|報導|時事/i],
+            ['購物', /\b(shop|shopping|coupon|deal|amazon|taobao|shopee)\b|購物|商品|優惠|折扣|團購|蝦皮|淘寶/i],
+            ['設計', /\b(design|figma|dribbble|behance|typography|illustration)\b|設計|配色|插畫/i],
+            ['影片', /\b(video|youtube|vimeo|bilibili|netflix)\b|影片|影音|直播/i],
+            ['音樂', /\b(music|spotify|soundcloud|playlist|album|lyrics)\b|音樂|歌曲|歌詞|專輯/i],
+            ['食譜', /\b(recipe|cooking|baking)\b|食譜|料理|美食|餐廳|烘焙/i],
+            ['旅遊', /\b(travel|trip|hotel|airbnb|flight|itinerary)\b|旅遊|旅行|景點|住宿|機票|行程/i],
+            ['財經', /\b(stock|finance|invest|crypto|bitcoin|etf|economy)\b|財經|股票|投資|理財|基金|加密|匯率/i],
+            ['健康', /\b(health|fitness|workout|nutrition|medical|yoga)\b|健康|健身|營養|醫療/i],
+            ['遊戲', /\b(game|gaming|steam|playstation|nintendo|esports)\b|遊戲|電玩/i],
+            ['研究', /\b(arxiv|paper|research|journal)\b|論文|研究|期刊/i]
+        ];
+
+        function getTagCounts() {
+            const m = new Map();
+            rawLinksCache.forEach(l => {
+                const arr = Array.isArray(l.categories) ? l.categories : (l.categories ? [l.categories] : []);
+                arr.forEach(t => { if (t) m.set(t, (m.get(t) || 0) + 1); });
+            });
+            return m;
+        }
+
+        // 回傳 [{ tag, why }]，由高到低可信度；全部在本機計算，不會對外送出任何資料。
+        function suggestTagsForLink(url, title, description) {
+            const out = [];
+            const push = (tag, why) => { if (tag && !out.some(o => o.tag === tag)) out.push({ tag, why }); };
+            const host = String(getDomain(url) || '').toLowerCase().replace(/^www\./, '');
+            const counts = getTagCounts();
+
+            if (host) {
+                const dom = new Map();
+                rawLinksCache.forEach(l => {
+                    if (String(getDomain(l.url) || '').toLowerCase().replace(/^www\./, '') !== host) return;
+                    (Array.isArray(l.categories) ? l.categories : []).forEach(t => {
+                        if (t && !GENERIC_TAGS.has(t)) dom.set(t, (dom.get(t) || 0) + 1);
+                    });
+                });
+                [...dom.entries()].sort((a, b) => b[1] - a[1]).slice(0, 3).forEach(([t]) => push(t, '同網域常用'));
+            }
+
+            const text = `${title || ''} ${description || ''}`.toLowerCase();
+            if (text.trim()) {
+                [...counts.keys()].sort((a, b) => counts.get(b) - counts.get(a)).forEach(t => {
+                    if (t.length >= 2 && !GENERIC_TAGS.has(t) && text.includes(t.toLowerCase())) push(t, '內容提到此標籤');
+                });
+            }
+            DOMAIN_TAGS.forEach(([re, tags]) => { if (re.test(host)) tags.forEach(t => push(t, '依網域')); });
+            if (text.trim()) TAG_KEYWORDS.forEach(([tag, re]) => { if (re.test(text)) push(tag, '依關鍵字'); });
+            return out.slice(0, 8);
+        }
+
+        function mergeAutoTags(base, url, title, desc) {
+            const cats = Array.isArray(base) ? base.slice() : [];
+            if (!autoTagSuggest) return cats;
+            try {
+                const picks = suggestTagsForLink(url, title, desc).filter(s => !cats.includes(s.tag)).slice(0, 2).map(s => s.tag);
+                return [...new Set([...cats, ...picks])];
+            } catch (e) { return cats; }
+        }
+
+        function getSuggestionContext(inputId) {
+            const val = id => { const el = document.getElementById(id); return el ? el.value : ''; };
+            if (inputId === 'edit-categories') return { url: val('edit-url'), title: val('edit-title'), desc: val('edit-desc') };
+            if (inputId === 'quick-add-tags') {
+                const p = parseInputText(val('quick-add-url'));
+                return { url: p.url || '', title: val('quick-add-title') || p.extractedTitle || '', desc: '' };
+            }
+            return null;
+        }
+
+        function toggleAutoTagSetting(checked) {
+            autoTagSuggest = !!checked;
+            localStorage.setItem('autoTagSuggest', autoTagSuggest ? 'true' : 'false');
+        }
+
+        // ======================= v3：隱私模式 =======================
+        function applyPrivacyClass() {
+            document.body.classList.toggle('privacy-mode', privacyNoPreview);
+        }
+
+        function setPrivacyMode(checked) {
+            privacyNoPreview = !!checked;
+            localStorage.setItem('privacyNoPreview', privacyNoPreview ? 'true' : 'false');
+            applyPrivacyClass();
+            cardCache.clear();
+            if (rawLinksCache.length) renderCurrentView(rawLinksCache);
+            showToast(privacyNoPreview ? '🔒 隱私模式已開啟：不再對外抓取預覽、縮圖與 favicon' : '🔓 已關閉隱私模式', 'success');
+        }
+
+        // ======================= v3：稍後閱讀提醒 =======================
+        function getRemindTs(l) {
+            const t = Number(l && l.remindAt);
+            return Number.isFinite(t) && t > 0 ? t : 0;
+        }
+        function isDueLink(l, now = Date.now()) {
+            const t = getRemindTs(l);
+            return t > 0 && t <= now && !l.isRead;
+        }
+        function countDueLinks() {
+            const now = Date.now();
+            let n = 0;
+            rawLinksCache.forEach(l => { if (isDueLink(l, now)) n++; });
+            return n;
+        }
+        function formatRemindTime(ts) {
+            return new Date(ts).toLocaleString('zh-TW', { month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', hour12: false });
+        }
+        function toLocalInputValue(ts) {
+            const d = new Date(ts), p = n => String(n).padStart(2, '0');
+            return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}T${p(d.getHours())}:${p(d.getMinutes())}`;
+        }
+        function parseRemindInput(v) {
+            if (!v) return 0;
+            const t = new Date(v).getTime();
+            return Number.isFinite(t) && t > 0 ? t : 0;
+        }
+
+        function refreshReminderUI() {
+            const now = Date.now();
+            let due = 0;
+            rawLinksCache.forEach(l => { if (isDueLink(l, now)) due++; });
+            lastDueCount = due;
+            const badge = document.getElementById('reminder-badge');
+            if (badge) { badge.style.display = due ? 'flex' : 'none'; badge.textContent = due > 99 ? '99+' : String(due); }
+            document.title = (due ? `(${due}) ` : '') + BASE_TITLE;
+            const banner = document.getElementById('reminder-banner');
+            if (banner) {
+                if (due && reminderBannerDismissedFor !== String(due) && activeStatus !== 'due') {
+                    banner.style.display = 'flex';
+                    banner.innerHTML = `<span><i class="fas fa-bell"></i>有 <strong>${due}</strong> 筆稍後閱讀已到期</span><span class="flex gap-2"><button type="button" class="btn-primary btn-sm" onclick="openReminderList()">查看</button><button type="button" class="btn-outline btn-sm" onclick="dismissReminderBanner()">稍後再說</button></span>`;
+                } else {
+                    banner.style.display = 'none';
+                }
+            }
+        }
+
+        function dismissReminderBanner() {
+            reminderBannerDismissedFor = String(lastDueCount);
+            const banner = document.getElementById('reminder-banner');
+            if (banner) banner.style.display = 'none';
+        }
+
+        function openReminderList() {
+            const due = countDueLinks();
+            const hasAny = rawLinksCache.some(l => getRemindTs(l) > 0 && !l.isRead);
+            if (!due && !hasAny) {
+                showToast('目前沒有設定提醒的連結。可在卡片上點 🔔 設定稍後閱讀。', 'info');
+                return;
+            }
+            const target = due > 0 ? 'due' : 'reminder';
+            if (isKanbanMode) toggleKanbanView();
+            activeFolder = 'all'; activeTag = 'all'; activeStatus = target; visibleLimit = PAGE_SIZE;
+            const searchEl = document.getElementById('search-input');
+            const statusEl = document.getElementById('status-select');
+            if (searchEl) searchEl.value = '';
+            if (statusEl) statusEl.value = target;
+            renderFolderChips(true);
+            renderCurrentView(rawLinksCache);
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        function openRemindModal(id) {
+            const l = rawLinksCache.find(x => safeId(x.id) === safeId(id));
+            if (!l) return;
+            document.getElementById('remind-link-id').value = safeId(l.id);
+            document.getElementById('remind-link-title').textContent = l.title || l.url || '';
+            const cur = getRemindTs(l);
+            document.getElementById('remind-custom').value = toLocalInputValue(cur || Date.now() + 3600e3);
+            openModal('remind-modal');
+        }
+
+        function remindPresetTs(kind) {
+            const d = new Date();
+            switch (kind) {
+                case 'hour': return Date.now() + 3600e3;
+                case 'tonight': d.setHours(20, 0, 0, 0); if (d.getTime() <= Date.now() + 10 * 60e3) d.setDate(d.getDate() + 1); return d.getTime();
+                case 'tomorrow': d.setDate(d.getDate() + 1); d.setHours(9, 0, 0, 0); return d.getTime();
+                case 'weekend': { const add = ((6 - d.getDay() + 7) % 7) || 7; d.setDate(d.getDate() + add); d.setHours(10, 0, 0, 0); return d.getTime(); }
+                case 'nextweek': { const add = ((8 - d.getDay()) % 7) || 7; d.setDate(d.getDate() + add); d.setHours(9, 0, 0, 0); return d.getTime(); }
+            }
+            return 0;
+        }
+
+        async function setRemind(id, ts) {
+            closeModal('remind-modal');
+            await updateLinkProp(safeId(id), 'remindAt', ts);
+            showToast(ts ? `⏰ 已設定提醒：${formatRemindTime(ts)}` : '已清除提醒', 'success');
+        }
+        function applyRemindPreset(kind) { setRemind(document.getElementById('remind-link-id').value, remindPresetTs(kind)); }
+        function saveCustomRemind() {
+            const ts = parseRemindInput(document.getElementById('remind-custom').value);
+            if (!ts) { showToast('請選擇有效的提醒時間', 'error'); return; }
+            setRemind(document.getElementById('remind-link-id').value, ts);
+        }
+        function clearRemind() { setRemind(document.getElementById('remind-link-id').value, 0); }
+
+        // ======================= v3：頂部「⋯」選單 =======================
+        function toggleHeaderMenu(ev) {
+            if (ev) ev.stopPropagation();
+            const m = document.getElementById('header-menu');
+            if (!m) return;
+            const open = m.style.display === 'none' || !m.style.display;
+            m.style.display = open ? 'block' : 'none';
+            const b = document.getElementById('btn-menu');
+            if (b) b.setAttribute('aria-expanded', String(open));
+            if (open) { const first = m.querySelector('.menu-item'); if (first && ev && ev.detail === 0) first.focus(); }
+        }
+        function closeHeaderMenu() {
+            const m = document.getElementById('header-menu');
+            if (m && m.style.display !== 'none') {
+                m.style.display = 'none';
+                const b = document.getElementById('btn-menu');
+                if (b) b.setAttribute('aria-expanded', 'false');
+            }
+        }
+        document.addEventListener('click', e => {
+            if (!e.target.closest || !e.target.closest('.menu-wrap') || e.target.closest('.menu-item')) closeHeaderMenu();
+        });
+        document.addEventListener('keydown', e => { if (e.key === 'Escape') closeHeaderMenu(); });
+
+        // ======================= v3：卡片渲染（鍵控重用 + 固定欄位瀑布流 + 事件委派） =======================
+        function getMasonryColumnCount() {
+            const w = window.innerWidth;
+            if (document.body.classList.contains('large-font-layout')) return w > 1024 ? 3 : (w > 768 ? 2 : 1);
+            if (w > 1280) return 5;
+            if (w > 1024) return 4;
+            if (w > 768) return 3;
+            if (w > 480) return 2;
+            return 1;
+        }
+
+        let relayoutTimer = null;
+        function scheduleMasonryRelayout() {
+            clearTimeout(relayoutTimer);
+            relayoutTimer = setTimeout(() => {
+                if (isKanbanMode || currentView !== 'masonry' || !allLinksCache.length) return;
+                if (getMasonryColumnCount() !== masonryCols) renderLinks(allLinksCache);
+            }, 150);
+        }
+        window.addEventListener('resize', scheduleMasonryRelayout);
+
+        // 只搬動「位置不對」的節點，其餘原地保留（圖片不會重新載入、不會閃爍）。
+        function reconcileChildren(parent, desired) {
+            let ref = parent.firstChild;
+            for (const el of desired) {
+                if (el === ref) ref = ref.nextSibling;
+                else parent.insertBefore(el, ref);
+            }
+            while (ref) { const next = ref.nextSibling; parent.removeChild(ref); ref = next; }
+        }
+
+        function initCardDelegation() {
+            if (window.__cardDelegationReady) return;
+            window.__cardDelegationReady = true;
+            const box = document.getElementById('links-container');
+            const kanban = document.getElementById('kanban-board');
+            if (box) {
+                box.addEventListener('click', ev => {
+                    const card = ev.target.closest('.link-card[data-id]');
+                    if (!card || !box.contains(card)) return;
+                    const id = card.dataset.id;
+                    const actEl = ev.target.closest('[data-action]');
+                    const act = (actEl && card.contains(actEl)) ? actEl.dataset.action : 'card';
+                    switch (act) {
+                        case 'select': toggleSelect(id, actEl, ev); return;
+                        case 'open':
+                            if (batchMode) { ev.preventDefault(); handleCardClick(id, ev); return; }
+                            recordLinkClick(id); return;
+                        case 'copy': copyLinkById(id, ev); return;
+                        case 'pin': togglePin(id); return;
+                        case 'read': toggleRead(id); return;
+                        case 'remind':
+                            if (batchMode) { handleCardClick(id, ev); return; }
+                            ev.stopPropagation(); openRemindModal(id); return;
+                        case 'edit': openEdit(id); return;
+                        case 'delete': deleteLink(id); return;
+                        case 'folder':
+                            if (batchMode) { handleCardClick(id, ev); return; }
+                            ev.stopPropagation(); setFolder(actEl.dataset.folder); return;
+                        case 'tag':
+                            if (batchMode) { handleCardClick(id, ev); return; }
+                            ev.stopPropagation(); setTag(actEl.dataset.tag); return;
+                        case 'domain':
+                            if (batchMode) { handleCardClick(id, ev); return; }
+                            ev.stopPropagation(); filterByDomain(actEl.dataset.domain); return;
+                        default: handleCardClick(id, ev);
+                    }
+                });
+                // load / error 不會冒泡，改用捕獲階段在容器統一處理縮圖事件。
+                box.addEventListener('load', ev => {
+                    const t = ev.target;
+                    if (t && t.tagName === 'IMG' && t.dataset && t.dataset.thumbIndex !== undefined) {
+                        const card = t.closest('.link-card[data-id]');
+                        if (card) handleThumbnailLoad(t, card.dataset.id);
+                    }
+                }, true);
+                box.addEventListener('error', ev => {
+                    const t = ev.target;
+                    if (t && t.tagName === 'IMG' && t.dataset && t.dataset.thumbIndex !== undefined) {
+                        const card = t.closest('.link-card[data-id]');
+                        if (card) recoverThumbnail(t, card.dataset.id);
+                    }
+                }, true);
+            }
+            if (kanban) {
+                kanban.addEventListener('click', ev => {
+                    const card = ev.target.closest('.kanban-card[data-id]');
+                    const actEl = ev.target.closest('[data-action]');
+                    if (!card || !actEl || !card.contains(actEl)) return;
+                    const id = card.dataset.id;
+                    switch (actEl.dataset.action) {
+                        case 'open': recordLinkClick(id); break;
+                        case 'copy': copyLinkById(id, ev); break;
+                        case 'edit': openEdit(id); break;
+                        case 'delete': deleteLink(id); break;
+                    }
+                });
+            }
+        }
+
+        function initV3UI() {
+            applyPrivacyClass();
+            initCardDelegation();
+            const dcText = document.getElementById('dead-check-text');
+            if (dcText && window.MutationObserver) {
+                new MutationObserver(() => {
+                    const b = document.getElementById('menu-progress');
+                    if (!b) return;
+                    const t = (dcText.textContent || '').trim();
+                    const show = isCheckingLinks && t && dcText.style.display !== 'none';
+                    b.style.display = show ? 'flex' : 'none';
+                    b.textContent = t;
+                }).observe(dcText, { childList: true, characterData: true, subtree: true, attributes: true, attributeFilter: ['style'] });
+            }
+            if (!window.__v3Ticker) {
+                const tick = () => {
+                    if (!rawLinksCache.length) return;
+                    if (countDueLinks() !== lastDueCount) renderCurrentView(rawLinksCache);
+                };
+                window.__v3Ticker = setInterval(tick, 30000);
+                document.addEventListener('visibilitychange', () => { if (!document.hidden) tick(); });
+            }
+        }
+
         function sortFoldersArray(folders) {
             return folders.sort((a, b) => {
                 const oa = typeof a.order === 'number' ? a.order : (a.id === 'default' ? 0 : 9999);
@@ -1510,7 +2238,7 @@
                     f.unshift({id:'default',name:'未分類',icon:'fa-inbox',order:0});
                     writeLocalJson('my_folders', f);
                 }
-                return sortFoldersArray(f.map((x, idx) => ({ ...x, id: safeId(x.id) || 'default', icon: safeIcon(x.icon), order: typeof x.order === 'number' ? x.order : idx })));
+                return sortFoldersArray(f.map((x, idx) => ({ ...x, id: safeId(x.id) || 'default', icon: safeIcon(x.icon), order: typeof x.order === 'number' ? x.order : idx, parentId: safeId(x.parentId) || '' })));
             }
             if (!db || !requestUid) return defaultFolder();
 
@@ -1521,7 +2249,7 @@
                 if (requestGeneration !== cloudSessionGeneration || isLocalMode || currentUser?.uid !== requestUid) {
                     return defaultFolder();
                 }
-                let f=s.docs.map((d, idx)=>({id:safeId(d.id),...d.data(),icon:safeIcon(d.data().icon), order: typeof d.data().order === 'number' ? d.data().order : idx + 1}));
+                let f=s.docs.map((d, idx)=>({id:safeId(d.id),...d.data(),icon:safeIcon(d.data().icon), order: typeof d.data().order === 'number' ? d.data().order : idx + 1, parentId: safeId(d.data().parentId) || ''}));
                 if(!f.some(x=>x.id==='default')){
                     const defFolder = {name:'未分類',icon:'fa-inbox',order:0};
                     await foldersRef.doc('default').set(defFolder);
@@ -1551,25 +2279,62 @@
             if (activeFolder !== 'all' && !allFoldersCache.some(f => f.id === activeFolder)) {
                 activeFolder = 'all';
             }
-            const folderCounts = {};
+            const tree = getFolderTree();
+            const direct = {};
             rawLinksCache.forEach(l => {
                 const fid = l.folderId || 'default';
-                folderCounts[fid] = (folderCounts[fid] || 0) + 1;
+                direct[fid] = (direct[fid] || 0) + 1;
             });
-
-            const c=document.getElementById('folder-chips');
-            let h=`<div class="chip ${activeFolder==='all'?'active':''}" onclick="setFolder('all')"><i class="fas fa-layer-group"></i> 全部 <span class="chip-count">${rawLinksCache.length}</span></div>`;
-            allFoldersCache.forEach(f=>{
+            // 上層資料夾的數量包含所有子資料夾，與篩選結果一致。
+            const subtreeCount = id => { let n = 0; getFolderSubtreeIds(id, tree).forEach(x => { n += direct[x] || 0; }); return n; };
+            const chip = (f, cls) => {
                 const fid = safeId(f.id);
-                const ficon = safeIcon(f.icon);
-                const cnt = folderCounts[fid] || 0;
-                h+=`<div class="chip ${activeFolder===fid?'active':''}" onclick="setFolder('${fid}')"><i class="fas ${ficon}"></i> ${escapeHtml(f.name)} <span class="chip-count">${cnt}</span></div>`;
+                return `<div class="chip ${cls}" onclick="setFolder('${fid}')"><i class="fas ${safeIcon(f.icon)}"></i> ${escapeHtml(f.name)} <span class="chip-count">${subtreeCount(fid)}</span></div>`;
+            };
+
+            const activePath = activeFolder === 'all' ? [] : [...getFolderAncestors(activeFolder, tree), activeFolder];
+            const c = document.getElementById('folder-chips');
+            let h = `<div class="chip ${activeFolder==='all'?'active':''}" onclick="setFolder('all')"><i class="fas fa-layer-group"></i> 全部 <span class="chip-count">${rawLinksCache.length}</span></div>`;
+            (tree.childrenOf.get('') || []).forEach(f => {
+                const cls = activeFolder === f.id ? 'active' : (activePath.includes(f.id) ? 'ancestor' : '');
+                h += chip(f, cls);
             });
-            c.innerHTML=h;
+            c.innerHTML = h;
+
+            // 第二列：目前資料夾的路徑（可點回上層）與它的子資料夾
+            const sub = document.getElementById('subfolder-chips');
+            if (sub) {
+                let sh = '';
+                if (activeFolder !== 'all') {
+                    const ancestors = getFolderAncestors(activeFolder, tree);
+                    const kids = tree.childrenOf.get(activeFolder) || [];
+                    if (ancestors.length || kids.length) {
+                        ancestors.forEach(pid => {
+                            const pf = allFoldersCache.find(f => f.id === pid);
+                            if (pf) sh += chip(pf, 'crumb');
+                        });
+                        if (ancestors.length) {
+                            const cur = allFoldersCache.find(f => f.id === activeFolder);
+                            if (cur) sh += chip(cur, 'active');
+                        }
+                        if (kids.length) {
+                            sh += `<span class="chip-label">子資料夾</span>`;
+                            kids.forEach(k => { sh += chip(k, ''); });
+                        }
+                    }
+                }
+                sub.innerHTML = sh;
+                sub.style.display = sh ? 'flex' : 'none';
+            }
         }
 
         function setFolder(id){
-            activeFolder = (activeFolder === id && id !== 'all') ? 'all' : id;
+            if (id !== 'all' && activeFolder === id) {
+                // 再點一次目前資料夾：回到上一層（頂層則回到「全部」）
+                activeFolder = getFolderTree().parentOf.get(id) || 'all';
+            } else {
+                activeFolder = id;
+            }
             visibleLimit = PAGE_SIZE;
             renderFolderChips(true);
             renderCurrentView(rawLinksCache);
@@ -1689,60 +2454,139 @@
             }
         }
 
+        function renderFolderTreeHtml(parentId, tree, depth, direct) {
+            const kids = tree.childrenOf.get(parentId) || [];
+            return `<div class="folder-group" data-parent="${parentId}">` + kids.map(f => {
+                const fid = safeId(f.id);
+                const canNest = fid !== 'default';
+                const canAddChild = canNest && depth < MAX_FOLDER_DEPTH - 1;
+                return `<div class="folder-node" data-folder-id="${fid}">
+                    <div class="folder-row flex justify-between items-center p-1.5 text-sm">
+                        <span class="flex items-center" style="min-width:0;">
+                            <i class="fas fa-grip-vertical folder-drag-handle" title="同一層內上下拖曳排序"></i>
+                            <i class="fas ${safeIcon(f.icon)} mr-2" style="color:var(--primary);"></i><span style="word-break:break-all;">${escapeHtml(f.name)}</span><span class="folder-count">${direct[fid] || 0}</span>
+                        </span>
+                        <div class="flex gap-1" style="flex-shrink:0;">
+                            ${canAddChild ? `<button type="button" class="btn-outline btn-sm" onclick="startAddSubfolder('${fid}')" title="新增子資料夾" aria-label="新增子資料夾"><i class="fas fa-folder-plus"></i></button>` : ''}
+                            ${canNest ? `<button type="button" class="btn-outline btn-sm" onclick="openFolderMove('${fid}')" title="移動到其他資料夾" aria-label="移動到其他資料夾"><i class="fas fa-right-left"></i></button>` : ''}
+                            <button type="button" class="btn-outline btn-sm" onclick="renameFolder('${fid}')" title="重新命名" aria-label="重新命名"><i class="fas fa-pen"></i></button>
+                            ${canNest ? `<button type="button" class="btn-outline btn-sm" style="color:var(--danger);border-color:var(--danger);" onclick="deleteFolder('${fid}')" title="刪除" aria-label="刪除"><i class="fas fa-trash"></i></button>` : ''}
+                        </div>
+                    </div>
+                    ${renderFolderTreeHtml(fid, tree, depth + 1, direct)}
+                </div>`;
+            }).join('') + `</div>`;
+        }
+
+        function refreshNewFolderParentSelect() {
+            const sel = document.getElementById('new-folder-parent');
+            if (!sel) return;
+            const valid = newFolderParentSel && allFoldersCache.some(f => f.id === newFolderParentSel) ? newFolderParentSel : '';
+            newFolderParentSel = valid;
+            sel.innerHTML = buildParentOptions(valid, new Set(['default']), 1);
+            if (!Array.from(sel.options).some(o => o.value === valid)) newFolderParentSel = '';
+            sel.value = newFolderParentSel;
+        }
+
         function initFolderSortable() {
             if (typeof Sortable === 'undefined') return;
-            const listEl = document.getElementById('folder-list');
-            if (!listEl) return;
-            if (listEl.sortable) listEl.sortable.destroy();
-            listEl.sortable = Sortable.create(listEl, {
-                handle: '.folder-drag-handle',
-                animation: 150,
-                ghostClass: 'sortable-ghost',
-                delay: 150, delayOnTouchOnly: true,
-                onEnd: async () => {
-                    const ids = Array.from(listEl.querySelectorAll('[data-folder-id]')).map(el => safeId(el.dataset.folderId));
-                    const reordered = [];
-                    ids.forEach((id, idx) => {
-                        const found = allFoldersCache.find(f => f.id === id);
-                        if (found) reordered.push({ ...found, order: idx });
-                    });
-                    allFoldersCache = reordered;
-                    renderFolderChips(true);
-                    try {
-                        if (isLocalMode) {
-                            writeLocalJson('my_folders', allFoldersCache);
-                        } else if (currentUser && db) {
-                            await executeBatchInChunks(allFoldersCache, (batch, f) => {
-                                batch.update(db.collection('users').doc(currentUser.uid).collection('folders').doc(f.id), { order: f.order });
-                            });
-                        }
-                    } catch (err) {
-                        showToast("⚠️ 資料夾順序儲存失敗：" + err.message, "error");
-                    }
-                }
+            const root = document.getElementById('folder-list');
+            if (!root) return;
+            root.querySelectorAll('.folder-group').forEach(g => { if (g.sortable) { g.sortable.destroy(); g.sortable = null; } });
+            root.querySelectorAll('.folder-group').forEach(group => {
+                group.sortable = Sortable.create(group, {
+                    handle: '.folder-drag-handle',
+                    draggable: '.folder-node',
+                    animation: 150,
+                    ghostClass: 'sortable-ghost',
+                    delay: 150, delayOnTouchOnly: true,
+                    fallbackOnBody: true, swapThreshold: 0.65,
+                    onEnd: () => persistFolderGroupOrder(group)
+                });
             });
+        }
+
+        async function persistFolderGroupOrder(group) {
+            const ids = Array.from(group.children).filter(el => el.classList && el.classList.contains('folder-node')).map(el => safeId(el.dataset.folderId));
+            const changed = [];
+            ids.forEach((id, idx) => {
+                const f = allFoldersCache.find(x => x.id === id);
+                if (f && f.order !== idx) { f.order = idx; changed.push({ id, order: idx }); }
+            });
+            if (!changed.length) return;
+            renderFolderChips(true);
+            try {
+                if (isLocalMode) {
+                    const local = readLocalJson('my_folders', []);
+                    local.forEach(lf => { const ch = changed.find(c => c.id === safeId(lf.id)); if (ch) lf.order = ch.order; });
+                    if (!writeLocalJson('my_folders', local)) throw new Error('本機儲存失敗');
+                } else if (currentUser && db) {
+                    await executeBatchInChunks(changed, (batch, c) => {
+                        batch.update(db.collection('users').doc(currentUser.uid).collection('folders').doc(c.id), { order: c.order });
+                    });
+                }
+            } catch (err) {
+                showToast("⚠️ 資料夾順序儲存失敗：" + err.message, "error");
+            }
         }
 
         function openFolderModal(){
             switchManageTab('folders');
-            const l=document.getElementById('folder-list');
-            l.innerHTML=allFoldersCache.map(f=>{
-                const fid = safeId(f.id);
-                const ficon = safeIcon(f.icon);
-                return `
-                <div class="flex justify-between items-center p-1.5 text-sm" data-folder-id="${fid}" style="border-bottom:1px solid var(--border-color);background:var(--card-dark);">
-                    <span class="flex items-center">
-                        <i class="fas fa-grip-vertical folder-drag-handle" title="上下拖曳排序"></i>
-                        <i class="fas ${ficon} mr-2" style="color:var(--primary);"></i>${escapeHtml(f.name)}
-                    </span>
-                    <div class="flex gap-1">
-                        <button type="button" class="btn-outline btn-sm" onclick="renameFolder('${fid}')" title="重新命名"><i class="fas fa-pen"></i></button>
-                        ${fid!=='default'?`<button type="button" class="btn-outline btn-sm" style="color:var(--danger);border-color:var(--danger);" onclick="deleteFolder('${fid}')" title="刪除"><i class="fas fa-trash"></i></button>`:''}
-                    </div>
-                </div>`;
-            }).join('');
+            const tree = getFolderTree();
+            const direct = {};
+            rawLinksCache.forEach(l => { const k = l.folderId || 'default'; direct[k] = (direct[k] || 0) + 1; });
+            document.getElementById('folder-list').innerHTML = renderFolderTreeHtml('', tree, 0, direct);
+            refreshNewFolderParentSelect();
             initFolderSortable();
             openModal('folder-modal', 'new-folder-name');
+        }
+
+        function startAddSubfolder(id) {
+            newFolderParentSel = id;
+            refreshNewFolderParentSelect();
+            const inp = document.getElementById('new-folder-name');
+            if (inp) { inp.focus(); inp.scrollIntoView({ block: 'nearest' }); }
+        }
+
+        function openFolderMove(id) {
+            const f = allFoldersCache.find(x => x.id === id);
+            if (!f) return;
+            const tree = getFolderTree();
+            const exclude = new Set([...getFolderSubtreeIds(id, tree), 'default']);
+            document.getElementById('folder-move-id').value = id;
+            document.getElementById('folder-move-name').textContent = f.name;
+            document.getElementById('folder-move-parent').innerHTML = buildParentOptions(tree.parentOf.get(id) || '', exclude, getFolderHeight(id, tree));
+            openModal('folder-move-modal', 'folder-move-parent');
+        }
+
+        async function confirmFolderMove() {
+            const id = safeId(document.getElementById('folder-move-id').value);
+            const newParent = safeId(document.getElementById('folder-move-parent').value) || '';
+            const tree = getFolderTree();
+            if ((tree.parentOf.get(id) || '') === newParent) { closeModal('folder-move-modal'); return; }
+            if (newParent && getFolderSubtreeIds(id, tree).has(newParent)) { showToast('不能把資料夾移到它自己的子資料夾內', 'error'); return; }
+            const siblings = tree.childrenOf.get(newParent) || [];
+            const order = siblings.length ? Math.max(...siblings.map(s => typeof s.order === 'number' ? s.order : 0)) + 1 : 0;
+            try {
+                if (isLocalMode) {
+                    const f = readLocalJson('my_folders', []);
+                    const i = f.findIndex(x => safeId(x.id) === id);
+                    if (i > -1) {
+                        f[i].parentId = newParent; f[i].order = order;
+                        if (!writeLocalJson('my_folders', f)) throw new Error('本機儲存失敗，資料夾未移動');
+                    }
+                } else {
+                    if (!currentUser || !db) throw new Error('尚未連線到雲端資料庫');
+                    await db.collection('users').doc(currentUser.uid).collection('folders').doc(id).update({ parentId: newParent, order });
+                }
+                closeModal('folder-move-modal');
+                await renderFolderChips();
+                openFolderModal();
+                renderCurrentView(rawLinksCache);
+                showToast('已移動資料夾', 'success');
+            } catch (e) {
+                showToast('❌ 移動資料夾失敗：' + e.message, 'error');
+            }
         }
 
         async function renameFolder(id) {
@@ -1771,19 +2615,28 @@
         async function addFolder(){
             const n=document.getElementById('new-folder-name').value.trim();
             const ic=safeIcon(document.getElementById('new-folder-icon').value);
+            const parentSel = document.getElementById('new-folder-parent');
+            const parentId = safeId(parentSel ? parentSel.value : '') || '';
             if(!n)return;
-            const nextOrder = allFoldersCache.length;
+            const tree = getFolderTree();
+            if (parentId) {
+                if (parentId === 'default' || !allFoldersCache.some(f => f.id === parentId)) { showToast('請選擇有效的上層資料夾', 'error'); return; }
+                if (getFolderAncestors(parentId, tree).length + 1 > MAX_FOLDER_DEPTH - 1) { showToast(`資料夾最多 ${MAX_FOLDER_DEPTH} 層`, 'error'); return; }
+            }
+            const siblings = tree.childrenOf.get(parentId) || [];
+            const nextOrder = siblings.length ? Math.max(...siblings.map(s => typeof s.order === 'number' ? s.order : 0)) + 1 : 0;
             try {
                 if(isLocalMode){
                     const f=readLocalJson('my_folders', []);
                     let fid='f_'+Date.now(), nId=1;
                     const usedFolderIds=new Set(f.map(x=>safeId(x.id)).filter(Boolean));
                     while(usedFolderIds.has(fid)) fid=`f_${Date.now()}_${nId++}`;
-                    f.push({id:fid,name:n,icon:ic,order:nextOrder});
+                    f.push({id:fid,name:n,icon:ic,order:nextOrder,parentId});
                     if(!writeLocalJson('my_folders', f)) throw new Error('本機儲存失敗，資料夾未建立');
                 }else{
-                    await db.collection('users').doc(currentUser.uid).collection('folders').add({name:n,icon:ic,order:nextOrder});
+                    await db.collection('users').doc(currentUser.uid).collection('folders').add({name:n,icon:ic,order:nextOrder,parentId});
                 }
+                newFolderParentSel = parentId;
                 document.getElementById('new-folder-name').value='';
                 await renderFolderChips();
                 openFolderModal();
@@ -1794,30 +2647,32 @@
         }
 
         async function deleteFolder(id){
-            if(!confirm("確定刪除此資料夾？（內含的連結將移回「未分類」）"))return;
+            if (id === 'default') return;
+            const tree = getFolderTree();
+            const parentId = tree.parentOf.get(id) || '';
+            const kids = (tree.childrenOf.get(id) || []).slice();
+            const fallback = parentId || 'default';
+            const fallbackName = (allFoldersCache.find(f => f.id === fallback) || { name: '未分類' }).name;
+            if(!confirm(`確定刪除此資料夾？\n內含的連結將移到「${fallbackName}」${kids.length ? `，其 ${kids.length} 個子資料夾會上移一層` : ''}。`))return;
             try {
                 if(isLocalMode){
-                    const f=readLocalJson('my_folders', []).filter(x=>x.id!==id);
+                    const f=readLocalJson('my_folders', []);
                     const l=readLocalJson('my_links', []);
-                    l.forEach(x=>{if(x.folderId===id)x.folderId='default';});
-                    // 一次寫入，避免資料夾已刪除但連結尚未移回未分類。
-                    // 先寫入連結的「未分類」狀態，再移除資料夾；若第二步失敗，至少不會留下孤兒連結。
-                    const linksOk = writeLocalJson('my_links', l);
-                    if (!linksOk) throw new Error('本機儲存失敗，資料夾刪除未完成');
-                    const foldersOk = writeLocalJson('my_folders', f);
-                    if (!foldersOk) throw new Error('本機儲存失敗，連結已移回未分類，但資料夾仍保留');
+                    l.forEach(x=>{if(x.folderId===id)x.folderId=fallback;});
+                    f.forEach(x=>{if(safeId(x.parentId)===id)x.parentId=parentId;});
+                    const nf = f.filter(x=>x.id!==id);
+                    // 先寫入連結，再寫入資料夾；若第二步失敗，至少不會留下孤兒連結。
+                    if (!writeLocalJson('my_links', l)) throw new Error('本機儲存失敗，資料夾刪除未完成');
+                    if (!writeLocalJson('my_folders', nf)) throw new Error('本機儲存失敗，連結已移到上層資料夾，但資料夾仍保留');
                 }else{
                     if(!currentUser || !db) throw new Error('尚未連線到雲端資料庫');
-                    const linksRef=db.collection('users').doc(currentUser.uid).collection('links');
-                    const folderRef=db.collection('users').doc(currentUser.uid).collection('folders').doc(id);
-                    // 先處理連結，再刪除資料夾。若更新失敗，原資料夾仍存在，不會形成孤兒連結。
-                    const snap=await linksRef.where('folderId','==',id).get();
-                    await executeBatchInChunks(snap.docs, (batch, doc) => {
-                        batch.update(doc.ref, { folderId: 'default' });
-                    });
-                    await folderRef.delete();
+                    const base = db.collection('users').doc(currentUser.uid);
+                    const snap = await base.collection('links').where('folderId','==',id).get();
+                    await executeBatchInChunks(snap.docs, (batch, doc) => { batch.update(doc.ref, { folderId: fallback }); });
+                    await executeBatchInChunks(kids, (batch, k) => { batch.update(base.collection('folders').doc(k.id), { parentId }); });
+                    await base.collection('folders').doc(id).delete();
                 }
-                if(activeFolder===id) activeFolder='all';
+                if(activeFolder===id) activeFolder = fallback === 'default' ? 'all' : fallback;
                 await renderFolderChips();
                 openFolderModal();
                 loadLinks();
@@ -1832,7 +2687,10 @@
             for(let i=0;i<str.length;i++) h = str.charCodeAt(i) + ((h << 5) - h);
             return `hsl(${Math.abs(h) % 360}, ${a * 100}%, ${l * 100}%)`;
         }
-        function getTagStyles(t){return`background:${stringToHslColor(t,0.4,0.85)};color:${stringToHslColor(t,0.7,0.3)};border:1px solid ${stringToHslColor(t,0.4,0.7)};`;}
+        function getTagStyles(t){
+            if (document.body.classList.contains('light-mode')) return`background:${stringToHslColor(t,0.4,0.85)};color:${stringToHslColor(t,0.7,0.3)};border:1px solid ${stringToHslColor(t,0.4,0.7)};`;
+            return`background:${stringToHslColor(t,0.35,0.22)};color:${stringToHslColor(t,0.75,0.8)};border:1px solid ${stringToHslColor(t,0.4,0.38)};`;
+        }
 
         function getYouTubeVideoId(u){const r=/(?:youtu\.be\/|youtube\.com\/(?:watch\?v=|embed\/|v\/|shorts\/))([a-zA-Z0-9_-]{11})/;return u.match(r)?.[1]||null;}
         async function fetchYouTubeInfo(u){
@@ -2065,19 +2923,35 @@
 
         function scheduleMissingThumbnailRecovery(link){
             if(!link || !link.id || !link.url) return;
+            // 無圖模式不需要縮圖，不必打外部 API。
+            if(privacyNoPreview || document.body.classList.contains('thumb-mode-none')) return;
             const id=safeId(link.id);
-            if(!id || thumbnailRecoveryInFlight.has(id)) return;
-            const candidates=getThumbnailCandidates(link,false);
-            if(candidates.length) return;
+            if(!id || thumbnailRecoveryInFlight.has(id) || thumbnailRecoveryAttempted.has(id)) return;
+            if(getThumbnailCandidates(link,false).length) return;
+            // 每個連結每次開啟頁面只嘗試一次，並限制同時最多 2 個請求，避免匯入大量書籤後瞬間耗盡額度。
+            thumbnailRecoveryAttempted.add(id);
             thumbnailRecoveryInFlight.add(id);
-            setTimeout(async()=>{
-                try{
-                    const info=await fetchWebpageInfo(link.url);
-                    const fresh=normalizeThumbnailUrl(info?.image) || getYoutubeFallbackImage(link.url);
-                    if(fresh) await persistThumbnailCandidate(id,fresh,link,false);
-                }catch(e){}
-                finally{ thumbnailRecoveryInFlight.delete(id); }
-            },180);
+            thumbnailRecoveryQueue.push(link);
+            pumpThumbnailRecovery();
+        }
+
+        function pumpThumbnailRecovery(){
+            while(thumbnailRecoveryActive<2 && thumbnailRecoveryQueue.length){
+                const link=thumbnailRecoveryQueue.shift();
+                thumbnailRecoveryActive++;
+                (async()=>{
+                    try{
+                        const info=await fetchWebpageInfo(link.url);
+                        const fresh=normalizeThumbnailUrl(info?.image) || getYoutubeFallbackImage(link.url);
+                        if(fresh) await persistThumbnailCandidate(safeId(link.id),fresh,link,false);
+                    }catch(e){}
+                    finally{
+                        thumbnailRecoveryActive--;
+                        thumbnailRecoveryInFlight.delete(safeId(link.id));
+                        pumpThumbnailRecovery();
+                    }
+                })();
+            }
         }
 
         function handleThumbnailLoad(img,id){
@@ -2100,6 +2974,14 @@
             else if(l.includes('threads'))tags=["Threads","社群"];
             else if(l.includes('douyin.com')||l.includes('tiktok.com'))tags=["抖音/TikTok","影片"];
             else if(l.includes('github.com'))tags=["GitHub","開發"];
+            if (privacyNoPreview) {
+                // 隱私模式：不對外送出網址，只用網域當標題。
+                try { r.title = new URL(u).hostname.replace(/^www\./, ''); } catch (e) { r.title = u; }
+                r.description = `已保存連結：${u}`;
+                r.categories = tags;
+                r.local = true;
+                return r;
+            }
             
             if(l.includes('youtube.com')||l.includes('youtu.be')){
                 const y=await fetchYouTubeInfo(u);
@@ -2149,10 +3031,10 @@
                     return true;
                 }
                 const info=await fetchWebpageInfo(u);
-                let ft = (info.title && info.title !== "未命名連結" && !["抖音", "Instagram", "Facebook", "X"].includes(info.title)) ? info.title : (extractedTitle || info.title);
+                let ft = (!info.local && info.title && info.title !== "未命名連結" && !["抖音", "Instagram", "Facebook", "X"].includes(info.title)) ? info.title : (extractedTitle || info.title);
                 if(info.account&&!ft.includes(info.account))ft=`${info.account} - ${ft}`;
                 const tf=activeFolder!=='all'?activeFolder:'default';
-                const data={url:u,title:ft,categories:info.categories,description:info.description,image:info.image||"",imageOriginal:info.image||"",imageBackup:"",imageCandidates:uniqueThumbnailUrls([info.image]),folderId:tf,createdAt:Date.now(),pinned:false,isRead:false,isDead:false,clicks:0};
+                const data={url:u,title:ft,categories:mergeAutoTags(info.categories,u,ft,info.description),description:info.description,image:info.image||"",imageOriginal:info.image||"",imageBackup:"",imageCandidates:uniqueThumbnailUrls([info.image]),folderId:tf,createdAt:Date.now(),pinned:false,isRead:false,isDead:false,clicks:0};
                 if(isLocalMode){
                     if (!saveToLocal(data)) throw new Error('本機儲存失敗，可能已達 localStorage 容量上限');
                 } else {
@@ -2192,7 +3074,7 @@
 
         function sameLinkExceptThumbnail(a, b){
             if(!a || !b) return false;
-            const strip = obj => { const x={...obj}; delete x.image; delete x.imageOriginal; delete x.imageBackup; delete x.imageCandidates; return x; };
+            const strip = obj => { const x={...obj}; delete x.image; delete x.imageOriginal; delete x.imageBackup; delete x.imageCandidates; delete x.clicks; return x; };
             try { return JSON.stringify(strip(a)) === JSON.stringify(strip(b)); } catch { return false; }
         }
 
@@ -2215,16 +3097,29 @@
                 if(unsubscribeSnapshot)unsubscribeSnapshot();
                 const snapshotUid = currentUser.uid;
                 const snapshotGeneration = cloudSessionGeneration;
+                let firstSnapshot = true;
                 unsubscribeSnapshot=db.collection('users').doc(snapshotUid).collection('links').orderBy('createdAt','desc').onSnapshot(
                     s => {
                         // Firestore unsubscribe 不保證已排入佇列的回呼不會執行；檢查工作階段後才更新 UI。
                         if (snapshotGeneration !== cloudSessionGeneration || isLocalMode || currentUser?.uid !== snapshotUid) return;
                         const incoming = s.docs.map(d=>normalizeLinkThumbnailFields({id:safeId(d.id),...d.data()}));
                         const oldById = new Map(rawLinksCache.map(x => [safeId(x.id), x]));
-                        let needsRender = incoming.length !== rawLinksCache.length;
+                        let needsRender = firstSnapshot || incoming.length !== rawLinksCache.length;
+                        firstSnapshot = false;
                         incoming.forEach(next => {
                             const prev = oldById.get(safeId(next.id));
                             if (!prev || !sameLinkExceptThumbnail(prev, next)) needsRender = true;
+                        });
+                        // 點擊次數變動不重繪整頁，只更新該卡片的徽章（依點擊數排序時才重繪）。
+                        incoming.forEach(next => {
+                            const prev = oldById.get(safeId(next.id));
+                            if (prev && (prev.clicks || 0) !== (next.clicks || 0)) {
+                                if (currentSort === 'clicks') needsRender = true;
+                                else {
+                                    const holder = document.getElementById('click-badge-' + safeId(next.id));
+                                    if (holder) holder.innerHTML = next.clicks > 0 ? `<span class="click-count-badge" title="造訪次數"><i class="fas fa-fire"></i>${next.clicks}</span>` : '';
+                                }
+                            }
                         });
                         rawLinksCache = incoming;
                         if (currentSort === 'random' && randomWeightMap.size === 0) refreshRandomWeights(rawLinksCache);
@@ -2256,11 +3151,14 @@
         }
 
         function updateStatusSelectCounts(baseLinks) {
-            let unread = 0, read = 0, pinned = 0, dead = 0;
+            let unread = 0, read = 0, pinned = 0, dead = 0, dueN = 0, remN = 0;
+            const nowTs = Date.now();
             baseLinks.forEach(l => {
                 if (l.isRead) read++; else unread++;
                 if (l.pinned) pinned++;
                 if (l.isDead) dead++;
+                if (isDueLink(l, nowTs)) dueN++;
+                if (getRemindTs(l) > 0 && !l.isRead) remN++;
             });
             const setOpt = (id, label, cnt) => {
                 const el = document.getElementById(id);
@@ -2271,6 +3169,8 @@
             setOpt('opt-status-read', '✅ 僅看已讀', read);
             setOpt('opt-status-pinned', '⭐ 僅看釘選', pinned);
             setOpt('opt-status-dead', '💔 僅看失效', dead);
+            setOpt('opt-status-due', '⏰ 提醒到期', dueN);
+            setOpt('opt-status-reminder', '🔔 已設提醒', remN);
         }
 
         function renderCurrentView(links){
@@ -2280,7 +3180,8 @@
             const clearBtn = document.getElementById('search-clear-btn');
             if (clearBtn) clearBtn.style.display = s.length > 0 ? 'flex' : 'none';
 
-            const folderFiltered = links.filter(l => activeFolder === 'all' || l.folderId === activeFolder || (!l.folderId && activeFolder === 'default'));
+            const folderSet = activeFolder === 'all' ? null : getFolderSubtreeIds(activeFolder, getFolderTree());
+            const folderFiltered = links.filter(l => !folderSet || folderSet.has(l.folderId) || (!l.folderId && folderSet.has('default')));
             renderTagChips(folderFiltered);
 
             const preStatusFiltered = folderFiltered.filter(l => {
@@ -2303,10 +3204,16 @@
                 if (activeStatus === 'read') return !!l.isRead;
                 if (activeStatus === 'pinned') return !!l.pinned;
                 if (activeStatus === 'dead') return !!l.isDead;
+                if (activeStatus === 'due') return isDueLink(l);
+                if (activeStatus === 'reminder') return getRemindTs(l) > 0 && !l.isRead;
                 return true;
             });
 
             f.sort((a, b) => {
+                if (activeStatus === 'due' || activeStatus === 'reminder' || currentSort === 'remind') {
+                    const ra = getRemindTs(a) || Infinity, rb = getRemindTs(b) || Infinity;
+                    if (ra !== rb) return ra < rb ? -1 : 1;
+                }
                 const pinDiff = (b.pinned ? 1 : 0) - (a.pinned ? 1 : 0);
                 if (pinDiff !== 0) return pinDiff;
                 if (currentSort === 'random') {
@@ -2331,6 +3238,7 @@
                 renderLinks(f);
             }
             isInitialRender = false;
+            refreshReminderUI();
         }
 
         function resetAllFilters() {
@@ -2447,16 +3355,17 @@
         }
         
         function renderLinks(links){
-            const c=document.getElementById('links-container');
+            const c = document.getElementById('links-container');
             const sentinel = document.getElementById('load-more-sentinel');
             const rawQuery = document.getElementById('search-input').value.trim();
-            if(!links.length){
+            if (!links.length) {
                 if (sentinel) sentinel.style.display = 'none';
                 const isFiltered = activeFolder !== 'all' || activeTag !== 'all' || activeStatus !== 'all' || rawQuery !== '';
-                c.innerHTML=`<div class="text-center py-10 col-span-full text-sm" style="color:var(--text-muted);">
+                c.innerHTML = `<div class="empty-state text-center py-10 text-sm" style="color:var(--text-muted);">
                     <p class="mb-3">找不到符合條件的連結</p>
                     ${isFiltered ? `<button type="button" class="btn-outline" onclick="resetAllFilters()"><i class="fas fa-broom"></i> 清除所有篩選條件</button>` : ''}
                 </div>`;
+                layoutKey = ''; masonryColEls = []; masonryCols = 0; cardCache.clear();
                 return;
             }
 
@@ -2470,37 +3379,112 @@
                 }
             }
 
-            const animClass = isInitialRender ? 'card-enter' : '';
-            c.innerHTML=visibleSlice.map((l,i)=>{
-                const lid = safeId(l.id);
-                const th = formatTitleHtml(l.title, rawQuery);
-                const descHtml = safeHighlightText(l.description, rawQuery);
-                let timeText = '未知';
-                if (l.createdAt) {
-                    const date = new Date(l.createdAt);
-                    timeText = date.toLocaleString('zh-TW', { month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', hour12: false });
+            // 1. 版面結構：瀑布流 = N 個固定欄位；列表 = 單欄。結構改變時才重建。
+            const isMasonry = currentView === 'masonry';
+            const n = isMasonry ? getMasonryColumnCount() : 0;
+            const wantKey = isMasonry ? 'm' + n : 'l';
+            if (layoutKey !== wantKey) {
+                c.textContent = '';
+                masonryColEls = [];
+                if (isMasonry) {
+                    for (let i = 0; i < n; i++) {
+                        const col = document.createElement('div');
+                        col.className = 'masonry-col';
+                        c.appendChild(col);
+                        masonryColEls.push(col);
+                    }
                 }
-                const safeUrl = safeHref(l.url) || '#';
-                const thumbCandidates = getThumbnailCandidates(l, false);
-                if(!thumbCandidates.length) scheduleMissingThumbnailRecovery(l);
-                const safeImg = safeHref(thumbCandidates[0] || l.image, true);
-                const rawDomain = getDomain(l.url);
-                const domainHost = encodeURIComponent(rawDomain);
-                let ih = safeImg ? `<a href="${safeUrl}" target="_blank" rel="noopener noreferrer" class="link-image-preview" onclick="if(batchMode){event.preventDefault();return;}recordLinkClick('${lid}')"><img loading="lazy" data-thumb-index="0" src="${safeImg}" onload="handleThumbnailLoad(this,'${lid}')" onerror="recoverThumbnail(this,'${lid}')"></a>` : "";
-                let sh = safeImg ? `<a href="${safeUrl}" target="_blank" rel="noopener noreferrer" class="link-thumb-small" onclick="if(batchMode){event.preventDefault();return;}recordLinkClick('${lid}')"><img loading="lazy" data-thumb-index="0" src="${safeImg}" onload="handleThumbnailLoad(this,'${lid}')" onerror="recoverThumbnail(this,'${lid}')"></a>` : "";
-                const fo=allFoldersCache.find(f=>f.id===l.folderId)||allFoldersCache.find(f=>f.id==='default');
-                const fb=fo?`<div class="folder-badge" onclick="if(!batchMode){event.stopPropagation();setFolder('${safeId(fo.id)}');}" title="篩選此資料夾"><i class="fas ${safeIcon(fo.icon)}"></i> ${escapeHtml(fo.name)}</div>`:"";
-                const tg=(Array.isArray(l.categories)?l.categories:(l.categories?[l.categories]:[])).map(t=>`<span class="tag-badge" style="${getTagStyles(t)}" data-tag="${escapeHtml(t)}" onclick="if(!batchMode){event.stopPropagation();setTag(this.dataset.tag);}" title="點擊篩選標籤">${escapeHtml(t)}</span>`).join('');
-                const isSelected = selectedIds.has(lid);
-                const cb=`<input type="checkbox" class="batch-checkbox" ${isSelected?'checked':''} onclick="event.stopPropagation();toggleSelect('${lid}',this,event)">`;
-                const dbadge=l.isDead?`<div class="dead-badge"><i class="fas fa-exclamation-triangle"></i> 失效</div>`:"";
-                const clickBadge = l.clicks > 0 ? `<span class="click-count-badge" title="造訪次數"><i class="fas fa-fire"></i>${l.clicks}</span>` : "";
-                const extraClasses = `${animClass} ${l.pinned?'is-pinned':''} ${l.isRead?'is-read':''} ${l.isDead?'is-dead':''} ${fo?'has-folder':''} ${!safeImg?'no-image':''} ${isSelected?'batch-selected':''}`;
-                const animStyle = isInitialRender ? `style="animation-delay:${Math.min(i*0.015, 0.3)}s"` : '';
-                return`<div class="link-card ${extraClasses}" data-id="${lid}" ${animStyle} onclick="handleCardClick('${lid}',event)">${cb}${fb}${ih}<div class="card-actions"><button type="button" class="btn-outline" onclick="copyLinkById('${lid}',event)" title="複製網址"><i class="fas fa-copy"></i></button><button type="button" class="btn-outline" onclick="togglePin('${lid}')" title="釘選置頂"><i class="fas fa-thumbtack" style="${l.pinned?'color:var(--warning);':''}"></i></button><button type="button" class="btn-outline" onclick="toggleRead('${lid}')" title="標記已讀"><i class="fas ${l.isRead?'fa-check-circle':'fa-circle'}"></i></button><button type="button" class="btn-outline" onclick="openEdit('${lid}')" title="編輯"><i class="fas fa-edit"></i></button><button type="button" class="btn-outline btn-delete" onclick="deleteLink('${lid}')" title="刪除"><i class="fas fa-trash"></i></button></div><div class="card-body-row"><div class="card-text-col"><p class="link-desc">${descHtml}</p><h3 class="link-title"><a href="${safeUrl}" target="_blank" rel="noopener noreferrer" onclick="if(batchMode){event.preventDefault();return;}recordLinkClick('${lid}')">${th}</a></h3><a href="${safeUrl}" target="_blank" rel="noopener noreferrer" class="link-url-display" onclick="if(batchMode){event.preventDefault();return;}recordLinkClick('${lid}')">${safeUrl}</a></div>${sh}</div><div class="card-footer"><div class="source-info"><img loading="lazy" class="favicon" src="https://www.google.com/s2/favicons?domain=${domainHost}&sz=64" alt="" data-domain="${escapeHtml(rawDomain)}" onclick="if(!batchMode){event.stopPropagation();filterByDomain(this.dataset.domain);}" title="點擊篩選同網域 (${escapeHtml(rawDomain)})"><span class="source-text">${timeText}</span><span id="click-badge-${lid}">${clickBadge}</span></div><div class="tags-container">${tg}</div></div>${dbadge}</div>`;
-            }).join('');
+                masonryCols = n;
+                layoutKey = wantKey;
+            }
+
+            // 2. 建立（或重用）卡片節點
+            const folderMap = new Map(allFoldersCache.map(f => [f.id, f]));
+            const tree = getFolderTree();
+            const ctx = {
+                rawQuery,
+                now: Date.now(),
+                light: document.body.classList.contains('light-mode'),
+                privacy: privacyNoPreview,
+                folderOf: l => folderMap.get(l.folderId) || folderMap.get('default'),
+                folderPath: id => [...getFolderAncestors(id, tree), id].map(x => (folderMap.get(x) || {}).name || '').filter(Boolean).join(' / ')
+            };
+            const keep = new Set();
+            const els = visibleSlice.map((l, i) => {
+                const id = safeId(l.id);
+                keep.add(id);
+                const key = cardKey(l, ctx);
+                const cached = cardCache.get(id);
+                if (cached && cached.key === key) return cached.el;
+                const el = buildCardEl(l, ctx, i);
+                cardCache.set(id, { key, el });
+                return el;
+            });
+
+            // 3. 依序放入欄位（只搬動需要移動的節點）
+            if (isMasonry) masonryColEls.forEach((col, k) => reconcileChildren(col, els.filter((_, i) => i % n === k)));
+            else reconcileChildren(c, els);
+
+            for (const id of Array.from(cardCache.keys())) if (!keep.has(id)) cardCache.delete(id);
         }
-        
+
+        function cardKey(l, ctx) {
+            const lid = safeId(l.id);
+            const fo = ctx.folderOf(l);
+            const rt = getRemindTs(l);
+            const thumb = ctx.privacy ? '' : (getThumbnailCandidates(l, false)[0] || l.image || '');
+            return [
+                lid, l.url, l.title, l.description, JSON.stringify(l.categories || []), l.folderId,
+                fo ? fo.id + '|' + fo.name + '|' + fo.icon + '|' + ctx.folderPath(fo.id) : '',
+                l.pinned ? 1 : 0, l.isRead ? 1 : 0, l.isDead ? 1 : 0, l.clicks || 0, l.createdAt || 0,
+                rt ? rt + (rt <= ctx.now ? 'd' : 'w') : '', thumb,
+                selectedIds.has(lid) ? 1 : 0, ctx.rawQuery, ctx.light ? 1 : 0, ctx.privacy ? 1 : 0
+            ].join('\u0001');
+        }
+
+        function buildCardEl(l, ctx, i) {
+            const lid = safeId(l.id);
+            const rawQuery = ctx.rawQuery;
+            const th = formatTitleHtml(l.title, rawQuery);
+            const descHtml = safeHighlightText(l.description, rawQuery);
+            let timeText = '未知';
+            if (l.createdAt) timeText = new Date(l.createdAt).toLocaleString('zh-TW', { month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', hour12: false });
+            const safeUrl = safeHref(l.url) || '#';
+            const thumbCandidates = ctx.privacy ? [] : getThumbnailCandidates(l, false);
+            if (!ctx.privacy && !thumbCandidates.length) scheduleMissingThumbnailRecovery(l);
+            const safeImg = ctx.privacy ? '' : safeHref(thumbCandidates[0] || l.image, true);
+            const rawDomain = getDomain(l.url);
+            const domainHost = encodeURIComponent(rawDomain);
+            const imgTag = `<img loading="lazy" data-thumb-index="0" src="${safeImg}" alt="">`;
+            const ih = safeImg ? `<a href="${safeUrl}" target="_blank" rel="noopener noreferrer" class="link-image-preview" data-action="open" tabindex="-1" aria-hidden="true">${imgTag}</a>` : '';
+            const sh = safeImg ? `<a href="${safeUrl}" target="_blank" rel="noopener noreferrer" class="link-thumb-small" data-action="open" tabindex="-1" aria-hidden="true">${imgTag}</a>` : '';
+            const fo = ctx.folderOf(l);
+            const fb = fo ? `<div class="folder-badge" data-action="folder" data-folder="${safeId(fo.id)}" title="篩選此資料夾：${escapeHtml(ctx.folderPath(fo.id))}"><i class="fas ${safeIcon(fo.icon)}"></i> ${escapeHtml(fo.name)}</div>` : '';
+            const tg = (Array.isArray(l.categories) ? l.categories : (l.categories ? [l.categories] : [])).map(t => `<span class="tag-badge" style="${getTagStyles(t)}" data-action="tag" data-tag="${escapeHtml(t)}" title="點擊篩選標籤">${escapeHtml(t)}</span>`).join('');
+            const isSelected = selectedIds.has(lid);
+            const cb = `<input type="checkbox" class="batch-checkbox" data-action="select" aria-label="選取此連結" ${isSelected ? 'checked' : ''}>`;
+            const dbadge = l.isDead ? `<div class="dead-badge"><i class="fas fa-exclamation-triangle"></i> 失效</div>` : '';
+            const clickBadge = l.clicks > 0 ? `<span class="click-count-badge" title="造訪次數"><i class="fas fa-fire"></i>${l.clicks}</span>` : '';
+            const rt = getRemindTs(l);
+            const due = rt > 0 && rt <= ctx.now && !l.isRead;
+            const remindBadge = (rt > 0 && !l.isRead)
+                ? `<span class="remind-badge ${due ? 'due' : ''}" data-action="remind" title="${due ? '提醒已到期，點擊重新設定' : '點擊修改提醒'}"><i class="fas fa-bell"></i> ${due ? '到期 ' : ''}${formatRemindTime(rt)}</span>` : '';
+            const favicon = ctx.privacy
+                ? `<span class="favicon favicon-letter" style="background:${stringToHslColor(rawDomain, 0.5, 0.4)};" data-action="domain" data-domain="${escapeHtml(rawDomain)}" title="點擊篩選同網域 (${escapeHtml(rawDomain)})">${escapeHtml((rawDomain || '?').charAt(0).toUpperCase())}</span>`
+                : `<img loading="lazy" class="favicon" src="https://www.google.com/s2/favicons?domain=${domainHost}&sz=64" alt="" data-action="domain" data-domain="${escapeHtml(rawDomain)}" title="點擊篩選同網域 (${escapeHtml(rawDomain)})">`;
+            const extraClasses = `${isInitialRender ? 'card-enter' : ''} ${l.pinned ? 'is-pinned' : ''} ${l.isRead ? 'is-read' : ''} ${l.isDead ? 'is-dead' : ''} ${due ? 'is-due' : ''} ${fo ? 'has-folder' : ''} ${!safeImg ? 'no-image' : ''} ${isSelected ? 'batch-selected' : ''}`;
+            const animStyle = isInitialRender ? `style="animation-delay:${Math.min(i * 0.015, 0.3)}s"` : '';
+            const html = `<div class="link-card ${extraClasses}" data-id="${lid}" ${animStyle}>${cb}${fb}${ih}<div class="card-actions"><button type="button" class="btn-outline" data-action="copy" title="複製網址" aria-label="複製網址"><i class="fas fa-copy"></i></button><button type="button" class="btn-outline" data-action="pin" title="釘選置頂" aria-label="釘選置頂"><i class="fas fa-thumbtack" style="${l.pinned ? 'color:var(--warning);' : ''}"></i></button><button type="button" class="btn-outline" data-action="read" title="標記已讀" aria-label="標記已讀"><i class="fas ${l.isRead ? 'fa-check-circle' : 'fa-circle'}"></i></button><button type="button" class="btn-outline" data-action="remind" title="稍後閱讀提醒" aria-label="稍後閱讀提醒"><i class="fas fa-bell" style="${rt && !l.isRead ? 'color:var(--warning);' : ''}"></i></button><button type="button" class="btn-outline" data-action="edit" title="編輯" aria-label="編輯"><i class="fas fa-edit"></i></button><button type="button" class="btn-outline btn-delete" data-action="delete" title="刪除" aria-label="刪除"><i class="fas fa-trash"></i></button></div><div class="card-body-row"><div class="card-text-col"><p class="link-desc">${descHtml}</p><h3 class="link-title"><a href="${safeUrl}" target="_blank" rel="noopener noreferrer" data-action="open">${th}</a></h3><a href="${safeUrl}" target="_blank" rel="noopener noreferrer" class="link-url-display" data-action="open">${safeUrl}</a></div>${sh}</div><div class="card-footer"><div class="source-info">${favicon}<span class="source-text">${timeText}</span><span id="click-badge-${lid}">${clickBadge}</span>${remindBadge}</div><div class="tags-container">${tg}</div></div>${dbadge}</div>`;
+            const tpl = document.createElement('template');
+            tpl.innerHTML = html;
+            const el = tpl.content.firstElementChild;
+            if (isInitialRender) {
+                // 進場動畫只播一次；之後節點被搬動時不應重播。
+                el.addEventListener('animationend', () => { el.classList.remove('card-enter'); el.style.animationDelay = ''; el.style.opacity = ''; }, { once: true });
+            }
+            return el;
+        }
+
         function renderTagChips(links){
             const c=document.getElementById('tag-chips');
             const tagCounts = new Map();
@@ -2626,14 +3610,16 @@
                 document.getElementById('edit-url').value=l.url||"";
                 document.getElementById('edit-categories').value=Array.isArray(l.categories)?l.categories.join(', '):(l.categories||"");
                 document.getElementById('edit-desc').value=l.description||"";
+                document.getElementById('edit-remind').value=getRemindTs(l)?toLocalInputValue(getRemindTs(l)):'';
                 const s=document.getElementById('edit-folder');
-                s.innerHTML=allFoldersCache.map(f=>`<option value="${safeId(f.id)}" ${l.folderId===f.id?'selected':''}>${escapeHtml(f.name)}</option>`).join('');
+                s.innerHTML=folderOptionsHtml(l.folderId);
                 renderModalTagSuggestions('edit-categories', 'edit-tag-suggestions');
                 openModal('edit-modal', 'edit-title');
             }
         }
 
         async function refetchInEditModal() {
+            if (privacyNoPreview) { showToast('🔒 隱私模式已開啟，不會對外抓取網頁資訊', 'error'); return; }
             const raw = document.getElementById('edit-url').value.trim();
             const u = cleanUrl(raw);
             if (!u) { showToast("請先輸入有效的 http/https 網址", "error"); return; }
@@ -2673,7 +3659,7 @@
             const imgVal=document.getElementById('edit-image').value.trim();
             const existing=rawLinksCache.find(x=>safeId(x.id)===id) || {};
             const thumbMerged=imgVal ? mergeThumbnailData(existing,imgVal) : existing;
-            const u={title:document.getElementById('edit-title').value,url:cleaned,categories:cats,description:document.getElementById('edit-desc').value,folderId:safeId(document.getElementById('edit-folder').value)||'default'};
+            const u={title:document.getElementById('edit-title').value,url:cleaned,categories:cats,description:document.getElementById('edit-desc').value,folderId:safeId(document.getElementById('edit-folder').value)||'default',remindAt:parseRemindInput(document.getElementById('edit-remind').value)};
             // 編輯時不再把空白 image 寫回資料庫；原縮圖與備份欄位完整保留。
             if(imgVal){
                 u.image=imgVal;
@@ -2717,7 +3703,7 @@
                 toggleBatchMode();
             }
             isKanbanMode=!isKanbanMode;
-            document.getElementById('links-container').style.display=isKanbanMode?'none':'block';
+            document.getElementById('links-container').style.display=isKanbanMode?'none':'';
             document.getElementById('kanban-board').style.display=isKanbanMode?'flex':'none';
             document.getElementById('btn-kanban').classList.toggle('btn-primary',isKanbanMode);
             document.getElementById('btn-kanban').classList.toggle('btn-outline',!isKanbanMode);
@@ -2738,11 +3724,11 @@
                 const descHtml = safeHighlightText(l.description, rawQuery);
                 return `<div class="kanban-card" data-id="${lid}">
                     <div class="k-actions">
-                        <button type="button" class="btn-outline" onclick="copyLinkById('${lid}',event)" title="複製網址"><i class="fas fa-copy"></i></button>
-                        <button type="button" class="btn-outline" onclick="openEdit('${lid}')" title="編輯"><i class="fas fa-pen"></i></button>
-                        <button type="button" class="btn-outline" style="color:var(--danger);" onclick="deleteLink('${lid}')" title="刪除"><i class="fas fa-trash"></i></button>
+                        <button type="button" class="btn-outline" data-action="copy" title="複製網址" aria-label="複製網址"><i class="fas fa-copy"></i></button>
+                        <button type="button" class="btn-outline" data-action="edit" title="編輯" aria-label="編輯"><i class="fas fa-pen"></i></button>
+                        <button type="button" class="btn-outline" style="color:var(--danger);" data-action="delete" title="刪除" aria-label="刪除"><i class="fas fa-trash"></i></button>
                     </div>
-                    <div class="k-title"><a href="${safeUrl}" target="_blank" rel="noopener noreferrer" onclick="recordLinkClick('${lid}')">${th}</a></div>
+                    <div class="k-title"><a href="${safeUrl}" target="_blank" rel="noopener noreferrer" data-action="open">${th}</a></div>
                     <div class="k-desc">${descHtml}</div>
                 </div>`;
             };
@@ -2787,6 +3773,8 @@
         
         function applyTheme(isLight) {
             document.body.classList.toggle('light-mode', isLight);
+            document.documentElement.classList.toggle('light-mode', isLight);
+            document.querySelector('meta[name="theme-color"]')?.setAttribute('content', isLight ? '#f1f5f9' : '#0f172a');
             const icon = document.getElementById('theme-icon');
             if (icon) icon.className = isLight ? 'fas fa-moon' : 'fas fa-sun';
             if (rawLinksCache.length > 0) renderCurrentView(rawLinksCache);
@@ -2834,28 +3822,30 @@
             const links = await getAllLinks();
             if (!links.length) { showToast("目前沒有可匯出的連結", "error"); return; }
             const folders = allFoldersCache.length ? allFoldersCache : await getFolders();
-            const grouped = new Map();
-            folders.forEach(f => grouped.set(f.id, { name: f.name, items: [] }));
-            if (!grouped.has('default')) grouped.set('default', { name: '未分類', items: [] });
-
+            const folderList = folders.some(f => f.id === 'default') ? folders.slice() : [{ id: 'default', name: '未分類', icon: 'fa-inbox', order: 0 }, ...folders];
+            const bmTree = getFolderTree(folderList);
+            const itemsByFolder = new Map(folderList.map(f => [f.id, []]));
             links.forEach(l => {
-                const fid = (l.folderId && grouped.has(l.folderId)) ? l.folderId : 'default';
-                grouped.get(fid).items.push(l);
+                const fid = (l.folderId && itemsByFolder.has(l.folderId)) ? l.folderId : 'default';
+                itemsByFolder.get(fid).push(l);
             });
-
-            let html = `<!DOCTYPE NETSCAPE-Bookmark-file-1>\n<!-- This is an automatically generated file. -->\n<META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=UTF-8">\n<TITLE>Bookmarks</TITLE>\n<H1>Smart Link Manager 書籤匯出</H1>\n<DL><p>\n`;
-            grouped.forEach(group => {
-                if (!group.items.length) return;
-                html += `    <DT><H3>${escapeHtml(group.name)}</H3>\n    <DL><p>\n`;
-                group.items.forEach(l => {
+            const folderHasContent = id => (itemsByFolder.get(id) || []).length > 0 || (bmTree.childrenOf.get(id) || []).some(c => folderHasContent(c.id));
+            const renderBmFolder = (f, indent) => {
+                if (!folderHasContent(f.id)) return '';
+                const pad = ' '.repeat(indent);
+                let out = `${pad}<DT><H3>${escapeHtml(f.name)}</H3>\n${pad}<DL><p>\n`;
+                (itemsByFolder.get(f.id) || []).forEach(l => {
                     const addDate = Math.floor((l.createdAt || Date.now()) / 1000);
                     const safeU = safeHref(l.url);
-                    if (safeU) {
-                        html += `        <DT><A HREF="${safeU}" ADD_DATE="${addDate}">${escapeHtml(l.title || l.url)}</A>\n`;
-                    }
+                    if (safeU) out += `${pad}    <DT><A HREF="${safeU}" ADD_DATE="${addDate}">${escapeHtml(l.title || l.url)}</A>\n`;
                 });
-                html += `    </DL><p>\n`;
-            });
+                (bmTree.childrenOf.get(f.id) || []).forEach(c => { out += renderBmFolder(c, indent + 4); });
+                out += `${pad}</DL><p>\n`;
+                return out;
+            };
+
+            let html = `<!DOCTYPE NETSCAPE-Bookmark-file-1>\n<!-- This is an automatically generated file. -->\n<META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=UTF-8">\n<TITLE>Bookmarks</TITLE>\n<H1>Smart Link Manager 書籤匯出</H1>\n<DL><p>\n`;
+            (bmTree.childrenOf.get('') || []).forEach(f => { html += renderBmFolder(f, 4); });
             html += `</DL><p>\n`;
 
             const blob = new Blob([html], { type: "text/html;charset=utf-8" });
@@ -2870,8 +3860,14 @@
 
         function parseBrowserBookmarksHtml(htmlText) {
             const doc = new DOMParser().parseFromString(htmlText, 'text/html');
-            const existingFolderNameMap = new Map();
-            allFoldersCache.forEach(f => existingFolderNameMap.set(f.name, f.id));
+            const skipNames = ['書籤列', 'Bookmarks bar', '其他書籤', 'Other bookmarks'];
+            // 既有資料夾的「路徑 → id」，讓同名同路徑的資料夾直接沿用，避免重複建立。
+            const existingTree = getFolderTree();
+            const existingPathMap = new Map();
+            allFoldersCache.forEach(f => {
+                const names = [...getFolderAncestors(f.id, existingTree), f.id].map(x => (allFoldersCache.find(y => y.id === x) || {}).name);
+                existingPathMap.set(names.join('/'), f.id);
+            });
 
             const newFolders = [];
             const parsedLinks = [];
@@ -2884,22 +3880,34 @@
                 const addDateAttr = a.getAttribute('add_date');
                 const createdAt = addDateAttr ? (parseInt(addDateAttr, 10) * 1000 || (now - idx)) : (now - idx);
 
+                // 由內而外蒐集巢狀資料夾名稱（<DL> 前一個兄弟元素是 <H3>）
+                const names = [];
+                let dl = a.closest('dl');
+                while (dl) {
+                    const h = dl.previousElementSibling;
+                    if (h && h.tagName === 'H3') {
+                        const nm = h.textContent.trim();
+                        if (nm && !skipNames.includes(nm)) names.unshift(nm);
+                    }
+                    dl = dl.parentElement ? dl.parentElement.closest('dl') : null;
+                }
+
                 let folderId = 'default';
                 let categories = ['書籤匯入'];
-                const parentDl = a.closest('dl');
-                if (parentDl && parentDl.previousElementSibling && parentDl.previousElementSibling.tagName === 'H3') {
-                    const folderName = parentDl.previousElementSibling.textContent.trim();
-                    if (folderName && !['書籤列', 'Bookmarks bar', '其他書籤', 'Other bookmarks'].includes(folderName)) {
-                        if (existingFolderNameMap.has(folderName)) {
-                            folderId = existingFolderNameMap.get(folderName);
-                        } else {
-                            const newFid = 'f_bm_' + now + '_' + newFolders.length;
-                            existingFolderNameMap.set(folderName, newFid);
-                            newFolders.push({ id: newFid, name: folderName, icon: 'fa-bookmark', order: allFoldersCache.length + newFolders.length });
-                            folderId = newFid;
+                if (names.length) {
+                    let parent = '', pathKey = '';
+                    names.forEach(nm => {
+                        pathKey = pathKey ? pathKey + '/' + nm : nm;
+                        let fid = existingPathMap.get(pathKey);
+                        if (!fid) {
+                            fid = 'f_bm_' + now + '_' + newFolders.length;
+                            existingPathMap.set(pathKey, fid);
+                            newFolders.push({ id: fid, name: nm, icon: 'fa-bookmark', order: allFoldersCache.length + newFolders.length, parentId: parent });
                         }
-                        categories.push(folderName);
-                    }
+                        parent = fid;
+                    });
+                    folderId = parent || 'default';
+                    categories.push(names[names.length - 1]);
                 }
 
                 parsedLinks.push({
@@ -2923,7 +3931,7 @@
 
             return { links: parsedLinks, folders: newFolders };
         }
-        
+
         async function importData(ev){
             const f=ev.target.files[0];if(!f)return;
             // 匯入讀檔期間若切換帳號／模式，必須取消，避免把資料寫到另一個工作階段。
@@ -2951,7 +3959,7 @@
                         throw new Error('匯入期間登入帳號或模式已變更，為避免資料寫入錯誤位置，本次匯入已取消。請重新選擇檔案再試。');
                     }
 
-                    const existingUrlSet = new Set(rawLinksCache.map(x => cleanUrl(x.url) || x.url).filter(Boolean));
+                    const existingUrlSet = new Set(rawLinksCache.map(x => dedupeKey(x.url)).filter(Boolean));
                     const existingLinkIds = new Set(rawLinksCache.map(x => safeId(x.id)).filter(Boolean));
                     const existingFolderIds = new Set(allFoldersCache.map(fo => safeId(fo.id)).filter(Boolean));
                     const folderIdMap = new Map();
@@ -2977,22 +3985,32 @@
                         existingFolderIds.add(candidate);
                         folderIdMap.set(originalId, candidate);
                         uniqueNewFolders.push({
-                            ...fo,
                             id: candidate,
-                            icon: safeIcon(fo.icon),
-                            order: typeof fo.order === 'number' ? fo.order : (allFoldersCache.length + uniqueNewFolders.length)
+                            name: String(fo?.name == null ? '未命名資料夾' : fo.name).slice(0, 60) || '未命名資料夾',
+                            icon: safeIcon(fo?.icon),
+                            order: typeof fo?.order === 'number' ? fo.order : (allFoldersCache.length + uniqueNewFolders.length),
+                            parentId: '',
+                            _origParent: String(fo?.parentId || '')
                         });
+                    });
+
+                    // 將匯入資料夾的「舊上層 id」轉成實際新 id（上層也可能是本機既有資料夾）。
+                    uniqueNewFolders.forEach(nf => {
+                        const mapped = folderIdMap.get(nf._origParent);
+                        nf.parentId = (mapped && mapped !== nf.id && mapped !== 'default') ? mapped : '';
+                        delete nf._origParent;
                     });
 
                     // 匯入連結時同時防止「URL 重複」與「文件 ID 衝突」。
                     incomingLinks.forEach((x, idx) => {
-                        const cu = cleanUrl(x.url);
+                        const cu = cleanUrl(x?.url);
                         if (!cu) return;
-                        if (existingUrlSet.has(cu)) {
+                        const dk = dedupeKey(cu);
+                        if (existingUrlSet.has(dk)) {
                             skippedCount++;
                             return;
                         }
-                        existingUrlSet.add(cu);
+                        existingUrlSet.add(dk);
 
                         const originalId = String(x?.id || '');
                         let linkId = safeId(originalId);
@@ -3003,12 +4021,9 @@
 
                         const importedFolderId = String(x?.folderId || '');
                         const mappedFolderId = folderIdMap.get(importedFolderId);
-                        uniqueNewLinks.push(normalizeLinkThumbnailFields({
-                            ...x,
-                            url: cu,
-                            id: candidate,
-                            folderId: mappedFolderId || 'default'
-                        }));
+                        uniqueNewLinks.push(normalizeLinkThumbnailFields(
+                            sanitizeImportedLink(x, cu, candidate, mappedFolderId || 'default', now, idx)
+                        ));
                     });
 
                     if (importStartedGeneration !== cloudSessionGeneration || importStartedLocal !== isLocalMode || (!importStartedLocal && importStartedUid !== (currentUser?.uid || null))) {
@@ -3043,6 +4058,9 @@
                         if (folderIdRemap.size) {
                             uniqueNewLinks.forEach(x => {
                                 if (folderIdRemap.has(x.folderId)) x.folderId = folderIdRemap.get(x.folderId);
+                            });
+                            uniqueNewFolders.forEach(x => {
+                                if (folderIdRemap.has(x.parentId)) x.parentId = folderIdRemap.get(x.parentId);
                             });
                         }
 
@@ -3079,7 +4097,9 @@
             while (c.children.length >= 3) c.removeChild(c.firstChild);
             const d=document.createElement('div');
             d.className=`toast ${t}`;
-            d.innerHTML=`<span>${m}</span>`;
+            const msgSpan=document.createElement('span');
+            msgSpan.textContent=m;
+            d.appendChild(msgSpan);
             c.appendChild(d);
             setTimeout(()=>{d.style.animation='fadeOut 0.3s ease forwards';setTimeout(()=>d.remove(),300);},3000);
         }
@@ -3231,7 +4251,7 @@
         function openBatchMoveModal() {
             if (!selectedIds.size) { showToast("請先勾選連結", "error"); return; }
             const sel = document.getElementById('batch-move-select');
-            sel.innerHTML = allFoldersCache.map(f => `<option value="${safeId(f.id)}">${escapeHtml(f.name)}</option>`).join('');
+            sel.innerHTML = folderOptionsHtml('');
             openModal('batch-move-modal', 'batch-move-select');
         }
 
@@ -3287,6 +4307,7 @@
         }
         
         async function startDeadLinkCheck(){
+            if (privacyNoPreview && !isCheckingLinks) { showToast('🔒 隱私模式已開啟：失效檢測會把網址送到 Microlink，請先在「顯示、閱讀與隱私設置」中關閉。', 'error'); return; }
             if (isCheckingLinks) {
                 abortDeadCheck = true;
                 showToast("🛑 已停止檢測，正在儲存目前已檢查的進度...", "info");
@@ -3322,19 +4343,28 @@
 
             const total = checkableLinks.length;
             let dc = 0, cc = 0, ups = [];
+            let rateLimited = false;
             tx.textContent = `0/${total}`;
 
             const chunkSize = 4;
             for (let i = 0; i < checkableLinks.length; i += chunkSize) {
-                if (abortDeadCheck) break;
+                if (abortDeadCheck || rateLimited) break;
                 const chunk = checkableLinks.slice(i, i + chunkSize);
                 await Promise.all(chunk.map(async l => {
                     try {
                         const r = await fetchWithTimeout(`https://api.microlink.io/?url=${encodeURIComponent(l.url)}`, 8000);
+                        if (r.status === 429) { rateLimited = true; return; }
                         const d = await r.json();
+                        // 只有「目標網站明確回 404/410」或「網域不存在」才算失效；
+                        // Microlink 自身錯誤、逾時、被目標站擋下都不等於連結失效。
                         let dead = false;
-                        if (d.status !== 'success') dead = true;
-                        else if (d.data && d.data.statusCode && d.data.statusCode >= 400) dead = true;
+                        const code = String(d.code || '');
+                        const msg = String(d.message || '');
+                        if (d.status === 'success') {
+                            dead = [404, 410].includes(Number(d.data && d.data.statusCode));
+                        } else {
+                            dead = /ENOTFOUND|EAI_AGAIN/i.test(code) || /ENOTFOUND|getaddrinfo/i.test(msg);
+                        }
                         if (dead !== (l.isDead || false)) { ups.push({ id: l.id, isDead: dead }); if (dead) dc++; }
                     } catch (e) {
                         // 網路逾時、Microlink 異常或代理失敗不等於網址失效，避免誤標記。
@@ -3367,6 +4397,7 @@
             ic.classList.remove('rotating');
             tx.style.display = 'none';
             tx.textContent = '';
+            if (rateLimited) showToast('⚠️ Microlink 額度已用完 (429)，已提前停止；已檢查的結果仍會保存', 'error');
             showToast(`✅ 檢測結束！已檢查 ${cc} 個，新增標記失效 ${dc} 個`, dc > 0 ? "error" : "success");
             loadLinks();
         }
@@ -3374,7 +4405,7 @@
         // 手機滑動 / 長按批次操作：左滑刪除、右滑複製；長按進入批次選取。
         let gestureState = null;
         function isCardInteractiveTarget(target){
-            return !!(target && target.closest && target.closest('a,button,input,select,textarea,.tag-badge,.folder-badge'));
+            return !!(target && target.closest && target.closest('a,button,input,select,textarea,.tag-badge,.folder-badge,.remind-badge'));
         }
         document.addEventListener('touchstart', e => {
             if(batchMode || e.touches.length !== 1) return;
@@ -3440,7 +4471,7 @@
                 if (inp) {
                     inp.value = pasted.trim();
                     processAndSaveUrl().then(saved => {
-                        if (saved) lastAutoSavedUrl = url;
+                        if (saved) lastAutoSavedUrl = '';
                     });
                 }
             }
@@ -3448,11 +4479,15 @@
         });
 
         let dragCounter = 0;
+        let internalDrag = false; // 頁面內部拖曳（資料夾排序、看板、卡片連結）不應觸發全螢幕匯入遮罩
+        document.addEventListener('dragstart', () => { internalDrag = true; });
+        document.addEventListener('dragend', () => { internalDrag = false; dragCounter = 0; document.getElementById('drop-zone-overlay')?.classList.remove('active'); });
         window.addEventListener('dragenter', e => {
             const appScreen = document.getElementById('app-screen');
-            if (!appScreen || appScreen.style.display === 'none' || isKanbanMode) return;
+            if (!appScreen || appScreen.style.display === 'none' || isKanbanMode || internalDrag) return;
+            if (Array.from(document.querySelectorAll('.modal-overlay')).some(m => m.style.display === 'flex')) return;
             const types = Array.from(e.dataTransfer?.types || []);
-            if (types.includes('Files') || types.includes('text/uri-list') || types.includes('text/plain')) {
+            if (types.includes('Files') || types.includes('text/uri-list')) {
                 dragCounter++;
                 document.getElementById('drop-zone-overlay')?.classList.add('active');
             }
@@ -3524,6 +4559,7 @@
                 closeModal('help-modal');
                 if(batchMode)toggleBatchMode();
             }
+            if (e.ctrlKey || e.metaKey || e.altKey) return;
             if(!inInput){
                 if(e.key==='/'){e.preventDefault();document.getElementById('search-input').focus();}
                 else if(e.key==='n'||e.key==='N'){e.preventDefault();document.getElementById('url-input').focus();}
@@ -3547,6 +4583,12 @@
 
                     const cleanedExtUrl = cleanUrl(extUrl);
                     if (!cleanedExtUrl) {
+                        window.close();
+                        return;
+                    }
+
+                    // 任何網頁都能組出 ?quick_add=1&url=… 連結；寫入前先讓使用者確認，避免被誘導自動新增書籤。
+                    if (!confirm(`要將這個網頁加入智能連結嗎？\n\n${String(extTitle || '').slice(0, 120)}\n${cleanedExtUrl}`)) {
                         window.close();
                         return;
                     }
@@ -3589,6 +4631,7 @@
                         if (info.categories && info.categories.length > 0 && info.categories[0] !== "一般網站") {
                             finalData.categories = [...new Set([...finalData.categories, ...info.categories])];
                         }
+                        finalData.categories = mergeAutoTags(finalData.categories, cleanedExtUrl, finalData.title, finalData.description);
                         finalData = normalizeLinkThumbnailFields(finalData);
                     } catch (e) {
                         finalData.title = extTitle || "未命名網頁";
@@ -3613,8 +4656,10 @@
                 }
             }
 
-            applyTheme(localStorage.getItem('theme') === 'light');
+            const savedTheme = localStorage.getItem('theme');
+            applyTheme(savedTheme ? savedTheme === 'light' : !!(window.matchMedia && matchMedia('(prefers-color-scheme: light)').matches));
             applyViewMode(currentView);
+            initV3UI();
             const sortSelect = document.getElementById('sort-select');
             if (sortSelect) sortSelect.value = currentSort;
             
@@ -3625,6 +4670,11 @@
             
             updateHtmlSaveTime();
             initInfiniteScrollObserver();
+            // 圖示按鈕補上 aria-label（沿用 title），卡片重繪後也會自動補。
+            const labelButtons = root => root.querySelectorAll('button[title]:not([aria-label])').forEach(b => b.setAttribute('aria-label', b.title));
+            labelButtons(document);
+            const linksBox = document.getElementById('links-container');
+            if (linksBox && window.MutationObserver) new MutationObserver(() => labelButtons(linksBox)).observe(linksBox, { childList: true, subtree: true });
             const m={name:"智能連結",short_name:"連結",start_url:".",display:"standalone",background_color:"#0f172a",theme_color:"#6366f1",icons:[{src:"data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🔗</text></svg>",sizes:"any",type:"image/svg+xml"}]};
             document.getElementById('pwa-manifest').href=URL.createObjectURL(new Blob([JSON.stringify(m)],{type:'application/json'}));
         };
