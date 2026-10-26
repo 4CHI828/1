@@ -17,13 +17,14 @@
 <link rel="manifest" href="data:application/manifest+json;base64,eyJuYW1lIjoi6Zuy56uv5YWo6IO95YiG5biz6KiY5bizIiwic2hvcnRfbmFtZSI6Iumbsuerr+iomOW4syIsImRlc2NyaXB0aW9uIjoi6Zuy56uv6KiY5biz44CB5YiG5biz6IiH5aSa5Lq65ZCI5LuYIiwic3RhcnRfdXJsIjoiLi9wYXkuaHRtbCIsImRpc3BsYXkiOiJzdGFuZGFsb25lIiwiYmFja2dyb3VuZF9jb2xvciI6IiMxMTE4MjciLCJ0aGVtZV9jb2xvciI6IiMyNTYzZWIiLCJpY29ucyI6W3sic3JjIjoiaHR0cHM6Ly9jZG4taWNvbnMtcG5nLmZsYXRpY29uLmNvbS81MTIvMjkzNi8yOTM2NzU4LnBuZyIsInNpemVzIjoiMTkyeDE5MiIsInR5cGUiOiJpbWFnZS9wbmciLCJwdXJwb3NlIjoiYW55IG1hc2thYmxlIn1dLCJzY29wZSI6Ii4vIn0=">
 <meta name="theme-color" content="#3b82f6">
 <meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="雲端記帳">
 <link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/2936/2936758.png">
 <script>
 (function() {
 const savedTheme = localStorage.getItem("theme");
-if (savedTheme === "dark" || (!savedTheme && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+if (savedTheme === "dark" || ((!savedTheme || savedTheme === "auto") && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
 document.documentElement.classList.add("dark");
 } else {
 document.documentElement.classList.remove("dark");
@@ -118,6 +119,8 @@ try {
 .record-card { user-select: none; -webkit-user-select: none; }
 
 body { padding-bottom: 80px; }
+#mainChartContainer .chart-visual { position: relative; width: 100%; height: 340px; }
+#mainChartContainer canvas { max-width: 100%; }
 
 /* Mobile UI optimization */
 @media (max-width: 640px) {
@@ -172,7 +175,7 @@ body { padding-bottom: 80px; }
 
   #saveRecordBtn { min-height: 48px; font-size: 0.95rem; }
   #voiceInputBtn, #clearReceiptBtn { min-height: 44px; }
-  label[for="receiptPhotoInput"], label[for="ocrReceiptInput"] { min-height: 44px; align-items: center; }
+  #receiptPhotoAttachWrap, #ocrReceiptWrap, #ocrReceiptGalleryWrap { min-height: 44px; align-items: center; }
 
   #view-history > div:first-child,
   #view-settle .flex.items-center.justify-between,
@@ -322,10 +325,75 @@ body.batch-mode .record-card .record-action-buttons { display:none !important; }
   .record-card .batch-select-box { width:22px; height:22px; flex:0 0 22px; border:2px solid rgb(156 163 175); border-radius:7px; align-items:center; justify-content:center; }
   .record-card.batch-selected .batch-select-box { background:rgb(37 99 235); border-color:rgb(37 99 235); color:white; }
 }
+
+/* =========================================================
+   Mobile UI polish v5
+   ========================================================= */
+html { touch-action: manipulation; }
+@keyframes sheetUp { from { transform: translateY(28px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+@media (max-width: 640px) {
+  /* iOS 在輸入框字級 < 16px 時，聚焦會自動放大頁面且不會還原 */
+  input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="file"]),
+  select, textarea { font-size: 16px !important; }
+  /* 主要金額輸入框加大 */
+  #originalAmount { font-size: 22px !important; min-height: 52px; }
+  /* 10–11px 的小字放大到 12px，提升可讀性 */
+  [class*="text-[0.6rem]"], [class*="text-[0.65rem]"], [class*="text-[0.68rem]"],
+  [class*="text-[0.7rem]"], [class*="text-[0.72rem]"] { font-size: 0.75rem !important; }
+
+  /* 標題列：重新命名／刪除收進「⋯」選單 */
+  #renameSheetBtn, #deleteSheetBtn { display: none !important; }
+  #sheetMoreBtn { min-width: 42px; min-height: 42px; display: inline-flex; align-items: center; justify-content: center; }
+
+  /* 常駐儲存列（位於底部導覽上方） */
+  #saveRecordBtn { display: none; }
+  #saveBar { position: sticky; bottom: calc(72px + env(safe-area-inset-bottom)); z-index: 30; }
+  #saveBarBtn { min-height: 52px; }
+  /* 鍵盤開啟時隱藏底部導覽，把空間還給輸入區 */
+  body.kb-open nav { display: none; }
+  body.kb-open #saveBar { bottom: 8px; }
+
+  /* 彈窗改成底部抽屜 */
+  #memberDrilldownModal, #lineShareModal, #recordDetailModal, #moveCopyRecordModal, #batchMoveCopySheetModal {
+    align-items: flex-end !important; padding: 0 !important;
+  }
+  #memberDrilldownModal > div, #lineShareModal > div, #recordDetailModal > div, #moveCopyRecordModal > div, #batchMoveCopySheetModal > div {
+    max-width: 100% !important; width: 100%;
+    border-radius: 24px 24px 0 0 !important;
+    padding-bottom: calc(1.25rem + env(safe-area-inset-bottom));
+    max-height: 90vh !important; max-height: 90dvh !important;
+    animation: sheetUp .22s cubic-bezier(.16,1,.3,1);
+  }
+  #moveCopyRecordModal > div, #batchMoveCopySheetModal > div { overflow-y: auto; }
+}
 </style>
 <script>
 tailwind.config = { darkMode: 'class' };
 </script>
+<style id="darkModeFixes">
+html.dark { color-scheme: dark; background-color: #0f172a; }
+html:not(.dark) { color-scheme: light; }
+html.dark select option, html.dark select optgroup { background-color: #1f2937; color: #f3f4f6; }
+html.dark input[type="date"]::-webkit-calendar-picker-indicator { filter: invert(.85); }
+html.dark button.hover\:text-gray-800:not(.text-blue-600):hover { color: #f3f4f6; }
+html.dark .border:not([class*="border-"]) { border-color: #374151; }
+#mainChartContainer .chart-range-btn { background: rgba(255,255,255,.75); border-color: rgba(148,163,184,.35); color: #64748b; }
+#mainChartContainer .chart-range-btn.active { background: #2563eb; border-color: #2563eb; color: #fff; }
+html.dark #mainChartContainer .chart-range-btn { background: rgba(30,41,59,.7); border-color: rgba(100,116,139,.45); color: #cbd5e1; }
+html.dark #mainChartContainer .chart-range-btn.active { background: #3b82f6; border-color: #3b82f6; color: #fff; }
+#mainChartContainer .chart-mode-btn.is-active { background: #fff !important; color: #2563eb !important; font-weight: 800 !important; box-shadow: 0 1px 3px rgba(0,0,0,.12); }
+html.dark #mainChartContainer .chart-mode-btn.is-active { background: #475569 !important; color: #93c5fd !important; }
+/* 儲存按鈕：不依賴 Tailwind 漸層工具類，確保淺色模式下白字有藍色底 */
+#saveRecordBtn, #saveBarBtn { background-color: #2563eb; background-image: linear-gradient(to right, #2563eb, #4f46e5); color: #fff; }
+#saveRecordBtn:hover { background-image: linear-gradient(to right, #1d4ed8, #4338ca); }
+#saveRecordBtn span, #saveBarBtn span { color: #fff; }
+button:focus-visible, a:focus-visible, select:focus-visible, summary:focus-visible, [role="button"]:focus-visible, input[type="checkbox"]:focus-visible, input[type="radio"]:focus-visible { outline: 2px solid #2563eb !important; outline-offset: 2px; }
+html.dark button:focus-visible, html.dark a:focus-visible, html.dark select:focus-visible, html.dark [role="button"]:focus-visible { outline-color: #93c5fd !important; }
+@media (prefers-reduced-motion: reduce) {
+  *, ::before, ::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; }
+  .toast-anim { animation: none !important; }
+}
+</style>
 </head>
 <body class="bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-slate-900 dark:to-gray-900 min-h-screen text-gray-800 dark:text-gray-100 transition-colors duration-300 font-sans">
 <div id="toastContainer" class="fixed top-4 left-1/2 transform -translate-x-1/2 z-50 flex flex-col gap-2 pointer-events-auto w-11/12 max-w-sm"></div>
@@ -341,6 +409,7 @@ tailwind.config = { darkMode: 'class' };
 <button type="button" id="addSheetBtn" class="bg-blue-100 text-blue-600 dark:bg-blue-900/50 dark:text-blue-300 hover:bg-blue-200 dark:hover:bg-blue-800 px-2.5 py-1.5 rounded-xl font-bold transition active:scale-95 text-xs" title="新增帳本">＋</button>
 <button type="button" id="renameSheetBtn" class="bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-600 px-2 py-1.5 rounded-xl font-bold transition active:scale-95 text-xs" title="重新命名帳本">✎</button>
 <button type="button" id="deleteSheetBtn" class="bg-red-100 text-red-600 dark:bg-red-900/40 dark:text-red-300 hover:bg-red-200 dark:hover:bg-red-800 px-2 py-1.5 rounded-xl font-bold transition active:scale-95 text-xs" title="刪除帳本">🗑</button>
+<button type="button" id="sheetMoreBtn" class="sm:hidden bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-200 px-2.5 py-1.5 rounded-xl font-bold transition active:scale-95 text-sm" aria-haspopup="menu" aria-expanded="false" title="更多帳本操作">⋯</button>
 </div>
 <div class="flex items-center gap-1.5 flex-shrink-0 ml-auto">
 <button type="button" id="syncIndicator" onclick="retryPendingSync()" class="hidden shrink-0 text-[0.7rem] px-2 py-1 rounded-lg bg-blue-100 text-blue-700 dark:bg-blue-900/50 dark:text-blue-300 font-mono shadow-sm whitespace-nowrap">已同步</button>
@@ -352,6 +421,10 @@ tailwind.config = { darkMode: 'class' };
 </div>
 </div>
 </header>
+<div id="sheetMoreMenu" role="menu" class="hidden sm:hidden fixed z-50 min-w-[11rem] rounded-2xl bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 shadow-2xl overflow-hidden text-sm" style="top: calc(60px + env(safe-area-inset-top)); left: 12px;">
+<button type="button" role="menuitem" onclick="closeSheetMoreMenu();document.getElementById('renameSheetBtn').click()" class="w-full text-left px-4 py-3 font-bold text-gray-700 dark:text-gray-100 active:bg-gray-100 dark:active:bg-gray-700">✎ 重新命名帳本</button>
+<button type="button" role="menuitem" onclick="closeSheetMoreMenu();document.getElementById('deleteSheetBtn').click()" class="w-full text-left px-4 py-3 font-bold text-red-600 dark:text-red-400 border-t border-gray-100 dark:border-gray-700 active:bg-red-50 dark:active:bg-red-900/30">🗑 刪除帳本</button>
+</div>
 <main class="max-w-2xl mx-auto w-full px-3 pt-[72px] pb-6">
 <!-- Record View -->
 <div id="view-record" class="app-view space-y-4">
@@ -368,7 +441,8 @@ tailwind.config = { darkMode: 'class' };
 <div id="receiptPreviewThumb" onclick="openCurrentReceiptModal()" class="hidden w-8 h-8 rounded-lg border border-gray-300 shadow-sm bg-cover bg-center cursor-pointer"></div>
 <button type="button" id="clearReceiptBtn" onclick="clearReceiptPhoto()" class="hidden text-red-400 hover:text-red-600 font-bold">×</button>
 <button type="button" id="voiceInputBtn" class="flex items-center gap-1 bg-white/80 dark:bg-gray-700 shadow-sm border border-gray-200/50 dark:border-gray-600 px-2.5 py-1.5 rounded-lg text-blue-600 dark:text-blue-300 font-bold hover:scale-105 transition">🎤 語音</button>
-<label class="flex items-center gap-1 bg-white/80 dark:bg-gray-700 shadow-sm border border-gray-200/50 dark:border-gray-600 px-2.5 py-1.5 rounded-lg text-emerald-600 dark:text-emerald-400 font-bold cursor-pointer hover:scale-105 transition">📷 收據辨識<input type="file" id="ocrReceiptInput" accept="image/*" capture="environment" multiple class="hidden"></label>
+<label id="ocrReceiptWrap" class="flex items-center gap-1 bg-white/80 dark:bg-gray-700 shadow-sm border border-gray-200/50 dark:border-gray-600 px-2.5 py-1.5 rounded-lg text-emerald-600 dark:text-emerald-400 font-bold cursor-pointer hover:scale-105 transition">📷 拍照辨識<input type="file" id="ocrReceiptInput" accept="image/*" capture="environment" class="hidden"></label>
+<label id="ocrReceiptGalleryWrap" class="flex items-center gap-1 bg-white/80 dark:bg-gray-700 shadow-sm border border-gray-200/50 dark:border-gray-600 px-2.5 py-1.5 rounded-lg text-emerald-600 dark:text-emerald-400 font-bold cursor-pointer hover:scale-105 transition">🖼️ 相簿辨識<input type="file" id="ocrReceiptGalleryInput" accept="image/*" multiple class="hidden"></label>
 </div>
 </div>
 <div class="flex items-center gap-1.5 overflow-x-auto pb-1 text-xs" id="quickTemplatesBar"></div>
@@ -419,6 +493,16 @@ tailwind.config = { darkMode: 'class' };
 </div>
 </div>
 </div>
+<div id="amountOpRow" class="flex items-center gap-1 text-sm overflow-x-auto sm:hidden" aria-label="算式快捷鍵">
+<span class="text-[0.7rem] text-gray-400 font-bold flex-shrink-0">算式：</span>
+<button type="button" onpointerdown="event.preventDefault()" onclick="insertAmountOp('+')" class="flex-shrink-0 w-10 h-9 rounded-lg bg-gray-100 dark:bg-gray-700 font-bold active:scale-95">＋</button>
+<button type="button" onpointerdown="event.preventDefault()" onclick="insertAmountOp('-')" class="flex-shrink-0 w-10 h-9 rounded-lg bg-gray-100 dark:bg-gray-700 font-bold active:scale-95">－</button>
+<button type="button" onpointerdown="event.preventDefault()" onclick="insertAmountOp('*')" class="flex-shrink-0 w-10 h-9 rounded-lg bg-gray-100 dark:bg-gray-700 font-bold active:scale-95">×</button>
+<button type="button" onpointerdown="event.preventDefault()" onclick="insertAmountOp('/')" class="flex-shrink-0 w-10 h-9 rounded-lg bg-gray-100 dark:bg-gray-700 font-bold active:scale-95">÷</button>
+<button type="button" onpointerdown="event.preventDefault()" onclick="insertAmountOp('(')" class="flex-shrink-0 w-10 h-9 rounded-lg bg-gray-100 dark:bg-gray-700 font-bold active:scale-95">(</button>
+<button type="button" onpointerdown="event.preventDefault()" onclick="insertAmountOp(')')" class="flex-shrink-0 w-10 h-9 rounded-lg bg-gray-100 dark:bg-gray-700 font-bold active:scale-95">)</button>
+<button type="button" onpointerdown="event.preventDefault()" onclick="insertAmountOp('back')" class="flex-shrink-0 w-12 h-9 rounded-lg bg-gray-100 dark:bg-gray-700 font-bold active:scale-95">⌫</button>
+</div>
 <div class="flex flex-wrap items-center justify-between gap-2 pt-0.5">
 <div class="flex items-center gap-1 text-[0.75rem] overflow-x-auto">
 <span class="text-gray-400 font-bold mr-0.5">💰 稅費：</span>
@@ -430,7 +514,7 @@ tailwind.config = { darkMode: 'class' };
 </div>
 <div class="flex items-center justify-end gap-1.5 text-xs text-gray-400 ml-auto flex-wrap">
 <span>折合台幣 <span id="previewTwd" class="font-bold text-blue-600 dark:text-blue-400 text-sm">0</span></span>
-<input type="number" id="overrideTwdInput" placeholder="🔒請款TWD" class="w-28 border border-dashed border-blue-300 dark:border-blue-600 rounded-lg px-2 py-0.5 text-xs font-mono text-right bg-blue-50/40 dark:bg-gray-800 text-blue-700 dark:text-blue-300 outline-none focus:ring-1 focus:ring-blue-500">
+<input type="number" inputmode="decimal" id="overrideTwdInput" placeholder="🔒請款TWD" class="w-28 border border-dashed border-blue-300 dark:border-blue-600 rounded-lg px-2 py-0.5 text-xs font-mono text-right bg-blue-50/40 dark:bg-gray-800 text-blue-700 dark:text-blue-300 outline-none focus:ring-1 focus:ring-blue-500">
 </div>
 </div>
 <div id="splitSection" class="p-3.5 bg-gray-50/80 dark:bg-gray-700/30 rounded-2xl border border-gray-200/60 dark:border-gray-600/50 space-y-3">
@@ -459,7 +543,7 @@ tailwind.config = { darkMode: 'class' };
 <div class="flex items-center justify-between border-t border-gray-200 dark:border-gray-700 pt-3 text-xs flex-wrap gap-2">
 <span class="font-bold text-gray-600 dark:text-gray-300">分攤演算法：</span>
 <div class="flex bg-gray-200 dark:bg-gray-800 p-0.5 rounded-xl shadow-inner text-[0.75rem] flex-wrap">
-<button type="button" onclick="setSplitMode('equal')" id="modeEqualBtn" class="px-2.5 py-1 rounded-lg bg-white dark:bg-gray-600 font-bold text-blue-600 shadow-sm transition">均分</button>
+<button type="button" onclick="setSplitMode('equal')" id="modeEqualBtn" class="px-2.5 py-1 rounded-lg bg-white dark:bg-gray-600 font-bold text-blue-600 dark:text-blue-300 shadow-sm transition">均分</button>
 <button type="button" onclick="setSplitMode('custom')" id="modeCustomBtn" class="px-2.5 py-1 rounded-lg text-gray-500 dark:text-gray-400 font-medium hover:text-gray-800 transition">按金額</button>
 <button type="button" onclick="setSplitMode('ratio')" id="modeRatioBtn" class="px-2.5 py-1 rounded-lg text-gray-500 dark:text-gray-400 font-medium hover:text-gray-800 transition">比例權重</button>
 <button type="button" onclick="setSplitMode('percent')" id="modePercentBtn" class="px-2.5 py-1 rounded-lg text-gray-500 dark:text-gray-400 font-medium hover:text-gray-800 transition">百分比(%)</button>
@@ -525,6 +609,11 @@ tailwind.config = { darkMode: 'class' };
 </button>
 </div>
 </div>
+</div>
+<div id="saveBar" class="sm:hidden">
+<button type="button" id="saveBarBtn" onpointerdown="event.preventDefault()" onclick="if(document.activeElement&&document.activeElement.blur)document.activeElement.blur();document.getElementById('saveRecordBtn').click()" class="w-full bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-bold rounded-2xl shadow-xl shadow-blue-900/20 active:scale-[0.98] transition flex items-center justify-center gap-2 text-base">
+<span>💾</span><span id="saveBarText">儲存紀錄</span><span class="opacity-80 font-mono text-sm">· NT$ <span id="saveBarAmount">0</span></span>
+</button>
 </div>
 </div>
 <!-- History View -->
@@ -596,7 +685,7 @@ tailwind.config = { darkMode: 'class' };
 <div class="flex justify-between items-center text-xs font-bold text-gray-700 dark:text-gray-300 mb-2 flex-wrap gap-1">
 <span>📊 財務分析圖表 (TWD)</span>
 <div class="flex bg-gray-200 dark:bg-gray-800 p-0.5 rounded-lg shadow-inner">
-<button type="button" id="chartTypePieBtn" class="chart-mode-btn is-active px-2 py-1 rounded-md bg-white dark:bg-gray-600 font-bold text-blue-600 shadow-sm transition">佔比</button>
+<button type="button" id="chartTypePieBtn" class="chart-mode-btn is-active px-2 py-1 rounded-md text-gray-500 dark:text-gray-400 font-medium hover:text-gray-800 transition">佔比</button>
 <button type="button" id="chartTypeBarBtn" class="chart-mode-btn px-2 py-1 rounded-md text-gray-500 dark:text-gray-400 font-medium hover:text-gray-800 transition">趨勢</button>
 <button type="button" id="chartTypeMemberBtn" class="chart-mode-btn px-2 py-1 rounded-md text-gray-500 dark:text-gray-400 font-medium hover:text-gray-800 transition">負擔</button>
 <button type="button" id="chartTypeNetBtn" class="chart-mode-btn px-2 py-1 rounded-md text-gray-500 dark:text-gray-400 font-medium hover:text-gray-800 transition">淨損益</button>
@@ -723,7 +812,7 @@ tailwind.config = { darkMode: 'class' };
 </div>
 <div class="flex items-center gap-3">
 <button type="button" id="fontDecBtn" class="w-8 h-8 bg-white dark:bg-gray-700 rounded-full shadow border hover:bg-gray-50 transition font-bold active:scale-90">-</button>
-<input type="range" id="fontSlider" min="12" max="36" step="1" value="16" class="flex-1 accent-blue-600 h-1.5 bg-gray-200 rounded-lg appearance-none cursor-pointer">
+<input type="range" id="fontSlider" min="12" max="36" step="1" value="16" class="flex-1 accent-blue-600 h-1.5 bg-gray-200 dark:bg-gray-600 rounded-lg appearance-none cursor-pointer">
 <button type="button" id="fontIncBtn" class="w-8 h-8 bg-white dark:bg-gray-700 rounded-full shadow border hover:bg-gray-50 transition font-bold active:scale-90">+</button>
 <button type="button" id="fontResetBtn" class="text-xs text-gray-500 hover:text-blue-500 ml-1 font-medium">重設</button>
 </div>
@@ -782,7 +871,7 @@ tailwind.config = { darkMode: 'class' };
 <footer class="text-center text-[0.75rem] text-gray-400 dark:text-gray-500 flex flex-wrap items-center justify-center gap-2 pt-4 pb-2">
 <div>最後修改時間 <span id="lastUpdatedDisplay" class="font-mono"></span></div>
 <span>|</span>
-<a href="https://v.douyin.com/XmUkpVat8Lg/" target="_blank" class="font-bold text-blue-500 hover:text-blue-600 transition flex items-center gap-0.5">奇奇828 <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path></svg></a>
+<a href="https://v.douyin.com/XmUkpVat8Lg/" target="_blank" rel="noopener noreferrer" class="font-bold text-blue-500 hover:text-blue-600 transition flex items-center gap-0.5">奇奇828 <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path></svg></a>
 </footer>
 </div>
 </main>
@@ -823,6 +912,7 @@ tailwind.config = { darkMode: 'class' };
 </div>
 <button type="button" onclick="executeLineShare('personal')" class="w-full bg-purple-600 hover:bg-purple-700 text-white font-bold py-1.5 rounded-xl shadow transition active:scale-95 text-center block">複製個人明細</button>
 </div>
+<button type="button" onclick="shareSettlementImage()" class="w-full bg-emerald-50 dark:bg-emerald-900/30 hover:bg-emerald-100 dark:hover:bg-emerald-900/50 p-3 rounded-2xl text-left border border-emerald-200/60 dark:border-emerald-800/50 transition active:scale-95 flex flex-col gap-0.5"><span class="font-bold text-emerald-700 dark:text-emerald-300 text-sm">🖼️ 分享結算圖片</span><span class="text-[0.75rem] text-gray-500 dark:text-gray-400">產生含成員結餘與轉帳路徑的圖片，可直接傳到 LINE 或儲存。</span></button>
 <button type="button" onclick="executeLineShare('all')" class="w-full bg-gray-50 dark:bg-gray-700/40 hover:bg-gray-100 dark:hover:bg-gray-700/70 p-3 rounded-2xl text-left border border-gray-200 dark:border-gray-600 transition active:scale-95 flex flex-col gap-0.5">
 <span class="font-bold text-gray-700 dark:text-gray-200 text-sm">📑 完整帳本匯總</span>
 </button>
@@ -930,6 +1020,7 @@ function escapeJsStr(str) {
     if (!str) return ""; 
     return String(str).replace(/\\/g, "\\\\").replace(/'/g, "\\'").replace(/"/g, '\\"').replace(/\n/g, '\\n').replace(/\r/g, '\\r'); 
 }
+function jsAttr(str) { return escapeHtml(escapeJsStr(str)); }
 function escapeDriveQueryString(str) { return String(str || "").replace(/\\/g, "\\\\").replace(/'/g, "\\'"); }
 
 function loadExternalScript(src, globalName) {
@@ -1791,8 +1882,8 @@ function renderSettlement(records) {
         <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 p-2 bg-white/50 dark:bg-gray-800/50 rounded-lg mb-1 border border-blue-50 dark:border-gray-700">
             <span class="font-bold">${escapeHtml(t.from)} <span class="text-gray-400 mx-1">➔</span> ${escapeHtml(t.to)}</span>
             <div class="flex items-center justify-between sm:justify-end gap-2">
-                <span class="font-mono font-bold text-blue-600">$${t.amt.toLocaleString()}</span>
-                <button type="button" onclick="markSettlementPaid('${escapeJsStr(t.from)}','${escapeJsStr(t.to)}',${Number(t.amt)})" class="shrink-0 bg-emerald-600 hover:bg-emerald-700 text-white px-2.5 py-1 rounded-lg text-[0.7rem] font-bold shadow-sm transition active:scale-95" title="記錄已給錢並從未結清款項扣除">💸 已給錢</button>
+                <span class="font-mono font-bold text-blue-600 dark:text-blue-400">$${t.amt.toLocaleString()}</span>
+                <button type="button" onclick="markSettlementPaid('${jsAttr(t.from)}','${jsAttr(t.to)}',${Number(t.amt)})" class="shrink-0 bg-emerald-600 hover:bg-emerald-700 text-white px-2.5 py-1 rounded-lg text-[0.7rem] font-bold shadow-sm transition active:scale-95" title="記錄已給錢並從未結清款項扣除">💸 已給錢</button>
             </div>
         </div>`).join("") || `<div class="text-center text-gray-400 py-2">帳目已平，無需轉帳</div>`;
 }
@@ -1953,6 +2044,7 @@ function getChartRecordDiagnostic(record) {
     return {
         id: String(record?.id || ''),
         title: String(record?.title || '未命名紀錄'),
+        type: String(record?.type || ''),
         date: String(record?.date || '').slice(0, 10),
         category: String(record?.category || '其他'),
         currency: String(record?.currency || 'TWD').toUpperCase(),
@@ -2000,6 +2092,7 @@ function renderChartDiagnostic(records, expenses) {
     }).join('');
     box.classList.remove('hidden');
     box.innerHTML = `<div class="flex items-center justify-between gap-2 mb-1"><strong class="text-amber-800 dark:text-amber-300">🔎 圖表資料診斷</strong><span class="font-mono font-bold">圖表支出 ${formatChartMoney(total)}</span></div><div class="text-amber-800/90 dark:text-amber-200 mb-1">${mismatchText}</div><div class="text-amber-800/90 dark:text-amber-200 mb-2">${excludedText}</div><div class="text-xs font-bold text-gray-700 dark:text-gray-200 mb-1">✅ 已計入支出的紀錄</div><div class="max-h-56 overflow-y-auto rounded-lg bg-white/60 dark:bg-slate-900/40 px-2">${detail || '<div class="py-2 text-gray-500">沒有支出紀錄</div>'}</div>${excludedDetail ? `<div class="text-xs font-bold text-red-700 dark:text-red-300 mt-3 mb-1">❌ 未計入支出的紀錄</div><div class="max-h-56 overflow-y-auto rounded-lg bg-red-50/70 dark:bg-red-950/20 px-2">${excludedDetail}</div>` : ''}${allRows.length > 80 ? `<div class="mt-1 text-gray-500">僅顯示前 80 筆。</div>` : ''}`;
+    box.innerHTML = `<details><summary class="cursor-pointer select-none font-bold text-amber-800 dark:text-amber-300">🔎 圖表資料診斷（圖表支出 ${formatChartMoney(total)}，點擊展開）</summary><div class="mt-2">${box.innerHTML}</div></details>`;
 }
 
 function calculateChartSummary(records) {
@@ -2358,7 +2451,7 @@ async function createReceiptOcrImages(file) {
         im.onerror = () => reject(new Error("圖片載入失敗"));
         im.src = dataUrl;
     });
-    const max = 2400;
+    const max = 2000;
     const scale = Math.min(1.6, max / Math.max(img.width, img.height));
     const w = Math.max(1, Math.round(img.width * scale));
     const h = Math.max(1, Math.round(img.height * scale));
@@ -2376,7 +2469,9 @@ async function createReceiptOcrImages(file) {
         d[i] = d[i + 1] = d[i + 2] = v;
     }
     ctx.putImageData(imageData, 0, 0);
-    return [dataUrl, canvas.toDataURL("image/jpeg", 0.9)];
+    const processed = canvas.toDataURL("image/jpeg", 0.9);
+    canvas.width = canvas.height = 0; // 釋放手機記憶體
+    return [processed];
 }
 
 function cleanOcrText(text) {
@@ -2732,11 +2827,12 @@ async function handleOCR(file) {
         return;
     }
     receiptOcrRunning = true;
-    const ocrInput = document.getElementById("ocrReceiptInput");
-    if (ocrInput) ocrInput.disabled = true;
+    const ocrInputs = ["ocrReceiptInput", "ocrReceiptGalleryInput"].map(id => document.getElementById(id)).filter(Boolean);
+    ocrInputs.forEach(el => { el.disabled = true; });
     const notice = document.getElementById("aiStatusNotice");
     if (notice) { notice.classList.remove("hidden"); notice.textContent = "AI OCR 模組載入中..."; }
     try {
+        if (!window.Tesseract) showToast("首次辨識需下載約數十 MB 的辨識資料，建議連上 Wi‑Fi", "info");
         if (notice) notice.textContent = "正在準備收據影像...";
         const images = await createReceiptOcrImages(file);
         const results = [];
@@ -2776,16 +2872,64 @@ async function handleOCR(file) {
         showToast("OCR 辨識失敗: " + e.message, "error");
     } finally {
         if (notice) notice.classList.add("hidden");
-        const input = document.getElementById("ocrReceiptInput");
-        if (input) {
-            input.value = "";
-            input.disabled = false;
-        }
+        ["ocrReceiptInput", "ocrReceiptGalleryInput"].forEach(id => {
+            const el = document.getElementById(id);
+            if (el) { el.value = ""; el.disabled = false; }
+        });
         receiptOcrRunning = false;
     }
 }
 
+function chineseNumberToInt(str) {
+    const digit = { "零": 0, "〇": 0, "一": 1, "二": 2, "兩": 2, "两": 2, "三": 3, "四": 4, "五": 5, "六": 6, "七": 7, "八": 8, "九": 9 };
+    const unit = { "十": 10, "百": 100, "千": 1000 };
+    let total = 0, section = 0, num = 0, lastUnit = 0, zero = false, valid = false;
+    for (const ch of String(str || "")) {
+        if (ch in digit) { if (digit[ch] === 0) zero = true; num = digit[ch]; valid = true; }
+        else if (ch in unit) { section += (num || 1) * unit[ch]; lastUnit = unit[ch]; num = 0; valid = true; }
+        else if (ch === "萬" || ch === "万") { total += ((section + num) || 1) * 10000; section = 0; num = 0; lastUnit = 10000; zero = false; valid = true; }
+        else return 0;
+    }
+    if (!valid) return 0;
+    // 省略單位寫法：「一百五」=150、「兩千三」=2300、「一萬二」=12000
+    if (num > 0 && lastUnit >= 100 && !zero) section += num * (lastUnit / 10);
+    else section += num;
+    return total + section;
+}
+function parseVoiceExpense(raw) {
+    const text = String(raw || "").trim()
+        .replace(/[０-９]/g, c => String.fromCharCode(c.charCodeAt(0) - 0xFEE0))
+        .replace(/(\d)[,，](?=\d{3})/g, "$1");
+    const unitAfter = /^\s*(?:塊錢|块钱|塊|块|元|圓|圆|錢|钱|台幣|新台幣|NTD|TWD)/i;
+    let amount = 0, title = text;
+    const arabic = [...text.matchAll(/\d+(?:\.\d+)?/g)];
+    if (arabic.length) {
+        const m = arabic[arabic.length - 1];
+        amount = Number(m[0]);
+        const before = text.slice(0, m.index).replace(/(?:NT\$|NTD|TWD|\$)\s*$/i, "");
+        const after = text.slice(m.index + m[0].length).replace(unitAfter, "");
+        title = `${before} ${after}`;
+    } else {
+        const m = text.match(/([零〇一二兩两三四五六七八九十百千萬万]+)\s*(?:塊錢|块钱|塊|块|元|圓|圆|錢|钱)?\s*$/);
+        if (m) {
+            const n = chineseNumberToInt(m[1]);
+            if (n > 0) { amount = n; title = text.slice(0, m.index); }
+        }
+    }
+    title = title
+        .replace(/[，,。.!！?？]/g, " ")
+        .replace(/^\s*(?:花了|買了|买了|付了|消費|支出)\s*/, "")
+        .replace(/\s*(?:花了|總共|总共|一共|共)\s*$/, "")
+        .replace(/\s+/g, " ")
+        .trim();
+    return { title, amount };
+}
+
 function handleVoice() {
+    const isIOS = /iP(hone|ad|od)/.test(navigator.userAgent) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+    const standalone = window.navigator.standalone === true || window.matchMedia?.("(display-mode: standalone)").matches;
+    if (isIOS && standalone) return showToast("iOS 主畫面模式不支援語音辨識，請改用 Safari 開啟，或使用鍵盤上的 🎤 聽寫", "error");
+    if (window.__voiceRunning) return;
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
     if (!SpeechRecognition) return showToast("此瀏覽器不支援語音識別，請改用 Chrome / Edge / Safari 支援版本", "error");
     const notice = document.getElementById("aiStatusNotice");
@@ -2795,41 +2939,40 @@ function handleVoice() {
     recognition.interimResults = false;
     recognition.maxAlternatives = 1;
     recognition.onstart = () => {
+        window.__voiceRunning = true;
         notice?.classList.remove("hidden");
         if (notice) notice.textContent = "正在聆聽中... (請說：項目 金額)";
     };
     recognition.onresult = (event) => {
         const transcript = String(event.results?.[0]?.[0]?.transcript || '').trim();
         if (!transcript) return;
+        const { title, amount } = parseVoiceExpense(transcript);
         showToast(`識別到：${transcript}`);
-        const amountMatch = transcript.match(/(?:\$|NT\$|NTD|TWD)?\s*([0-9][0-9,]*(?:\.[0-9]+)?)/i);
-        const parts = transcript.split(/\s+/).filter(Boolean);
-        if (parts.length >= 2) {
-            const titleEl = document.getElementById("title");
-            if (titleEl) titleEl.value = parts[0];
-        }
-        if (amountMatch) {
+        const titleEl = document.getElementById("title");
+        if (title && titleEl) titleEl.value = title;
+        if (amount > 0) {
             const amountEl = document.getElementById("originalAmount");
             if (amountEl) {
-                amountEl.value = amountMatch[1].replace(/,/g, "");
+                amountEl.value = String(amount);
                 amountEl.dispatchEvent(new Event('input'));
             }
             updateTwdPreview();
         } else {
-            showToast("沒有辨識到數字金額，請手動確認", "info");
+            showToast("沒有辨識到金額，請手動確認（可說「午餐 150」或「午餐一百五」）", "info");
         }
+        if (!title) showToast("沒有辨識到項目名稱，請手動輸入", "info");
     };
     recognition.onerror = (event) => {
         const messages = {
             'not-allowed': '麥克風權限被拒絕，請在瀏覽器設定允許麥克風',
-            'service-not-allowed': '目前瀏覽器不允許語音服務',
+            'service-not-allowed': '語音服務未啟用；iOS 請到「設定 > 一般 > 鍵盤」開啟「啟用聽寫」與 Siri',
             'audio-capture': '找不到可用的麥克風',
             'no-speech': '沒有聽到語音，請再試一次',
             'network': '語音服務連線失敗，請檢查網路'
         };
         showToast(messages[event?.error] || `語音辨識失敗：${event?.error || '未知錯誤'}`, "error");
     };
-    recognition.onend = () => { notice?.classList.add("hidden"); };
+    recognition.onend = () => { window.__voiceRunning = false; notice?.classList.add("hidden"); };
     try {
         recognition.start();
     } catch (e) {
@@ -2838,7 +2981,7 @@ function handleVoice() {
     }
 }
 
-document.getElementById("ocrReceiptInput").onchange = async (e) => {
+const ocrBatchChangeHandler = async (e) => {
     const input = e.target;
     const files = Array.from(input.files || []);
     if (!files.length) return;
@@ -2868,6 +3011,7 @@ document.getElementById("ocrReceiptInput").onchange = async (e) => {
         }
     } finally { input.value = ""; }
 };
+["ocrReceiptInput", "ocrReceiptGalleryInput"].forEach(id => { const el = document.getElementById(id); if (el) el.onchange = ocrBatchChangeHandler; });
 document.getElementById("applyReceiptOcrBtn")?.addEventListener("click", () => applyReceiptOcrMeta(true));
 document.getElementById("applyReceiptOcrBlankBtn")?.addEventListener("click", () => applyReceiptOcrMeta(false));
 document.getElementById("voiceInputBtn").onclick = handleVoice;
@@ -3353,6 +3497,7 @@ function startFirestoreRealtimeListener(sheetName = currentSheet) {
                 remoteRecords.forEach(r => observeFirestoreLogicalClock(r._syncVersion));
                 updateFirestoreSyncCursor(sheetName, snapshot.docs.map(d => d.data()));
                 const localRecords = prepareFirestoreRecords(loadLocalSheetMirror(sheetName));
+                const dirtyNow = loadFirestoreDirtyRecords(sheetName);
                 const byId = new Map(externalRecords.map(r => [String(r.id), r]));
                 let hasExternalChange = externalRecords.length > 0 || snapshot.docChanges().some(change => {
                     const d = change.doc?.data?.() || {};
@@ -3361,7 +3506,7 @@ function startFirestoreRealtimeListener(sheetName = currentSheet) {
                 let localWon = false;
                 for (const local of localRecords) {
                     const remote = byId.get(String(local.id));
-                    if (!remote) { byId.set(String(local.id), local); localWon = true; continue; }
+                    if (!remote) { byId.set(String(local.id), local); if (!cursorMs || dirtyNow.has(String(local.id))) localWon = true; continue; }
                     const cmp = compareFirestoreRecords(local, remote);
                     if (cmp > 0) { byId.set(String(local.id), local); localWon = true; await backupFirestoreConflict(sheetName, local, remote, "local-version-newer-realtime"); }
                     else if (cmp < 0 && JSON.stringify(local) !== JSON.stringify(remote)) await backupFirestoreConflict(sheetName, remote, local, "local-version-older-realtime");
@@ -4721,7 +4866,7 @@ function switchTab(tabId) {
         if (el) el.classList.toggle("hidden", v !== tabId);
         const nav = document.getElementById("nav-" + v);
         if (nav) {
-            const isActive = (v === tabId);
+            const isActive = (v === tabId); if (nav) { if (isActive) nav.setAttribute("aria-current", "page"); else nav.removeAttribute("aria-current"); }
             nav.className = isActive
                 ? "flex flex-col items-center justify-center w-full py-1 text-blue-600 dark:text-blue-400 font-bold transition active:scale-95 rounded-xl bg-blue-50 dark:bg-blue-900/30"
                 : "flex flex-col items-center justify-center w-full py-1 text-gray-500 dark:text-gray-400 font-medium hover:text-blue-500 transition active:scale-95 rounded-xl";
@@ -4744,6 +4889,7 @@ function updateTwdPreview() {
     try {
         const { twd } = calculateTwd();
         previewEl.textContent = Math.round(twd).toLocaleString();
+        const sbAmt = document.getElementById("saveBarAmount"); if (sbAmt) sbAmt.textContent = Math.round(twd).toLocaleString();
         if (typeof updateSplitStatus === 'function') updateSplitStatus();
         if (typeof updateEqualPerPersonPreview === 'function') updateEqualPerPersonPreview();
     } catch (e) { previewEl.textContent = "0"; }
@@ -4810,7 +4956,7 @@ window.openMemberDrilldown = function(name) {
         <div class="bg-rose-50 dark:bg-rose-900/20 p-2 rounded-xl border border-rose-100 dark:border-rose-800"><div class="text-[0.6rem] text-gray-500">總應攤</div><div class="font-mono font-bold text-rose-500">$${Math.round(totalOwed).toLocaleString()}</div></div>
         <div class="bg-blue-50 dark:bg-blue-900/20 p-2 rounded-xl border border-blue-100 dark:border-blue-800"><div class="text-[0.6rem] text-gray-500">最終結餘</div><div class="font-mono font-bold text-blue-600">${(totalPaid - totalOwed) >= 0 ? '+' : ''}${Math.round(totalPaid - totalOwed).toLocaleString()}</div></div>`;
     contentList.innerHTML = memberDetails.map(d => `
-        <div onclick="jumpToEdit('${escapeJsStr(d.id)}')" class="flex items-center justify-between p-2 bg-gray-50 dark:bg-gray-700/50 rounded-xl border border-gray-100 dark:border-gray-600 cursor-pointer hover:bg-blue-50 dark:hover:bg-blue-900/30 transition">
+        <div onclick="jumpToEdit('${jsAttr(d.id)}')" class="flex items-center justify-between p-2 bg-gray-50 dark:bg-gray-700/50 rounded-xl border border-gray-100 dark:border-gray-600 cursor-pointer hover:bg-blue-50 dark:hover:bg-blue-900/30 transition">
             <div class="flex flex-col overflow-hidden"><span class="font-bold truncate">${escapeHtml(d.title)}</span><span class="text-[0.6rem] text-gray-400">${escapeHtml(d.date)} · ${escapeHtml(d.category)}</span></div>
             <div class="flex items-center gap-2 font-mono text-[0.7rem]">
                 ${d.paid > 0 ? `<span class="text-emerald-600">+$${Math.round(d.paid)}</span>` : ''}
@@ -4944,8 +5090,17 @@ function getDateStringFromDate(d) {
     const pad = n => String(n).padStart(2, "0");
     return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
 }
+window.insertAmountOp = function(op) {
+    const el = document.getElementById("originalAmount"); if (!el) return;
+    el.focus();
+    const len = el.value.length;
+    let a = el.selectionStart ?? len, b = el.selectionEnd ?? len;
+    if (op === "back") { if (a === b && a > 0) a -= 1; el.setRangeText("", a, b, "end"); }
+    else el.setRangeText(op, a, b, "end");
+    el.dispatchEvent(new Event("input", { bubbles: true }));
+};
 function evaluateMathInput(rawStr) {
-    const s = String(rawStr || "").replace(/,/g, "").trim();
+    const s = String(rawStr || "").replace(/,/g, "").replace(/[×＊]/g, "*").replace(/÷/g, "/").replace(/[−－]/g, "-").replace(/＋/g, "+").trim();
     if (!s || s.length > 80 || !/^[0-9.+\-*/()\s]+$/.test(s)) return 0;
     try {
         const result = Function(`"use strict"; return (${s})`)();
@@ -5050,7 +5205,7 @@ function renderMultiPayerList() {
         return `
         <div class="flex items-center justify-between gap-2 bg-white dark:bg-gray-700 rounded-lg p-1.5 border border-blue-100 dark:border-gray-600">
             <label class="flex items-center gap-1.5 min-w-0"><input type="checkbox" class="multi-payer-cb" data-member="${escapeHtml(m)}" ${checked ? "checked" : ""}><span class="truncate">${escapeHtml(m)}</span></label>
-            <div class="flex items-center gap-1"><input type="number" min="0" step="0.01" class="multi-payer-input w-24 text-right bg-transparent border border-gray-200 dark:border-gray-500 rounded px-1.5 py-1" data-member="${escapeHtml(m)}" placeholder="0" value="${escapeHtml(old.value)}" ${checked ? "" : "disabled"}><span class="text-[0.6rem] text-gray-400">${escapeHtml(unit)}</span></div>
+            <div class="flex items-center gap-1"><input type="number" inputmode="decimal" min="0" step="0.01" class="multi-payer-input w-24 text-right bg-transparent border border-gray-200 dark:border-gray-500 rounded px-1.5 py-1" data-member="${escapeHtml(m)}" placeholder="0" value="${escapeHtml(old.value)}" ${checked ? "" : "disabled"}><span class="text-[0.6rem] text-gray-400">${escapeHtml(unit)}</span></div>
         </div>`;
     }).join("");
     box.querySelectorAll(".multi-payer-cb").forEach(cb => cb.addEventListener("change", () => {
@@ -5217,21 +5372,21 @@ function renderSplitInputs() {
     if (customBox) {
         customBox.innerHTML = safeMembers.map(m => `<div class="flex items-center justify-between gap-2 bg-white dark:bg-gray-700 rounded-lg p-1.5 border border-gray-200 dark:border-gray-600">
             <span class="text-xs font-bold truncate">${escapeHtml(m)}</span>
-            <input type="number" min="0" step="0.01" class="custom-split-input w-28 text-right bg-transparent border border-gray-200 dark:border-gray-500 rounded px-1.5 py-1" data-member="${escapeHtml(m)}" placeholder="0" value="${escapeHtml(customOld.get(m) ?? "")}">
+            <input type="number" inputmode="decimal" min="0" step="0.01" class="custom-split-input w-28 text-right bg-transparent border border-gray-200 dark:border-gray-500 rounded px-1.5 py-1" data-member="${escapeHtml(m)}" placeholder="0" value="${escapeHtml(customOld.get(m) ?? "")}">
         </div>`).join("");
         customBox.querySelectorAll(".custom-split-input").forEach(i => i.addEventListener("input", updateSplitStatus));
     }
     if (ratioBox) {
         ratioBox.innerHTML = safeMembers.map(m => `<div class="flex items-center justify-between gap-2 bg-white dark:bg-gray-700 rounded-lg p-1.5 border border-gray-200 dark:border-gray-600">
             <span class="text-xs font-bold truncate">${escapeHtml(m)}</span>
-            <input type="number" min="0" step="0.1" class="ratio-split-input w-28 text-right bg-transparent border border-gray-200 dark:border-gray-500 rounded px-1.5 py-1" data-member="${escapeHtml(m)}" placeholder="1" value="${escapeHtml(ratioOld.get(m) ?? "")}">
+            <input type="number" inputmode="decimal" min="0" step="0.1" class="ratio-split-input w-28 text-right bg-transparent border border-gray-200 dark:border-gray-500 rounded px-1.5 py-1" data-member="${escapeHtml(m)}" placeholder="1" value="${escapeHtml(ratioOld.get(m) ?? "")}">
         </div>`).join("");
         ratioBox.querySelectorAll(".ratio-split-input").forEach(i => i.addEventListener("input", updateSplitStatus));
     }
     if (percentBox) {
         percentBox.innerHTML = safeMembers.map(m => `<div class="flex items-center justify-between gap-2 bg-white dark:bg-gray-700 rounded-lg p-1.5 border border-gray-200 dark:border-gray-600">
             <span class="text-xs font-bold truncate">${escapeHtml(m)}</span>
-            <div class="flex items-center gap-1"><input type="number" min="0" max="100" step="0.01" class="percent-split-input w-24 text-right bg-transparent border border-gray-200 dark:border-gray-500 rounded px-1.5 py-1" data-member="${escapeHtml(m)}" placeholder="0" value="${escapeHtml(percentOld.get(m) ?? "")}"><span class="text-xs text-gray-400">%</span></div>
+            <div class="flex items-center gap-1"><input type="number" inputmode="decimal" min="0" max="100" step="0.01" class="percent-split-input w-24 text-right bg-transparent border border-gray-200 dark:border-gray-500 rounded px-1.5 py-1" data-member="${escapeHtml(m)}" placeholder="0" value="${escapeHtml(percentOld.get(m) ?? "")}"><span class="text-xs text-gray-400">%</span></div>
         </div>`).join("");
         percentBox.querySelectorAll(".percent-split-input").forEach(i => i.addEventListener("input", updateSplitStatus));
     }
@@ -5623,7 +5778,7 @@ function renderTrash() {
     const trashList = document.getElementById("trashListSettings"); if (!trashList) return;
     const deleted = cachedRecords.filter(r => r.deleted && !r.purged);
     const count = document.getElementById("trashCountDisplaySettings"); if (count) count.textContent = deleted.length;
-    trashList.innerHTML = deleted.map(r => `<div class="flex items-center justify-between p-2 bg-white dark:bg-gray-800 rounded-lg text-xs"><span>${escapeHtml(r.title)} ($${Math.round(getChartTwdAmount(r)).toLocaleString()})</span><button type="button" onclick="restoreRecord('${escapeJsStr(r.id)}')" class="text-blue-500 font-bold">恢復</button></div>`).join("");
+    trashList.innerHTML = deleted.map(r => `<div class="flex items-center justify-between p-2 bg-white dark:bg-gray-800 rounded-lg text-xs"><span>${escapeHtml(r.title)} ($${Math.round(getChartTwdAmount(r)).toLocaleString()})</span><button type="button" onclick="restoreRecord('${jsAttr(r.id)}')" class="text-blue-500 font-bold">恢復</button></div>`).join("");
 }
 
 window.duplicateRecordToForm = function(id) {
@@ -5692,10 +5847,45 @@ function cancelEdit() {
     renderSplitInputs(); updateTwdPreview();
 }
 
-function toggleThemeFixed() {
-    const dark = document.documentElement.classList.toggle("dark"); safeSetLocalStorage("theme", dark ? "dark" : "light");
-    const btn=document.getElementById("themeToggleBtn"); if(btn) btn.textContent=dark?"☀️":"🌙";
+function applyThemeColorMeta() {
+    const m = document.querySelector('meta[name="theme-color"]');
+    if (m) m.setAttribute('content', document.documentElement.classList.contains('dark') ? '#111827' : '#3b82f6');
 }
+function getThemeMode() { const t = localStorage.getItem("theme"); return t === "light" || t === "dark" ? t : "auto"; }
+function updateThemeButton() {
+    const btn = document.getElementById("themeToggleBtn"); if (!btn) return;
+    const info = { auto: ["🌓", "自動（跟隨系統）"], light: ["☀️", "淺色"], dark: ["🌙", "深色"] }[getThemeMode()];
+    btn.textContent = info[0];
+    btn.title = `主題：${info[1]}（點擊切換）`;
+    btn.setAttribute("aria-label", `主題：${info[1]}，點擊切換`);
+}
+function setThemeMode(mode) {
+    if (mode === "auto") { try { localStorage.removeItem("theme"); } catch (_) {} }
+    else safeSetLocalStorage("theme", mode);
+    const dark = mode === "dark" || (mode === "auto" && window.matchMedia("(prefers-color-scheme: dark)").matches);
+    document.documentElement.classList.toggle("dark", dark);
+    updateThemeButton(); applyThemeColorMeta();
+    if (!document.getElementById("mainChartContainer")?.classList.contains("hidden")) void drawCharts();
+}
+function toggleThemeFixed() {
+    const next = { auto: "light", light: "dark", dark: "auto" }[getThemeMode()];
+    setThemeMode(next);
+    showToast(`主題：${{ auto: "自動（跟隨系統）", light: "淺色", dark: "深色" }[next]}`, "info");
+}
+
+(function () {
+    const mq = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)");
+    if (!mq) return;
+    const onChange = e => {
+        if (getThemeMode() !== "auto") return;
+        document.documentElement.classList.toggle("dark", e.matches);
+        const btn = document.getElementById("themeToggleBtn");
+        updateThemeButton();
+        applyThemeColorMeta();
+        if (!document.getElementById("mainChartContainer")?.classList.contains("hidden")) void drawCharts();
+    };
+    mq.addEventListener ? mq.addEventListener("change", onChange) : mq.addListener(onChange);
+})();
 
 function bindRepairEvents() {
     const theme=document.getElementById("themeToggleBtn"); if(theme && !theme.dataset.bound){theme.dataset.bound="1";theme.addEventListener("click",toggleThemeFixed);}
@@ -5790,7 +5980,7 @@ function renderRecordsList(activeRecords = null){
     const totalFiltered = filtered.length;
     const visibleRecords = filtered.slice(0, Math.max(HISTORY_PAGE_SIZE, historyRenderLimit));
     list.innerHTML=visibleRecords.map(r=>{
-        const color=getMemberColor(Object.keys(parsePayers(r))[0]||r.payer); const id=escapeJsStr(r.id); 
+        const color=getMemberColor(Object.keys(parsePayers(r))[0]||r.payer); const id=jsAttr(r.id); 
         return `<div class="record-card bg-white dark:bg-gray-800 p-3 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-sm flex items-center justify-between group transition hover:border-blue-300 cursor-pointer" data-record-id="${id}" role="button" tabindex="0" onclick="handleRecordCardClick('${id}')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();handleRecordCardClick('${id}')}" aria-label="查看 ${escapeHtml(r.title)} 詳細紀錄">
             <div class="flex items-center gap-3 overflow-hidden">
                 <div class="batch-select-box" aria-hidden="true">✓</div>
@@ -5800,10 +5990,10 @@ function renderRecordsList(activeRecords = null){
             <div class="flex items-center gap-3">
                 <div class="text-right"><div class="text-sm font-mono font-bold ${r.type==='income'?'text-emerald-600':'text-gray-700 dark:text-gray-200'}">${r.type==='income'?'+':''}$${Math.round(getChartTwdAmount(r)).toLocaleString()}</div><div class="text-[0.6rem] text-gray-400 font-mono">${escapeHtml(r.amount)} ${escapeHtml(r.currency)}</div></div>
                 <div class="record-action-buttons flex opacity-0 group-hover:opacity-100 transition gap-1">
-                    <button type="button" onclick="event.stopPropagation();startEditRecord('${id}')" class="p-1.5 bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-100">✏️</button>
-                    <button type="button" onclick="event.stopPropagation();duplicateRecordToForm('${id}')" class="p-1.5 bg-gray-50 text-gray-600 rounded-lg hover:bg-gray-100">📋</button>
-                    <button type="button" onclick="event.stopPropagation();openMoveCopyRecordModal('${id}')" class="p-1.5 bg-violet-50 text-violet-600 rounded-lg hover:bg-violet-100" title="移動／複製到其他帳本">↗️</button>
-                    <button type="button" onclick="event.stopPropagation();softDeleteRecord('${id}')" class="p-1.5 bg-red-50 text-red-600 rounded-lg hover:bg-red-100">🗑️</button>
+                    <button type="button" onclick="event.stopPropagation();startEditRecord('${id}')" class="p-1.5 bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-100 dark:bg-blue-900/30 dark:text-blue-300 dark:hover:bg-blue-900/50">✏️</button>
+                    <button type="button" onclick="event.stopPropagation();duplicateRecordToForm('${id}')" class="p-1.5 bg-gray-50 text-gray-600 rounded-lg hover:bg-gray-100 dark:bg-gray-700 dark:text-gray-200 dark:hover:bg-gray-600">📋</button>
+                    <button type="button" onclick="event.stopPropagation();openMoveCopyRecordModal('${id}')" class="p-1.5 bg-violet-50 text-violet-600 rounded-lg hover:bg-violet-100 dark:bg-violet-900/30 dark:text-violet-300 dark:hover:bg-violet-900/50" title="移動／複製到其他帳本">↗️</button>
+                    <button type="button" onclick="event.stopPropagation();softDeleteRecord('${id}')" class="p-1.5 bg-red-50 text-red-600 rounded-lg hover:bg-red-100 dark:bg-red-900/30 dark:text-red-300 dark:hover:bg-red-900/50">🗑️</button>
                 </div>
             </div>
         </div>`;
@@ -6297,7 +6487,7 @@ window.openRecordDetail = function(id) {
     const row = (label, value, cls="") => `<div class="flex items-start justify-between gap-3 py-2 border-b border-gray-100 dark:border-gray-700 last:border-0"><span class="text-gray-500 dark:text-gray-400 flex-shrink-0">${label}</span><span class="text-right font-medium ${cls}">${value}</span></div>`;
     const payerText = Object.entries(payerMap).map(([n,a]) => `${escapeHtml(n)} $${Math.round(a).toLocaleString()}`).join("、") || escapeHtml(r.payer || "—");
     const shareText = Object.entries(shareMap).map(([n,a]) => `${escapeHtml(n)} $${Math.round(a).toLocaleString()}`).join("、") || "—";
-    const receipt = (r.receipt || r.receiptUrl) ? `<button type="button" onclick="openRecordReceipt('${escapeJsStr(r.id)}')" class="text-blue-600 dark:text-blue-400 underline">查看收據照片</button>` : "無";
+    const receipt = (r.receipt || r.receiptUrl) ? `<button type="button" onclick="openRecordReceipt('${jsAttr(r.id)}')" class="text-blue-600 dark:text-blue-400 underline">查看收據照片</button>` : "無";
     const ocr = r.receiptOcr ? [r.receiptOcr.merchant, r.receiptOcr.invoiceNo, r.receiptOcr.date, r.receiptOcr.currency, r.receiptOcr.amount ? `$${r.receiptOcr.amount}` : ""].filter(Boolean).map(escapeHtml).join(" · ") : "無";
     box.innerHTML = `<div class="bg-gray-50 dark:bg-gray-900/50 rounded-2xl p-3">${row("項目", escapeHtml(r.title), "font-bold text-gray-800 dark:text-gray-100")}${row("日期", escapeHtml(r.date || "—"))}${row("類型", escapeHtml(typeLabels[r.type] || r.type || "—"))}${row("類別", escapeHtml(r.category || "其他"))}${row("原始金額", `${escapeHtml(r.amount)} ${escapeHtml(r.currency || "TWD")}`)}${row("TWD 金額", `$${Math.round(getChartTwdAmount(r)).toLocaleString()}`, "font-mono font-bold")}${row("匯率", escapeHtml(String(r.rate ?? 1)))}${row("付款人", payerText)}${row("分攤", shareText)}${row("分攤模式", escapeHtml(r.splitMode || "—"))}${row("收據", receipt)}${row("OCR", ocr)}</div>`;
     const edit = document.getElementById("detailEditBtn"), dup = document.getElementById("detailDuplicateBtn");
@@ -6396,7 +6586,8 @@ try { cachedRecords = normalizeAllRecords(cachedRecords); } catch(e) { console.w
 
 window.onload = function() {
     const isDark = document.documentElement.classList.contains("dark");
-    document.getElementById("themeToggleBtn").textContent = isDark ? "☀️" : "🌙";
+    updateThemeButton();
+    applyThemeColorMeta();
     applyFontSize(localStorage.getItem("app_custom_font_size") || 16);
     initFontSizeControls();
     renderSheetSelector();
@@ -6405,6 +6596,7 @@ window.onload = function() {
     renderQuickTemplates();
     cachedRecords = normalizeAllRecords(loadLocalSheetMirror(currentSheet));
     saveLocalSheetMirror(currentSheet, cachedRecords);
+    if (cachedRecords.length && !safetyLoadSnapshots(currentSheet).length) createLocalSnapshot("啟動初始備份");
     renderAllViews();
     setSyncBadge("離線本機", false, false);
     fetchExchangeRates();
@@ -6449,6 +6641,7 @@ window.onload = function() {
         initGoogleClient();
         accessToken = null; tokenExpiry = 0;
         googleAuthNeedsReauth = false;
+        if (isFirestoreMode()) { updateGoogleUI(false); setSyncBadge("Firestore 雲端模式", false, false); return; }
 
         // 重新整理後優先使用 Google GIS 的 prompt: 'none' 靜默授權。
         // 成功就直接恢復 Drive；失敗也不誤判為登出，只保留手動授權入口。
@@ -6731,9 +6924,152 @@ window.addEventListener("offline", () => {
     setSyncBadge("離線待同步", false, true);
 });
 
+// ===== 手機介面：⋯ 選單、鍵盤狀態、儲存列文字 =====
+window.closeSheetMoreMenu = function() {
+    document.getElementById("sheetMoreMenu")?.classList.add("hidden");
+    document.getElementById("sheetMoreBtn")?.setAttribute("aria-expanded", "false");
+};
+document.getElementById("sheetMoreBtn")?.addEventListener("click", e => {
+    e.stopPropagation();
+    const menu = document.getElementById("sheetMoreMenu");
+    if (!menu) return;
+    const nowHidden = menu.classList.toggle("hidden");
+    e.currentTarget.setAttribute("aria-expanded", nowHidden ? "false" : "true");
+});
+document.addEventListener("click", e => {
+    const menu = document.getElementById("sheetMoreMenu");
+    if (menu && !menu.classList.contains("hidden") && !menu.contains(e.target)) window.closeSheetMoreMenu();
+});
+(function() {
+    const textLike = el => !!el && el.matches && el.matches('input:not([type=checkbox]):not([type=radio]):not([type=range]):not([type=file]):not([type=button]), textarea');
+    const mobile = () => window.matchMedia("(max-width: 640px)").matches;
+    // 只在「文字輸入框」取得焦點時加入；離開時延遲確認，避免點擊儲存列時版面位移導致點不到
+    document.addEventListener("focusin", e => { if (mobile() && textLike(e.target)) document.body.classList.add("kb-open"); });
+    document.addEventListener("focusout", () => setTimeout(() => {
+        if (!textLike(document.activeElement)) document.body.classList.remove("kb-open");
+    }, 250));
+})();
+(function() {
+    const src = document.getElementById("saveBtnText"), dst = document.getElementById("saveBarText");
+    if (!src || !dst) return;
+    const sync = () => { dst.textContent = String(src.textContent || "儲存紀錄").replace(/\s*\(Enter\)/, ""); };
+    new MutationObserver(sync).observe(src, { childList: true, characterData: true, subtree: true });
+    sync();
+})();
+
+// ===== 結算圖片分享 =====
+async function shareSettlementImage() {
+    const balances = calculateSettlementBalances(getActiveRecords());
+    const debts = [], credits = [], transfers = [];
+    Object.entries(balances).forEach(([name, bal]) => { if (bal < -0.1) debts.push({ name, amt: -bal }); else if (bal > 0.1) credits.push({ name, amt: bal }); });
+    for (let d = 0, c = 0; d < debts.length && c < credits.length;) {
+        const amt = Math.min(debts[d].amt, credits[c].amt);
+        transfers.push({ from: debts[d].name, to: credits[c].name, amt: Math.round(amt) });
+        debts[d].amt -= amt; credits[c].amt -= amt;
+        if (debts[d].amt <= 0.1) d++; if (credits[c].amt <= 0.1) c++;
+    }
+    const rows = Object.entries(balances), W = 720, pad = 32, rowH = 46, headH = 110, secH = 56;
+    const H = headH + secH + rows.length * rowH + secH + Math.max(1, transfers.length) * rowH + 70;
+    const dpr = 2, canvas = document.createElement("canvas");
+    canvas.width = W * dpr; canvas.height = H * dpr;
+    const ctx = canvas.getContext("2d"); ctx.scale(dpr, dpr);
+    const font = w => `${w} 22px system-ui, -apple-system, "Noto Sans TC", "PingFang TC", "Microsoft JhengHei", sans-serif`;
+    ctx.fillStyle = "#ffffff"; ctx.fillRect(0, 0, W, H);
+    const g = ctx.createLinearGradient(0, 0, W, 0); g.addColorStop(0, "#2563eb"); g.addColorStop(1, "#4f46e5");
+    ctx.fillStyle = g; ctx.fillRect(0, 0, W, headH);
+    ctx.fillStyle = "#fff"; ctx.textBaseline = "middle"; ctx.textAlign = "left";
+    ctx.font = font("700").replace("22px", "34px"); ctx.fillText(`【${currentSheet}】結算`, pad, 46, W - pad * 2);
+    ctx.font = font("400"); ctx.fillText(getTodayString(), pad, 84);
+    let y = headH;
+    const section = t => { ctx.fillStyle = "#1e293b"; ctx.font = font("700").replace("22px", "26px"); ctx.textAlign = "left"; ctx.fillText(t, pad, y + secH / 2 + 6); y += secH; };
+    const line = () => { ctx.strokeStyle = "#e2e8f0"; ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(pad, y); ctx.lineTo(W - pad, y); ctx.stroke(); };
+    section("成員結餘（正＝可領回／負＝應付）");
+    rows.forEach(([name, bal]) => {
+        ctx.fillStyle = "#334155"; ctx.font = font("500"); ctx.textAlign = "left"; ctx.fillText(name, pad, y + rowH / 2, 380);
+        ctx.fillStyle = bal >= 0 ? "#059669" : "#dc2626"; ctx.textAlign = "right";
+        ctx.fillText(`${bal >= 0 ? "+" : ""}${Math.round(bal).toLocaleString()} TWD`, W - pad, y + rowH / 2);
+        y += rowH; line();
+    });
+    section("轉帳路徑");
+    if (!transfers.length) { ctx.fillStyle = "#059669"; ctx.textAlign = "left"; ctx.font = font("500"); ctx.fillText("✅ 帳目已平，無需轉帳", pad, y + rowH / 2); y += rowH; }
+    transfers.forEach(t => {
+        ctx.fillStyle = "#334155"; ctx.font = font("500"); ctx.textAlign = "left"; ctx.fillText(`${t.from}  ➔  ${t.to}`, pad, y + rowH / 2, 440);
+        ctx.fillStyle = "#2563eb"; ctx.textAlign = "right"; ctx.fillText(`$${t.amt.toLocaleString()}`, W - pad, y + rowH / 2);
+        y += rowH; line();
+    });
+    ctx.fillStyle = "#94a3b8"; ctx.font = font("400").replace("22px", "18px"); ctx.textAlign = "center";
+    ctx.fillText("雲端全能分帳記帳 Pro", W / 2, H - 28);
+    closeLineShareModal();
+    canvas.toBlob(async blob => {
+        if (!blob) return showToast("產生圖片失敗", "error");
+        const file = new File([blob], `settlement_${currentSheet}_${getTodayString()}.png`, { type: "image/png" });
+        try {
+            if (navigator.canShare?.({ files: [file] })) { await navigator.share({ files: [file], title: `${currentSheet} 結算` }); return; }
+        } catch (e) { if (e?.name === "AbortError") return; }
+        downloadBlobFile(file.name, blob, "image/png");
+        showToast("結算圖片已下載", "success");
+    }, "image/png");
+}
+window.shareSettlementImage = shareSettlementImage;
+
+// ===== 無障礙 (Accessibility) =====
+(function initA11y() {
+    const labels = { addSheetBtn: "新增帳本", renameSheetBtn: "重新命名帳本", deleteSheetBtn: "刪除帳本", sheetMoreBtn: "更多帳本操作", refreshBtn: "重新整理", syncIndicator: "同步狀態，點擊重試", clearSearchBtn: "清除搜尋", clearReceiptBtn: "移除收據照片", fontDecBtn: "縮小字型", fontIncBtn: "放大字型", receiptPreviewThumb: "檢視收據照片" };
+    Object.entries(labels).forEach(([id, l]) => document.getElementById(id)?.setAttribute("aria-label", l));
+    const thumb = document.getElementById("receiptPreviewThumb");
+    if (thumb) { thumb.setAttribute("role", "button"); thumb.tabIndex = 0; thumb.addEventListener("keydown", e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); thumb.click(); } }); }
+    const toast = document.getElementById("toastContainer");
+    if (toast) { toast.setAttribute("role", "status"); toast.setAttribute("aria-live", "polite"); }
+    const main = document.querySelector("main");
+    if (main) { main.id = "mainContent"; main.tabIndex = -1; }
+    const skip = document.createElement("a");
+    skip.href = "#mainContent"; skip.textContent = "跳到主要內容";
+    skip.className = "sr-only focus:not-sr-only focus:fixed focus:top-2 focus:left-2 focus:z-[60] focus:bg-blue-600 focus:text-white focus:px-3 focus:py-2 focus:rounded-lg";
+    skip.addEventListener("click", e => { e.preventDefault(); main?.focus(); });
+    document.body.prepend(skip);
+
+    const modalLabels = { memberDrilldownModal: "成員對帳單", lineShareModal: "複製 LINE 清單", recordDetailModal: "紀錄詳細資料", imageModal: "收據照片" };
+    const modalIds = Object.keys(modalLabels);
+    const focusables = root => Array.from(root.querySelectorAll('a[href],button:not([disabled]),input:not([disabled]),select:not([disabled]),textarea:not([disabled]),[tabindex]:not([tabindex="-1"])')).filter(el => el.offsetParent !== null);
+    const lastFocus = {};
+    modalIds.forEach(id => {
+        const m = document.getElementById(id); if (!m) return;
+        m.setAttribute("role", "dialog"); m.setAttribute("aria-modal", "true"); m.setAttribute("aria-label", modalLabels[id]); m.tabIndex = -1;
+        let wasOpen = !m.classList.contains("hidden");
+        new MutationObserver(() => {
+            const open = !m.classList.contains("hidden");
+            if (open === wasOpen) return;
+            wasOpen = open;
+            if (open) { lastFocus[id] = document.activeElement; setTimeout(() => (focusables(m)[0] || m).focus({ preventScroll: true }), 30); }
+            else { const prev = lastFocus[id]; delete lastFocus[id]; if (prev && document.contains(prev)) prev.focus({ preventScroll: true }); }
+        }).observe(m, { attributes: true, attributeFilter: ["class"] });
+    });
+    new MutationObserver(muts => muts.forEach(mu => mu.addedNodes.forEach(n => {
+        if (n.id === "moveCopyRecordModal" || n.id === "batchMoveCopySheetModal") setTimeout(() => focusables(n)[0]?.focus(), 30);
+    }))).observe(document.body, { childList: true });
+
+    document.addEventListener("keydown", e => {
+        if (e.key === "Escape") {
+            if (document.getElementById("batchMoveCopySheetModal")) return closeBatchMoveCopySheetModal();
+            if (document.getElementById("moveCopyRecordModal")) return closeMoveCopyRecordModal();
+            const top = modalIds.slice().reverse().map(id => document.getElementById(id)).find(m => m && !m.classList.contains("hidden"));
+            if (top) { ({ imageModal: closeImageModal, memberDrilldownModal: closeMemberDrilldown, lineShareModal: closeLineShareModal, recordDetailModal: closeRecordDetail })[top.id](); return; }
+            if (!document.getElementById("sheetMoreMenu")?.classList.contains("hidden")) return closeSheetMoreMenu();
+            if (historyBatchMode) exitHistoryBatchMode();
+            return;
+        }
+        if (e.key !== "Tab") return;
+        const open = document.querySelector("#memberDrilldownModal:not(.hidden), #lineShareModal:not(.hidden), #recordDetailModal:not(.hidden), #moveCopyRecordModal, #batchMoveCopySheetModal");
+        if (!open) return;
+        const items = focusables(open); if (!items.length) return;
+        const first = items[0], last = items[items.length - 1], inside = open.contains(document.activeElement);
+        if (e.shiftKey && (!inside || document.activeElement === first)) { e.preventDefault(); last.focus(); }
+        else if (!e.shiftKey && (!inside || document.activeElement === last)) { e.preventDefault(); first.focus(); }
+    });
+})();
+
 // 啟動時顯示最近備份數，並建立初始快照（不重複建立）。
 try {
-    if (!safetyLoadSnapshots(currentSheet).length && Array.isArray(cachedRecords)) createLocalSnapshot("啟動初始備份");
     renderSnapshotPanel();
 } catch (_) {}
 </script>
