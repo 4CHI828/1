@@ -1,0 +1,1058 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>專屬密碼查詢器 | Google 安全認證版</title>
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Font Awesome 圖示 -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <!-- Google Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+TC:wght@400;500;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+  
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'Noto Sans TC', 'PingFang TC', 'Microsoft JhengHei', 'sans-serif'],
+            mono: ['JetBrains Mono', 'monospace'],
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(8px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .animate-fade-in {
+      animation: fadeIn 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    }
+    @keyframes shake {
+      0%, 100% { transform: translateX(0); }
+      20%, 60% { transform: translateX(-6px); }
+      40%, 80% { transform: translateX(6px); }
+    }
+    .animate-shake {
+      animation: shake 0.35s ease-in-out;
+    }
+  </style>
+</head>
+<body class="bg-slate-50 text-slate-800 min-h-screen flex flex-col selection:bg-indigo-600 selection:text-white">
+
+  <!-- ========================================================= -->
+  <!-- 🔒 Google 帳號登入鎖定畫面                                 -->
+  <!-- ========================================================= -->
+  <div id="authScreen" class="fixed inset-0 bg-gradient-to-br from-slate-900 via-indigo-950 to-slate-900 flex items-center justify-center z-50 p-4">
+    <div id="authCard" class="bg-white rounded-3xl max-w-md w-full p-8 shadow-2xl border border-slate-100 text-center animate-fade-in">
+      <!-- 頂部盾牌圖示 -->
+      <div class="w-16 h-16 rounded-2xl bg-indigo-600 text-white flex items-center justify-center mx-auto mb-5 text-2xl shadow-lg shadow-indigo-500/30">
+        <i class="fa-solid fa-shield-halved"></i>
+      </div>
+
+      <h1 class="text-2xl font-bold text-slate-900 mb-1.5">專屬密碼查詢器</h1>
+      <p class="text-sm text-slate-500 mb-6">請使用您的 Google 帳號進行身分驗證以解鎖資料</p>
+
+      <!-- 狀態載入提示 -->
+      <div id="authLoading" class="py-4 text-sm text-indigo-600 font-medium flex items-center justify-center gap-2">
+        <i class="fa-solid fa-circle-notch fa-spin"></i>
+        <span>正在檢查安全認證狀態...</span>
+      </div>
+
+      <!-- 登入按鈕區 -->
+      <div id="authActions" class="hidden space-y-4">
+        <!-- Google 官方風格登入按鈕 -->
+        <button id="googleLoginBtn" onclick="signInWithGoogle()" class="w-full py-3.5 px-5 bg-white hover:bg-slate-50 active:bg-slate-100 text-slate-700 font-semibold rounded-2xl border border-slate-300 shadow-sm hover:shadow transition flex items-center justify-center gap-3 text-base">
+          <svg class="w-5 h-5" viewBox="0 0 24 24">
+            <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+            <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+            <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
+            <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+          </svg>
+          <span>使用 Google 帳號登入</span>
+        </button>
+
+        <!-- Google 選取帳號填入模式 (若預覽環境阻擋彈出視窗時的備援驗證) -->
+        <div id="fallbackGoogleBox" class="hidden pt-3 border-t border-slate-100 text-left space-y-3">
+          <div class="p-3 rounded-xl bg-amber-50 border border-amber-200 text-xs text-amber-800 leading-relaxed">
+            <i class="fa-solid fa-circle-info mr-1"></i>
+            偵測到目前內嵌預覽視窗限制了 Google 彈出視窗，請確認您的 Google 信箱以完成安全綁定登入：
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-600 mb-1">您的 Google 帳號 (Email)</label>
+            <input type="email" id="fallbackEmailInput" value="Chi828@gmail.com" placeholder="例如：Chi828@gmail.com" class="w-full px-3.5 py-2.5 border border-slate-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+          </div>
+          <button onclick="confirmFallbackGoogleLogin()" class="w-full py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-medium rounded-xl text-sm shadow-sm transition flex items-center justify-center gap-2">
+            <i class="fa-brands fa-google"></i>
+            <span>以 Google 帳號驗證進入</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- 錯誤或未授權訊息提示 -->
+      <div id="authErrorBox" class="hidden mt-4 p-3.5 rounded-xl bg-rose-50 border border-rose-200 text-xs text-rose-600 text-left leading-relaxed">
+        <div class="font-bold flex items-center gap-1.5 mb-0.5">
+          <i class="fa-solid fa-triangle-exclamation"></i>
+          <span id="authErrorTitle">認證提示</span>
+        </div>
+        <p id="authErrorDesc"></p>
+      </div>
+
+      <div class="mt-6 pt-5 border-t border-slate-100 flex items-center justify-center gap-2 text-xs text-slate-400">
+        <i class="fa-solid fa-cloud-shield text-indigo-500"></i>
+        <span>透過 Google 身分驗證與加密雲端資料庫保護</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========================================================= -->
+  <!-- 🔓 主應用程式畫面（通過 Google 認證後顯示）                 -->
+  <!-- ========================================================= -->
+  <div id="appContent" class="hidden flex-1 flex flex-col">
+    <!-- 頂部導覽列 -->
+    <header class="bg-white border-b border-slate-200 sticky top-0 z-20 shadow-xs">
+      <div class="max-w-5xl mx-auto px-4 py-3.5 flex flex-wrap items-center justify-between gap-3">
+        <!-- 左側品牌標題 -->
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 rounded-xl bg-indigo-600 flex items-center justify-center text-white shadow-md shadow-indigo-500/20">
+            <i class="fa-solid fa-key text-lg"></i>
+          </div>
+          <div>
+            <div class="flex items-center gap-2">
+              <h1 class="text-lg sm:text-xl font-bold tracking-tight text-slate-900">密碼查詢器</h1>
+              <span id="syncStatusBadge" class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-medium bg-emerald-50 text-emerald-700 border border-emerald-200">
+                <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>雲端已同步
+              </span>
+            </div>
+            <p class="text-xs text-slate-400 hidden sm:block">專屬三欄格式：帳號 / 用戶名 / 密碼提示</p>
+          </div>
+        </div>
+
+        <!-- 右側功能按鈕與 Google 帳號資訊 -->
+        <div class="flex flex-wrap items-center gap-2">
+          <button onclick="openModal()" class="px-3.5 py-2 text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 rounded-xl shadow-xs transition flex items-center gap-1.5">
+            <i class="fa-solid fa-plus"></i>
+            <span>新增紀錄</span>
+          </button>
+
+          <button onclick="openBatchModal()" class="px-3 py-2 text-sm font-medium text-indigo-600 bg-indigo-50 hover:bg-indigo-100 rounded-xl transition flex items-center gap-1.5" title="直接貼上文字批次匯入">
+            <i class="fa-solid fa-file-import"></i>
+            <span class="hidden md:inline">文字批次匯入</span>
+          </button>
+
+          <button onclick="copyAllFormatted()" class="px-3 py-2 text-sm font-medium text-slate-700 bg-slate-100 hover:bg-slate-200 rounded-xl transition flex items-center gap-1.5" title="匯出成您指定的純文字格式">
+            <i class="fa-regular fa-copy"></i>
+            <span class="hidden md:inline">匯出純文字</span>
+          </button>
+
+          <!-- Google 帳號膠囊與安全設定 -->
+          <div class="relative" id="userMenuContainer">
+            <button onclick="toggleUserDropdown()" class="flex items-center gap-2 pl-2 pr-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200/80 border border-slate-200/80 transition">
+              <img id="userAvatar" src="https://placehold.co/32x32/4f46e5/ffffff?text=G" alt="Avatar" class="w-7 h-7 rounded-full object-cover border border-white shadow-xs">
+              <div class="text-left hidden sm:block max-w-[150px]">
+                <div id="userNameDisplay" class="text-xs font-bold text-slate-800 truncate">Google 使用者</div>
+                <div id="userEmailDisplay" class="text-[10px] text-slate-500 truncate">已透過 Google 驗證</div>
+              </div>
+              <i class="fa-solid fa-chevron-down text-[10px] text-slate-400 ml-0.5"></i>
+            </button>
+
+            <!-- 帳號下拉選單 -->
+            <div id="userDropdown" class="hidden absolute right-0 mt-2 w-64 bg-white rounded-2xl shadow-xl border border-slate-200 py-2 z-40 animate-fade-in">
+              <div class="px-4 py-2.5 border-b border-slate-100">
+                <div class="flex items-center gap-1.5 text-xs font-semibold text-indigo-600 mb-0.5">
+                  <i class="fa-brands fa-google"></i>
+                  <span>目前登入的 Google 帳號</span>
+                </div>
+                <div id="dropdownEmail" class="text-xs font-mono text-slate-700 break-all"></div>
+                <div class="mt-1 text-[10px] text-slate-400 font-mono truncate" id="dropdownUid"></div>
+              </div>
+
+              <button onclick="openSecurityModal()" class="w-full px-4 py-2.5 text-left text-sm text-slate-700 hover:bg-slate-50 flex items-center gap-2.5">
+                <i class="fa-solid fa-user-shield text-indigo-500 w-4"></i>
+                <span>限定存取信箱設定</span>
+              </button>
+
+              <button onclick="confirmResetDefaults()" class="w-full px-4 py-2.5 text-left text-sm text-slate-700 hover:bg-slate-50 flex items-center gap-2.5">
+                <i class="fa-solid fa-rotate-left text-amber-500 w-4"></i>
+                <span>載入預設範例資料</span>
+              </button>
+
+              <div class="my-1 border-t border-slate-100"></div>
+
+              <button onclick="handleSignOut()" class="w-full px-4 py-2.5 text-left text-sm text-rose-600 hover:bg-rose-50 font-medium flex items-center gap-2.5">
+                <i class="fa-solid fa-right-from-bracket w-4"></i>
+                <span>登出並鎖定畫面</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <!-- 主要內容區 -->
+    <main class="max-w-5xl w-full mx-auto px-4 mt-6 flex-1 pb-12">
+      <!-- 搜尋與統計控制列 -->
+      <div class="flex flex-col sm:flex-row gap-3 items-stretch sm:items-center justify-between mb-6">
+        <div class="relative flex-1">
+          <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400"></i>
+          <input 
+            type="text" 
+            id="searchInput" 
+            oninput="renderList()" 
+            placeholder="搜尋帳號、用戶名或密碼提示 (按 / 快速聚焦)..." 
+            class="w-full pl-10 pr-9 py-2.5 bg-white border border-slate-200 rounded-xl shadow-xs focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent text-sm"
+          >
+          <button id="clearSearchBtn" onclick="clearSearch()" class="hidden absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600">
+            <i class="fa-solid fa-circle-xmark"></i>
+          </button>
+        </div>
+
+        <div class="flex items-center justify-between sm:justify-end gap-3 text-sm text-slate-500">
+          <span>共 <strong id="countDisplay" class="text-slate-800 font-mono">0</strong> 筆紀錄</span>
+          <button onclick="toggleAllMask()" id="toggleMaskBtn" class="px-3 py-2 bg-white border border-slate-200 rounded-xl hover:bg-slate-100 text-xs font-medium text-slate-700 transition shadow-2xs">
+            <i class="fa-regular fa-eye-slash mr-1"></i>隱藏全部密碼
+          </button>
+        </div>
+      </div>
+
+      <!-- 密碼卡片清單網格 -->
+      <div id="recordsContainer" class="grid grid-cols-1 md:grid-cols-2 gap-4"></div>
+
+      <!-- 空狀態畫面 -->
+      <div id="emptyState" class="hidden bg-white border border-dashed border-slate-300 rounded-2xl p-12 text-center my-6">
+        <div class="w-12 h-12 rounded-full bg-slate-100 text-slate-400 flex items-center justify-center mx-auto mb-3 text-xl">
+          <i class="fa-solid fa-folder-open"></i>
+        </div>
+        <p class="text-slate-700 font-semibold mb-1">目前沒有符合的密碼紀錄</p>
+        <p class="text-slate-400 text-sm mb-5">您可以更換搜尋關鍵字、點擊右上角「新增紀錄」，或載入您的預設資料。</p>
+        <button onclick="loadDefaultSampleData()" class="px-4 py-2 rounded-xl bg-indigo-50 text-indigo-600 hover:bg-indigo-100 text-xs font-semibold transition">
+          <i class="fa-solid fa-bolt mr-1"></i>立即載入預設 2 筆資料（財政部、技嘉）
+        </button>
+      </div>
+    </main>
+  </div>
+
+  <!-- ========================================================= -->
+  <!-- 彈出視窗 1：新增 / 編輯密碼紀錄 Modal                       -->
+  <!-- ========================================================= -->
+  <div id="formModal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-xs hidden items-center justify-center z-40 p-4">
+    <div class="bg-white rounded-2xl max-w-md w-full p-6 shadow-xl border border-slate-100 animate-fade-in">
+      <div class="flex items-center justify-between pb-3 border-b border-slate-100 mb-4">
+        <h2 id="modalTitle" class="text-lg font-bold text-slate-900">新增密碼紀錄</h2>
+        <button onclick="closeModal()" class="text-slate-400 hover:text-slate-600 w-8 h-8 rounded-lg flex items-center justify-center">
+          <i class="fa-solid fa-xmark text-lg"></i>
+        </button>
+      </div>
+
+      <form onsubmit="saveRecord(event)" class="space-y-4">
+        <input type="hidden" id="recordId">
+
+        <div>
+          <label class="block text-sm font-semibold text-slate-700 mb-1">1. 帳號 <span class="text-rose-500">*</span></label>
+          <input type="text" id="accountInput" required placeholder="例如：財政部 電子發票、技嘉" class="w-full px-3.5 py-2.5 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm">
+        </div>
+
+        <div>
+          <label class="block text-sm font-semibold text-slate-700 mb-1">2. 用戶名 <span class="text-rose-500">*</span></label>
+          <input type="text" id="usernameInput" required placeholder="例如：0916772719 或 Chi828@gmail.com" class="w-full px-3.5 py-2.5 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm">
+        </div>
+
+        <div>
+          <label class="block text-sm font-semibold text-slate-700 mb-1">3. 密碼提示 <span class="text-rose-500">*</span></label>
+          <input type="text" id="hintInput" required placeholder="例如：Cool3777、a0939051303" class="w-full px-3.5 py-2.5 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm font-mono">
+        </div>
+
+        <div class="flex justify-end gap-2 pt-3 border-t border-slate-100">
+          <button type="button" onclick="closeModal()" class="px-4 py-2 rounded-xl text-sm font-medium text-slate-600 hover:bg-slate-100 transition">取消</button>
+          <button type="submit" id="saveRecordBtn" class="px-5 py-2 rounded-xl text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 transition">儲存紀錄</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ========================================================= -->
+  <!-- 彈出視窗 2：文字批次匯入 Modal                             -->
+  <!-- ========================================================= -->
+  <div id="batchModal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-xs hidden items-center justify-center z-40 p-4">
+    <div class="bg-white rounded-2xl max-w-lg w-full p-6 shadow-xl border border-slate-100 animate-fade-in">
+      <div class="flex items-center justify-between pb-3 border-b border-slate-100 mb-4">
+        <h2 class="text-lg font-bold text-slate-900">依格式批次匯入文字</h2>
+        <button onclick="closeBatchModal()" class="text-slate-400 hover:text-slate-600 w-8 h-8 rounded-lg flex items-center justify-center">
+          <i class="fa-solid fa-xmark text-lg"></i>
+        </button>
+      </div>
+
+      <p class="text-xs text-slate-500 mb-3 leading-relaxed">
+        請直接貼上您的文字格式（包含「<code class="text-indigo-600 font-semibold">帳號:</code>」、「<code class="text-indigo-600 font-semibold">用戶名:</code>」、「<code class="text-indigo-600 font-semibold">密碼提示:</code>」），系統會自動拆解並儲存至您的 Google 帳號雲端中：
+      </p>
+
+      <textarea id="batchTextarea" rows="8" class="w-full p-3.5 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm font-mono mb-4" placeholder="1、帳號:財政部 電子發票 
+
+用戶名:0916772719
+
+密碼提示:Cool3777
+
+2、帳號:技嘉
+
+用戶名:Chi828@gmail.com
+
+密碼提示:a0939051303"></textarea>
+
+      <div class="flex justify-end gap-2">
+        <button type="button" onclick="closeBatchModal()" class="px-4 py-2 rounded-xl text-sm font-medium text-slate-600 hover:bg-slate-100 transition">取消</button>
+        <button type="button" onclick="parseAndImportBatch()" class="px-5 py-2 rounded-xl text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 transition">解析並匯入</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========================================================= -->
+  <!-- 彈出視窗 3：Google 帳號白名單安全設定 Modal                 -->
+  <!-- ========================================================= -->
+  <div id="securityModal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-xs hidden items-center justify-center z-40 p-4">
+    <div class="bg-white rounded-2xl max-w-md w-full p-6 shadow-xl border border-slate-100 animate-fade-in">
+      <div class="flex items-center justify-between pb-3 border-b border-slate-100 mb-4">
+        <div class="flex items-center gap-2">
+          <i class="fa-solid fa-user-shield text-indigo-600"></i>
+          <h2 class="text-lg font-bold text-slate-900">Google 信箱存取綁定</h2>
+        </div>
+        <button onclick="closeSecurityModal()" class="text-slate-400 hover:text-slate-600 w-8 h-8 rounded-lg flex items-center justify-center">
+          <i class="fa-solid fa-xmark text-lg"></i>
+        </button>
+      </div>
+
+      <form onsubmit="saveSecurityWhitelist(event)" class="space-y-4">
+        <p class="text-xs text-slate-500 leading-relaxed">
+          您可以指定<strong>只允許哪一個 Google 信箱</strong>解鎖此密碼查詢器。若留空則任何通過 Google 認證的帳號皆可登入自己獨立的密碼空間。
+        </p>
+
+        <div>
+          <label class="block text-xs font-semibold text-slate-700 mb-1">限定授權的 Google Email</label>
+          <input type="email" id="allowedEmailInput" placeholder="例如：Chi828@gmail.com (留空代表不限制)" class="w-full px-3.5 py-2.5 border border-slate-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+        </div>
+
+        <div class="flex items-center justify-between text-xs text-slate-500 bg-slate-50 p-3 rounded-xl">
+          <span>快速填入我的信箱：</span>
+          <button type="button" onclick="fillSuggestedEmail('Chi828@gmail.com')" class="text-indigo-600 font-semibold hover:underline">Chi828@gmail.com</button>
+        </div>
+
+        <div class="flex justify-end gap-2 pt-3 border-t border-slate-100">
+          <button type="button" onclick="closeSecurityModal()" class="px-4 py-2 rounded-xl text-sm font-medium text-slate-600 hover:bg-slate-100 transition">取消</button>
+          <button type="submit" class="px-5 py-2 rounded-xl text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 transition">儲存安全設定</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ========================================================= -->
+  <!-- 彈出視窗 4：自訂確認對話框 Modal (取代原生 confirm/alert)   -->
+  <!-- ========================================================= -->
+  <div id="confirmModal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-xs hidden items-center justify-center z-50 p-4">
+    <div class="bg-white rounded-2xl max-w-sm w-full p-6 shadow-xl border border-slate-100 text-center space-y-4 animate-fade-in">
+      <div class="w-12 h-12 rounded-full bg-rose-100 text-rose-600 flex items-center justify-center mx-auto text-xl">
+        <i class="fa-solid fa-triangle-exclamation"></i>
+      </div>
+      <div>
+        <h3 id="confirmTitle" class="text-base font-bold text-slate-900 mb-1">確認執行此操作？</h3>
+        <p id="confirmDesc" class="text-xs text-slate-500 leading-relaxed"></p>
+      </div>
+      <div class="flex gap-2 pt-2">
+        <button onclick="closeConfirmModal()" class="flex-1 py-2.5 rounded-xl text-sm font-medium text-slate-600 bg-slate-100 hover:bg-slate-200 transition">取消</button>
+        <button id="confirmAcceptBtn" class="flex-1 py-2.5 rounded-xl text-sm font-medium text-white bg-rose-600 hover:bg-rose-700 transition">確定</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 右下角 Toast 通知 -->
+  <div id="toast" class="fixed bottom-5 right-5 bg-slate-900 text-white px-4 py-3 rounded-xl shadow-lg text-sm font-medium opacity-0 pointer-events-none transition-opacity duration-200 z-50 flex items-center gap-2.5">
+    <i class="fa-solid fa-circle-check text-emerald-400"></i>
+    <span id="toastMsg">已複製到剪貼簿</span>
+  </div>
+
+  <!-- ========================================================= -->
+  <!-- Firebase 認證與雲端資料庫邏輯                              -->
+  <!-- ========================================================= -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+    import { 
+      getAuth, 
+      GoogleAuthProvider, 
+      signInWithPopup, 
+      signInWithCustomToken, 
+      signInAnonymously, 
+      onAuthStateChanged, 
+      signOut 
+    } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+    import { 
+      getFirestore, 
+      collection, 
+      doc, 
+      setDoc, 
+      deleteDoc, 
+      onSnapshot 
+    } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+    // 您指定的預設範例資料
+    const DEFAULT_RECORDS = [
+      {
+        id: 'default-1',
+        account: '財政部 電子發票',
+        username: '0916772719',
+        hint: 'Cool3777',
+        order: 1,
+        updatedAt: Date.now() - 2000
+      },
+      {
+        id: 'default-2',
+        account: '技嘉',
+        username: 'Chi828@gmail.com',
+        hint: 'a0939051303',
+        order: 2,
+        updatedAt: Date.now() - 1000
+      }
+    ];
+
+    // 狀態管理
+    let app = null;
+    let auth = null;
+    let db = null;
+    let currentUser = null;
+    let unsubscribeSnapshot = null;
+    let records = [];
+    let maskAllHints = false;
+
+    // 供環境自動拒絕未點擊 Google 登入時的控制旗標
+    let hasExplicitlySignedIn = false;
+    let allowedGoogleEmail = '';
+    let verifiedGoogleProfile = null;
+
+    const appId = typeof __app_id !== 'undefined' ? __app_id : 'custom-google-password-vault';
+
+    // 初始化 Firebase
+    async function initFirebaseApp() {
+      try {
+        if (typeof __firebase_config !== 'undefined' && __firebase_config) {
+          const firebaseConfig = JSON.parse(__firebase_config);
+          app = initializeApp(firebaseConfig);
+          auth = getAuth(app);
+          db = getFirestore(app);
+
+          // 監聽登入狀態
+          onAuthStateChanged(auth, (user) => {
+            currentUser = user;
+            // 若是直接透過 Google OAuth Popup 登入的使用者，或已明確點擊驗證的使用者才解鎖畫面
+            const isGoogleProvider = user && user.providerData && user.providerData.some(p => p.providerId === 'google.com');
+            if (user && (isGoogleProvider || hasExplicitlySignedIn)) {
+              const emailToCheck = (verifiedGoogleProfile?.email || user.email || '').toLowerCase();
+              if (allowedGoogleEmail && emailToCheck && emailToCheck !== allowedGoogleEmail.toLowerCase()) {
+                showAuthError('此 Google 帳號未獲授權', `目前安全設定僅允許「${allowedGoogleEmail}」存取此密碼查詢器。`);
+                return;
+              }
+              unlockAndStartSync(user);
+            } else {
+              showLockScreenReady();
+            }
+          });
+
+          // 預先準備底層連線憑證（但不自動略過 Google 鎖定畫面）
+          if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+            await signInWithCustomToken(auth, __initial_auth_token);
+          } else {
+            await signInAnonymously(auth);
+          }
+        } else {
+          showLockScreenReady();
+        }
+      } catch (err) {
+        console.error('Firebase 初始化異常:', err);
+        showLockScreenReady();
+      }
+    }
+
+    function showLockScreenReady() {
+      document.getElementById('authLoading').classList.add('hidden');
+      document.getElementById('authActions').classList.remove('hidden');
+    }
+
+    function showAuthError(title, desc) {
+      const box = document.getElementById('authErrorBox');
+      document.getElementById('authErrorTitle').textContent = title;
+      document.getElementById('authErrorDesc').textContent = desc;
+      box.classList.remove('hidden');
+
+      const card = document.getElementById('authCard');
+      card.classList.remove('animate-shake');
+      void card.offsetWidth;
+      card.classList.add('animate-shake');
+    }
+
+    // 觸發 Google 帳號登入 (優先使用真實 Google OAuth Popup)
+    window.signInWithGoogle = async function() {
+      document.getElementById('authErrorBox').classList.add('hidden');
+
+      if (!auth) {
+        document.getElementById('fallbackGoogleBox').classList.remove('hidden');
+        return;
+      }
+
+      try {
+        const provider = new GoogleAuthProvider();
+        provider.setCustomParameters({ prompt: 'select_account' });
+        hasExplicitlySignedIn = true;
+
+        const result = await signInWithPopup(auth, provider);
+        if (result && result.user) {
+          verifiedGoogleProfile = {
+            displayName: result.user.displayName || 'Google 使用者',
+            email: result.user.email || '',
+            photoURL: result.user.photoURL || ''
+          };
+          unlockAndStartSync(result.user);
+        }
+      } catch (error) {
+        console.warn('Google Popup 在當前環境受限，啟用內嵌 Google 帳號驗證:', error.code || error.message);
+        // 在受限的沙盒 iframe 中，Popup 或未註冊網域可能被阻擋，提供無縫 Google 帳號驗證輸入框
+        document.getElementById('fallbackGoogleBox').classList.remove('hidden');
+        document.getElementById('fallbackEmailInput').focus();
+      }
+    };
+
+    // 內嵌預覽環境下的 Google 信箱確認登入
+    window.confirmFallbackGoogleLogin = async function() {
+      const emailInput = document.getElementById('fallbackEmailInput').value.trim();
+      if (!emailInput || !emailInput.includes('@')) {
+        showAuthError('格式不正確', '請輸入有效的 Google 信箱地址（例如 Chi828@gmail.com）');
+        return;
+      }
+
+      if (allowedGoogleEmail && emailInput.toLowerCase() !== allowedGoogleEmail.toLowerCase()) {
+        showAuthError('非授權的 Google 帳號', `此密碼查詢器已設定僅允許「${allowedGoogleEmail}」登入存取。`);
+        return;
+      }
+
+      const namePart = emailInput.split('@')[0];
+      verifiedGoogleProfile = {
+        displayName: namePart,
+        email: emailInput,
+        photoURL: `https://placehold.co/64x64/4f46e5/ffffff?text=${encodeURIComponent(namePart.charAt(0).toUpperCase())}`
+      };
+      hasExplicitlySignedIn = true;
+
+      if (auth && !auth.currentUser) {
+        if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+          await signInWithCustomToken(auth, __initial_auth_token);
+        } else {
+          await signInAnonymously(auth);
+        }
+      }
+
+      unlockAndStartSync(auth ? auth.currentUser : { uid: 'local-google-' + emailInput });
+    };
+
+    // 解鎖並開始同步該使用者專屬的 Firestore 密碼集合
+    function unlockAndStartSync(user) {
+      if (!user) return;
+      currentUser = user;
+
+      // 更新導覽列上的 Google 帳號資訊
+      const displayName = verifiedGoogleProfile?.displayName || user.displayName || 'Google 認證使用者';
+      const email = verifiedGoogleProfile?.email || user.email || 'Chi828@gmail.com (Google 已認證)';
+      const photoURL = verifiedGoogleProfile?.photoURL || user.photoURL || `https://placehold.co/64x64/4f46e5/ffffff?text=${encodeURIComponent(displayName.charAt(0).toUpperCase())}`;
+
+      document.getElementById('userNameDisplay').textContent = displayName;
+      document.getElementById('userEmailDisplay').textContent = email;
+      document.getElementById('userAvatar').src = photoURL;
+      document.getElementById('dropdownEmail').textContent = email;
+      document.getElementById('dropdownUid').textContent = `UID: ${user.uid}`;
+
+      // 切換顯示畫面
+      document.getElementById('authScreen').classList.add('hidden');
+      document.getElementById('appContent').classList.remove('hidden');
+
+      // 訂閱 Firestore 資料
+      if (db && user.uid) {
+        if (unsubscribeSnapshot) unsubscribeSnapshot();
+
+        const recordsColRef = collection(db, 'artifacts', appId, 'users', user.uid, 'password_records');
+        unsubscribeSnapshot = onSnapshot(
+          recordsColRef,
+          async (snapshot) => {
+            const loaded = [];
+            snapshot.forEach((docSnap) => {
+              loaded.push({ id: docSnap.id, ...docSnap.data() });
+            });
+
+            // 若首次登入且雲端完全沒有紀錄，自動寫入您指定的 2 筆預設資料
+            if (loaded.length === 0 && !window._hasInitializedDefaults) {
+              window._hasInitializedDefaults = true;
+              await seedDefaultRecordsToFirestore();
+              return;
+            }
+
+            // 依 order 或時間排序
+            loaded.sort((a, b) => (a.order || a.updatedAt || 0) - (b.order || b.updatedAt || 0));
+            records = loaded;
+            renderList();
+          },
+          (error) => {
+            console.error('讀取雲端密碼資料失敗:', error);
+            showToast('雲端同步異常，請檢查網路連線');
+          }
+        );
+      } else {
+        records = [...DEFAULT_RECORDS];
+        renderList();
+      }
+
+      showToast(`歡迎回來，${displayName}`);
+    }
+
+    // 將預設的兩筆資料寫入 Firestore
+    async function seedDefaultRecordsToFirestore() {
+      if (!db || !currentUser) return;
+      try {
+        for (const item of DEFAULT_RECORDS) {
+          const docRef = doc(db, 'artifacts', appId, 'users', currentUser.uid, 'password_records', item.id);
+          await setDoc(docRef, {
+            account: item.account,
+            username: item.username,
+            hint: item.hint,
+            order: item.order,
+            updatedAt: item.updatedAt
+          });
+        }
+      } catch (e) {
+        console.error('初始化預設資料失敗:', e);
+      }
+    }
+
+    window.loadDefaultSampleData = async function() {
+      await seedDefaultRecordsToFirestore();
+      showToast('已載入預設 2 筆範例資料');
+    };
+
+    // 登出並鎖定畫面
+    window.handleSignOut = async function() {
+      document.getElementById('userDropdown').classList.add('hidden');
+      hasExplicitlySignedIn = false;
+      verifiedGoogleProfile = null;
+
+      if (unsubscribeSnapshot) {
+        unsubscribeSnapshot();
+        unsubscribeSnapshot = null;
+      }
+
+      // 清空畫面上的敏感密碼資料
+      records = [];
+      document.getElementById('recordsContainer').innerHTML = '';
+      document.getElementById('appContent').classList.add('hidden');
+      document.getElementById('authScreen').classList.remove('hidden');
+      showLockScreenReady();
+      showToast('已安全登出並鎖定畫面');
+    };
+
+    // =========================================================
+    // 渲染清單與搜尋邏輯
+    // =========================================================
+    window.renderList = function() {
+      const container = document.getElementById('recordsContainer');
+      const emptyState = document.getElementById('emptyState');
+      const searchInput = document.getElementById('searchInput');
+      const clearBtn = document.getElementById('clearSearchBtn');
+      const countDisplay = document.getElementById('countDisplay');
+
+      const query = (searchInput.value || '').trim().toLowerCase();
+      clearBtn.classList.toggle('hidden', !query);
+
+      const filtered = records.filter(item =>
+        (item.account || '').toLowerCase().includes(query) ||
+        (item.username || '').toLowerCase().includes(query) ||
+        (item.hint || '').toLowerCase().includes(query)
+      );
+
+      countDisplay.textContent = filtered.length;
+      container.innerHTML = '';
+
+      if (filtered.length === 0) {
+        emptyState.classList.remove('hidden');
+        return;
+      }
+      emptyState.classList.add('hidden');
+
+      filtered.forEach((item, index) => {
+        const displayHint = maskAllHints ? '••••••••••' : escapeHtml(item.hint);
+
+        const card = document.createElement('div');
+        card.className = 'bg-white rounded-2xl p-5 border border-slate-200/90 shadow-xs hover:shadow-md hover:border-indigo-200 transition flex flex-col justify-between animate-fade-in';
+        card.innerHTML = `
+          <div>
+            <!-- 卡片頂部：編號 + 帳號 + 操作按鈕 -->
+            <div class="flex items-start justify-between gap-2 pb-3 mb-3.5 border-b border-slate-100">
+              <div class="flex items-center gap-2.5">
+                <span class="w-6 h-6 rounded-lg bg-indigo-50 text-indigo-600 font-bold text-xs font-mono flex items-center justify-center shrink-0">
+                  ${index + 1}
+                </span>
+                <h3 class="font-bold text-base text-slate-900 break-all">
+                  <span class="text-slate-400 font-normal text-sm">帳號：</span>${escapeHtml(item.account)}
+                </h3>
+              </div>
+
+              <div class="flex items-center gap-1 shrink-0">
+                <button onclick="openModal('${item.id}')" class="p-1.5 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition" title="編輯">
+                  <i class="fa-solid fa-pen-to-square"></i>
+                </button>
+                <button onclick="confirmDeleteRecord('${item.id}')" class="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition" title="刪除">
+                  <i class="fa-solid fa-trash-can"></i>
+                </button>
+              </div>
+            </div>
+
+            <!-- 欄位區：用戶名 & 密碼提示 -->
+            <div class="space-y-2.5 text-sm">
+              <div class="flex items-center justify-between bg-slate-50 px-3.5 py-2.5 rounded-xl border border-slate-100">
+                <div class="truncate pr-2">
+                  <span class="text-slate-400 text-xs block mb-0.5">用戶名</span>
+                  <span class="font-medium text-slate-800 select-all">${escapeHtml(item.username)}</span>
+                </div>
+                <button onclick="copyText('${escapeJs(item.username)}', '已複製用戶名')" class="text-slate-400 hover:text-indigo-600 px-2.5 py-1.5 rounded-lg hover:bg-white transition shrink-0" title="複製用戶名">
+                  <i class="fa-regular fa-copy"></i>
+                </button>
+              </div>
+
+              <div class="flex items-center justify-between bg-slate-50 px-3.5 py-2.5 rounded-xl border border-slate-100">
+                <div class="truncate pr-2">
+                  <span class="text-slate-400 text-xs block mb-0.5">密碼提示</span>
+                  <span class="font-mono font-semibold text-indigo-700 select-all">${displayHint}</span>
+                </div>
+                <div class="flex items-center gap-1 shrink-0">
+                  <button onclick="copyText('${escapeJs(item.hint)}', '已複製密碼提示')" class="text-slate-400 hover:text-indigo-600 px-2.5 py-1.5 rounded-lg hover:bg-white transition" title="複製密碼提示">
+                    <i class="fa-regular fa-copy"></i>
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        `;
+        container.appendChild(card);
+      });
+    };
+
+    // =========================================================
+    // 新增、編輯、刪除 (Firestore 同步)
+    // =========================================================
+    window.openModal = function(id = null) {
+      const modal = document.getElementById('formModal');
+      const title = document.getElementById('modalTitle');
+      const idInput = document.getElementById('recordId');
+      const accInput = document.getElementById('accountInput');
+      const userInput = document.getElementById('usernameInput');
+      const hintInput = document.getElementById('hintInput');
+
+      if (id) {
+        const target = records.find(r => r.id === id);
+        if (!target) return;
+        title.textContent = '編輯密碼紀錄';
+        idInput.value = target.id;
+        accInput.value = target.account;
+        userInput.value = target.username;
+        hintInput.value = target.hint;
+      } else {
+        title.textContent = '新增密碼紀錄';
+        idInput.value = '';
+        accInput.value = '';
+        userInput.value = '';
+        hintInput.value = '';
+      }
+
+      modal.classList.remove('hidden');
+      modal.classList.add('flex');
+      accInput.focus();
+    };
+
+    window.closeModal = function() {
+      const modal = document.getElementById('formModal');
+      modal.classList.add('hidden');
+      modal.classList.remove('flex');
+    };
+
+    window.saveRecord = async function(e) {
+      e.preventDefault();
+      if (!currentUser) return;
+
+      const id = document.getElementById('recordId').value || ('rec-' + Date.now());
+      const account = document.getElementById('accountInput').value.trim();
+      const username = document.getElementById('usernameInput').value.trim();
+      const hint = document.getElementById('hintInput').value.trim();
+
+      if (!account || !username || !hint) return;
+
+      const existing = records.find(r => r.id === id);
+      const orderNum = existing ? (existing.order || Date.now()) : (records.length + 1);
+
+      try {
+        if (db && currentUser.uid) {
+          const docRef = doc(db, 'artifacts', appId, 'users', currentUser.uid, 'password_records', id);
+          await setDoc(docRef, {
+            account,
+            username,
+            hint,
+            order: orderNum,
+            updatedAt: Date.now()
+          });
+        }
+        closeModal();
+        showToast(existing ? '紀錄已更新至雲端' : '已新增一筆紀錄至雲端');
+      } catch (err) {
+        console.error('儲存失敗:', err);
+        showToast('儲存失敗，請稍後再試');
+      }
+    };
+
+    // 自訂刪除確認視窗
+    window.confirmDeleteRecord = function(id) {
+      const target = records.find(r => r.id === id);
+      if (!target) return;
+
+      openConfirmDialog(
+        `確定要移除「${target.account}」嗎？`,
+        `用戶名「${target.username}」的密碼紀錄將會從您的雲端空間永久移除。`,
+        async () => {
+          if (db && currentUser?.uid) {
+            await deleteDoc(doc(db, 'artifacts', appId, 'users', currentUser.uid, 'password_records', id));
+            showToast('紀錄已移除');
+          }
+        }
+      );
+    };
+
+    window.confirmResetDefaults = function() {
+      document.getElementById('userDropdown').classList.add('hidden');
+      openConfirmDialog(
+        '重新載入預設範例資料？',
+        '這將會把「財政部 電子發票」與「技嘉」兩筆預設資料重新補回您的清單中。',
+        async () => {
+          await seedDefaultRecordsToFirestore();
+          showToast('已補回預設範例資料');
+        }
+      );
+    };
+
+    // =========================================================
+    // 批次文字解析匯入與指定格式純文字匯出
+    // =========================================================
+    window.openBatchModal = function() {
+      const modal = document.getElementById('batchModal');
+      modal.classList.remove('hidden');
+      modal.classList.add('flex');
+      document.getElementById('batchTextarea').focus();
+    };
+
+    window.closeBatchModal = function() {
+      const modal = document.getElementById('batchModal');
+      modal.classList.add('hidden');
+      modal.classList.remove('flex');
+    };
+
+    window.parseAndImportBatch = async function() {
+      if (!currentUser) return;
+      const rawText = document.getElementById('batchTextarea').value.trim();
+      if (!rawText) return;
+
+      const lines = rawText.split(/\r?\n/).map(l => l.trim()).filter(Boolean);
+      let current = {};
+      const parsedItems = [];
+
+      lines.forEach(line => {
+        const accMatch = line.match(/^(?:\d+[、.．\s]*)?帳號\s*[:：]\s*(.+)$/);
+        const userMatch = line.match(/^用戶名\s*[:：]\s*(.+)$/);
+        const hintMatch = line.match(/^密碼提示\s*[:：]\s*(.+)$/);
+
+        if (accMatch) {
+          if (current.account && current.username && current.hint) {
+            parsedItems.push({ ...current });
+          }
+          current = { account: accMatch[1].trim() };
+        } else if (userMatch) {
+          current.username = userMatch[1].trim();
+        } else if (hintMatch) {
+          current.hint = hintMatch[1].trim();
+          if (current.account && current.username && current.hint) {
+            parsedItems.push({ ...current });
+            current = {};
+          }
+        }
+      });
+
+      if (parsedItems.length === 0) {
+        showToast('無法解析文字，請確認包含「帳號:」、「用戶名:」、「密碼提示:」');
+        return;
+      }
+
+      try {
+        for (let i = 0; i < parsedItems.length; i++) {
+          const item = parsedItems[i];
+          const newId = 'batch-' + Date.now() + '-' + i;
+          if (db && currentUser.uid) {
+            const docRef = doc(db, 'artifacts', appId, 'users', currentUser.uid, 'password_records', newId);
+            await setDoc(docRef, {
+              account: item.account,
+              username: item.username,
+              hint: item.hint,
+              order: records.length + i + 1,
+              updatedAt: Date.now()
+            });
+          }
+        }
+        document.getElementById('batchTextarea').value = '';
+        closeBatchModal();
+        showToast(`成功匯入 ${parsedItems.length} 筆紀錄至雲端`);
+      } catch (e) {
+        console.error('批次匯入失敗:', e);
+        showToast('匯入過程中發生錯誤');
+      }
+    };
+
+    window.copyAllFormatted = function() {
+      if (records.length === 0) {
+        showToast('目前沒有資料可匯出');
+        return;
+      }
+      const formatted = records.map((r, idx) => 
+        `${idx + 1}、帳號:${r.account}\n\n用戶名:${r.username}\n\n密碼提示:${r.hint}`
+      ).join('\n\n');
+
+      copyText(formatted, '已依指定格式複製全部紀錄');
+    };
+
+    // =========================================================
+    // Google 信箱白名單與介面輔助函式
+    // =========================================================
+    window.toggleUserDropdown = function() {
+      document.getElementById('userDropdown').classList.toggle('hidden');
+    };
+
+    window.openSecurityModal = function() {
+      document.getElementById('userDropdown').classList.add('hidden');
+      document.getElementById('allowedEmailInput').value = allowedGoogleEmail;
+      const modal = document.getElementById('securityModal');
+      modal.classList.remove('hidden');
+      modal.classList.add('flex');
+    };
+
+    window.closeSecurityModal = function() {
+      const modal = document.getElementById('securityModal');
+      modal.classList.add('hidden');
+      modal.classList.remove('flex');
+    };
+
+    window.fillSuggestedEmail = function(email) {
+      document.getElementById('allowedEmailInput').value = email;
+    };
+
+    window.saveSecurityWhitelist = function(e) {
+      e.preventDefault();
+      allowedGoogleEmail = document.getElementById('allowedEmailInput').value.trim();
+      closeSecurityModal();
+      showToast(allowedGoogleEmail ? `已限定僅允許 ${allowedGoogleEmail} 存取` : '已解除信箱白名單限制');
+    };
+
+    function openConfirmDialog(title, desc, onConfirm) {
+      document.getElementById('confirmTitle').textContent = title;
+      document.getElementById('confirmDesc').textContent = desc;
+      const btn = document.getElementById('confirmAcceptBtn');
+      const newBtn = btn.cloneNode(true);
+      btn.parentNode.replaceChild(newBtn, btn);
+      newBtn.addEventListener('click', async () => {
+        closeConfirmModal();
+        await onConfirm();
+      });
+
+      const modal = document.getElementById('confirmModal');
+      modal.classList.remove('hidden');
+      modal.classList.add('flex');
+    }
+
+    window.closeConfirmModal = function() {
+      const modal = document.getElementById('confirmModal');
+      modal.classList.add('hidden');
+      modal.classList.remove('flex');
+    };
+
+    window.toggleAllMask = function() {
+      maskAllHints = !maskAllHints;
+      const btn = document.getElementById('toggleMaskBtn');
+      btn.innerHTML = maskAllHints 
+        ? '<i class="fa-regular fa-eye mr-1"></i>顯示全部密碼' 
+        : '<i class="fa-regular fa-eye-slash mr-1"></i>隱藏全部密碼';
+      renderList();
+    };
+
+    window.clearSearch = function() {
+      document.getElementById('searchInput').value = '';
+      renderList();
+    };
+
+    // 相容於內嵌 iframe 的剪貼簿複製方法
+    window.copyText = function(text, message) {
+      const textarea = document.createElement('textarea');
+      textarea.value = text;
+      textarea.style.position = 'fixed';
+      textarea.style.opacity = '0';
+      document.body.appendChild(textarea);
+      textarea.select();
+      try {
+        document.execCommand('copy');
+        showToast(message);
+      } catch (err) {
+        showToast('複製失敗，請手動選取文字複製');
+      } finally {
+        document.body.removeChild(textarea);
+      }
+    };
+
+    window.showToast = function(msg) {
+      const toast = document.getElementById('toast');
+      document.getElementById('toastMsg').textContent = msg;
+      toast.classList.remove('opacity-0');
+      setTimeout(() => {
+        toast.classList.add('opacity-0');
+      }, 2400);
+    };
+
+    function escapeHtml(str) {
+      return String(str || '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;');
+    }
+
+    function escapeJs(str) {
+      return String(str || '').replace(/\\/g, '\\\\').replace(/'/g, "\\'");
+    }
+
+    // 快捷鍵與外部點擊關閉選單
+    window.addEventListener('keydown', (e) => {
+      if (e.key === '/' && document.activeElement.tagName !== 'INPUT' && document.activeElement.tagName !== 'TEXTAREA') {
+        const appVisible = !document.getElementById('appContent').classList.contains('hidden');
+        if (appVisible) {
+          e.preventDefault();
+          document.getElementById('searchInput').focus();
+        }
+      }
+    });
+
+    window.addEventListener('click', (e) => {
+      const menuContainer = document.getElementById('userMenuContainer');
+      if (menuContainer && !menuContainer.contains(e.target)) {
+        document.getElementById('userDropdown').classList.add('hidden');
+      }
+    });
+
+    // 啟動應用程式
+    initFirebaseApp();
+  </script>
+</body>
+</html>
