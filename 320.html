@@ -33,14 +33,23 @@
         let activeUpdatesCount = 0; 
         
         let rollingInterval = null;
+        let isLoadingData = false;     // 避免同步請求重疊
+        let loadSeq = 0;               // 只採用最新一次請求的結果
+        let lastQueueSig = '';         // 畫面簽章：資料沒變就不重繪
+        let lastPlaylistSig = '';
+        let lastRequestsSig = '';
 
-        if (isDarkMode) document.body.classList.add('dark-mode');
+        // 修復：<head> 執行時 document.body 還不存在，改掛在 <html> 上，載入時就套用深色模式且不閃爍
+        if (isDarkMode) document.documentElement.classList.add('dark-mode');
     </script>
     <style>
         :root { --bg-color: #f4f6f8; --text-color: #2d3436; --card-bg: #ffffff; --primary: #ff6b6b; --primary-hover: #ee5253; --secondary: #48dbfb; --danger: #ff7675; --success: #55efc4; --warning: #fbc531; --border: #e1e4e8; --reply-bg: #f8f9fa; --accent-gold: #fbc531; --shadow-sm: 0 2px 8px rgba(0,0,0,0.04); --shadow-md: 0 4px 15px rgba(0,0,0,0.06); --shadow-lg: 0 10px 30px rgba(0,0,0,0.1); --radius-lg: 16px; --radius-md: 10px; --radius-sm: 8px; --transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1); }
-        body.dark-mode { --bg-color: #121212; --text-color: #e0e0e0; --card-bg: #1e1e1e; --primary: #ff7675; --border: #2d2d2d; --reply-bg: #2d3436; --shadow-sm: 0 2px 8px rgba(0,0,0,0.2); --shadow-md: 0 4px 15px rgba(0,0,0,0.4); --shadow-lg: 0 10px 30px rgba(0,0,0,0.6); }
-        body { font-family: 'PingFang TC', 'Microsoft JhengHei', 'Segoe UI', Roboto, sans-serif; background-color: var(--bg-color); color: var(--text-color); max-width: 900px; margin: 0 auto; padding: 20px; padding-bottom: 120px; scroll-behavior: smooth; transition: background 0.4s ease, color 0.4s ease; line-height: 1.6; animation: fadeInUp 0.5s ease-out; overscroll-behavior-y: none; }
+        html.dark-mode { --bg-color: #121212; --text-color: #e0e0e0; --card-bg: #1e1e1e; --primary: #ff7675; --border: #2d2d2d; --reply-bg: #2d3436; --shadow-sm: 0 2px 8px rgba(0,0,0,0.2); --shadow-md: 0 4px 15px rgba(0,0,0,0.4); --shadow-lg: 0 10px 30px rgba(0,0,0,0.6); }
+        body { font-family: 'PingFang TC', 'Microsoft JhengHei', 'Segoe UI', Roboto, sans-serif; background-color: var(--bg-color); color: var(--text-color); max-width: 900px; margin: 0 auto; padding: 20px; padding-bottom: 120px; transition: background 0.4s ease, color 0.4s ease; line-height: 1.6; animation: fadeInUp 0.5s ease-out; overscroll-behavior-y: none; }
         @keyframes fadeInUp { from { opacity: 0; transform: translateY(15px); } to { opacity: 1; transform: translateY(0); } }
+        html { scroll-behavior: smooth; }
+        :focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; }
+        @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; transition-duration: 0.01ms !important; scroll-behavior: auto !important; } }
         h1 { text-align: center; color: var(--primary); font-size: 26px; margin-bottom: 25px; font-weight: 800; letter-spacing: 1px; }
         .social-links { display: flex; justify-content: center; gap: 12px; margin-bottom: 35px; flex-wrap: wrap; }
         .social-links a { text-decoration: none; color: var(--text-color); background: var(--card-bg); padding: 8px 16px; border-radius: 50px; font-size: 13px; font-weight: 500; box-shadow: var(--shadow-sm); border: 1px solid var(--border); transition: var(--transition); }
@@ -56,6 +65,8 @@
         .filter-bar input, .filter-bar select { width: 100%; padding: 10px 14px; font-size: 14px; box-sizing: border-box; transition: var(--transition); border: 1px solid var(--border); border-radius: var(--radius-md); background: var(--bg-color); color: var(--text-color); }
         .filter-bar select { text-align: center; text-align-last: center; cursor: pointer; }
         .filter-bar input:focus, .filter-bar select:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 3px rgba(255,107,107,0.15); }
+        #searchInput::-webkit-search-cancel-button { display: none; }
+        #searchInput { padding-right: 34px; }
         .clear-search-btn { position: absolute; right: 12px; top: 50%; transform: translateY(-50%); color: #ff9f43; cursor: pointer; font-weight: bold; font-size: 16px; display: none; transition: var(--transition); }
         .clear-search-btn:hover { color: var(--primary); transform: translateY(-50%) scale(1.2); }
         .btn { border: none; border-radius: var(--radius-md); cursor: pointer; font-weight: 600; display: inline-flex; align-items: center; justify-content: center; padding: 10px 16px; font-size: 14px; transition: var(--transition); }
@@ -69,7 +80,7 @@
         .admin-badge { display: none; background: linear-gradient(45deg, #fbc531, #f1c40f); color: #fff; padding: 4px 12px; border-radius: 50px; font-size: 12px; margin-left: 10px; vertical-align: middle; }
         .admin-badge.active { display: inline-block; }
         .queue-panel { background: linear-gradient(135deg, #fffcf0 0%, #fff3cd 100%); border: 1px solid #ffeaa7; color: #856404; padding: 25px; border-radius: var(--radius-lg); margin-bottom: 30px; box-shadow: var(--shadow-md); }
-        body.dark-mode .queue-panel { background: linear-gradient(135deg, #2c2a1a 0%, #3d3b20 100%); border-color: #635c33; color: var(--accent-gold); }
+        html.dark-mode .queue-panel { background: linear-gradient(135deg, #2c2a1a 0%, #3d3b20 100%); border-color: #635c33; color: var(--accent-gold); }
         .queue-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 20px; flex-wrap: wrap; gap: 10px; }
         .queue-heading { display: flex; flex-direction: column; gap: 4px; }
         .queue-title { font-size: 20px; font-weight: 800; display: flex; align-items: center; gap: 8px; }
@@ -82,7 +93,7 @@
         .queue-item:hover { transform: translateX(5px); background: rgba(255,255,255,0.95); box-shadow: var(--shadow-sm); }
         .queue-item.sortable-ghost { opacity: 0.4; background: var(--border); border: 2px dashed var(--primary); }
         .queue-item.sortable-chosen { box-shadow: var(--shadow-lg); transform: scale(1.02); }
-        body.dark-mode .queue-item { background: rgba(0,0,0,0.3); color: #e0e0e0; }
+        html.dark-mode .queue-item { background: rgba(0,0,0,0.3); color: #e0e0e0; }
         .queue-item.singing { background: rgba(255,107,107,0.15); border: 2px solid var(--primary); box-shadow: 0 0 20px rgba(255,107,107,0.3); animation: pulse-queue 2s infinite; }
         .queue-item.done { opacity: 0.55; text-decoration: line-through; background: rgba(85, 239, 196, 0.08); border-color: var(--success); }
         .queue-item.queued { background: rgba(255,255,255,0.8); }
@@ -101,15 +112,15 @@
         .queue-stats .stat-singing { background: rgba(255,107,107,0.15); color: var(--primary); border-color: var(--primary); }
         .queue-stats .stat-queued { background: rgba(72,219,251,0.1); color: #0984e3; border-color: #48dbfb; }
         .queue-stats .stat-done { background: rgba(85,239,196,0.1); color: #00b894; border-color: #55efc4; }
-        body.dark-mode .queue-stats .stat-queued { color: #48dbfb; }
-        body.dark-mode .queue-stats .stat-done { color: #55efc4; }
+        html.dark-mode .queue-stats .stat-queued { color: #48dbfb; }
+        html.dark-mode .queue-stats .stat-done { color: #55efc4; }
         .queue-section { margin-bottom: 12px; }
         .queue-section-title { font-size: 12px; font-weight: 700; margin-bottom: 8px; padding: 6px 12px; border-radius: 8px; display: flex; align-items: center; gap: 6px; letter-spacing: 0.5px; }
         .queue-section-title.singing { background: rgba(255,107,107,0.15); color: var(--primary); }
         .queue-section-title.queued { background: rgba(72,219,251,0.1); color: #0984e3; }
         .queue-section-title.done { background: rgba(85,239,196,0.1); color: #00b894; }
-        body.dark-mode .queue-section-title.queued { color: #48dbfb; }
-        body.dark-mode .queue-section-title.done { color: #55efc4; }
+        html.dark-mode .queue-section-title.queued { color: #48dbfb; }
+        html.dark-mode .queue-section-title.done { color: #55efc4; }
         .queue-queued-list { display: flex; flex-direction: column; gap: 8px; }
         @keyframes fadeInQueue { from { opacity: 0; transform: translateX(-20px); } to { opacity: 1; transform: translateX(0); } }
         .queue-item.new-item { animation: fadeInQueue 0.5s ease-out; }
@@ -118,6 +129,7 @@
         th { background-color: var(--primary); color: white; font-weight: 600; font-size: 15px; }
         tr:hover { background-color: var(--bg-color); transition: var(--transition); }
         .btn-sm { padding: 6px 12px; font-size: 12px; border-radius: 8px; border: none; cursor: pointer; color: white; transition: var(--transition); }
+        .action-btns { display: flex; gap: 6px; flex-wrap: nowrap; }
         .btn-edit { background-color: var(--secondary); }
         .btn-del { background-color: var(--danger); }
         .btn-sm:hover { transform: translateY(-2px); opacity: 0.9; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
@@ -139,7 +151,7 @@
         .replies-container { margin-top: 15px; display: flex; flex-direction: column; gap: 12px; padding-left: 20px; }
         .reply-box { padding: 12px 18px; border-radius: var(--radius-md); font-size: 13px; border: 1px solid var(--border); max-width: 90%; position: relative; transition: var(--transition); }
         .reply-box.official { background-color: #fffbe6; border-left: 4px solid var(--accent-gold); border-radius: 0 15px 15px 15px; }
-        body.dark-mode .reply-box.official { background-color: #2d2a1a; }
+        html.dark-mode .reply-box.official { background-color: #2d2a1a; }
         .reply-box.general { background-color: var(--reply-bg); border-left: 4px solid var(--secondary); border-radius: 0 15px 15px 15px; }
         .reply-header { font-weight: 700; margin-bottom: 6px; display: flex; justify-content: space-between; align-items: center; }
         .reply-header.official { color: #d39e00; } 
@@ -266,10 +278,10 @@
         <div class="filter-bar">
             <div class="filter-group filter-group-search">
                 <div class="search-wrapper">
-                    <input type="text" id="searchInput" placeholder="🔍 搜尋..." oninput="handleSearchInput()">
-                    <span id="clearSearch" class="clear-search-btn" onclick="clearSearch()">✕</span>
+                    <input type="search" id="searchInput" placeholder="🔍 搜尋歌手 / 歌名 / 標籤..." aria-label="搜尋歌曲" autocomplete="off" oninput="handleSearchInput()">
+                    <span id="clearSearch" class="clear-search-btn" role="button" aria-label="清除搜尋" onclick="clearSearch()">✕</span>
                 </div>
-                <select id="artistFilter" onchange="applyFilters()">
+                <select id="artistFilter" aria-label="依歌手篩選" onchange="applyFilters()">
                     <option value="all">🎤 歌手</option>
                     <option value="__sort_clicks__">🔥 熱門</option>
                 </select>
@@ -277,9 +289,9 @@
             <div class="filter-group filter-group-actions">
                 <button class="btn btn-random" title="隨機選歌" onclick="pickRandomSong()">🎲 隨機</button>
                 <button class="btn btn-export" title="匯出CSV" onclick="exportCSV()">📥 匯出</button>
-                <button class="btn btn-icon" title="重新整理" onclick="manualRefresh()">🔄</button>
-                <button class="btn btn-icon" title="切換深色模式" onclick="toggleDarkMode()" id="themeBtn">🌙</button>
-                <button class="btn btn-icon" title="功能說明" onclick="showHelpModal()">❓</button>
+                <button class="btn btn-icon" title="重新整理" aria-label="重新整理" onclick="manualRefresh()">🔄</button>
+                <button class="btn btn-icon" title="切換深色模式" aria-label="切換深色模式" onclick="toggleDarkMode()" id="themeBtn">🌙</button>
+                <button class="btn btn-icon" title="功能說明" aria-label="功能說明" onclick="showHelpModal()">❓</button>
             </div>
             <div class="filter-group filter-group-auth">
                 <button class="btn btn-login" id="loginBtn" onclick="loginAdmin()">🔐 登入</button>
@@ -314,12 +326,12 @@
     <div class="request-section" id="requestSection">
         <h3 style="margin-top:0; font-weight:800;">📝 點歌與留言板 <span style="font-size:12px; font-weight:normal; color:#888;">(支援無限串樓)</span></h3>
         <div class="request-form">
-            <input type="text" id="reqNick" placeholder="您的暱稱 (選填)" style="max-width:150px;">
+            <input type="text" id="reqNick" placeholder="您的暱稱 (選填)" maxlength="20" style="max-width:150px;">
             <div class="req-msg-row">
-                <textarea id="reqMessage" rows="2" placeholder="想點什麼歌？或給静静的留言..."></textarea>
+                <textarea id="reqMessage" rows="2" maxlength="500" placeholder="想點什麼歌？或給静静的留言...（Ctrl/⌘ + Enter 送出）" onkeydown="if((event.ctrlKey||event.metaKey)&&event.key==='Enter'){event.preventDefault();submitRequest(document.getElementById('submitReqBtn'));}"></textarea>
                 <button type="button" class="emoji-toggle-btn" onclick="toggleEmojiPanel(this)" title="插入表情符號">😊</button>
             </div>
-            <button class="btn btn-add" onclick="submitRequest(this)" style="width:auto; padding:12px 24px; margin-top:0;">送出</button>
+            <button class="btn btn-add" id="submitReqBtn" onclick="submitRequest(this)" style="width:auto; padding:12px 24px; margin-top:0;">送出</button>
         </div>
         <div id="requestSkeleton" class="loading active">
             <div class="skeleton-row"><div class="skeleton-cell" style="width:30%"></div><div class="skeleton-cell" style="width:70%"></div></div>
@@ -331,14 +343,14 @@
         <p>由 <a href="https://www.douyin.com/user/MS4wLjABAAAAamj38l-UDbYbUGcPhEdJI-rM8-Y_tAMFLy7kZAWMpJw" target="_blank" rel="noopener noreferrer">新竹奇奇828</a> 協助升級製作</p>
     </div>
     <div class="fab-group">
-        <button id="scrollTopBtn" class="scroll-top-btn" onclick="window.scrollTo({top:0, behavior:'smooth'})">⬆️</button>
+        <button id="scrollTopBtn" class="scroll-top-btn" aria-label="回到頂端" onclick="window.scrollTo({top:0, behavior:'smooth'})">⬆️</button>
         <button id="msgBtn" class="fab-btn msg-btn" onclick="scrollToRequestSection()">💬 留言</button>
         <button id="fabBtn" class="fab-btn add-btn" onclick="toggleAddForm()">新增歌曲</button>
     </div>
     <div id="addFormContainer" class="add-form-container">
         <div class="form-header">
             <h3 style="margin:0; font-size:18px; font-weight:800;">📝 新增歌曲</h3>
-            <button onclick="toggleAddForm()" style="background:none; border:none; font-size:24px; cursor:pointer; color:var(--text-color);">✕</button>
+            <button onclick="toggleAddForm()" aria-label="關閉" style="background:none; border:none; font-size:24px; cursor:pointer; color:var(--text-color);">✕</button>
         </div>
         <div class="form-tabs">
             <div class="form-tab active" onclick="switchTab('single')" id="tabSingle">單首新增</div>
@@ -346,7 +358,7 @@
         </div>
         <div id="singleForm">
             <div class="form-group"><label>歌手：</label><input type="text" id="artist" placeholder="例如：周杰倫"></div>
-            <div class="form-group"><label>歌曲名稱：</label><input type="text" id="song" placeholder="例如：晴天"></div>
+            <div class="form-group"><label>歌曲名稱：</label><input type="text" id="song" placeholder="例如：晴天" onkeydown="if(event.key==='Enter')addSong()"></div>
             <div class="form-group"><label>標籤 (選填)：</label><input type="text" id="tags" placeholder="例如: #抒情, #KTV必點"></div>
             <button id="addBtn" class="btn-add" onclick="addSong()">✨ 確認新增至雲端</button>
         </div>
@@ -356,7 +368,7 @@
         </div>
     </div>
     
-    <div id="randomModal" class="modal-overlay" onclick="if(event.target===this && !rollingInterval)this.style.display='none'">
+    <div id="randomModal" class="modal-overlay" role="dialog" aria-modal="true" onclick="if(event.target===this && !rollingInterval)closeRandomModal()">
         <div class="modal-content">
             <h2 style="color:var(--primary); margin-top:0; font-weight:800;">✨ 命運的選擇 ✨</h2>
             
@@ -367,16 +379,16 @@
             <button id="stopRollingBtn" class="btn-listen" onclick="stopRolling()" style="background: linear-gradient(45deg, #fbc531, #f39c12); width: 100%; max-width: 250px; font-size: 20px; display: none;">🛑 停！</button>
             
             <div id="randomResultActions" style="display:none; width: 100%;">
-                <a id="randomSongLink" href="#" target="_blank" rel="noopener noreferrer" class="btn-listen" style="width: 100%; max-width: 250px; box-sizing: border-box; display: block; margin: 0 auto 15px auto;">🎵 立即試聽</a>
+                <a id="randomSongLink" href="#" target="_blank" rel="noopener noreferrer" class="btn-listen" onclick="recordClick(this.dataset.id)" style="width: 100%; max-width: 250px; box-sizing: border-box; display: block; margin: 0 auto 15px auto;">🎵 立即試聽</a>
                 <div>
                     <button class="btn btn-random" onclick="pickRandomSong()" style="margin-right:10px;">🎲 再抽一次</button>
-                    <button class="btn" style="background:#636e72; color:white;" onclick="document.getElementById('randomModal').style.display='none'">關閉</button>
+                    <button class="btn" style="background:#636e72; color:white;" onclick="closeRandomModal()">關閉</button>
                 </div>
             </div>
         </div>
     </div>
     
-    <div id="helpModal" class="modal-overlay" onclick="if(event.target===this)this.style.display='none'">
+    <div id="helpModal" class="modal-overlay" role="dialog" aria-modal="true" onclick="if(event.target===this)this.style.display='none'">
         <div class="modal-content">
             <h2 style="color:var(--primary); margin-top:0; font-weight:800;">📖 系統功能說明</h2>
             <div style="text-align:left; line-height:1.8; font-size:15px; margin:20px 0;">
@@ -390,7 +402,7 @@
             <button class="btn" style="background:var(--primary); color:white; padding: 12px 35px; font-weight:bold;" onclick="document.getElementById('helpModal').style.display='none'">我知道了</button>
         </div>
     </div>
-    <div id="toastContainer" class="toast-container"></div>
+    <div id="toastContainer" class="toast-container" aria-live="polite"></div>
 
     <div id="globalEmojiPanel" class="emoji-panel"></div>
 
@@ -409,6 +421,8 @@
             type = type || 'success';
             duration = duration || 3000;
             const container = document.getElementById('toastContainer');
+            // 最多同時顯示 3 則，避免連續操作時通知疊滿畫面
+            while (container.children.length >= 3) container.firstChild.remove();
             const toast = document.createElement('div');
             toast.className = 'toast ' + type;
             toast.textContent = message;
@@ -432,18 +446,70 @@
 
         async function fetchWithRetry(url, options = {}, retries = 2, timeout = 10000) {
             for (let i = 0; i <= retries; i++) {
+                const controller = new AbortController();
+                const id = setTimeout(function() { controller.abort(); }, timeout);
                 try {
-                    const controller = new AbortController();
-                    const id = setTimeout(function() { controller.abort(); }, timeout);
                     const res = await fetch(url, Object.assign({}, options, { signal: controller.signal }));
-                    clearTimeout(id);
                     if (!res.ok) throw new Error('HTTP error! status: ' + res.status);
                     return await res.json();
                 } catch (err) {
                     if (i === retries) throw err;
                     await new Promise(function(r) { setTimeout(r, 1000 * (i + 1)); });
+                } finally {
+                    clearTimeout(id);
                 }
             }
+        }
+
+        // 會「新增資料」的動作不可自動重送：Apps Script 回應慢時，前端逾時但後端其實已寫入，重送會產生重複歌曲/留言
+        const NON_IDEMPOTENT_ACTIONS = { add: 1, batch_add: 1, add_request: 1, reply_request: 1 };
+
+        function apiPost(payload) {
+            const once = NON_IDEMPOTENT_ACTIONS[payload.action];
+            return fetchWithRetry(API_URL, {
+                method: 'POST',
+                headers: { 'Content-Type': 'text/plain' },
+                body: JSON.stringify(payload)
+            }, once ? 0 : 1, once ? 25000 : 12000);
+        }
+
+        function findSong(id) {
+            return allSongs.find(function(s) { return String(s.id) === String(id); });
+        }
+
+        function isInQueue(song) {
+            return song && (song.status === 'queued' || song.status === 'singing' || song.status === 'done');
+        }
+
+        // 待唱清單統一排序：演唱中 → 排隊中 → 已完成，再依 queueOrder / 加入時間
+        const STATUS_ORDER = { 'singing': 0, 'queued': 1, 'done': 2 };
+        function compareQueue(a, b) {
+            if (STATUS_ORDER[a.status] !== STATUS_ORDER[b.status]) return STATUS_ORDER[a.status] - STATUS_ORDER[b.status];
+            const orderA = Number.isFinite(Number(a.queueOrder)) && a.queueOrder !== null && a.queueOrder !== '' ? Number(a.queueOrder) : Number.MAX_SAFE_INTEGER;
+            const orderB = Number.isFinite(Number(b.queueOrder)) && b.queueOrder !== null && b.queueOrder !== '' ? Number(b.queueOrder) : Number.MAX_SAFE_INTEGER;
+            if (orderA !== orderB) return orderA - orderB;
+            const timeA = Number(a.queueTime) || 0;
+            const timeB = Number(b.queueTime) || 0;
+            if (timeA !== timeB) return timeA - timeB;
+            return String(a.id).localeCompare(String(b.id));
+        }
+
+        // 樂觀更新用：備份 / 還原。還原時清掉 localUpdateTime，讓下一次同步以雲端為準
+        function snapshotSong(song) {
+            return { status: song.status, queueTime: song.queueTime, queueOrder: song.queueOrder, localUpdateTime: song.localUpdateTime };
+        }
+        function restoreSong(song, snap) {
+            song.status = snap.status;
+            song.queueTime = snap.queueTime;
+            song.queueOrder = snap.queueOrder;
+            song.localUpdateTime = 0;
+        }
+
+        function youtubeSearchLink(song) {
+            return 'https://www.youtube.com/results?search_query=' + encodeURIComponent((song.artist || '') + ' ' + (song.song || ''));
+        }
+        function songLink(song) {
+            return (song.link && isValidUrl(song.link)) ? song.link : youtubeSearchLink(song);
         }
 
         function isAdmin() {
@@ -490,23 +556,22 @@
                 callback(); 
                 return; 
             }
-            pendingAdminCallback = callback;
+            // 修復：使用者按「取消」時不保留回呼，避免之後登入時意外執行舊的操作
             if (confirm('⚠️ 此操作需要管理員權限，是否立即登入？')) {
+                pendingAdminCallback = callback;
                 loginAdmin();
+            } else {
+                pendingAdminCallback = null;
             }
         }
 
         function loginAdmin() {
             if (isAdmin()) { showToast('您已經是管理員了！', 'info'); return; }
             const password = prompt('⚠️ 請輸入管理員密碼：\n(登入後 24 小時內免重複輸入)');
-            if (!password) return;
-            
+            if (!password) { pendingAdminCallback = null; return; }
+
             showToast('🔄 驗證中...', 'info', 2000);
-            fetchWithRetry(API_URL, {
-                method: 'POST',
-                headers: { 'Content-Type': 'text/plain' },
-                body: JSON.stringify({ action: 'login', password: password })
-            })
+            apiPost({ action: 'login', password: password })
             .then(function(result) {
                 if (result.status === 'success') {
                     localStorage.setItem(ADMIN_TOKEN_KEY, JSON.stringify({ 
@@ -523,10 +588,12 @@
                         cb();
                     }
                 } else {
+                    pendingAdminCallback = null;
                     showToast('❌ ' + (result.message || '密碼錯誤'), 'error');
                 }
             })
             .catch(function(err) {
+                pendingAdminCallback = null;
                 showToast('❌ 登入失敗，請檢查網路', 'error');
                 console.error(err);
             });
@@ -537,11 +604,7 @@
             localStorage.removeItem(ADMIN_TOKEN_KEY);
             
             if (token) {
-                fetchWithRetry(API_URL, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'text/plain' },
-                    body: JSON.stringify({ action: 'logout', token: token })
-                }).catch(function() {});
+                apiPost({ action: 'logout', token: token }).catch(function() {});
             }
             
             updateAdminUI();
@@ -558,7 +621,7 @@
 
         function toggleDarkMode() {
             isDarkMode = !isDarkMode;
-            document.body.classList.toggle('dark-mode', isDarkMode);
+            document.documentElement.classList.toggle('dark-mode', isDarkMode);
             localStorage.setItem('darkMode', isDarkMode);
             document.getElementById('themeBtn').textContent = isDarkMode ? '☀️' : '🌙';
         }
@@ -596,24 +659,26 @@
             }
         }
 
-        const handleSearchInput = debounce(function() {
+        const debouncedApplyFilters = debounce(applyFilters, 250);
+        function handleSearchInput() {
+            // 清除按鈕立即顯示，篩選則延遲執行
             const input = document.getElementById('searchInput');
-            const clearBtn = document.getElementById('clearSearch');
-            clearBtn.style.display = input.value.trim() === '' ? 'none' : 'block';
-            applyFilters();
-        }, 300);
+            document.getElementById('clearSearch').style.display = input.value.trim() === '' ? 'none' : 'block';
+            debouncedApplyFilters();
+        }
 
         function clearSearch() {
             const input = document.getElementById('searchInput');
             input.value = '';
-            handleSearchInput();
+            document.getElementById('clearSearch').style.display = 'none';
+            applyFilters();
             input.focus();
             showToast('🔍 已清除搜尋內容', 'info');
         }
 
         function hideSkeleton(id) {
             const el = document.getElementById(id);
-            if (el) {
+            if (el && el.style.display !== 'none') {
                 el.classList.add('fade-out');
                 setTimeout(function() { el.classList.remove('active'); el.style.display = 'none'; }, 300);
             }
@@ -634,24 +699,21 @@
         function renderAllData(data, isCache) {
             if (data.status === 'success' && Array.isArray(data.songs)) {
                 const now = Date.now();
+                // 用 Map 查找，避免每首歌都掃一次整份歌單 (O(n²))
+                const oldMap = new Map();
+                allSongs.forEach(function(s) { oldMap.set(String(s.id), s); });
                 data.songs.forEach(function(newSong) {
-                    const oldSong = allSongs.find(function(s) { return String(s.id) === String(newSong.id); });
-                    if (oldSong) {
-                        // 15 秒保護機制：只要這首歌在 15 秒內有任何本地操作，絕對信任本地端
-                        if (oldSong.localUpdateTime && (now - oldSong.localUpdateTime < 15000)) {
-                            newSong.status = oldSong.status;
-                            newSong.queueTime = oldSong.queueTime;
-                            newSong.queueOrder = oldSong.queueOrder;
-                            newSong.localUpdateTime = oldSong.localUpdateTime;
-                        }
-                        else if (oldSong.queueOrder != null && oldSong.status) {
-                            // 保留本機已建立的排序資訊，避免背景同步瞬間跳位
-                            newSong.queueOrder = oldSong.queueOrder;
-                        } 
-                        else if (oldSong.queueTime && (now - oldSong.queueTime < 180000) && !oldSong.localUpdateTime) {
-                            newSong.status = oldSong.status;
-                            newSong.queueTime = oldSong.queueTime;
-                        }
+                    const oldSong = oldMap.get(String(newSong.id));
+                    if (!oldSong) return;
+                    if (oldSong.localUpdateTime && (now - oldSong.localUpdateTime < 15000)) {
+                        // 15 秒保護機制：這首歌 15 秒內有本地操作，信任本地端
+                        newSong.status = oldSong.status;
+                        newSong.queueTime = oldSong.queueTime;
+                        newSong.queueOrder = oldSong.queueOrder;
+                        newSong.localUpdateTime = oldSong.localUpdateTime;
+                    } else if ((newSong.queueOrder == null || newSong.queueOrder === '') && oldSong.queueOrder != null && newSong.status && newSong.status === oldSong.status) {
+                        // 雲端沒提供排序時才沿用本機排序；雲端有排序就以雲端為準（其他管理員的拖曳才會同步過來）
+                        newSong.queueOrder = oldSong.queueOrder;
                     }
                 });
 
@@ -659,14 +721,10 @@
                 if (data.fixedCount > 0 && !isCache) {
                     showToast('🔧 已自動修復 ' + data.fixedCount + ' 首歌曲的 ID，現在可以正常操作了！', 'success', 4000);
                 }
-                const reqNickVal = document.getElementById('reqNick').value;
-                const reqMsgVal = document.getElementById('reqMessage').value;
                 if (Array.isArray(data.requests)) renderRequests(data.requests);
                 renderQueuePanel();
                 updateArtistFilter();
                 applyFilters();
-                document.getElementById('reqNick').value = reqNickVal;
-                document.getElementById('reqMessage').value = reqMsgVal;
                 
                 if (!isCache) { 
                     try { localStorage.setItem(CACHE_KEY, JSON.stringify(data)); } 
@@ -682,20 +740,15 @@
         function renderQueuePanel() {
             if (isDraggingQueue) return;
 
-            const queueSongs = allSongs.filter(function(s) { return s.status && s.status !== ''; });
-            queueSongs.sort(function(a, b) {
-                const statusOrder = { 'singing': 0, 'queued': 1, 'done': 2 };
-                if (statusOrder[a.status] !== statusOrder[b.status]) return statusOrder[a.status] - statusOrder[b.status];
-                
-                const orderA = Number.isFinite(Number(a.queueOrder)) ? Number(a.queueOrder) : Number.MAX_SAFE_INTEGER;
-                const orderB = Number.isFinite(Number(b.queueOrder)) ? Number(b.queueOrder) : Number.MAX_SAFE_INTEGER;
-                if (orderA !== orderB) return orderA - orderB;
-                const timeA = Number(a.queueTime) || 0;
-                const timeB = Number(b.queueTime) || 0;
-                if (timeA !== timeB) return timeA - timeB;
-                
-                return String(a.id).localeCompare(String(b.id));
-            });
+            const queueSongs = allSongs.filter(isInQueue);
+            queueSongs.sort(compareQueue);
+
+            // 內容沒變就不重繪：避免每 10 秒同步時清單閃動、拖曳元件被重建
+            const isAdminMode = isAdmin();
+            const sig = (isAdminMode ? 'A' : 'G') + '|' + queueSongs.map(function(s) { return s.id + ':' + s.status + ':' + s.queueTime + ':' + s.artist + ':' + s.song; }).join('|');
+            if (sig === lastQueueSig) return;
+            lastQueueSig = sig;
+
             const singingSongs = queueSongs.filter(function(s) { return s.status === 'singing'; });
             const queuedSongs = queueSongs.filter(function(s) { return s.status === 'queued'; });
             const doneSongs = queueSongs.filter(function(s) { return s.status === 'done'; });
@@ -711,7 +764,6 @@
                 return;
             }
             
-            const isAdminMode = isAdmin();
             let html = '<div class="queue-stats">';
             html += '<span class="stat-singing">🎤 演唱中 ' + singingSongs.length + '</span>';
             html += '<span class="stat-queued">⏳ 排隊中 ' + queuedSongs.length + '</span>';
@@ -759,7 +811,7 @@
             
             const timeDisplay = song.queueTime ? `<div class="queue-time">${formatTime(song.queueTime)}</div>` : '';
 
-            return '<div class="queue-item ' + song.status + '" data-id="' + songId + '"><span class="queue-index">' + index + '.</span>' + statusBtn + '<div class="queue-text"><span>' + escapeHtml(song.artist) + ' - ' + escapeHtml(song.song) + '</span>' + timeDisplay + '</div>' + delBtn + '</div>';
+            return '<div class="queue-item ' + escapeHtml(song.status) + '" data-id="' + songId + '"><span class="queue-index" title="' + (isAdminMode && song.status === 'queued' ? '拖曳調整順序' : '') + '">' + index + '.</span>' + statusBtn + '<div class="queue-text"><span>' + escapeHtml(song.artist) + ' - ' + escapeHtml(song.song) + '</span>' + timeDisplay + '</div>' + delBtn + '</div>';
         }
 
         function initSortable(enableDrag) {
@@ -801,242 +853,194 @@
             if (ids.length === 0) return;
 
             // 備份原順序，API 失敗時完整回復
-            const backup = ids.map(function(id) {
-                const song = allSongs.find(function(s) { return String(s.id) === String(id); });
-                return song ? { id: song.id, queueOrder: song.queueOrder, queueTime: song.queueTime, localUpdateTime: song.localUpdateTime } : null;
-            }).filter(Boolean);
+            const backup = [];
             const baseTime = Date.now();
             ids.forEach(function(id, index) {
-                const song = allSongs.find(function(s) { return String(s.id) === String(id); });
-                if (song) {
-                    song.queueOrder = index;
-                    song.queueTime = baseTime + (index * 100);
-                    song.localUpdateTime = Date.now();
-                }
+                const song = findSong(id);
+                if (!song) return;
+                backup.push({ song: song, snap: snapshotSong(song) });
+                song.queueOrder = index;
+                song.queueTime = baseTime + (index * 100);
+                song.localUpdateTime = baseTime;
             });
             renderQueuePanel();
 
+            function rollback() {
+                backup.forEach(function(b) { restoreSong(b.song, b.snap); });
+                renderQueuePanel();
+            }
+
             activeUpdatesCount++;
-            fetchWithRetry(API_URL, { method: 'POST', headers: { 'Content-Type': 'text/plain' }, body: JSON.stringify({ action: 'update_queue_order', order: ids, token: getAdminToken() }) })
+            apiPost({ action: 'update_queue_order', order: ids, token: getAdminToken() })
             .then(function(result) {
-                activeUpdatesCount--;
-                if (result.status !== 'success') {
-                    backup.forEach(function(b) {
-                        const song = allSongs.find(function(s) { return String(s.id) === String(b.id); });
-                        if (song) { song.queueOrder = b.queueOrder; song.queueTime = b.queueTime; song.localUpdateTime = b.localUpdateTime; }
-                    });
-                    renderQueuePanel();
-                }
+                if (result.status !== 'success') rollback();
                 handleApiResponse(result, function() { showToast('🔀 順序已同步至雲端', 'success', 2000); });
             })
             .catch(function(err) {
-                activeUpdatesCount--;
-                backup.forEach(function(b) {
-                    const song = allSongs.find(function(s) { return String(s.id) === String(b.id); });
-                    if (song) { song.queueOrder = b.queueOrder; song.queueTime = b.queueTime; song.localUpdateTime = b.localUpdateTime; }
-                });
-                renderQueuePanel();
+                rollback();
                 showToast('❌ 順序同步失敗，已還原', 'error');
                 console.error(err);
-            });
+            })
+            .finally(function() { activeUpdatesCount--; });
         }
 
         function getNextQueueOrder() {
-            const orders = allSongs.filter(function(s) { return s.status === 'queued' && Number.isFinite(Number(s.queueOrder)); })
+            const orders = allSongs.filter(function(s) { return s.status === 'queued' && s.queueOrder !== null && s.queueOrder !== '' && Number.isFinite(Number(s.queueOrder)); })
                 .map(function(s) { return Number(s.queueOrder); });
             return orders.length ? Math.max.apply(null, orders) + 1 : 0;
         }
 
+        // 共用：送出單首歌曲的狀態變更（樂觀更新 + 失敗還原）
+        function sendStatusUpdate(song, nextStatus, opts) {
+            opts = opts || {};
+            const snap = snapshotSong(song);
+            const now = Date.now();
+            song.status = nextStatus;
+            song.localUpdateTime = now;
+            if (nextStatus === 'queued' && snap.status !== 'queued') { song.queueTime = now; song.queueOrder = getNextQueueOrder(); }
+            else if (nextStatus === '') { song.queueTime = 0; song.queueOrder = null; }
+            renderQueuePanel();
+
+            const payload = { action: 'update_status', id: String(song.id), status: nextStatus };
+            const token = getAdminToken();
+            if (token) payload.token = token;
+
+            function rollback() { restoreSong(song, snap); renderQueuePanel(); }
+
+            activeUpdatesCount++;
+            return apiPost(payload)
+                .then(function(result) {
+                    if (result.status !== 'success') {
+                        rollback();
+                        if (opts.guestTokenHint && result.message && result.message.indexOf('Token') !== -1 && !token) {
+                            showToast('⚠️ 此操作需要管理員權限', 'error');
+                            return;
+                        }
+                    }
+                    handleApiResponse(result, opts.onSuccess);
+                })
+                .catch(function(err) {
+                    rollback();
+                    showToast(opts.failMsg || '❌ 更新失敗，請重試', 'error');
+                    console.error(err);
+                })
+                .finally(function() { activeUpdatesCount--; });
+        }
+
         function cycleQueueStatus(id) {
             requireAdmin(function() {
-                const song = allSongs.find(function(s) { return String(s.id) === String(id); });
+                const song = findSong(id);
                 if (!song) return;
-                let nextStatus = song.status === 'queued' ? 'singing' : (song.status === 'singing' ? 'done' : (song.status === 'done' ? '' : 'queued'));
-                
-                const originalStatus = song.status;
-                const originalQueueTime = song.queueTime;
-                
-                song.status = nextStatus;
-                song.localUpdateTime = Date.now(); // 🔥 標記最後修改時間
-                if (nextStatus === 'queued') { song.queueTime = Date.now(); song.queueOrder = getNextQueueOrder(); }
-                else if (nextStatus === '') { song.queueTime = 0; song.queueOrder = null; }
-                
-                renderQueuePanel();
-                
-                activeUpdatesCount++;
-                fetchWithRetry(API_URL, { method: 'POST', headers: { 'Content-Type': 'text/plain' }, body: JSON.stringify({ action: 'update_status', id: String(id), status: nextStatus, token: getAdminToken() }) })
-                .then(function(result) {
-                    activeUpdatesCount--;
-                    handleApiResponse(result, function() {
-                        const statusMap = { 'queued': '⏳ 排隊中', 'singing': '🎤 演唱中', 'done': '✅ 已完成', '': '已移出' };
-                        showToast(song.song + ' → ' + (statusMap[nextStatus] || '已移出'), 'success', 2000);
-                    });
-                }).catch(function(err) { 
-                    activeUpdatesCount--;
-                    showToast('❌ 更新失敗，請重試', 'error'); console.error(err);
-                    song.status = originalStatus;
-                    song.queueTime = originalQueueTime;
-                    song.queueOrder = originalQueueOrder;
-                    renderQueuePanel();
+                const nextStatus = song.status === 'queued' ? 'singing' : (song.status === 'singing' ? 'done' : (song.status === 'done' ? '' : 'queued'));
+                const statusMap = { 'queued': '⏳ 排隊中', 'singing': '🎤 演唱中', 'done': '✅ 已完成', '': '已移出' };
+                sendStatusUpdate(song, nextStatus, {
+                    onSuccess: function() { showToast(song.song + ' → ' + (statusMap[nextStatus] || '已移出'), 'success', 2000); }
                 });
             });
         }
 
         function clearQueue() {
             requireAdmin(function() {
-                if (!confirm('確定要清空所有待唱歌曲嗎？')) return;
-                
-                const backup = [];
-                // 🔥 立即本地更新 UI 並備份
-                allSongs.forEach(function(s) { 
-                    if(s.status === 'queued' || s.status === 'singing' || s.status === 'done') {
-                        backup.push({ id: s.id, status: s.status, queueTime: s.queueTime, queueOrder: s.queueOrder });
-                        s.status = ''; 
-                        s.queueTime = 0; s.queueOrder = null; 
-                        s.localUpdateTime = Date.now(); // 🔥 標記最後修改時間
-                    }
+                const inQueue = allSongs.filter(isInQueue);
+                if (inQueue.length === 0) { showToast('清單已經是空的囉', 'info'); return; }
+                if (!confirm('確定要清空所有待唱歌曲嗎？（共 ' + inQueue.length + ' 首）')) return;
+
+                // 立即本地更新 UI 並備份
+                const now = Date.now();
+                const backup = inQueue.map(function(s) {
+                    const snap = snapshotSong(s);
+                    s.status = ''; s.queueTime = 0; s.queueOrder = null; s.localUpdateTime = now;
+                    return { song: s, snap: snap };
                 });
                 renderQueuePanel();
 
-                activeUpdatesCount++;
-                fetchWithRetry(API_URL, { method: 'POST', headers: { 'Content-Type': 'text/plain' }, body: JSON.stringify({ action: 'clear_queue', token: getAdminToken() }) })
-                .then(function(result) { 
-                    activeUpdatesCount--;
-                    handleApiResponse(result, function() { showToast('🗑️ 清單已清空'); loadPlaylistData(true); }); 
-                })
-                .catch(function(err) { 
-                    activeUpdatesCount--;
-                    showToast('❌ 清空失敗，請檢查網路', 'error'); 
-                    // 🔥 API 失敗，將備份資料還原到畫面上
-                    backup.forEach(function(b) {
-                        const song = allSongs.find(function(s) { return String(s.id) === String(b.id); });
-                        if (song) {
-                            song.status = b.status;
-                            song.queueTime = b.queueTime;
-                            song.queueOrder = b.queueOrder;
-                            song.localUpdateTime = Date.now();
-                        }
-                    });
+                function rollback() {
+                    backup.forEach(function(b) { restoreSong(b.song, b.snap); });
                     renderQueuePanel();
-                });
+                }
+
+                activeUpdatesCount++;
+                apiPost({ action: 'clear_queue', token: getAdminToken() })
+                .then(function(result) {
+                    if (result.status !== 'success') rollback();
+                    handleApiResponse(result, function() { showToast('🗑️ 清單已清空'); });
+                })
+                .catch(function(err) {
+                    rollback();
+                    showToast('❌ 清空失敗，請檢查網路', 'error');
+                    console.error(err);
+                })
+                .finally(function() { activeUpdatesCount--; });
             });
+        }
+
+        function getQueuePosition(song) {
+            const queueSongs = allSongs.filter(isInQueue).sort(compareQueue);
+            return queueSongs.findIndex(function(s) { return String(s.id) === String(song.id); }) + 1;
+        }
+
+        // 共用：把一首歌加入待唱（點歌名、隨機抽歌都走這裡）
+        function queueSong(song, successMsg) {
+            const id = String(song.id);
+            if (queueingLock[id]) return;
+            queueingLock[id] = true;
+            showToast(successMsg, 'success');
+            sendStatusUpdate(song, 'queued', { guestTokenHint: true, failMsg: '❌ 加入失敗，請重試' })
+                .finally(function() { delete queueingLock[id]; });
         }
 
         function addToQueue(id) {
             if (!id) { showToast('⚠️ 此歌曲資料異常，請重新整理頁面', 'error'); return; }
-            if (queueingLock[id]) return;
-
-            const song = allSongs.find(function(s) { return String(s.id) === String(id); });
+            const song = findSong(id);
             if (!song) { showToast('❌ 找不到這首歌曲，請重新整理', 'error'); return; }
-            
-            if (song.status === 'queued' || song.status === 'singing' || song.status === 'done') {
-                const queueSongs = allSongs.filter(function(s) { return s.status === 'queued' || s.status === 'singing' || s.status === 'done'; });
-                
-                queueSongs.sort(function(a, b) {
-                    const statusOrder = { 'singing': 0, 'queued': 1, 'done': 2 };
-                    if (statusOrder[a.status] !== statusOrder[b.status]) return statusOrder[a.status] - statusOrder[b.status];
-                    const orderA = Number.isFinite(Number(a.queueOrder)) ? Number(a.queueOrder) : Number.MAX_SAFE_INTEGER;
-                    const orderB = Number.isFinite(Number(b.queueOrder)) ? Number(b.queueOrder) : Number.MAX_SAFE_INTEGER;
-                    if (orderA !== orderB) return orderA - orderB;
-                    return (Number(a.queueTime) || 0) - (Number(b.queueTime) || 0);
-                });
-                
-                const position = queueSongs.findIndex(function(s) { return String(s.id) === String(id); }) + 1;
-                let statusText = song.status === 'singing' ? '正在演唱中' : (song.status === 'done' ? '已完成' : '排隊中第 ' + position + ' 位');
-                return showToast('📍 ' + song.song + ' 已' + statusText, 'info', 2500);
+
+            if (isInQueue(song)) {
+                const statusText = song.status === 'singing' ? '正在演唱中' : (song.status === 'done' ? '已完成' : '排隊中第 ' + getQueuePosition(song) + ' 位');
+                showToast('📍 ' + song.song + ' 已' + statusText, 'info', 2500);
+                return;
             }
-            
-            queueingLock[id] = true;
-            activeUpdatesCount++;
-            
-            const originalStatus = song.status;
-            const originalQueueTime = song.queueTime;
-            const originalQueueOrder = song.queueOrder;
-            
-            song.status = 'queued';
-            song.queueTime = Date.now();
-            song.queueOrder = getNextQueueOrder();
-            song.localUpdateTime = Date.now(); // 🔥 標記最後修改時間
-            renderQueuePanel();
-            showToast('🎤 已加入待唱: ' + song.song, 'success');
-            
-            const payload = { action: 'update_status', id: String(id), status: 'queued' };
-            const token = getAdminToken();
-            if (token) payload.token = token;
-            
-            fetchWithRetry(API_URL, { 
-                method: 'POST', headers: { 'Content-Type': 'text/plain' }, body: JSON.stringify(payload) 
-            })
-            .then(function(result) { 
-                delete queueingLock[id];
-                activeUpdatesCount--;
-                if (result.status !== 'success') {
-                    if (result.message && result.message.indexOf('Token') !== -1) showToast('⚠️ 此操作需要管理員權限', 'error');
-                    song.status = originalStatus;
-                    song.queueTime = originalQueueTime;
-                    renderQueuePanel();
-                }
-            })
-            .catch(function(err) { 
-                delete queueingLock[id];
-                activeUpdatesCount--;
-                showToast('❌ 加入失敗，請重試', 'error');
-                song.status = originalStatus;
-                song.queueTime = originalQueueTime;
-                song.queueOrder = originalQueueOrder;
-                renderQueuePanel();
-            });
+            queueSong(song, '🎤 已加入待唱: ' + song.song);
         }
 
         function removeFromQueue(id) {
             requireAdmin(function() {
-                const song = allSongs.find(function(s) { return String(s.id) === String(id); });
-                const originalStatus = song ? song.status : '';
-                const originalQueueTime = song ? song.queueTime : 0;
-                const originalQueueOrder = song ? song.queueOrder : null;
-                
-                if (song) { 
-                    song.status = ''; 
-                    song.queueTime = 0; 
-                    song.localUpdateTime = Date.now(); // 🔥 標記最後修改時間
-                    renderQueuePanel(); 
-                }
-                
-                activeUpdatesCount++;
-                fetchWithRetry(API_URL, { method: 'POST', headers: { 'Content-Type': 'text/plain' }, body: JSON.stringify({ action: 'update_status', id: String(id), status: '', token: getAdminToken() }) })
-                .then(function(result) { 
-                    activeUpdatesCount--;
-                    handleApiResponse(result, function() { showToast('✅ 已移出'); }); 
-                })
-                .catch(function(err) { 
-                    activeUpdatesCount--;
-                    showToast('❌ 移出失敗，請重試', 'error');
-                    if (song) {
-                        song.status = originalStatus;
-                        song.queueTime = originalQueueTime;
-                        song.queueOrder = originalQueueOrder;
-                        renderQueuePanel();
-                    }
+                const song = findSong(id);
+                if (!song) return;
+                sendStatusUpdate(song, '', {
+                    failMsg: '❌ 移出失敗，請重試',
+                    onSuccess: function() { showToast('✅ 已移出'); }
                 });
             });
         }
 
+        function getRandomPool() {
+            const available = allSongs.filter(function(s) { return !isInQueue(s); });
+            return available.length > 0 ? available : allSongs;
+        }
+
         function pickRandomSong() {
             if (allSongs.length === 0) { showToast('目前沒有歌曲！', 'error'); return; }
-            
+
             document.getElementById('randomModal').style.display = 'flex';
             document.getElementById('randomResultActions').style.display = 'none';
-            document.getElementById('stopRollingBtn').style.display = 'inline-block';
-            
-            if (rollingInterval) clearInterval(rollingInterval);
-            
-            const availableSongs = allSongs.filter(function(s) { return s.status !== 'queued' && s.status !== 'singing' && s.status !== 'done'; });
-            const pool = availableSongs.length > 0 ? availableSongs : allSongs;
+            const stopBtn = document.getElementById('stopRollingBtn');
+            stopBtn.style.display = 'inline-block';
+            setTimeout(function() { stopBtn.focus(); }, 50);
 
+            if (rollingInterval) clearInterval(rollingInterval);
+
+            const pool = getRandomPool();
+            const info = document.getElementById('randomSongInfo');
             rollingInterval = setInterval(function() {
                 const tempSong = pool[Math.floor(Math.random() * pool.length)];
-                document.getElementById('randomSongInfo').innerHTML = '🎤 ' + escapeHtml(tempSong.artist) + '<br>🎵 ' + escapeHtml(tempSong.song);
+                info.innerHTML = '🎤 ' + escapeHtml(tempSong.artist) + '<br>🎵 ' + escapeHtml(tempSong.song);
             }, 60);
+        }
+
+        function closeRandomModal() {
+            // 修復：按 Esc 關閉時也要停止滾動計時器
+            if (rollingInterval) { clearInterval(rollingInterval); rollingInterval = null; }
+            document.getElementById('randomModal').style.display = 'none';
         }
 
         function stopRolling() {
@@ -1047,49 +1051,16 @@
             document.getElementById('stopRollingBtn').style.display = 'none';
             document.getElementById('randomResultActions').style.display = 'block';
 
-            const availableSongs = allSongs.filter(function(s) { return s.status !== 'queued' && s.status !== 'singing' && s.status !== 'done'; });
-            const pool = availableSongs.length > 0 ? availableSongs : allSongs;
+            const pool = getRandomPool();
             const finalSong = pool[Math.floor(Math.random() * pool.length)];
-            
-            let link = (finalSong.link && isValidUrl(finalSong.link)) ? finalSong.link : 'https://www.youtube.com/results?search_query=' + encodeURIComponent((finalSong.artist || '') + ' ' + (finalSong.song || ''));
-            
-            document.getElementById('randomSongInfo').innerHTML = '🎤 ' + escapeHtml(finalSong.artist) + '<br>🎵 ' + escapeHtml(finalSong.song) + '<br><span style="font-size:16px; color:#888; margin-top:10px; display:inline-block;">🔥 已被試聽 ' + (finalSong.clicks || 0) + ' 次</span>';
-            document.getElementById('randomSongLink').href = link;
 
-            if (finalSong.status !== 'queued' && finalSong.status !== 'singing' && finalSong.status !== 'done') {
-                showToast('🎲 抽中！已自動加入待唱清單', 'success');
-                
-                const originalStatus = finalSong.status;
-                const originalQueueTime = finalSong.queueTime;
-                
-                activeUpdatesCount++; 
-                finalSong.status = 'queued';
-                finalSong.queueTime = Date.now();
-                finalSong.localUpdateTime = Date.now(); // 🔥 標記最後修改時間
-                renderQueuePanel();
-                
-                const payload = { action: 'update_status', id: String(finalSong.id), status: 'queued' };
-                const token = getAdminToken();
-                if (token) payload.token = token;
-                
-                fetchWithRetry(API_URL, { method: 'POST', headers: { 'Content-Type': 'text/plain' }, body: JSON.stringify(payload) })
-                .then(function(result) { 
-                    activeUpdatesCount--;
-                    if (result.status !== 'success') {
-                        if (result.message && result.message.indexOf('Token') !== -1) showToast('⚠️ 此操作需要管理員權限', 'error');
-                        else showToast('❌ 加入失敗：' + (result.message || '未知錯誤'), 'error');
-                        finalSong.status = originalStatus;
-                        finalSong.queueTime = originalQueueTime;
-                        renderQueuePanel();
-                    }
-                })
-                .catch(function(err) { 
-                    activeUpdatesCount--;
-                    showToast('❌ 網路錯誤，加入待唱失敗', 'error');
-                    finalSong.status = originalStatus;
-                    finalSong.queueTime = originalQueueTime;
-                    renderQueuePanel();
-                });
+            document.getElementById('randomSongInfo').innerHTML = '🎤 ' + escapeHtml(finalSong.artist) + '<br>🎵 ' + escapeHtml(finalSong.song) + '<br><span style="font-size:16px; color:#888; margin-top:10px; display:inline-block;">🔥 已被試聽 ' + (Number(finalSong.clicks) || 0) + ' 次</span>';
+            const link = document.getElementById('randomSongLink');
+            link.href = songLink(finalSong);
+            link.dataset.id = String(finalSong.id);
+
+            if (!isInQueue(finalSong)) {
+                queueSong(finalSong, '🎲 抽中！已自動加入待唱清單');
             } else {
                 showToast('🎲 這首歌已經在待唱清單裡囉！', 'info');
             }
@@ -1143,9 +1114,14 @@
 
         function toggleEmojiPanel(btn) {
             const wrapper = btn.closest('.req-msg-row') || btn.closest('.reply-input-area') || btn.parentNode;
-            currentEmojiTarget = wrapper.querySelector('textarea');
-            
-            if (!currentEmojiTarget) return;
+            const target = wrapper.querySelector('textarea');
+            if (!target) return;
+
+            // 修復：面板已開啟且按的是同一顆按鈕 → 關閉；按的是另一顆 → 移到新位置而不是關掉
+            const isSameBtn = btn.classList.contains('active');
+            closeEmojiPanel();
+            if (isSameBtn) return;
+            currentEmojiTarget = target;
             
             const rect = btn.getBoundingClientRect();
             globalPanel.style.bottom = 'auto';
@@ -1163,8 +1139,13 @@
                 globalPanel.style.top = (rect.bottom + 10) + 'px';
             }
             
-            globalPanel.classList.toggle('show');
-            btn.classList.toggle('active');
+            globalPanel.classList.add('show');
+            btn.classList.add('active');
+        }
+
+        function closeEmojiPanel() {
+            globalPanel.classList.remove('show');
+            document.querySelectorAll('.emoji-toggle-btn.active').forEach(function(b) { b.classList.remove('active'); });
         }
 
         function insertEmojiAtCursor(textarea, emoji) {
@@ -1180,10 +1161,7 @@
         }
 
         document.addEventListener('click', function(e) {
-            if (!e.target.closest('#globalEmojiPanel') && !e.target.closest('.emoji-toggle-btn')) {
-                globalPanel.classList.remove('show');
-                document.querySelectorAll('.emoji-toggle-btn.active').forEach(function(b) { b.classList.remove('active'); });
-            }
+            if (!e.target.closest('#globalEmojiPanel') && !e.target.closest('.emoji-toggle-btn')) closeEmojiPanel();
         });
 
         function renderRequests(requests) {
@@ -1191,11 +1169,33 @@
             hideSkeleton('requestSkeleton');
             showElement('requestList');
             const displayRequests = requests;
+            const isAdminMode = isAdmin();
+
+            // 留言沒變就不重繪（原本每 10 秒重繪一次，會把正在打的回覆清掉）
+            const sig = (isAdminMode ? 'A' : 'G') + JSON.stringify(displayRequests);
+            if (sig === lastRequestsSig) return;
+            lastRequestsSig = sig;
+
             if (displayRequests.length === 0) {
                 list.innerHTML = '<p style="text-align:center; color:#888; padding: 20px;">目前還沒有留言，快來留言吧！</p>';
                 return;
             }
-            const isAdminMode = isAdmin();
+
+            // 若有人正在回覆，先記下內容，重繪後還原
+            let openReply = null;
+            const openArea = Array.from(list.querySelectorAll('.reply-input-area')).find(function(el) { return el.style.display !== 'none'; });
+            if (openArea) {
+                const active = document.activeElement;
+                openReply = {
+                    id: openArea.closest('.request-item').dataset.id,
+                    nick: openArea.querySelector('.reply-nick').value,
+                    text: openArea.querySelector('.reply-text').value,
+                    focus: active && openArea.contains(active) ? (active.classList.contains('reply-text') ? 'reply-text' : 'reply-nick') : null,
+                    selStart: active && active.selectionStart, selEnd: active && active.selectionEnd
+                };
+                if (globalPanel.classList.contains('show') && openArea.contains(currentEmojiTarget)) closeEmojiPanel();
+            }
+            const savedNick = escapeHtml(localStorage.getItem('lastReplyNick') || '');
             let htmlContent = '';
             for (let i = 0; i < displayRequests.length; i++) {
                 const req = displayRequests[i];
@@ -1212,9 +1212,24 @@
                     repliesHtml += '</div>';
                 }
                 const delReqBtn = isAdminMode ? '<button class="req-action-btn" style="color:var(--danger);" data-id="' + escapeHtml(String(req.id)) + '" onclick="confirmDeleteRequest(this.dataset.id)">🗑️ 刪除</button>' : '';
-                htmlContent += '<div class="request-item" data-id="' + escapeHtml(String(req.id)) + '"><div class="req-header"><span class="req-nick">' + escapeHtml(req.nickname) + '</span><span>' + escapeHtml(req.time) + '</span></div><div>' + escapeHtml(req.message) + '</div>' + repliesHtml + '<div class="req-actions"><button class="req-action-btn" onclick="toggleReplyInput(this)">💬 回覆</button>' + delReqBtn + '</div><div class="reply-input-area" style="display:none;"><div style="display:flex; gap:8px; align-items:flex-start; width:100%;"><input type="text" class="reply-nick" placeholder="暱稱" value="' + escapeHtml(localStorage.getItem('lastReplyNick') || '') + '" style="max-width:140px;"><div style="flex:1; position:relative;"><textarea class="reply-text" placeholder="輸入回覆內容..." rows="2" style="width:100%;"></textarea><button type="button" class="emoji-toggle-btn" onclick="toggleEmojiPanel(this)" title="插入表情符號" style="position:absolute; right:8px; top:8px; width:32px; height:32px; font-size:16px;">😊</button></div></div><div class="reply-btn-group"><button class="btn-reply-general" onclick="submitGeneralReply(this)">💬 一般回覆</button><button class="btn-reply-official" onclick="submitOfficialReply(this)">👑 官方回覆</button></div></div></div>';
+                htmlContent += '<div class="request-item" data-id="' + escapeHtml(String(req.id)) + '"><div class="req-header"><span class="req-nick">' + escapeHtml(req.nickname) + '</span><span>' + escapeHtml(req.time) + '</span></div><div>' + escapeHtml(req.message) + '</div>' + repliesHtml + '<div class="req-actions"><button class="req-action-btn" onclick="toggleReplyInput(this)">💬 回覆</button>' + delReqBtn + '</div><div class="reply-input-area" style="display:none;"><div style="display:flex; gap:8px; align-items:flex-start; width:100%;"><input type="text" class="reply-nick" placeholder="暱稱" value="' + savedNick + '" style="max-width:140px;"><div style="flex:1; position:relative;"><textarea class="reply-text" placeholder="輸入回覆內容..." rows="2" style="width:100%; box-sizing:border-box; padding-right:46px;"></textarea><button type="button" class="emoji-toggle-btn" onclick="toggleEmojiPanel(this)" title="插入表情符號" style="position:absolute; right:8px; top:8px; width:32px; height:32px; font-size:16px;">😊</button></div></div><div class="reply-btn-group"><button class="btn-reply-general" onclick="submitGeneralReply(this)">💬 一般回覆</button><button class="btn-reply-official" onclick="submitOfficialReply(this)">👑 官方回覆</button></div></div></div>';
             }
             list.innerHTML = htmlContent;
+
+            if (openReply) {
+                const item = Array.from(list.querySelectorAll('.request-item')).find(function(el) { return el.dataset.id === openReply.id; });
+                const area = item && item.querySelector('.reply-input-area');
+                if (area) {
+                    area.style.display = 'flex';
+                    area.querySelector('.reply-nick').value = openReply.nick;
+                    area.querySelector('.reply-text').value = openReply.text;
+                    if (openReply.focus) {
+                        const el = area.querySelector('.' + openReply.focus);
+                        el.focus();
+                        try { el.setSelectionRange(openReply.selStart, openReply.selEnd); } catch (e) {}
+                    }
+                }
+            }
         }
 
         function toggleReplyInput(btn) {
@@ -1222,11 +1237,17 @@
             const inputArea = requestItem.querySelector('.reply-input-area');
             if (inputArea && inputArea.style.display === 'none') {
                 document.querySelectorAll('.reply-input-area').forEach(function(el) { el.style.display = 'none'; });
-                globalPanel.classList.remove('show');
-                document.querySelectorAll('.emoji-toggle-btn.active').forEach(function(b) { b.classList.remove('active'); });
+                closeEmojiPanel();
                 inputArea.style.display = 'flex';
                 inputArea.querySelector('.reply-nick').focus();
             } else if (inputArea) { inputArea.style.display = 'none'; }
+        }
+
+        function clearReplyArea(requestItem) {
+            const area = requestItem && requestItem.querySelector('.reply-input-area');
+            if (!area) return;
+            area.querySelector('.reply-text').value = '';
+            area.style.display = 'none';
         }
 
         function submitGeneralReply(btn) {
@@ -1241,10 +1262,10 @@
             btn.innerText = '傳送中...';
 
             localStorage.setItem('lastReplyNick', nick);
-            fetchWithRetry(API_URL, { method: 'POST', headers: { 'Content-Type': 'text/plain' }, body: JSON.stringify({ action: 'reply_request', id: String(id), replier: nick, replyContent: replyText, isOfficial: false }) })
+            apiPost({ action: 'reply_request', id: String(id), replier: nick, replyContent: replyText, isOfficial: false })
             .then(function(result) { 
                 btn.disabled = false; btn.innerText = originalText;
-                handleApiResponse(result, function() { loadPlaylistData(true); showToast('✅ 回覆成功'); }); 
+                handleApiResponse(result, function() { clearReplyArea(requestItem); loadPlaylistData(true); showToast('✅ 回覆成功'); }); 
             })
             .catch(function(err) { 
                 btn.disabled = false; btn.innerText = originalText;
@@ -1263,10 +1284,10 @@
                 btn.disabled = true;
                 btn.innerText = '傳送中...';
 
-                fetchWithRetry(API_URL, { method: 'POST', headers: { 'Content-Type': 'text/plain' }, body: JSON.stringify({ action: 'reply_request', id: String(id), replier: ADMIN_NAME, replyContent: replyText, isOfficial: true, token: getAdminToken() }) })
+                apiPost({ action: 'reply_request', id: String(id), replier: ADMIN_NAME, replyContent: replyText, isOfficial: true, token: getAdminToken() })
                 .then(function(result) { 
                     btn.disabled = false; btn.innerText = originalText;
-                    handleApiResponse(result, function() { loadPlaylistData(true); showToast('✅ 官方回覆成功'); }); 
+                    handleApiResponse(result, function() { clearReplyArea(requestItem); loadPlaylistData(true); showToast('✅ 官方回覆成功'); }); 
                 })
                 .catch(function(err) { 
                     btn.disabled = false; btn.innerText = originalText;
@@ -1278,73 +1299,99 @@
         function confirmDeleteReply(replyId) {
             requireAdmin(function() {
                 if (!confirm('確定刪除這則回覆？')) return;
-                fetchWithRetry(API_URL, { method: 'POST', headers: { 'Content-Type': 'text/plain' }, body: JSON.stringify({ action: 'delete_reply', replyId: String(replyId), token: getAdminToken() }) })
+                apiPost({ action: 'delete_reply', replyId: String(replyId), token: getAdminToken() })
                 .then(function(result) { handleApiResponse(result, function() { loadPlaylistData(true); showToast('✅ 已刪除'); }); })
                 .catch(function(err) { showToast('❌ 刪除失敗，請重試', 'error'); console.error(err); });
             });
         }
 
+        let lastArtistSig = '';
         function updateArtistFilter() {
             const select = document.getElementById('artistFilter');
             const currentVal = select.value;
+            const uniqueArtists = Array.from(new Set(allSongs.map(function(item) { return item.artist; }).filter(Boolean)))
+                .sort(function(a, b) { return String(a).localeCompare(String(b), 'zh-Hant'); });
+            const sig = uniqueArtists.join('\u0001');
+            if (sig === lastArtistSig) return;   // 歌手名單沒變就不重建下拉選單
+            lastArtistSig = sig;
             select.innerHTML = '<option value="all">🎤 歌手</option><option value="__sort_clicks__">🔥 熱門</option>';
-            const uniqueArtists = [];
-            allSongs.forEach(function(item) { if (item.artist && uniqueArtists.indexOf(item.artist) === -1) uniqueArtists.push(item.artist); });
-            uniqueArtists.sort().forEach(function(artist) {
+            const frag = document.createDocumentFragment();
+            uniqueArtists.forEach(function(artist) {
                 const opt = document.createElement('option');
                 opt.value = artist;
                 opt.textContent = artist;
-                select.appendChild(opt);
+                frag.appendChild(opt);
             });
+            select.appendChild(frag);
             select.value = currentVal;
+            // 修復：原本選的歌手被刪光時，select.value 會變成空字串，導致歌單整個變空白
+            if (select.value !== currentVal) select.value = 'all';
         }
 
         function applyFilters() {
             const searchTerm = document.getElementById('searchInput').value.toLowerCase().trim();
-            const selectedValue = document.getElementById('artistFilter').value;
+            const selectedValue = document.getElementById('artistFilter').value || 'all';
             filteredSongs = allSongs.filter(function(item) {
-                const matchSearch = !searchTerm || item.artist.toLowerCase().indexOf(searchTerm) !== -1 || item.song.toLowerCase().indexOf(searchTerm) !== -1 || (item.tags || '').toLowerCase().indexOf(searchTerm) !== -1;
+                // 防呆：欄位可能是 undefined 或數字
+                const matchSearch = !searchTerm ||
+                    String(item.artist || '').toLowerCase().indexOf(searchTerm) !== -1 ||
+                    String(item.song || '').toLowerCase().indexOf(searchTerm) !== -1 ||
+                    String(item.tags || '').toLowerCase().indexOf(searchTerm) !== -1;
                 return matchSearch && (selectedValue === 'all' || selectedValue === '__sort_clicks__' || item.artist === selectedValue);
             });
-            if (selectedValue === '__sort_clicks__') filteredSongs.sort(function(a, b) { return (b.clicks || 0) - (a.clicks || 0); });
+            if (selectedValue === '__sort_clicks__') filteredSongs.sort(function(a, b) { return (Number(b.clicks) || 0) - (Number(a.clicks) || 0); });
             renderPlaylist(filteredSongs);
         }
 
         function renderPlaylist(songs) {
             const tbody = document.getElementById('playlistBody');
-            tbody.innerHTML = '';
             document.getElementById('songCount').innerText = songs.length;
             hideSkeleton('skeletonLoader');
             showElement('playlistTable');
+
+            const isAdminMode = isAdmin();
+            const sig = (isAdminMode ? 'A' : 'G') + '|' + songs.map(function(s) { return [s.id, s.artist, s.song, s.clicks, s.tags, s.link].join('\u0001'); }).join('\u0002');
+            if (sig === lastPlaylistSig) return;   // 資料沒變就不重繪整張表
+            lastPlaylistSig = sig;
+
             if (!songs || songs.length === 0) {
                 tbody.innerHTML = '<tr><td colspan="5" style="text-align:center; padding:20px;">🎵 找不到符合條件的歌曲</td></tr>';
                 return;
             }
-            const isAdminMode = isAdmin();
-            songs.forEach(function(item) {
-                const tr = document.createElement('tr');
-                let displayLink = (item.link && isValidUrl(item.link)) ? item.link : 'https://www.youtube.com/results?search_query=' + encodeURIComponent((item.artist || '') + ' ' + (item.song || ''));
-                const tagsHtml = item.tags ? item.tags.split(',').map(function(t) { return '<span class="tag-badge">' + escapeHtml(t.trim()) + '</span>'; }).join('') : '';
+            // 一次組好字串再寫入 DOM，比逐列 appendChild 快很多
+            const rows = songs.map(function(item) {
+                const displayLink = escapeHtml(songLink(item));
+                const tagsHtml = item.tags ? String(item.tags).split(/[,，]/).map(function(t) { return t.trim(); }).filter(Boolean).map(function(t) { return '<span class="tag-badge">' + escapeHtml(t) + '</span>'; }).join('') : '';
                 const songId = escapeHtml(String(item.id));
-                let actionBtns = isAdminMode ? '<button class="btn-sm btn-edit" data-id="' + songId + '" onclick="editSong(this.dataset.id)">✏️</button><button class="btn-sm btn-del" data-id="' + songId + '" onclick="confirmDelete(this.dataset.id)">🗑️</button>' : '<span style="color:#ccc; font-size:12px;">(訪客)</span>';
-                
-                tr.innerHTML = 
-                    '<td data-label="歌手">' + escapeHtml(item.artist) + '<br>' + tagsHtml + '</td>' +
-                    '<td data-label="歌曲名稱"><span class="clickable-title" data-id="' + songId + '" onclick="addToQueue(this.dataset.id)">' + escapeHtml(item.song) + '</span></td>' +
-                    '<td data-label="點擊次數" style="text-align:center; font-weight:bold; color:var(--primary); font-size:15px;">' + (item.clicks || 0) + ' 🔥</td>' +
+                const actionBtns = isAdminMode ? '<button class="btn-sm btn-edit" data-id="' + songId + '" onclick="editSong(this.dataset.id)" title="編輯" aria-label="編輯">✏️</button> <button class="btn-sm btn-del" data-id="' + songId + '" onclick="confirmDelete(this.dataset.id)" title="刪除" aria-label="刪除">🗑️</button>' : '<span style="color:#ccc; font-size:12px;">(訪客)</span>';
+                return '<tr>' +
+                    '<td data-label="歌手">' + escapeHtml(item.artist) + (tagsHtml ? '<br>' + tagsHtml : '') + '</td>' +
+                    '<td data-label="歌曲名稱"><span class="clickable-title" role="button" tabindex="0" title="點擊加入待唱清單" data-id="' + songId + '" onclick="addToQueue(this.dataset.id)" onkeydown="if(event.key===\'Enter\'||event.key===\' \'){event.preventDefault();addToQueue(this.dataset.id);}">' + escapeHtml(item.song) + '</span></td>' +
+                    '<td data-label="點擊次數" class="click-count" data-id="' + songId + '" style="text-align:center; font-weight:bold; color:var(--primary); font-size:15px;">' + (Number(item.clicks) || 0) + ' 🔥</td>' +
                     '<td data-label="試聽"><a href="' + displayLink + '" target="_blank" rel="noopener noreferrer" class="listen-link" data-id="' + songId + '" onclick="recordClick(this.dataset.id)" style="color:var(--primary); text-decoration:none; font-weight:bold;">🎧 試聽</a></td>' +
-                    '<td data-label="操作"><div class="action-btns">' + actionBtns + '</div></td>';
-                tbody.appendChild(tr);
+                    '<td data-label="操作"><div class="action-btns">' + actionBtns + '</div></td>' +
+                    '</tr>';
             });
+            tbody.innerHTML = rows.join('');
         }
 
         function recordClick(id) {
-            const item = allSongs.find(function(s) { return String(s.id) === String(id); });
+            if (!id) return;
+            const item = findSong(id);
             if (item) {
                 item.clicks = (Number(item.clicks) || 0) + 1;
-                applyFilters();
+                if (document.getElementById('artistFilter').value === '__sort_clicks__') {
+                    applyFilters();
+                } else {
+                    // 只更新那一格，不必重繪整張表
+                    document.querySelectorAll('.click-count').forEach(function(td) {
+                        if (td.dataset.id === String(id)) td.textContent = item.clicks + ' 🔥';
+                    });
+                    lastPlaylistSig = '';
+                }
             }
-            fetch(API_URL, { method: 'POST', headers: { 'Content-Type': 'text/plain' }, body: JSON.stringify({ action: 'click', id: String(id) }) }).catch(function() {
+            // keepalive：分頁切走時請求也能送完
+            fetch(API_URL, { method: 'POST', keepalive: true, headers: { 'Content-Type': 'text/plain' }, body: JSON.stringify({ action: 'click', id: String(id) }) }).catch(function() {
                 // 伺服器失敗時，下一次同步會以雲端實際數字校正
             });
         }
@@ -1355,9 +1402,12 @@
                 const song = document.getElementById('song').value.trim();
                 const tags = document.getElementById('tags').value.trim();
                 if (!artist || !song) { showToast('請填寫歌手和歌曲名稱！', 'error'); return; }
+                const dup = allSongs.some(function(x) { return String(x.artist || '').toLowerCase() === artist.toLowerCase() && String(x.song || '').toLowerCase() === song.toLowerCase(); });
+                if (dup && !confirm('「' + artist + ' - ' + song + '」已經在歌單中，仍要新增嗎？')) return;
                 const btn = document.getElementById('addBtn');
+                if (btn.disabled) return;
                 btn.disabled = true; btn.innerText = '新增中...';
-                fetchWithRetry(API_URL, { method: 'POST', headers: { 'Content-Type': 'text/plain' }, body: JSON.stringify({ action: 'add', artist: artist, song: song, link: '', tags: tags, token: getAdminToken() }) })
+                apiPost({ action: 'add', artist: artist, song: song, link: '', tags: tags, token: getAdminToken() })
                 .then(function(result) {
                     btn.disabled = false; btn.innerText = '✨ 確認新增至雲端';
                     handleApiResponse(result, function() {
@@ -1374,42 +1424,38 @@
                 if (!input) { showToast('請貼上歌曲清單！', 'error'); return; }
                 const lines = input.split('\n').filter(function(line) { return line.trim() !== ''; });
                 
+                // 支援：「歌手 - 歌名」、全形「－ — –」、逗號（含全形「，」）、Tab、或空白分隔
+                const seen = new Set();
                 const songsToAdd = lines.map(function(line) {
+                    line = line.trim().replace(/^\d+[\.\)、]\s*/, '');   // 去掉「1. 」「2) 」這類編號
                     let artist = '', song = '';
-                    line = line.trim();
-                    
-                    if (line.indexOf(' - ') !== -1) {
-                        const parts = line.split(' - ');
-                        artist = parts[0].trim();
-                        song = parts.slice(1).join(' - ').trim();
-                    } 
-                    else if (line.indexOf(',') !== -1) {
-                        const parts = line.split(',');
-                        artist = parts[0].trim();
-                        song = parts.slice(1).join(',').trim();
-                    } 
-                    else {
+                    const m = line.match(/^(.+?)\s+[-－—–]\s+(.+)$/) || line.match(/^(.+?)\s*[－—–]\s*(.+)$/) ||
+                              line.match(/^(.+?)\t+(.+)$/) || line.match(/^(.+?)\s*[,，]\s*(.+)$/);
+                    if (m) {
+                        artist = m[1].trim(); song = m[2].trim();
+                    } else {
                         const parts = line.split(/\s+/);
-                        if (parts.length >= 2) {
-                             artist = parts[0];
-                             song = parts.slice(1).join(' ');
-                        } else {
-                            artist = ''; 
-                            song = line;
-                        }
+                        if (parts.length >= 2) { artist = parts[0]; song = parts.slice(1).join(' '); }
+                        else { song = line; }
                     }
-                    
-                    if (!artist && !song) return null;
+                    if (!song) return null;
                     if (!artist) artist = '未知歌手';
-                    
+                    // 略過清單內重複、以及歌單中已存在的歌
+                    const key = (artist + '\u0001' + song).toLowerCase();
+                    if (seen.has(key)) return null;
+                    seen.add(key);
+                    const exists = allSongs.some(function(x) { return String(x.artist || '').toLowerCase() === artist.toLowerCase() && String(x.song || '').toLowerCase() === song.toLowerCase(); });
+                    if (exists) return null;
                     return { artist: artist, song: song, link: '', tags: '' };
-                }).filter(function(s) { return s && s.song; });
+                }).filter(Boolean);
 
-                if (songsToAdd.length === 0) { showToast('格式錯誤！建議使用「歌手 - 歌名」格式', 'error'); return; }
+                const skipped = lines.length - songsToAdd.length;
+                if (songsToAdd.length === 0) { showToast(skipped > 0 ? '這些歌都已在歌單中或格式錯誤（建議「歌手 - 歌名」）' : '格式錯誤！建議使用「歌手 - 歌名」格式', 'error'); return; }
+                if (skipped > 0 && !confirm('將新增 ' + songsToAdd.length + ' 首，略過 ' + skipped + ' 首（重複或已存在），確定上傳？')) return;
                 
                 const btn = document.getElementById('batchBtn');
                 btn.disabled = true; btn.innerText = '上傳中...';
-                fetchWithRetry(API_URL, { method: 'POST', headers: { 'Content-Type': 'text/plain' }, body: JSON.stringify({ action: 'batch_add', songs: songsToAdd, token: getAdminToken() }) })
+                apiPost({ action: 'batch_add', songs: songsToAdd, token: getAdminToken() })
                 .then(function(result) {
                     btn.disabled = false; btn.innerText = '🚀 批量上傳至雲端';
                     handleApiResponse(result, function() { document.getElementById('batchInput').value = ''; toggleAddForm(); showToast('🚀 成功新增 ' + songsToAdd.length + ' 首歌曲！'); loadPlaylistData(true); });
@@ -1422,10 +1468,13 @@
             requireAdmin(function() {
                 const item = allSongs.find(function(s) { return String(s.id) === String(id); });
                 if (!item) { showToast('❌ 找不到這首歌曲', 'error'); return; }
-                const newArtist = prompt('修改歌手名稱：', item.artist); if (!newArtist) return;
-                const newSong = prompt('修改歌曲名稱：', item.song); if (!newSong) return;
+                const newArtist = prompt('修改歌手名稱：', item.artist); if (newArtist === null) return;
+                if (!newArtist.trim()) { showToast('歌手名稱不可空白', 'error'); return; }
+                const newSong = prompt('修改歌曲名稱：', item.song); if (newSong === null) return;
+                if (!newSong.trim()) { showToast('歌曲名稱不可空白', 'error'); return; }
                 const newTags = prompt('修改標籤：', item.tags || ''); if (newTags === null) return;
-                fetchWithRetry(API_URL, { method: 'POST', headers: { 'Content-Type': 'text/plain' }, body: JSON.stringify({ action: 'edit', id: String(id), artist: newArtist.trim(), song: newSong.trim(), link: item.link || '', tags: newTags.trim(), token: getAdminToken() }) })
+                if (newArtist.trim() === item.artist && newSong.trim() === item.song && newTags.trim() === (item.tags || '')) { showToast('沒有變更', 'info'); return; }
+                apiPost({ action: 'edit', id: String(id), artist: newArtist.trim(), song: newSong.trim(), link: item.link || '', tags: newTags.trim(), token: getAdminToken() })
                 .then(function(result) { handleApiResponse(result, function() { loadPlaylistData(true); showToast('✅ 編輯成功！'); }); })
                 .catch(function(err) { showToast('❌ 編輯失敗，請重試', 'error'); console.error(err); });
             });
@@ -1437,7 +1486,7 @@
                 const item = allSongs.find(function(s) { return String(s.id) === String(id); });
                 if (!item) { showToast('❌ 找不到這首歌曲', 'error'); return; }
                 if (!confirm('確定刪除「' + item.artist + ' - ' + item.song + '」嗎？')) return;
-                fetchWithRetry(API_URL, { method: 'POST', headers: { 'Content-Type': 'text/plain' }, body: JSON.stringify({ action: 'delete', id: String(id), token: getAdminToken() }) })
+                apiPost({ action: 'delete', id: String(id), token: getAdminToken() })
                 .then(function(result) { handleApiResponse(result, function() { loadPlaylistData(true); showToast('✅ 已刪除'); }); })
                 .catch(function(err) { showToast('❌ 刪除失敗，請重試', 'error'); console.error(err); });
             });
@@ -1446,7 +1495,7 @@
         function confirmDeleteRequest(id) {
             requireAdmin(function() {
                 if (!confirm('確定刪除這則留言嗎？')) return;
-                fetchWithRetry(API_URL, { method: 'POST', headers: { 'Content-Type': 'text/plain' }, body: JSON.stringify({ action: 'delete_request', id: String(id), token: getAdminToken() }) })
+                apiPost({ action: 'delete_request', id: String(id), token: getAdminToken() })
                 .then(function(result) { handleApiResponse(result, function() { loadPlaylistData(true); showToast('✅ 已刪除'); }); })
                 .catch(function(err) { showToast('❌ 刪除失敗，請重試', 'error'); console.error(err); });
             });
@@ -1456,9 +1505,10 @@
             const nick = document.getElementById('reqNick').value.trim() || '匿名訪客';
             const msg = document.getElementById('reqMessage').value.trim();
             if (!msg) { showToast('請輸入內容！', 'error'); return; }
+            if (btn.disabled) return;
             if (nick !== '匿名訪客') localStorage.setItem('lastReplyNick', nick);
             btn.disabled = true; btn.innerText = '送出中...';
-            fetchWithRetry(API_URL, { method: 'POST', headers: { 'Content-Type': 'text/plain' }, body: JSON.stringify({ action: 'add_request', nickname: nick, message: msg }) })
+            apiPost({ action: 'add_request', nickname: nick, message: msg })
             .then(function(result) {
                 btn.disabled = false; btn.innerText = '送出';
                 handleApiResponse(result, function() { document.getElementById('reqMessage').value = ''; showToast('✅ 留言成功！'); loadPlaylistData(true); });
@@ -1498,16 +1548,33 @@
         }
 
         function loadPlaylistData(isManual) {
-            if (!isManual && activeUpdatesCount > 0) return;
-            
-            if (isManual || allSongs.length === 0) {
-                document.getElementById('skeletonLoader').classList.add('active');
-                document.getElementById('skeletonLoader').style.display = '';
+            if (!isManual && (activeUpdatesCount > 0 || isLoadingData)) return;
+
+            // 只有「完全沒資料」時才顯示骨架；有資料時在背景更新，不讓整張表閃一下
+            if (allSongs.length === 0) {
+                const sk = document.getElementById('skeletonLoader');
+                sk.classList.remove('fade-out');
+                sk.classList.add('active');
+                sk.style.display = '';
                 document.getElementById('playlistTable').style.display = 'none';
             }
+
+            const seq = ++loadSeq;
+            isLoadingData = true;
             fetchWithRetry(API_URL)
-                .then(function(result) { renderAllData(result, false); })
+                .then(function(result) {
+                    if (seq !== loadSeq) return;   // 已有更新的請求，丟棄舊結果
+                    if (activeUpdatesCount > 0 && !isManual) return;
+                    renderAllData(result, false);
+                })
                 .catch(function(error) {
+                    if (seq !== loadSeq) return;
+                    if (allSongs.length > 0) {
+                        // 畫面上已有資料：背景同步失敗就安靜略過，手動重整才提示
+                        if (isManual) showToast('⚠️ 網路暫時無法連線，顯示的是先前的資料', 'error');
+                        console.error('Fetch error:', error);
+                        return;
+                    }
                     hideAllSkeletons();
                     let restored = false;
                     try {
@@ -1517,41 +1584,70 @@
                             restored = true;
                         }
                     } catch (e) { console.error('Cache fallback error:', e); }
+                    if (!restored) { renderPlaylist([]); renderQueuePanel(); renderRequests([]); }
                     showToast(restored ? '⚠️ 網路暫時無法連線，已切換至本地快取' : '❌ 網路不穩或 API 錯誤', 'error');
                     console.error('Fetch error:', error);
-                });
+                })
+                .finally(function() { if (seq === loadSeq) isLoadingData = false; });
         }
 
         function manualRefresh() { showToast('🔄 正在重新整理...', 'info', 1500); loadPlaylistData(true); }
 
-        let touchStartY = 0; let touchStartX = 0; let isPulling = false;
+        // 下拉重新整理：只有「從頁面最頂端開始」的手勢才算，且不在彈窗/表情面板內觸發
+        let touchStartY = null; let touchStartX = 0; let isPulling = false;
         const pullIndicator = document.getElementById('pullRefreshIndicator');
         const pullText = document.getElementById('pullText');
-        
-        document.addEventListener('touchstart', function(e) { 
-            if (window.scrollY === 0) {
-                touchStartY = e.touches[0].clientY; 
+
+        document.addEventListener('touchstart', function(e) {
+            const inOverlay = e.target.closest('.modal-overlay, .emoji-panel, .add-form-container, .queue-list');
+            if (window.scrollY <= 0 && !inOverlay) {
+                touchStartY = e.touches[0].clientY;
                 touchStartX = e.touches[0].clientX;
+            } else {
+                touchStartY = null;
             }
-        });
+        }, { passive: true });
         document.addEventListener('touchmove', function(e) {
-            if (window.scrollY === 0) {
-                let diffY = e.touches[0].clientY - touchStartY;
-                let diffX = Math.abs(e.touches[0].clientX - touchStartX);
-                if (diffY > 50 && diffY > diffX) { 
-                    isPulling = true; 
-                    pullIndicator.classList.add('active'); 
-                    pullText.innerText = '放開即可重新整理...'; 
-                }
+            if (touchStartY === null || window.scrollY > 0) return;
+            const diffY = e.touches[0].clientY - touchStartY;
+            const diffX = Math.abs(e.touches[0].clientX - touchStartX);
+            if (diffY > 70 && diffY > diffX * 1.5 && !isPulling) {
+                isPulling = true;
+                pullIndicator.classList.add('active');
+                pullText.innerText = '放開即可重新整理...';
+            }
+        }, { passive: true });
+        document.addEventListener('touchend', function() {
+            touchStartY = null;
+            if (isPulling) {
+                pullText.innerText = '正在重新整理...';
+                manualRefresh();
+                setTimeout(function() { pullIndicator.classList.remove('active'); isPulling = false; }, 1000);
             }
         });
-        document.addEventListener('touchend', function() {
-            if (isPulling) { pullText.innerText = '正在重新整理...'; manualRefresh(); setTimeout(function() { pullIndicator.classList.remove('active'); isPulling = false; }, 1000); }
+
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                closeRandomModal();
+                document.getElementById('helpModal').style.display = 'none';
+                closeEmojiPanel();
+                if (document.getElementById('addFormContainer').style.display === 'block') toggleAddForm();
+            }
         });
-        
-        document.addEventListener('keydown', function(e) { if (e.key === 'Escape') { document.getElementById('randomModal').style.display = 'none'; document.getElementById('helpModal').style.display = 'none'; } });
-        window.addEventListener('scroll', function() { document.getElementById('scrollTopBtn').style.display = window.scrollY > 300 ? 'flex' : 'none'; });
-        
+
+        // 捲動事件用 requestAnimationFrame 節流，並在捲動時收起表情面板（它是 fixed 定位，不會跟著走）
+        let scrollTicking = false;
+        window.addEventListener('scroll', function() {
+            if (globalPanel.classList.contains('show')) closeEmojiPanel();
+            if (scrollTicking) return;
+            scrollTicking = true;
+            requestAnimationFrame(function() {
+                document.getElementById('scrollTopBtn').style.display = window.scrollY > 300 ? 'flex' : 'none';
+                scrollTicking = false;
+            });
+        }, { passive: true });
+        window.addEventListener('resize', function() { if (globalPanel.classList.contains('show')) closeEmojiPanel(); });
+
         document.addEventListener('DOMContentLoaded', function() {
             const lastNick = localStorage.getItem('lastReplyNick');
             if (lastNick) document.getElementById('reqNick').value = lastNick;
@@ -1582,9 +1678,7 @@
         });
         
         document.addEventListener('visibilitychange', function() { 
-            if (document.visibilityState === 'visible' && activeUpdatesCount === 0) {
-                loadPlaylistData(false); 
-            }
+            if (document.visibilityState === 'visible' && activeUpdatesCount === 0) loadPlaylistData(false);
         });
     </script>
 </body>
