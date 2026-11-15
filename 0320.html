@@ -2,7 +2,9 @@
 <html lang="zh-Hant">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#ff7675">
+    <link rel="preconnect" href="https://www.youtube.com">
     <title>静静在夏天🍔🎤⁰³²⁰的歌單</title>
     <style>
         /* =========================================================================
@@ -40,7 +42,8 @@
             color: var(--text-color);
             margin: 0; padding: 15px;
             display: flex; flex-direction: column; align-items: center;
-            transition: background 0.5s ease;
+            transition: background 0.5s ease, color 0.5s ease;
+            -webkit-tap-highlight-color: transparent;
             overflow-x: hidden;
             min-height: 100vh;
             box-sizing: border-box;
@@ -60,6 +63,7 @@
         }
 
         .blob {
+            pointer-events: none;
             position: fixed; width: 300px; height: 300px;
             background: var(--primary-glow); filter: blur(80px); border-radius: 50%;
             z-index: -2; animation: moveBlob 20s infinite alternate;
@@ -71,6 +75,15 @@
         @keyframes moveBlob {
             0% { transform: translate(0, 0) scale(1); }
             100% { transform: translate(100px, 50px) scale(1.2); }
+        }
+
+        .confetti {
+            position: fixed; top: -12px; z-index: 1001; pointer-events: none; border-radius: 2px;
+            animation: confettiFall linear forwards;
+        }
+        @keyframes confettiFall {
+            0% { transform: translateY(0) rotate(0deg); opacity: 1; }
+            100% { transform: translateY(105vh) rotate(720deg); opacity: 0.6; }
         }
 
         .particle {
@@ -122,9 +135,12 @@
             transition: var(--transition); font-size: 16px; box-sizing: border-box;
         }
         .search-box:focus { border-color: var(--primary); box-shadow: 0 0 0 4px var(--primary-glow); }
+        .search-box::-webkit-search-cancel-button { display: none; }
         .clear-btn { position: absolute; right: 15px; top: 50%; transform: translateY(-50%); background: none; border: none; font-size: 18px; color: #bbb; cursor: pointer; display: none; }
 
         .sort-select { padding: 10px 20px; border-radius: 30px; border: 2px solid #ffeaa7; background: var(--input-bg); color: var(--text-color); cursor: pointer; }
+        .random-btn:hover { transform: translateY(-2px); box-shadow: 0 8px 20px var(--primary-glow); }
+        button:focus-visible, a:focus-visible, select:focus-visible { outline: 3px solid var(--primary); outline-offset: 2px; }
         .random-btn { padding: 0 25px; background: var(--accent-grad); color: white; border: none; border-radius: 30px; cursor: pointer; font-weight: 600; transition: var(--transition); }
         .history-btn { padding: 0 25px; background: var(--card-bg); color: var(--primary); border: 2px solid var(--primary); border-radius: 30px; cursor: pointer; font-weight: 600; transition: var(--transition); }
         .history-btn:hover { background: var(--primary); color: white; }
@@ -141,6 +157,7 @@
             cursor: pointer; font-size: 13px; border: 1px solid var(--border-color); 
             color: var(--text-color); transition: var(--transition); white-space: nowrap;
         }
+        .tab:hover { border-color: var(--primary); }
         .tab.active { background: var(--primary); color: white; transform: scale(1.05); box-shadow: 0 4px 10px var(--primary-glow); }
 
         .table-wrapper { width: 100%; overflow-x: auto; }
@@ -152,13 +169,19 @@
         tr:hover td { background: rgba(255,118,117,0.05); }
 
         .fav-btn { background: none; border: none; cursor: pointer; font-size: 20px; color: #ccc; transition: var(--transition); width: 30px; height: 30px; }
+        .fav-btn:hover { color: #ff9f9f; }
         .fav-btn.active { color: #ff4757; transform: scale(1.3); }
 
         .song-link { color: var(--text-color); text-decoration: none; font-weight: 600; transition: var(--transition); }
-        .song-link:hover { color: var(--primary); transform: scale(1.05); }
+        .song-link:hover { color: var(--primary); }
+        .empty-row td { padding: 40px; color: #999; text-align: center; }
         mark { background-color: rgba(255, 118, 117, 0.3); color: inherit; border-radius: 3px; }
 
         /* 彈窗樣式 */
+        body.modal-open { overflow: hidden; }
+        .modal-overlay.open { display: flex; }
+        .draw-scope { font-size: 12px; opacity: 0.7; margin-top: -6px; }
+        .history-empty { text-align: center; padding: 25px 10px; opacity: 0.5; font-size: 14px; }
         .modal-overlay {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: rgba(0,0,0,0.7); display: none; align-items: center; justify-content: center;
@@ -210,6 +233,7 @@
         .history-list::-webkit-scrollbar-thumb { background: var(--primary); border-radius: 10px; }
         
         .history-item {
+            display: block; text-decoration: none; color: inherit;
             padding: 10px 12px; border-bottom: 1px solid var(--border-color);
             background: rgba(0,0,0,0.02); border-radius: 12px; margin-bottom: 8px; transition: var(--transition);
         }
@@ -239,9 +263,10 @@
             h1 { font-size: 22px; }
             table, thead, tbody, th, td, tr { display: block; }
             thead { display: none; }
-            .music-row { margin-bottom: 15px; background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 20px; padding: 10px; box-shadow: 0 4px 10px rgba(0,0,0,0.03); }
+            .music-row { position: relative; padding-right: 50px !important; margin-bottom: 15px; background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 20px; padding: 10px; box-shadow: 0 4px 10px rgba(0,0,0,0.03); }
             .music-row td { border: none; padding: 8px; text-align: left; display: flex; align-items: center; }
-            .col-fav { justify-content: center; width: 40px; margin-right: -40px; position: absolute; right: 10px; top: 10px; }
+            .music-row td.col-fav { justify-content: center; width: 40px; padding: 0; position: absolute; right: 10px; top: 50%; transform: translateY(-50%); }
+            .empty-row td { display: block; text-align: center; }
             .col-artist { font-size: 13px; opacity: 0.7; color: var(--text-color); }
             .col-song { font-size: 16px; font-weight: 600; }
             .controls-row { gap: 8px; }
@@ -251,6 +276,11 @@
             #themeToggle { left: 15px; }
             #langToggle { left: 15px; bottom: 80px; }
             #backToTop { right: 15px; }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            *, *::before, *::after { animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; transition-duration: 0.01ms !important; }
+            .blob, #cursor-glow { display: none; }
         }
 
         @keyframes fadeInDown { from { opacity: 0; transform: translateY(-15px); } to { opacity: 1; transform: translateY(0); } }
@@ -279,10 +309,10 @@
     
     <div class="controls-row">
         <div class="search-wrapper">
-            <input type="text" id="searchInput" class="search-box" placeholder="搜尋歌手或歌曲...">
-            <button id="clearSearch" class="clear-btn">✕</button>
+            <input type="search" id="searchInput" class="search-box" placeholder="搜尋歌手或歌曲..." autocomplete="off" enterkeyhint="search">
+            <button id="clearSearch" class="clear-btn" type="button" aria-label="清除搜尋">✕</button>
         </div>
-        <select id="sortSelect" class="sort-select">
+        <select id="sortSelect" class="sort-select" aria-label="排序">
             <option value="default" id="opt-default">預設排序</option>
             <option value="song" id="opt-song">歌曲 A-Z</option>
             <option value="artist" id="opt-artist">歌手 A-Z</option>
@@ -291,8 +321,8 @@
         <button id="historyBtn" class="history-btn">📜 抽歌紀錄</button>
     </div>
     
-    <div class="category-tabs" id="categoryTabs"></div>
-    <div class="stats" style="margin-bottom: 10px; font-size: 14px; opacity: 0.7;"><span id="stat-text">目前顯示</span>: <span id="totalCount">0</span> <span id="stat-unit">首</span></div>
+    <div class="category-tabs" id="categoryTabs" role="toolbar"></div>
+    <div class="stats" style="margin-bottom: 10px; font-size: 14px; opacity: 0.7;"><span id="stat-text">目前顯示</span>: <span id="totalCount" aria-live="polite">0</span> <span id="stat-unit">首</span></div>
 
     <div class="table-wrapper">
         <table id="musicTable">
@@ -310,9 +340,9 @@
 </div>
 
 <div class="footer-stats">
-    <span id="footerText">💖 你的造訪次數: <span class="visitor-count" id="personalCount">0</span> 次</span>
+    <span id="footerText"><span id="footer-visit-label">💖 你的造訪次數</span>: <span class="visitor-count" id="personalCount">0</span> 次</span>
     <div style="margin-top: 10px; font-size: 12px; opacity: 0.7;">
-        🌐 總造訪次數：<img src="https://SiteStates.com/show/image/33689.jpg" border="0" alt="Visitor Counter" />
+        🌐 總造訪次數：<img src="https://SiteStates.com/show/image/33689.jpg" border="0" alt="Visitor Counter" style="vertical-align: middle;" />
     </div>
 </div>
 
@@ -320,19 +350,20 @@
     <a href="https://www.twitch.tv/chi828" target="_blank" id="credit-text">新竹奇奇828製作</a>
 </div>
 
-<button id="themeToggle" class="fab-btn" title="切換主題">🌙</button>
-<button id="langToggle" class="fab-btn" title="切換繁簡">文</button>
-<button id="backToTop" class="fab-btn">↑</button>
+<button id="themeToggle" class="fab-btn" title="切換主題" aria-label="切換主題">🌙</button>
+<button id="langToggle" class="fab-btn" title="切換繁簡" aria-label="切換繁簡">文</button>
+<button id="backToTop" class="fab-btn" title="回到頂部" aria-label="回到頂部">↑</button>
 
 <!-- 整合式抽歌與紀錄彈窗 -->
 <div class="modal-overlay" id="modalOverlay">
-    <div class="modal-card" id="modalCard">
+    <div class="modal-card" id="modalCard" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
         
         <!-- 上半部：抽歌結果區 -->
         <div id="drawSection" style="flex-shrink: 0;">
             <div class="modal-badge" id="modalBadge" style="display: none;"></div>
             <h2 id="modalTitle" style="margin-top: 0; font-size: 20px;">✨ 正在抽獎... ✨</h2>
-            <div class="random-song" id="resSong">...</div>
+            <div class="draw-scope" id="drawScope" style="display: none;"></div>
+            <div class="random-song" id="resSong" aria-live="polite">...</div>
             <div class="random-artist" id="resArtist">...</div>
             
             <div class="modal-meta-box" id="modalMetaBox" style="display: none;">
@@ -391,7 +422,9 @@
             linkDouyin: "🍔 靜靜的抖音", linkTwitch: "🍔 静静的圖奇", linkDC: "🍔 DC靜靜幫", linkYT: "🍔 静静的YT", linkIG: "🍔 静静的IG",
             songSeqPrefix: "歌單序號 #",
             drawSeqPrefix: "🎯 本次抽歌序號：第 ", drawSeqSuffix: " 次抽中",
-            drawTimePrefix: "🕒 抽取時間："
+            drawTimePrefix: "🕒 抽取時間：",
+            emptyFav: "💗 還沒有收藏的歌曲，點歌名旁的 ❤ 加入最愛吧！",
+            drawScope: "🎯 抽選範圍："
         },
         'zh-Hans': {
             greetingMorning: "早安，美好的音乐时光 ☀️",
@@ -415,15 +448,19 @@
             linkDouyin: "🍔 静静的抖音", linkTwitch: "🍔 静静的图奇", linkDC: "🍔 DC静静帮", linkYT: "🍔 静静的YT", linkIG: "🍔 静静的IG",
             songSeqPrefix: "歌单序号 #",
             drawSeqPrefix: "🎯 本次抽歌序号：第 ", drawSeqSuffix: " 次抽中",
-            drawTimePrefix: "🕒 抽取时间："
+            drawTimePrefix: "🕒 抽取时间：",
+            emptyFav: "💗 还没有收藏的歌曲，点歌名旁的 ❤ 加入最爱吧！",
+            drawScope: "🎯 抽选范围："
         }
     };
 
-    // 繁簡轉換字典，【修復：移除了于/於的轉換，讓于文文等歌手顯示正確】
-    const T2S_MAP = {'靜':'静','單':'单','環':'环','團':'团','龍':'龙','適':'适','麗':'丽','願':'愿','樂':'乐','個':'个','體':'体','裡':'里','麼':'么','愛':'爱','會':'会','還':'还','萬':'万','當':'当','傑':'杰','聽':'听','說':'说','雲':'云','驚':'惊','與':'与','來':'来','為':'为','煙':'烟','菸':'烟'};
-    const S2T_MAP = {'静':'靜','单':'單','环':'環','团':'團','龙':'龍','适':'適','丽':'麗','愿':'願','乐':'樂','个':'個','体':'體','里':'裡','么':'麼','爱':'愛','会':'會','还':'還','万':'萬','当':'當','杰':'傑','听':'聽','说':'說','云':'雲','惊':'驚','与':'與','来':'來','为':'為','烟':'煙'};
-    const T2S_REGEX = new RegExp(Object.keys(T2S_MAP).join('|'), 'g');
-    const S2T_REGEX = new RegExp(Object.keys(S2T_MAP).join('|'), 'g');
+    // 繁簡轉換字典（逐字對照，依歌單內容產生）。
+    // 簡→繁刻意排除「于、杰、里、范、郁、采、朴、峰、丑、托、后、台」等會誤轉人名或歌名的字（如于文文、周杰倫、七里香、范瑋琪）。
+    const T2S_MAP = {"亞":"亚","佔":"占","來":"来","倆":"俩","個":"个","們":"们","倫":"伦","傑":"杰","傳":"传","傷":"伤","傾":"倾","儀":"仪","儷":"俪","兒":"儿","冊":"册","冪":"幂","凱":"凯","別":"别","刪":"删","剛":"刚","劃":"划","劇":"剧","劉":"刘","動":"动","勝":"胜","勢":"势","勳":"勋","協":"协","吳":"吴","員":"员","問":"问","喬":"乔","單":"单","嗎":"吗","嘆":"叹","嘰":"叽","噹":"当","國":"国","園":"园","圓":"圆","圖":"图","團":"团","場":"场","塵":"尘","壞":"坏","壽":"寿","夢":"梦","夾":"夹","奧":"奥","婭":"娅","媽":"妈","嫻":"娴","孫":"孙","學":"学","實":"实","寧":"宁","寫":"写","寬":"宽","寵":"宠","寶":"宝","將":"将","對":"对","島":"岛","嵐":"岚","嶼":"屿","嶽":"岳","帶":"带","幫":"帮","幾":"几","廢":"废","廣":"广","廳":"厅","張":"张","彎":"弯","彥":"彦","後":"后","從":"从","惡":"恶","愛":"爱","慶":"庆","憂":"忧","憐":"怜","憫":"悯","憶":"忆","應":"应","懷":"怀","懸":"悬","戀":"恋","戰":"战","戲":"戏","捨":"舍","捲":"卷","換":"换","揮":"挥","擁":"拥","據":"据","擬":"拟","擱":"搁","數":"数","時":"时","曉":"晓","曖":"暧","書":"书","會":"会","東":"东","條":"条","棧":"栈","楊":"杨","楓":"枫","極":"极","榮":"荣","樂":"乐","樓":"楼","標":"标","樣":"样","樹":"树","樺":"桦","橋":"桥","機":"机","歐":"欧","歡":"欢","歲":"岁","歷":"历","歸":"归","殘":"残","殤":"殇","殺":"杀","氣":"气","決":"决","沒":"没","涼":"凉","淒":"凄","淚":"泪","淺":"浅","渦":"涡","湊":"凑","溫":"温","滅":"灭","滿":"满","潔":"洁","潤":"润","澤":"泽","濤":"涛","瀧":"泷","灣":"湾","為":"为","烏":"乌","無":"无","煉":"炼","煒":"炜","煙":"烟","煩":"烦","熱":"热","爛":"烂","爾":"尔","牆":"墙","牽":"牵","獨":"独","現":"现","瑋":"玮","瑩":"莹","環":"环","畫":"画","異":"异","當":"当","發":"发","盧":"卢","祿":"禄","禍":"祸","禕":"祎","禮":"礼","種":"种","稱":"称","穎":"颖","穩":"稳","窩":"窝","筆":"笔","簡":"简","籠":"笼","籤":"签","紀":"纪","約":"约","紅":"红","納":"纳","純":"纯","紙":"纸","終":"终","絕":"绝","給":"给","絲":"丝","綠":"绿","維":"维","綺":"绮","綾":"绫","緒":"绪","線":"线","緣":"缘","編":"编","緯":"纬","練":"练","總":"总","繼":"继","續":"续","羅":"罗","聯":"联","聲":"声","聽":"听","臨":"临","與":"与","興":"兴","艷":"艳","芻":"刍","莊":"庄","華":"华","菸":"烟","萬":"万","葉":"叶","蓮":"莲","蔥":"葱","蕭":"萧","薔":"蔷","薩":"萨","藍":"蓝","藝":"艺","藥":"药","蘇":"苏","蘋":"苹","蘭":"兰","虛":"虚","號":"号","衝":"冲","裡":"里","襖":"袄","見":"见","親":"亲","覺":"觉","觀":"观","計":"计","訊":"讯","記":"记","訣":"诀","許":"许","詞":"词","詠":"咏","詩":"诗","話":"话","該":"该","語":"语","說":"说","誰":"谁","課":"课","諾":"诺","謊":"谎","謙":"谦","謝":"谢","謠":"谣","證":"证","譚":"谭","譜":"谱","讀":"读","變":"变","讓":"让","豬":"猪","貓":"猫","貝":"贝","財":"财","貳":"贰","費":"费","貼":"贴","資":"资","賓":"宾","質":"质","賴":"赖","購":"购","贈":"赠","贏":"赢","趙":"赵","跡":"迹","車":"车","軌":"轨","軒":"轩","輕":"轻","輪":"轮","輸":"输","轉":"转","迴":"回","這":"这","連":"连","進":"进","遊":"游","運":"运","過":"过","達":"达","遠":"远","選":"选","還":"还","邊":"边","鄉":"乡","鄧":"邓","鄭":"郑","醜":"丑","鈺":"钰","銀":"银","銘":"铭","錘":"锤","錚":"铮","錢":"钱","錦":"锦","錯":"错","鍵":"键","鎮":"镇","鐘":"钟","長":"长","門":"门","閉":"闭","開":"开","間":"间","闊":"阔","闕":"阙","關":"关","陰":"阴","陳":"陈","陸":"陆","陽":"阳","隊":"队","險":"险","隱":"隐","隻":"只","雋":"隽","雙":"双","雛":"雏","雞":"鸡","離":"离","難":"难","雲":"云","電":"电","霧":"雾","靚":"靓","靜":"静","韋":"韦","韓":"韩","響":"响","頁":"页","頂":"顶","項":"项","順":"顺","頌":"颂","頔":"𬱖","頭":"头","顏":"颜","願":"愿","風":"风","飄":"飘","飛":"飞","養":"养","餘":"余","館":"馆","馬":"马","騎":"骑","騙":"骗","騰":"腾","驊":"骅","驕":"骄","體":"体","髮":"发","鬧":"闹","魚":"鱼","鮮":"鲜","鯉":"鲤","鯊":"鲨","鳥":"鸟","鳳":"凤","鴛":"鸳","鴦":"鸯","鴻":"鸿","麗":"丽","麼":"么","黃":"黄","點":"点","齊":"齐","齡":"龄","龍":"龙","於":"于"};
+    const S2T_MAP = {"静":"靜","单":"單","乐":"樂","纯":"純","莱":"萊","队":"隊","复":"復","温":"溫","环":"環","团":"團","龙":"龍","适":"適","丽":"麗","愿":"願","个":"個","体":"體","么":"麼","爱":"愛","会":"會","还":"還","万":"萬","当":"當","听":"聽","说":"說","惊":"驚","与":"與","来":"來","为":"為","烟":"煙"};
+    const T2S_REGEX = new RegExp('[' + Object.keys(T2S_MAP).join('') + ']', 'g');
+    const S2T_REGEX = new RegExp('[' + Object.keys(S2T_MAP).join('') + ']', 'g');
+    const toSimp = s => s.replace(T2S_REGEX, c => T2S_MAP[c]);
 
     const HIGH_PITCH_SONGS = ["煎熬", "離歌", "我的美麗", "左手指月", "離不開你", "給你一點顏色", "煙火裡的塵埃"];
 
@@ -1213,465 +1250,464 @@
 783	蘇運瑩	時候
 `;
 
-    // 每一行資料讀取，如果為空行則過濾掉
+    // ===== 安全的 localStorage（無痕模式或被封鎖時不會讓整頁壞掉） =====
+    const Store = {
+        get(k) { try { return localStorage.getItem(k); } catch (e) { return null; } },
+        set(k, v) { try { localStorage.setItem(k, v); } catch (e) {} },
+        remove(k) { try { localStorage.removeItem(k); } catch (e) {} },
+        json(k, fallback) { try { const v = JSON.parse(localStorage.getItem(k)); return v ?? fallback; } catch (e) { return fallback; } }
+    };
+
+    const PAGE_SIZE = 30;
+    const YT = (a, s) => `https://www.youtube.com/results?search_query=${encodeURIComponent(a + ' ' + s)}`;
+    const escapeHTML = s => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+    const normalize = s => toSimp(String(s)).toLowerCase();
+
+    // 每一行資料讀取，如果為空行則過濾掉；預先算好搜尋用的正規化字串
     const rawMusicData = rawDataString.trim().split('\n').filter(line => line.trim() !== '').map(line => {
         const parts = line.split('\t');
         const artist = parts[1] ? parts[1].trim() : "未知歌手";
         const song = parts[2] ? parts[2].trim() : "未知歌曲";
         return {
             id: parseInt(parts[0], 10) || 0,
-            artist: artist,
-            song: song,
-            favKey: `${artist}-${song}`
+            artist, song,
+            favKey: `${artist}-${song}`,
+            nArtist: normalize(artist),
+            nSong: normalize(song)
         };
     });
+    const HIGH_PITCH_SET = new Set(HIGH_PITCH_SONGS);
 
     const State = {
-        favorites: JSON.parse(localStorage.getItem('musicFavsV2')) || [],
+        favorites: new Set(Store.json('musicFavsV2', [])),
         currentArtist: "全部",
-        theme: localStorage.getItem('theme') || 'light',
-        lang: localStorage.getItem('preferred-lang') || 'zh-Hant',
-        displayLimit: 30,
-        drawCount: parseInt(localStorage.getItem('drawCount') || '0'),
-        drawHistory: JSON.parse(localStorage.getItem('drawHistory')) || []
+        theme: Store.get('theme') || 'light',
+        lang: Store.get('preferred-lang') === 'zh-Hans' ? 'zh-Hans' : 'zh-Hant',
+        filtered: [],
+        rendered: 0,
+        term: '',
+        drawCount: parseInt(Store.get('drawCount') || '0', 10) || 0,
+        drawHistory: Store.json('drawHistory', [])
     };
+    if (!Array.isArray(State.drawHistory)) State.drawHistory = [];
 
-    const musicBody = document.getElementById('musicBody');
-    const searchInput = document.getElementById('searchInput');
-    const clearSearchBtn = document.getElementById('clearSearch');
-    const sortSelect = document.getElementById('sortSelect');
-    const totalCountSpan = document.getElementById('totalCount');
-    const categoryTabs = document.getElementById('categoryTabs');
-    const modalOverlay = document.getElementById('modalOverlay');
-    const backToTopBtn = document.getElementById('backToTop');
-    const personalCountSpan = document.getElementById('personalCount');
-    const cursorGlow = document.getElementById('cursor-glow');
+    const $ = id => document.getElementById(id);
+    const musicBody = $('musicBody');
+    const searchInput = $('searchInput');
+    const clearSearchBtn = $('clearSearch');
+    const sortSelect = $('sortSelect');
+    const totalCountSpan = $('totalCount');
+    const categoryTabs = $('categoryTabs');
+    const modalOverlay = $('modalOverlay');
+    const backToTopBtn = $('backToTop');
+    const cursorGlow = $('cursor-glow');
+    const sentinel = $('loadMoreSentinel');
+    const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+    const dict = () => LANG_DICT[State.lang];
 
     function convertText(text) {
         if (!text) return "";
-        if (State.lang === 'zh-Hans') {
-            return text.replace(T2S_REGEX, match => T2S_MAP[match] || match);
-        } else {
-            return text.replace(S2T_REGEX, match => S2T_MAP[match] || match);
+        return State.lang === 'zh-Hans'
+            ? text.replace(T2S_REGEX, c => T2S_MAP[c])
+            : text.replace(S2T_REGEX, c => S2T_MAP[c]);
+    }
+
+    // 在顯示文字上標出搜尋結果（逐字轉換長度不變，所以可直接對齊位置；繁簡互搜都能命中）
+    function highlight(display, norm, term) {
+        if (!term) return escapeHTML(display);
+        let out = '', last = 0, i = norm.indexOf(term);
+        while (i !== -1) {
+            out += escapeHTML(display.slice(last, i)) + '<mark>' + escapeHTML(display.slice(i, i + term.length)) + '</mark>';
+            last = i + term.length;
+            i = norm.indexOf(term, last);
         }
+        return out + escapeHTML(display.slice(last));
+    }
+
+    function setGreeting() {
+        const hour = new Date().getHours();
+        const d = dict();
+        $('greeting').innerText = (hour < 12) ? d.greetingMorning : (hour < 18) ? d.greetingAfternoon : d.greetingEvening;
     }
 
     function applyLanguage() {
-        const d = LANG_DICT[State.lang];
+        const d = dict();
         document.documentElement.lang = State.lang;
-        document.getElementById('mainTitle').innerText = d.mainTitle;
-        document.getElementById('link-douyin').innerText = d.linkDouyin;
-        document.getElementById('link-twitch').innerText = d.linkTwitch;
-        document.getElementById('link-dc').innerText = d.linkDC;
-        document.getElementById('link-yt').innerText = d.linkYT;
-        document.getElementById('link-ig').innerText = d.linkIG;
-        document.getElementById('searchInput').placeholder = d.searchPlaceholder;
-        document.getElementById('opt-default').innerText = d.sortDefault;
-        document.getElementById('opt-song').innerText = d.sortSong;
-        document.getElementById('opt-artist').innerText = d.sortArtist;
-        document.getElementById('randomBtn').innerText = d.randomBtn;
-        document.getElementById('historyBtn').innerText = d.historyBtn;
-        document.getElementById('stat-text').innerText = d.statText;
-        document.getElementById('stat-unit').innerText = d.statUnit;
-        document.getElementById('th-artist').innerText = d.thArtist;
-        document.getElementById('th-song').innerText = d.thSong;
-        document.getElementById('footerText').innerHTML = `${d.footerVisit}: <span class="visitor-count" id="personalCount">${localStorage.getItem('myPlaylistVisits') || 0}</span> 次`;
-        document.getElementById('credit-text').innerText = d.credits;
-        document.getElementById('closeModal').innerText = d.modalClose;
-        document.getElementById('retryBtn').innerText = d.modalRetry;
-        document.getElementById('stopBtn').innerText = d.stopBtn;
-        document.getElementById('historyTitle').innerText = d.historyTitle;
-        document.getElementById('clearHistoryBtn').innerText = d.historyClear;
-        document.getElementById('langToggle').innerText = d.langBtn;
+        document.title = d.mainTitle;
+        const textMap = {
+            mainTitle: d.mainTitle, 'link-douyin': d.linkDouyin, 'link-twitch': d.linkTwitch, 'link-dc': d.linkDC,
+            'link-yt': d.linkYT, 'link-ig': d.linkIG, 'opt-default': d.sortDefault, 'opt-song': d.sortSong,
+            'opt-artist': d.sortArtist, randomBtn: d.randomBtn, historyBtn: d.historyBtn, 'stat-text': d.statText,
+            'stat-unit': d.statUnit, 'th-artist': d.thArtist, 'th-song': d.thSong, 'footer-visit-label': d.footerVisit,
+            'credit-text': d.credits, closeModal: d.modalClose, retryBtn: d.modalRetry, stopBtn: d.stopBtn,
+            historyTitle: d.historyTitle, clearHistoryBtn: d.historyClear, langToggle: d.langBtn
+        };
+        for (const id in textMap) $(id).innerText = textMap[id];
+        searchInput.placeholder = d.searchPlaceholder;
+        searchInput.setAttribute('aria-label', d.searchPlaceholder);
+        setGreeting();
         generateTabs();
         renderTable();
-        if (modalOverlay.style.display === 'flex') renderHistoryList(); 
+        if (modalOverlay.classList.contains('open')) {
+            renderHistoryList();
+            if (!isDrawing) showLatestResult();
+        }
     }
 
     function switchLanguage() {
         State.lang = (State.lang === 'zh-Hant') ? 'zh-Hans' : 'zh-Hant';
-        localStorage.setItem('preferred-lang', State.lang);
+        Store.set('preferred-lang', State.lang);
         applyLanguage();
     }
 
+    function updatePersonalCount() {
+        const visits = (parseInt(Store.get('myPlaylistVisits') || '0', 10) || 0) + 1;
+        Store.set('myPlaylistVisits', visits);
+        $('personalCount').innerText = visits;
+    }
+
+    function saveFavorites() { Store.set('musicFavsV2', JSON.stringify([...State.favorites])); }
+
+    // 收藏：只更新那一顆按鈕，不重畫整張表（除非正在看「最愛」分頁）
     musicBody.addEventListener('click', (e) => {
-        const favBtn = e.target.closest('.fav-btn');
-        if (favBtn) {
-            const favKey = favBtn.dataset.key;
-            toggleFavorite(favKey);
-        }
+        const btn = e.target.closest('.fav-btn');
+        if (!btn) return;
+        const key = btn.dataset.key;
+        if (State.favorites.has(key)) State.favorites.delete(key); else State.favorites.add(key);
+        saveFavorites();
+        if (State.currentArtist === '收藏') { renderTable(); return; }
+        const on = State.favorites.has(key);
+        btn.classList.toggle('active', on);
+        btn.setAttribute('aria-pressed', on);
     });
 
-    function setGreeting() {
-        const hour = new Date().getHours();
-        const d = LANG_DICT[State.lang];
-        const greetingEl = document.getElementById('greeting');
-        greetingEl.innerText = (hour < 12) ? d.greetingMorning : (hour < 18) ? d.greetingAfternoon : d.greetingEvening;
-    }
-
-    function updatePersonalCount() {
-        let personalVisits = localStorage.getItem('myPlaylistVisits') || 0;
-        personalVisits = parseInt(personalVisits) + 1;
-        localStorage.setItem('myPlaylistVisits', personalVisits);
-        const span = document.getElementById('personalCount');
-        if(span) span.innerText = personalVisits;
-    }
-
-    function toggleFavorite(favKey) {
-        if (State.favorites.includes(favKey)) {
-            State.favorites = State.favorites.filter(fk => fk !== favKey);
-        } else {
-            State.favorites.push(favKey);
-        }
-        localStorage.setItem('musicFavsV2', JSON.stringify(State.favorites));
-        renderTable();
-    }
-
     function generateTabs() {
-        const d = LANG_DICT[State.lang];
+        const d = dict();
         const counts = {};
         rawMusicData.forEach(item => { counts[item.artist] = (counts[item.artist] || 0) + 1; });
-        const sortedArtists = Object.keys(counts).sort((a, b) => counts[b] - counts[a]);
-        const topArtists = sortedArtists.slice(0, 15);
-        
-        let tabsHTML = `<button class="tab ${State.currentArtist==='全部'?'active':''}" data-artist="全部">${d.allTab}</button>`;
-        tabsHTML += `<button class="tab ${State.currentArtist==='收藏'?'active':''}" data-artist="收藏">${d.favTab}</button>`;
-        tabsHTML += `<button class="tab ${State.currentArtist==='高音歌'?'active':''}" data-artist="高音歌">${d.highPitchTab}</button>`;
-        
-        topArtists.forEach(artist => {
-            if(artist !== "其他") {
-                tabsHTML += `<button class="tab ${State.currentArtist===artist?'active':''}" data-artist="${artist}">${convertText(artist)}</button>`;
-            }
-        });
-        categoryTabs.innerHTML = tabsHTML;
+        const topArtists = Object.keys(counts).sort((a, b) => counts[b] - counts[a]).slice(0, 15);
+        const tab = (key, label) => `<button class="tab ${State.currentArtist === key ? 'active' : ''}" data-artist="${escapeHTML(key)}">${escapeHTML(label)}</button>`;
+        categoryTabs.innerHTML = tab('全部', d.allTab) + tab('收藏', d.favTab) + tab('高音歌', d.highPitchTab)
+            + topArtists.map(a => tab(a, convertText(a))).join('');
     }
 
-    function escapeRegExp(string) {
-        return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); 
+    function getFiltered() {
+        const term = State.term;
+        const cat = State.currentArtist;
+        const list = rawMusicData.filter(item => {
+            if (term && !item.nArtist.includes(term) && !item.nSong.includes(term)) return false;
+            if (cat === '全部') return true;
+            if (cat === '收藏') return State.favorites.has(item.favKey);
+            if (cat === '高音歌') return HIGH_PITCH_SET.has(item.song);
+            return item.artist === cat;
+        });
+        const sort = sortSelect.value;
+        const locale = State.lang === 'zh-Hans' ? 'zh-Hans-CN' : 'zh-Hant-TW';
+        if (sort === 'song') list.sort((a, b) => a.song.localeCompare(b.song, locale));
+        else if (sort === 'artist') list.sort((a, b) => a.artist.localeCompare(b.artist, locale) || a.id - b.id);
+        return list;
+    }
+
+    function rowHTML(item) {
+        const on = State.favorites.has(item.favKey);
+        const key = escapeHTML(item.favKey);
+        return `<td class="col-fav"><button class="fav-btn ${on ? 'active' : ''}" data-key="${key}" aria-pressed="${on}" aria-label="❤ ${key}">❤</button></td>
+            <td class="col-artist">${highlight(convertText(item.artist), item.nArtist, State.term)}</td>
+            <td class="col-song"><a href="${YT(item.artist, item.song)}" target="_blank" rel="noopener" class="song-link">🎵 ${highlight(convertText(item.song), item.nSong, State.term)}</a></td>`;
+    }
+
+    // 只追加下一批，不會整張表重畫（舊列不會重播進場動畫）
+    function appendRows() {
+        const next = State.filtered.slice(State.rendered, State.rendered + PAGE_SIZE);
+        if (!next.length) return;
+        const fragment = document.createDocumentFragment();
+        next.forEach((item, i) => {
+            const tr = document.createElement('tr');
+            tr.className = 'music-row';
+            tr.style.animationDelay = `${i * 0.015}s`;
+            tr.innerHTML = rowHTML(item);
+            fragment.appendChild(tr);
+        });
+        musicBody.appendChild(fragment);
+        State.rendered += next.length;
+        // 螢幕很高時哨兵仍在畫面內，繼續補
+        requestAnimationFrame(() => {
+            if (State.rendered < State.filtered.length && sentinel.getBoundingClientRect().top < window.innerHeight + 300) appendRows();
+        });
     }
 
     function renderTable() {
-        const d = LANG_DICT[State.lang];
-        const term = searchInput.value.toLowerCase();
-        const sort = sortSelect.value;
-        clearSearchBtn.style.display = term ? 'block' : 'none';
-
-        let searchRegex = null;
-        if (term) {
-            searchRegex = new RegExp(`(${escapeRegExp(term)})`, 'gi');
-        }
-
-        let filtered = rawMusicData.filter(item => {
-            const matchesSearch = item.artist.toLowerCase().includes(term) || item.song.toLowerCase().includes(term);
-            let matchesArtist = (State.currentArtist === "全部") ? true : 
-                               (State.currentArtist === "收藏") ? State.favorites.includes(item.favKey) : 
-                               (State.currentArtist === "高音歌") ? HIGH_PITCH_SONGS.includes(item.song) : 
-                               item.artist === State.currentArtist;
-            return matchesSearch && matchesArtist;
-        });
-
-        if (sort === 'song') filtered.sort((a, b) => a.song.localeCompare(b.song, State.lang));
-        else if (sort === 'artist') filtered.sort((a, b) => a.artist.localeCompare(b.artist, State.lang));
-
-        totalCountSpan.innerText = filtered.length;
-
-        const slice = filtered.slice(0, State.displayLimit);
-        const fragment = document.createDocumentFragment();
-
-        if (slice.length === 0) {
-            const tr = document.createElement('tr');
-            tr.innerHTML = `<td colspan="3" style="padding: 40px; color: #999;">${d.emptySearch}</td>`;
-            fragment.appendChild(tr);
-        } else {
-            slice.forEach((item, index) => {
-                const isFav = State.favorites.includes(item.favKey);
-                const searchUrl = `https://www.youtube.com/results?search_query=${encodeURIComponent(item.artist + ' ' + item.song)}`;
-                const tr = document.createElement('tr');
-                tr.className = 'music-row';
-                tr.style.animationDelay = `${index * 0.01}s`;
-                
-                const convArtist = convertText(item.artist);
-                const convSong = convertText(item.song);
-
-                const hlArtist = searchRegex ? convArtist.replace(searchRegex, `<mark>$1</mark>`) : convArtist;
-                const hlSong = searchRegex ? convSong.replace(searchRegex, `<mark>$1</mark>`) : convSong;
-
-                tr.innerHTML = `
-                    <td class="col-fav"><button class="fav-btn ${isFav?'active':''}" data-key="${item.favKey}">❤</button></td>
-                    <td class="col-artist">${hlArtist}</td>
-                    <td class="col-song"><a href="${searchUrl}" target="_blank" class="song-link">🎵 ${hlSong}</a></td>
-                `;
-                fragment.appendChild(tr);
-            });
-        }
+        const d = dict();
+        clearSearchBtn.style.display = searchInput.value ? 'block' : 'none';
+        State.filtered = getFiltered();
+        State.rendered = 0;
+        totalCountSpan.innerText = State.filtered.length;
         musicBody.innerHTML = '';
-        musicBody.appendChild(fragment);
+        if (!State.filtered.length) {
+            const msg = (State.currentArtist === '收藏' && !State.term) ? d.emptyFav : d.emptySearch;
+            musicBody.innerHTML = `<tr class="empty-row"><td colspan="3">${msg}</td></tr>`;
+            return;
+        }
+        appendRows();
     }
 
-    let cursorX = -1000;
-    let cursorY = -1000;
-    let isCursorMoving = false;
+    new IntersectionObserver((entries) => {
+        if (entries[0].isIntersecting) appendRows();
+    }, { rootMargin: '300px 0px' }).observe(sentinel);
 
-    window.addEventListener('mousemove', (e) => {
-        cursorX = e.clientX;
-        cursorY = e.clientY;
-        if (!isCursorMoving) {
-            isCursorMoving = true;
+    // ===== 視覺效果 =====
+    if (!reduceMotion && window.matchMedia('(pointer: fine)').matches) {
+        let cx = -1000, cy = -1000, ticking = false;
+        window.addEventListener('mousemove', (e) => {
+            cx = e.clientX; cy = e.clientY;
+            if (ticking) return;
+            ticking = true;
             requestAnimationFrame(() => {
-                cursorGlow.style.transform = `translate3d(${cursorX - 150}px, ${cursorY - 150}px, 0)`;
-                isCursorMoving = false;
+                cursorGlow.style.transform = `translate3d(${cx - 150}px, ${cy - 150}px, 0)`;
+                ticking = false;
             });
-        }
-    }, { passive: true });
+        }, { passive: true });
+    }
 
     function initVisuals() {
+        if (reduceMotion) return;
         const interval = window.innerWidth < 600 ? 1200 : 600;
+        const symbols = ['🎵', '🎶', '🎤', '🍔', '✨', '💿', '🎸'];
         setInterval(() => {
-            if (document.hidden) return; 
-            const symbols = ['🎵', '🎶', '🎤', '🍔', '✨', '💿', '🎸'];
+            if (document.hidden) return;
             const p = document.createElement('div');
             p.className = 'particle';
             p.innerText = symbols[Math.floor(Math.random() * symbols.length)];
             p.style.left = Math.random() * 100 + 'vw';
             p.style.fontSize = (15 + Math.random() * 20) + 'px';
             p.style.animationDuration = (5 + Math.random() * 8) + 's';
+            p.addEventListener('animationend', () => p.remove());
             document.body.appendChild(p);
-            setTimeout(() => p.remove(), 13000);
         }, interval);
     }
 
     function fireConfetti() {
+        if (reduceMotion) return;
         const colors = ['#ff7675', '#fab1a0', '#ffeaa7', '#55efc4', '#81ecec', '#a29bfe'];
         for (let i = 0; i < 40; i++) {
             const c = document.createElement('div');
             c.className = 'confetti';
             c.style.left = Math.random() * 100 + 'vw';
-            c.style.top = '-10px';
             c.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
             c.style.width = c.style.height = (Math.random() * 8 + 5) + 'px';
             c.style.animationDuration = (Math.random() * 2 + 2) + 's';
+            c.style.animationDelay = (Math.random() * 0.3) + 's';
+            c.addEventListener('animationend', () => c.remove());
             document.body.appendChild(c);
-            setTimeout(() => c.remove(), 3000);
         }
     }
 
     function formatDateTime(date) {
-        const y = date.getFullYear();
-        const m = String(date.getMonth() + 1).padStart(2, '0');
-        const d = String(date.getDate()).padStart(2, '0');
-        const h = String(date.getHours()).padStart(2, '0');
-        const min = String(date.getMinutes()).padStart(2, '0');
-        const s = String(date.getSeconds()).padStart(2, '0');
-        return `${y}/${m}/${d} ${h}:${min}:${s}`;
+        const p = n => String(n).padStart(2, '0');
+        return `${date.getFullYear()}/${p(date.getMonth() + 1)}/${p(date.getDate())} ${p(date.getHours())}:${p(date.getMinutes())}:${p(date.getSeconds())}`;
     }
 
+    // ===== 抽歌 =====
     function renderHistoryList() {
-        const historyList = document.getElementById('historyList');
-        const d = LANG_DICT[State.lang];
-        if (State.drawHistory.length === 0) {
-            historyList.innerHTML = `<div style="text-align:center; padding: 25px 10px; opacity:0.5; font-size: 14px;">${d.historyEmpty}</div>`;
-        } else {
-            historyList.innerHTML = State.drawHistory.map(item => {
-                const searchUrl = `https://www.youtube.com/results?search_query=${encodeURIComponent(item.artist + ' ' + item.song)}`;
-                return `
-                <div class="history-item">
-                    <div class="history-time">${d.drawSeqPrefix}#${item.seq} &nbsp;|&nbsp; ${item.time}</div>
-                    <a href="${searchUrl}" target="_blank" style="text-decoration:none;">
-                        <div class="history-song">🎵 ${convertText(item.song)}</div>
-                        <div class="history-artist">🎤 ${convertText(item.artist)}</div>
-                    </a>
-                </div>
-            `}).join('');
+        const d = dict();
+        const list = $('historyList');
+        if (!State.drawHistory.length) {
+            list.innerHTML = `<div class="history-empty">${d.historyEmpty}</div>`;
+            return;
         }
+        list.innerHTML = State.drawHistory.map(item => `
+            <a class="history-item" href="${YT(item.artist, item.song)}" target="_blank" rel="noopener">
+                <div class="history-time">#${item.seq} &nbsp;|&nbsp; ${escapeHTML(item.time)}</div>
+                <div class="history-song">🎵 ${escapeHTML(convertText(item.song))}</div>
+                <div class="history-artist">🎤 ${escapeHTML(convertText(item.artist))}</div>
+            </a>`).join('');
     }
 
     let drawInterval = null;
     let isDrawing = false;
+    let currentPick = null;
+    let lastFocus = null;
 
-    function startRandomDraw(doAnimate = true) {
-        const d = LANG_DICT[State.lang];
-        const resSong = document.getElementById('resSong');
-        const resArtist = document.getElementById('resArtist');
-        const modalTitle = document.getElementById('modalTitle');
-        const modalBadge = document.getElementById('modalBadge');
-        const modalMetaBox = document.getElementById('modalMetaBox');
-        const stopBtn = document.getElementById('stopBtn');
-        const resultActions = document.getElementById('resultActions');
+    const els = {
+        song: $('resSong'), artist: $('resArtist'), title: $('modalTitle'), badge: $('modalBadge'),
+        meta: $('modalMetaBox'), stop: $('stopBtn'), actions: $('resultActions'), scope: $('drawScope'), retry: $('retryBtn')
+    };
 
-        modalOverlay.style.display = 'flex';
-        renderHistoryList(); 
-
-        if (!doAnimate) {
-            if (State.drawHistory.length > 0) {
-                const latest = State.drawHistory[0];
-                modalTitle.innerText = "🕒 " + d.historyBtn;
-                resSong.innerText = "✨ " + convertText(latest.song) + " ✨";
-                resArtist.innerText = "🎤 " + convertText(latest.artist);
-                modalBadge.innerText = `${d.songSeqPrefix}${latest.id}`;
-                modalBadge.style.display = 'inline-block';
-                document.getElementById('resDrawSeq').innerHTML = `${d.drawSeqPrefix}<strong>#${latest.seq}</strong>${d.drawSeqSuffix}`;
-                document.getElementById('resDrawTime').innerHTML = `${d.drawTimePrefix}<strong>${latest.time}</strong>`;
-                modalMetaBox.style.display = 'flex';
-                stopBtn.style.display = 'none';
-                resultActions.style.display = 'flex';
-            } else {
-                modalTitle.innerText = "🕒 " + d.historyBtn;
-                resSong.innerText = "...";
-                resArtist.innerText = "...";
-                modalBadge.style.display = 'none';
-                modalMetaBox.style.display = 'none';
-                stopBtn.style.display = 'none';
-                resultActions.style.display = 'flex';
-            }
-            return;
-        }
-
-        isDrawing = true;
-        modalTitle.innerText = d.modalDrawing;
-        modalBadge.style.display = 'none';
-        modalMetaBox.style.display = 'none';
-        
-        stopBtn.style.display = 'block';
-        resultActions.style.display = 'none';
-        
-        if (drawInterval) clearInterval(drawInterval);
-        
-        drawInterval = setInterval(() => {
-            const tempSong = rawMusicData[Math.floor(Math.random() * rawMusicData.length)];
-            resSong.innerText = tempSong.song;
-            resArtist.innerText = tempSong.artist;
-        }, 60); 
+    function openModal() {
+        if (!modalOverlay.classList.contains('open')) lastFocus = document.activeElement;
+        modalOverlay.classList.add('open');
+        document.body.classList.add('modal-open');
+        renderHistoryList();
     }
 
-    document.getElementById('stopBtn').addEventListener('click', () => {
+    function closeModal() {
+        if (isDrawing) { clearInterval(drawInterval); isDrawing = false; }
+        modalOverlay.classList.remove('open');
+        document.body.classList.remove('modal-open');
+        if (lastFocus) lastFocus.focus();
+    }
+
+    function setResultMode(drawing) {
+        els.stop.style.display = drawing ? 'block' : 'none';
+        els.actions.style.display = drawing ? 'none' : 'flex';
+        (drawing ? els.stop : els.retry).focus();
+    }
+
+    function showResult(entry) {
+        const d = dict();
+        els.song.innerText = "✨ " + convertText(entry.song) + " ✨";
+        els.artist.innerText = "🎤 " + convertText(entry.artist);
+        els.badge.innerText = `${d.songSeqPrefix}${entry.id}`;
+        els.badge.style.display = 'inline-block';
+        $('resDrawSeq').innerHTML = `${d.drawSeqPrefix}<strong>#${entry.seq}</strong>${d.drawSeqSuffix}`;
+        $('resDrawTime').innerHTML = `${d.drawTimePrefix}<strong>${escapeHTML(entry.time)}</strong>`;
+        els.meta.style.display = 'flex';
+    }
+
+    function showLatestResult() {
+        const d = dict();
+        els.title.innerText = "🕒 " + d.historyBtn;
+        els.scope.style.display = 'none';
+        if (State.drawHistory.length) {
+            showResult(State.drawHistory[0]);
+        } else {
+            els.song.innerText = "...";
+            els.artist.innerText = "...";
+            els.badge.style.display = 'none';
+            els.meta.style.display = 'none';
+        }
+    }
+
+    // 抽選範圍＝目前畫面上的清單（分頁＋搜尋）；清單是空的就從全部抽
+    function getDrawPool() {
+        const d = dict();
+        const pool = State.filtered.length ? State.filtered : rawMusicData;
+        let label;
+        if (!State.filtered.length || (State.currentArtist === '全部' && !State.term)) label = d.allTab;
+        else {
+            const cat = { '全部': d.allTab, '收藏': d.favTab, '高音歌': d.highPitchTab }[State.currentArtist] || convertText(State.currentArtist);
+            label = State.term ? `${cat} + 「${searchInput.value.trim()}」` : cat;
+        }
+        return { pool, label };
+    }
+
+    function startRandomDraw() {
+        const d = dict();
+        const { pool, label } = getDrawPool();
+        openModal();
+        isDrawing = true;
+        els.title.innerText = d.modalDrawing;
+        els.badge.style.display = 'none';
+        els.meta.style.display = 'none';
+        els.scope.innerText = `${d.drawScope}${label}（${pool.length} ${d.statUnit}）`;
+        els.scope.style.display = 'block';
+        setResultMode(true);
+
+        clearInterval(drawInterval);
+        const tick = () => {
+            currentPick = pool[Math.floor(Math.random() * pool.length)];
+            els.song.innerText = convertText(currentPick.song);
+            els.artist.innerText = convertText(currentPick.artist);
+        };
+        tick();
+        drawInterval = setInterval(tick, 60);
+    }
+
+    function stopDraw() {
         if (!isDrawing) return;
         isDrawing = false;
         clearInterval(drawInterval);
+        const finalSong = currentPick; // 停在畫面上看到的那首
 
-        const d = LANG_DICT[State.lang];
-        const finalSong = rawMusicData[Math.floor(Math.random() * rawMusicData.length)];
-        
         State.drawCount += 1;
-        localStorage.setItem('drawCount', State.drawCount);
-        const nowStr = formatDateTime(new Date());
+        Store.set('drawCount', State.drawCount);
+        const entry = { seq: State.drawCount, time: formatDateTime(new Date()), song: finalSong.song, artist: finalSong.artist, id: finalSong.id };
+        State.drawHistory.unshift(entry);
+        if (State.drawHistory.length > 50) State.drawHistory.length = 50;
+        Store.set('drawHistory', JSON.stringify(State.drawHistory));
 
-        State.drawHistory.unshift({
-            seq: State.drawCount,
-            time: nowStr,
-            song: finalSong.song,
-            artist: finalSong.artist,
-            id: finalSong.id
-        });
-        if(State.drawHistory.length > 50) State.drawHistory.pop(); 
-        localStorage.setItem('drawHistory', JSON.stringify(State.drawHistory));
-        
-        document.getElementById('resSong').innerText = "✨ " + convertText(finalSong.song) + " ✨";
-        document.getElementById('resArtist').innerText = "🎤 " + convertText(finalSong.artist);
-        
-        const modalBadge = document.getElementById('modalBadge');
-        modalBadge.innerText = `${d.songSeqPrefix}${finalSong.id}`;
-        modalBadge.style.display = 'inline-block';
-
-        document.getElementById('resDrawSeq').innerHTML = `${d.drawSeqPrefix}<strong>#${State.drawCount}</strong>${d.drawSeqSuffix}`;
-        document.getElementById('resDrawTime').innerHTML = `${d.drawTimePrefix}<strong>${nowStr}</strong>`;
-        document.getElementById('modalMetaBox').style.display = 'flex';
-
-        document.getElementById('modalTitle').innerText = d.modalWon;
-        
-        document.getElementById('stopBtn').style.display = 'none';
-        document.getElementById('resultActions').style.display = 'flex';
-        
-        renderHistoryList(); 
+        els.title.innerText = dict().modalWon;
+        showResult(entry);
+        setResultMode(false);
+        renderHistoryList();
         fireConfetti();
-    });
-
-    document.getElementById('randomBtn').addEventListener('click', () => startRandomDraw(true));
-    document.getElementById('retryBtn').addEventListener('click', () => startRandomDraw(true));
-    document.getElementById('historyBtn').addEventListener('click', () => startRandomDraw(false));
-    document.getElementById('closeModal').addEventListener('click', () => {
-        if (isDrawing) {
-            clearInterval(drawInterval);
-            isDrawing = false;
-        }
-        modalOverlay.style.display = 'none';
-    });
-    
-    document.getElementById('clearHistoryBtn').addEventListener('click', () => {
-        const d = LANG_DICT[State.lang];
-        if (confirm(d.confirmClear)) {
-            State.drawHistory = [];
-            localStorage.removeItem('drawHistory');
-            renderHistoryList();
-            
-            if (!isDrawing) {
-                document.getElementById('modalTitle').innerText = "🕒 " + d.historyBtn;
-                document.getElementById('resSong').innerText = "...";
-                document.getElementById('resArtist').innerText = "...";
-                document.getElementById('modalBadge').style.display = 'none';
-                document.getElementById('modalMetaBox').style.display = 'none';
-            }
-        }
-    });
-
-    const observer = new IntersectionObserver((entries) => {
-        if (entries[0].isIntersecting) {
-            State.displayLimit += 30; 
-            renderTable();
-        }
-    }, { threshold: 1.0 });
-
-    observer.observe(document.getElementById('loadMoreSentinel'));
-
-    clearSearchBtn.addEventListener('click', () => { searchInput.value = ''; renderTable(); });
-    document.getElementById('langToggle').addEventListener('click', switchLanguage);
-
-    function debounce(func, timeout = 300) {
-        let timer;
-        return (...args) => {
-            clearTimeout(timer);
-            timer = setTimeout(() => { func.apply(this, args); }, timeout);
-        };
     }
-    searchInput.addEventListener('input', debounce(() => {
-        State.displayLimit = 30; 
-        renderTable();
-    }));
-    sortSelect.addEventListener('change', renderTable);
-    
-    categoryTabs.addEventListener('click', (e) => {
-        if (e.target.classList.contains('tab')) {
-            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-            e.target.classList.add('active');
-            State.currentArtist = e.target.getAttribute('data-artist');
-            State.displayLimit = 30; 
-            renderTable();
-        }
+
+    $('randomBtn').addEventListener('click', startRandomDraw);
+    $('retryBtn').addEventListener('click', startRandomDraw);
+    $('stopBtn').addEventListener('click', stopDraw);
+    $('historyBtn').addEventListener('click', () => {
+        openModal();
+        showLatestResult();
+        setResultMode(false);
+    });
+    $('closeModal').addEventListener('click', closeModal);
+    modalOverlay.addEventListener('click', (e) => { if (e.target === modalOverlay && !isDrawing) closeModal(); });
+    document.addEventListener('keydown', (e) => {
+        if (!modalOverlay.classList.contains('open')) return;
+        if (e.key === 'Escape') closeModal();
+        else if (isDrawing && (e.key === ' ' || e.key === 'Enter')) { e.preventDefault(); stopDraw(); }
     });
 
-    const themeToggle = document.getElementById('themeToggle');
+    $('clearHistoryBtn').addEventListener('click', () => {
+        if (!confirm(dict().confirmClear)) return;
+        State.drawHistory = [];
+        Store.remove('drawHistory');
+        renderHistoryList();
+        if (!isDrawing) showLatestResult();
+    });
+
+    // ===== 搜尋／排序／分頁 =====
+    function debounce(fn, ms = 250) {
+        let t;
+        return (...args) => { clearTimeout(t); t = setTimeout(() => fn(...args), ms); };
+    }
+    const onSearch = () => { State.term = normalize(searchInput.value.trim()); renderTable(); };
+    searchInput.addEventListener('input', () => { clearSearchBtn.style.display = searchInput.value ? 'block' : 'none'; });
+    searchInput.addEventListener('input', debounce(onSearch));
+    searchInput.addEventListener('keydown', (e) => { if (e.key === 'Escape') { searchInput.value = ''; onSearch(); } });
+    clearSearchBtn.addEventListener('click', () => { searchInput.value = ''; onSearch(); searchInput.focus(); });
+    sortSelect.addEventListener('change', renderTable);
+    $('langToggle').addEventListener('click', switchLanguage);
+
+    categoryTabs.addEventListener('click', (e) => {
+        const tab = e.target.closest('.tab');
+        if (!tab) return;
+        categoryTabs.querySelectorAll('.tab').forEach(t => t.classList.toggle('active', t === tab));
+        State.currentArtist = tab.dataset.artist;
+        renderTable();
+    });
+
+    // ===== 主題 =====
+    const themeToggle = $('themeToggle');
     function applyTheme(theme) {
         document.body.setAttribute('data-theme', theme);
         themeToggle.innerText = theme === 'dark' ? '☀️' : '🌙';
-        localStorage.setItem('theme', theme);
+        Store.set('theme', theme);
     }
-    applyTheme(State.theme);
     themeToggle.addEventListener('click', () => {
         State.theme = State.theme === 'light' ? 'dark' : 'light';
         applyTheme(State.theme);
     });
 
-    window.onscroll = () => {
-        backToTopBtn.style.display = (document.documentElement.scrollTop > 300) ? "flex" : "none";
-    };
-    backToTopBtn.addEventListener('click', () => window.scrollTo({ top: 0, behavior: 'smooth' }));
+    // ===== 回到頂部 =====
+    let scrollTicking = false;
+    window.addEventListener('scroll', () => {
+        if (scrollTicking) return;
+        scrollTicking = true;
+        requestAnimationFrame(() => {
+            backToTopBtn.style.display = window.scrollY > 300 ? 'flex' : 'none';
+            scrollTicking = false;
+        });
+    }, { passive: true });
+    backToTopBtn.addEventListener('click', () => window.scrollTo({ top: 0, behavior: reduceMotion ? 'auto' : 'smooth' }));
 
-    window.onload = () => {
-        updatePersonalCount();
-        applyLanguage();
-        setGreeting();
-        initVisuals();
-        renderTable();
-    };
+    // ===== 啟動（不必等外部計數器圖片載完） =====
+    applyTheme(State.theme);
+    updatePersonalCount();
+    applyLanguage();
+    initVisuals();
 </script>
 </body>
 </html>
