@@ -5,9 +5,13 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>智能連結 Smart Link Manager</title>
     <script>try{var __t=localStorage.getItem('theme');var __l=__t?__t==='light':(window.matchMedia&&matchMedia('(prefers-color-scheme: light)').matches);if(__l)document.documentElement.classList.add('light-mode');}catch(e){}</script>
+    <link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="preconnect" href="https://www.gstatic.com" crossorigin>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.7/Sortable.min.js"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.7/Sortable.min.js"></script>
     <link rel="manifest" id="pwa-manifest">
     <meta name="theme-color" content="#0f172a">
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🔗</text></svg>">
@@ -104,7 +108,7 @@
         .list-view { display: flex; flex-direction: column; gap: 0.6rem; } 
         .list-view .link-card { width: 100%; max-width: 100%; }
 
-        .link-card { background-color: var(--card-dark); border-radius: 8px; padding: 0.6rem; border: 1px solid var(--border-color); transition: all 0.25s; display: flex; flex-direction: column; position: relative; overflow: hidden; }
+        .link-card { background-color: var(--card-dark); border-radius: 8px; padding: 0.6rem; border: 1px solid var(--border-color); transition: border-color 0.25s, box-shadow 0.25s, transform 0.25s, opacity 0.25s; display: flex; flex-direction: column; position: relative; overflow: hidden; }
         .link-card:hover { border-color: var(--primary); box-shadow: 0 4px 12px rgba(0,0,0,0.2); transform: translateY(-2px); }
         .link-card.is-pinned { border-left: 3px solid var(--warning); } 
         .link-card.is-read { opacity: 0.55; }
@@ -144,7 +148,7 @@
         .tag-badge { padding: 0.12rem 0.4rem; border-radius: 3px; font-size: calc(0.68rem * var(--font-scale)); font-weight: 600; cursor: pointer; transition: transform 0.15s, opacity 0.15s; user-select: none; }
         .tag-badge:hover { transform: scale(1.06); opacity: 0.9; }
 
-        .folder-badge { position: absolute; top: 0.45rem; left: 0.5rem; z-index: 5; background: rgba(15, 23, 42, 0.85); backdrop-filter: blur(4px); color: #fff; padding: 0.12rem 0.4rem; border-radius: 4px; font-size: calc(0.68rem * var(--font-scale)); display: flex; align-items: center; gap: 0.2rem; cursor: pointer; }
+        .folder-badge { position: absolute; top: 0.45rem; left: 0.5rem; z-index: 5; background: rgba(15, 23, 42, 0.85); color: #fff; padding: 0.12rem 0.4rem; border-radius: 4px; font-size: calc(0.68rem * var(--font-scale)); display: flex; align-items: center; gap: 0.2rem; cursor: pointer; }
         
         .card-actions { position: absolute; top: 0.45rem; right: 0.5rem; z-index: 10; display: flex; gap: 0.2rem; opacity: 0; transition: opacity 0.2s; }
         .link-card:hover .card-actions { opacity: 1; }
@@ -357,6 +361,13 @@
         .favicon-letter { display: inline-flex; align-items: center; justify-content: center; font-size: 0.6rem; font-weight: 700; color: #fff; width: 14px; height: 14px; border-radius: 3px; }
         .setting-row { display: flex; align-items: center; justify-content: space-between; gap: 0.6rem; cursor: pointer; padding: 0.5rem; border-radius: 0.25rem; background: var(--bg-dark); border: 1px solid var(--border-color); color: var(--text-main); }
         .setting-row small { display: block; color: var(--text-muted); font-size: 0.68rem; margin-top: 2px; }
+
+        /* ---- v4: 鍵盤操作與減少動態效果 ---- */
+        .chip:focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; }
+        @media (prefers-reduced-motion: reduce) {
+            .card-enter, .modal, .toast { animation-duration: 0.01ms !important; animation-delay: 0s !important; }
+            .link-card, .link-image-preview img, .kanban-card, .batch-toolbar, #back-to-top, button, a.btn-style { transition: none !important; }
+        }
     </style>
 </head>
 <body class="flex flex-col min-h-screen">
@@ -576,7 +587,7 @@
             </div>
 
             <!-- 7. 雲端／本機自動合併與跨瀏覽器書籤互通 -->
-            <div class="help-section" style="margin-bottom:0;">
+            <div class="help-section">
                 <div class="help-section-title"><i class="fas fa-cloud-download-alt"></i> 7. 原生 PWA 安裝、本機合併與跨瀏覽器書籤互通</div>
                 <ul class="help-list">
                     <li><span><strong>PWA 原生安裝：</strong>若瀏覽器支援，頂部工具列將自動浮現「📥 安裝 App」按鈕，可將本工具安裝至桌面或手機主畫面，享有原生 App 體驗。</span></li>
@@ -586,7 +597,7 @@
             </div>
 
             <div class="help-section">
-                <div class="help-section-title"><i class="fas fa-folder-tree"></i> 7. 巢狀資料夾、稍後閱讀提醒、隱私模式與標籤建議</div>
+                <div class="help-section-title"><i class="fas fa-folder-tree"></i> 8. 巢狀資料夾、稍後閱讀提醒、隱私模式與標籤建議</div>
                 <ul class="help-list">
                     <li><span><strong>巢狀資料夾（最多 4 層）：</strong>在「管理資料夾與標籤」按 <i class="fas fa-folder-plus"></i> 新增子資料夾、<i class="fas fa-right-left"></i> 移動到其他資料夾；同層內可拖曳排序。點選上層資料夾會一併顯示所有子資料夾內的連結。刪除資料夾時，連結與子資料夾會移到上一層。</span></li>
                     <li><span><strong>稍後閱讀提醒：</strong>卡片上的 <i class="fas fa-bell"></i> 或編輯視窗可設定提醒時間；到期後頂部鈴鐺會顯示筆數並出現橫幅。標為已讀後即視為完成。</span></li>
@@ -1060,6 +1071,23 @@
             return /^fa-[a-z0-9-]+$/i.test(s) ? s : 'fa-folder';
         }
 
+        // 統一把 categories 轉成陣列（舊資料可能是單一字串）
+        function catsOf(l) {
+            const c = l && l.categories;
+            return Array.isArray(c) ? c : (c ? [c] : []);
+        }
+
+        // 搜尋用的小寫索引字串；以連結物件為鍵快取，物件被新資料取代時自動失效。
+        const searchHayCache = new WeakMap();
+        function searchHaystack(l) {
+            let h = searchHayCache.get(l);
+            if (h === undefined) {
+                h = [l.title, l.url, l.description, ...catsOf(l)].map(v => String(v || '').toLowerCase()).join('\n');
+                searchHayCache.set(l, h);
+            }
+            return h;
+        }
+
         // 擴充網址追蹤參數淨化名單
         function cleanUrl(rawUrl) {
             let u = String(rawUrl || '').trim();
@@ -1161,15 +1189,23 @@
             return String(str).replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]));
         }
 
+        // 同一個搜尋字串只編譯一次正則（每張卡片會呼叫 2~3 次）
+        let _hlQuery = null, _hlRegex = null;
+        function getHighlightRegex(rawQuery) {
+            const q = String(rawQuery || '').trim();
+            if (q === _hlQuery) return _hlRegex;
+            const tokens = q.split(/\s+/).filter(Boolean).map(t => t.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'));
+            _hlQuery = q;
+            _hlRegex = tokens.length ? new RegExp(`(${tokens.join('|')})`, 'gi') : null;
+            return _hlRegex;
+        }
+
         // 先對「原始字串」進行正則切分，再逐段執行 escapeHtml，徹底杜絕 &amp; / &quot; 等實體被切碎
         function safeHighlightText(rawStr, rawQuery) {
             const str = String(rawStr || '');
             if (!rawQuery) return escapeHtml(str);
-            const tokens = String(rawQuery).trim().split(/\s+/).filter(Boolean)
-                .map(t => t.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).filter(Boolean);
-            if (!tokens.length) return escapeHtml(str);
-
-            const regex = new RegExp(`(${tokens.join('|')})`, 'gi');
+            const regex = getHighlightRegex(rawQuery);
+            if (!regex) return escapeHtml(str);
             return str.split(regex).map((part, idx) =>
                 idx % 2 === 1 ? `<mark class="search-hl">${escapeHtml(part)}</mark>` : escapeHtml(part)
             ).join('');
@@ -1423,7 +1459,7 @@
                 } else {
                     const primary = urlMap.get(dk);
                     const c1 = Array.isArray(primary.categories) ? primary.categories : (primary.categories ? [primary.categories] : []);
-                    const c2 = Array.isArray(l.categories) ? l.categories : (l.categories ? [l.categories] : []);
+                    const c2 = catsOf(l);
                     primary.categories = [...new Set([...c1, ...c2])];
                     primary.clicks = (primary.clicks || 0) + (l.clicks || 0);
                     primary.pinned = !!(primary.pinned || l.pinned);
@@ -1437,7 +1473,7 @@
                         ...(Array.isArray(l.imageCandidates) ? l.imageCandidates : []),
                         l.image, l.imageOriginal, l.imageBackup
                     ]).slice(0,12);
-                    toUpdate.push(primary);
+                    if (!toUpdate.includes(primary)) toUpdate.push(primary);
                     toDeleteIds.push(safeId(l.id));
                 }
             });
@@ -1450,7 +1486,12 @@
             if (!confirm(`🔍 掃描發現 ${toDeleteIds.length} 筆重複網址！\n是否自動下載安全備份，並合併它們的標籤與點擊數、清除多餘副本？`)) return;
 
             // 背景自動觸發一次備份
-            exportData(true);
+            try {
+                await exportData(true);
+            } catch (e) {
+                showToast("❌ 備份失敗，已取消清理：" + e.message, "error");
+                return;
+            }
             showToast("📦 已自動下載合併前的安全備份檔", "info");
 
             try {
@@ -1888,10 +1929,10 @@
             ['研究', /\b(arxiv|paper|research|journal)\b|論文|研究|期刊/i]
         ];
 
-        function getTagCounts() {
+        function getTagCounts(links = rawLinksCache) {
             const m = new Map();
-            rawLinksCache.forEach(l => {
-                const arr = Array.isArray(l.categories) ? l.categories : (l.categories ? [l.categories] : []);
+            links.forEach(l => {
+                const arr = catsOf(l);
                 arr.forEach(t => { if (t) m.set(t, (m.get(t) || 0) + 1); });
             });
             return m;
@@ -2289,12 +2330,12 @@
             const subtreeCount = id => { let n = 0; getFolderSubtreeIds(id, tree).forEach(x => { n += direct[x] || 0; }); return n; };
             const chip = (f, cls) => {
                 const fid = safeId(f.id);
-                return `<div class="chip ${cls}" onclick="setFolder('${fid}')"><i class="fas ${safeIcon(f.icon)}"></i> ${escapeHtml(f.name)} <span class="chip-count">${subtreeCount(fid)}</span></div>`;
+                return `<div role="button" tabindex="0" class="chip ${cls}" onclick="setFolder('${fid}')"><i class="fas ${safeIcon(f.icon)}"></i> ${escapeHtml(f.name)} <span class="chip-count">${subtreeCount(fid)}</span></div>`;
             };
 
             const activePath = activeFolder === 'all' ? [] : [...getFolderAncestors(activeFolder, tree), activeFolder];
             const c = document.getElementById('folder-chips');
-            let h = `<div class="chip ${activeFolder==='all'?'active':''}" onclick="setFolder('all')"><i class="fas fa-layer-group"></i> 全部 <span class="chip-count">${rawLinksCache.length}</span></div>`;
+            let h = `<div role="button" tabindex="0" class="chip ${activeFolder==='all'?'active':''}" onclick="setFolder('all')"><i class="fas fa-layer-group"></i> 全部 <span class="chip-count">${rawLinksCache.length}</span></div>`;
             (tree.childrenOf.get('') || []).forEach(f => {
                 const cls = activeFolder === f.id ? 'active' : (activePath.includes(f.id) ? 'ancestor' : '');
                 h += chip(f, cls);
@@ -2352,13 +2393,7 @@
         function renderGlobalTagList() {
             const container = document.getElementById('global-tag-list');
             if (!container) return;
-            const tagCounts = new Map();
-            rawLinksCache.forEach(l => {
-                if (l.categories) {
-                    const arr = Array.isArray(l.categories) ? l.categories : [l.categories];
-                    arr.forEach(t => { if (t) tagCounts.set(t, (tagCounts.get(t) || 0) + 1); });
-                }
-            });
+            const tagCounts = getTagCounts();
 
             if (tagCounts.size === 0) {
                 container.innerHTML = `<div class="text-center py-6 text-xs" style="color:var(--text-muted);">目前沒有任何標籤</div>`;
@@ -2387,7 +2422,7 @@
             const newTag = newTagInput.trim();
 
             const affected = rawLinksCache.filter(l => {
-                const arr = Array.isArray(l.categories) ? l.categories : (l.categories ? [l.categories] : []);
+                const arr = catsOf(l);
                 return arr.includes(oldTag);
             });
             if (!affected.length) return;
@@ -2396,7 +2431,7 @@
                 if (isLocalMode) {
                     const a = readLocalJson('my_links', []);
                     a.forEach(l => {
-                        const arr = Array.isArray(l.categories) ? l.categories : (l.categories ? [l.categories] : []);
+                        const arr = catsOf(l);
                         if (arr.includes(oldTag)) {
                             l.categories = [...new Set(arr.map(x => x === oldTag ? newTag : x))];
                         }
@@ -2404,7 +2439,7 @@
                     if(!writeLocalJson('my_links', a)) throw new Error('本機儲存失敗，標籤未完成改名');
                 } else {
                     await executeBatchInChunks(affected, (batch, l) => {
-                        const arr = Array.isArray(l.categories) ? l.categories : (l.categories ? [l.categories] : []);
+                        const arr = catsOf(l);
                         const updated = [...new Set(arr.map(x => x === oldTag ? newTag : x))];
                         batch.update(db.collection('users').doc(currentUser.uid).collection('links').doc(l.id), { categories: updated });
                     });
@@ -2423,7 +2458,7 @@
             if (!confirm(`確定要從所有連結中移除標籤「${targetTag}」嗎？（連結本身不會被刪除）`)) return;
 
             const affected = rawLinksCache.filter(l => {
-                const arr = Array.isArray(l.categories) ? l.categories : (l.categories ? [l.categories] : []);
+                const arr = catsOf(l);
                 return arr.includes(targetTag);
             });
             if (!affected.length) return;
@@ -2432,7 +2467,7 @@
                 if (isLocalMode) {
                     const a = readLocalJson('my_links', []);
                     a.forEach(l => {
-                        const arr = Array.isArray(l.categories) ? l.categories : (l.categories ? [l.categories] : []);
+                        const arr = catsOf(l);
                         if (arr.includes(targetTag)) {
                             l.categories = arr.filter(x => x !== targetTag);
                         }
@@ -2440,7 +2475,7 @@
                     if(!writeLocalJson('my_links', a)) throw new Error('本機儲存失敗，標籤未完成移除');
                 } else {
                     await executeBatchInChunks(affected, (batch, l) => {
-                        const arr = Array.isArray(l.categories) ? l.categories : (l.categories ? [l.categories] : []);
+                        const arr = catsOf(l);
                         const updated = arr.filter(x => x !== targetTag);
                         batch.update(db.collection('users').doc(currentUser.uid).collection('links').doc(l.id), { categories: updated });
                     });
@@ -2687,9 +2722,18 @@
             for(let i=0;i<str.length;i++) h = str.charCodeAt(i) + ((h << 5) - h);
             return `hsl(${Math.abs(h) % 360}, ${a * 100}%, ${l * 100}%)`;
         }
+        const tagStyleCache = new Map();
         function getTagStyles(t){
-            if (document.body.classList.contains('light-mode')) return`background:${stringToHslColor(t,0.4,0.85)};color:${stringToHslColor(t,0.7,0.3)};border:1px solid ${stringToHslColor(t,0.4,0.7)};`;
-            return`background:${stringToHslColor(t,0.35,0.22)};color:${stringToHslColor(t,0.75,0.8)};border:1px solid ${stringToHslColor(t,0.4,0.38)};`;
+            const light = document.body.classList.contains('light-mode');
+            const key = (light ? 'L' : 'D') + t;
+            let st = tagStyleCache.get(key);
+            if (st === undefined) {
+                st = light
+                    ? `background:${stringToHslColor(t,0.4,0.85)};color:${stringToHslColor(t,0.7,0.3)};border:1px solid ${stringToHslColor(t,0.4,0.7)};`
+                    : `background:${stringToHslColor(t,0.35,0.22)};color:${stringToHslColor(t,0.75,0.8)};border:1px solid ${stringToHslColor(t,0.4,0.38)};`;
+                tagStyleCache.set(key, st);
+            }
+            return st;
         }
 
         function getYouTubeVideoId(u){const r=/(?:youtu\.be\/|youtube\.com\/(?:watch\?v=|embed\/|v\/|shorts\/))([a-zA-Z0-9_-]{11})/;return u.match(r)?.[1]||null;}
@@ -2853,19 +2897,6 @@
                     };
                     if(promote) update.image=merged.image;
 
-                    // 完全相同的縮圖資料不再 update，避免 Firestore snapshot 造成卡片反覆重建。
-                    const currentState={
-                        image: normalizeThumbnailUrl(target.image),
-                        imageOriginal: normalizeThumbnailUrl(target.imageOriginal),
-                        imageBackup: normalizeThumbnailUrl(target.imageBackup),
-                        imageCandidates: Array.isArray(target.imageCandidates)?target.imageCandidates:[]
-                    };
-                    const nextState={
-                        image: normalizeThumbnailUrl(update.image ?? target.image),
-                        imageOriginal: normalizeThumbnailUrl(update.imageOriginal),
-                        imageBackup: normalizeThumbnailUrl(update.imageBackup),
-                        imageCandidates: Array.isArray(update.imageCandidates)?update.imageCandidates:[]
-                    };
                     // target 已經是 merged，這裡只用持久化狀態快取做去重；成功送出後標記。
                     if(thumbnailPersistState.get(safeId(id))!==persistKey){
                         await db.collection('users').doc(currentUser.uid).collection('links').doc(safeId(id)).update(update);
@@ -3188,13 +3219,8 @@
                 const mt = activeTag === 'all' || (Array.isArray(l.categories) ? l.categories.includes(activeTag) : l.categories === activeTag);
                 if (!mt) return false;
                 if (!searchTokens.length) return true;
-                const titleStr = (l.title || '').toLowerCase();
-                const urlStr = (l.url || '').toLowerCase();
-                const descStr = (l.description || '').toLowerCase();
-                const catArr = Array.isArray(l.categories) ? l.categories.map(c => String(c).toLowerCase()) : [];
-                return searchTokens.every(tok =>
-                    titleStr.includes(tok) || urlStr.includes(tok) || descStr.includes(tok) || catArr.some(c => c.includes(tok))
-                );
+                const hay = searchHaystack(l);
+                return searchTokens.every(tok => hay.includes(tok));
             });
 
             updateStatusSelectCounts(preStatusFiltered);
@@ -3261,6 +3287,14 @@
             target.clicks = (target.clicks || 0) + 1;
             const shouldMarkRead = autoMarkReadOnClick && !target.isRead;
             if (shouldMarkRead) target.isRead = true;
+            const refreshUI = () => {
+                if (currentSort === 'clicks' || shouldMarkRead) {
+                    renderCurrentView(rawLinksCache);
+                } else {
+                    const badgeHolder = document.getElementById('click-badge-' + id);
+                    if (badgeHolder) badgeHolder.innerHTML = `<span class="click-count-badge" title="造訪次數"><i class="fas fa-fire"></i>${target.clicks}</span>`;
+                }
+            };
 
             if (isLocalMode) {
                 if(!writeLocalJson('my_links', rawLinksCache)){
@@ -3269,13 +3303,10 @@
                     showToast('⚠️ 本機儲存失敗，點擊紀錄未保存', 'error');
                     return;
                 }
-                if (currentSort === 'clicks' || shouldMarkRead) {
-                    renderCurrentView(rawLinksCache);
-                } else {
-                    const badgeHolder = document.getElementById('click-badge-' + id);
-                    if (badgeHolder) badgeHolder.innerHTML = `<span class="click-count-badge" title="造訪次數"><i class="fas fa-fire"></i>${target.clicks}</span>`;
-                }
+                refreshUI();
             } else if (currentUser && db) {
+                // 快取已先樂觀更新，雲端快照回來時數值相同、不會觸發重繪，所以要在這裡先更新畫面。
+                refreshUI();
                 const upObj = { clicks: firebase.firestore.FieldValue.increment(1) };
                 if (shouldMarkRead) upObj.isRead = true;
                 db.collection('users').doc(currentUser.uid).collection('links').doc(id).update(upObj).catch(() => {});
@@ -3401,13 +3432,21 @@
             // 2. 建立（或重用）卡片節點
             const folderMap = new Map(allFoldersCache.map(f => [f.id, f]));
             const tree = getFolderTree();
+            const pathMemo = new Map();
             const ctx = {
                 rawQuery,
                 now: Date.now(),
                 light: document.body.classList.contains('light-mode'),
                 privacy: privacyNoPreview,
                 folderOf: l => folderMap.get(l.folderId) || folderMap.get('default'),
-                folderPath: id => [...getFolderAncestors(id, tree), id].map(x => (folderMap.get(x) || {}).name || '').filter(Boolean).join(' / ')
+                folderPath: id => {
+                    let p = pathMemo.get(id);
+                    if (p === undefined) {
+                        p = [...getFolderAncestors(id, tree), id].map(x => (folderMap.get(x) || {}).name || '').filter(Boolean).join(' / ');
+                        pathMemo.set(id, p);
+                    }
+                    return p;
+                }
             };
             const keep = new Set();
             const els = visibleSlice.map((l, i) => {
@@ -3455,12 +3494,12 @@
             const safeImg = ctx.privacy ? '' : safeHref(thumbCandidates[0] || l.image, true);
             const rawDomain = getDomain(l.url);
             const domainHost = encodeURIComponent(rawDomain);
-            const imgTag = `<img loading="lazy" data-thumb-index="0" src="${safeImg}" alt="">`;
+            const imgTag = `<img loading="lazy" decoding="async" data-thumb-index="0" src="${safeImg}" alt="">`;
             const ih = safeImg ? `<a href="${safeUrl}" target="_blank" rel="noopener noreferrer" class="link-image-preview" data-action="open" tabindex="-1" aria-hidden="true">${imgTag}</a>` : '';
             const sh = safeImg ? `<a href="${safeUrl}" target="_blank" rel="noopener noreferrer" class="link-thumb-small" data-action="open" tabindex="-1" aria-hidden="true">${imgTag}</a>` : '';
             const fo = ctx.folderOf(l);
             const fb = fo ? `<div class="folder-badge" data-action="folder" data-folder="${safeId(fo.id)}" title="篩選此資料夾：${escapeHtml(ctx.folderPath(fo.id))}"><i class="fas ${safeIcon(fo.icon)}"></i> ${escapeHtml(fo.name)}</div>` : '';
-            const tg = (Array.isArray(l.categories) ? l.categories : (l.categories ? [l.categories] : [])).map(t => `<span class="tag-badge" style="${getTagStyles(t)}" data-action="tag" data-tag="${escapeHtml(t)}" title="點擊篩選標籤">${escapeHtml(t)}</span>`).join('');
+            const tg = (catsOf(l)).map(t => `<span class="tag-badge" style="${getTagStyles(t)}" data-action="tag" data-tag="${escapeHtml(t)}" title="點擊篩選標籤">${escapeHtml(t)}</span>`).join('');
             const isSelected = selectedIds.has(lid);
             const cb = `<input type="checkbox" class="batch-checkbox" data-action="select" aria-label="選取此連結" ${isSelected ? 'checked' : ''}>`;
             const dbadge = l.isDead ? `<div class="dead-badge"><i class="fas fa-exclamation-triangle"></i> 失效</div>` : '';
@@ -3471,7 +3510,7 @@
                 ? `<span class="remind-badge ${due ? 'due' : ''}" data-action="remind" title="${due ? '提醒已到期，點擊重新設定' : '點擊修改提醒'}"><i class="fas fa-bell"></i> ${due ? '到期 ' : ''}${formatRemindTime(rt)}</span>` : '';
             const favicon = ctx.privacy
                 ? `<span class="favicon favicon-letter" style="background:${stringToHslColor(rawDomain, 0.5, 0.4)};" data-action="domain" data-domain="${escapeHtml(rawDomain)}" title="點擊篩選同網域 (${escapeHtml(rawDomain)})">${escapeHtml((rawDomain || '?').charAt(0).toUpperCase())}</span>`
-                : `<img loading="lazy" class="favicon" src="https://www.google.com/s2/favicons?domain=${domainHost}&sz=64" alt="" data-action="domain" data-domain="${escapeHtml(rawDomain)}" title="點擊篩選同網域 (${escapeHtml(rawDomain)})">`;
+                : `<img loading="lazy" decoding="async" class="favicon" src="https://www.google.com/s2/favicons?domain=${domainHost}&sz=64" alt="" data-action="domain" data-domain="${escapeHtml(rawDomain)}" title="點擊篩選同網域 (${escapeHtml(rawDomain)})">`;
             const extraClasses = `${isInitialRender ? 'card-enter' : ''} ${l.pinned ? 'is-pinned' : ''} ${l.isRead ? 'is-read' : ''} ${l.isDead ? 'is-dead' : ''} ${due ? 'is-due' : ''} ${fo ? 'has-folder' : ''} ${!safeImg ? 'no-image' : ''} ${isSelected ? 'batch-selected' : ''}`;
             const animStyle = isInitialRender ? `style="animation-delay:${Math.min(i * 0.015, 0.3)}s"` : '';
             const html = `<div class="link-card ${extraClasses}" data-id="${lid}" ${animStyle}>${cb}${fb}${ih}<div class="card-actions"><button type="button" class="btn-outline" data-action="copy" title="複製網址" aria-label="複製網址"><i class="fas fa-copy"></i></button><button type="button" class="btn-outline" data-action="pin" title="釘選置頂" aria-label="釘選置頂"><i class="fas fa-thumbtack" style="${l.pinned ? 'color:var(--warning);' : ''}"></i></button><button type="button" class="btn-outline" data-action="read" title="標記已讀" aria-label="標記已讀"><i class="fas ${l.isRead ? 'fa-check-circle' : 'fa-circle'}"></i></button><button type="button" class="btn-outline" data-action="remind" title="稍後閱讀提醒" aria-label="稍後閱讀提醒"><i class="fas fa-bell" style="${rt && !l.isRead ? 'color:var(--warning);' : ''}"></i></button><button type="button" class="btn-outline" data-action="edit" title="編輯" aria-label="編輯"><i class="fas fa-edit"></i></button><button type="button" class="btn-outline btn-delete" data-action="delete" title="刪除" aria-label="刪除"><i class="fas fa-trash"></i></button></div><div class="card-body-row"><div class="card-text-col"><p class="link-desc">${descHtml}</p><h3 class="link-title"><a href="${safeUrl}" target="_blank" rel="noopener noreferrer" data-action="open">${th}</a></h3><a href="${safeUrl}" target="_blank" rel="noopener noreferrer" class="link-url-display" data-action="open">${safeUrl}</a></div>${sh}</div><div class="card-footer"><div class="source-info">${favicon}<span class="source-text">${timeText}</span><span id="click-badge-${lid}">${clickBadge}</span>${remindBadge}</div><div class="tags-container">${tg}</div></div>${dbadge}</div>`;
@@ -3487,26 +3526,20 @@
 
         function renderTagChips(links){
             const c=document.getElementById('tag-chips');
-            const tagCounts = new Map();
-            links.forEach(l=>{
-                if(l.categories){
-                    const arr = Array.isArray(l.categories) ? l.categories : [l.categories];
-                    arr.forEach(t => { if (t) tagCounts.set(t, (tagCounts.get(t) || 0) + 1); });
-                }
-            });
+            const tagCounts = getTagCounts(links);
             if (activeTag !== 'all' && !tagCounts.has(activeTag)) {
                 activeTag = 'all';
             }
             const sortedTags = Array.from(tagCounts.entries()).sort((a, b) => (b[1] - a[1]) || a[0].localeCompare(b[0], 'zh-Hant'));
             const isLight = document.body.classList.contains('light-mode');
-            let h=`<div class="chip ${activeTag==='all'?'active':''}" onclick="setTag('all')"><i class="fas fa-tags"></i> 全部 <span class="chip-count">${links.length}</span></div>`;
+            let h=`<div role="button" tabindex="0" class="chip ${activeTag==='all'?'active':''}" onclick="setTag('all')"><i class="fas fa-tags"></i> 全部 <span class="chip-count">${links.length}</span></div>`;
             sortedTags.forEach(([t, cnt]) => {
                 const activeBg = stringToHslColor(t, 0.65, 0.48);
                 const textColor = stringToHslColor(t, 0.7, isLight ? 0.38 : 0.68);
                 const borderColor = stringToHslColor(t, 0.5, isLight ? 0.75 : 0.35);
                 const ia = activeTag === t;
                 const st = ia ? `background:${activeBg};color:white;border-color:${activeBg};` : `border-color:${borderColor};color:${textColor};`;
-                h+=`<div class="chip ${ia?'active':''}" style="${st}" data-tag="${escapeHtml(t)}" onclick="setTag(this.dataset.tag)">${escapeHtml(t)} <span class="chip-count">${cnt}</span></div>`;
+                h+=`<div role="button" tabindex="0" class="chip ${ia?'active':''}" style="${st}" data-tag="${escapeHtml(t)}" onclick="setTag(this.dataset.tag)">${escapeHtml(t)} <span class="chip-count">${cnt}</span></div>`;
             });
             c.innerHTML=h;
         }
@@ -4533,6 +4566,14 @@
             }
         });
 
+        // 資料夾 / 標籤 chip 可用鍵盤 Enter、空白鍵操作
+        document.addEventListener('keydown', e => {
+            if ((e.key === 'Enter' || e.key === ' ') && e.target.classList && e.target.classList.contains('chip')) {
+                e.preventDefault();
+                e.target.click();
+            }
+        });
+
         window.addEventListener('scroll', () => {
             const btn = document.getElementById('back-to-top');
             if (btn) btn.classList.toggle('visible', window.scrollY > 300);
@@ -4541,7 +4582,7 @@
         document.addEventListener('keydown',e=>{
             if (e.isComposing || e.keyCode === 229) return;
             const activeEl = document.activeElement;
-            const inInput = ['INPUT','TEXTAREA','SELECT'].includes(activeEl.tagName);
+            const inInput = !!activeEl && ['INPUT','TEXTAREA','SELECT'].includes(activeEl.tagName);
             
             if(e.key==='Escape'){
                 const searchInp = document.getElementById('search-input');
@@ -4549,14 +4590,7 @@
                     clearSearchInput();
                     return;
                 }
-                closeModal('folder-modal');
-                closeModal('edit-modal');
-                closeModal('quick-add-modal');
-                closeModal('font-modal');
-                closeModal('batch-move-modal');
-                closeModal('batch-tag-modal');
-                closeModal('extension-help-modal');
-                closeModal('help-modal');
+                document.querySelectorAll('.modal-overlay').forEach(m => { m.style.display = 'none'; });
                 if(batchMode)toggleBatchMode();
             }
             if (e.ctrlKey || e.metaKey || e.altKey) return;
@@ -4568,7 +4602,7 @@
             }
         });
 
-        window.onload = async () => {
+        async function initApp() {
             const urlParams = new URLSearchParams(window.location.search);
             if (isQuickAddMode) {
                 const extUrl = urlParams.get('url');
@@ -4670,14 +4704,13 @@
             
             updateHtmlSaveTime();
             initInfiniteScrollObserver();
-            // 圖示按鈕補上 aria-label（沿用 title），卡片重繪後也會自動補。
-            const labelButtons = root => root.querySelectorAll('button[title]:not([aria-label])').forEach(b => b.setAttribute('aria-label', b.title));
-            labelButtons(document);
-            const linksBox = document.getElementById('links-container');
-            if (linksBox && window.MutationObserver) new MutationObserver(() => labelButtons(linksBox)).observe(linksBox, { childList: true, subtree: true });
+            // 圖示按鈕補上 aria-label（沿用 title）；動態產生的卡片按鈕本身已帶 aria-label。
+            document.querySelectorAll('button[title]:not([aria-label])').forEach(b => b.setAttribute('aria-label', b.title));
+            document.querySelectorAll('.modal-overlay').forEach(o => { o.setAttribute('role', 'dialog'); o.setAttribute('aria-modal', 'true'); });
             const m={name:"智能連結",short_name:"連結",start_url:".",display:"standalone",background_color:"#0f172a",theme_color:"#6366f1",icons:[{src:"data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🔗</text></svg>",sizes:"any",type:"image/svg+xml"}]};
             document.getElementById('pwa-manifest').href=URL.createObjectURL(new Blob([JSON.stringify(m)],{type:'application/json'}));
-        };
+        }
+        initApp();
     </script>
 </body>
 </html>
