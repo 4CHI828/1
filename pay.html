@@ -771,7 +771,7 @@ html.dark button:focus-visible, html.dark a:focus-visible, html.dark select:focu
 <div id="view-settings" class="app-view hidden space-y-4">
 <div class="bg-blue-50/80 dark:bg-blue-900/20 border border-blue-200/60 dark:border-blue-700/40 rounded-2xl p-4 flex flex-col sm:flex-row items-center justify-between gap-3 shadow-sm">
 <div class="flex items-center gap-3 w-full sm:w-auto">
-<img src="https://upload.wikimedia.org/wikipedia/commons/1/12/Google_Drive_icon_%282020%29.svg" class="w-8 h-8 flex-shrink-0" alt="Drive">
+<img src="https://upload.wikimedia.org/wikipedia/commons/1/12/Google_Drive_icon_%282020%29.svg" class="w-8 h-8 flex-shrink-0" alt="Drive" loading="lazy" decoding="async" width="32" height="32">
 <div class="flex flex-col">
 <div class="flex items-center gap-2 flex-wrap"><span class="text-sm font-bold text-gray-800 dark:text-gray-100" id="googleAccountStatus">尚未連結 Google 帳號</span></div>
 <span class="text-[0.75rem] text-gray-500 dark:text-gray-400">Firebase 登入狀態會自動保存；可將現有 Google Drive JSON 一次搬到 Firestore，之後改用 Firebase 雲端同步</span>
@@ -1337,21 +1337,41 @@ const firestoreLocalWriteEchoes = new Map();
 const FIRESTORE_DEVICE_ID_KEY = "firestore_device_id";
 const FIRESTORE_LOGICAL_CLOCK_KEY = "firestore_logical_clock";
 const FIRESTORE_CONFLICT_LOG_KEY = "firestore_conflict_log";
+// 效能：裝置 ID 與邏輯時鐘在同步時會對「每一筆紀錄」讀取一次，改用記憶體快取，
+// 只有真的要推進時鐘時才讀寫 localStorage；其他分頁的變更由 storage 事件帶回。
+let firestoreDeviceIdCache = "";
+let firestoreLogicalClockCache = null;
+function readStoredFirestoreLogicalClock() { return Math.max(0, Number(localStorage.getItem(FIRESTORE_LOGICAL_CLOCK_KEY)) || 0); }
 function getFirestoreDeviceId() {
+    if (firestoreDeviceIdCache) return firestoreDeviceIdCache;
     let id = localStorage.getItem(FIRESTORE_DEVICE_ID_KEY) || "";
     if (!id) { id = (crypto?.randomUUID ? crypto.randomUUID() : `dev_${Date.now()}_${Math.random().toString(36).slice(2)}`); safeSetLocalStorage(FIRESTORE_DEVICE_ID_KEY, id); }
+    firestoreDeviceIdCache = id;
     return id;
 }
-function getFirestoreLogicalClock() { return Math.max(0, Number(localStorage.getItem(FIRESTORE_LOGICAL_CLOCK_KEY)) || 0); }
+function getFirestoreLogicalClock() {
+    if (firestoreLogicalClockCache == null) firestoreLogicalClockCache = readStoredFirestoreLogicalClock();
+    return firestoreLogicalClockCache;
+}
 function nextFirestoreLogicalClock(observe = 0) {
-    const next = Math.max(getFirestoreLogicalClock(), Number(observe) || 0) + 1;
+    // 產生新版本號時仍重新讀一次 localStorage，確保不會低於其他分頁已推進的時鐘。
+    const next = Math.max(getFirestoreLogicalClock(), readStoredFirestoreLogicalClock(), Number(observe) || 0) + 1;
+    firestoreLogicalClockCache = next;
     safeSetLocalStorage(FIRESTORE_LOGICAL_CLOCK_KEY, String(next));
     return next;
 }
 function observeFirestoreLogicalClock(version) {
     const n = Number(version) || 0;
-    if (n > getFirestoreLogicalClock()) safeSetLocalStorage(FIRESTORE_LOGICAL_CLOCK_KEY, String(n));
+    if (n <= getFirestoreLogicalClock()) return;
+    const stored = readStoredFirestoreLogicalClock();
+    firestoreLogicalClockCache = Math.max(n, stored);
+    if (n > stored) safeSetLocalStorage(FIRESTORE_LOGICAL_CLOCK_KEY, String(n));
 }
+window.addEventListener("storage", e => {
+    if (e.key === FIRESTORE_LOGICAL_CLOCK_KEY || e.key === null) {
+        firestoreLogicalClockCache = Math.max(firestoreLogicalClockCache || 0, readStoredFirestoreLogicalClock());
+    }
+});
 function touchFirestoreRecord(record, force = false) {
     if (!record || !getFirebaseUser()) return record;
     const now = new Date().toISOString();
@@ -1429,7 +1449,15 @@ function markFirestoreRecordDirty(recordId, sheetName = currentSheet) {
     safeSetLocalStorage(FIRESTORE_DIRTY_KEY, JSON.stringify(all));
 }
 function markFirestoreRecordsDirty(recordIds, sheetName = currentSheet) {
-    (Array.isArray(recordIds) || recordIds instanceof Set ? Array.from(recordIds) : []).forEach(id => markFirestoreRecordDirty(id, sheetName));
+    // 效能：整批只讀寫一次 localStorage（原本每個 ID 都重新 parse／stringify 整份清單，匯入大量資料時為 O(n²)）。
+    const list = (Array.isArray(recordIds) || recordIds instanceof Set ? Array.from(recordIds) : []).filter(Boolean);
+    if (!list.length) return;
+    const all = loadJSON(FIRESTORE_DIRTY_KEY, {});
+    const key = String(sheetName);
+    const ids = new Set(Array.isArray(all[key]) ? all[key].map(String) : []);
+    list.forEach(id => ids.add(String(id)));
+    all[key] = Array.from(ids).slice(-10000);
+    safeSetLocalStorage(FIRESTORE_DIRTY_KEY, JSON.stringify(all));
 }
 
 // 將一批本機資料標記為「這次操作明確要寫入 Firebase」。
@@ -1694,7 +1722,17 @@ async function loadRecordsFromDrive(sheetName = currentSheet) {
     }
 }
 
-function saveLocalSheetMirror(name, data) { safeSetLocalStorage(`local_records_${name}`, JSON.stringify(data)); }
+let localMirrorWarnedAt = 0;
+function saveLocalSheetMirror(name, data) {
+    const ok = safeSetLocalStorage(`local_records_${name}`, JSON.stringify(data));
+    // 寫入失敗多半是瀏覽器本機儲存空間已滿；原本完全沒有提示，資料可能在重新整理後消失。
+    if (!ok && Date.now() - localMirrorWarnedAt > 60000) {
+        localMirrorWarnedAt = Date.now();
+        console.warn("本機鏡像寫入失敗（localStorage 可能已滿）：", name);
+        showToast("⚠️ 本機儲存空間不足，資料可能無法保存；請先匯出完整 JSON 備份", "error");
+    }
+    return ok;
+}
 function loadLocalSheetMirror(name) {
     const value = loadJSON(`local_records_${name}`, []);
     return Array.isArray(value) ? value : [];
@@ -1747,15 +1785,27 @@ function scheduleRealtimeRenderAllViews() {
     else setTimeout(run, 0);
 }
 
+function isViewVisible(id) {
+    const el = document.getElementById(id);
+    return !!el && !el.classList.contains("hidden");
+}
+
 function renderAllViews() {
     // 同一輪渲染共用 active records，避免大型帳本重複 filter 全部紀錄。
     const active = getActiveRecords();
-    renderRecordsList(active);
-    renderSettlement(active);
-    renderPersonalStats(active);
-    renderPoolStats(active);
-    const chartContainer = document.getElementById("mainChartContainer");
-    if (chartContainer && !chartContainer.classList.contains("hidden")) void drawCharts();
+    // 效能：只重繪目前顯示中的分頁。隱藏中的分頁在 switchTab() 切換時一定會用最新資料重繪，
+    // 因此每次儲存／同步不必再重建看不到的明細清單、結算卡片與圖表。
+    if (isViewVisible("view-history")) {
+        renderRecordsList(active);
+        const chartContainer = document.getElementById("mainChartContainer");
+        if (chartContainer && !chartContainer.classList.contains("hidden")) void drawCharts();
+    }
+    if (isViewVisible("view-settle")) {
+        renderSettlement(active);
+        renderPersonalStats(active);
+        renderPoolStats(active);
+    }
+    if (isViewVisible("view-settings")) renderTrash();
 }
 
 function getActiveRecords() { return cachedRecords.filter(r => !r.deleted && !r.purged); }
@@ -2091,8 +2141,8 @@ function renderChartDiagnostic(records, expenses) {
         return `<div class="py-1.5 border-b border-red-200/60 dark:border-red-800/40 last:border-b-0"><div class="font-bold text-red-700 dark:text-red-300">❌ 未計入 · ${escapeHtml(r.date)} · ${escapeHtml(r.category)} · ${escapeHtml(r.title)}</div><div class="text-gray-600 dark:text-gray-300 mt-0.5">類型=${escapeHtml(String(r.type || '未知'))} · 整筆=${formatChartMoney(r.chartAmount)} · amount=${r.amount == null ? '—' : formatChartMoney(r.amount)} · twdAmount=${r.twdAmount == null ? '—' : formatChartMoney(r.twdAmount)}</div></div>`;
     }).join('');
     box.classList.remove('hidden');
-    box.innerHTML = `<div class="flex items-center justify-between gap-2 mb-1"><strong class="text-amber-800 dark:text-amber-300">🔎 圖表資料診斷</strong><span class="font-mono font-bold">圖表支出 ${formatChartMoney(total)}</span></div><div class="text-amber-800/90 dark:text-amber-200 mb-1">${mismatchText}</div><div class="text-amber-800/90 dark:text-amber-200 mb-2">${excludedText}</div><div class="text-xs font-bold text-gray-700 dark:text-gray-200 mb-1">✅ 已計入支出的紀錄</div><div class="max-h-56 overflow-y-auto rounded-lg bg-white/60 dark:bg-slate-900/40 px-2">${detail || '<div class="py-2 text-gray-500">沒有支出紀錄</div>'}</div>${excludedDetail ? `<div class="text-xs font-bold text-red-700 dark:text-red-300 mt-3 mb-1">❌ 未計入支出的紀錄</div><div class="max-h-56 overflow-y-auto rounded-lg bg-red-50/70 dark:bg-red-950/20 px-2">${excludedDetail}</div>` : ''}${allRows.length > 80 ? `<div class="mt-1 text-gray-500">僅顯示前 80 筆。</div>` : ''}`;
-    box.innerHTML = `<details><summary class="cursor-pointer select-none font-bold text-amber-800 dark:text-amber-300">🔎 圖表資料診斷（圖表支出 ${formatChartMoney(total)}，點擊展開）</summary><div class="mt-2">${box.innerHTML}</div></details>`;
+    const diagnosticBody = `<div class="flex items-center justify-between gap-2 mb-1"><strong class="text-amber-800 dark:text-amber-300">🔎 圖表資料診斷</strong><span class="font-mono font-bold">圖表支出 ${formatChartMoney(total)}</span></div><div class="text-amber-800/90 dark:text-amber-200 mb-1">${mismatchText}</div><div class="text-amber-800/90 dark:text-amber-200 mb-2">${excludedText}</div><div class="text-xs font-bold text-gray-700 dark:text-gray-200 mb-1">✅ 已計入支出的紀錄</div><div class="max-h-56 overflow-y-auto rounded-lg bg-white/60 dark:bg-slate-900/40 px-2">${detail || '<div class="py-2 text-gray-500">沒有支出紀錄</div>'}</div>${excludedDetail ? `<div class="text-xs font-bold text-red-700 dark:text-red-300 mt-3 mb-1">❌ 未計入支出的紀錄</div><div class="max-h-56 overflow-y-auto rounded-lg bg-red-50/70 dark:bg-red-950/20 px-2">${excludedDetail}</div>` : ''}${allRows.length > 80 ? `<div class="mt-1 text-gray-500">僅顯示前 80 筆。</div>` : ''}`;
+    box.innerHTML = `<details><summary class="cursor-pointer select-none font-bold text-amber-800 dark:text-amber-300">🔎 圖表資料診斷（圖表支出 ${formatChartMoney(total)}，點擊展開）</summary><div class="mt-2">${diagnosticBody}</div></details>`;
 }
 
 function calculateChartSummary(records) {
@@ -2267,10 +2317,8 @@ async function drawCharts() {
         const catData = {};
         expenses.forEach(r => {
             const k = r.category || '其他';
-            if (!catData[k]) catData[k] = { total: 0, records: [] };
-            const value = getChartTwdAmount(r);
-            catData[k].total += value;
-            catData[k].records.push(getChartRecordDiagnostic(r));
+            if (!catData[k]) catData[k] = { total: 0 };
+            catData[k].total += getChartTwdAmount(r);
         });
         const entries = Object.entries(catData).sort((a,b) => b[1].total-a[1].total);
         const pieTotal = entries.reduce((sum, [,value]) => sum + (Number(value.total) || 0), 0);
@@ -2313,7 +2361,7 @@ async function drawCharts() {
         };
         chartInstance = new Chart(canvas, {
             type: 'doughnut',
-            data: { labels: entries.map(x => x[0]), datasets: [{ label: '整筆支出', data: entries.map(x => x[1].total), recordDiagnostics: entries.map(x => x[1].records), backgroundColor: entries.map((_,i) => CHART_COLORS[i % CHART_COLORS.length]), borderWidth: 2, borderColor: isDark ? '#0f172a' : '#fff', hoverOffset: 6 }] },
+            data: { labels: entries.map(x => x[0]), datasets: [{ label: '整筆支出', data: entries.map(x => x[1].total), backgroundColor: entries.map((_,i) => CHART_COLORS[i % CHART_COLORS.length]), borderWidth: 2, borderColor: isDark ? '#0f172a' : '#fff', hoverOffset: 6 }] },
             plugins: [pieValueLabels],
             options: { ...commonOptions, cutout: '66%', plugins: { ...commonOptions.plugins, legend: { ...commonOptions.plugins.legend, position: 'right' } } }
         });
@@ -3073,9 +3121,12 @@ window.restoreRecord = async function(id) {
         cachedRecords[idx].deleted = false;
         cachedRecords[idx].updatedAt = new Date().toISOString();
         if (isFirestoreMode() && getFirebaseUser()) markFirestoreRecordVersion(cachedRecords[idx], true);
+        // 修正：Firestore 同步是從本機鏡像讀資料，必須先寫入鏡像，否則同步後這筆會又變回「已刪除」。
+        saveLocalSheetMirror(currentSheet, cachedRecords);
         renderAllViews(); renderTrash();
         if (!isFirestoreMode() && googleSessionLinked && !accessToken) await ensureGoogleAccessToken(true);
         const ok = await saveRecordsToDrive(true);
+        renderAllViews(); renderTrash();
         showToast(ok ? "紀錄已恢復並同步雲端！" : "紀錄已恢復，等待雲端同步", ok ? "success" : "info");
     }
 };
@@ -4878,6 +4929,9 @@ function switchTab(tabId) {
     } else if (tabId === "settle") {
         const records = getActiveRecords();
         renderSettlement(records); renderPersonalStats(records); renderPoolStats(records);
+    } else if (tabId === "settings") {
+        // 修正：刪除紀錄後回收桶數量不會更新，進入設定頁時一律重算。
+        renderTrash();
     }
     window.scrollTo({ top: 0, behavior: 'smooth' });
 }
@@ -5545,7 +5599,30 @@ function captureSplitValues(){
     return values;
 }
 
+// 修正：雲端同步完成前表單尚未清空，連點儲存／連按 Enter 會存出重複紀錄
+// （編輯模式下第二次點擊還會另存成一筆新紀錄）。儲存進行中一律忽略後續點擊。
+let saveRecordInFlight = false;
+function setSaveButtonsBusy(busy) {
+    ["saveRecordBtn", "saveBarBtn"].forEach(id => {
+        const btn = document.getElementById(id);
+        if (!btn) return;
+        btn.disabled = busy;
+        btn.setAttribute("aria-busy", busy ? "true" : "false");
+        btn.classList.toggle("opacity-60", busy);
+    });
+}
 async function saveRecord() {
+    if (saveRecordInFlight) return;
+    saveRecordInFlight = true;
+    setSaveButtonsBusy(true);
+    try {
+        return await saveRecordImpl();
+    } finally {
+        saveRecordInFlight = false;
+        setSaveButtonsBusy(false);
+    }
+}
+async function saveRecordImpl() {
     const title = String(document.getElementById("title")?.value || "").trim();
     const amount = evaluateMathInput(document.getElementById("originalAmount")?.value || "");
     if (!title || amount <= 0) return showToast("請輸入正確的項目與金額", "error");
@@ -5934,8 +6011,12 @@ async function quickPoolAction(action){
     if(title===null) return;
     const payer=action==='contribute'?(prompt("繳款人",members[0]||"")||members[0]||"公費"):"公費";
     const r=normalizeRecord({id:generateUUID(),title:title.trim()||"公費",amount:Math.round(amount),currency:"TWD",twdAmount:Math.round(amount),rate:1,category:"公費",type:action==='contribute'?"income":"expense",date:getTodayString(),payer,payers:[{member:payer,amount:Math.round(amount)}],shares:[{member:"公費",amount:Math.round(amount)}],splitMembers:[`公費:${Math.round(amount)}`],deleted:false,updatedAt:new Date().toISOString()});
+    createLocalSnapshot(action==='contribute'?"繳交公費前":"公費支出前");
     if (isFirestoreMode() && getFirebaseUser()) markFirestoreRecordVersion(r, true);
-    cachedRecords.unshift(r); renderAllViews(); renderTrash();
+    cachedRecords.unshift(r);
+    // 修正：Firestore 同步是從本機鏡像讀資料，必須先寫入鏡像，否則這筆公費不會上傳、同步後還會從畫面消失。
+    saveLocalSheetMirror(currentSheet, cachedRecords);
+    renderAllViews(); renderTrash();
     if (!isFirestoreMode() && googleSessionLinked && !accessToken) await ensureGoogleAccessToken(true);
     const ok = await saveRecordsToDrive(true);
     showToast(ok ? (action==='contribute'?"公費已入帳並同步雲端":"公費支出已入帳並同步雲端") : (action==='contribute'?"公費已入帳，等待雲端同步":"公費支出已入帳，等待雲端同步"), ok ? "success" : "info");
@@ -5960,10 +6041,14 @@ function renderRecordsList(activeRecords = null){
     if(fCat!=="all") filtered=filtered.filter(r=>r.category===fCat);
     if(fMem!=="all") filtered=filtered.filter(r=>Object.prototype.hasOwnProperty.call(parsePayers(r),fMem)||Object.prototype.hasOwnProperty.call(parseShares(r),fMem));
     if(sDate) filtered=filtered.filter(r=>r.date>=sDate); if(eDate) filtered=filtered.filter(r=>r.date<=eDate);
+    // 效能：updatedAt 每筆只解析一次；日期為 YYYY-MM-DD，直接比較字串與 localeCompare 結果相同但快很多。
+    const updatedMsCache = new Map();
+    const updatedMs = r => { let t = updatedMsCache.get(r); if (t === undefined) { t = Date.parse(r.updatedAt || "") || 0; updatedMsCache.set(r, t); } return t; };
     const compareDate = (a,b,desc) => {
-        const dateCmp = String(a.date || "").localeCompare(String(b.date || ""));
+        const dateA = String(a.date || ""), dateB = String(b.date || "");
+        const dateCmp = dateA < dateB ? -1 : dateA > dateB ? 1 : 0;
         if (dateCmp) return desc ? -dateCmp : dateCmp;
-        const timeA = Date.parse(a.updatedAt || "") || 0, timeB = Date.parse(b.updatedAt || "") || 0;
+        const timeA = updatedMs(a), timeB = updatedMs(b);
         if (timeA !== timeB) return desc ? timeB - timeA : timeA - timeB;
         return desc ? String(b.id || "").localeCompare(String(a.id || "")) : String(a.id || "").localeCompare(String(b.id || ""));
     };
@@ -6584,8 +6669,7 @@ function renderSheetSelector() {
 // ==========================================
 try { cachedRecords = normalizeAllRecords(cachedRecords); } catch(e) { console.warn("資料正規化失敗",e); cachedRecords=[]; }
 
-window.onload = function() {
-    const isDark = document.documentElement.classList.contains("dark");
+function initApp() {
     updateThemeButton();
     applyThemeColorMeta();
     applyFontSize(localStorage.getItem("app_custom_font_size") || 16);
@@ -6618,9 +6702,7 @@ window.onload = function() {
     }
     
     document.getElementById("saveRecordBtn").onclick = saveRecord;
-    document.getElementById("originalAmount").addEventListener("input", updateTwdPreview);
-    document.getElementById("overrideTwdInput").addEventListener("input", updateTwdPreview);
-    document.getElementById("currency").addEventListener("change", updateTwdPreview);
+    // 金額／幣別／請款 TWD 的即時預覽由 bindRepairEvents() 統一綁定，避免每次輸入重複計算兩次。
     
     bindRepairEvents();
     repairFilterMemberSelect();
@@ -6685,7 +6767,10 @@ window.onload = function() {
             }
         }, 250);
     }
-};
+}
+// 效能：DOM 就緒即初始化，不必等 Google 登入元件、圖片等外部資源全部載入完成。
+if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", initApp, { once: true });
+else initApp();
 
 
 // ==========================================
@@ -6804,6 +6889,8 @@ function renderSnapshotPanel() {
     const listEl = document.getElementById("snapshotList");
     const countEl = document.getElementById("snapshotCountDisplay");
     if (!panel || !listEl) return;
+    // 效能：面板收合時不重繪（每次儲存都會呼叫到這裡）；展開時 showSafetySnapshots() 會重繪。
+    if (panel.classList.contains("hidden")) return;
     const list = safetyLoadSnapshots(currentSheet);
     if (countEl) countEl.textContent = list.length;
     listEl.innerHTML = list.length ? list.map((s,i) => `
