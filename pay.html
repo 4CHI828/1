@@ -598,6 +598,42 @@ body.app-v7 #btnTypeExpense[aria-pressed="true"] { color: var(--v7-t-expense) !i
 body.app-v7 #btnTypePersonal[aria-pressed="true"] { color: var(--v7-t-personal) !important; }
 body.app-v7 #btnTypeIncome[aria-pressed="true"] { color: var(--v7-t-income) !important; }
 
+/* 類別／成員顏色 */
+.v7-hue-0 { --hue-fg: #B7400B; --hue-bg: #FFEDD5; }
+.v7-hue-1 { --hue-fg: #0369A1; --hue-bg: #E0F2FE; }
+.v7-hue-2 { --hue-fg: #4338CA; --hue-bg: #E0E7FF; }
+.v7-hue-3 { --hue-fg: #BE185D; --hue-bg: #FCE7F3; }
+.v7-hue-4 { --hue-fg: #92590A; --hue-bg: #FEF3C7; }
+.v7-hue-5 { --hue-fg: #6D28D9; --hue-bg: #EDE9FE; }
+.v7-hue-6 { --hue-fg: #0F766E; --hue-bg: #CCFBF1; }
+.v7-hue-7 { --hue-fg: #137537; --hue-bg: #DCFCE7; }
+.v7-hue-8 { --hue-fg: #BE123C; --hue-bg: #FFE4E6; }
+.v7-hue-9 { --hue-fg: #4B5563; --hue-bg: #E5E7EB; }
+html.dark .v7-hue-0 { --hue-fg: #FDBA74; --hue-bg: rgba(249,115,22,.2); }
+html.dark .v7-hue-1 { --hue-fg: #7DD3FC; --hue-bg: rgba(14,165,233,.2); }
+html.dark .v7-hue-2 { --hue-fg: #A5B4FC; --hue-bg: rgba(99,102,241,.22); }
+html.dark .v7-hue-3 { --hue-fg: #F9A8D4; --hue-bg: rgba(236,72,153,.2); }
+html.dark .v7-hue-4 { --hue-fg: #FCD34D; --hue-bg: rgba(245,158,11,.2); }
+html.dark .v7-hue-5 { --hue-fg: #C4B5FD; --hue-bg: rgba(139,92,246,.22); }
+html.dark .v7-hue-6 { --hue-fg: #5EEAD4; --hue-bg: rgba(20,184,166,.2); }
+html.dark .v7-hue-7 { --hue-fg: #86EFAC; --hue-bg: rgba(34,197,94,.18); }
+html.dark .v7-hue-8 { --hue-fg: #FDA4AF; --hue-bg: rgba(244,63,94,.2); }
+html.dark .v7-hue-9 { --hue-fg: #CBD5E1; --hue-bg: #273142; }
+body.app-v7 .v7-rec-mark[class*="v7-hue-"] { background: var(--hue-bg); color: var(--hue-fg); }
+.v7-hue-chip::before { content: ""; width: 8px; height: 8px; border-radius: 50%; background: var(--hue-fg); flex-shrink: 0; }
+body.app-v7 .v7-hue-chip[aria-pressed="true"] { background: var(--hue-fg); border-color: var(--hue-fg); color: #fff; }
+body.app-v7 .v7-hue-chip[aria-pressed="true"]::before { background: currentColor; opacity: .85; }
+html.dark body.app-v7 .v7-hue-chip[aria-pressed="true"] { color: #0B0F17; }
+body.app-v7 #membersCheckboxes label.v7-hue-check:has(input:checked) { background: var(--hue-bg) !important; border-color: var(--hue-fg) !important; color: var(--hue-fg) !important; }
+body.app-v7 #membersCheckboxes label.v7-hue-check input { accent-color: var(--hue-fg); }
+body.app-v7 .v7-tag-list > span.v7-hue-tag { background: var(--hue-bg) !important; color: var(--hue-fg) !important; font-weight: 700; }
+body.app-v7 .v7-tag-list > span.v7-hue-tag button { color: var(--hue-fg) !important; opacity: .8; }
+.v7-avatar { width: 28px; height: 28px; flex-shrink: 0; display: inline-flex; align-items: center; justify-content: center; border-radius: 50%; background: var(--hue-bg); color: var(--hue-fg); font-size: .8125rem; font-weight: 700; }
+.v7-avatar.is-sm { width: 22px; height: 22px; font-size: .6875rem; }
+.v7-member-name, .v7-drill-title { display: inline-flex; align-items: center; gap: 8px; }
+.v7-member-sub { padding-left: 36px; }
+.v7-cat-tag { color: var(--hue-fg); font-weight: 700; }
+
 /* 底部分頁 */
 .v7-nav { background: var(--v7-card); border-top: 1px solid var(--v7-line); padding-bottom: env(safe-area-inset-bottom); }
 .v7-nav-inner { max-width: 42rem; margin: 0 auto; height: 64px; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); }
@@ -1128,7 +1164,7 @@ body.app-v7.kb-open .v7-nav { display: none; }
 <div id="memberDrilldownModal" class="hidden fixed inset-0 bg-slate-900/60 z-50 flex items-center justify-center p-4" onclick="if(event.target===this)closeMemberDrilldown()">
 <div class="v7-modal max-w-md w-full max-h-[85vh]">
 <div class="v7-modal-head">
-<h3 class="v7-modal-title"><span id="drillMemberName"></span> 的對帳單</h3>
+<h3 class="v7-modal-title v7-drill-title"><span id="drillAvatar"></span><span id="drillMemberName"></span> 的對帳單</h3>
 <button type="button" onclick="closeMemberDrilldown()" class="v7-icon-btn v7-icon-btn-field" aria-label="關閉"><svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
 </div>
 <div id="drillSummaryBox" class="v7-stat3 v7-stat-box"></div>
@@ -2196,7 +2232,7 @@ function renderSettlement(records) {
         const other = bal - ((paidExp[name] || 0) - (shareExp[name] || 0));
         if (Math.abs(other) >= 0.5) parts.push(`${other > 0 ? "已付出" : "已收回"} ${Math.round(Math.abs(other)).toLocaleString()}`);
         return `<button type="button" class="v7-member" onclick="openMemberDrilldown('${escapeHtml(escapeJsStr(name))}')" aria-label="${escapeHtml(name)}，結餘 ${net}，查看對帳明細">
-            <span class="v7-member-top"><span class="v7-member-name">${escapeHtml(name)}</span><span class="v7-member-net ${cls}">${net}</span></span>
+            <span class="v7-member-top"><span class="v7-member-name">${v7Avatar(name)}${escapeHtml(name)}</span><span class="v7-member-net ${cls}">${net}</span></span>
             <span class="v7-member-sub"><span>${parts.join(" · ")}</span><span>${hint}</span></span>
         </button>`;
     }).join("") || `<div class="v7-kv"><span>還沒有成員</span></div>`;
@@ -2223,7 +2259,7 @@ function renderSettlement(records) {
     const tBox = document.getElementById("settlementTransfers");
     tBox.innerHTML = shown.map(t => `<div class="v7-transfer">
             <div class="v7-transfer-main">
-                <span class="v7-transfer-who">${escapeHtml(t.from)}<svg class="v7-chev" role="img" aria-label="轉給" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>${escapeHtml(t.to)}</span>
+                <span class="v7-transfer-who">${v7Avatar(t.from, "is-sm")}${escapeHtml(t.from)}<svg class="v7-chev" role="img" aria-label="轉給" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>${v7Avatar(t.to, "is-sm")}${escapeHtml(t.to)}</span>
                 <span class="v7-transfer-amt">NT$ ${t.amt.toLocaleString()}</span>
             </div>
             <button type="button" onclick="markSettlementPaid('${jsAttr(t.from)}','${jsAttr(t.to)}',${Number(t.amt)})" class="v7-secondary-btn" title="記錄已給錢，會新增一筆平帳還款紀錄">標記已付</button>
@@ -5313,6 +5349,8 @@ window.openMemberDrilldown = function(name) {
         }
     });
     nameDisplay.textContent = name;
+    const drillAvatar = document.getElementById("drillAvatar");
+    if (drillAvatar) drillAvatar.innerHTML = v7Avatar(name);
     memberDetails.sort((a, b) => String(b.date || "").localeCompare(String(a.date || "")));
     const money = v => Math.round(Math.abs(v)).toLocaleString();
     const net = Math.round(totalPaid - totalOwed);
@@ -6468,7 +6506,7 @@ function renderRecordsList(activeRecords = null){
         const orig = origText(r);
         return `<div class="record-card v7-rec" data-record-id="${id}" role="button" tabindex="0" onclick="handleRecordCardClick('${id}')" onkeydown="if(event.target===this&&(event.key==='Enter'||event.key===' ')){event.preventDefault();handleRecordCardClick('${id}')}" aria-label="${escapeHtml(r.title)}，NT$ ${twd}">
             <div class="batch-select-box" aria-hidden="true"></div>
-            <div class="v7-rec-mark v7-type-${escapeHtml(r.type || 'expense')}" aria-hidden="true">${escapeHtml((r.category || '其')[0])}</div>
+            <div class="v7-rec-mark v7-hue-${v7CategoryHue(r.category)}" aria-hidden="true">${escapeHtml((r.category || '其')[0])}</div>
             <div class="v7-rec-main"><div class="v7-rec-title">${escapeHtml(r.title)}</div><div class="v7-rec-sub">${escapeHtml(sub)}</div></div>
             <div class="v7-rec-amt"><div class="v7-rec-twd v7-type-${escapeHtml(r.type || 'expense')}">${r.type === 'income' ? '+' : ''}${twd}</div>${orig ? `<div class="v7-rec-orig">${escapeHtml(orig)}</div>` : ""}</div>
             <div class="record-action-buttons">${iconBtn("修改", `startEditRecord('${id}')`, "edit")}${iconBtn("複製成新紀錄", `duplicateRecordToForm('${id}')`, "copy")}${iconBtn("移動或複製到其他帳本", `openMoveCopyRecordModal('${id}')`, "move")}${iconBtn("刪除（可復原）", `softDeleteRecord('${id}')`, "trash", "is-danger")}</div>
@@ -6985,7 +7023,7 @@ window.openRecordDetail = function(id) {
     const rate = Number(r.rate);
     const splitLabel = { equal: "均分", custom: "按金額", ratio: "按比例", percent: "按百分比" }[r.splitMode];
     box.innerHTML = `<div class="v7-detail-hero">
-            <div class="v7-meta">${escapeHtml(typeLabels[r.type] || r.type || "")} · ${escapeHtml(r.category || "其他")}</div>
+            <div class="v7-meta">${escapeHtml(typeLabels[r.type] || r.type || "")} · <span class="v7-cat-tag v7-hue-${v7CategoryHue(r.category)}">${escapeHtml(r.category || "其他")}</span></div>
             <div class="v7-detail-title">${escapeHtml(r.title)}</div>
             <div class="v7-detail-amt v7-type-${escapeHtml(r.type || "expense")}">${r.type === "income" ? "+" : ""}NT$ ${twd}</div>
             ${orig ? `<div class="v7-meta">${escapeHtml(orig)}${rate > 0 && rate !== 1 ? ` · 匯率 ${escapeHtml(String(rate))}` : ""}</div>` : ""}
@@ -7621,6 +7659,36 @@ function v7DayLabel(d) {
     if (d === localDateString(yd)) return `昨天 ${base}`;
     return y !== new Date().getFullYear() ? `${y}/${base}` : base;
 }
+// 類別、成員各有固定顏色：0 橘 1 天藍 2 靛 3 粉 4 琥珀 5 紫 6 青綠 7 綠 8 玫瑰 9 灰
+var V7_CATEGORY_HUES = { 餐飲: 0, 交通: 1, 住宿: 2, 購物: 3, 門票: 4, 娛樂: 5, 生活: 7, 公費: 6, 平帳還款: 9, 其他: 9 };
+function v7Hash(text) { let h = 0; for (const ch of String(text || "")) h = (h * 31 + ch.codePointAt(0)) >>> 0; return h; }
+function v7CategoryHue(category) {
+    const c = String(category || "其他");
+    return Object.prototype.hasOwnProperty.call(V7_CATEGORY_HUES, c) ? V7_CATEGORY_HUES[c] : v7Hash(c) % 9;
+}
+function v7MemberHue(name) {
+    if (name === "公費") return 6;
+    const order = [1, 0, 5, 7, 3, 2, 4, 8, 6];
+    const i = Array.isArray(members) ? members.indexOf(name) : -1;
+    return order[(i >= 0 ? i : v7Hash(name)) % order.length];
+}
+function v7Avatar(name, size = "") {
+    const n = String(name || "?");
+    return `<span class="v7-avatar ${size} v7-hue-${v7MemberHue(n)}" aria-hidden="true">${escapeHtml(Array.from(n)[0] || "?")}</span>`;
+}
+// 分攤勾選、設定頁的成員／類別標籤：渲染後補上顏色
+function v7ApplyHues() {
+    document.querySelectorAll("#membersCheckboxes label").forEach(label => {
+        const v = label.querySelector(".member-cb")?.value;
+        if (v != null) { label.classList.add("v7-hue-check"); label.className = label.className.replace(/\bv7-hue-\d\b/g, "").trim() + ` v7-hue-${v7MemberHue(v)}`; }
+    });
+    const tagHue = (listId, hueFn) => document.querySelectorAll(`#${listId} > span`).forEach(span => {
+        const name = (span.firstChild?.textContent || span.textContent || "").replace(/×$/, "").trim();
+        span.className = span.className.replace(/\bv7-hue-\d\b/g, "").trim() + ` v7-hue-tag v7-hue-${hueFn(name)}`;
+    });
+    tagHue("memberTagList", v7MemberHue);
+    tagHue("categoryTagList", v7CategoryHue);
+}
 function v7OrigText(r) {
     const sym = { TWD: "NT$", JPY: "¥", USD: "US$", EUR: "€", KRW: "₩", THB: "฿", HKD: "HK$", CNY: "CN¥" };
     const c = String(r?.currency || "TWD").toUpperCase();
@@ -7673,14 +7741,14 @@ function v7WatchValue(el, proto, cb) {
     el.addEventListener("change", cb);
     el.addEventListener("input", cb);
 }
-function v7RenderSelectChips(selectId, boxId) {
+function v7RenderSelectChips(selectId, boxId, hueFn = null) {
     const sel = document.getElementById(selectId), box = document.getElementById(boxId);
     if (!sel || !box) return;
     const opts = Array.from(sel.options), cur = sel.value;
     const sig = opts.map(o => `${o.value}\u0001${o.text}`).join("\u0002") + "\u0003" + cur;
     if (box.dataset.sig === sig) return;
     box.dataset.sig = sig;
-    box.innerHTML = opts.map(o => `<button type="button" class="v7-chip" data-value="${escapeHtml(o.value)}" aria-pressed="${o.value === cur ? "true" : "false"}">${escapeHtml(o.text)}</button>`).join("");
+    box.innerHTML = opts.map(o => `<button type="button" class="v7-chip${hueFn ? ` v7-hue-chip v7-hue-${hueFn(o.value)}` : ""}" data-value="${escapeHtml(o.value)}" aria-pressed="${o.value === cur ? "true" : "false"}">${escapeHtml(o.text)}</button>`).join("");
     const active = box.querySelector('[aria-pressed="true"]');
     if (active) {
         const left = active.offsetLeft - box.offsetLeft, right = left + active.offsetWidth;
@@ -7705,8 +7773,9 @@ function v7RefreshFormChips() {
     v7ChipsQueued = true;
     queueMicrotask(() => {
         v7ChipsQueued = false;
-        v7RenderSelectChips("category", "categoryChips");
-        v7RenderSelectChips("payer", "payerChips");
+        v7RenderSelectChips("category", "categoryChips", v7CategoryHue);
+        v7RenderSelectChips("payer", "payerChips", v7MemberHue);
+        v7ApplyHues();
         const cur = document.getElementById("currency");
         const chipText = document.getElementById("currencyChipText");
         if (cur && chipText) chipText.textContent = cur.options[cur.selectedIndex]?.text || cur.value || "TWD";
@@ -7850,6 +7919,11 @@ function v7InitUi() {
     const thumb = document.getElementById("receiptPreviewThumb");
     if (thumb) new MutationObserver(v7UpdateMoreSummary).observe(thumb, { attributes: true, attributeFilter: ["class"] });
     document.addEventListener("change", e => { if (e.target?.classList?.contains("member-cb")) v7UpdateSplitSummary(); });
+    ["membersCheckboxes", "memberTagList", "categoryTagList"].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) new MutationObserver(() => v7ApplyHues()).observe(el, { childList: true });
+    });
+    v7ApplyHues();
     document.getElementById("historyChips")?.addEventListener("click", e => {
         const chip = e.target.closest("[data-hchip]");
         if (chip) void v7HistoryChipClick(chip.dataset.hchip);
