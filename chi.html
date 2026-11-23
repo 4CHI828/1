@@ -2,10 +2,22 @@
 <html lang="zh-Hant">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="theme-color" content="#1e293b">
   <title>奇奇｜個人生活工作站</title>
+
+  <!-- 在畫面繪製前先套用主題，避免重新整理時閃一下預設色 -->
+  <script>
+    (function () {
+      try {
+        var t = localStorage.getItem('chichi_theme');
+        if (t) document.documentElement.setAttribute('data-theme', t);
+      } catch (e) {}
+    })();
+  </script>
+
   <style>
-    /* 主題色票變數設定 */
+    /* ================= 主題色票 ================= */
     :root,
     [data-theme="default"] {
       --top-bg: #1e293b;
@@ -16,15 +28,11 @@
       --hover-bg: rgba(255, 255, 255, 0.08);
       --accent: #38bdf8;
       --drawer-bg: rgba(30, 41, 59, 0.97);
+      --dot-border: rgba(255, 255, 255, 0.25);
       --nav-height: 58px;
       --radius-sm: 10px;
-      --shadow-soft: 0 8px 28px rgba(0,0,0,.16);
     }
-
     [data-theme="emerald"] {
-      --nav-height: 58px;
-      --radius-sm: 10px;
-      --shadow-soft: 0 8px 28px rgba(0,0,0,.16);
       --top-bg: #064e3b;
       --bottom-bg: #022c22;
       --border-color: #047857;
@@ -32,9 +40,8 @@
       --text-main: #ecfdf5;
       --hover-bg: rgba(255, 255, 255, 0.1);
       --accent: #34d399;
-      --drawer-bg: rgba(6, 78, 59, 0.96);
+      --drawer-bg: rgba(6, 78, 59, 0.97);
     }
-
     [data-theme="cyber"] {
       --top-bg: #2e1065;
       --bottom-bg: #1a0b36;
@@ -43,9 +50,8 @@
       --text-main: #faf5ff;
       --hover-bg: rgba(255, 255, 255, 0.1);
       --accent: #c084fc;
-      --drawer-bg: rgba(46, 16, 101, 0.96);
+      --drawer-bg: rgba(46, 16, 101, 0.97);
     }
-
     [data-theme="sunset"] {
       --top-bg: #431407;
       --bottom-bg: #1c1917;
@@ -54,9 +60,8 @@
       --text-main: #fff7ed;
       --hover-bg: rgba(255, 255, 255, 0.1);
       --accent: #fb923c;
-      --drawer-bg: rgba(67, 20, 7, 0.96);
+      --drawer-bg: rgba(67, 20, 7, 0.97);
     }
-
     [data-theme="light"] {
       --top-bg: #ffffff;
       --bottom-bg: #f8fafc;
@@ -65,9 +70,11 @@
       --text-main: #0f172a;
       --hover-bg: rgba(0, 0, 0, 0.05);
       --accent: #2563eb;
-      --drawer-bg: rgba(255, 255, 255, 0.96);
+      --drawer-bg: rgba(255, 255, 255, 0.97);
+      --dot-border: rgba(0, 0, 0, 0.2);
     }
 
+    /* ================= 基礎 ================= */
     * {
       margin: 0;
       padding: 0;
@@ -75,140 +82,19 @@
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "PingFang TC", "Noto Sans TC", sans-serif;
     }
 
+    html, body {
+      height: 100%;
+      overflow: hidden;
+      overscroll-behavior: none;
+    }
+
     body {
       background-color: var(--bottom-bg);
       color: var(--text-main);
-      overflow: hidden;
       transition: background-color 0.3s ease;
-      padding-bottom: env(safe-area-inset-bottom);
     }
 
-    /* 5% / 95% Grid 架構 */
-    .app-layout {
-      display: grid;
-      grid-template-rows: minmax(44px, 5%) 1fr;
-      width: 100%;
-      height: 100vh;
-      height: 100dvh;
-      transition: grid-template-rows 0.3s ease;
-    }
-
-    .app-layout.focus-mode {
-      grid-template-rows: 0px 1fr;
-    }
-
-    .nav-bar {
-      background-color: var(--top-bg);
-      border-bottom: 1px solid var(--border-color);
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 0 16px;
-      overflow: hidden;
-      transition: background-color 0.3s ease, border-color 0.3s ease;
-      white-space: nowrap;
-    }
-
-    .nav-left, .nav-right {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      height: 100%;
-    }
-
-    /* 桌面版：上方導覽列可獨立左右滑動 */
-    .nav-left {
-      min-width: 0;
-      flex: 1 1 auto;
-      overflow-x: auto;
-      overflow-y: hidden;
-      scrollbar-width: thin;
-      -webkit-overflow-scrolling: touch;
-      overscroll-behavior-x: contain;
-      scroll-behavior: smooth;
-    }
-
-    .nav-left::-webkit-scrollbar {
-      height: 4px;
-    }
-
-    .nav-left::-webkit-scrollbar-thumb {
-      background: var(--border-color);
-      border-radius: 99px;
-    }
-
-    .nav-left::-webkit-scrollbar-track {
-      background: transparent;
-    }
-
-    .nav-left > * {
-      flex: 0 0 auto;
-    }
-
-    @media (min-width: 769px) {
-      .nav-left {
-        cursor: grab;
-      }
-
-      .nav-left:active {
-        cursor: grabbing;
-      }
-    }
-
-    .nav-right {
-      flex: 0 0 auto;
-    }
-
-    .brand {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      font-weight: 700;
-      color: var(--text-main);
-      margin-right: 8px;
-    }
-    .brand-home {
-      border: 0;
-      padding: 6px 8px;
-      background: transparent;
-      cursor: pointer;
-      border-radius: 8px;
-      -webkit-tap-highlight-color: transparent;
-      color: var(--text-main);
-      transition: background-color 0.2s ease, color 0.2s ease;
-    }
-    .brand-home:hover {
-      background-color: var(--hover-bg);
-      color: var(--accent);
-    }
-    .brand-home:focus-visible {
-      outline: 2px solid var(--accent);
-      outline-offset: 2px;
-    }
-
-    .nav-item {
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      color: var(--text-muted);
-      text-decoration: none;
-      font-size: 0.85rem;
-      padding: 6px 12px;
-      border-radius: 6px;
-      transition: all 0.2s ease;
-      cursor: pointer;
-    }
-
-    .nav-item:hover {
-      background-color: var(--hover-bg);
-      color: var(--text-main);
-    }
-
-    .nav-item.active {
-      color: var(--accent);
-      background-color: var(--hover-bg);
-      font-weight: 600;
-    }
+    button, a, .dot { -webkit-tap-highlight-color: transparent; }
 
     .icon {
       width: 16px;
@@ -218,64 +104,207 @@
       stroke-linecap: round;
       stroke-linejoin: round;
       fill: none;
+      flex: 0 0 auto;
     }
+
+    /* ================= 版面 ================= */
+    .app-layout {
+      display: grid;
+      grid-template-rows: auto 1fr;
+      width: 100%;
+      height: 100vh;
+      height: 100dvh;
+    }
+
+    /* ================= 上方導覽列 ================= */
+    .nav-bar {
+      min-height: var(--nav-height);
+      background-color: var(--top-bg);
+      border-bottom: 1px solid var(--border-color);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 6px;
+      padding: 0 clamp(10px, 1.5vw, 22px);
+      padding-top: env(safe-area-inset-top);
+      overflow: hidden;
+      white-space: nowrap;
+      position: relative;
+      z-index: 120;
+      transition: background-color 0.3s ease, border-color 0.3s ease;
+    }
+
+    /* 專注模式：真正收起導覽列（原本 0px 列高但 min-height 仍撐開，會蓋住內容） */
+    .app-layout.focus-mode .nav-bar {
+      min-height: 0;
+      height: 0;
+      padding-top: 0;
+      padding-bottom: 0;
+      border-bottom-width: 0;
+      visibility: hidden;
+    }
+
+    .nav-left, .nav-right {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      height: 100%;
+    }
+
+    .nav-left {
+      min-width: 0;
+      flex: 1 1 auto;
+      overflow-x: auto;
+      overflow-y: hidden;
+      scrollbar-width: thin;
+      scrollbar-color: var(--border-color) transparent;
+      -webkit-overflow-scrolling: touch;
+      overscroll-behavior-x: contain;
+      scroll-behavior: smooth;
+      /* 左右邊緣淡出，提示可以滑動 */
+      -webkit-mask-image: linear-gradient(to right, transparent 0, #000 10px, #000 calc(100% - 18px), transparent 100%);
+              mask-image: linear-gradient(to right, transparent 0, #000 10px, #000 calc(100% - 18px), transparent 100%);
+      padding: 0 10px 0 4px;
+    }
+    .nav-left::-webkit-scrollbar { height: 4px; }
+    .nav-left::-webkit-scrollbar-thumb { background: var(--border-color); border-radius: 99px; }
+    .nav-left::-webkit-scrollbar-track { background: transparent; }
+    .nav-left > * { flex: 0 0 auto; }
+    .nav-left.dragging { scroll-behavior: auto; cursor: grabbing; user-select: none; }
+    .nav-left.dragging .nav-item { pointer-events: none; }
+
+    @media (min-width: 769px) and (hover: hover) {
+      .nav-left { cursor: grab; }
+    }
+
+    .nav-right { flex: 0 0 auto; }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      min-width: max-content;
+      min-height: 40px;
+      padding: 7px 9px;
+      margin-right: 2px;
+      border: 0;
+      border-radius: var(--radius-sm);
+      background: transparent;
+      color: var(--text-main);
+      font-weight: 700;
+      font-size: 0.95rem;
+      cursor: pointer;
+      transition: background-color 0.2s ease, color 0.2s ease;
+    }
+    .brand .icon { stroke: var(--accent); }
+    .brand:hover { background-color: var(--hover-bg); color: var(--accent); }
 
     .nav-separator {
       width: 1px;
       height: 18px;
       background-color: var(--border-color);
+      flex: 0 0 auto;
+    }
+
+    .nav-item {
+      position: relative;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      min-height: 40px;
+      padding: 7px 11px;
+      border: 1px solid transparent;
+      border-radius: var(--radius-sm);
+      color: var(--text-muted);
+      text-decoration: none;
+      font-size: 0.85rem;
+      cursor: pointer;
+      transition: background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+      -webkit-user-drag: none;
+    }
+    .nav-item:hover { background-color: var(--hover-bg); color: var(--text-main); }
+    .nav-item.active {
+      color: var(--accent);
+      background-color: var(--hover-bg);
+      font-weight: 600;
+      border-color: color-mix(in srgb, var(--accent) 24%, transparent);
+    }
+    .nav-item.active::after {
+      content: "";
+      position: absolute;
+      left: 12px;
+      right: 12px;
+      bottom: 2px;
+      height: 2px;
+      border-radius: 99px;
+      background: var(--accent);
+      opacity: .9;
+    }
+    /* 外開連結的小箭頭 */
+    .nav-item .ext {
+      width: 11px;
+      height: 11px;
+      opacity: .55;
+      margin-left: -2px;
     }
 
     .btn-icon {
       display: inline-flex;
       align-items: center;
       justify-content: center;
-      width: 28px;
-      height: 28px;
-      border-radius: 6px;
+      width: 38px;
+      height: 38px;
+      border-radius: var(--radius-sm);
       border: none;
       background: transparent;
       color: var(--text-muted);
       cursor: pointer;
-      transition: all 0.2s ease;
+      transition: background-color 0.2s ease, color 0.2s ease;
     }
+    .btn-icon:hover { background-color: var(--hover-bg); color: var(--text-main); }
+    .btn-icon[aria-pressed="true"] { color: var(--accent); }
 
-    .btn-icon:hover {
-      background-color: var(--hover-bg);
-      color: var(--text-main);
-    }
+    .theme-cycle { display: none; }
 
     .clock {
       font-size: 0.85rem;
       color: var(--text-main);
       font-variant-numeric: tabular-nums;
       font-weight: 500;
+      padding: 0 2px;
     }
 
-    .theme-dots {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-
+    .theme-dots { display: flex; align-items: center; gap: 7px; padding: 0 3px; }
     .dot {
-      width: 12px;
-      height: 12px;
+      width: 14px;
+      height: 14px;
       border-radius: 50%;
-      border: 1px solid rgba(255,255,255,0.2);
+      border: 1px solid var(--dot-border);
       cursor: pointer;
-      transition: transform 0.2s;
+      box-shadow: 0 0 0 2px transparent;
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+    .dot:hover { transform: scale(1.2); box-shadow: 0 0 0 2px var(--hover-bg); }
+    .dot[aria-pressed="true"] { box-shadow: 0 0 0 2px var(--text-main); }
+
+    .brand:focus-visible,
+    .btn-icon:focus-visible,
+    .nav-item:focus-visible,
+    .btn-action:focus-visible,
+    .dot:focus-visible,
+    .scratchpad-add:focus-visible,
+    .scratchpad-block-delete:focus-visible {
+      outline: 2px solid var(--accent);
+      outline-offset: 2px;
     }
 
-    .dot:hover {
-      transform: scale(1.2);
-    }
-
+    /* ================= 內容區 ================= */
     .content-area {
       position: relative;
       width: 100%;
       height: 100%;
-      background-color: #fff; /* iframe default background */
+      min-height: 0;
+      background: var(--bottom-bg);
       overflow: hidden;
     }
 
@@ -286,38 +315,60 @@
       display: block;
     }
 
+    /* 載入進度條 */
+    .load-bar {
+      position: absolute;
+      top: 0;
+      left: 0;
+      height: 2px;
+      width: 0;
+      background: var(--accent);
+      box-shadow: 0 0 8px var(--accent);
+      opacity: 0;
+      z-index: 95;
+      pointer-events: none;
+      transition: width .25s ease, opacity .3s ease;
+    }
+    .load-bar.loading { opacity: 1; width: 75%; transition: width 6s cubic-bezier(.1,.7,.2,1), opacity .2s; }
+    .load-bar.done { opacity: 0; width: 100%; transition: width .2s ease, opacity .4s ease .2s; }
+
     .exit-focus {
       position: absolute;
-      top: 12px;
+      top: max(12px, env(safe-area-inset-top));
       right: 16px;
+      min-height: 36px;
       background: var(--drawer-bg);
       color: var(--text-main);
       border: 1px solid var(--border-color);
-      padding: 6px 12px;
+      padding: 6px 14px;
       border-radius: 20px;
       font-size: 0.8rem;
       cursor: pointer;
       opacity: 0;
       pointer-events: none;
       transform: translateY(-20px);
-      transition: all 0.3s ease;
+      transition: opacity .3s ease, transform .3s ease;
       z-index: 100;
       box-shadow: 0 4px 12px rgba(0,0,0,0.2);
     }
-
     .app-layout.focus-mode .exit-focus {
-      opacity: 1;
+      opacity: .55;
       pointer-events: auto;
       transform: translateY(0);
     }
+    .app-layout.focus-mode .exit-focus:hover,
+    .app-layout.focus-mode .exit-focus:focus-visible { opacity: 1; }
 
+    /* ================= 隨手備忘錄 ================= */
     .scratchpad-drawer {
       position: absolute;
-      top: 64px;
+      top: 12px;
       right: 14px;
-      width: 340px;
-      height: min(520px, calc(100% - 78px));
+      width: min(380px, 92vw);
+      height: min(560px, calc(100% - 24px));
       background: var(--drawer-bg);
+      -webkit-backdrop-filter: blur(10px);
+              backdrop-filter: blur(10px);
       border: 1px solid var(--border-color);
       border-radius: 14px;
       display: flex;
@@ -332,30 +383,44 @@
       box-shadow: 0 12px 32px rgba(0,0,0,0.28);
       overflow: hidden;
     }
-
     .scratchpad-drawer.open {
       opacity: 1;
       visibility: visible;
       pointer-events: auto;
-      transform: translateY(0) scale(1);
+      transform: none;
     }
 
     .scratchpad-header {
-      padding: 12px 16px;
+      min-height: 52px;
+      padding: 9px 8px 9px 14px;
       border-bottom: 1px solid var(--border-color);
       display: flex;
       justify-content: space-between;
       align-items: center;
+      gap: 8px;
       font-weight: 600;
       color: var(--text-main);
       font-size: 0.9rem;
     }
+    .scratchpad-title { display: flex; align-items: center; gap: 10px; min-width: 0; }
+    .save-status { font-size: 0.75rem; color: var(--text-muted); font-weight: 400; }
+
+    .scratchpad-close {
+      flex: 0 0 34px;
+      width: 34px;
+      height: 34px;
+      border-radius: 8px;
+      background: var(--hover-bg);
+      color: var(--text-main);
+    }
+    .scratchpad-close:hover { background: var(--border-color); }
 
     .scratchpad-body {
       flex: 1;
       min-height: 0;
       padding: 12px;
       overflow-y: auto;
+      overscroll-behavior: contain;
     }
 
     .scratchpad-blocks {
@@ -363,6 +428,7 @@
       grid-template-columns: 1fr;
       gap: 10px;
       align-content: start;
+      margin-bottom: 10px;
     }
 
     .scratchpad-block {
@@ -371,7 +437,9 @@
       border-radius: 12px;
       overflow: hidden;
       box-shadow: 0 2px 8px rgba(0,0,0,.06);
+      transition: border-color .2s ease;
     }
+    .scratchpad-block:focus-within { border-color: color-mix(in srgb, var(--accent) 55%, var(--border-color)); }
 
     .scratchpad-block-head {
       display: flex;
@@ -399,6 +467,13 @@
       opacity: .75;
     }
 
+    .scratchpad-block-count {
+      flex: 0 0 auto;
+      font-size: .7rem;
+      color: var(--text-muted);
+      font-variant-numeric: tabular-nums;
+    }
+
     .scratchpad-block-delete {
       flex: 0 0 auto;
       width: 30px;
@@ -410,11 +485,7 @@
       cursor: pointer;
       font-size: 16px;
     }
-
-    .scratchpad-block-delete:hover {
-      background: var(--border-color);
-      color: var(--text-main);
-    }
+    .scratchpad-block-delete:hover { background: var(--border-color); color: var(--text-main); }
 
     .scratchpad-block-content {
       display: block;
@@ -428,7 +499,6 @@
       color: var(--text-main);
       font-size: .85rem;
       line-height: 1.55;
-      box-sizing: border-box;
     }
 
     .scratchpad-add {
@@ -441,11 +511,7 @@
       cursor: pointer;
       font-weight: 600;
     }
-
-    .scratchpad-add:hover {
-      background: var(--hover-bg);
-      color: var(--text-main);
-    }
+    .scratchpad-add:hover { background: var(--hover-bg); color: var(--text-main); }
 
     .scratchpad-footer {
       padding: 10px 12px;
@@ -455,300 +521,85 @@
       flex-wrap: wrap;
     }
 
-    .scratchpad-footer .btn-action {
+    .btn-action {
       flex: 1 1 auto;
       min-width: 58px;
       white-space: nowrap;
-    }
-
-    .btn-action {
-      flex: 1;
       padding: 6px 0;
       background: var(--hover-bg);
       border: 1px solid var(--border-color);
       color: var(--text-main);
-      border-radius: 4px;
+      border-radius: 6px;
       cursor: pointer;
       font-size: 0.8rem;
     }
+    .btn-action:hover { background: var(--border-color); }
 
-    .btn-action:hover {
-      background: var(--border-color);
-    }
-  
-    /* ================= 整體介面精修 ================= */
-    .nav-bar {
-      min-height: var(--nav-height);
-      padding-left: clamp(10px, 1.5vw, 22px);
-      padding-right: clamp(10px, 1.5vw, 22px);
-      box-shadow: 0 1px 0 rgba(255,255,255,.02);
-      position: relative;
-      z-index: 120;
-    }
-
-    .nav-left, .nav-right { gap: 6px; }
-
-    .brand {
-      min-width: max-content;
-      padding: 7px 9px;
-      border-radius: var(--radius-sm);
-      margin-right: 2px;
-    }
-
-    .nav-item {
-      position: relative;
-      min-height: 40px;
-      padding: 7px 11px;
-      border: 1px solid transparent;
-      border-radius: var(--radius-sm);
-    }
-
-    .nav-item.active {
-      border-color: color-mix(in srgb, var(--accent) 24%, transparent);
-      box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--accent) 8%, transparent);
-    }
-
-
-    .nav-item.active::after {
-      content: "";
-      position: absolute;
-      left: 12px;
-      right: 12px;
-      bottom: 2px;
-      height: 2px;
-      border-radius: 99px;
-      background: var(--accent);
-      opacity: .9;
-    }
-
-    .btn-icon {
-      width: 38px;
-      height: 38px;
-      border-radius: var(--radius-sm);
-    }
-
-    .btn-icon:focus-visible,
-    .nav-item:focus-visible,
-    .btn-action:focus-visible,
-    .dot:focus-visible {
-      outline: 2px solid var(--accent);
-      outline-offset: 2px;
-    }
-
-    .theme-dots { gap: 7px; padding: 0 3px; }
-
-    .dot {
-      width: 14px;
-      height: 14px;
-      box-shadow: 0 0 0 2px transparent;
-    }
-
-    .dot:hover { box-shadow: 0 0 0 2px var(--hover-bg); }
-    .dot[aria-pressed="true"] { box-shadow: 0 0 0 2px var(--text-main); }
-
-    .content-area { background: var(--bottom-bg); }
-
-    .scratchpad-drawer {
-      width: min(380px, 92vw);
-      box-shadow: -12px 0 35px rgba(0,0,0,.22);
-    }
-
-    .scratchpad-header {
-      min-height: 54px;
-      padding: 10px 12px 10px 16px;
-    }
-
-    .scratchpad-title {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-
-    .scratchpad-close {
-      width: 34px;
-      height: 34px;
-      border: 0;
-      border-radius: 9px;
-      background: var(--hover-bg);
-      color: var(--text-main);
-      cursor: pointer;
-      font-size: 18px;
-      line-height: 1;
-    }
-
-    .scratchpad-close:hover { background: var(--border-color); }
-
-    .scratchpad-body textarea::placeholder { color: var(--text-muted); opacity: .8; }
-
-    @media (prefers-reduced-motion: reduce) {
-      *, *::before, *::after {
-        scroll-behavior: auto !important;
-        transition-duration: .01ms !important;
-        animation-duration: .01ms !important;
-        animation-iteration-count: 1 !important;
-      }
-    }
-
-
-    .scratchpad-header {
-      min-height: 52px;
-      padding: 9px 8px 9px 14px;
-      border-bottom: 1px solid var(--border-color);
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      gap: 8px;
-    }
-
-    .scratchpad-close {
-      flex: 0 0 34px;
-      width: 34px;
-      height: 34px;
-      border-radius: 8px;
-    }
-
-    /* ================= 手機介面優化 ================= */
+    /* ================= 手機 ================= */
     @media (max-width: 768px) {
-      html, body {
-        width: 100%;
-        min-width: 0;
-        height: 100%;
-        height: 100dvh;
-        overflow: hidden;
-        overscroll-behavior: none;
-      }
-
-      .app-layout {
-        grid-template-rows: auto 1fr;
-        height: 100dvh;
-      }
-
-      .app-layout.focus-mode {
-        grid-template-rows: 0 1fr;
-      }
-
       .nav-bar {
         min-height: 58px;
-        height: auto;
         padding: 6px 8px;
-        gap: 6px;
-        align-items: center;
-        overflow: hidden;
+        padding-top: max(6px, env(safe-area-inset-top));
       }
 
       .nav-left {
-        min-width: 0;
-        flex: 1 1 auto;
         gap: 5px;
-        overflow-x: auto;
-        overflow-y: hidden;
         scrollbar-width: none;
-        -webkit-overflow-scrolling: touch;
-        overscroll-behavior-x: contain;
       }
+      .nav-left::-webkit-scrollbar { display: none; }
 
-      .nav-left::-webkit-scrollbar {
-        display: none;
-      }
+      .brand { font-size: 0.9rem; gap: 5px; min-height: 44px; padding: 8px 9px; }
+      .brand .icon,
+      .nav-item .icon { width: 17px; height: 17px; }
+      .nav-item .ext { width: 11px; height: 11px; }
 
-      .brand {
-        flex: 0 0 auto;
-        margin-right: 2px;
-        gap: 5px;
-        font-size: 0.9rem;
-      }
-      .brand-home {
-        min-height: 44px;
-        padding: 8px 9px;
-      }
-
-      .brand .icon {
-        width: 17px;
-        height: 17px;
-      }
-
-      .nav-separator {
-        flex: 0 0 auto;
-        height: 22px;
-        margin: 0 2px;
-      }
+      .nav-separator { height: 22px; margin: 0 2px; }
 
       .nav-item {
-        flex: 0 0 auto;
         min-height: 44px;
         padding: 8px 10px;
         gap: 5px;
         border-radius: 9px;
         font-size: 0.82rem;
-        -webkit-tap-highlight-color: transparent;
         touch-action: manipulation;
       }
 
-      .nav-item .icon {
-        width: 17px;
-        height: 17px;
-      }
-
-      .nav-right {
-        flex: 0 0 auto;
-        gap: 2px;
-      }
-
+      .nav-right { gap: 2px; }
       .nav-right > .nav-separator,
       .nav-right > .clock,
-      .theme-dots {
-        display: none;
-      }
+      .theme-dots { display: none; }
+      .theme-cycle { display: inline-flex; }
 
       .btn-icon {
         flex: 0 0 42px;
         width: 42px;
         height: 44px;
         border-radius: 9px;
-        -webkit-tap-highlight-color: transparent;
         touch-action: manipulation;
       }
+      .btn-icon .icon { width: 19px; height: 19px; }
 
-      .btn-icon .icon {
-        width: 19px;
-        height: 19px;
-      }
+      .exit-focus { right: 10px; min-height: 42px; padding: 8px 14px; font-size: 0.85rem; border-radius: 22px; }
 
-      .content-area {
-        min-height: 0;
-      }
-
-      iframe {
-        width: 100%;
-        height: 100%;
-        min-height: 0;
-        -webkit-overflow-scrolling: touch;
-      }
-
-      .exit-focus {
-        top: max(10px, env(safe-area-inset-top));
-        right: 10px;
-        min-height: 42px;
-        padding: 8px 14px;
-        font-size: 0.85rem;
-        border-radius: 22px;
-        -webkit-tap-highlight-color: transparent;
-      }
-
+      /* 手機版備忘錄：從右側滑入的全高抽屜 */
       .scratchpad-drawer {
+        position: fixed;
         top: 0;
-        right: -100%;
+        right: 0;
         width: min(100%, 420px);
-        max-width: 100%;
         height: 100%;
         height: 100dvh;
-        border-left: none;
+        border-radius: 0;
+        border-top: 0;
+        border-right: 0;
+        border-bottom: 0;
+        transform: translateX(100%);
+        transition: transform .25s ease, opacity .25s ease, visibility .25s ease;
         box-shadow: -8px 0 24px rgba(0,0,0,0.25);
+        z-index: 200;
       }
-
-      .scratchpad-drawer.open {
-        right: 0;
-      }
+      .scratchpad-drawer.open { transform: translateX(0); }
 
       .scratchpad-header {
         min-height: 58px;
@@ -756,24 +607,14 @@
         padding-top: max(10px, env(safe-area-inset-top));
         font-size: 0.95rem;
       }
+      .scratchpad-close { flex-basis: 40px; width: 40px; height: 40px; }
 
-      .scratchpad-body {
-        padding: 10px;
-      }
+      .scratchpad-body { padding: 10px; }
+      .scratchpad-blocks { gap: 8px; }
 
-      .scratchpad-blocks {
-        gap: 8px;
-      }
-
-      .scratchpad-block-title {
-        font-size: 16px;
-      }
-
-      .scratchpad-block-content {
-        font-size: 16px; /* 避免 iOS Safari 聚焦時自動放大 */
-        min-height: 120px;
-        line-height: 1.6;
-      }
+      /* 16px 以上避免 iOS Safari 聚焦時自動放大 */
+      .scratchpad-block-title { font-size: 16px; }
+      .scratchpad-block-content { font-size: 16px; min-height: 120px; line-height: 1.6; }
 
       .scratchpad-footer {
         padding: 10px 14px;
@@ -786,101 +627,62 @@
         padding: 9px 0;
         border-radius: 8px;
         font-size: 0.9rem;
-        -webkit-tap-highlight-color: transparent;
         touch-action: manipulation;
       }
     }
 
-    /* 超窄手機：保留主要操作，讓導覽列可左右滑動 */
     @media (max-width: 420px) {
-      .nav-bar {
-        padding-left: 6px;
-        padding-right: 6px;
-      }
-
-      .nav-left {
-        gap: 3px;
-      }
-
-      .brand {
-        font-size: 0.82rem;
-      }
-
-      .nav-item {
-        padding-left: 9px;
-        padding-right: 9px;
-        font-size: 0.78rem;
-      }
-
-      .nav-right {
-        gap: 0;
-      }
-
-      .btn-icon {
-        flex-basis: 40px;
-        width: 40px;
-      }
+      .nav-bar { padding-left: 6px; padding-right: 6px; }
+      .nav-left { gap: 3px; }
+      .brand { font-size: 0.82rem; }
+      .nav-item { padding-left: 9px; padding-right: 9px; font-size: 0.78rem; }
+      .nav-right { gap: 0; }
+      .btn-icon { flex-basis: 40px; width: 40px; }
     }
 
-    /* 橫向手機：縮小導覽列高度，增加內容空間 */
-    @media (max-width: 900px) and (orientation: landscape) {
-      .nav-bar {
-        min-height: 50px;
-        padding-top: 3px;
-        padding-bottom: 3px;
-      }
-
-      .nav-item,
-      .btn-icon {
-        min-height: 40px;
-        height: 40px;
-      }
+    /* 橫向手機：壓低導覽列 */
+    @media (max-width: 900px) and (orientation: landscape) and (max-height: 500px) {
+      .nav-bar { min-height: 50px; padding-top: 3px; padding-bottom: 3px; }
+      .nav-item, .btn-icon, .brand { min-height: 40px; height: 40px; }
     }
 
-    /* 觸控裝置：取消 hover 造成的黏住效果 */
+    /* 觸控裝置：取消 hover 黏住 */
     @media (hover: none) and (pointer: coarse) {
       .nav-item:hover,
       .btn-icon:hover,
       .btn-action:hover,
-      .dot:hover {
+      .brand:hover {
         background-color: transparent;
         color: inherit;
-        transform: none;
       }
-
-      .nav-item.active {
-        color: var(--accent);
-        background-color: var(--hover-bg);
-      }
-
-      .nav-item.active::after {
-        left: 10px;
-        right: 10px;
-        bottom: 1px;
-      }
-
-      .scratchpad-close {
-        flex: 0 0 40px;
-        width: 40px;
-        height: 40px;
-      }
-
-      button, a, .dot {
-        -webkit-tap-highlight-color: transparent;
-      }
+      .nav-item:hover { color: var(--text-muted); }
+      .nav-item.active,
+      .nav-item.active:hover { color: var(--accent); background-color: var(--hover-bg); }
+      .nav-item.active::after { left: 10px; right: 10px; bottom: 1px; }
+      .btn-action:active,
+      .btn-icon:active,
+      .nav-item:active { background-color: var(--hover-bg); }
     }
 
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after {
+        scroll-behavior: auto !important;
+        transition-duration: .01ms !important;
+        animation-duration: .01ms !important;
+        animation-iteration-count: 1 !important;
+      }
+    }
   </style>
 </head>
 <body>
 
   <div class="app-layout" id="appLayout">
-    
+
     <header class="nav-bar">
-      <div class="nav-left">
-        <!-- 品牌區 -->
-        <button class="brand brand-home" onclick="openHome()" title="開啟首頁 index.html" aria-label="開啟首頁">
-          <svg class="icon" style="stroke: var(--accent)" viewBox="0 0 24 24">
+      <nav class="nav-left" id="navLeft" aria-label="主要導覽">
+        <!-- 品牌區：開啟首頁 -->
+        <button class="brand" id="brandHome" type="button" title="開啟首頁 index.html" aria-label="開啟首頁">
+          <svg class="icon" viewBox="0 0 24 24" aria-hidden="true">
             <rect x="3" y="3" width="7" height="7" rx="1.5"></rect>
             <rect x="14" y="3" width="7" height="7" rx="1.5"></rect>
             <rect x="14" y="14" width="7" height="7" rx="1.5"></rect>
@@ -888,235 +690,363 @@
           </svg>
           <span>奇奇</span>
         </button>
-        <div class="nav-separator"></div>
+        <div class="nav-separator" aria-hidden="true"></div>
 
-        <!-- 導覽連結 -->
-        <a href="smart_link_manager.html" target="content-frame" class="nav-item active" onclick="setActiveLink(this)" id="link-1" title="Alt+1">
-          <svg class="icon" viewBox="0 0 24 24"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg>
+        <!-- 導覽連結：target="content-frame" 的會在下方開啟 -->
+        <a href="smart_link_manager.html" target="content-frame" class="nav-item active" aria-current="page" id="link-1" title="Alt+1" draggable="false">
+          <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg>
           智能連結
         </a>
 
-        <a href="pay.html" target="content-frame" class="nav-item" onclick="setActiveLink(this)" id="link-2" title="Alt+2">
-          <svg class="icon" viewBox="0 0 24 24"><rect x="2" y="5" width="20" height="14" rx="2"></rect><line x1="2" y1="10" x2="22" y2="10"></line></svg>
+        <a href="pay.html" target="content-frame" class="nav-item" id="link-2" title="Alt+2" draggable="false">
+          <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><rect x="2" y="5" width="20" height="14" rx="2"></rect><line x1="2" y1="10" x2="22" y2="10"></line></svg>
           記帳
         </a>
 
-        <a href="https://chi.xo.je/PIC/" class="nav-item" onclick="openImageUploader(event, this)" id="link-3" title="Alt+3">
-          <svg class="icon" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>
+        <!-- 上傳圖片：在 chi.xo.je 上於下方開啟，其他網域開新分頁 -->
+        <a href="https://chi.xo.je/PIC/" class="nav-item" id="link-3" data-action="uploader" title="Alt+3" draggable="false">
+          <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>
           上傳圖片
         </a>
 
-        <a href="https://postcopilot.ai/zh-tw/download" target="content-frame" class="nav-item" onclick="setActiveLink(this)" id="link-4" title="Alt+4">
-          <svg class="icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"></circle><path d="M16 8v5a3 3 0 0 0 6 0v-1a10 10 0 1 0-3.92 7.94"></path></svg>
+        <a href="https://postcopilot.ai/zh-tw/download" target="content-frame" class="nav-item" id="link-4" title="Alt+4" draggable="false">
+          <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4"></circle><path d="M16 8v5a3 3 0 0 0 6 0v-1a10 10 0 1 0-3.92 7.94"></path></svg>
           脆下載
         </a>
 
-        <!-- ig下載：唯一在新分頁開啟，沒有 setActiveLink -->
-        <a href="https://saveclip.app/zh-tw9" target="_blank" class="nav-item" id="link-5" title="Alt+5 (新分頁)">
-          <svg class="icon" viewBox="0 0 24 24"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"></rect><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"></line></svg>
+        <a href="https://saveclip.app/zh-tw9" target="_blank" rel="noopener noreferrer" class="nav-item" id="link-5" title="Alt+5（新分頁）" draggable="false">
+          <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"></rect><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"></line></svg>
           ig下載
+          <svg class="icon ext" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 17 17 7"></path><path d="M8 7h9v9"></path></svg>
         </a>
 
-        <a href="f.html" target="content-frame" class="nav-item" onclick="setActiveLink(this)" id="link-6" title="Alt+6">
-          <svg class="icon" viewBox="0 0 24 24"><path d="M17.8 19.2 16 11l3.5-3.5C21 6 21.5 4 21 3c-1-.5-3 0-4.5 1.5L13 8 4.8 6.2c-.5-.1-.9.1-1.1.5l-.3.5c-.2.5-.1 1 .3 1.3L9 12l-2 3H4l-1 1 3 2 2 3 1-1v-3l3-2 3.5 5.3c.3.4.8.5 1.3.3l.5-.2c.4-.3.6-.7.5-1.2z"></path></svg>
+        <a href="f.html" target="content-frame" class="nav-item" id="link-6" title="Alt+6" draggable="false">
+          <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M17.8 19.2 16 11l3.5-3.5C21 6 21.5 4 21 3c-1-.5-3 0-4.5 1.5L13 8 4.8 6.2c-.5-.1-.9.1-1.1.5l-.3.5c-.2.5-.1 1 .3 1.3L9 12l-2 3H4l-1 1 3 2 2 3 1-1v-3l3-2 3.5 5.3c.3.4.8.5 1.3.3l.5-.2c.4-.3.6-.7.5-1.2z"></path></svg>
           福岡
         </a>
 
-        <a href="busan.html" target="content-frame" class="nav-item" onclick="setActiveLink(this)" id="link-7" title="Alt+7">
-          <svg class="icon" viewBox="0 0 24 24">
-            <path d="M12 21s7-6.2 7-12a7 7 0 1 0-14 0c0 5.8 7 12 7 12z"></path>
-            <circle cx="12" cy="9" r="2.5"></circle>
-          </svg>
+        <a href="busan.html" target="content-frame" class="nav-item" id="link-7" title="Alt+7" draggable="false">
+          <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21s7-6.2 7-12a7 7 0 1 0-14 0c0 5.8 7 12 7 12z"></path><circle cx="12" cy="9" r="2.5"></circle></svg>
           釜山
         </a>
 
-        <a href="https://ai-customs.tw/" target="_blank" rel="noopener noreferrer" class="nav-item" onclick="setActiveLink(this)" id="link-8" title="Alt+8">
-          <svg class="icon" viewBox="0 0 24 24">
-            <path d="M3 7h18"></path>
-            <path d="M5 7v13h14V7"></path>
-            <path d="M8 7V4h8v3"></path>
-            <path d="M9 12h6"></path>
-            <path d="M9 16h4"></path>
-          </svg>
+        <a href="https://ai-customs.tw/" target="_blank" rel="noopener noreferrer" class="nav-item" id="link-8" title="Alt+8（新分頁）" draggable="false">
+          <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 7h18"></path><path d="M5 7v13h14V7"></path><path d="M8 7V4h8v3"></path><path d="M9 12h6"></path><path d="M9 16h4"></path></svg>
           入境物品檢查
+          <svg class="icon ext" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 17 17 7"></path><path d="M8 7h9v9"></path></svg>
         </a>
 
-        <a href="https://susugo.codlin.me/" target="content-frame" class="nav-item" onclick="setActiveLink(this)" id="link-9" title="Alt+9">
-          <svg class="icon" viewBox="0 0 24 24">
-            <rect x="4" y="4" width="16" height="16" rx="3"></rect>
-            <path d="M8 9h8"></path>
-            <path d="M8 13h8"></path>
-            <path d="M8 17h5"></path>
-          </svg>
+        <a href="https://susugo.codlin.me/" target="content-frame" class="nav-item" id="link-9" title="Alt+9" draggable="false">
+          <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="4" width="16" height="16" rx="3"></rect><path d="M8 9h8"></path><path d="M8 13h8"></path><path d="M8 17h5"></path></svg>
           麥當勞
         </a>
-      </div>
+      </nav>
 
       <div class="nav-right">
-        <!-- 重新整理 -->
-        <button class="btn-icon" onclick="refreshIframe()" title="重新整理">
-          <svg class="icon" viewBox="0 0 24 24"><polyline points="23 4 23 10 17 10"></polyline><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path></svg>
+        <button class="btn-icon" id="btnRefresh" type="button" title="重新整理" aria-label="重新整理">
+          <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><polyline points="23 4 23 10 17 10"></polyline><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path></svg>
         </button>
-        <!-- 在新分頁開啟 -->
-        <button class="btn-icon" onclick="openNewTab()" title="在新分頁開啟目前內容">
-          <svg class="icon" viewBox="0 0 24 24"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg>
+        <button class="btn-icon" id="btnNewTab" type="button" title="在新分頁開啟目前內容" aria-label="在新分頁開啟目前內容">
+          <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg>
         </button>
-        <!-- 專注模式 -->
-        <button class="btn-icon" onclick="toggleFocus()" title="專注模式 (隱藏頂部)">
-          <svg class="icon" viewBox="0 0 24 24"><path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"></path></svg>
+        <button class="btn-icon" id="btnFocus" type="button" title="專注模式（隱藏頂部，Esc 離開）" aria-label="專注模式">
+          <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"></path></svg>
         </button>
-        <!-- 隨手備忘錄 -->
-        <button class="btn-icon" onclick="toggleScratchpad()" title="隨手備忘錄">
-          <svg class="icon" viewBox="0 0 24 24"><path d="M12 20h9"></path><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path></svg>
+        <button class="btn-icon" id="btnScratch" type="button" title="隨手備忘錄（Alt+0）" aria-label="隨手備忘錄" aria-controls="scratchpad" aria-pressed="false">
+          <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 20h9"></path><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path></svg>
+        </button>
+        <!-- 手機版：主題輪替按鈕（桌面版用色票） -->
+        <button class="btn-icon theme-cycle" id="btnThemeCycle" type="button" title="切換主題" aria-label="切換主題">
+          <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"></circle><path d="M12 3a9 9 0 0 0 0 18z" fill="currentColor"></path></svg>
         </button>
 
-        <div class="nav-separator"></div>
+        <div class="nav-separator" aria-hidden="true"></div>
+        <time class="clock" id="clockDisplay">00:00 週一</time>
+        <div class="nav-separator" aria-hidden="true"></div>
 
-        <!-- 時鐘 -->
-        <div class="clock" id="clockDisplay">00:00 週一</div>
-
-        <div class="nav-separator"></div>
-
-        <!-- 主題色票 -->
-        <div class="theme-dots">
-          <button class="dot" type="button" style="background-color: #38bdf8;" onclick="setTheme('default')" aria-label="深藍主題" title="深藍"></button>
-          <button class="dot" type="button" style="background-color: #34d399;" onclick="setTheme('emerald')" aria-label="翡翠主題" title="翡翠"></button>
-          <button class="dot" type="button" style="background-color: #c084fc;" onclick="setTheme('cyber')" aria-label="紫色主題" title="紫色"></button>
-          <button class="dot" type="button" style="background-color: #fb923c;" onclick="setTheme('sunset')" aria-label="夕陽主題" title="夕陽"></button>
-          <button class="dot" type="button" style="background-color: #64748b;" onclick="setTheme('light')" aria-label="淺色主題" title="淺色"></button>
+        <div class="theme-dots" role="group" aria-label="主題">
+          <button class="dot" type="button" data-theme-name="default" style="background-color:#38bdf8;" aria-label="深藍主題" title="深藍"></button>
+          <button class="dot" type="button" data-theme-name="emerald" style="background-color:#34d399;" aria-label="翡翠主題" title="翡翠"></button>
+          <button class="dot" type="button" data-theme-name="cyber"   style="background-color:#c084fc;" aria-label="紫色主題" title="紫色"></button>
+          <button class="dot" type="button" data-theme-name="sunset"  style="background-color:#fb923c;" aria-label="夕陽主題" title="夕陽"></button>
+          <button class="dot" type="button" data-theme-name="light"   style="background-color:#64748b;" aria-label="淺色主題" title="淺色"></button>
         </div>
       </div>
     </header>
 
     <main class="content-area">
-      <!-- 內容 iframe -->
-      <iframe id="content-frame" name="content-frame" src="smart_link_manager.html"></iframe>
-      
-      <!-- 專注模式離開按鈕 -->
-      <button class="exit-focus" onclick="toggleFocus()">退出專注模式</button>
+      <div class="load-bar" id="loadBar" aria-hidden="true"></div>
 
-      <!-- 隨手備忘錄抽屜 -->
-      <div class="scratchpad-drawer" id="scratchpad">
+      <iframe id="content-frame" name="content-frame" title="內容區" src="smart_link_manager.html"
+              allow="clipboard-read; clipboard-write; fullscreen"></iframe>
+
+      <button class="exit-focus" id="btnExitFocus" type="button">退出專注模式</button>
+
+      <!-- 隨手備忘錄 -->
+      <aside class="scratchpad-drawer" id="scratchpad" aria-label="隨手備忘錄" aria-hidden="true">
         <div class="scratchpad-header">
-          <div style="display:flex;align-items:center;gap:10px;min-width:0;">
+          <div class="scratchpad-title">
             <span>隨手備忘錄</span>
-            <span style="font-size:0.75rem;color:var(--text-muted);" id="saveStatus">自動儲存中...</span>
+            <span class="save-status" id="saveStatus" aria-live="polite">已自動儲存</span>
           </div>
-          <button class="btn-icon scratchpad-close" onclick="toggleScratchpad()" title="關閉備忘錄" aria-label="關閉備忘錄">
-            <svg class="icon" viewBox="0 0 24 24">
-              <line x1="18" y1="6" x2="6" y2="18"></line>
-              <line x1="6" y1="6" x2="18" y2="18"></line>
-            </svg>
+          <button class="btn-icon scratchpad-close" id="btnScratchClose" type="button" title="關閉備忘錄（Esc）" aria-label="關閉備忘錄">
+            <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
           </button>
         </div>
         <div class="scratchpad-body">
           <div class="scratchpad-blocks" id="scratchpadBlocks"></div>
-          <button class="scratchpad-add" type="button" onclick="addScratchBlock()">＋ 新增區塊</button>
+          <button class="scratchpad-add" id="btnAddBlock" type="button">＋ 新增區塊</button>
         </div>
         <div class="scratchpad-footer">
-          <button class="btn-action" type="button" onclick="selectAllScratchpad()">選取目前</button>
-          <button class="btn-action" type="button" onclick="copyScratchpad()">📋 複製全部</button>
-          <button class="btn-action" type="button" onclick="pasteScratchpad()">📌 貼上</button>
-          <button class="btn-action" type="button" onclick="clearScratchpad()">清空</button>
+          <button class="btn-action" type="button" data-keep-focus id="btnSelect">選取目前</button>
+          <button class="btn-action" type="button" data-keep-focus id="btnCopy">📋 複製全部</button>
+          <button class="btn-action" type="button" data-keep-focus id="btnPaste">📌 貼上</button>
+          <button class="btn-action" type="button" id="btnClear">清空</button>
         </div>
-      </div>
+      </aside>
     </main>
 
   </div>
 
   <script>
-    /* ================= 導覽列與 iframe 邏輯 ================= */
-    const iframe = document.getElementById('content-frame');
-    let currentIframeUrl = 'smart_link_manager.html';
-    
-    // 切換活動標籤樣式 (除了ig下載)
-    function setActiveLink(element) {
-      document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
-      element.classList.add('active');
-      // 更新當前 iframe 網址紀錄，避免 CORS 錯誤
-      currentIframeUrl = element.getAttribute('href');
+  (function () {
+    'use strict';
+
+    /* ================= 共用小工具 ================= */
+    const $ = (s, root = document) => root.querySelector(s);
+    const $$ = (s, root = document) => Array.from(root.querySelectorAll(s));
+
+    // localStorage 包一層，隱私模式或被封鎖時不會整頁壞掉
+    const store = {
+      get(k) { try { return localStorage.getItem(k); } catch (e) { return null; } },
+      set(k, v) { try { localStorage.setItem(k, v); return true; } catch (e) { return false; } },
+      remove(k) { try { localStorage.removeItem(k); } catch (e) {} }
+    };
+
+    const layout = $('#appLayout');
+    const iframe = $('#content-frame');
+    const navLeft = $('#navLeft');
+    const loadBar = $('#loadBar');
+    const navItems = $$('.nav-item', navLeft);
+    const LAST_PAGE_KEY = 'chichi_last_page';
+
+    /* ================= iframe 導覽 ================= */
+    let currentIframeUrl = iframe.getAttribute('src');
+    let loadTimer;
+
+    function markActive(el) {
+      navItems.forEach(a => { a.classList.remove('active'); a.removeAttribute('aria-current'); });
+      if (el) {
+        el.classList.add('active');
+        el.setAttribute('aria-current', 'page');
+        el.scrollIntoView({ block: 'nearest', inline: 'nearest', behavior: 'smooth' });
+      }
     }
 
-    // 點擊「奇奇」：在下方內容區開啟 index.html
-    function openHome() {
-      document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
-      currentIframeUrl = 'index.html';
-      iframe.src = currentIframeUrl;
+    function startLoading() {
+      clearTimeout(loadTimer);
+      loadBar.classList.remove('done');
+      void loadBar.offsetWidth; // 重新觸發動畫
+      loadBar.classList.add('loading');
+      loadTimer = setTimeout(finishLoading, 15000); // 被擋住的網站不會觸發 load，保底收起
     }
 
-    // 上傳圖片：依目前網站主機決定開啟方式
-    // chi.xo.je → 在下方 iframe 開啟
-    // 4chi828.github.io → 新視窗開啟
-    function openImageUploader(event, element) {
-      event.preventDefault();
-      const url = element.getAttribute('href');
-      const host = window.location.hostname.toLowerCase();
+    function finishLoading() {
+      clearTimeout(loadTimer);
+      loadBar.classList.remove('loading');
+      loadBar.classList.add('done');
+    }
+
+    iframe.addEventListener('load', finishLoading);
+
+    function loadInFrame(url, el) {
+      currentIframeUrl = url;
+      markActive(el || null);
+      startLoading();
+      iframe.src = url;
+      store.set(LAST_PAGE_KEY, JSON.stringify({ url, id: el ? el.id : null }));
+    }
+
+    // 取得 iframe 目前實際網址（同網域時能抓到裡面點過的頁面）
+    function getFrameUrl() {
+      try {
+        const href = iframe.contentWindow.location.href;
+        if (href && href !== 'about:blank') return href;
+      } catch (e) { /* 跨網域讀不到，用紀錄值 */ }
+      return currentIframeUrl;
+    }
+
+    function openHome() { loadInFrame('index.html', null); }
+
+    function openImageUploader(el) {
+      const url = el.getAttribute('href');
+      const host = location.hostname.toLowerCase();
       if (host === 'chi.xo.je' || host.endsWith('.chi.xo.je')) {
-        document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
-        element.classList.add('active');
-        currentIframeUrl = url;
-        iframe.src = url;
-      } else if (host === '4chi828.github.io' || host.endsWith('.4chi828.github.io')) {
-        window.open(url, '_blank', 'noopener,noreferrer');
+        loadInFrame(url, el);
       } else {
         window.open(url, '_blank', 'noopener,noreferrer');
       }
     }
 
-    // 重新整理 iframe
     function refreshIframe() {
-      iframe.src = currentIframeUrl;
-    }
-
-    // 在新分頁開啟目前的 iframe 來源
-    function openNewTab() {
-      if(currentIframeUrl) {
-        window.open(currentIframeUrl, '_blank');
+      startLoading();
+      try {
+        iframe.contentWindow.location.reload(); // 同網域：保留 iframe 內的頁面位置
+      } catch (e) {
+        iframe.src = currentIframeUrl;
       }
     }
 
-    // 專注全螢幕模式
-    const layout = document.getElementById('appLayout');
-    function toggleFocus() {
-      layout.classList.toggle('focus-mode');
+    function openNewTab() {
+      const url = getFrameUrl();
+      if (url) window.open(url, '_blank', 'noopener');
     }
 
-    /* ================= 鍵盤快捷鍵 (Alt+1 ~ Alt+9) ================= */
+    // 導覽列點擊（事件委派）
+    navLeft.addEventListener('click', (e) => {
+      const a = e.target.closest('a.nav-item');
+      if (!a) return;
+      if (drag.moved) { e.preventDefault(); return; } // 剛拖曳完不算點擊
+
+      if (a.dataset.action === 'uploader') {
+        e.preventDefault();
+        openImageUploader(a);
+      } else if (a.getAttribute('target') === 'content-frame') {
+        e.preventDefault();
+        loadInFrame(a.getAttribute('href'), a);
+      }
+      // 其餘（target="_blank"）走瀏覽器預設：開新分頁，不改變目前標籤
+    });
+
+    $('#brandHome').addEventListener('click', openHome);
+    $('#btnRefresh').addEventListener('click', refreshIframe);
+    $('#btnNewTab').addEventListener('click', openNewTab);
+
+    // 還原上次開啟的頁面
+    (function restoreLastPage() {
+      let saved;
+      try { saved = JSON.parse(store.get(LAST_PAGE_KEY) || 'null'); } catch (e) {}
+      if (!saved || !saved.url || saved.url === currentIframeUrl) { startLoading(); return; }
+      const el = saved.id ? document.getElementById(saved.id) : null;
+      // 只還原仍存在、且會在下方開啟的項目（或首頁）
+      if (el && (el.getAttribute('target') === 'content-frame' || el.dataset.action === 'uploader') && el.getAttribute('href') === saved.url) {
+        loadInFrame(saved.url, el);
+      } else if (!saved.id && saved.url === 'index.html') {
+        loadInFrame('index.html', null);
+      } else {
+        startLoading();
+      }
+    })();
+
+    /* ================= 導覽列：滑鼠拖曳 / 滾輪橫向捲動 ================= */
+    const drag = { down: false, x: 0, left: 0, moved: false };
+
+    navLeft.addEventListener('pointerdown', (e) => {
+      if (e.pointerType !== 'mouse' || e.button !== 0) return;
+      drag.down = true;
+      drag.moved = false;
+      drag.x = e.clientX;
+      drag.left = navLeft.scrollLeft;
+    });
+
+    window.addEventListener('pointermove', (e) => {
+      if (!drag.down) return;
+      const dx = e.clientX - drag.x;
+      if (!drag.moved && Math.abs(dx) > 5) {
+        drag.moved = true;
+        navLeft.classList.add('dragging');
+      }
+      if (drag.moved) navLeft.scrollLeft = drag.left - dx;
+    });
+
+    window.addEventListener('pointerup', () => {
+      if (!drag.down) return;
+      drag.down = false;
+      navLeft.classList.remove('dragging');
+      setTimeout(() => { drag.moved = false; }, 0); // 讓緊接著的 click 被忽略
+    });
+
+    navLeft.addEventListener('wheel', (e) => {
+      if (navLeft.scrollWidth <= navLeft.clientWidth) return;
+      if (Math.abs(e.deltaY) > Math.abs(e.deltaX)) {
+        e.preventDefault();
+        navLeft.scrollBy({ left: e.deltaY, behavior: 'auto' });
+      }
+    }, { passive: false });
+
+    /* ================= 專注模式 ================= */
+    const btnFocus = $('#btnFocus');
+    function toggleFocus(force) {
+      const on = layout.classList.toggle('focus-mode', force);
+      btnFocus.setAttribute('aria-pressed', on ? 'true' : 'false');
+      if (on) $('#btnExitFocus').focus({ preventScroll: true });
+    }
+    btnFocus.addEventListener('click', () => toggleFocus());
+    $('#btnExitFocus').addEventListener('click', () => toggleFocus(false));
+
+    /* ================= 鍵盤快捷鍵 ================= */
     document.addEventListener('keydown', (e) => {
-      // 確保用戶按下 Alt 鍵且按鍵是 1 到 9
-      if (e.altKey && e.key >= '1' && e.key <= '9') {
-        e.preventDefault(); // 阻止瀏覽器預設行為
-        const link = document.getElementById(`link-${e.key}`);
-        if (link) {
-          link.click();
+      // 用 e.code 判斷，macOS 的 Option+數字也能用
+      if (e.altKey && !e.ctrlKey && !e.metaKey) {
+        const m = /^(?:Digit|Numpad)([0-9])$/.exec(e.code);
+        if (m) {
+          e.preventDefault();
+          if (m[1] === '0') { toggleScratchpad(); return; }
+          const link = document.getElementById('link-' + m[1]);
+          if (link) link.click();
+          return;
         }
+      }
+      if (e.key === 'Escape') {
+        if (scratchpad.classList.contains('open')) toggleScratchpad(false);
+        else if (layout.classList.contains('focus-mode')) toggleFocus(false);
       }
     });
 
-    /* ================= 時鐘邏輯 ================= */
-    const clockDisplay = document.getElementById('clockDisplay');
+    /* ================= 時鐘（對齊整分鐘更新） ================= */
+    const clockDisplay = $('#clockDisplay');
     const days = ['週日', '週一', '週二', '週三', '週四', '週五', '週六'];
 
     function updateClock() {
       const now = new Date();
       const h = String(now.getHours()).padStart(2, '0');
       const m = String(now.getMinutes()).padStart(2, '0');
-      const d = days[now.getDay()];
-      clockDisplay.textContent = `${h}:${m} ${d}`;
+      clockDisplay.textContent = `${h}:${m} ${days[now.getDay()]}`;
+      clockDisplay.dateTime = now.toISOString();
+      setTimeout(updateClock, 60000 - (now.getSeconds() * 1000 + now.getMilliseconds()) + 50);
     }
-    setInterval(updateClock, 1000);
-    updateClock(); // 初始呼叫
+    updateClock();
+    // 從背景切回來時立即校正
+    document.addEventListener('visibilitychange', () => { if (!document.hidden) { const n = new Date(); clockDisplay.textContent = `${String(n.getHours()).padStart(2,'0')}:${String(n.getMinutes()).padStart(2,'0')} ${days[n.getDay()]}`; } });
 
-    /* ================= 隨手備忘錄：分區塊 (LocalStorage) ================= */
-    const scratchpad = document.getElementById('scratchpad');
-    const scratchpadBlocks = document.getElementById('scratchpadBlocks');
-    const saveStatus = document.getElementById('saveStatus');
+    /* ================= 隨手備忘錄 ================= */
+    const scratchpad = $('#scratchpad');
+    const scratchpadBlocks = $('#scratchpadBlocks');
+    const saveStatus = $('#saveStatus');
+    const btnScratch = $('#btnScratch');
     const SCRATCH_BLOCKS_KEY = 'chichi_scratchpad_blocks';
     const LEGACY_SCRATCH_KEY = 'chichi_scratchpad';
-    let saveTimeout;
+    let saveTimeout = null;
+    let statusTimeout = null;
+    let lastBlockId = null; // 記住最後編輯的區塊（點按鈕時焦點會跑掉）
 
-    function toggleScratchpad() {
-      scratchpad.classList.toggle('open');
+    function setStatus(text, revertMs) {
+      saveStatus.textContent = text;
+      clearTimeout(statusTimeout);
+      if (revertMs) statusTimeout = setTimeout(() => { saveStatus.textContent = '已自動儲存'; }, revertMs);
+    }
+
+    function toggleScratchpad(force) {
+      const open = scratchpad.classList.toggle('open', force);
+      scratchpad.setAttribute('aria-hidden', open ? 'false' : 'true');
+      btnScratch.setAttribute('aria-pressed', open ? 'true' : 'false');
+      if (open) {
+        const target = getTargetTextarea();
+        if (target && window.matchMedia('(hover: hover)').matches) target.focus({ preventScroll: true });
+      } else {
+        flushSave();
+        if (scratchpad.contains(document.activeElement)) btnScratch.focus({ preventScroll: true });
+      }
     }
 
     function makeScratchBlock(title = '', content = '') {
@@ -1129,26 +1059,26 @@
 
     function getScratchBlocks() {
       try {
-        const raw = localStorage.getItem(SCRATCH_BLOCKS_KEY);
-        if (raw) {
-          const data = JSON.parse(raw);
-          if (Array.isArray(data) && data.length) return data;
+        const data = JSON.parse(store.get(SCRATCH_BLOCKS_KEY) || 'null');
+        if (Array.isArray(data) && data.length) {
+          return data.map(b => ({ id: b.id || makeScratchBlock().id, title: b.title || '', content: b.content || '' }));
         }
       } catch (e) {}
-
-      // 舊版單一備忘錄自動轉成第一個區塊，不讓既有內容消失
-      const legacy = localStorage.getItem(LEGACY_SCRATCH_KEY) || '';
-      if (legacy) {
-        return [makeScratchBlock('一般', legacy)];
-      }
-
+      // 舊版單一備忘錄自動轉成第一個區塊
+      const legacy = store.get(LEGACY_SCRATCH_KEY) || '';
+      if (legacy) return [makeScratchBlock('一般', legacy)];
       return [makeScratchBlock('我的備忘', '')];
     }
 
     let scratchBlocks = getScratchBlocks();
 
-    function renderScratchBlocks(focusNew = false) {
-      scratchpadBlocks.innerHTML = '';
+    function countLabel(text) {
+      const n = [...(text || '')].length;
+      return n ? `${n} 字` : '';
+    }
+
+    function renderScratchBlocks(focusId = null) {
+      const frag = document.createDocumentFragment();
 
       scratchBlocks.forEach((block, index) => {
         const card = document.createElement('div');
@@ -1164,10 +1094,14 @@
         title.placeholder = '區塊標題';
         title.value = block.title || '';
         title.setAttribute('aria-label', `第 ${index + 1} 個區塊標題`);
-        title.addEventListener('input', () => {
-          block.title = title.value;
-          scheduleScratchSave();
+        title.addEventListener('input', () => { block.title = title.value; scheduleScratchSave(); });
+        title.addEventListener('keydown', (e) => {
+          if (e.key === 'Enter' && !e.isComposing) { e.preventDefault(); content.focus(); }
         });
+
+        const count = document.createElement('span');
+        count.className = 'scratchpad-block-count';
+        count.textContent = countLabel(block.content);
 
         const del = document.createElement('button');
         del.className = 'scratchpad-block-delete';
@@ -1177,8 +1111,7 @@
         del.setAttribute('aria-label', '刪除這個區塊');
         del.addEventListener('click', () => deleteScratchBlock(block.id));
 
-        head.appendChild(title);
-        head.appendChild(del);
+        head.append(title, count, del);
 
         const content = document.createElement('textarea');
         content.className = 'scratchpad-block-content';
@@ -1187,47 +1120,74 @@
         content.setAttribute('aria-label', `${block.title || '備忘'} 內容`);
         content.addEventListener('input', () => {
           block.content = content.value;
+          count.textContent = countLabel(content.value);
           scheduleScratchSave();
         });
 
-        card.appendChild(head);
-        card.appendChild(content);
-        scratchpadBlocks.appendChild(card);
+        card.append(head, content);
+        frag.appendChild(card);
       });
 
-      if (focusNew) {
-        const cards = scratchpadBlocks.querySelectorAll('.scratchpad-block');
-        const last = cards[cards.length - 1];
-        if (last) {
-          const title = last.querySelector('.scratchpad-block-title');
+      scratchpadBlocks.replaceChildren(frag);
+
+      if (focusId) {
+        const card = scratchpadBlocks.querySelector(`[data-id="${focusId}"]`);
+        const title = card && card.querySelector('.scratchpad-block-title');
+        if (title) {
           title.focus();
           title.select();
+          card.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
         }
       }
     }
 
+    scratchpadBlocks.addEventListener('focusin', (e) => {
+      const card = e.target.closest('.scratchpad-block');
+      if (card) lastBlockId = card.dataset.id;
+    });
+
+    // 讓「選取 / 複製 / 貼上」按鈕按下時不搶走輸入框焦點（桌面版）
+    $$('[data-keep-focus]').forEach(btn => btn.addEventListener('mousedown', e => e.preventDefault()));
+
+    function getTargetCard() {
+      const id = (document.activeElement && document.activeElement.closest && document.activeElement.closest('.scratchpad-block')?.dataset.id)
+        || lastBlockId;
+      return (id && scratchpadBlocks.querySelector(`[data-id="${id}"]`)) || scratchpadBlocks.querySelector('.scratchpad-block');
+    }
+
+    function getTargetTextarea() {
+      const card = getTargetCard();
+      return card ? card.querySelector('.scratchpad-block-content') : null;
+    }
+
     function scheduleScratchSave() {
-      saveStatus.textContent = '儲存中...';
+      setStatus('儲存中...');
       clearTimeout(saveTimeout);
       saveTimeout = setTimeout(saveScratchBlocks, 350);
     }
 
     function saveScratchBlocks() {
-      try {
-        localStorage.setItem(SCRATCH_BLOCKS_KEY, JSON.stringify(scratchBlocks));
-        // 保留舊版 key 的相容性，但不再以它作為主要資料來源
-        localStorage.removeItem(LEGACY_SCRATCH_KEY);
-        saveStatus.textContent = '已自動儲存';
-      } catch (err) {
-        saveStatus.textContent = '儲存失敗';
-        console.error('隨手備忘錄儲存失敗：', err);
+      clearTimeout(saveTimeout);
+      saveTimeout = null;
+      if (store.set(SCRATCH_BLOCKS_KEY, JSON.stringify(scratchBlocks))) {
+        store.remove(LEGACY_SCRATCH_KEY);
+        setStatus('已自動儲存');
+      } else {
+        setStatus('儲存失敗');
+        console.error('隨手備忘錄儲存失敗（localStorage 無法寫入）');
       }
     }
 
+    // 關閉分頁或切到背景前，把還沒存的內容存起來
+    function flushSave() { if (saveTimeout) saveScratchBlocks(); }
+    window.addEventListener('pagehide', flushSave);
+    document.addEventListener('visibilitychange', () => { if (document.hidden) flushSave(); });
+
     function addScratchBlock() {
-      scratchBlocks.push(makeScratchBlock(`區塊 ${scratchBlocks.length + 1}`, ''));
+      const block = makeScratchBlock(`區塊 ${scratchBlocks.length + 1}`, '');
+      scratchBlocks.push(block);
       saveScratchBlocks();
-      renderScratchBlocks(true);
+      renderScratchBlocks(block.id);
     }
 
     function deleteScratchBlock(id) {
@@ -1235,86 +1195,131 @@
         alert('至少保留一個區塊。');
         return;
       }
-
-      if (!confirm('確定要刪除這個區塊嗎？')) return;
-      scratchBlocks = scratchBlocks.filter(block => block.id !== id);
+      const block = scratchBlocks.find(b => b.id === id);
+      const isEmpty = block && !block.content.trim();
+      if (!isEmpty && !confirm(`確定要刪除「${block.title || '未命名'}」這個區塊嗎？`)) return;
+      scratchBlocks = scratchBlocks.filter(b => b.id !== id);
+      if (lastBlockId === id) lastBlockId = null;
       saveScratchBlocks();
       renderScratchBlocks();
     }
 
     function selectAllScratchpad() {
-      const activeCard = document.activeElement?.closest('.scratchpad-block');
-      const target = activeCard?.querySelector('.scratchpad-block-content')
-        || scratchpadBlocks.querySelector('.scratchpad-block-content');
+      const target = getTargetTextarea();
       if (!target) return;
       target.focus();
-      target.select();
       target.setSelectionRange(0, target.value.length);
     }
 
     function getAllScratchText() {
       return scratchBlocks.map((block, i) => {
         const title = (block.title || `區塊 ${i + 1}`).trim();
-        const content = block.content || '';
-        return `${title}\n${content}`.trim();
+        return `${title}\n${block.content || ''}`.trim();
       }).filter(Boolean).join('\n\n--------------------\n\n');
     }
 
-    function copyScratchpad() {
-      const text = getAllScratchText();
-      if (!text) return;
-
-      navigator.clipboard.writeText(text).then(() => {
-        saveStatus.textContent = '已複製全部！';
-        setTimeout(() => saveStatus.textContent = '已自動儲存', 2000);
-      }).catch(() => {
-        alert('瀏覽器未允許複製，請手動選取內容。');
-      });
+    function fallbackCopy(text) {
+      const ta = document.createElement('textarea');
+      ta.value = text;
+      ta.setAttribute('readonly', '');
+      ta.style.cssText = 'position:fixed;top:-1000px;opacity:0;';
+      document.body.appendChild(ta);
+      ta.select();
+      let ok = false;
+      try { ok = document.execCommand('copy'); } catch (e) {}
+      ta.remove();
+      return ok;
     }
 
-    async function pasteScratchpad() {
+    async function copyScratchpad() {
+      const text = getAllScratchText();
+      if (!text) return;
       try {
-        const text = await navigator.clipboard.readText();
-        if (!text) return;
-
-        // 貼到目前第一個區塊；如果有焦點中的區塊，貼到該區塊
-        const activeCard = document.activeElement?.closest('.scratchpad-block');
-        const targetId = activeCard?.dataset.id || scratchBlocks[0]?.id;
-        const target = scratchBlocks.find(block => block.id === targetId);
-        if (!target) return;
-
-        target.content = (target.content ? target.content + '\n' : '') + text;
-        saveScratchBlocks();
-        renderScratchBlocks();
-      } catch (err) {
-        alert('瀏覽器未允許自動貼上，請使用鍵盤 Ctrl+V。');
+        await navigator.clipboard.writeText(text);
+        setStatus('已複製全部！', 2000);
+      } catch (e) {
+        if (fallbackCopy(text)) setStatus('已複製全部！', 2000);
+        else alert('瀏覽器未允許複製，請手動選取內容。');
       }
     }
 
+    async function pasteScratchpad() {
+      const target = getTargetTextarea();
+      if (!target) return;
+      let text;
+      try {
+        text = await navigator.clipboard.readText();
+      } catch (err) {
+        alert('瀏覽器未允許自動貼上，請使用 Ctrl+V（Mac：⌘+V）。');
+        return;
+      }
+      if (!text) return;
+
+      // 貼在游標位置（沒有游標時接在最後）
+      const hasCaret = document.activeElement === target || target.selectionStart !== target.value.length || target.selectionEnd !== target.value.length;
+      const start = hasCaret ? target.selectionStart : target.value.length;
+      const end = hasCaret ? target.selectionEnd : target.value.length;
+      const prefix = (!hasCaret && target.value && !target.value.endsWith('\n')) ? '\n' : '';
+      target.setRangeText(prefix + text, start, end, 'end');
+      target.dispatchEvent(new Event('input', { bubbles: true }));
+      target.focus();
+      saveScratchBlocks();
+      setStatus('已貼上', 1500);
+    }
+
     function clearScratchpad() {
-      if (!confirm('確定要清空全部備忘錄區塊嗎？')) return;
+      if (!confirm('確定要清空全部備忘錄區塊嗎？此動作無法復原。')) return;
       scratchBlocks = [makeScratchBlock('我的備忘', '')];
+      lastBlockId = null;
       saveScratchBlocks();
       renderScratchBlocks();
-      saveStatus.textContent = '已清空';
+      setStatus('已清空', 2000);
     }
+
+    btnScratch.addEventListener('click', () => toggleScratchpad());
+    $('#btnScratchClose').addEventListener('click', () => toggleScratchpad(false));
+    $('#btnAddBlock').addEventListener('click', addScratchBlock);
+    $('#btnSelect').addEventListener('click', selectAllScratchpad);
+    $('#btnCopy').addEventListener('click', copyScratchpad);
+    $('#btnPaste').addEventListener('click', pasteScratchpad);
+    $('#btnClear').addEventListener('click', clearScratchpad);
+
+    // 其他分頁改了備忘錄時同步過來
+    window.addEventListener('storage', (e) => {
+      if (e.key === SCRATCH_BLOCKS_KEY && !scratchpadBlocks.contains(document.activeElement)) {
+        scratchBlocks = getScratchBlocks();
+        renderScratchBlocks();
+      }
+      if (e.key === 'chichi_theme' && e.newValue) setTheme(e.newValue, false);
+    });
 
     renderScratchBlocks();
 
-    /* ================= 佈景主題切換 ================= */
-    function setTheme(theme) {
-      document.body.setAttribute('data-theme', theme);
-      localStorage.setItem('chichi_theme', theme);
-      document.querySelectorAll('.theme-dots .dot').forEach(dot => {
-        dot.setAttribute('aria-pressed', dot.getAttribute('onclick')?.includes(`'${theme}'`) ? 'true' : 'false');
+    /* ================= 主題切換 ================= */
+    const THEMES = ['default', 'emerald', 'cyber', 'sunset', 'light'];
+    const metaTheme = document.querySelector('meta[name="theme-color"]');
+
+    function setTheme(theme, persist = true) {
+      if (!THEMES.includes(theme)) theme = 'default';
+      document.documentElement.setAttribute('data-theme', theme);
+      if (persist) store.set('chichi_theme', theme);
+      $$('.theme-dots .dot').forEach(dot => {
+        dot.setAttribute('aria-pressed', dot.dataset.themeName === theme ? 'true' : 'false');
       });
+      // 讓手機瀏覽器網址列顏色跟著主題
+      const topBg = getComputedStyle(document.documentElement).getPropertyValue('--top-bg').trim();
+      if (metaTheme && topBg) metaTheme.setAttribute('content', topBg);
     }
-    
-    // 初始化載入主題
-    const savedTheme = localStorage.getItem('chichi_theme');
-    if(savedTheme) {
-      setTheme(savedTheme);
-    }
+
+    $$('.theme-dots .dot').forEach(dot => dot.addEventListener('click', () => setTheme(dot.dataset.themeName)));
+
+    $('#btnThemeCycle').addEventListener('click', () => {
+      const cur = document.documentElement.getAttribute('data-theme') || 'default';
+      setTheme(THEMES[(THEMES.indexOf(cur) + 1) % THEMES.length]);
+    });
+
+    setTheme(store.get('chichi_theme') || 'default', false);
+  })();
   </script>
 </body>
 </html>
