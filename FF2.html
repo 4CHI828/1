@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>福岡6天新路線行程表</title>
+<style>
+/* VOICE: 跟使用者原本的福岡行程網頁同一套版型（使用者指定沿用）
+   IDEA: 每日可展開的行程卡＋打勾清單
+   PICTURE: 每日時間軸本身
+   COLOUR and TYPE: 沿用原網頁藍/紅交錯、微軟正黑體
+   LAYOUT: 單欄 950px 卡片，手機有吸頂天數列 */
+:root{--font-scale:1;--bg-body:#f5f5f5;--bg-container:#fff;--bg-card:#f8f9fa;--bg-info:#ecf0f1;--text-primary:#2c3e50;--text-secondary:#6b7678;--text-light:#fff;--primary-color:#3498db;--primary-hover:#2980b9;--accent-red:#e74c3c;--accent-green:#27ae60;--border-color:#dee2e6;--shadow:0 4px 15px rgba(0,0,0,.08)}
+[data-theme="dark"]{--bg-body:#121212;--bg-container:#1e1e1e;--bg-card:#2c2c2c;--bg-info:#2a2a2a;--text-primary:#e0e0e0;--text-secondary:#aaa;--primary-color:#64b5f6;--primary-hover:#42a5f5;--border-color:#444;--shadow:0 4px 15px rgba(0,0,0,.4)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg-body:#121212;--bg-container:#1e1e1e;--bg-card:#2c2c2c;--bg-info:#2a2a2a;--text-primary:#e0e0e0;--text-secondary:#aaa;--primary-color:#64b5f6;--primary-hover:#42a5f5;--border-color:#444}}
+*{margin:0;padding:0;box-sizing:border-box;min-width:0;-webkit-tap-highlight-color:transparent}
+html{scroll-behavior:smooth;font-size:calc(16px * var(--font-scale));scroll-padding-top:64px}
+body{font-family:-apple-system,BlinkMacSystemFont,"Microsoft JhengHei","PingFang TC","Segoe UI",Roboto,sans-serif;background:var(--bg-body);color:var(--text-primary);padding:20px;line-height:1.6;overflow-x:clip}
+.container{max-width:950px;margin:0 auto;background:var(--bg-container);padding:40px;border-radius:12px;box-shadow:var(--shadow)}
+.top-action-bar{display:flex;justify-content:flex-end;gap:8px;margin-bottom:20px;flex-wrap:wrap}
+.pill{background:var(--bg-card);border:2px solid var(--primary-color);padding:6px 14px;border-radius:20px;font-size:14px;font-weight:bold;color:var(--primary-color);cursor:pointer;min-height:40px}
+.pill:hover,.pill:focus-visible{background:var(--primary-color);color:var(--text-light);outline:none}
+h1{text-align:center;margin-bottom:10px;font-size:2rem;border-bottom:3px solid var(--primary-color);padding-bottom:15px;text-wrap:balance}
+h2{margin:34px 0 15px;padding-bottom:8px;border-bottom:2px solid var(--primary-color);font-size:1.5rem}
+h3{margin:18px 0 8px;font-size:1.15rem}
+.subtitle{text-align:center;color:var(--text-secondary);margin-bottom:26px;font-size:1.05rem}
+.info-box{background:var(--bg-info);padding:20px;border-radius:8px;margin-bottom:24px}
+.info-box p{margin:6px 0}
+.day-nav{display:flex;gap:8px;overflow-x:auto;padding:10px 0;margin-bottom:12px;scrollbar-width:none}
+.day-nav::-webkit-scrollbar{display:none}
+.day-chip{flex:none;background:var(--bg-card);color:var(--text-primary);border:1px solid var(--border-color);padding:8px 15px;border-radius:20px;font-size:.95rem;font-weight:700;text-decoration:none}
+.day-chip:hover{background:var(--primary-color);color:#fff}
+@media(max-width:700px){.day-nav{position:sticky;top:0;z-index:40;background:var(--bg-body);margin:0 -16px 12px;padding:10px 16px}}
+.toggle-all{display:flex;justify-content:center;gap:10px;margin:18px 0;flex-wrap:wrap}
+.btn{background:var(--primary-color);color:#fff;border:none;padding:10px 18px;border-radius:6px;cursor:pointer;font-size:.95rem;min-height:44px}
+.btn:hover{background:var(--primary-hover)}
+.btn-secondary{background:#6c757d}
+details.day{background:var(--bg-container);border:1px solid var(--border-color);border-left:5px solid var(--primary-color);margin-bottom:20px;border-radius:6px;overflow:hidden}
+details.day:nth-of-type(odd){border-left-color:var(--accent-red)}
+details.day>summary{background:var(--primary-color);color:#fff;padding:15px 20px;cursor:pointer;font-weight:bold;font-size:1.12rem;list-style:none;display:flex;justify-content:space-between;align-items:center;gap:10px}
+details.day:nth-of-type(odd)>summary{background:var(--accent-red)}
+details.day>summary::-webkit-details-marker{display:none}
+details.day>summary::after{content:'▼';font-size:.85rem;transition:transform .3s;flex:none}
+details.day[open]>summary::after{transform:rotate(180deg)}
+.count{font-size:.85rem;background:rgba(255,255,255,.25);padding:2px 8px;border-radius:10px;margin-left:auto;flex:none}
+.day-content{padding:20px}
+.time-item{margin:12px 0;display:flex;align-items:flex-start;gap:6px}
+.time-header{display:inline-flex;align-items:center;gap:8px;width:130px;flex:none}
+.schedule-check{width:20px;height:20px;cursor:pointer;accent-color:var(--primary-color);flex:none}
+.time{font-weight:bold;color:var(--primary-color);font-family:monospace;font-size:1.05rem;white-space:nowrap}
+details.day:nth-of-type(odd) .time{color:var(--accent-red)}
+.location{flex:1}
+.location small{display:block;color:var(--text-secondary);font-size:.92rem;margin-top:2px}
+.time-item.completed{opacity:.42}
+.time-item.completed .time,.time-item.completed .location{text-decoration:line-through}
+.map-link{display:inline-flex;margin-left:6px;color:var(--primary-color);text-decoration:none;font-size:.85rem;padding:1px 6px;border-radius:4px;border:1px solid var(--primary-color);white-space:nowrap}
+.map-link:hover{background:var(--primary-color);color:#fff}
+.photo{background:#ffe0e6;color:#c0392b;padding:1px 6px;border-radius:3px;font-weight:bold;font-size:.88rem}
+.box{padding:14px 15px;margin:12px 0;border-radius:6px;border-left:5px solid;font-size:.95rem}
+.warning-box{background:#fff3cd;border-color:#ffc107;color:#6b5200}
+.success-box{background:#d4edda;border-color:#28a745;color:#155724}
+.rain-box{background:#eef2ff;border:2px solid #818cf8;padding:15px;border-radius:8px;margin:12px 0;color:#2e2a6b}
+.tips-box{background:#d5f4e6;border:2px solid var(--accent-green);padding:20px;border-radius:8px;margin-top:20px}
+[data-theme="dark"] .warning-box{background:#3a321a;color:#ffe082}[data-theme="dark"] .success-box{background:#1c3323;color:#a5d6a7}[data-theme="dark"] .rain-box{background:#1e1e38;border-color:#4f46e5;color:#e0e0e0}[data-theme="dark"] .tips-box{background:#1b382b;color:var(--text-primary)}[data-theme="dark"] .photo{background:#4a2027;color:#ffb3bf}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .warning-box{background:#3a321a;color:#ffe082}:root:not([data-theme="light"]) .success-box{background:#1c3323;color:#a5d6a7}:root:not([data-theme="light"]) .rain-box{background:#1e1e38;border-color:#4f46e5;color:#e0e0e0}:root:not([data-theme="light"]) .tips-box{background:#1b382b;color:var(--text-primary)}}
+.info-table{width:100%;border-collapse:collapse;margin:12px 0;font-size:.92rem}
+.info-table th,.info-table td{border:1px solid var(--border-color);padding:9px 10px;text-align:left;vertical-align:top}
+.info-table th{background:var(--primary-color);color:#fff}
+.info-table td.num{text-align:right;white-space:nowrap}
+.info-table tfoot td{background:var(--bg-card);font-weight:bold;color:var(--accent-red)}
+.detail-section{background:var(--bg-card);border:1px solid var(--border-color);border-radius:8px;padding:18px 20px;margin:16px 0}
+.detail-section ul,.tips-box ul,.rain-box ul{padding-left:1.3em}
+.detail-section li,.tips-box li,.rain-box li{margin:5px 0}
+.note{font-size:.85rem;color:var(--text-secondary);margin-top:6px}
+.scroll{overflow-x:auto}
+@media(max-width:600px){body{padding:0}.container{padding:20px 16px;border-radius:0}h1{font-size:1.55rem}.time-item{flex-wrap:wrap}.time-header{width:auto}.location{flex-basis:100%;padding-left:28px}
+table{font-size:13px}.stack thead{display:none}.stack tr{display:grid;padding-block:10px;border-bottom:1px solid var(--border-color)}.stack td{display:flow-root;border:0;padding:3px 0;padding-inline-start:7em;text-align:start}.stack td::before{content:attr(data-l);float:inline-start;width:6.5em;margin-inline-start:-7em;font-weight:bold;color:var(--text-secondary)}.stack td.num{text-align:start}}
+</style>
+<script>new MutationObserver(()=>{for(const c of document.querySelectorAll('.stack td:not([data-l])')){let i=0,p=c;while(p=p.previousElementSibling)i+=p.colSpan;c.dataset.l=c.closest('table').rows[0].cells[i]?.textContent||''}}).observe(document,{childList:true,subtree:true})</script>
+</head>
+<body>
+<div class="container">
+  <div class="top-action-bar">
+    <button class="pill" id="fontDown" aria-label="縮小字體">A-</button>
+    <button class="pill" id="fontUp" aria-label="放大字體">A+</button>
+    <button class="pill" id="themeBtn">🌙 深色</button>
+  </div>
+
+  <h1>🗾 福岡6天5夜行程表（新路線・不重複版）</h1>
+  <p class="subtitle">日期未定｜假設第 1 天中午抵達、第 6 天傍晚返台｜住天神或博多</p>
+
+  <div class="info-box">
+    <p>🧭 <b>順路原則：</b>每天只往一個方向，盡量繞一圈回來，不走回頭路。</p>
+    <p>➡️ D1 博多舊城（步行）｜D2 往東北：門司港・下關繞一圈｜D3 往西南：長崎｜D4 往南：熊本｜D5 往西：唐津・呼子｜D6 往西：能古島，搭同一條空港線直達機場</p>
+    <p>🔁 D2～D5 可互換，但 <b>D2 一定要排在週五、六、日或國定假日</b>（唐戶市場壽司屋台只在這幾天開）。</p>
+  </div>
+
+  <div class="box success-box">✅ <b>已避開原行程（chi.xo.je/f.html）出現過的所有地點</b>，包括雨天備案和餐廳：由布院、太宰府、柳川、糸島、相島、宮地嶽、南藏院、LaLaport、筥崎宮、大濠公園、福岡市美術館、福岡塔、櫛田神社、博多町家故鄉館、運河城、天神地下街、Parco、BOSS E・ZO／teamLab、海之中道、寶可夢中心、機場免稅店；一蘭、ShinShin、兼虎、だるま、一幸舍、中洲／天神屋台、水炊雞鍋、牛腸鍋、燒肉。</div>
+
+  <nav class="day-nav" id="dayNav" aria-label="天數導覽"></nav>
+  <div class="toggle-all">
+    <button class="btn" id="openAll">📂 全部展開</button>
+    <button class="btn btn-secondary" id="closeAll">📁 全部收合</button>
+    <button class="btn btn-secondary" id="resetChecks">↺ 清除打勾</button>
+  </div>
+
+  <h2>📅 每日行程安排</h2>
+  <div id="days"></div>
+
+  <h2>🚆 交通票券建議</h2>
+  <div class="detail-section">
+    <h3>JR 北部九州鐵路周遊券（5 日）⭐ 推薦</h3>
+    <ul>
+      <li>D2～D5 幾乎全是 JR 長途：門司港、長崎、熊本、唐津，連續使用 5 天（D2～D6）就能涵蓋，比單買划算很多。</li>
+      <li>可搭：九州新幹線（博多～熊本）、西九州新幹線＋接力海鷗號（長崎）、特急音速號（門司港）、JR 筑肥線（姪濱～唐津）。</li>
+      <li><b>不能搭：</b>山陽新幹線博多～小倉（D2 改搭特急音速號約 45 分）、福岡地鐵（天神～姪濱要另付）、關門汽船、長崎路面電車、熊本市電、巴士、渡船。</li>
+      <li>指定席有使用次數限制，熱門班次先劃位；售價以 JR 九州官網為準。</li>
+    </ul>
+    <h3>其他</h3>
+    <ul>
+      <li>IC 卡（Suica／PASMO／ICOCA，可綁 Apple Wallet）：福岡地鐵、JR、西鐵巴士可感應；長崎路面電車、熊本市電可考慮買一日券。</li>
+      <li>D2 關門海峽：門司港棧橋（Marine Gate Moji）↔ 唐戶棧橋約 5 分，日間約 20 分一班。注意門司港搭船處不在懷舊區內的棧橋。</li>
+      <li>D6 能古島渡船：姪濱渡船場↔能古島約 10 分，大約每小時一班，出發前查福岡市營渡船時刻表。</li>
+    </ul>
+  </div>
+
+  <h2>🌧️ 雨天備案（也都不在原行程內）</h2>
+  <div class="rain-box"><ul>
+    <li><b>D1：</b>福岡亞洲美術館（博多 Riverain 7～8 樓，週三休館）＋ 博多傳統工藝館。</li>
+    <li><b>D2：</b>下關海響館水族館（唐戶市場旁）＋ 門司港懷舊展望室、九州鐵道紀念館；關門隧道人道本身就是室內。</li>
+    <li><b>D3：</b>原爆資料館、出島室內展館、長崎歷史文化博物館；稻佐山遇到大雨、起霧看不到夜景就提早回博多。</li>
+    <li><b>D4：</b>熊本城天守閣內部展示、熊本市現代美術館、鶴屋百貨＋上通／下通拱廊（全程有屋簷）。</li>
+    <li><b>D5：</b>風浪大時烏賊丸號會停航，改去佐賀縣立名護屋城博物館（呼子附近）；呼子朝市雨天照常但攤位會變少。</li>
+    <li><b>D6：</b>跳過能古島，改在 MARINOA CITY 多逛一點，或去福岡市博物館（西新）。</li>
+  </ul></div>
+
+  <h2>💰 預算參考（每人，單位日圓）</h2>
+  <div class="scroll">
+  <table class="info-table stack">
+    <thead><tr><th>項目</th><th>內容</th><th>估算</th></tr></thead>
+    <tbody>
+      <tr><td>JR 長途（單買）</td><td>門司港往返、長崎往返（自由席）、熊本往返（自由席，單程約 5,310）、唐津往返</td><td class="num">約 28,000～33,000</td></tr>
+      <tr><td>JR 長途（Pass）</td><td>北部九州 5 日券，可省下一大半</td><td class="num">依官網售價</td></tr>
+      <tr><td>市內交通</td><td>地鐵、路面電車、市電、巴士、關門汽船、渡船</td><td class="num">約 4,000～5,000</td></tr>
+      <tr><td>門票</td><td>原爆資料館、出島、大浦天主堂、哥拉巴園、稻佐山纜車、熊本城（800）、水前寺、唐津城、能古島海島公園（1,500）</td><td class="num">約 7,000～8,000</td></tr>
+      <tr><td>選配</td><td>呼子烏賊丸號 七釜遊覽船</td><td class="num">約 2,000</td></tr>
+      <tr><td>餐飲</td><td>每天約 3,000～5,000（呼子活烏賊、熊本馬肉較貴）</td><td class="num">約 18,000～30,000</td></tr>
+    </tbody>
+    <tfoot><tr><td>合計（不含住宿、購物）</td><td>單買 JR 的情況</td><td class="num">約 59,000～78,000</td></tr></tfoot>
+  </table>
+  </div>
+  <p class="note">票價、門票都是概算，實際以各官網當天公告為準。</p>
+
+  <h2>✅ 行前待辦清單</h2>
+  <div class="scroll">
+  <table class="info-table stack">
+    <thead><tr><th>時機</th><th>待辦事項</th></tr></thead>
+    <tbody>
+      <tr><td>訂機票時</td><td>確認 D2 落在週五、六、日或國定假日；不是的話把 D2 跟 D3～D5 對調。</td></tr>
+      <tr><td>出發前</td><td>購買北部九州 5 日 JR Pass，並先劃長崎、熊本的指定席。</td></tr>
+      <tr><td>出發前</td><td>查 D3 長崎→博多 末班接力海鷗號時間，決定稻佐山待多久。</td></tr>
+      <tr><td>出發前</td><td>上熊本城官網確認開放時間與禁止進入區域（2026 地震後部分區域仍有管制）。</td></tr>
+      <tr><td>D5 前一晚</td><td>確認呼子海況、烏賊丸號是否出航；D5 若是週三，萬坊朝市通り店公休，改吃河太郎。</td></tr>
+      <tr><td>D6 前一晚</td><td>查姪濱→能古島渡船時刻；和飯店確認行李寄放到 16:00。</td></tr>
+      <tr><td>入境前</td><td>填 Visit Japan Web，QR Code 截圖存相簿。</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <div class="tips-box">
+    <h3 style="margin-top:0">💡 實務小提醒</h3>
+    <ul>
+      <li>唐戶市場：週五、六 10:00 開始，週日和假日 8:00 開始，15:00 收攤，熱門壽司常常中午前就賣完，越早到越好。</li>
+      <li>關門隧道人道 6:00～22:00、行人免費，兩端各有半個紀念章，蓋完可以拼成一個圓。</li>
+      <li>長崎：博多出發最快約 1 小時 20 分，在武雄溫泉站同一個月台換車；長崎站月台內沒有便利商店，早餐先在博多買。</li>
+      <li>稻佐山纜車營業到 22:00；山頂風大，帶件外套。</li>
+      <li>熊本城：9:00～19:00，最後入園 18:00。水前寺成趣園 8:30～17:00，16:30 停止入園。熊本熊廣場 10:00～19:00。</li>
+      <li>呼子朝市 7:30～12:00，9:00～9:30 最熱鬧，可以殺價。</li>
+      <li>能古島海島公園：週一到週六 9:00～17:30，週日和假日開到 18:30（冬季都是 17:30）。</li>
+    </ul>
+  </div>
+  <p class="note" style="text-align:center;margin-top:24px">行程依原網頁格式重新整理｜時間為建議值，現場依交通狀況彈性調整</p>
+</div>
+
+<script>
+{
+const M = q => 'https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent(q);
+const DAYS = [
+ {t:'Day 1 - 抵達 ➔ 博多舊城寺町 ➔ 川端 ➔ 中洲明太重', chip:'D1 博多舊城',
+  pre:'<div class="box warning-box">⚠️ 首日走路行程，範圍約 2 公里。櫛田神社就在川端商店街旁，原行程已經去過，直接略過。</div>',
+  items:[
+  ['11:20','抵達福岡機場國際線，入境、領行李','福岡空港 国際線ターミナル'],
+  ['12:15','搭免費接駁巴士到國內線 ➔ 地鐵空港線到博多站（約 5 分）<small>住天神的話多坐 2 站到天神</small>','博多駅'],
+  ['12:40','飯店寄放行李（尚不可入住）',''],
+  ['13:00','午餐：因幡烏龍麵（博多站 DEITOS 麵街道）<small>軟 Q 博多烏龍麵，翻桌快</small>','因幡うどん デイトス'],
+  ['14:00','承天寺 <span class="photo">📸 烏龍麵・蕎麥麵發祥碑</span><small>博多站步行約 10 分</small>','承天寺 福岡'],
+  ['14:45','東長寺：福岡大佛（日本最大木造坐像）、朱紅六角堂','東長寺 福岡'],
+  ['15:30','聖福寺：日本第一座禪寺，寺內石板小路散步','聖福寺 福岡'],
+  ['16:15','博多千年門・御供所町寺町散步','博多千年門'],
+  ['16:45','博多川端商店街 ➔ 博多 Riverain（福岡亞洲美術館，週三休館）','博多リバレイン'],
+  ['18:30','晚餐：元祖博多明太重 <small>整條明太子蓋飯，晚餐時段也要排隊</small>','元祖博多めんたい重'],
+  ['20:00','那珂川河岸、春吉橋看中洲夜景 ➔ 回飯店','春吉橋']
+ ]},
+ {t:'Day 2 - 門司港 ➔ 船渡下關唐戶市場 ➔ 海底隧道走回九州 🚢（週五～日）', chip:'D2 門司港・下關',
+  pre:'<div class="box warning-box">⚠️ 唐戶市場「活きいき馬關街」只在週五、六、日和國定假日。路線：門司港 →（船）→ 下關 →（海底隧道步行）→ 門司 → 門司港，繞一圈不走回頭路。</div>',
+  items:[
+  ['08:15','博多 ➔ 小倉（新幹線約 15 分）➔ JR 鹿兒島本線到門司港（約 13 分）<small>用北部九州 Pass 的話改搭特急音速號到小倉（約 45 分）</small>','門司港駅'],
+  ['09:30','門司港站 <span class="photo">📸 重要文化財木造站房</span>','門司港駅'],
+  ['09:40','門司港棧橋（Marine Gate Moji）搭關門汽船 ➔ 唐戶（約 5 分）','マリンゲートもじ'],
+  ['10:00','唐戶市場「活きいき馬關街」週末壽司屋台 <span class="photo">📸 河豚握壽司</span><small>一盤一盤挑，坐在海峽邊吃</small>','唐戸市場'],
+  ['11:30','赤間神宮：龍宮城造型朱紅水天門','赤間神宮'],
+  ['12:15','沿海峽步道走到御裳川公園（壇之浦古戰場）','みもすそ川公園'],
+  ['12:45','關門隧道人道：海底 780m 走回九州 <span class="photo">📸 海底縣界線</span>','関門トンネル人道'],
+  ['13:15','和布刈神社 ＋ 關門橋近景','和布刈神社'],
+  ['14:00','關門海峽めかり站搭潮風號觀光小火車 ➔ 九州鐵道紀念館<small>潮風號季節性運行，沒開就搭西鐵巴士回門司港</small>','関門海峡めかり駅'],
+  ['14:30','門司港懷舊區：舊門司三井俱樂部、舊大阪商船、藍翼門司吊橋、懷舊展望室','門司港レトロ'],
+  ['18:00','晚餐：門司港燒咖哩（焼きカレー）','門司港 焼きカレー'],
+  ['20:15','JR 門司港 ➔ 小倉 ➔ 博多（約 1 小時）','']
+ ]},
+ {t:'Day 3 - 長崎一日：平和公園 ➔ 中華街 ➔ 哥拉巴園 ➔ 稻佐山夜景 🌃', chip:'D3 長崎',
+  pre:'<div class="box warning-box">⚠️ 由北往南一路玩下去，最後往西上稻佐山，再回長崎站。路面電車建議買一日券。長崎站月台內沒有商店，早餐先在博多買。</div>',
+  items:[
+  ['07:45','博多 ➔ 接力海鷗號 ➔ 武雄溫泉（同月台轉乘）➔ 西九州新幹線海鷗號 ➔ 長崎（最快約 1 小時 20 分）','長崎駅'],
+  ['09:30','平和公園：和平祈念像','平和公園 長崎'],
+  ['10:15','長崎原爆資料館','長崎原爆資料館'],
+  ['11:45','路面電車 ➔ 眼鏡橋・中島川石橋群 <span class="photo">📸 找河岸愛心石</span>','眼鏡橋 長崎'],
+  ['12:30','午餐：新地中華街 長崎強棒麵／皿烏龍麵','長崎新地中華街'],
+  ['13:30','出島（荷蘭商館復原區）<small>中華街步行約 5 分</small>','出島 長崎'],
+  ['15:00','路面電車往南 ➔ 大浦天主堂（世界遺產）','大浦天主堂'],
+  ['15:45','哥拉巴園 <span class="photo">📸 俯瞰長崎港</span>','グラバー園'],
+  ['17:00','荷蘭坂・東山手洋館群，順著石坂路下山','オランダ坂'],
+  ['18:00','巴士到「ロープウェイ前」➔ 長崎纜車 ➔ 稻佐山展望台 <span class="photo">📸 世界新三大夜景</span>','稲佐山山頂展望台'],
+  ['19:30','晚餐：山頂餐廳，或下山在長崎站周邊吃（順買角煮饅頭當伴手禮）','アミュプラザ長崎'],
+  ['20:30','長崎 ➔ 博多 <small>末班車出發前務必確認</small>','']
+ ]},
+ {t:'Day 4 - 熊本一日：熊本城 ➔ 水前寺成趣園 ➔ 熊本熊廣場 🐻', chip:'D4 熊本',
+  pre:'<div class="box warning-box">⚠️ 熊本城在 2026 年熊本地震後臨時休園，8/13 已重新開放，開放時間 9:00～19:00（最後入園 18:00），部分石垣區域禁止進入。景點都在市電沿線，今天可以睡晚一點。</div>',
+  items:[
+  ['09:00','博多 ➔ 熊本（九州新幹線瑞穗號／櫻號 約 32～40 分）','熊本駅'],
+  ['09:45','熊本站搭市電 ➔「熊本城・市役所前」',''],
+  ['10:00','熊本城天守閣 ＋ 特別見學通路 <span class="photo">📸 復興中的石垣</span>','熊本城'],
+  ['12:00','櫻之馬場 城彩苑：午餐、小吃（馬肉可樂餅、太平燕、いきなり團子）','桜の馬場 城彩苑'],
+  ['13:30','市電 ➔ 水前寺公園站 ➔ 水前寺成趣園（16:30 停止入園）','水前寺成趣園'],
+  ['15:30','市電 ➔ 水道町 ➔ 熊本熊廣場 KUMAMON SQUARE（TETRIA 熊本大樓 1F）<small>熊本熊出場時間先查官網</small>','くまモンスクエア'],
+  ['16:30','上通・下通拱廊商店街逛街','上通 熊本'],
+  ['18:30','晚餐：馬肉料理（菅乃屋）或熊本拉麵（こむらさき）','菅乃屋 上通店'],
+  ['20:00','市電 ➔ 熊本站 ➔ 新幹線回博多','']
+ ]},
+ {t:'Day 5 - 唐津・呼子：呼子朝市 ➔ 活烏賊 ➔ 唐津城 ➔ 虹之松原 🦑', chip:'D5 唐津・呼子',
+  pre:'<div class="box warning-box">⚠️ 呼子朝市只開到中午 12 點，要早出門。回程的虹之松原就在 JR 筑肥線上，順路下車。列車會經過糸島但不下車（原行程已去）。</div>',
+  items:[
+  ['07:20','天神 ➔ 地鐵空港線直通 JR 筑肥線 ➔ 唐津（約 1 小時 20 分，部分班次需在筑前前原轉車）','唐津駅'],
+  ['08:50','步行到唐津大手口巴士中心（約 5 分）','唐津大手口バスセンター'],
+  ['09:00','昭和巴士 ➔ 呼子（約 30 分）',''],
+  ['09:30','呼子朝市（日本三大朝市）<span class="photo">📸 整排烏賊一夜干</span><small>9:00～9:30 最熱鬧，可以殺價</small>','呼子朝市'],
+  ['11:00','午餐：活烏賊生魚片（河太郎 呼子店 或 萬坊）<small>透明烏賊，腳吃完做成天婦羅；萬坊朝市通り店週三休</small>','河太郎 呼子店'],
+  ['12:00','（選）烏賊丸號 七釜遊覽船，約 40 分 <small>海況差會停航</small>','マリンパル呼子'],
+  ['13:00','巴士回唐津（約 30 分）',''],
+  ['13:45','唐津城（舞鶴城）登天守看玄界灘','唐津城'],
+  ['15:00','舊高取邸（近代和風豪宅，週一休）','旧高取邸'],
+  ['16:00','JR 唐津 ➔ 虹之松原站（2 站）',''],
+  ['16:15','虹之松原 ＋ 唐津漢堡 松原本店 <span class="photo">📸 綿延 5 公里松林</span>','からつバーガー 松原本店'],
+  ['19:00','回天神，晚餐：博多一口煎餃（餃子のテムジン 大名本店）','餃子のテムジン 大名本店']
+ ]},
+ {t:'Day 6 - 能古島花海 ➔ MARINOA CITY ➔ 空港線直達機場 ✈️', chip:'D6 能古島・返台',
+  pre:'<div class="box success-box">✅ 姪濱、天神、福岡機場都在地鐵空港線上，早上往西、下午回頭拿行李直達機場，完全順路。</div>',
+  items:[
+  ['08:30','退房，行李寄放飯店櫃檯（約好 16:00 前領取）',''],
+  ['09:00','天神 ➔ 姪濱（地鐵空港線約 11 分）➔ 巴士／計程車到姪濱渡船場','姪浜旅客待合所'],
+  ['09:40','福岡市營渡船 ➔ 能古島（約 10 分）','能古渡船場'],
+  ['10:00','西鐵巴士 ➔ 能古島海島公園（約 13 分）',''],
+  ['10:15','能古島海島公園 <span class="photo">📸 花海＋博多灣</span><small>春油菜花、夏向日葵、秋大波斯菊、冬水仙</small>','のこのしまアイランドパーク'],
+  ['12:15','午餐：能古漢堡（園內島產蔬菜漢堡）',''],
+  ['13:00','巴士＋渡船回姪濱',''],
+  ['13:45','MARINOA CITY 福岡 Outlet 最後補貨','マリノアシティ福岡'],
+  ['15:15','姪濱 ➔ 天神，回飯店取行李',''],
+  ['16:00','地鐵空港線 ➔ 福岡空港站（約 11 分）➔ 免費接駁巴士 ➔ 國際線航廈','福岡空港 国際線ターミナル'],
+  ['16:40','抵達國際線，辦理登機與托運','']
+ ]}
+];
+let saved={};
+try{saved=JSON.parse(localStorage.getItem('fk-new-checks')||'{}')}catch(e){saved={}}
+const save=()=>{try{localStorage.setItem('fk-new-checks',JSON.stringify(saved))}catch(e){}};
+const wrap=document.getElementById('days');
+wrap.innerHTML=DAYS.map((d,di)=>`<details class="day" id="day${di+1}"${di===0?' open':''}><summary><span>📅 ${d.t}</span><span class="count" id="cnt${di}"></span></summary><div class="day-content">${d.pre}${d.items.map((it,ii)=>{const k=di+'-'+ii;const done=saved[k];return `<div class="time-item${done?' completed':''}"><span class="time-header"><input type="checkbox" class="schedule-check" data-k="${k}" data-d="${di}" aria-label="完成 ${it[0]}"${done?' checked':''}><span class="time">${it[0]}</span></span><span class="location">${it[1]}${it[2]?`<a class="map-link" href="${M(it[2])}" target="_blank" rel="noopener">📍地圖</a>`:''}</span></div>`}).join('')}</div></details>`).join('');
+document.getElementById('dayNav').innerHTML=DAYS.map((d,i)=>`<a class="day-chip" href="#day${i+1}" data-i="${i+1}">${d.chip}</a>`).join('');
+const upd=di=>{const all=wrap.querySelectorAll(`.schedule-check[data-d="${di}"]`);let n=0;all.forEach(c=>{if(c.checked)n++});document.getElementById('cnt'+di).textContent=n+'/'+all.length};
+DAYS.forEach((d,i)=>upd(i));
+wrap.addEventListener('change',e=>{const c=e.target;if(!c.classList.contains('schedule-check'))return;c.closest('.time-item').classList.toggle('completed',c.checked);if(c.checked)saved[c.dataset.k]=1;else delete saved[c.dataset.k];save();upd(c.dataset.d)});
+document.getElementById('dayNav').addEventListener('click',e=>{const a=e.target.closest('.day-chip');if(!a)return;const el=document.getElementById('day'+a.dataset.i);if(el)el.open=true});
+document.getElementById('openAll').onclick=()=>wrap.querySelectorAll('details').forEach(x=>x.open=true);
+document.getElementById('closeAll').onclick=()=>wrap.querySelectorAll('details').forEach(x=>x.open=false);
+document.getElementById('resetChecks').onclick=()=>{saved={};save();wrap.querySelectorAll('.schedule-check').forEach(c=>{c.checked=false;c.closest('.time-item').classList.remove('completed')});DAYS.forEach((d,i)=>upd(i))};
+let scale=1;try{scale=parseFloat(localStorage.getItem('fk-new-scale'))||1}catch(e){}
+const applyScale=()=>{document.documentElement.style.setProperty('--font-scale',scale);try{localStorage.setItem('fk-new-scale',scale)}catch(e){}};
+applyScale();
+document.getElementById('fontUp').onclick=()=>{scale=Math.min(1.4,+(scale+0.1).toFixed(1));applyScale()};
+document.getElementById('fontDown').onclick=()=>{scale=Math.max(0.8,+(scale-0.1).toFixed(1));applyScale()};
+const tb=document.getElementById('themeBtn');
+const isDark=()=>{const t=document.documentElement.dataset.theme;return t?t==='dark':matchMedia('(prefers-color-scheme: dark)').matches};
+const setLabel=()=>{tb.textContent=isDark()?'☀️ 淺色':'🌙 深色'};
+setLabel();
+tb.onclick=()=>{document.documentElement.dataset.theme=isDark()?'light':'dark';setLabel()};
+}
+</script>
+</body>
+</html>
