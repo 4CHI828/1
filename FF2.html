@@ -35,6 +35,8 @@ h3{margin:18px 0 8px;font-size:1.15rem}
 .btn{background:var(--primary-color);color:#fff;border:none;padding:10px 18px;border-radius:6px;cursor:pointer;font-size:.95rem;min-height:44px}
 .btn:hover{background:var(--primary-hover)}
 .btn-secondary{background:#6c757d}
+.btn-green{background:var(--accent-green);text-decoration:none;display:inline-flex;align-items:center}
+.btn-green:hover{background:#1e8449}
 details.day{background:var(--bg-container);border:1px solid var(--border-color);border-left:5px solid var(--primary-color);margin-bottom:20px;border-radius:6px;overflow:hidden}
 details.day:nth-of-type(odd){border-left-color:var(--accent-red)}
 details.day>summary{background:var(--primary-color);color:#fff;padding:15px 20px;cursor:pointer;font-weight:bold;font-size:1.12rem;list-style:none;display:flex;justify-content:space-between;align-items:center;gap:10px}
@@ -71,6 +73,61 @@ details.day:nth-of-type(odd) .time{color:var(--accent-red)}
 .detail-section{background:var(--bg-card);border:1px solid var(--border-color);border-radius:8px;padding:18px 20px;margin:16px 0}
 .detail-section ul,.tips-box ul,.rain-box ul{padding-left:1.3em}
 .detail-section li,.tips-box li,.rain-box li{margin:5px 0}
+.dist-box{background:var(--bg-card);border:1px solid var(--border-color);border-radius:8px;margin:18px 0 4px;padding:0 14px}
+.dist-box>summary{cursor:pointer;padding:12px 0;font-weight:bold;list-style:none}
+.dist-box>summary::-webkit-details-marker{display:none}
+.dist-box>summary::after{content:" ▾"}
+.dist-box[open]>summary::after{content:" ▴"}
+.dist-box .info-table{margin-top:0}
+/* 📱 手機易讀版 */
+html.m{font-size:calc(17.5px * var(--font-scale))}
+html.m body{padding:0}
+html.m .container{padding:14px 12px 96px;border-radius:0;box-shadow:none}
+html.m h1{font-size:1.45rem}
+html.m h2{font-size:1.3rem;margin-top:28px}
+html.m .day-nav{position:sticky;top:0;z-index:40;background:var(--bg-body);margin:0 -12px 12px;padding:10px 12px}
+html.m .day-chip{padding:10px 16px;font-size:1rem}
+html.m .time-item{flex-wrap:wrap;background:var(--bg-card);border:1px solid var(--border-color);border-radius:10px;padding:10px 12px;margin:10px 0}
+html.m .time-header{width:auto}
+html.m .time{font-size:1.15rem}
+html.m .location{flex-basis:100%;padding-left:0;margin-top:4px;line-height:1.65}
+html.m .map-link{padding:7px 12px;margin:8px 0 0;font-size:.95rem}
+html.m .schedule-check{width:24px;height:24px}
+html.m details.day>summary{padding:16px 14px;font-size:1.05rem;line-height:1.45}
+html.m .day-content{padding:12px 10px}
+html.m .top-action-bar{justify-content:center}
+html.m .stack thead{display:none}html.m .stack tr{display:grid;padding-block:10px;border-bottom:1px solid var(--border-color)}html.m .stack td{display:flow-root;border:0;padding:3px 0;padding-inline-start:7em;text-align:start}html.m .stack td::before{content:attr(data-l);float:inline-start;width:6.5em;margin-inline-start:-7em;font-weight:bold;color:var(--text-secondary)}html.m .stack td.num{text-align:start}
+.bottom-nav{display:none}
+html.m .bottom-nav{display:flex;position:fixed;left:0;right:0;bottom:0;z-index:60;background:var(--bg-container);border-top:1px solid var(--border-color);box-shadow:0 -2px 10px rgba(0,0,0,.08);padding:4px 0 calc(4px + env(safe-area-inset-bottom))}
+.bottom-nav a{flex:1;display:flex;flex-direction:column;align-items:center;gap:1px;padding:6px 0;min-height:52px;text-decoration:none;color:var(--text-primary);font-size:12px;font-weight:bold}
+.bottom-nav a span{font-size:20px;line-height:1.1}
+.today-tag{background:#fff;color:var(--accent-red);border-radius:10px;padding:1px 8px;font-size:.8rem;margin-left:6px}
+/* 💰 記帳本 */
+.ld-rate{display:flex;flex-wrap:wrap;gap:10px;align-items:center;background:var(--bg-info);border-radius:8px;padding:12px 14px;margin:10px 0}
+.ld-rate input{width:110px}
+.ld-form{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,150px),1fr));gap:10px;background:var(--bg-card);border:1px solid var(--border-color);border-radius:8px;padding:14px;margin:12px 0}
+.ld-form label{display:flex;flex-direction:column;gap:4px;font-size:.88rem;font-weight:bold;color:var(--text-secondary)}
+.ld-form .wide{grid-column:1/-1}
+.ld input,.ld select{font:inherit;font-size:16px;padding:9px 10px;border:1px solid var(--border-color);border-radius:6px;background:var(--bg-container);color:var(--text-primary);min-height:44px;width:100%}
+.ld input:focus-visible,.ld select:focus-visible,.ld button:focus-visible{outline:3px solid var(--primary-color);outline-offset:1px}
+.ld-total{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,105px),1fr));gap:10px;margin:12px 0}
+.ld-card{background:var(--bg-card);border:1px solid var(--border-color);border-radius:8px;padding:12px 14px}
+.ld-card b{display:block;font-size:clamp(1.3rem,5vw,1.7rem);color:var(--accent-red);font-family:monospace;white-space:nowrap}
+.ld-bar{display:grid;grid-template-columns:4.5em minmax(0,1fr) auto;gap:8px;align-items:center;margin:6px 0;font-size:.92rem}
+.ld-bar i{display:block;height:12px;border-radius:6px;background:var(--primary-color)}
+.ld-bar em{font-style:normal;white-space:nowrap;font-family:monospace}
+.ld-day{margin:14px 0 4px;font-weight:bold;display:flex;justify-content:space-between;gap:8px;border-bottom:2px solid var(--border-color);padding-bottom:4px}
+.ld-row{display:flex;gap:10px;align-items:center;padding:8px 0;border-bottom:1px dashed var(--border-color)}
+.ld-row .what{flex:1}
+.ld-row .what small{display:block;color:var(--text-secondary);font-size:.82rem}
+.ld-row .amt{text-align:right;font-family:monospace;white-space:nowrap}
+.ld-row .amt small{display:block;color:var(--text-secondary)}
+.ld-del{background:none;border:1px solid var(--border-color);color:var(--text-secondary);border-radius:6px;min-width:44px;min-height:40px;cursor:pointer;font-size:.85rem}
+.ld-del.arm{background:var(--accent-red);color:#fff;border-color:var(--accent-red)}
+.ld-tools{display:flex;flex-wrap:wrap;gap:8px;margin:14px 0}
+.ld-msg{font-size:.88rem;color:var(--text-secondary)}
+.ld-empty{color:var(--text-secondary);text-align:center;padding:18px 0}
+.ld-cat{display:inline-block;font-size:.75rem;padding:0 6px;border-radius:4px;background:var(--bg-info);margin-right:4px}
 .note{font-size:.85rem;color:var(--text-secondary);margin-top:6px}
 .scroll{overflow-x:auto}
 @media(max-width:600px){body{padding:0}.container{padding:20px 16px;border-radius:0}h1{font-size:1.55rem}.time-item{flex-wrap:wrap}.time-header{width:auto}.location{flex-basis:100%;padding-left:28px}
@@ -79,42 +136,60 @@ table{font-size:13px}.stack thead{display:none}.stack tr{display:grid;padding-bl
 <script>new MutationObserver(()=>{for(const c of document.querySelectorAll('.stack td:not([data-l])')){let i=0,p=c;while(p=p.previousElementSibling)i+=p.colSpan;c.dataset.l=c.closest('table').rows[0].cells[i]?.textContent||''}}).observe(document,{childList:true,subtree:true})</script>
 </head>
 <body>
-<div class="container">
+<div class="container" id="top">
   <div class="top-action-bar">
     <button class="pill" id="fontDown" aria-label="縮小字體">A-</button>
     <button class="pill" id="fontUp" aria-label="放大字體">A+</button>
+    <button class="pill" id="modeBtn">📱 手機易讀版</button>
     <button class="pill" id="themeBtn">🌙 深色</button>
   </div>
 
   <h1>🗾 福岡6天5夜行程表（新路線・不重複版）</h1>
-  <p class="subtitle">日期未定｜假設第 1 天中午抵達、第 6 天傍晚返台｜住天神或博多</p>
+  <p class="subtitle">2027年3月11日（四）– 3月16日（二）｜假設第 1 天中午抵達、第 6 天傍晚返台｜住天神或博多</p>
+  <p class="subtitle" id="countdown" style="margin-top:-18px;font-weight:bold;color:var(--accent-red)"></p>
 
   <div class="info-box">
     <p>🧭 <b>順路原則：</b>每天只往一個方向，盡量繞一圈回來，不走回頭路。</p>
-    <p>➡️ D1 博多舊城（步行）｜D2 往東北：門司港・下關繞一圈｜D3 往西南：長崎｜D4 往南：熊本｜D5 往西：唐津・呼子｜D6 往西：能古島，搭同一條空港線直達機場</p>
-    <p>🔁 D2～D5 可互換，但 <b>D2 一定要排在週五、六、日或國定假日</b>（唐戶市場壽司屋台只在這幾天開）。</p>
+    <p>➡️ D1 博多＋往東到南藏院｜D2 往東北：宮地嶽 → 門司港・下關繞一圈｜D3 往西南：長崎｜D4 往南：熊本｜D5 往西：唐津・呼子，回程順路糸島看夕陽｜D6 往西：能古島，搭同一條空港線直達機場</p>
+    <p>📆 <b>星期已對過：</b>D2 是週五，唐戶市場壽司屋台有開 ✅；D5 是週一（糸島西海岸直達巴士平日班次少，回程改搭路線巴士）；其他景點這幾天都沒有公休。</p>
+    <p>🌸 <b>3 月中旬：</b>白天約 10～17°C，早晚涼，要帶薄外套；能古島正好是油菜花季，熊本、長崎的染井吉野櫻多半要到 3 月下旬才開。</p>
   </div>
 
-  <div class="box success-box">✅ <b>已避開原行程（chi.xo.je/f.html）出現過的所有地點</b>，包括雨天備案和餐廳：由布院、太宰府、柳川、糸島、相島、宮地嶽、南藏院、LaLaport、筥崎宮、大濠公園、福岡市美術館、福岡塔、櫛田神社、博多町家故鄉館、運河城、天神地下街、Parco、BOSS E・ZO／teamLab、海之中道、寶可夢中心、機場免稅店；一蘭、ShinShin、兼虎、だるま、一幸舍、中洲／天神屋台、水炊雞鍋、牛腸鍋、燒肉。</div>
+  <div class="box success-box">✅ <b>已避開原行程（chi.xo.je/f.html）裡去過的地點</b>：由布院、太宰府、柳川、相島、LaLaport、筥崎宮、大濠公園、福岡市美術館、福岡塔、櫛田神社、博多町家故鄉館、天神地下街、Parco、BOSS E・ZO／teamLab、海之中道、寶可夢中心、機場免稅店；一蘭、ShinShin、だるま、一幸舍、中洲／天神屋台、水炊雞鍋、牛腸鍋、燒肉。<br>➕ <b>還沒去過、這次補排進來：</b>宮地嶽神社（D2）、南藏院（D1）、博多運河城（D1）、麵屋兼虎（D1）、糸島二見浦・PALM BEACH（D5）。</div>
 
   <nav class="day-nav" id="dayNav" aria-label="天數導覽"></nav>
   <div class="toggle-all">
     <button class="btn" id="openAll">📂 全部展開</button>
     <button class="btn btn-secondary" id="closeAll">📁 全部收合</button>
     <button class="btn btn-secondary" id="resetChecks">↺ 清除打勾</button>
+    <a class="btn btn-green" href="https://www.anitabi.cn/map" target="_blank" rel="noopener">🗺️ 動漫地圖</a>
+    <a class="btn btn-green" href="https://4chi828.github.io/1/pay.html" target="_blank" rel="noopener">💰 記帳</a>
   </div>
 
-  <h2>📅 每日行程安排</h2>
+  <h2 id="days-h">📅 每日行程安排</h2>
   <div id="days"></div>
 
-  <h2>🚆 交通票券建議</h2>
+  <h2 id="ticket-h">🚆 交通票券建議</h2>
   <div class="detail-section">
-    <h3>JR 北部九州鐵路周遊券（5 日）⭐ 推薦</h3>
+    <h3>💡 省錢方案比較（長途交通，每人）</h3>
+    <div class="scroll"><table class="info-table stack">
+      <thead><tr><th>方案</th><th>費用</th><th>時間代價</th></tr></thead>
+      <tbody>
+        <tr><td>單買 JR（新幹線＋特急）</td><td class="num">約 29,000～34,000</td><td>—</td></tr>
+        <tr><td><b>⭐ JR 北部九州 5 日券（D2～D6）</b></td><td class="num"><b>17,000</b></td><td>不用多花時間 ✅</td></tr>
+        <tr><td>高速巴士（長崎、熊本）＋普通車</td><td class="num">約 16,000</td><td>長崎、熊本來回各多約 2 小時</td></tr>
+        <tr><td>SUNQ 北部九州 3 日巴士券（D3～D5）＋D2 普通車</td><td class="num">約 12,500</td><td>同上；部分高速巴士要先上網劃位</td></tr>
+      </tbody>
+    </table></div>
+    <p class="note">JR 5 日券售價依 JR 九州官網（3 日 15,000／5 日 17,000）；巴士：福岡⇄長崎九州號單程 2,900、天神⇄熊本火之國號單程約 2,500；SUNQ 3 日券網路通路約 9,500。</p>
+    <h3>✅ 採用：JR 北部九州鐵路周遊券 5 日（17,000 日圓）</h3>
     <ul>
-      <li>D2～D5 幾乎全是 JR 長途：門司港、長崎、熊本、唐津，連續使用 5 天（D2～D6）就能涵蓋，比單買划算很多。</li>
-      <li>可搭：九州新幹線（博多～熊本）、西九州新幹線＋接力海鷗號（長崎）、特急音速號（門司港）、JR 筑肥線（姪濱～唐津）。</li>
-      <li><b>不能搭：</b>山陽新幹線博多～小倉（D2 改搭特急音速號約 45 分）、福岡地鐵（天神～姪濱要另付）、關門汽船、長崎路面電車、熊本市電、巴士、渡船。</li>
-      <li>指定席有使用次數限制，熱門班次先劃位；售價以 JR 九州官網為準。</li>
+      <li>3/12（D2）開始用到 3/16（D6），連續 5 天。D2 門司港、D3 長崎、D4 熊本、D5 唐津・糸島的 JR 全部包含，不用另外買票。</li>
+      <li>可搭：九州新幹線（博多～熊本）、西九州新幹線＋接力海鷗號（長崎）、鹿兒島本線（福間・小倉・門司港）、JR 筑肥線（姪濱～唐津、九大學研都市）。</li>
+      <li><b>D2 注意：</b>博多～小倉的山陽新幹線不能用，行程已經改成搭鹿兒島本線快速，經福間（宮地嶽）到小倉，不用補票。</li>
+      <li><b>不包含：</b>福岡地鐵（天神～姪濱另付約 300 日圓）、關門汽船、長崎路面電車、熊本市電、巴士、渡船。</li>
+      <li>D1 南藏院的篠栗線不在 5 天內，單買來回約 700 日圓就好（如果改買 3 日券 15,000，D2 和 D5 改單買反而更貴）。</li>
+      <li>指定席有免費劃位次數，長崎、熊本的熱門班次建議先劃位；也可以直接坐自由席。</li>
     </ul>
     <h3>其他</h3>
     <ul>
@@ -124,13 +199,13 @@ table{font-size:13px}.stack thead{display:none}.stack tr{display:grid;padding-bl
     </ul>
   </div>
 
-  <h2>🌧️ 雨天備案（也都不在原行程內）</h2>
+  <h2 id="rain-h">🌧️ 雨天備案（也都不在原行程內）</h2>
   <div class="rain-box"><ul>
-    <li><b>D1：</b>福岡亞洲美術館（博多 Riverain 7～8 樓，週三休館）＋ 博多傳統工藝館。</li>
-    <li><b>D2：</b>下關海響館水族館（唐戶市場旁）＋ 門司港懷舊展望室、九州鐵道紀念館；關門隧道人道本身就是室內。</li>
+    <li><b>D1：</b>寺町改成福岡亞洲美術館（博多 Riverain 7～8 樓，週三休館），運河城多待一會；南藏院涅槃像在戶外，大雨時可只做體內參拜。</li>
+    <li><b>D2：</b>宮地嶽大雨時可跳過，直接去門司港；下關海響館水族館（唐戶市場旁）＋ 門司港懷舊展望室、九州鐵道紀念館；關門隧道人道本身就是室內。</li>
     <li><b>D3：</b>原爆資料館、出島室內展館、長崎歷史文化博物館；稻佐山遇到大雨、起霧看不到夜景就提早回博多。</li>
     <li><b>D4：</b>熊本城天守閣內部展示、熊本市現代美術館、鶴屋百貨＋上通／下通拱廊（全程有屋簷）。</li>
-    <li><b>D5：</b>風浪大時烏賊丸號會停航，改去佐賀縣立名護屋城博物館（呼子附近）；呼子朝市雨天照常但攤位會變少。</li>
+    <li><b>D5：</b>風浪大時烏賊丸號會停航，改去佐賀縣立名護屋城博物館（呼子附近）；呼子朝市雨天照常但攤位會變少。糸島下雨看不到夕陽的話，唐津之後直接回天神，改去福岡市博物館（西新，順路）。</li>
     <li><b>D6：</b>跳過能古島，改在 MARINOA CITY 多逛一點，或去福岡市博物館（西新）。</li>
   </ul></div>
 
@@ -139,30 +214,64 @@ table{font-size:13px}.stack thead{display:none}.stack tr{display:grid;padding-bl
   <table class="info-table stack">
     <thead><tr><th>項目</th><th>內容</th><th>估算</th></tr></thead>
     <tbody>
-      <tr><td>JR 長途（單買）</td><td>門司港往返、長崎往返（自由席）、熊本往返（自由席，單程約 5,310）、唐津往返</td><td class="num">約 28,000～33,000</td></tr>
-      <tr><td>JR 長途（Pass）</td><td>北部九州 5 日券，可省下一大半</td><td class="num">依官網售價</td></tr>
-      <tr><td>市內交通</td><td>地鐵、路面電車、市電、巴士、關門汽船、渡船</td><td class="num">約 4,000～5,000</td></tr>
-      <tr><td>門票</td><td>原爆資料館、出島、大浦天主堂、哥拉巴園、稻佐山纜車、熊本城（800）、水前寺、唐津城、能古島海島公園（1,500）</td><td class="num">約 7,000～8,000</td></tr>
+      <tr><td>JR 長途 ⭐</td><td>JR 北部九州 5 日券（3/12～3/16），門司港、長崎、熊本、唐津・糸島全包</td><td class="num">17,000</td></tr>
+      <tr><td>（參考）單買 JR</td><td>同樣路線單買新幹線、特急，用 5 日券約省 12,000～17,000</td><td class="num">約 29,000～34,000</td></tr>
+      <tr><td>市內交通</td><td>D1 南藏院 JR、地鐵、路面電車、市電、巴士（含糸島西之浦線）、關門汽船、渡船</td><td class="num">約 6,000～7,000</td></tr>
+      <tr><td>門票</td><td>南藏院體內參拜、原爆資料館、出島、大浦天主堂、哥拉巴園、稻佐山纜車、熊本城（800）、水前寺、唐津城、能古島海島公園（1,500）</td><td class="num">約 7,000～8,000</td></tr>
       <tr><td>選配</td><td>呼子烏賊丸號 七釜遊覽船</td><td class="num">約 2,000</td></tr>
       <tr><td>餐飲</td><td>每天約 3,000～5,000（呼子活烏賊、熊本馬肉較貴）</td><td class="num">約 18,000～30,000</td></tr>
     </tbody>
-    <tfoot><tr><td>合計（不含住宿、購物）</td><td>單買 JR 的情況</td><td class="num">約 59,000～78,000</td></tr></tfoot>
+    <tfoot><tr><td>合計（不含住宿、購物）</td><td>使用 JR 5 日券（不含參考列）</td><td class="num">約 50,000～64,000</td></tr></tfoot>
   </table>
   </div>
   <p class="note">票價、門票都是概算，實際以各官網當天公告為準。</p>
+
+  <h2 id="ledger">💰 互動記帳本（自動抓取當日即時匯率）</h2>
+  <div class="ld">
+    <div class="ld-rate">
+      <span id="ldRateTag">📌 匯率</span>
+      <label style="display:flex;align-items:center;gap:6px;font-weight:bold">1 日圓 = <input id="ldRate" type="number" step="0.0001" min="0.01" inputmode="decimal" aria-label="日圓兌台幣匯率"> 台幣</label>
+      <button class="btn" id="ldRefresh" type="button">🔄 抓即時匯率</button>
+      <span class="ld-msg" id="ldRateMsg"></span>
+    </div>
+    <form class="ld-form" id="ldForm" autocomplete="off">
+      <label>日期<select id="ldDate"></select></label>
+      <label>分類<select id="ldCat"></select></label>
+      <label class="wide">品項<input id="ldItem" required maxlength="60" placeholder="例如：唐戶市場壽司"></label>
+      <label>金額<input id="ldAmt" type="number" min="0" step="1" inputmode="decimal" required placeholder="0"></label>
+      <label>幣別<select id="ldCur"><option value="JPY">日圓 ¥</option><option value="TWD">台幣 NT$</option></select></label>
+      <label>付款<select id="ldPay"><option>現金</option><option>信用卡</option><option>IC卡</option><option>其他</option></select></label>
+      <label style="justify-content:flex-end"><button class="btn" type="submit" style="width:100%">➕ 新增消費</button></label>
+    </form>
+    <div class="ld-total">
+      <div class="ld-card">日圓總計<b id="ldTotJ">¥0</b></div>
+      <div class="ld-card">折合台幣<b id="ldTotT">NT$0</b></div>
+      <div class="ld-card">筆數<b id="ldCnt">0</b></div>
+    </div>
+    <div id="ldCats"></div>
+    <div id="ldList"></div>
+    <div class="ld-tools">
+      <button class="btn" id="ldCsv" type="button">📊 匯出試算表 (CSV)</button>
+      <button class="btn btn-secondary" id="ldCopy" type="button">📄 複製文字</button>
+      <label class="btn btn-secondary" style="cursor:pointer">📥 匯入 CSV<input id="ldImport" type="file" accept=".csv,.txt,text/csv,text/plain" hidden></label>
+    </div>
+    <p class="ld-msg" id="ldSync">💾 記錄存在這台裝置的瀏覽器</p>
+    <p class="note">每筆會記下新增當下的匯率，之後改匯率不會影響舊紀錄。若這個環境無法連外抓匯率，會沿用上次匯率，也可以自己輸入。</p>
+  </div>
+
 
   <h2>✅ 行前待辦清單</h2>
   <div class="scroll">
   <table class="info-table stack">
     <thead><tr><th>時機</th><th>待辦事項</th></tr></thead>
     <tbody>
-      <tr><td>訂機票時</td><td>確認 D2 落在週五、六、日或國定假日；不是的話把 D2 跟 D3～D5 對調。</td></tr>
-      <tr><td>出發前</td><td>購買北部九州 5 日 JR Pass，並先劃長崎、熊本的指定席。</td></tr>
+      <tr><td>已確認 ✅</td><td>D2 是 3/12 週五，唐戶市場有開；D5 是 3/15 週一，糸島回程改搭西之浦線（平日直達巴士趕不上夕陽）。</td></tr>
+      <tr><td>出發前</td><td>購買 JR 北部九州 5 日券（17,000，3/12 起用），先劃長崎、熊本的指定席。</td></tr>
       <tr><td>出發前</td><td>查 D3 長崎→博多 末班接力海鷗號時間，決定稻佐山待多久。</td></tr>
       <tr><td>出發前</td><td>上熊本城官網確認開放時間與禁止進入區域（2026 地震後部分區域仍有管制）。</td></tr>
-      <tr><td>D5 前一晚</td><td>確認呼子海況、烏賊丸號是否出航；D5 若是週三，萬坊朝市通り店公休，改吃河太郎。</td></tr>
-      <tr><td>D6 前一晚</td><td>查姪濱→能古島渡船時刻；和飯店確認行李寄放到 16:00。</td></tr>
-      <tr><td>入境前</td><td>填 Visit Japan Web，QR Code 截圖存相簿。</td></tr>
+      <tr><td>3/14 晚上</td><td>確認呼子海況、烏賊丸號是否出航（3 月玄界灘風浪偶爾偏大）；查好昭和巴士西之浦線「九大學研都市 ⇄ 二見ヶ浦」去回程時刻和末班。</td></tr>
+      <tr><td>3/15 晚上</td><td>查姪濱→能古島渡船時刻；和飯店確認行李寄放到 16:00。</td></tr>
+      <tr><td>2027/2 月起</td><td>填 Visit Japan Web，QR Code 截圖存相簿。</td></tr>
     </tbody>
   </table>
   </div>
@@ -170,54 +279,69 @@ table{font-size:13px}.stack thead{display:none}.stack tr{display:grid;padding-bl
   <div class="tips-box">
     <h3 style="margin-top:0">💡 實務小提醒</h3>
     <ul>
+      <li>宮地嶽神社：福間站前搭西鐵巴士約 5 分，下車走 3 分鐘；境內免費參拜。「光之道」夕陽只在每年 2 月、10 月的 20 日前後。</li>
+      <li>南藏院：城戶南藏院前站走路約 3 分鐘到參道入口；體內參拜要付費。這裡是祈禱的場所，境內禁止邊走邊吃。</li>
       <li>唐戶市場：週五、六 10:00 開始，週日和假日 8:00 開始，15:00 收攤，熱門壽司常常中午前就賣完，越早到越好。</li>
       <li>關門隧道人道 6:00～22:00、行人免費，兩端各有半個紀念章，蓋完可以拼成一個圓。</li>
       <li>長崎：博多出發最快約 1 小時 20 分，在武雄溫泉站同一個月台換車；長崎站月台內沒有便利商店，早餐先在博多買。</li>
       <li>稻佐山纜車營業到 22:00；山頂風大，帶件外套。</li>
       <li>熊本城：9:00～19:00，最後入園 18:00。水前寺成趣園 8:30～17:00，16:30 停止入園。熊本熊廣場 10:00～19:00。</li>
+      <li>糸島二見浦：西海岸直達巴士（West Coast Liner）天神 ⇄ 二見浦約 55 分，但回程平日 17:00 就收班（週末 18:00），想看夕陽要改搭西之浦線接 JR 九大學研都市站。</li>
       <li>呼子朝市 7:30～12:00，9:00～9:30 最熱鬧，可以殺價。</li>
       <li>能古島海島公園：週一到週六 9:00～17:30，週日和假日開到 18:30（冬季都是 17:30）。</li>
     </ul>
   </div>
+  <nav class="bottom-nav" aria-label="快速導覽">
+    <a href="#days-h"><span>📅</span>行程</a>
+    <a href="#rain-h"><span>🌧️</span>雨天</a>
+    <a href="#ledger"><span>💰</span>記帳</a>
+    <a href="#ticket-h"><span>🚆</span>交通</a>
+    <a href="#top"><span>⬆️</span>置頂</a>
+  </nav>
   <p class="note" style="text-align:center;margin-top:24px">行程依原網頁格式重新整理｜時間為建議值，現場依交通狀況彈性調整</p>
+  <p class="note" id="lastmod" style="text-align:center;margin-top:10px;font-size:.95rem">📅 行程最後修改：2026年11月23日 15:06</p>
 </div>
 
 <script>
 {
 const M = q => 'https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent(q);
 const DAYS = [
- {t:'Day 1 - 抵達 ➔ 博多舊城寺町 ➔ 川端 ➔ 中洲明太重', chip:'D1 博多舊城',
-  pre:'<div class="box warning-box">⚠️ 首日走路行程，範圍約 2 公里。櫛田神社就在川端商店街旁，原行程已經去過，直接略過。</div>',
+ {t:'Day 1 - 3/11（四）- 抵達 ➔ 兼虎沾麵 ➔ 博多寺町 ➔ 南藏院 ➔ 運河城 ➔ 中洲', chip:'D1 博多・南藏院',
+  pre:'<div class="box warning-box">⚠️ 南藏院的戶外涅槃像全天都能看，但體內參拜 16:30 截止，所以 15:30 前要從博多出發。櫛田神社在川端商店街旁，原行程已經去過，直接略過。</div>',
   items:[
   ['11:20','抵達福岡機場國際線，入境、領行李','福岡空港 国際線ターミナル'],
-  ['12:15','搭免費接駁巴士到國內線 ➔ 地鐵空港線到博多站（約 5 分）<small>住天神的話多坐 2 站到天神</small>','博多駅'],
-  ['12:40','飯店寄放行李（尚不可入住）',''],
-  ['13:00','午餐：因幡烏龍麵（博多站 DEITOS 麵街道）<small>軟 Q 博多烏龍麵，翻桌快</small>','因幡うどん デイトス'],
+  ['12:15','搭免費接駁巴士到國內線 ➔ 地鐵空港線到博多站（約 5 分）','博多駅'],
+  ['12:40','飯店寄放行李（住天神的話，寄放完再搭地鐵回博多）',''],
+  ['13:00','午餐：麵屋兼虎 博多站前店 🔥 濃厚魚介豚骨沾麵<small>DEITOS 店也可以；站前店 20 席、翻桌較快，排隊通常比較短。吃完記得加湯（スープ割り）</small>','麺や兼虎 博多駅前店'],
   ['14:00','承天寺 <span class="photo">📸 烏龍麵・蕎麥麵發祥碑</span><small>博多站步行約 10 分</small>','承天寺 福岡'],
-  ['14:45','東長寺：福岡大佛（日本最大木造坐像）、朱紅六角堂','東長寺 福岡'],
-  ['15:30','聖福寺：日本第一座禪寺，寺內石板小路散步','聖福寺 福岡'],
-  ['16:15','博多千年門・御供所町寺町散步','博多千年門'],
-  ['16:45','博多川端商店街 ➔ 博多 Riverain（福岡亞洲美術館，週三休館）','博多リバレイン'],
-  ['18:30','晚餐：元祖博多明太重 <small>整條明太子蓋飯，晚餐時段也要排隊</small>','元祖博多めんたい重'],
-  ['20:00','那珂川河岸、春吉橋看中洲夜景 ➔ 回飯店','春吉橋']
+  ['14:30','東長寺：福岡大佛（日本最大木造坐像）、朱紅六角堂','東長寺 福岡'],
+  ['15:00','博多千年門 ➔ 聖福寺（日本第一座禪寺）','聖福寺 福岡'],
+  ['15:30','JR 博多站 ➔ 篠栗線（福北ゆたか線）➔ 城戶南藏院前站（快速約 20 分）','城戸南蔵院前駅'],
+  ['16:00','南藏院 <span class="photo">📸 世界最大級青銅釋迦涅槃像 41m</span><small>體內參拜（付費）16:30 前入場；境內請保持安靜</small>','南蔵院 篠栗'],
+  ['17:00','城戶南藏院前 ➔ 博多（約 20 分）➔ 步行或巴士到運河城',''],
+  ['17:45','博多運河城 Canal City：B1 水舞秀、逛街（Alpen FUKUOKA 在南館）','キャナルシティ博多'],
+  ['19:15','沿川端商店街往北走 ➔ 晚餐：元祖博多明太重','元祖博多めんたい重'],
+  ['20:30','沿那珂川往南散步，春吉橋看中洲夜景 ➔ 回飯店','春吉橋']
  ]},
- {t:'Day 2 - 門司港 ➔ 船渡下關唐戶市場 ➔ 海底隧道走回九州 🚢（週五～日）', chip:'D2 門司港・下關',
-  pre:'<div class="box warning-box">⚠️ 唐戶市場「活きいき馬關街」只在週五、六、日和國定假日。路線：門司港 →（船）→ 下關 →（海底隧道步行）→ 門司 → 門司港，繞一圈不走回頭路。</div>',
+ {t:'Day 2 - 3/12（五）- 宮地嶽神社 ➔ 門司港 ➔ 船渡下關唐戶市場 ➔ 海底隧道走回九州 🚢', chip:'D2 宮地嶽・門司港・下關',
+  pre:'<div class="box warning-box">✅ 3/12 是週五，唐戶市場「活きいき馬關街」有開（週五、六 10:00～15:00；週日和假日 8:00 開始），平日人比週末少。路線：博多 → 福間（宮地嶽）→ 小倉 → 門司港 →（船）→ 下關 →（海底隧道步行）→ 門司 → 門司港，全程沿 JR 鹿兒島本線往東北，不走回頭路。今天整天都是在來線，用北部九州 Pass 不用補新幹線。</div>',
   items:[
-  ['08:15','博多 ➔ 小倉（新幹線約 15 分）➔ JR 鹿兒島本線到門司港（約 13 分）<small>用北部九州 Pass 的話改搭特急音速號到小倉（約 45 分）</small>','門司港駅'],
-  ['09:30','門司港站 <span class="photo">📸 重要文化財木造站房</span>','門司港駅'],
-  ['09:40','門司港棧橋（Marine Gate Moji）搭關門汽船 ➔ 唐戶（約 5 分）','マリンゲートもじ'],
-  ['10:00','唐戶市場「活きいき馬關街」週末壽司屋台 <span class="photo">📸 河豚握壽司</span><small>一盤一盤挑，坐在海峽邊吃</small>','唐戸市場'],
-  ['11:30','赤間神宮：龍宮城造型朱紅水天門','赤間神宮'],
-  ['12:15','沿海峽步道走到御裳川公園（壇之浦古戰場）','みもすそ川公園'],
-  ['12:45','關門隧道人道：海底 780m 走回九州 <span class="photo">📸 海底縣界線</span>','関門トンネル人道'],
-  ['13:15','和布刈神社 ＋ 關門橋近景','和布刈神社'],
-  ['14:00','關門海峽めかり站搭潮風號觀光小火車 ➔ 九州鐵道紀念館<small>潮風號季節性運行，沒開就搭西鐵巴士回門司港</small>','関門海峡めかり駅'],
-  ['14:30','門司港懷舊區：舊門司三井俱樂部、舊大阪商船、藍翼門司吊橋、懷舊展望室','門司港レトロ'],
-  ['18:00','晚餐：門司港燒咖哩（焼きカレー）','門司港 焼きカレー'],
-  ['20:15','JR 門司港 ➔ 小倉 ➔ 博多（約 1 小時）','']
+  ['07:45','JR 博多 ➔ 鹿兒島本線快速 ➔ 福間站（約 25 分）','福間駅'],
+  ['08:10','福間站前搭西鐵巴士 ➔「宮地嶽神社前」（約 5 分）',''],
+  ['08:20','宮地嶽神社 <span class="photo">📸 日本第一大注連繩＋直通大海的參道</span><small>早上人少；參道商店多半較晚開。「光之道」夕陽只在 2 月、10 月的 20 日前後</small>','宮地嶽神社'],
+  ['09:15','巴士回福間站 ➔ JR 快速 ➔ 小倉 ➔ 門司港（約 1 小時）',''],
+  ['10:25','門司港站 <span class="photo">📸 重要文化財木造站房</span>','門司港駅'],
+  ['10:40','門司港棧橋（Marine Gate Moji）搭關門汽船 ➔ 唐戶（約 5 分）','マリンゲートもじ'],
+  ['10:50','唐戶市場「活きいき馬關街」週末壽司屋台 <span class="photo">📸 河豚握壽司</span><small>週六人最多，熱門壽司可能中午前賣完</small>','唐戸市場'],
+  ['12:00','赤間神宮：龍宮城造型朱紅水天門','赤間神宮'],
+  ['12:45','沿海峽步道走到御裳川公園（壇之浦古戰場）','みもすそ川公園'],
+  ['13:15','關門隧道人道：海底 780m 走回九州 <span class="photo">📸 海底縣界線</span>','関門トンネル人道'],
+  ['13:45','和布刈神社 ＋ 關門橋近景 ➔ 潮風號或西鐵巴士回門司港<small>潮風號季節性運行</small>','和布刈神社'],
+  ['14:45','門司港懷舊區：舊門司三井俱樂部、舊大阪商船、藍翼門司吊橋、九州鐵道紀念館、懷舊展望室','門司港レトロ'],
+  ['18:00','晚餐：門司港燒咖哩（焼きカレー） ➔ 港邊夜景','門司港 焼きカレー'],
+  ['20:15','JR 門司港 ➔ 小倉 ➔ 特急音速號 ➔ 博多（約 1 小時 10 分，5 日券可搭；不要搭新幹線）','']
  ]},
- {t:'Day 3 - 長崎一日：平和公園 ➔ 中華街 ➔ 哥拉巴園 ➔ 稻佐山夜景 🌃', chip:'D3 長崎',
+ {t:'Day 3 - 3/13（六）- 長崎一日：平和公園 ➔ 中華街 ➔ 哥拉巴園 ➔ 稻佐山夜景 🌃', chip:'D3 長崎',
   pre:'<div class="box warning-box">⚠️ 由北往南一路玩下去，最後往西上稻佐山，再回長崎站。路面電車建議買一日券。長崎站月台內沒有商店，早餐先在博多買。</div>',
   items:[
   ['07:45','博多 ➔ 接力海鷗號 ➔ 武雄溫泉（同月台轉乘）➔ 西九州新幹線海鷗號 ➔ 長崎（最快約 1 小時 20 分）','長崎駅'],
@@ -233,7 +357,7 @@ const DAYS = [
   ['19:30','晚餐：山頂餐廳，或下山在長崎站周邊吃（順買角煮饅頭當伴手禮）','アミュプラザ長崎'],
   ['20:30','長崎 ➔ 博多 <small>末班車出發前務必確認</small>','']
  ]},
- {t:'Day 4 - 熊本一日：熊本城 ➔ 水前寺成趣園 ➔ 熊本熊廣場 🐻', chip:'D4 熊本',
+ {t:'Day 4 - 3/14（日）- 熊本一日：熊本城 ➔ 水前寺成趣園 ➔ 熊本熊廣場 🐻', chip:'D4 熊本',
   pre:'<div class="box warning-box">⚠️ 熊本城在 2026 年熊本地震後臨時休園，8/13 已重新開放，開放時間 9:00～19:00（最後入園 18:00），部分石垣區域禁止進入。景點都在市電沿線，今天可以睡晚一點。</div>',
   items:[
   ['09:00','博多 ➔ 熊本（九州新幹線瑞穗號／櫻號 約 32～40 分）','熊本駅'],
@@ -246,30 +370,32 @@ const DAYS = [
   ['18:30','晚餐：馬肉料理（菅乃屋）或熊本拉麵（こむらさき）','菅乃屋 上通店'],
   ['20:00','市電 ➔ 熊本站 ➔ 新幹線回博多','']
  ]},
- {t:'Day 5 - 唐津・呼子：呼子朝市 ➔ 活烏賊 ➔ 唐津城 ➔ 虹之松原 🦑', chip:'D5 唐津・呼子',
-  pre:'<div class="box warning-box">⚠️ 呼子朝市只開到中午 12 點，要早出門。回程的虹之松原就在 JR 筑肥線上，順路下車。列車會經過糸島但不下車（原行程已去）。</div>',
+ {t:'Day 5 - 3/15（一）- 唐津・呼子：呼子朝市 ➔ 活烏賊 ➔ 唐津城 ➔ 糸島二見浦夕陽 🦑🌅', chip:'D5 唐津・呼子・糸島',
+  pre:'<div class="box warning-box">⚠️ 全天沿 JR 筑肥線往西，去程直達最遠的呼子，回程在九大學研都市站下車去糸島看夕陽，不走回頭路。西海岸直達巴士（West Coast Liner）平日最後一班約 17:00 從二見浦開，趕不上夕陽，所以回程改搭昭和巴士西之浦線接 JR。3 月中旬日落約 18:20。</div>',
   items:[
   ['07:20','天神 ➔ 地鐵空港線直通 JR 筑肥線 ➔ 唐津（約 1 小時 20 分，部分班次需在筑前前原轉車）','唐津駅'],
   ['08:50','步行到唐津大手口巴士中心（約 5 分）','唐津大手口バスセンター'],
   ['09:00','昭和巴士 ➔ 呼子（約 30 分）',''],
   ['09:30','呼子朝市（日本三大朝市）<span class="photo">📸 整排烏賊一夜干</span><small>9:00～9:30 最熱鬧，可以殺價</small>','呼子朝市'],
-  ['11:00','午餐：活烏賊生魚片（河太郎 呼子店 或 萬坊）<small>透明烏賊，腳吃完做成天婦羅；萬坊朝市通り店週三休</small>','河太郎 呼子店'],
-  ['12:00','（選）烏賊丸號 七釜遊覽船，約 40 分 <small>海況差會停航</small>','マリンパル呼子'],
+  ['11:00','午餐：活烏賊生魚片（河太郎 呼子店 或 萬坊）<small>透明烏賊，腳吃完做成天婦羅</small>','河太郎 呼子店'],
+  ['12:00','（選）烏賊丸號 七釜遊覽船，約 40 分 <small>海況差會停航；不搭的話可以早一班巴士回唐津</small>','マリンパル呼子'],
   ['13:00','巴士回唐津（約 30 分）',''],
   ['13:45','唐津城（舞鶴城）登天守看玄界灘','唐津城'],
-  ['15:00','舊高取邸（近代和風豪宅，週一休）','旧高取邸'],
-  ['16:00','JR 唐津 ➔ 虹之松原站（2 站）',''],
-  ['16:15','虹之松原 ＋ 唐津漢堡 松原本店 <span class="photo">📸 綿延 5 公里松林</span>','からつバーガー 松原本店'],
-  ['19:00','回天神，晚餐：博多一口煎餃（餃子のテムジン 大名本店）','餃子のテムジン 大名本店']
+  ['14:50','JR 唐津 ➔ 筑肥線 ➔ 九大學研都市站（約 50 分）','九大学研都市駅'],
+  ['15:50','昭和巴士 西之浦線 ➔「二見ヶ浦」（約 30～40 分）<small>班次不多，先查好時刻；人多時也可搭計程車</small>',''],
+  ['16:30','糸島海岸：PALM BEACH THE GARDENS・天使之翼・椰子樹鞦韆 <span class="photo">📸 海景鞦韆</span><small>海邊咖啡廳下午茶</small>','PALM BEACH THE GARDENS 糸島'],
+  ['17:30','櫻井二見浦：夫婦岩＋海上白鳥居 <span class="photo">📸 夕陽落在夫婦岩之間</span>','桜井二見ヶ浦 夫婦岩'],
+  ['18:40','西之浦線 ➔ 九大學研都市 ➔ JR 筑肥線直通地鐵 ➔ 天神（約 1 小時 15 分）<small>末班巴士時間先確認</small>',''],
+  ['20:00','晚餐：博多一口煎餃（餃子のテムジン 大名本店）','餃子のテムジン 大名本店']
  ]},
- {t:'Day 6 - 能古島花海 ➔ MARINOA CITY ➔ 空港線直達機場 ✈️', chip:'D6 能古島・返台',
+ {t:'Day 6 - 3/16（二）- 能古島花海 ➔ MARINOA CITY ➔ 空港線直達機場 ✈️', chip:'D6 能古島・返台',
   pre:'<div class="box success-box">✅ 姪濱、天神、福岡機場都在地鐵空港線上，早上往西、下午回頭拿行李直達機場，完全順路。</div>',
   items:[
   ['08:30','退房，行李寄放飯店櫃檯（約好 16:00 前領取）',''],
   ['09:00','天神 ➔ 姪濱（地鐵空港線約 11 分）➔ 巴士／計程車到姪濱渡船場','姪浜旅客待合所'],
   ['09:40','福岡市營渡船 ➔ 能古島（約 10 分）','能古渡船場'],
   ['10:00','西鐵巴士 ➔ 能古島海島公園（約 13 分）',''],
-  ['10:15','能古島海島公園 <span class="photo">📸 花海＋博多灣</span><small>春油菜花、夏向日葵、秋大波斯菊、冬水仙</small>','のこのしまアイランドパーク'],
+  ['10:15','能古島海島公園 <span class="photo">📸 花海＋博多灣</span><small>3 月中正好是油菜花季，配博多灣很好拍</small>','のこのしまアイランドパーク'],
   ['12:15','午餐：能古漢堡（園內島產蔬菜漢堡）',''],
   ['13:00','巴士＋渡船回姪濱',''],
   ['13:45','MARINOA CITY 福岡 Outlet 最後補貨','マリノアシティ福岡'],
@@ -286,9 +412,20 @@ wrap.innerHTML=DAYS.map((d,di)=>`<details class="day" id="day${di+1}"${di===0?' 
 document.getElementById('dayNav').innerHTML=DAYS.map((d,i)=>`<a class="day-chip" href="#day${i+1}" data-i="${i+1}">${d.chip}</a>`).join('');
 const upd=di=>{const all=wrap.querySelectorAll(`.schedule-check[data-d="${di}"]`);let n=0;all.forEach(c=>{if(c.checked)n++});document.getElementById('cnt'+di).textContent=n+'/'+all.length};
 DAYS.forEach((d,i)=>upd(i));
+const DIST=[
+ [['福岡機場國際線 ➔ 國內線','免費接駁巴士',3.0,'約 10–15 分'],['福岡空港站 ➔ 博多站','地鐵空港線',3.3,'約 5 分'],['博多站 ➔ 兼虎 博多站前店','步行',0.3,'約 5 分'],['兼虎 ➔ 承天寺 ➔ 東長寺 ➔ 聖福寺','步行',1.5,'約 20 分（不含參觀）'],['聖福寺 ➔ JR 博多站','步行',1.2,'約 15 分'],['博多 ➔ 城戶南藏院前','JR 篠栗線快速',14.0,'約 20 分'],['車站 ➔ 南藏院境內（來回）','步行',0.8,'約 10 分'],['城戶南藏院前 ➔ 博多','JR 篠栗線',14.0,'約 20 分'],['博多站 ➔ 運河城','步行或巴士',1.2,'約 15 分'],['運河城 ➔ 川端商店街 ➔ 元祖博多明太重','步行',1.0,'約 12 分'],['明太重 ➔ 春吉橋 ➔ 天神飯店','步行',2.0,'約 25 分']],
+ [['博多 ➔ 福間','JR 鹿兒島本線快速',25.0,'約 25 分'],['福間站 ➔ 宮地嶽神社（來回）','西鐵巴士',4.0,'單程約 5 分'],['福間 ➔ 小倉','JR 鹿兒島本線快速',42.0,'約 35–40 分'],['小倉 ➔ 門司港','JR 鹿兒島本線',11.0,'約 14 分'],['門司港站 ➔ Marine Gate Moji','步行',0.3,'約 5 分'],['門司港 ➔ 唐戶','關門汽船',1.5,'約 5 分'],['唐戶市場 ➔ 赤間神宮','步行',0.6,'約 8 分'],['赤間神宮 ➔ 御裳川公園','步行（海峽步道）',2.0,'約 25 分'],['關門隧道人道（下關 ➔ 門司）','步行',0.8,'約 15 分'],['めかり ➔ 門司港懷舊區','潮風號或巴士',2.5,'約 10–15 分'],['懷舊區散步','步行',2.0,'約 30 分'],['門司港 ➔ 小倉 ➔ 博多','JR',78.0,'約 1 小時']],
+ [['博多 ➔ 武雄溫泉','接力海鷗號',79.0,'約 50 分'],['武雄溫泉 ➔ 長崎','西九州新幹線',69.6,'約 25–30 分'],['長崎站 ➔ 平和公園','路面電車',2.5,'約 10 分'],['平和公園 ➔ 原爆資料館','步行',0.6,'約 8 分'],['原爆資料館 ➔ 眼鏡橋','路面電車',3.5,'約 15 分'],['眼鏡橋 ➔ 新地中華街 ➔ 出島','步行',1.3,'約 18 分'],['出島 ➔ 大浦天主堂','路面電車',1.5,'約 10 分'],['大浦天主堂 ➔ 哥拉巴園 ➔ 荷蘭坂','步行',1.0,'約 15 分（坡道）'],['荷蘭坂 ➔ 纜車淵神社站','巴士',3.5,'約 15 分'],['淵神社 ➔ 稻佐山（來回）','長崎纜車',2.2,'單程約 5 分'],['淵神社站 ➔ 長崎站','巴士或計程車',2.0,'約 10 分'],['長崎 ➔ 博多','西九州新幹線＋接力海鷗號',148.6,'約 1 小時 20–30 分']],
+ [['博多 ➔ 熊本','九州新幹線',118.4,'約 32–40 分'],['熊本站 ➔ 熊本城・市役所前','市電',3.0,'約 15 分'],['熊本城 ➔ 櫻之馬場 城彩苑','步行',0.4,'約 5 分'],['熊本城・市役所前 ➔ 水前寺公園','市電',4.5,'約 20 分'],['水前寺公園 ➔ 水道町（熊本熊廣場）','市電',3.0,'約 12 分'],['熊本熊廣場 ➔ 上通・下通','步行',1.0,'約 15 分'],['通町筋 ➔ 熊本站','市電',3.0,'約 15 分'],['熊本 ➔ 博多','九州新幹線',118.4,'約 32–40 分']],
+ [['天神 ➔ 姪濱','地鐵空港線',7.0,'約 11 分'],['姪濱 ➔ 唐津','JR 筑肥線（直通）',42.6,'約 1 小時 10 分'],['唐津站 ➔ 大手口巴士中心','步行',0.4,'約 5 分'],['唐津 ➔ 呼子','昭和巴士',15.0,'約 30 分'],['呼子朝市 ➔ 餐廳 ➔ 遊覽船碼頭','步行',1.0,'約 15 分'],['（選）烏賊丸號 七釜遊覽','遊覽船',10.0,'約 40 分'],['呼子 ➔ 唐津','昭和巴士',15.0,'約 30 分'],['大手口 ➔ 唐津城 ➔ 唐津站','步行',2.0,'約 25 分'],['唐津 ➔ 九大學研都市','JR 筑肥線',34.0,'約 50 分'],['九大學研都市 ➔ 二見ヶ浦','昭和巴士 西之浦線',14.0,'約 30–40 分'],['PALM BEACH ➔ 二見浦夫婦岩','步行',1.5,'約 20 分'],['二見ヶ浦 ➔ 九大學研都市','昭和巴士 西之浦線',14.0,'約 30–40 分'],['九大學研都市 ➔ 天神','JR 筑肥線直通地鐵',15.5,'約 25 分'],['天神 ➔ 餃子のテムジン 大名本店','步行',0.8,'約 10 分']],
+ [['天神 ➔ 姪濱','地鐵空港線',7.0,'約 11 分'],['姪濱站 ➔ 姪濱渡船場','巴士或計程車',1.5,'約 10 分'],['姪濱 ➔ 能古島（來回）','福岡市營渡船',4.4,'單程約 10 分'],['能古渡船場 ➔ 海島公園（來回）','西鐵巴士',8.0,'單程約 13 分'],['姪濱渡船場 ➔ MARINOA CITY','巴士或步行',1.5,'約 10–20 分'],['MARINOA CITY ➔ 姪濱站','巴士',2.0,'約 10 分'],['姪濱 ➔ 天神（取行李）','地鐵空港線',7.0,'約 11 分'],['天神 ➔ 福岡空港','地鐵空港線',6.0,'約 11 分'],['國內線 ➔ 國際線','免費接駁巴士',3.0,'約 10 分']]
+];
+const tot=a=>a.reduce((s,r)=>s+r[2],0).toFixed(1);
+DIST.forEach((rows,i)=>{const dc=document.querySelector('#day'+(i+1)+' .day-content');if(dc)dc.insertAdjacentHTML('beforeend',`<details class="dist-box"><summary>📏 今日移動距離與交通時間：約 <b>${tot(rows)} km</b></summary><div class="scroll"><table class="info-table stack"><thead><tr><th>移動路段</th><th>交通方式</th><th>估算距離</th><th>預估時間</th></tr></thead><tbody>${rows.map(r=>`<tr><td>${r[0]}</td><td>${r[1]}</td><td class="num">${r[2]} km</td><td>${r[3]}</td></tr>`).join('')}</tbody><tfoot><tr><td colspan="2">🚩 今日移動總距離</td><td class="num">約 ${tot(rows)} km</td><td></td></tr></tfoot></table></div><p class="note">距離為估算：鐵路用營業里程或沿線距離，步行與巴士抓大概路程。</p></details>`)});
+
 wrap.addEventListener('change',e=>{const c=e.target;if(!c.classList.contains('schedule-check'))return;c.closest('.time-item').classList.toggle('completed',c.checked);if(c.checked)saved[c.dataset.k]=1;else delete saved[c.dataset.k];save();upd(c.dataset.d)});
 document.getElementById('dayNav').addEventListener('click',e=>{const a=e.target.closest('.day-chip');if(!a)return;const el=document.getElementById('day'+a.dataset.i);if(el)el.open=true});
-document.getElementById('openAll').onclick=()=>wrap.querySelectorAll('details').forEach(x=>x.open=true);
+document.getElementById('openAll').onclick=()=>wrap.querySelectorAll('details.day').forEach(x=>x.open=true);
 document.getElementById('closeAll').onclick=()=>wrap.querySelectorAll('details').forEach(x=>x.open=false);
 document.getElementById('resetChecks').onclick=()=>{saved={};save();wrap.querySelectorAll('.schedule-check').forEach(c=>{c.checked=false;c.closest('.time-item').classList.remove('completed')});DAYS.forEach((d,i)=>upd(i))};
 let scale=1;try{scale=parseFloat(localStorage.getItem('fk-new-scale'))||1}catch(e){}
@@ -296,11 +433,129 @@ const applyScale=()=>{document.documentElement.style.setProperty('--font-scale',
 applyScale();
 document.getElementById('fontUp').onclick=()=>{scale=Math.min(1.4,+(scale+0.1).toFixed(1));applyScale()};
 document.getElementById('fontDown').onclick=()=>{scale=Math.max(0.8,+(scale-0.1).toFixed(1));applyScale()};
+
+const TRIPD=['2027-03-11','2027-03-12','2027-03-13','2027-03-14','2027-03-15','2027-03-16'];
+const tz=new Date(Date.now()+8*3600e3).toISOString().slice(0,10);
+const ti=TRIPD.indexOf(tz);
+const mb=document.getElementById('modeBtn');
+let mobile;try{const p=localStorage.getItem('fk-new-mode');mobile=p?p==='m':matchMedia('(max-width: 700px)').matches}catch(e){mobile=matchMedia('(max-width: 700px)').matches}
+const applyMode=()=>{document.documentElement.classList.toggle('m',mobile);mb.textContent=mobile?'💻 電腦版':'📱 手機易讀版'};
+applyMode();
+mb.onclick=()=>{mobile=!mobile;applyMode();try{localStorage.setItem('fk-new-mode',mobile?'m':'d')}catch(e){}};
+if(ti>=0){wrap.querySelectorAll('details.day').forEach((x,i)=>{x.open=i===ti});const s=document.querySelector('#day'+(ti+1)+'>summary span');if(s)s.insertAdjacentHTML('beforeend','<span class="today-tag">今天</span>')}
+const cd=document.getElementById('countdown');if(cd){const dd=Math.ceil((new Date('2027-03-11T00:00:00+08:00')-new Date())/864e5);cd.textContent=dd>0?'✈️ 距離出發還有 '+dd+' 天':(dd>-6?'🎌 旅行進行中，玩得開心！':'');}
 const tb=document.getElementById('themeBtn');
 const isDark=()=>{const t=document.documentElement.dataset.theme;return t?t==='dark':matchMedia('(prefers-color-scheme: dark)').matches};
 const setLabel=()=>{tb.textContent=isDark()?'☀️ 淺色':'🌙 深色'};
 setLabel();
 tb.onclick=()=>{document.documentElement.dataset.theme=isDark()?'light':'dark';setLabel()};
+}
+</script>
+
+<script>
+{
+const $=id=>document.getElementById(id);
+const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const TRIP=[['2027-03-11','D1 3/11（四）'],['2027-03-12','D2 3/12（五）'],['2027-03-13','D3 3/13（六）'],['2027-03-14','D4 3/14（日）'],['2027-03-15','D5 3/15（一）'],['2027-03-16','D6 3/16（二）'],['other','行前／其他']];
+const CATS=['餐飲','交通','門票','購物','住宿','其他'];
+const DEF_RATE=0.2098, DEF_NOTE='臺銀現金賣出 2026/11/17';
+const LS='fk-new-ledger';
+let L={items:[],rate:DEF_RATE,rateSrc:'default',rateAt:''};
+let store=null, writing=Promise.resolve(), rateNote='';
+const fmtJ=n=>'¥'+Math.round(n).toLocaleString('en-US');
+const fmtT=n=>'NT$'+Math.round(n).toLocaleString('en-US');
+const toJ=it=>it.cur==='TWD'?it.amt/(it.rate||L.rate):it.amt;
+const toT=it=>it.cur==='TWD'?it.amt:it.amt*(it.rate||L.rate);
+const setSync=t=>{$('ldSync').textContent=t};
+function lsLoad(){try{const v=JSON.parse(localStorage.getItem(LS)||'null');if(v&&Array.isArray(v.items))return v}catch(e){}return null}
+function lsSave(){try{localStorage.setItem(LS,JSON.stringify(L))}catch(e){}}
+function persist(){lsSave();if(!store)return;const body={items:L.items.slice(),rate:L.rate,rateSrc:L.rateSrc,rateAt:L.rateAt};writing=writing.then(()=>store.set(body)).catch(e=>{setSync(e&&e.code==='quota_exceeded'?'⚠️ 雲端空間已滿，已先存在這台裝置':'⚠️ 雲端儲存失敗，已先存在這台裝置')})}
+$('ldDate').innerHTML=TRIP.map(t=>`<option value="${t[0]}">${t[1]}</option>`).join('');
+$('ldCat').innerHTML=CATS.map(c=>`<option>${c}</option>`).join('');
+const today=new Date(Date.now()+8*3600e3).toISOString().slice(0,10);
+$('ldDate').value=TRIP.some(t=>t[0]===today)?today:'2027-03-11';
+function rateTag(){
+  const r=L.rate;
+  if(L.rateSrc==='live')return '✅ 即時匯率'+(L.rateAt?'（'+new Date(L.rateAt).toLocaleString('zh-TW',{month:'numeric',day:'numeric',hour:'2-digit',minute:'2-digit'})+' 更新）':'');
+  if(L.rateSrc==='manual')return '✏️ 手動匯率';
+  return '📌 預設匯率（'+DEF_NOTE+'）';
+}
+function render(){
+  if(document.activeElement!==$('ldRate'))$('ldRate').value=L.rate;
+  $('ldRateTag').textContent=rateTag();
+  $('ldRateMsg').textContent=rateNote;
+  const its=L.items;
+  let tj=0,tt=0;const byCat={},byDay={};
+  its.forEach(it=>{const j=toJ(it),t=toT(it);tj+=j;tt+=t;byCat[it.cat]=(byCat[it.cat]||0)+t;(byDay[it.date]=byDay[it.date]||[]).push(it)});
+  $('ldTotJ').textContent=fmtJ(tj);$('ldTotT').textContent=fmtT(tt);$('ldCnt').textContent=its.length;
+  const max=Math.max(1,...Object.values(byCat));
+  $('ldCats').innerHTML=its.length?'<h3>分類統計（台幣）</h3>'+CATS.filter(c=>byCat[c]).map(c=>`<div class="ld-bar"><span>${c}</span><i style="width:${Math.max(3,byCat[c]/max*100)}%"></i><em>${fmtT(byCat[c])}</em></div>`).join(''):'';
+  if(!its.length){$('ldList').innerHTML='<p class="ld-empty">還沒有記帳，從上面新增第一筆吧 ✍️</p>';return}
+  $('ldList').innerHTML='<h3>消費明細</h3>'+TRIP.filter(t=>byDay[t[0]]).map(t=>{const rows=byDay[t[0]];const dj=rows.reduce((s,x)=>s+toJ(x),0),dt=rows.reduce((s,x)=>s+toT(x),0);
+    return `<div class="ld-day"><span>📅 ${t[1]}</span><span>${fmtJ(dj)}｜${fmtT(dt)}</span></div>`+rows.map(it=>`<div class="ld-row"><div class="what">${esc(it.item)}<small><span class="ld-cat">${esc(it.cat)}</span>${esc(it.pay)}｜匯率 ${it.rate}</small></div><div class="amt">${it.cur==='TWD'?fmtT(it.amt):fmtJ(it.amt)}<small>${it.cur==='TWD'?'≈ '+fmtJ(toJ(it)):'≈ '+fmtT(toT(it))}</small></div><button class="ld-del" type="button" data-id="${esc(it.id)}" aria-label="刪除 ${esc(it.item)}">✕</button></div>`).join('')}).join('');
+}
+$('ldForm').addEventListener('submit',e=>{e.preventDefault();
+  const amt=parseFloat($('ldAmt').value);const item=$('ldItem').value.trim();
+  if(!item||!(amt>0)){$('ldAmt').focus();return}
+  L.items.push({id:Date.now().toString(36)+Math.random().toString(36).slice(2,6),date:$('ldDate').value,item,cat:$('ldCat').value,pay:$('ldPay').value,cur:$('ldCur').value,amt,rate:L.rate});
+  $('ldItem').value='';$('ldAmt').value='';persist();render();$('ldItem').focus();
+});
+let armT=null;
+$('ldList').addEventListener('click',e=>{const b=e.target.closest('.ld-del');if(!b)return;
+  if(!b.classList.contains('arm')){document.querySelectorAll('.ld-del.arm').forEach(x=>{x.classList.remove('arm');x.textContent='✕'});b.classList.add('arm');b.textContent='刪除？';clearTimeout(armT);armT=setTimeout(()=>{b.classList.remove('arm');b.textContent='✕'},3000);return}
+  L.items=L.items.filter(x=>x.id!==b.dataset.id);persist();render();
+});
+$('ldRate').addEventListener('change',()=>{const v=parseFloat($('ldRate').value);if(!(v>0)){$('ldRate').value=L.rate;return}if(v===L.rate)return;L.rate=v;L.rateSrc='manual';L.rateAt='';rateNote='';persist();render()});
+async function fetchRate(fromClick){
+  rateNote='🔄 抓取中…';render();
+  try{
+    const ctl=new AbortController();const tm=setTimeout(()=>ctl.abort(),6000);
+    const r=await fetch('https://open.er-api.com/v6/latest/JPY',{signal:ctl.signal,cache:'no-store'});clearTimeout(tm);
+    const j=await r.json();const v=j&&j.rates&&j.rates.TWD;if(!(v>0))throw new Error('no rate');
+    const nv=+v.toFixed(4);rateNote='';
+    const changed=nv!==L.rate||L.rateSrc!=='live';
+    L.rate=nv;L.rateSrc='live';L.rateAt=new Date().toISOString();
+    if(changed||fromClick)persist();render();
+  }catch(e){
+    rateNote=fromClick?'⚠️ 這個頁面環境不能連外抓匯率，請直接修改上面的數字（臺銀牌告可參考）':'（無法連外抓匯率，沿用 '+L.rate+'）';render();
+  }
+}
+$('ldRefresh').onclick=()=>fetchRate(true);
+function toCSV(){const q=s=>'"'+String(s).replace(/"/g,'""')+'"';return '﻿日期,品項,分類,付款,幣別,金額,匯率,日圓,台幣\n'+L.items.map(it=>[it.date,q(it.item),it.cat,it.pay,it.cur,it.amt,it.rate,Math.round(toJ(it)),Math.round(toT(it))].join(',')).join('\n')}
+function toText(){let s='福岡記帳 2027/3/11–3/16\n';TRIP.forEach(t=>{const rows=L.items.filter(x=>x.date===t[0]);if(!rows.length)return;s+='\n【'+t[1]+'】\n'+rows.map(it=>'・'+it.item+'（'+it.cat+'／'+it.pay+'）'+(it.cur==='TWD'?fmtT(it.amt):fmtJ(it.amt)+' ≈ '+fmtT(toT(it)))).join('\n')+'\n'});const tj=L.items.reduce((a,x)=>a+toJ(x),0),tt=L.items.reduce((a,x)=>a+toT(x),0);return s+'\n合計：'+fmtJ(tj)+'（約 '+fmtT(tt)+'）'}
+$('ldCopy').onclick=async()=>{try{await navigator.clipboard.writeText(toText());setSync('📋 已複製到剪貼簿')}catch(e){setSync('⚠️ 無法複製，請改用匯出 CSV')}};
+$('ldCsv').onclick=async()=>{if(!L.items.length){setSync('還沒有資料可以匯出');return}
+  const data=toCSV(),filename='福岡記帳_2027-03.csv';
+  try{const dl=(typeof claude!=='undefined'&&claude.use)?await claude.use('downloads'):null;
+    if(dl){await dl.save({filename,data});setSync('✅ 已匯出 CSV');return}
+    const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([data],{type:'text/csv'}));a.download=filename;a.click();setSync('✅ 已匯出 CSV');
+  }catch(e){setSync(e&&e.code==='declined'?'已取消匯出':'⚠️ 匯出失敗，可改用「複製文字」')}};
+function parseCSV(txt){const out=[];txt.replace(/^﻿/,'').split(/\r?\n/).forEach((line,i)=>{if(!line.trim()||i===0&&/日期/.test(line))return;const c=[];let cur='',inq=false;for(let k=0;k<line.length;k++){const ch=line[k];if(inq){if(ch==='"'&&line[k+1]==='"'){cur+='"';k++}else if(ch==='"')inq=false;else cur+=ch}else if(ch==='"')inq=true;else if(ch===','){c.push(cur);cur=''}else cur+=ch}c.push(cur);
+  const amt=parseFloat(c[5]);if(!c[1]||!(amt>0))return;out.push({id:Date.now().toString(36)+Math.random().toString(36).slice(2,7),date:TRIP.some(t=>t[0]===c[0])?c[0]:'other',item:c[1].slice(0,60),cat:CATS.includes(c[2])?c[2]:'其他',pay:c[3]||'其他',cur:c[4]==='TWD'?'TWD':'JPY',amt,rate:parseFloat(c[6])>0?parseFloat(c[6]):L.rate})});return out}
+$('ldImport').addEventListener('change',async e=>{const f=e.target.files&&e.target.files[0];if(!f)return;try{const add=parseCSV(await f.text());if(!add.length){setSync('⚠️ 檔案裡找不到可匯入的資料（需要本頁匯出的 CSV 格式）');return}L.items=L.items.concat(add);persist();render();setSync('✅ 已匯入 '+add.length+' 筆')}catch(err){setSync('⚠️ 讀取檔案失敗')}e.target.value=''});
+const local=lsLoad();if(local)L={items:local.items,rate:+local.rate||DEF_RATE,rateSrc:local.rateSrc||'default',rateAt:local.rateAt||''};
+render();
+fetchRate(false);
+(async()=>{
+  try{
+    if(typeof claude==='undefined'||!claude.use)return;
+    const db=await claude.use('db');const user=await claude.use('user');
+    const uid=user?await user.id():null;
+    if(!db||!uid)return;
+    const ref=db.collection('data/users/'+uid).doc('ledger');
+    setSync('☁️ 連線到你的帳號中…');
+    const t=setTimeout(()=>setSync('⚠️ 暫時連不到雲端，先用這台裝置的記錄'),10000);
+    let first=true;
+    ref.onSnapshot(snap=>{
+      if(!snap.metadata.fromCache)clearTimeout(t);
+      if(snap.exists){
+        if(!snap.metadata.hasPendingWrites){const d=snap.data()||{};L={items:Array.isArray(d.items)?d.items.map(x=>({...x})):[],rate:+d.rate||DEF_RATE,rateSrc:d.rateSrc||'manual',rateAt:d.rateAt||''};lsSave();render()}
+        store=ref;
+      }else if(!snap.metadata.fromCache){store=ref;if(first&&L.items.length)persist()}
+      if(!snap.metadata.fromCache){first=false;setSync('☁️ 已存到你的帳號（只有你看得到，換裝置也在）')}
+    },e=>{clearTimeout(t);store=null;setSync('💾 雲端無法使用，記錄存在這台裝置的瀏覽器')});
+  }catch(e){}
+})();
 }
 </script>
 </body>
