@@ -703,8 +703,8 @@
           記帳
         </a>
 
-        <!-- 上傳圖片：在 chi.xo.je 上於下方開啟，其他網域開新分頁 -->
-        <a href="https://chi.xo.je/PIC/" class="nav-item" id="link-3" data-action="uploader" title="Alt+3" draggable="false">
+        <!-- 上傳圖片：網頁開在 chi.xo.je → 下方框架開啟；其他網域（例如 GitHub Pages）→ 開新分頁。由下方程式自動設定 -->
+        <a href="https://chi.xo.je/PIC/" class="nav-item" id="link-3" title="Alt+3" draggable="false">
           <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>
           上傳圖片
         </a>
@@ -878,15 +878,27 @@
 
     function openHome() { loadInFrame('index.html', null); }
 
-    function openImageUploader(el) {
-      const url = el.getAttribute('href');
-      const host = location.hostname.toLowerCase();
-      if (host === 'chi.xo.je' || host.endsWith('.chi.xo.je')) {
-        loadInFrame(url, el);
+    /* ================= 上傳圖片：依目前網域決定開啟方式 =================
+       chi.xo.je（含子網域）→ 跟其他項目一樣在下方框架開啟
+       其他網域             → 開新分頁（跨網域時上傳頁無法放進框架）
+       開頁時就把連結本身設定好，所以 Alt+3、Ctrl+點擊、中鍵點擊都會照同樣規則 */
+    const IS_CHI_HOST = /(^|\.)chi\.xo\.je$/i.test(location.hostname);
+    (function setupUploaderLink() {
+      const a = document.getElementById('link-3');
+      if (!a) return;
+      if (IS_CHI_HOST) {
+        a.setAttribute('target', 'content-frame');
+        a.removeAttribute('rel');
+        a.title = 'Alt+3';
       } else {
-        window.open(url, '_blank', 'noopener,noreferrer');
+        a.setAttribute('target', '_blank');
+        a.setAttribute('rel', 'noopener noreferrer');
+        a.title = 'Alt+3（新分頁）';
+        // 加上跟 ig下載 一樣的「↗」小箭頭，一看就知道會開新分頁
+        const ext = document.querySelector('#link-5 .ext');
+        if (ext && !a.querySelector('.ext')) a.appendChild(ext.cloneNode(true));
       }
-    }
+    })();
 
     function refreshIframe() {
       startLoading();
@@ -907,11 +919,9 @@
       const a = e.target.closest('a.nav-item');
       if (!a) return;
       if (drag.moved) { e.preventDefault(); return; } // 剛拖曳完不算點擊
+      if (e.ctrlKey || e.metaKey || e.shiftKey) return;   // Ctrl / ⌘ / Shift + 點擊：交給瀏覽器開新分頁或新視窗
 
-      if (a.dataset.action === 'uploader') {
-        e.preventDefault();
-        openImageUploader(a);
-      } else if (a.getAttribute('target') === 'content-frame') {
+      if (a.getAttribute('target') === 'content-frame') {
         e.preventDefault();
         loadInFrame(a.getAttribute('href'), a);
       }
@@ -929,7 +939,7 @@
       if (!saved || !saved.url || saved.url === currentIframeUrl) { startLoading(); return; }
       const el = saved.id ? document.getElementById(saved.id) : null;
       // 只還原仍存在、且會在下方開啟的項目（或首頁）
-      if (el && (el.getAttribute('target') === 'content-frame' || el.dataset.action === 'uploader') && el.getAttribute('href') === saved.url) {
+      if (el && el.getAttribute('target') === 'content-frame' && el.getAttribute('href') === saved.url) {
         loadInFrame(saved.url, el);
       } else if (!saved.id && saved.url === 'index.html') {
         loadInFrame('index.html', null);
