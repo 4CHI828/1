@@ -332,6 +332,48 @@
     .load-bar.loading { opacity: 1; width: 75%; transition: width 6s cubic-bezier(.1,.7,.2,1), opacity .2s; }
     .load-bar.done { opacity: 0; width: 100%; transition: width .2s ease, opacity .4s ease .2s; }
 
+    /* 上傳圖片無法在框架顯示時的替代畫面 */
+    .frame-fallback {
+      position: absolute;
+      inset: 0;
+      z-index: 80;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      background: var(--bottom-bg);
+    }
+    .frame-fallback[hidden] { display: none; }
+    .ff-card {
+      max-width: 420px;
+      width: 100%;
+      text-align: center;
+      background: var(--top-bg);
+      color: var(--text-main);
+      border: 1px solid var(--border-color);
+      border-radius: 16px;
+      padding: 26px 22px;
+      box-shadow: 0 12px 32px rgba(0,0,0,.25);
+    }
+    .ff-icon { font-size: 40px; margin-bottom: 8px; }
+    .ff-card h3 { font-size: 1.1rem; margin-bottom: 8px; }
+    .ff-card p { font-size: .88rem; color: var(--text-muted); line-height: 1.6; margin-bottom: 18px; }
+    .ff-actions { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; }
+    .ff-actions button {
+      min-height: 44px;
+      padding: 0 18px;
+      border-radius: 10px;
+      border: 1px solid var(--border-color);
+      background: var(--hover-bg);
+      color: var(--text-main);
+      font-size: .92rem;
+      font-weight: 600;
+      cursor: pointer;
+    }
+    .ff-actions button.primary { background: var(--accent); border-color: var(--accent); color: #fff; }
+    .ff-actions button:hover { filter: brightness(1.1); }
+    .ff-actions button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
     .exit-focus {
       position: absolute;
       top: max(12px, env(safe-area-inset-top));
@@ -703,7 +745,7 @@
           記帳
         </a>
 
-        <!-- 上傳圖片：網頁開在 chi.xo.je → 下方框架開啟；其他網域（例如 GitHub Pages）→ 開新分頁。由下方程式自動設定 -->
+        <!-- 上傳圖片：一律先在下方框架開啟；不在 chi.xo.je 時若被擋住，會顯示「在新分頁開啟」 -->
         <a href="https://chi.xo.je/PIC/" class="nav-item" id="link-3" title="Alt+3" draggable="false">
           <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>
           上傳圖片
@@ -776,6 +818,19 @@
 
     <main class="content-area">
       <div class="load-bar" id="loadBar" aria-hidden="true"></div>
+
+      <!-- 上傳圖片在框架裡被擋住時顯示 -->
+      <div class="frame-fallback" id="frameFallback" role="alert" hidden>
+        <div class="ff-card">
+          <div class="ff-icon">🖼️</div>
+          <h3>上傳頁沒辦法在這裡顯示</h3>
+          <p>可能是瀏覽器封鎖了第三方 Cookie，或圖片主機的安全檢查擋住了框架。<br>改用新分頁開啟就能正常使用。</p>
+          <div class="ff-actions">
+            <button type="button" class="primary" id="ffOpen">↗ 在新分頁開啟</button>
+            <button type="button" id="ffRetry">🔄 再試一次</button>
+          </div>
+        </div>
+      </div>
 
       <iframe id="content-frame" name="content-frame" title="內容區" src="smart_link_manager.html"
               allow="clipboard-read; clipboard-write; fullscreen"></iframe>
@@ -859,10 +914,50 @@
 
     iframe.addEventListener('load', finishLoading);
 
+    /* ================= 上傳圖片：先試框架，被擋住就提示改開新分頁 =================
+       上傳頁（chi.xo.je/PIC/）在框架裡載入成功時，會用 postMessage 回報 'chi-pic-ready'。
+       在 chi.xo.je 以外的網域，若 PIC_TIMEOUT_MS 內沒收到回報，就顯示替代畫面。 */
+    const IS_CHI_HOST = /(^|\.)chi\.xo\.je$/i.test(location.hostname);
+    const PIC_ORIGIN_RE = /^https?:\/\/([a-z0-9-]+\.)*chi\.xo\.je$/i;
+    const PIC_TIMEOUT_MS = 10000;
+    const frameFallback = document.getElementById('frameFallback');
+    let picWatch = null;
+
+    function isPicUrl(u) {
+      try { return PIC_ORIGIN_RE.test(new URL(u, location.href).origin); } catch (e) { return false; }
+    }
+    function hideFrameFallback() {
+      clearTimeout(picWatch); picWatch = null;
+      frameFallback.hidden = true;
+    }
+    function armPicWatchdog() {
+      if (IS_CHI_HOST) return; // 同網站一定能顯示，不用偵測
+      clearTimeout(picWatch);
+      picWatch = setTimeout(() => {
+        picWatch = null;
+        finishLoading();
+        frameFallback.hidden = false;
+        document.getElementById('ffOpen').focus({ preventScroll: true });
+      }, PIC_TIMEOUT_MS);
+    }
+    window.addEventListener('message', (e) => {
+      // 只相信來自 chi.xo.je、而且是下方框架送來的訊息
+      if (!PIC_ORIGIN_RE.test(e.origin) || e.source !== iframe.contentWindow) return;
+      if (e.data && e.data.type === 'chi-pic-ready') hideFrameFallback();
+    });
+    document.getElementById('ffOpen').addEventListener('click', () => {
+      window.open(currentIframeUrl, '_blank', 'noopener');
+    });
+    document.getElementById('ffRetry').addEventListener('click', () => {
+      loadInFrame(currentIframeUrl, document.querySelector('.nav-item.active'));
+    });
+
     function loadInFrame(url, el) {
       currentIframeUrl = url;
       markActive(el || null);
       startLoading();
+      hideFrameFallback();
+      if (isPicUrl(url)) armPicWatchdog();
       iframe.src = url;
       store.set(LAST_PAGE_KEY, JSON.stringify({ url, id: el ? el.id : null }));
     }
@@ -878,30 +973,19 @@
 
     function openHome() { loadInFrame('index.html', null); }
 
-    /* ================= 上傳圖片：依目前網域決定開啟方式 =================
-       chi.xo.je（含子網域）→ 跟其他項目一樣在下方框架開啟
-       其他網域             → 開新分頁（跨網域時上傳頁無法放進框架）
-       開頁時就把連結本身設定好，所以 Alt+3、Ctrl+點擊、中鍵點擊都會照同樣規則 */
-    const IS_CHI_HOST = /(^|\.)chi\.xo\.je$/i.test(location.hostname);
+    // 上傳圖片：任何網域都先在下方框架開啟（被擋住時會自動顯示「在新分頁開啟」）
     (function setupUploaderLink() {
       const a = document.getElementById('link-3');
       if (!a) return;
-      if (IS_CHI_HOST) {
-        a.setAttribute('target', 'content-frame');
-        a.removeAttribute('rel');
-        a.title = 'Alt+3';
-      } else {
-        a.setAttribute('target', '_blank');
-        a.setAttribute('rel', 'noopener noreferrer');
-        a.title = 'Alt+3（新分頁）';
-        // 加上跟 ig下載 一樣的「↗」小箭頭，一看就知道會開新分頁
-        const ext = document.querySelector('#link-5 .ext');
-        if (ext && !a.querySelector('.ext')) a.appendChild(ext.cloneNode(true));
-      }
+      a.setAttribute('target', 'content-frame');
+      a.removeAttribute('rel');
+      a.title = IS_CHI_HOST ? 'Alt+3' : 'Alt+3（若無法在框架顯示，會提示改開新分頁）';
     })();
 
     function refreshIframe() {
       startLoading();
+      hideFrameFallback();
+      if (isPicUrl(currentIframeUrl)) armPicWatchdog();
       try {
         iframe.contentWindow.location.reload(); // 同網域：保留 iframe 內的頁面位置
       } catch (e) {
