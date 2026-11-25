@@ -171,6 +171,50 @@
     .nav-left::-webkit-scrollbar-track { background: transparent; }
     .nav-left > * { flex: 0 0 auto; }
     .nav-left.dragging { scroll-behavior: auto; cursor: grabbing; user-select: none; }
+    .nav-left.auto-scrolling { scroll-behavior: auto; }
+
+    /* ================= 連結列的漂浮左右箭頭（電腦版） ================= */
+    .nav-scroll-wrap {
+      position: relative;
+      flex: 1 1 auto;
+      min-width: 0;
+      height: 100%;
+      display: flex;
+      align-items: center;
+    }
+    .nav-scroll-wrap > .nav-left { width: 100%; }
+    .nav-arrow {
+      position: absolute;
+      top: 50%;
+      transform: translateY(-50%);
+      z-index: 5;
+      width: 34px;
+      height: 34px;
+      padding: 0;
+      border-radius: 50%;
+      border: 1px solid var(--border-color);
+      background: color-mix(in srgb, var(--top-bg) 88%, transparent);
+      color: var(--text-main);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      opacity: 0;
+      pointer-events: none;
+      box-shadow: 0 2px 8px rgba(0,0,0,.25);
+      transition: opacity .2s ease, background-color .15s ease, color .15s ease, border-color .15s ease;
+    }
+    .nav-arrow.show { opacity: 1; pointer-events: auto; }
+    .nav-arrow:hover,
+    .nav-arrow.active { background: var(--accent); border-color: var(--accent); color: var(--bottom-bg); }
+    .nav-arrow:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+    .nav-arrow .icon { width: 18px; height: 18px; }
+    .nav-arrow.left { left: 0; }
+    .nav-arrow.right { right: 0; }
+    /* 手機 / 平板沒有「滑鼠停在上面」，維持用手指滑，不顯示箭頭 */
+    @media (hover: none), (pointer: coarse) {
+      .nav-arrow { display: none; }
+    }
     .nav-left.dragging .nav-item { pointer-events: none; }
 
     @media (min-width: 769px) and (hover: hover) {
@@ -721,6 +765,10 @@
   <div class="app-layout" id="appLayout">
 
     <header class="nav-bar">
+      <div class="nav-scroll-wrap">
+      <button type="button" class="nav-arrow left" id="navArrowLeft" aria-label="連結往左捲動" title="滑鼠停在這裡會自動往左捲，點一下跳一段">
+        <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><polyline points="15 18 9 12 15 6"></polyline></svg>
+      </button>
       <nav class="nav-left" id="navLeft" aria-label="主要導覽">
         <!-- 品牌區：開啟首頁 -->
         <button class="brand" id="brandHome" type="button" title="開啟首頁 index.html" aria-label="開啟首頁">
@@ -783,6 +831,10 @@
           麥當勞
         </a>
       </nav>
+      <button type="button" class="nav-arrow right" id="navArrowRight" aria-label="連結往右捲動" title="滑鼠停在這裡會自動往右捲，點一下跳一段">
+        <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><polyline points="9 18 15 12 9 6"></polyline></svg>
+      </button>
+      </div>
 
       <div class="nav-right">
         <button class="btn-icon" id="btnRefresh" type="button" title="重新整理" aria-label="重新整理">
@@ -1067,6 +1119,66 @@
         navLeft.scrollBy({ left: e.deltaY, behavior: 'auto' });
       }
     }, { passive: false });
+
+    /* ================= 漂浮左右箭頭：滑鼠停在上面自動捲動 ================= */
+    const arrowL = $('#navArrowLeft'), arrowR = $('#navArrowRight');
+    const ARROW_SPEED_MIN = 90;   // 剛開始的速度（像素/秒）
+    const ARROW_SPEED_MAX = 260;  // 停久了最快的速度（像素/秒）
+    const ARROW_ACCEL = 110;      // 每多停 1 秒加快多少（像素/秒）
+    let arrowDir = 0, arrowRaf = 0, arrowStart = 0, arrowLast = 0, arrowPos = 0;
+
+    function updateNavArrows() {
+      const max = navLeft.scrollWidth - navLeft.clientWidth;
+      const canL = navLeft.scrollLeft > 2;
+      const canR = navLeft.scrollLeft < max - 2;
+      arrowL.classList.toggle('show', canL);
+      arrowR.classList.toggle('show', canR);
+      if ((arrowDir < 0 && !canL) || (arrowDir > 0 && !canR)) stopArrowScroll();
+    }
+    function arrowStep(t) {
+      if (!arrowDir) return;
+      const dt = Math.min(0.05, (t - arrowLast) / 1000); // 換分頁回來時不會一次暴衝
+      arrowLast = t;
+      const held = (t - arrowStart) / 1000;
+      const speed = Math.min(ARROW_SPEED_MAX, ARROW_SPEED_MIN + held * ARROW_ACCEL);
+      arrowPos += arrowDir * speed * dt;
+      navLeft.scrollLeft = arrowPos;
+      updateNavArrows();
+      if (arrowDir) arrowRaf = requestAnimationFrame(arrowStep);
+    }
+    function startArrowScroll(dir) {
+      if (drag.down) return;
+      arrowDir = dir;
+      arrowPos = navLeft.scrollLeft;
+      arrowStart = arrowLast = performance.now();
+      navLeft.classList.add('auto-scrolling');
+      (dir < 0 ? arrowL : arrowR).classList.add('active');
+      cancelAnimationFrame(arrowRaf);
+      arrowRaf = requestAnimationFrame(arrowStep);
+    }
+    function stopArrowScroll() {
+      arrowDir = 0;
+      cancelAnimationFrame(arrowRaf);
+      navLeft.classList.remove('auto-scrolling');
+      arrowL.classList.remove('active');
+      arrowR.classList.remove('active');
+    }
+    function jumpArrow(dir) {
+      stopArrowScroll();
+      navLeft.scrollBy({ left: dir * navLeft.clientWidth * 0.7, behavior: 'smooth' });
+    }
+
+    arrowL.addEventListener('mouseenter', () => startArrowScroll(-1));
+    arrowR.addEventListener('mouseenter', () => startArrowScroll(1));
+    arrowL.addEventListener('mouseleave', stopArrowScroll);
+    arrowR.addEventListener('mouseleave', stopArrowScroll);
+    arrowL.addEventListener('click', () => jumpArrow(-1));
+    arrowR.addEventListener('click', () => jumpArrow(1));
+    navLeft.addEventListener('scroll', updateNavArrows, { passive: true });
+    window.addEventListener('resize', updateNavArrows);
+    window.addEventListener('blur', stopArrowScroll);
+    if ('ResizeObserver' in window) new ResizeObserver(updateNavArrows).observe(navLeft);
+    updateNavArrows();
 
     /* ================= 專注模式 ================= */
     const btnFocus = $('#btnFocus');
