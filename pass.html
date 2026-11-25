@@ -1,1058 +1,1886 @@
 <!DOCTYPE html>
-<html lang="zh-TW">
+<html lang="zh-Hant-TW">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>專屬密碼查詢器 | Google 安全認證版</title>
-  <!-- Tailwind CSS -->
-  <script src="https://cdn.tailwindcss.com"></script>
-  <!-- Font Awesome 圖示 -->
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-  <!-- Google Fonts -->
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+TC:wght@400;500;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
-  
-  <script>
-    tailwind.config = {
-      theme: {
-        extend: {
-          fontFamily: {
-            sans: ['Inter', 'Noto Sans TC', 'PingFang TC', 'Microsoft JhengHei', 'sans-serif'],
-            mono: ['JetBrains Mono', 'monospace'],
-          }
-        }
-      }
-    }
-  </script>
-  <style>
-    @keyframes fadeIn {
-      from { opacity: 0; transform: translateY(8px); }
-      to { opacity: 1; transform: translateY(0); }
-    }
-    .animate-fade-in {
-      animation: fadeIn 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-    }
-    @keyframes shake {
-      0%, 100% { transform: translateX(0); }
-      20%, 60% { transform: translateX(-6px); }
-      40%, 80% { transform: translateX(6px); }
-    }
-    .animate-shake {
-      animation: shake 0.35s ease-in-out;
-    }
-  </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>帳號密碼安全管理 v1.3</title>
+<meta name="referrer" content="no-referrer">
+<meta name="robots" content="noindex, nofollow">
+<style>
+:root{
+  --sky-deep:#006BBE;
+  --sky-light:#0091E0;
+  --sky-grad:linear-gradient(135deg,#0091E0 0%,#006BBE 100%);
+  --sky-glow:#38b6ff;
+  --ink:#0e2740;
+  --line:#d6e6f5;
+  --bg1:#eaf4ff;
+  --bg2:#f6fbff;
+  --card:#ffffff;
+  --danger:#e0492f;
+  --ok:#1aa15a;
+  --warn:#f08a1d;
+  --radius:14px;
+  --shadow:0 8px 24px -8px rgba(0,80,160,.25);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%}
+body{
+  font-family:system-ui,'Segoe UI','Microsoft JhengHei','Noto Sans TC','Roboto',sans-serif;
+  color:var(--ink);
+  background:
+    radial-gradient(1200px 600px at 80% -10%, #bfe4ff 0%, transparent 60%),
+    radial-gradient(900px 500px at -10% 20%, #d8f0ff 0%, transparent 55%),
+    linear-gradient(180deg,var(--bg1),var(--bg2));
+  min-height:100vh;-webkit-font-smoothing:antialiased;
+}
+button{font-family:inherit;cursor:pointer;border:none}
+input,select,textarea{font-family:inherit}
+a{color:var(--sky-deep)}
+.hidden{display:none!important}
+
+/* 認證畫面 */
+#authLayer{position:fixed;inset:0;z-index:200;display:flex;align-items:center;justify-content:center;
+  background:radial-gradient(800px 400px at 70% 10%, rgba(56,182,255,.35), transparent 60%),linear-gradient(135deg,#0091E0,#006BBE);padding:18px;}
+.auth-card{width:100%;max-width:430px;background:#fff;border-radius:22px;box-shadow:0 30px 60px -20px rgba(0,40,80,.5);padding:30px 28px;animation:pop .35s ease;}
+@keyframes pop{from{transform:translateY(14px) scale(.98);opacity:0}to{transform:none;opacity:1}}
+.auth-logo{display:flex;flex-direction:column;align-items:center;gap:8px;margin-bottom:18px}
+.auth-logo .ic{width:64px;height:64px;border-radius:18px;background:var(--sky-grad);display:grid;place-items:center;color:#fff;font-size:30px;box-shadow:0 10px 22px -8px rgba(0,107,190,.7)}
+.auth-logo h2{font-size:1.35rem;background:var(--sky-grad);-webkit-background-clip:text;background-clip:text;color:transparent;letter-spacing:1px}
+.auth-logo p{color:#5b7d9c;font-size:.85rem}
+.auth-tabs{display:flex;background:#eef6ff;border-radius:12px;padding:4px;margin:6px 0 18px}
+.auth-tabs button{flex:1;padding:9px;border-radius:9px;background:transparent;color:#3a6c94;font-weight:600;font-size:.92rem}
+.auth-tabs button.active{background:var(--sky-grad);color:#fff;box-shadow:0 6px 14px -6px rgba(0,107,190,.7)}
+.field{margin-bottom:13px}
+.field label{display:block;font-size:.78rem;font-weight:700;color:#33608a;margin-bottom:5px;letter-spacing:.3px}
+.field input,.field select{width:100%;padding:11px 13px;border:1.6px solid var(--line);border-radius:11px;font-size:.95rem;background:#fbfdff;transition:.15s}
+.field input:focus,.field select:focus{outline:none;border-color:var(--sky-light);box-shadow:0 0 0 3px rgba(0,145,224,.15)}
+.btn-sky{width:100%;padding:12px;border-radius:12px;background:var(--sky-grad);color:#fff;font-weight:700;font-size:1rem;box-shadow:0 12px 22px -10px rgba(0,107,190,.8);transition:.15s}
+.btn-sky:hover{filter:brightness(1.06)}
+.auth-tip{margin-top:14px;font-size:.76rem;color:#7898b4;text-align:center;line-height:1.5}
+
+/* 主殼 */
+#app{display:flex;flex-direction:column;min-height:100vh}
+.banner{background:var(--sky-grad);color:#fff;padding:8px 20px;display:flex;align-items:center;gap:18px;box-shadow:0 6px 18px -8px rgba(0,60,120,.5);position:relative;}
+.banner .brand-left{display:flex;align-items:center;gap:12px;flex:0 0 auto}
+.avatar-box{position:relative}
+.avatar{width:54px;height:54px;border-radius:12px;object-fit:cover;background:#fff;border:2.5px solid rgba(255,255,255,.85);box-shadow:0 4px 10px rgba(0,40,90,.3);display:grid;place-items:center;color:var(--sky-deep);font-weight:800;font-size:1.3rem;cursor:pointer;overflow:hidden}
+.avatar img{width:100%;height:100%;object-fit:cover}
+.avatar-edit{position:absolute;right:-6px;bottom:-6px;min-width:22px;height:22px;padding:0 4px;border-radius:12px;background:#fff;color:var(--sky-deep);display:grid;place-items:center;font-size:10px;font-weight:700;box-shadow:0 2px 6px rgba(0,0,0,.25)}
+.user-meta{display:flex;flex-direction:column;line-height:1.2}
+.user-meta .uname{font-weight:800;font-size:1.02rem;display:flex;align-items:center;gap:7px}
+.role-badge{font-size:.62rem;background:rgba(255,255,255,.22);padding:2px 8px;border-radius:20px;font-weight:700;letter-spacing:.5px}
+.user-meta .usub{font-size:.72rem;opacity:.85}
+.banner .title-center{flex:1 1 auto;text-align:center;min-width:0}
+.banner .title-center h1{font-size:clamp(1.4rem,3.4vw,2.3rem);font-weight:800;letter-spacing:3px;white-space:nowrap;text-shadow:0 2px 0 rgba(0,40,90,.25),0 6px 18px rgba(0,0,0,.28);display:inline-flex;align-items:center;gap:12px;}
+.banner .title-center h1 i{font-size:.8em;filter:drop-shadow(0 3px 6px rgba(0,0,0,.3))}
+.banner .title-center .slogan{font-size:.72rem;letter-spacing:5px;opacity:.9;margin-top:1px}
+.banner .brand-right{flex:0 0 auto;display:flex;gap:8px}
+.icon-round{min-width:38px;height:38px;padding:0 10px;white-space:nowrap;border-radius:11px;background:rgba(255,255,255,.16);color:#fff;display:grid;place-items:center;font-size:.82rem;font-weight:700;transition:.15s}
+.icon-round:hover{background:rgba(255,255,255,.32)}
+
+/* 功能列 */
+.tabbar{background:var(--sky-grad);display:flex;flex-wrap:wrap;justify-content:center;gap:2px;padding:0 12px;box-shadow:inset 0 -3px 6px rgba(0,40,90,.25)}
+.tabbar button{color:#eaf6ff;font-weight:700;font-size:.92rem;letter-spacing:1px;padding:11px 20px;background:transparent;border-bottom:3px solid transparent;display:flex;align-items:center;gap:7px;transition:.15s;border-radius:9px 9px 0 0;}
+.tabbar button i{font-size:.95em;opacity:.9}
+.tabbar button:hover{background:rgba(255,255,255,.14)}
+.tabbar button.active{background:rgba(255,255,255,.95);color:var(--sky-deep);border-bottom-color:#fff;box-shadow:0 -4px 12px rgba(0,40,90,.2)}
+.tabbar button .tabname{outline:none;padding:1px 5px;border-radius:7px;min-width:1em;display:inline-block;cursor:pointer}
+.tabbar button .tabname:hover{background:rgba(255,255,255,.16)}
+.tabbar button .tabname[contenteditable="true"]{background:#fff;color:var(--sky-deep);box-shadow:0 0 0 2px var(--sky-light);cursor:text}
+.tabbar button .tabname[contenteditable="true"]:hover{background:#fff}
+
+/* 內容 */
+.wrap{flex:1 1 auto;width:100%;max-width:1500px;margin:0 auto;padding:16px 18px 8px}
+.panel{background:var(--card);border-radius:var(--radius);box-shadow:var(--shadow);padding:16px 18px;border:1px solid #e8f1fb}
+.panel-head{display:flex;flex-wrap:wrap;align-items:center;gap:12px;justify-content:space-between;margin-bottom:12px}
+.panel-head h3{font-size:1.1rem;color:var(--sky-deep);display:flex;align-items:center;gap:9px}
+.panel-head .count{font-size:.78rem;background:#eaf4ff;color:var(--sky-deep);padding:3px 12px;border-radius:20px;font-weight:700}
+.search-box{display:flex;align-items:center;background:#fff;border:1.5px solid var(--line);border-radius:30px;padding:3px 4px 3px 14px}
+.search-box i{color:#8fb1cf}
+.search-label{color:#8fb1cf;font-size:.82rem;font-weight:700;margin-right:4px}
+.ic-txt{color:#fff;font-weight:800}
+.auth-logo .ic span{color:#fff}
+.search-box input{border:none;outline:none;padding:8px 10px;font-size:.9rem;min-width:180px;background:transparent}
+.add-row{display:grid;grid-template-columns:repeat(5,1fr) auto;gap:10px;align-items:end;background:#f3faff;border:1px solid #dcecfb;border-radius:12px;padding:12px;margin-bottom:14px}
+.add-row .f label{display:block;font-size:.7rem;font-weight:700;color:#3f6f9a;margin-bottom:4px}
+.add-row .f input{width:100%;padding:9px 11px;border:1.5px solid #d6e6f5;border-radius:9px;font-size:.9rem;background:#fff}
+.add-row .f input:focus{outline:none;border-color:var(--sky-light)}
+.btn-add{padding:10px 18px;border-radius:10px;background:var(--sky-grad);color:#fff;font-weight:700;font-size:.92rem;box-shadow:0 8px 16px -8px rgba(0,107,190,.8);white-space:nowrap}
+.btn-add:hover{filter:brightness(1.06)}
+.table-wrap{overflow-x:auto;border-radius:12px;border:1px solid var(--line)}
+table{width:100%;border-collapse:collapse;min-width:880px;font-size:.9rem}
+thead th{background:#eaf4ff;color:var(--sky-deep);text-align:left;padding:12px 14px;font-weight:800;white-space:nowrap;border-bottom:2px solid #c8e0f4}
+tbody td{padding:11px 14px;border-bottom:1px solid #eef4fb;vertical-align:middle}
+tbody tr:hover td{background:#f8fcff}
+td .pw{font-family:'SF Mono',Consolas,monospace;background:#eef7ff;border-radius:20px;padding:3px 9px;display:inline-block;letter-spacing:1px}
+td .u{font-family:Consolas,monospace;color:#1e6f9e;word-break:break-all}
+td .rm{color:#5d7c99;font-size:.82rem;max-width:220px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ops{display:flex;gap:6px;flex-wrap:wrap}
+.opb{min-width:34px;height:34px;padding:0 10px;white-space:nowrap;border-radius:9px;display:grid;place-items:center;background:#eef4fb;color:#3a6c94;font-size:.76rem;transition:.12s}
+.opb:hover{background:var(--sky-grad);color:#fff}
+.opb.del:hover{background:var(--danger)}
+.opb.copyacc:hover{background:#1aa15a;color:#fff}
+.opb.copypw:hover{background:var(--warn);color:#fff}
+.empty{text-align:center;padding:36px;color:#7d9cb8;font-size:.9rem}
+
+/* 頁尾 備份 */
+.footer-tools{max-width:1500px;margin:14px auto 0;padding:0 18px 26px;display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.tool-card{background:#fff;border:1px solid #e3eefb;border-radius:var(--radius);box-shadow:var(--shadow);padding:16px 18px}
+.tool-card h4{display:flex;align-items:center;gap:9px;color:var(--sky-deep);margin-bottom:6px;font-size:1rem}
+.tool-card p{font-size:.8rem;color:#6f8caa;margin-bottom:12px;line-height:1.5}
+.tool-row{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+.btn-soft{padding:10px 16px;border-radius:10px;background:#eaf4ff;color:var(--sky-deep);font-weight:700;font-size:.88rem;display:inline-flex;align-items:center;gap:7px;transition:.15s;border:1px solid #d4e8fb}
+.btn-soft:hover{background:var(--sky-grad);color:#fff}
+.btn-soft input{display:none}
+.enc-hint{font-size:.74rem;color:#8aa6c0;display:flex;align-items:center;gap:6px;margin-top:8px}
+
+/* modal */
+.modal-mask{position:fixed;inset:0;background:rgba(8,40,72,.5);backdrop-filter:blur(3px);z-index:300;display:flex;align-items:center;justify-content:center;padding:18px}
+.modal{background:#fff;border-radius:18px;max-width:760px;width:100%;max-height:88vh;overflow:auto;box-shadow:0 30px 70px -20px rgba(0,30,60,.6)}
+.modal-head{background:var(--sky-grad);color:#fff;padding:15px 20px;display:flex;justify-content:space-between;align-items:center;position:sticky;top:0}
+.modal-head h3{font-size:1.1rem;display:flex;align-items:center;gap:9px}
+.modal-head .x{min-width:34px;height:34px;padding:0 12px;white-space:nowrap;border-radius:9px;background:rgba(255,255,255,.2);color:#fff;display:grid;place-items:center;font-size:.8rem;font-weight:700}
+.modal-body{padding:18px 20px}
+.admin-table{width:100%;border-collapse:collapse;font-size:.86rem}
+.admin-table th{background:#eaf4ff;color:var(--sky-deep);padding:10px;text-align:left;border-bottom:2px solid #c8e0f4}
+.admin-table td{padding:10px;border-bottom:1px solid #eef4fb}
+.pill{font-size:.7rem;padding:2px 9px;border-radius:20px;font-weight:700}
+.pill.admin{background:#ffe9d6;color:#b9600f}
+.pill.user{background:#dff1ff;color:#0a6bb0}
+.mini-btn{padding:6px 11px;border-radius:8px;font-size:.78rem;font-weight:700;background:#eef4fb;color:#3a6c94}
+.mini-btn.warn{background:#ffe2dc;color:#c0392b}
+.mini-btn.ok{background:#dcf5e6;color:#12894b}
+#toast{position:fixed;bottom:26px;left:50%;transform:translateX(-50%) translateY(20px);background:#0e2740;color:#fff;padding:11px 26px;border-radius:40px;font-weight:600;box-shadow:0 16px 34px rgba(0,0,0,.3);opacity:0;transition:.25s;z-index:500;pointer-events:none}
+#toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+
+/* ===== 行事曆 ===== */
+.cal-toolbar{display:flex;flex-wrap:wrap;align-items:center;gap:10px;margin-bottom:14px}
+.cal-toolbar select{padding:9px 12px;border:1.5px solid var(--line);border-radius:10px;font-size:.95rem;background:#fff;font-weight:700;color:var(--sky-deep);cursor:pointer}
+.cal-toolbar select:focus{outline:none;border-color:var(--sky-light);box-shadow:0 0 0 3px rgba(0,145,224,.15)}
+.cal-nav{display:flex;gap:6px}
+.cal-nav button{padding:9px 13px;border-radius:10px;background:#eaf4ff;color:var(--sky-deep);font-weight:800;font-size:.9rem;border:1px solid #d4e8fb}
+.cal-nav button:hover{background:var(--sky-grad);color:#fff}
+.cal-cur{margin-left:auto;font-weight:800;color:var(--sky-deep);font-size:1.1rem;display:flex;align-items:center;gap:8px}
+.cal-cur .n{background:#eaf4ff;color:var(--sky-deep);padding:3px 12px;border-radius:20px;font-size:.78rem;font-weight:700}
+.cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:6px}
+.cal-dow{background:#eaf4ff;color:var(--sky-deep);text-align:center;font-weight:800;padding:8px 0;border-radius:9px;font-size:.85rem}
+.cal-dow.weekend{color:var(--danger)}
+.cal-cell{min-height:94px;background:#fbfdff;border:1.5px solid #e3eefb;border-radius:11px;padding:6px 7px;cursor:pointer;transition:.12s;display:flex;flex-direction:column;gap:5px;overflow:hidden}
+.cal-cell:hover{border-color:var(--sky-light);box-shadow:0 6px 14px -8px rgba(0,107,190,.6);transform:translateY(-1px)}
+.cal-cell.blank{background:transparent;border:none;cursor:default;box-shadow:none;transform:none}
+.cal-cell .dnum{font-weight:800;font-size:.82rem;color:#3f6f9a;align-self:flex-end;line-height:1.4}
+.cal-cell.today .dnum{background:var(--sky-grad);color:#fff;border-radius:50%;min-width:22px;height:22px;display:grid;place-items:center}
+.cal-cell.has{background:#f3faff;border-color:#cfe4fa}
+.cal-cell .evt{font-size:.78rem;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;padding:2px 6px;border-radius:6px;background:rgba(0,107,190,.07);border-left:3px solid currentColor}
+.cal-cell .dot{font-size:.68rem;color:#9bb6cd;margin-top:auto;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.cal-modal .field label{display:block;font-size:.78rem;font-weight:700;color:#33608a;margin-bottom:5px}
+.cal-modal .field{margin-bottom:13px}
+.cal-modal .field input,.cal-modal .field textarea{width:100%;padding:11px 13px;border:1.6px solid var(--line);border-radius:11px;font-size:.95rem;background:#fbfdff;font-family:inherit}
+.cal-modal .field textarea{resize:vertical;min-height:110px;line-height:1.5}
+.cal-modal .field input:focus,.cal-modal .field textarea:focus{outline:none;border-color:var(--sky-light);box-shadow:0 0 0 3px rgba(0,145,224,.15)}
+.cal-colors{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.cal-colors .sw{width:26px;height:26px;border-radius:8px;border:2px solid #fff;box-shadow:0 0 0 1.5px #cfe0f2;cursor:pointer;transition:.1s}
+.cal-colors .sw:hover{transform:scale(1.08)}
+.cal-colors .sw.active{box-shadow:0 0 0 2.6px var(--sky-deep)}
+.cal-colors input[type=color]{width:36px;height:28px;border:1.5px solid var(--line);border-radius:8px;background:#fff;cursor:pointer;padding:1px}
+/* 多筆事件列表 */
+.cal-entry-list{margin-bottom:14px;max-height:180px;overflow-y:auto;border:1px solid var(--line);border-radius:10px;background:#f8fbff}
+.cal-entry-item{display:flex;align-items:center;gap:8px;padding:8px 12px;border-bottom:1px solid #eef4fb;font-size:.88rem}
+.cal-entry-item:last-child{border-bottom:none}
+.cal-entry-item .dot-c{width:10px;height:10px;border-radius:50%;flex:0 0 auto}
+.cal-entry-item .entry-title{flex:1;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;cursor:pointer}
+.cal-entry-item .entry-title:hover{text-decoration:underline}
+.cal-entry-item .entry-idx{font-size:.72rem;color:#8aa6c0;flex:0 0 auto}
+.cal-entry-item .mini-btn{padding:4px 9px;border-radius:7px;font-size:.74rem}
+.cal-no-entry{text-align:center;color:#9bb6cd;font-size:.84rem;padding:14px 0}
+.cal-actions{display:flex;gap:10px;margin-top:8px}
+.cal-actions .btn-add{flex:1}
+.btn-del-cal{flex:1;padding:12px;border-radius:12px;background:#ffe2dc;color:#c0392b;font-weight:800;font-size:.95rem}
+.btn-del-cal:hover{background:var(--danger);color:#fff}
+@media(max-width:680px){
+  .cal-cell{min-height:64px;padding:4px 4px}
+  .cal-cell .evt{font-size:.68rem;padding:1px 3px}
+  .cal-dow{font-size:.72rem;padding:6px 0}
+}
+
+@media(max-width:980px){
+  .add-row{grid-template-columns:repeat(2,1fr)}
+  .btn-add{grid-column:1/-1}
+  .footer-tools{grid-template-columns:1fr}
+}
+@media(max-width:680px){
+  .banner{flex-wrap:wrap;gap:10px;justify-content:space-between}
+  .banner .title-center{order:3;flex-basis:100%}
+  .banner .title-center h1{white-space:normal;letter-spacing:1px}
+  .tabbar button{flex:1 1 30%;justify-content:center;padding:10px 6px;font-size:.82rem}
+  .add-row{grid-template-columns:1fr}
+  .search-box input{min-width:120px}
+}
+/* ===== v1.2 安全修正新增樣式 ===== */
+.pw-wrap{position:relative}
+.pw-wrap input{padding-right:52px!important}
+.pw-eye{position:absolute;right:6px;bottom:6px;padding:4px 8px;border-radius:7px;background:#eef4fb;color:#3a6c94;font-size:.72rem;font-weight:700}
+.pw-eye:hover{background:var(--sky-grad);color:#fff}
+.auth-notice{background:#fff7e6;border:1px solid #ffd591;color:#8a5300;border-radius:11px;padding:10px 12px;font-size:.82rem;line-height:1.55;margin-bottom:14px}
+.auth-notice.danger{background:#ffeceb;border-color:#ffb4a8;color:#b3261e}
+.ask-desc{font-size:.84rem;color:#4d6f8f;line-height:1.6;margin-bottom:12px;white-space:pre-line}
+.cal-entry-item.active{background:#eaf4ff}
+.field textarea{width:100%;padding:11px 13px;border:1.6px solid var(--line);border-radius:11px;font-size:.95rem;background:#fbfdff;min-height:80px;resize:vertical;font-family:inherit}
+.field textarea:focus{outline:none;border-color:var(--sky-light);box-shadow:0 0 0 3px rgba(0,145,224,.15)}
+.btn-sky:disabled,.btn-add:disabled{opacity:.6;cursor:wait}
+button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible{outline:3px solid #ffbf47;outline-offset:2px}
+.lock-hint{font-size:.7rem;opacity:.85}
+.tool-card.plain{grid-column:1/-1;border-color:#ffd591;background:#fffaf0}
+.tool-card.plain h4{color:#b9600f}
+.plain-warn{font-size:.78rem;color:#a14d00;background:#fff1db;border-radius:9px;padding:8px 11px;margin-bottom:12px;line-height:1.55}
+.imp-summary{background:#f3faff;border:1px solid #d4e8fb;border-radius:11px;padding:11px 13px;font-size:.86rem;color:#33608a;line-height:1.7;margin-bottom:14px}
+.imp-summary b{color:var(--sky-deep)}
+.imp-modes{display:flex;flex-direction:column;gap:8px;margin-bottom:14px}
+.imp-modes label{display:flex;gap:10px;align-items:flex-start;border:1.6px solid var(--line);border-radius:11px;padding:10px 12px;cursor:pointer;font-size:.88rem;line-height:1.5}
+.imp-modes label:has(input:checked){border-color:var(--sky-light);background:#f3faff}
+.imp-modes input{margin-top:4px;accent-color:var(--sky-deep)}
+.imp-modes small{color:#6f8caa;display:block}
+.add-row.with-cat{grid-template-columns:.8fr repeat(5,1fr) auto}
+.add-row .f select,.field select.plain{width:100%;padding:9px 11px;border:1.5px solid #d6e6f5;border-radius:9px;font-size:.9rem;background:#fff;color:var(--ink)}
+.cat-pill{display:inline-block;font-size:.7rem;font-weight:700;padding:2px 8px;border-radius:20px;background:#eaf4ff;color:var(--sky-deep);margin-right:6px;vertical-align:1px;white-space:nowrap;cursor:pointer;border:1px solid #d4e8fb}
+.cat-pill:hover{background:var(--sky-grad);color:#fff}
+.cat-pill.c-bank{background:#fff1db;color:#a14d00;border-color:#ffd9a8}
+.cat-pill.c-mail{background:#e6f7ee;color:#12733f;border-color:#bfe8cf}
+.cat-pill.c-srv{background:#f1ebff;color:#5b34b0;border-color:#dccfff}
+.cat-pill.c-fw{background:#ffe9ef;color:#b3264f;border-color:#ffcbd8}
+.cat-pill.c-other{background:#eef1f4;color:#4b5b6b;border-color:#d9e0e7}
+@media(max-width:980px){.add-row.with-cat{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:680px){.add-row.with-cat{grid-template-columns:1fr}}
+/* ================= 手機版介面（依「手機版 / 電腦版」模式套用，預設依螢幕寬度自動判斷） ================= */
+.add-toggle{display:none}
+body.mobile-view .wrap,body.mobile-view .footer-tools{max-width:620px;margin-left:auto;margin-right:auto}
+/* ---------- 平板版面（681～1100px）：精簡頂部、單行分頁、兩欄卡片 ---------- */
+body.tablet-view .banner{padding:8px 16px;gap:12px}
+body.tablet-view .banner .title-center h1{font-size:1.45rem;letter-spacing:2px;gap:8px}
+body.tablet-view .banner .title-center .slogan{display:none}
+body.tablet-view .avatar{width:46px;height:46px}
+body.tablet-view .icon-round{height:36px;padding:0 10px}
+body.tablet-view .banner .brand-left{flex:0 1 auto;min-width:0}
+body.tablet-view .user-meta{min-width:0}
+body.tablet-view .user-meta .usub{max-width:280px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+body.tablet-view .banner .brand-right{margin-left:auto;flex:0 0 auto}
+body.tablet-view .search-label{white-space:nowrap}
+@media(max-width:899px){body.tablet-view .banner .title-center{display:none}}
+body.tablet-view .tabbar{flex-wrap:nowrap;justify-content:flex-start;overflow-x:auto;scrollbar-width:none;padding:0 12px;position:sticky;top:0;z-index:50;-webkit-overflow-scrolling:touch}
+body.tablet-view .tabbar::-webkit-scrollbar{display:none}
+body.tablet-view .tabbar button{flex:0 0 auto;padding:11px 16px;font-size:.9rem}
+body.tablet-view .wrap{padding:14px 14px 8px}
+body.tablet-view .search-box{flex:1 1 260px}
+body.tablet-view .search-box input{min-width:0;width:100%;font-size:16px}
+body.tablet-view .add-row,body.tablet-view .add-row.with-cat{grid-template-columns:repeat(3,minmax(0,1fr))}
+body.tablet-view .add-row.with-cat .btn-add{grid-column:1/-1}
+body.tablet-view .add-row .f input,body.tablet-view .add-row .f select,body.tablet-view .field input,body.tablet-view .field select,body.tablet-view .field textarea{font-size:16px}
+body.tablet-view tbody{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+body.tablet-view tbody tr{margin-bottom:0}
+body.tablet-view tbody tr:has(td.empty){grid-column:1/-1}
+body.tablet-view .footer-tools{padding:0 14px 22px}
+body.tablet-view .cal-cur{margin-left:0;width:100%}
+@media(min-width:900px){body.tablet-view .footer-tools{grid-template-columns:1fr 1fr}}
+  /* 頂部：壓縮成一行，省下畫面空間 */
+body.mobile-view .banner{padding:8px 12px;gap:8px;flex-wrap:nowrap}
+body.mobile-view .banner .title-center{display:none}
+body.mobile-view .avatar{width:40px;height:40px;border-radius:10px;font-size:1.05rem}
+body.mobile-view .user-meta .uname{font-size:.92rem}
+body.mobile-view .user-meta .usub{font-size:.66rem;max-width:150px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+body.mobile-view .banner .brand-right{margin-left:auto;gap:5px}
+body.mobile-view .icon-round{min-width:0;height:34px;padding:0 9px;font-size:.78rem}
+body.mobile-view .banner .brand-left{flex:1 1 auto;min-width:0;gap:8px}
+body.mobile-view .user-meta{min-width:0}
+body.mobile-view .user-meta .uname{min-width:0}
+body.mobile-view .user-meta .uname #displayName{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0}
+body.mobile-view .banner .brand-right{flex:0 0 auto}
+@media(max-width:430px){
+  body.mobile-view .user-meta .usub{display:none}
+  body.mobile-view .icon-round{padding:0 7px;font-size:.74rem;height:32px}
+  body.mobile-view .banner .brand-right{gap:4px}
+}
+  /* 分頁列：單行左右滑動，捲動時固定在畫面頂端 */
+body.mobile-view .tabbar{flex-wrap:nowrap;justify-content:flex-start;overflow-x:auto;scrollbar-width:none;padding:0 8px;position:sticky;top:0;z-index:50;-webkit-overflow-scrolling:touch}
+body.mobile-view .tabbar::-webkit-scrollbar{display:none}
+body.mobile-view .tabbar button{flex:0 0 auto;padding:11px 14px;font-size:.88rem;letter-spacing:0}
+  /* 內容區 */
+body.mobile-view .wrap{padding:10px 10px 6px}
+body.mobile-view .panel{padding:12px;border-radius:12px}
+body.mobile-view .panel-head{gap:8px;margin-bottom:10px}
+body.mobile-view .panel-head h3{font-size:1.02rem}
+body.mobile-view .search-box{flex:1 1 100%;order:3}
+body.mobile-view .search-box input{min-width:0;width:100%;font-size:16px}
+body.mobile-view .search-label{white-space:nowrap}
+body.mobile-view .add-toggle{display:inline-flex;align-items:center;margin-left:auto;padding:8px 14px;border-radius:10px;background:var(--sky-grad);color:#fff;font-weight:700;font-size:.88rem}
+body.mobile-view .add-toggle[aria-expanded="true"]{background:#eaf4ff;color:var(--sky-deep)}
+  /* 新增表單：預設收起，按「＋ 新增一筆」才展開 */
+body.mobile-view .add-row,body.mobile-view .add-row.with-cat{display:none;grid-template-columns:1fr 1fr;gap:9px;padding:11px}
+body.mobile-view .add-row.open{display:grid}
+body.mobile-view .add-row .f:has(#inName),body.mobile-view .add-row .f:has(#inUrl),body.mobile-view .add-row .f:has(#inRemark),body.mobile-view .add-row #inCatField{grid-column:1/-1}
+body.mobile-view .add-row .btn-add{grid-column:1/-1;padding:12px}
+body.mobile-view .add-row .f input,body.mobile-view .add-row .f select,body.mobile-view .field input,body.mobile-view .field select,body.mobile-view .field textarea{font-size:16px}
+  /* 表格 → 卡片 */
+body.mobile-view .table-wrap,body.tablet-view .table-wrap{border:none;overflow:visible;border-radius:0}
+body.mobile-view table,body.tablet-view table{min-width:0}
+body.mobile-view thead,body.tablet-view thead{display:none}
+body.mobile-view tbody tr,body.tablet-view tbody tr{display:block;border:1px solid var(--line);border-radius:12px;padding:10px 12px;margin-bottom:10px;background:#fff}
+body.mobile-view tbody tr:hover td,body.tablet-view tbody tr:hover td{background:transparent}
+body.mobile-view tbody td,body.tablet-view tbody td{display:flex;align-items:baseline;gap:8px;padding:3px 0;border:none;min-width:0}
+body.mobile-view tbody td[data-label]::before,body.tablet-view tbody td[data-label]::before{content:attr(data-label);flex:0 0 3em;font-size:.74rem;font-weight:700;color:#7d9cb8}
+body.mobile-view tbody td.is-empty,body.tablet-view tbody td.is-empty{display:none}
+body.mobile-view tbody td:first-child,body.tablet-view tbody td:first-child{font-size:1rem;padding-bottom:5px;flex-wrap:wrap}
+body.mobile-view td .u,body.tablet-view td .u{font-size:.84rem}
+body.mobile-view td .rm,body.tablet-view td .rm{max-width:none;white-space:normal;font-size:.82rem}
+body.mobile-view td .pw,body.tablet-view td .pw{word-break:break-all}
+body.mobile-view tbody td:last-child,body.tablet-view tbody td:last-child{padding-top:8px;margin-top:6px;border-top:1px dashed #e3eefb;display:block}
+body.mobile-view .ops,body.tablet-view .ops{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
+body.mobile-view .opb,body.tablet-view .opb{height:38px;font-size:.8rem;padding:0 4px}
+body.mobile-view .opb.copyacc,body.mobile-view .opb.copypw,body.tablet-view .opb.copyacc,body.tablet-view .opb.copypw{grid-column:span 1}
+body.mobile-view tbody td.empty,body.tablet-view tbody td.empty{display:block;border:none;margin-top:0;padding:24px 0}
+body.mobile-view tbody tr:has(td.empty),body.tablet-view tbody tr:has(td.empty){border-style:dashed}
+  /* 行事曆工具列 */
+body.mobile-view .cal-toolbar{gap:6px}
+body.mobile-view .cal-toolbar .search-label{display:none}
+body.mobile-view .cal-toolbar select{padding:8px 6px;font-size:.92rem}
+body.mobile-view .cal-nav button{padding:8px 9px;font-size:.82rem}
+body.mobile-view .cal-cur{margin-left:0;width:100%;justify-content:center;font-size:1rem}
+body.mobile-view .cal-grid{gap:4px}
+body.mobile-view .cal-cell{min-height:58px;border-radius:8px}
+  /* 頁尾、提示、對話框 */
+body.mobile-view .footer-tools{padding:0 10px 20px;gap:10px;margin-top:10px}
+body.mobile-view .tool-card{padding:13px}
+body.mobile-view .tool-row .btn-soft{flex:1 1 100%;justify-content:center}
+body.mobile-view #toast{max-width:calc(100vw - 32px);padding:10px 18px;bottom:calc(16px + env(safe-area-inset-bottom));text-align:center;font-size:.88rem}
+body.mobile-view .modal-mask{padding:10px;align-items:flex-end}
+body.mobile-view .modal{max-height:92vh;border-radius:16px}
+body.mobile-view .modal-body{padding:14px}
+/* 自訂分頁：色點、關閉 x、新增 + */
+.pal0{--pc:#1f7fd1;--pb:#f1f8ff}.pal1{--pc:#e07b00;--pb:#fff7ec}.pal2{--pc:#17945a;--pb:#effaf4}.pal3{--pc:#7b4bd6;--pb:#f6f2ff}
+.pal4{--pc:#d6336c;--pb:#fff1f5}.pal5{--pc:#0f9aa8;--pb:#edfafb}.pal6{--pc:#b88a00;--pb:#fffbe8}.pal7{--pc:#5b6b7c;--pb:#f4f6f8}
+.tabbar button.cat-tab{position:relative;padding-right:26px}
+.tabbar button .tdot{width:9px;height:9px;border-radius:50%;background:var(--pc);box-shadow:0 0 0 2px rgba(255,255,255,.85);flex:none}
+.tabbar .tab-x{position:absolute;top:3px;right:3px;width:18px;height:18px;border-radius:50%;display:grid;place-items:center;font-size:.85rem;line-height:1;background:rgba(255,255,255,.22);color:#fff;opacity:.55;cursor:pointer;transition:.15s}
+.tabbar button:hover .tab-x,.tabbar button.active .tab-x,.tabbar .tab-x:focus-visible{opacity:1}
+.tabbar button.active .tab-x{background:#e8f1fb;color:#4b6b88}
+.tabbar .tab-x:hover{background:#e5484d!important;color:#fff!important;transform:scale(1.1)}
+.tabbar button.tab-add{font-size:1.15rem;padding:9px 14px;opacity:.85}
+.tabbar button.tab-add:hover{opacity:1;background:rgba(255,255,255,.22)}
+@media(hover:none){.tabbar .tab-x{opacity:.85}}
+/* 密碼列表：依分類／列交錯顯示不同顏色 */
+.cat-pill[class*="pal"]{background:var(--pb);color:var(--pc);border-color:color-mix(in srgb,var(--pc) 30%,#fff)}
+.cat-pill[class*="pal"]:hover{background:var(--pc);color:#fff}
+tbody tr[class*="pal"] td{background:var(--pb)}
+tbody tr[class*="pal"] td:first-child{box-shadow:inset 4px 0 0 var(--pc)}
+tbody tr[class*="pal"] td:first-child b{color:color-mix(in srgb,var(--pc) 75%,#0e2740)}
+tbody tr[class*="pal"]:hover td{background:color-mix(in srgb,var(--pb) 55%,var(--pc) 10%)}
+tbody tr[class*="pal"] td .pw{background:#fff;box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--pc) 22%,#fff)}
+body.mobile-view tbody tr[class*="pal"],body.tablet-view tbody tr[class*="pal"]{background:var(--pb);border-color:color-mix(in srgb,var(--pc) 25%,#fff);box-shadow:inset 5px 0 0 var(--pc)}
+body.mobile-view tbody tr[class*="pal"] td,body.tablet-view tbody tr[class*="pal"] td{background:transparent}
+body.mobile-view tbody tr[class*="pal"] td:first-child,body.tablet-view tbody tr[class*="pal"] td:first-child{box-shadow:none}
+/* 最底部更新時間 */
+.update-bar{max-width:1500px;margin:0 auto;padding:4px 18px 30px;text-align:center;font-size:.8rem;color:#7f9bb5;line-height:1.7}
+.update-bar b{color:var(--sky-deep);font-weight:700}
+.update-bar .sep{margin:0 8px;color:#c3d6e8}
+body.mobile-view .update-bar{padding:2px 12px calc(24px + env(safe-area-inset-bottom));font-size:.76rem}
+body.mobile-view .update-bar .sep{display:block;height:0;overflow:hidden;margin:0}
+/* 浮動回頂/到底按鈕 */
+.scroll-fab{position:fixed;right:18px;bottom:24px;display:flex;flex-direction:column;gap:10px;z-index:150;transition:opacity .2s}
+.scroll-fab button{width:44px;height:44px;border-radius:50%;border:none;background:var(--sky-deep);color:#fff;font-size:1.2rem;font-weight:800;line-height:1;cursor:pointer;box-shadow:0 8px 20px rgba(0,40,90,.3);opacity:.82;transition:opacity .15s,transform .15s,visibility .2s}
+.scroll-fab button:hover{opacity:1;transform:translateY(-2px)}
+.scroll-fab button:focus-visible{outline:3px solid #9fd0ff;outline-offset:2px}
+.scroll-fab button.mid{display:grid;place-items:center}
+.scroll-fab button.mid span{width:14px;height:14px;border-radius:50%;border:2.5px solid #fff;box-sizing:border-box}
+body.mobile-view .scroll-fab button.mid span{width:12px;height:12px}
+.scroll-fab button.off{opacity:0;visibility:hidden;pointer-events:none}
+.scroll-fab.hidden{display:none}
+body.mobile-view .scroll-fab{right:12px;bottom:calc(72px + env(safe-area-inset-bottom))}
+body.mobile-view .scroll-fab button{width:40px;height:40px;font-size:1.05rem}
+@media print{.scroll-fab{display:none}}
+</style>
 </head>
-<body class="bg-slate-50 text-slate-800 min-h-screen flex flex-col selection:bg-indigo-600 selection:text-white">
+<body>
 
-  <!-- ========================================================= -->
-  <!-- 🔒 Google 帳號登入鎖定畫面                                 -->
-  <!-- ========================================================= -->
-  <div id="authScreen" class="fixed inset-0 bg-gradient-to-br from-slate-900 via-indigo-950 to-slate-900 flex items-center justify-center z-50 p-4">
-    <div id="authCard" class="bg-white rounded-3xl max-w-md w-full p-8 shadow-2xl border border-slate-100 text-center animate-fade-in">
-      <!-- 頂部盾牌圖示 -->
-      <div class="w-16 h-16 rounded-2xl bg-indigo-600 text-white flex items-center justify-center mx-auto mb-5 text-2xl shadow-lg shadow-indigo-500/30">
-        <i class="fa-solid fa-shield-halved"></i>
-      </div>
-
-      <h1 class="text-2xl font-bold text-slate-900 mb-1.5">專屬密碼查詢器</h1>
-      <p class="text-sm text-slate-500 mb-6">請使用您的 Google 帳號進行身分驗證以解鎖資料</p>
-
-      <!-- 狀態載入提示 -->
-      <div id="authLoading" class="py-4 text-sm text-indigo-600 font-medium flex items-center justify-center gap-2">
-        <i class="fa-solid fa-circle-notch fa-spin"></i>
-        <span>正在檢查安全認證狀態...</span>
-      </div>
-
-      <!-- 登入按鈕區 -->
-      <div id="authActions" class="hidden space-y-4">
-        <!-- Google 官方風格登入按鈕 -->
-        <button id="googleLoginBtn" onclick="signInWithGoogle()" class="w-full py-3.5 px-5 bg-white hover:bg-slate-50 active:bg-slate-100 text-slate-700 font-semibold rounded-2xl border border-slate-300 shadow-sm hover:shadow transition flex items-center justify-center gap-3 text-base">
-          <svg class="w-5 h-5" viewBox="0 0 24 24">
-            <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
-            <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
-            <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
-            <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
-          </svg>
-          <span>使用 Google 帳號登入</span>
-        </button>
-
-        <!-- Google 選取帳號填入模式 (若預覽環境阻擋彈出視窗時的備援驗證) -->
-        <div id="fallbackGoogleBox" class="hidden pt-3 border-t border-slate-100 text-left space-y-3">
-          <div class="p-3 rounded-xl bg-amber-50 border border-amber-200 text-xs text-amber-800 leading-relaxed">
-            <i class="fa-solid fa-circle-info mr-1"></i>
-            偵測到目前內嵌預覽視窗限制了 Google 彈出視窗，請確認您的 Google 信箱以完成安全綁定登入：
-          </div>
-          <div>
-            <label class="block text-xs font-semibold text-slate-600 mb-1">您的 Google 帳號 (Email)</label>
-            <input type="email" id="fallbackEmailInput" value="Chi828@gmail.com" placeholder="例如：Chi828@gmail.com" class="w-full px-3.5 py-2.5 border border-slate-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
-          </div>
-          <button onclick="confirmFallbackGoogleLogin()" class="w-full py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-medium rounded-xl text-sm shadow-sm transition flex items-center justify-center gap-2">
-            <i class="fa-brands fa-google"></i>
-            <span>以 Google 帳號驗證進入</span>
-          </button>
-        </div>
-      </div>
-
-      <!-- 錯誤或未授權訊息提示 -->
-      <div id="authErrorBox" class="hidden mt-4 p-3.5 rounded-xl bg-rose-50 border border-rose-200 text-xs text-rose-600 text-left leading-relaxed">
-        <div class="font-bold flex items-center gap-1.5 mb-0.5">
-          <i class="fa-solid fa-triangle-exclamation"></i>
-          <span id="authErrorTitle">認證提示</span>
-        </div>
-        <p id="authErrorDesc"></p>
-      </div>
-
-      <div class="mt-6 pt-5 border-t border-slate-100 flex items-center justify-center gap-2 text-xs text-slate-400">
-        <i class="fa-solid fa-cloud-shield text-indigo-500"></i>
-        <span>透過 Google 身分驗證與加密雲端資料庫保護</span>
-      </div>
+<div id="authLayer">
+  <div class="auth-card">
+    <div class="auth-logo">
+      <div class="ic"><span class="ic-txt">鎖</span></div>
+      <h2>帳號密碼安全管理</h2>
+      <p>Account &amp; Password Manager</p>
+    </div>
+    <div id="cryptoWarn" class="auth-notice danger hidden">
+      ⚠️ 目前的瀏覽器環境無法使用加密功能（WebCrypto）。<br>
+      請改用 <b>https://</b> 網址、<b>http://localhost</b>，或新版 Chrome / Edge / Firefox / Safari 開啟。
+    </div>
+    <div id="setupNotice" class="auth-notice hidden">
+      👋 <b>首次使用</b>：請建立第一個帳號，它會自動成為<b>管理員</b>。<br>
+      之後其他人可以自行註冊為一般使用者，管理員可在後台把人設為管理員。
+    </div>
+    <div class="auth-tabs" id="authTabs">
+      <button id="tabLogin" class="active" type="button">登入</button>
+      <button id="tabReg" type="button">註冊</button>
+    </div>
+    <form id="loginForm">
+      <div class="field"><label for="loginUser">使用者名稱</label><input id="loginUser" autocomplete="username" placeholder="請輸入帳號" required></div>
+      <div class="field pw-wrap"><label for="loginPass">密碼</label><input id="loginPass" type="password" autocomplete="current-password" placeholder="請輸入密碼" required><button type="button" class="pw-eye" data-eye="loginPass">顯示</button></div>
+      <button class="btn-sky" type="submit" id="loginBtn">進入系統</button>
+    </form>
+    <form id="regForm" class="hidden">
+      <div class="field"><label for="regUser">使用者名稱</label><input id="regUser" autocomplete="username" placeholder="登入帳號（中、英文皆可，最多 30 字）" maxlength="30" required></div>
+      <div class="field"><label for="regNick">顯示名稱</label><input id="regNick" placeholder="顯示於畫面上的名稱（選填）" maxlength="30"></div>
+      <div class="field pw-wrap"><label for="regPass">密碼</label><input id="regPass" type="password" autocomplete="new-password" placeholder="至少 8 個字元" required><button type="button" class="pw-eye" data-eye="regPass">顯示</button></div>
+      <div class="field"><label for="regPass2">確認密碼</label><input id="regPass2" type="password" autocomplete="new-password" placeholder="再次輸入密碼" required></div>
+      <button class="btn-sky" type="submit" id="regBtn">建立帳號</button>
+    </form>
+    <div class="auth-tip">
+      <br><b>帳號密碼安全管理</b> 只把資料存在<b>這台電腦的瀏覽器</b>裡，以 <b>AES-256-GCM</b> 加密。<br>
+      加密金鑰由你的登入密碼即時算出，不會存在任何地方，<span style="color:#e0492f"><b>忘記密碼就無法找回資料</b></span>，請定期使用下方「備份」功能。<br>
+      閒置 10 分鐘會自動上鎖。<br><br>
+      <span style="color:#0166CB"><b>&copy; 2026 Sonicbai. Licensed under CC BY-NC 4.0.</b></span>
     </div>
   </div>
+</div>
 
-  <!-- ========================================================= -->
-  <!-- 🔓 主應用程式畫面（通過 Google 認證後顯示）                 -->
-  <!-- ========================================================= -->
-  <div id="appContent" class="hidden flex-1 flex flex-col">
-    <!-- 頂部導覽列 -->
-    <header class="bg-white border-b border-slate-200 sticky top-0 z-20 shadow-xs">
-      <div class="max-w-5xl mx-auto px-4 py-3.5 flex flex-wrap items-center justify-between gap-3">
-        <!-- 左側品牌標題 -->
-        <div class="flex items-center gap-3">
-          <div class="w-10 h-10 rounded-xl bg-indigo-600 flex items-center justify-center text-white shadow-md shadow-indigo-500/20">
-            <i class="fa-solid fa-key text-lg"></i>
-          </div>
-          <div>
-            <div class="flex items-center gap-2">
-              <h1 class="text-lg sm:text-xl font-bold tracking-tight text-slate-900">密碼查詢器</h1>
-              <span id="syncStatusBadge" class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-medium bg-emerald-50 text-emerald-700 border border-emerald-200">
-                <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>雲端已同步
-              </span>
-            </div>
-            <p class="text-xs text-slate-400 hidden sm:block">專屬三欄格式：帳號 / 用戶名 / 密碼提示</p>
-          </div>
-        </div>
+<div id="app" class="hidden">
+  <header class="banner">
+    <div class="brand-left">
+      <div class="avatar-box" title="點選上傳自訂頭像" role="button" tabindex="0" aria-label="上傳頭像">
+        <div class="avatar" id="avatarBox">我</div>
+        <input type="file" id="avatarInput" accept="image/png,image/jpeg,image/webp,image/gif" style="display:none">
+      </div>
+      <div class="user-meta">
+        <div class="uname"><span id="displayName">使用者</span><span class="role-badge" id="roleBadge">USER</span></div>
+        <div class="usub"><span id="loginTime"></span></div>
+      </div>
+    </div>
+    <div class="title-center">
+      <h1>帳號密碼安全管理</h1>
+      <div class="slogan">ACCOUNT&nbsp;&amp;&nbsp;PASSWORD&nbsp;MANAGER</div>
+    </div>
+    <div class="brand-right">
+      <button class="icon-round" id="btnViewMode" type="button" title="切換版面：自動 → 手機 → 平板 → 電腦">自動</button>
+      <button class="icon-round" id="btnChangePw" title="更改我的登入密碼" type="button">改密</button>
+      <button class="icon-round hidden" id="btnAdmin" title="管理後台" type="button">管理</button>
+      <button class="icon-round" id="btnLogout" title="登出並上鎖（清除記憶體中的資料）" type="button">登出</button>
+    </div>
+  </header>
 
-        <!-- 右側功能按鈕與 Google 帳號資訊 -->
-        <div class="flex flex-wrap items-center gap-2">
-          <button onclick="openModal()" class="px-3.5 py-2 text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 rounded-xl shadow-xs transition flex items-center gap-1.5">
-            <i class="fa-solid fa-plus"></i>
-            <span>新增紀錄</span>
-          </button>
+  <nav class="tabbar" id="tabbar"></nav>
 
-          <button onclick="openBatchModal()" class="px-3 py-2 text-sm font-medium text-indigo-600 bg-indigo-50 hover:bg-indigo-100 rounded-xl transition flex items-center gap-1.5" title="直接貼上文字批次匯入">
-            <i class="fa-solid fa-file-import"></i>
-            <span class="hidden md:inline">文字批次匯入</span>
-          </button>
-
-          <button onclick="copyAllFormatted()" class="px-3 py-2 text-sm font-medium text-slate-700 bg-slate-100 hover:bg-slate-200 rounded-xl transition flex items-center gap-1.5" title="匯出成您指定的純文字格式">
-            <i class="fa-regular fa-copy"></i>
-            <span class="hidden md:inline">匯出純文字</span>
-          </button>
-
-          <!-- Google 帳號膠囊與安全設定 -->
-          <div class="relative" id="userMenuContainer">
-            <button onclick="toggleUserDropdown()" class="flex items-center gap-2 pl-2 pr-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200/80 border border-slate-200/80 transition">
-              <img id="userAvatar" src="https://placehold.co/32x32/4f46e5/ffffff?text=G" alt="Avatar" class="w-7 h-7 rounded-full object-cover border border-white shadow-xs">
-              <div class="text-left hidden sm:block max-w-[150px]">
-                <div id="userNameDisplay" class="text-xs font-bold text-slate-800 truncate">Google 使用者</div>
-                <div id="userEmailDisplay" class="text-[10px] text-slate-500 truncate">已透過 Google 驗證</div>
-              </div>
-              <i class="fa-solid fa-chevron-down text-[10px] text-slate-400 ml-0.5"></i>
-            </button>
-
-            <!-- 帳號下拉選單 -->
-            <div id="userDropdown" class="hidden absolute right-0 mt-2 w-64 bg-white rounded-2xl shadow-xl border border-slate-200 py-2 z-40 animate-fade-in">
-              <div class="px-4 py-2.5 border-b border-slate-100">
-                <div class="flex items-center gap-1.5 text-xs font-semibold text-indigo-600 mb-0.5">
-                  <i class="fa-brands fa-google"></i>
-                  <span>目前登入的 Google 帳號</span>
-                </div>
-                <div id="dropdownEmail" class="text-xs font-mono text-slate-700 break-all"></div>
-                <div class="mt-1 text-[10px] text-slate-400 font-mono truncate" id="dropdownUid"></div>
-              </div>
-
-              <button onclick="openSecurityModal()" class="w-full px-4 py-2.5 text-left text-sm text-slate-700 hover:bg-slate-50 flex items-center gap-2.5">
-                <i class="fa-solid fa-user-shield text-indigo-500 w-4"></i>
-                <span>限定存取信箱設定</span>
-              </button>
-
-              <button onclick="confirmResetDefaults()" class="w-full px-4 py-2.5 text-left text-sm text-slate-700 hover:bg-slate-50 flex items-center gap-2.5">
-                <i class="fa-solid fa-rotate-left text-amber-500 w-4"></i>
-                <span>載入預設範例資料</span>
-              </button>
-
-              <div class="my-1 border-t border-slate-100"></div>
-
-              <button onclick="handleSignOut()" class="w-full px-4 py-2.5 text-left text-sm text-rose-600 hover:bg-rose-50 font-medium flex items-center gap-2.5">
-                <i class="fa-solid fa-right-from-bracket w-4"></i>
-                <span>登出並鎖定畫面</span>
-              </button>
-            </div>
-          </div>
+  <main class="wrap">
+    <section class="panel" id="tablePanel">
+      <div class="panel-head">
+        <h3><span id="curCatName">網路資訊</span>
+          <span class="count" id="catCount">0 筆</span></h3>
+        <button type="button" class="add-toggle" id="addToggle" aria-expanded="false" aria-controls="addForm">＋ 新增一筆</button>
+        <div class="search-box">
+          <span class="search-label">搜尋</span>
+          <input id="searchInput" placeholder="搜尋名稱 / 網址 / 帳號 / 備註…" aria-label="搜尋">
         </div>
       </div>
-    </header>
-
-    <!-- 主要內容區 -->
-    <main class="max-w-5xl w-full mx-auto px-4 mt-6 flex-1 pb-12">
-      <!-- 搜尋與統計控制列 -->
-      <div class="flex flex-col sm:flex-row gap-3 items-stretch sm:items-center justify-between mb-6">
-        <div class="relative flex-1">
-          <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400"></i>
-          <input 
-            type="text" 
-            id="searchInput" 
-            oninput="renderList()" 
-            placeholder="搜尋帳號、用戶名或密碼提示 (按 / 快速聚焦)..." 
-            class="w-full pl-10 pr-9 py-2.5 bg-white border border-slate-200 rounded-xl shadow-xs focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent text-sm"
-          >
-          <button id="clearSearchBtn" onclick="clearSearch()" class="hidden absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600">
-            <i class="fa-solid fa-circle-xmark"></i>
-          </button>
-        </div>
-
-        <div class="flex items-center justify-between sm:justify-end gap-3 text-sm text-slate-500">
-          <span>共 <strong id="countDisplay" class="text-slate-800 font-mono">0</strong> 筆紀錄</span>
-          <button onclick="toggleAllMask()" id="toggleMaskBtn" class="px-3 py-2 bg-white border border-slate-200 rounded-xl hover:bg-slate-100 text-xs font-medium text-slate-700 transition shadow-2xs">
-            <i class="fa-regular fa-eye-slash mr-1"></i>隱藏全部密碼
-          </button>
-        </div>
-      </div>
-
-      <!-- 密碼卡片清單網格 -->
-      <div id="recordsContainer" class="grid grid-cols-1 md:grid-cols-2 gap-4"></div>
-
-      <!-- 空狀態畫面 -->
-      <div id="emptyState" class="hidden bg-white border border-dashed border-slate-300 rounded-2xl p-12 text-center my-6">
-        <div class="w-12 h-12 rounded-full bg-slate-100 text-slate-400 flex items-center justify-center mx-auto mb-3 text-xl">
-          <i class="fa-solid fa-folder-open"></i>
-        </div>
-        <p class="text-slate-700 font-semibold mb-1">目前沒有符合的密碼紀錄</p>
-        <p class="text-slate-400 text-sm mb-5">您可以更換搜尋關鍵字、點擊右上角「新增紀錄」，或載入您的預設資料。</p>
-        <button onclick="loadDefaultSampleData()" class="px-4 py-2 rounded-xl bg-indigo-50 text-indigo-600 hover:bg-indigo-100 text-xs font-semibold transition">
-          <i class="fa-solid fa-bolt mr-1"></i>立即載入預設 2 筆資料（財政部、技嘉）
-        </button>
-      </div>
-    </main>
-  </div>
-
-  <!-- ========================================================= -->
-  <!-- 彈出視窗 1：新增 / 編輯密碼紀錄 Modal                       -->
-  <!-- ========================================================= -->
-  <div id="formModal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-xs hidden items-center justify-center z-40 p-4">
-    <div class="bg-white rounded-2xl max-w-md w-full p-6 shadow-xl border border-slate-100 animate-fade-in">
-      <div class="flex items-center justify-between pb-3 border-b border-slate-100 mb-4">
-        <h2 id="modalTitle" class="text-lg font-bold text-slate-900">新增密碼紀錄</h2>
-        <button onclick="closeModal()" class="text-slate-400 hover:text-slate-600 w-8 h-8 rounded-lg flex items-center justify-center">
-          <i class="fa-solid fa-xmark text-lg"></i>
-        </button>
-      </div>
-
-      <form onsubmit="saveRecord(event)" class="space-y-4">
-        <input type="hidden" id="recordId">
-
-        <div>
-          <label class="block text-sm font-semibold text-slate-700 mb-1">1. 帳號 <span class="text-rose-500">*</span></label>
-          <input type="text" id="accountInput" required placeholder="例如：財政部 電子發票、技嘉" class="w-full px-3.5 py-2.5 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm">
-        </div>
-
-        <div>
-          <label class="block text-sm font-semibold text-slate-700 mb-1">2. 用戶名 <span class="text-rose-500">*</span></label>
-          <input type="text" id="usernameInput" required placeholder="例如：0916772719 或 Chi828@gmail.com" class="w-full px-3.5 py-2.5 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm">
-        </div>
-
-        <div>
-          <label class="block text-sm font-semibold text-slate-700 mb-1">3. 密碼提示 <span class="text-rose-500">*</span></label>
-          <input type="text" id="hintInput" required placeholder="例如：Cool3777、a0939051303" class="w-full px-3.5 py-2.5 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm font-mono">
-        </div>
-
-        <div class="flex justify-end gap-2 pt-3 border-t border-slate-100">
-          <button type="button" onclick="closeModal()" class="px-4 py-2 rounded-xl text-sm font-medium text-slate-600 hover:bg-slate-100 transition">取消</button>
-          <button type="submit" id="saveRecordBtn" class="px-5 py-2 rounded-xl text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 transition">儲存紀錄</button>
-        </div>
+      <form class="add-row" id="addForm" autocomplete="off">
+        <div class="f hidden" id="inCatField"><label for="inCat">分類</label><select id="inCat"></select></div>
+        <div class="f"><label for="inName">名稱</label><input id="inName" placeholder="例：公司入口網" maxlength="200"></div>
+        <div class="f"><label for="inUrl">網址 / IP</label><input id="inUrl" placeholder="http:// 或 IP" maxlength="2000"></div>
+        <div class="f"><label for="inAccount">帳號</label><input id="inAccount" placeholder="帳號" maxlength="300" autocomplete="off"></div>
+        <div class="f pw-wrap"><label for="inPassword">密碼</label><input id="inPassword" type="password" placeholder="密碼" maxlength="1000" autocomplete="new-password"><button type="button" class="pw-eye" data-eye="inPassword">顯示</button></div>
+        <div class="f"><label for="inRemark">備註</label><input id="inRemark" placeholder="選填" maxlength="5000"></div>
+        <button class="btn-add" id="btnAdd" type="submit">新增</button>
       </form>
-    </div>
-  </div>
-
-  <!-- ========================================================= -->
-  <!-- 彈出視窗 2：文字批次匯入 Modal                             -->
-  <!-- ========================================================= -->
-  <div id="batchModal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-xs hidden items-center justify-center z-40 p-4">
-    <div class="bg-white rounded-2xl max-w-lg w-full p-6 shadow-xl border border-slate-100 animate-fade-in">
-      <div class="flex items-center justify-between pb-3 border-b border-slate-100 mb-4">
-        <h2 class="text-lg font-bold text-slate-900">依格式批次匯入文字</h2>
-        <button onclick="closeBatchModal()" class="text-slate-400 hover:text-slate-600 w-8 h-8 rounded-lg flex items-center justify-center">
-          <i class="fa-solid fa-xmark text-lg"></i>
-        </button>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>名稱</th><th>網址 / IP</th><th>帳號</th><th>密碼</th><th>備註</th><th style="min-width:300px">操作</th></tr></thead>
+          <tbody id="tbody"></tbody>
+        </table>
       </div>
+    </section>
 
-      <p class="text-xs text-slate-500 mb-3 leading-relaxed">
-        請直接貼上您的文字格式（包含「<code class="text-indigo-600 font-semibold">帳號:</code>」、「<code class="text-indigo-600 font-semibold">用戶名:</code>」、「<code class="text-indigo-600 font-semibold">密碼提示:</code>」），系統會自動拆解並儲存至您的 Google 帳號雲端中：
-      </p>
-
-      <textarea id="batchTextarea" rows="8" class="w-full p-3.5 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm font-mono mb-4" placeholder="1、帳號:財政部 電子發票 
-
-用戶名:0916772719
-
-密碼提示:Cool3777
-
-2、帳號:技嘉
-
-用戶名:Chi828@gmail.com
-
-密碼提示:a0939051303"></textarea>
-
-      <div class="flex justify-end gap-2">
-        <button type="button" onclick="closeBatchModal()" class="px-4 py-2 rounded-xl text-sm font-medium text-slate-600 hover:bg-slate-100 transition">取消</button>
-        <button type="button" onclick="parseAndImportBatch()" class="px-5 py-2 rounded-xl text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 transition">解析並匯入</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- ========================================================= -->
-  <!-- 彈出視窗 3：Google 帳號白名單安全設定 Modal                 -->
-  <!-- ========================================================= -->
-  <div id="securityModal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-xs hidden items-center justify-center z-40 p-4">
-    <div class="bg-white rounded-2xl max-w-md w-full p-6 shadow-xl border border-slate-100 animate-fade-in">
-      <div class="flex items-center justify-between pb-3 border-b border-slate-100 mb-4">
-        <div class="flex items-center gap-2">
-          <i class="fa-solid fa-user-shield text-indigo-600"></i>
-          <h2 class="text-lg font-bold text-slate-900">Google 信箱存取綁定</h2>
+    <section class="panel hidden" id="calPanel">
+      <div class="cal-toolbar">
+        <div class="cal-nav">
+          <button id="calPrevY" title="上一年" type="button">&#171; 年</button>
+          <button id="calPrevM" title="上一月" type="button">&#8249; 月</button>
         </div>
-        <button onclick="closeSecurityModal()" class="text-slate-400 hover:text-slate-600 w-8 h-8 rounded-lg flex items-center justify-center">
-          <i class="fa-solid fa-xmark text-lg"></i>
-        </button>
+        <label class="search-label" for="calY">年</label>
+        <select id="calY"></select>
+        <label class="search-label" for="calM">月</label>
+        <select id="calM"></select>
+        <div class="cal-nav">
+          <button id="calNextM" title="下一月" type="button">月 &#8250;</button>
+          <button id="calNextY" title="下一年" type="button">年 &#187;</button>
+        </div>
+        <button class="btn-soft" id="calToday" style="padding:9px 16px" type="button">今天</button>
+        <div class="cal-cur" id="calCur"></div>
       </div>
+      <div class="cal-grid" id="calGrid"></div>
+    </section>
+  </main>
 
-      <form onsubmit="saveSecurityWhitelist(event)" class="space-y-4">
-        <p class="text-xs text-slate-500 leading-relaxed">
-          您可以指定<strong>只允許哪一個 Google 信箱</strong>解鎖此密碼查詢器。若留空則任何通過 Google 認證的帳號皆可登入自己獨立的密碼空間。
+  <div class="footer-tools">
+    <div class="tool-card">
+      <h4>個人資料備份（匯出加密檔）</h4>
+      <p>將目前帳號下所有分類、行事曆與頭像，以 <b>AES-256</b> 加密後輸出為 <code>*.json</code> 檔案。</p>
+      <div class="tool-row">
+        <button class="btn-soft" id="btnBackup" type="button">產生加密備份檔</button>
+        <span class="enc-hint">需設定一組備份解鎖密碼（至少 8 字元）</span>
+      </div>
+    </div>
+    <div class="tool-card">
+      <h4>個人資料回復（匯入備份檔）</h4>
+      <p>選擇先前輸出的加密 <code>*.json</code> 備份檔並輸入解鎖密碼，資料會<b>覆蓋</b>目前帳號的內容（v1.1 的舊備份檔也能用）。</p>
+      <div class="tool-row">
+        <label class="btn-soft">選擇備份檔
+          <input type="file" id="restoreInput" accept=".json,.txt"></label>
+        <button class="btn-soft" id="btnClear" type="button">清除此帳號所有資料</button>
+      </div>
+    </div>
+    <div class="tool-card plain">
+      <h4>未加密匯出 / 匯入（明碼檔）</h4>
+      <div class="plain-warn">⚠️ 明碼檔裡的密碼<b>任何人打開都看得到</b>。只在搬家、或從其他密碼工具轉進來時使用，用完請立即刪除檔案（也記得清空資源回收筒）。</div>
+      <div class="tool-row">
+        <button class="btn-soft" id="btnExportCsv" type="button">匯出 CSV（可用 Excel 開啟）</button>
+        <button class="btn-soft" id="btnExportJson" type="button">匯出 JSON（含行事曆）</button>
+        <label class="btn-soft">匯入未加密檔（CSV / JSON）
+          <input type="file" id="plainImportInput" accept=".csv,.json,.txt"></label>
+      </div>
+      <div class="enc-hint">匯入支援：本系統匯出的 CSV / JSON，以及 Chrome、Edge、Bitwarden 匯出的密碼 CSV</div>
+    </div>
+  </div>
+
+  <footer class="update-bar" id="updateBar">
+    <span>資料最後更新：<b id="dataUpdated">—</b></span><span class="sep">｜</span><span>網頁修改時間：<b id="appUpdated"></b></span>
+  </footer>
+</div>
+
+<div id="adminModal" class="modal-mask hidden">
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="adminTitle">
+    <div class="modal-head">
+      <h3 id="adminTitle">管理員後台</h3>
+      <button class="x" id="closeAdmin" type="button">關閉</button>
+    </div>
+    <div class="modal-body">
+      <div style="border:1px solid #cfe6fb;background:#f3faff;border-radius:12px;padding:14px 16px;margin-bottom:16px">
+        <h4 style="color:var(--sky-deep);margin-bottom:6px;font-size:1rem">系統完整備份 / 完整回復</h4>
+        <p style="font-size:.8rem;color:#6f8caa;line-height:1.55;margin-bottom:12px">
+          備份<b>整套系統資料</b>：所有已註冊使用者的帳號清單，以及每位使用者各自的加密資料庫。<br>
+          匯出的備份檔會以您設定的<b>完整備份密碼</b>再加密封存（各使用者的資料仍維持其自身加密，回復後本人仍以自己的密碼登入，互不干擾）。<br>
+          <b>完整回復</b>會<b>覆蓋目前本機的所有使用者與資料</b>，完成後需重新登入；若寫入途中失敗，會自動還原成回復前的狀態。
         </p>
-
-        <div>
-          <label class="block text-xs font-semibold text-slate-700 mb-1">限定授權的 Google Email</label>
-          <input type="email" id="allowedEmailInput" placeholder="例如：Chi828@gmail.com (留空代表不限制)" class="w-full px-3.5 py-2.5 border border-slate-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+        <div class="tool-row">
+          <button class="btn-soft" id="btnFullBackup" type="button">完整備份（匯出全部資料）</button>
+          <label class="btn-soft">完整回復（選擇備份檔）<input type="file" id="fullRestoreInput" accept=".json,.txt"></label>
         </div>
+        <div class="enc-hint">建議在調整任何資料前，先執行一次完整備份以備不時之需</div>
+      </div>
+      <p style="font-size:.82rem;color:#6f8caa;margin-bottom:12px">
+        共 <b id="userTotal">0</b> 個帳號（上限 5 人）。可停用 / 啟用、設為管理員、重置密碼、刪除使用者。<br>
+        <span style="color:#b9600f">註：帳號控管只在這個介面有效，真正保護資料的是每個人自己的加密密碼。</span>
+      </p>
+      <div class="table-wrap">
+        <table class="admin-table" style="min-width:640px">
+          <thead><tr><th>帳號</th><th>顯示名稱</th><th>角色</th><th>資料</th><th>狀態</th><th>操作</th></tr></thead>
+          <tbody id="adminTbody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
 
-        <div class="flex items-center justify-between text-xs text-slate-500 bg-slate-50 p-3 rounded-xl">
-          <span>快速填入我的信箱：</span>
-          <button type="button" onclick="fillSuggestedEmail('Chi828@gmail.com')" class="text-indigo-600 font-semibold hover:underline">Chi828@gmail.com</button>
-        </div>
+<div id="pwdModal" class="modal-mask hidden">
+  <div class="modal" style="max-width:450px" role="dialog" aria-modal="true" aria-labelledby="pwdModalTitle">
+    <div class="modal-head">
+      <h3><span id="pwdModalTitle">更改我的登入密碼</span></h3>
+      <button class="x" id="closePwd" type="button">關閉</button>
+    </div>
+    <div class="modal-body">
+      <form id="pwdForm">
+        <div class="field"><label for="pwOld">目前密碼</label><input id="pwOld" type="password" autocomplete="current-password" placeholder="請輸入目前登入密碼" required></div>
+        <div class="field pw-wrap"><label for="pwNew">新密碼</label><input id="pwNew" type="password" autocomplete="new-password" placeholder="至少 8 個字元" required><button type="button" class="pw-eye" data-eye="pwNew">顯示</button></div>
+        <div class="field"><label for="pwNew2">確認新密碼</label><input id="pwNew2" type="password" autocomplete="new-password" placeholder="再次輸入新密碼" required></div>
+        <button class="btn-sky" type="submit" id="pwdBtn">確認更改登入密碼</button>
+      </form>
+      <div class="auth-tip">提示：系統會先用<b>新密碼</b>把全部紀錄重新加密，確定寫入成功後才換掉舊的，過程中出錯也不會遺失資料。</div>
+    </div>
+  </div>
+</div>
 
-        <div class="flex justify-end gap-2 pt-3 border-t border-slate-100">
-          <button type="button" onclick="closeSecurityModal()" class="px-4 py-2 rounded-xl text-sm font-medium text-slate-600 hover:bg-slate-100 transition">取消</button>
-          <button type="submit" class="px-5 py-2 rounded-xl text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 transition">儲存安全設定</button>
-        </div>
+<div id="editModal" class="modal-mask hidden">
+  <div class="modal" style="max-width:520px" role="dialog" aria-modal="true" aria-labelledby="editTitle">
+    <div class="modal-head">
+      <h3 id="editTitle">編輯資料</h3>
+      <button class="x" id="closeEdit" type="button">關閉</button>
+    </div>
+    <div class="modal-body">
+      <form id="editForm" autocomplete="off">
+        <div class="field"><label for="eName">名稱</label><input id="eName" maxlength="200" required></div>
+        <div class="field"><label for="eCat">分類</label><select id="eCat" class="plain"></select></div>
+        <div class="field"><label for="eUrl">網址 / IP</label><input id="eUrl" maxlength="2000"></div>
+        <div class="field"><label for="eAccount">帳號</label><input id="eAccount" maxlength="300" autocomplete="off"></div>
+        <div class="field pw-wrap"><label for="ePassword">密碼</label><input id="ePassword" type="password" maxlength="1000" autocomplete="new-password"><button type="button" class="pw-eye" data-eye="ePassword">顯示</button></div>
+        <div class="field"><label for="eRemark">備註</label><textarea id="eRemark" maxlength="5000"></textarea></div>
+        <button class="btn-sky" type="submit">儲存變更</button>
       </form>
     </div>
   </div>
+</div>
 
-  <!-- ========================================================= -->
-  <!-- 彈出視窗 4：自訂確認對話框 Modal (取代原生 confirm/alert)   -->
-  <!-- ========================================================= -->
-  <div id="confirmModal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-xs hidden items-center justify-center z-50 p-4">
-    <div class="bg-white rounded-2xl max-w-sm w-full p-6 shadow-xl border border-slate-100 text-center space-y-4 animate-fade-in">
-      <div class="w-12 h-12 rounded-full bg-rose-100 text-rose-600 flex items-center justify-center mx-auto text-xl">
-        <i class="fa-solid fa-triangle-exclamation"></i>
+<div id="importModal" class="modal-mask hidden">
+  <div class="modal" style="max-width:500px" role="dialog" aria-modal="true" aria-labelledby="impTitle">
+    <div class="modal-head">
+      <h3 id="impTitle">匯入未加密資料</h3>
+      <button class="x" id="closeImport" type="button">取消</button>
+    </div>
+    <div class="modal-body">
+      <div class="imp-summary" id="impSummary"></div>
+      <div class="imp-modes">
+        <label><input type="radio" name="impMode" value="merge" checked><span><b>合併</b>：加到現有資料後面<small>完全相同的資料會自動略過，不會重複</small></span></label>
+        <label><input type="radio" name="impMode" value="replace"><span><b>覆蓋</b>：清空目前的帳密與行事曆，換成檔案內容<small>頭像與自訂分類名稱會保留</small></span></label>
       </div>
-      <div>
-        <h3 id="confirmTitle" class="text-base font-bold text-slate-900 mb-1">確認執行此操作？</h3>
-        <p id="confirmDesc" class="text-xs text-slate-500 leading-relaxed"></p>
-      </div>
-      <div class="flex gap-2 pt-2">
-        <button onclick="closeConfirmModal()" class="flex-1 py-2.5 rounded-xl text-sm font-medium text-slate-600 bg-slate-100 hover:bg-slate-200 transition">取消</button>
-        <button id="confirmAcceptBtn" class="flex-1 py-2.5 rounded-xl text-sm font-medium text-white bg-rose-600 hover:bg-rose-700 transition">確定</button>
-      </div>
+      <div class="field" id="impCatRow"><label for="impCat">沒有分類（或分類名稱對不上）的資料放到</label><select id="impCat"></select></div>
+      <button class="btn-sky" type="button" id="impConfirm">開始匯入</button>
+      <div class="auth-tip">匯入後資料會立即加密保存。完成後請記得刪除那個明碼檔。</div>
     </div>
   </div>
+</div>
 
-  <!-- 右下角 Toast 通知 -->
-  <div id="toast" class="fixed bottom-5 right-5 bg-slate-900 text-white px-4 py-3 rounded-xl shadow-lg text-sm font-medium opacity-0 pointer-events-none transition-opacity duration-200 z-50 flex items-center gap-2.5">
-    <i class="fa-solid fa-circle-check text-emerald-400"></i>
-    <span id="toastMsg">已複製到剪貼簿</span>
+<div id="askModal" class="modal-mask hidden">
+  <div class="modal" style="max-width:430px" role="dialog" aria-modal="true" aria-labelledby="askTitle">
+    <div class="modal-head">
+      <h3 id="askTitle">請輸入密碼</h3>
+      <button class="x" id="askClose" type="button">取消</button>
+    </div>
+    <div class="modal-body">
+      <form id="askForm" autocomplete="off">
+        <p class="ask-desc" id="askDesc"></p>
+        <div class="field pw-wrap"><label for="askPw1" id="askLabel1">密碼</label><input id="askPw1" type="password" autocomplete="new-password"><button type="button" class="pw-eye" data-eye="askPw1">顯示</button></div>
+        <div class="field" id="askRow2"><label for="askPw2">再輸入一次</label><input id="askPw2" type="password" autocomplete="new-password"></div>
+        <button class="btn-sky" type="submit">確定</button>
+      </form>
+    </div>
   </div>
-
-  <!-- ========================================================= -->
-  <!-- Firebase 認證與雲端資料庫邏輯                              -->
-  <!-- ========================================================= -->
-  <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-    import { 
-      getAuth, 
-      GoogleAuthProvider, 
-      signInWithPopup, 
-      signInWithCustomToken, 
-      signInAnonymously, 
-      onAuthStateChanged, 
-      signOut 
-    } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-    import { 
-      getFirestore, 
-      collection, 
-      doc, 
-      setDoc, 
-      deleteDoc, 
-      onSnapshot 
-    } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
-
-    // 您指定的預設範例資料
-    const DEFAULT_RECORDS = [
-      {
-        id: 'default-1',
-        account: '財政部 電子發票',
-        username: '0916772719',
-        hint: 'Cool3777',
-        order: 1,
-        updatedAt: Date.now() - 2000
-      },
-      {
-        id: 'default-2',
-        account: '技嘉',
-        username: 'Chi828@gmail.com',
-        hint: 'a0939051303',
-        order: 2,
-        updatedAt: Date.now() - 1000
-      }
-    ];
-
-    // 狀態管理
-    let app = null;
-    let auth = null;
-    let db = null;
-    let currentUser = null;
-    let unsubscribeSnapshot = null;
-    let records = [];
-    let maskAllHints = false;
-
-    // 供環境自動拒絕未點擊 Google 登入時的控制旗標
-    let hasExplicitlySignedIn = false;
-    let allowedGoogleEmail = '';
-    let verifiedGoogleProfile = null;
-
-    const appId = typeof __app_id !== 'undefined' ? __app_id : 'custom-google-password-vault';
-
-    // 初始化 Firebase
-    async function initFirebaseApp() {
-      try {
-        if (typeof __firebase_config !== 'undefined' && __firebase_config) {
-          const firebaseConfig = JSON.parse(__firebase_config);
-          app = initializeApp(firebaseConfig);
-          auth = getAuth(app);
-          db = getFirestore(app);
-
-          // 監聽登入狀態
-          onAuthStateChanged(auth, (user) => {
-            currentUser = user;
-            // 若是直接透過 Google OAuth Popup 登入的使用者，或已明確點擊驗證的使用者才解鎖畫面
-            const isGoogleProvider = user && user.providerData && user.providerData.some(p => p.providerId === 'google.com');
-            if (user && (isGoogleProvider || hasExplicitlySignedIn)) {
-              const emailToCheck = (verifiedGoogleProfile?.email || user.email || '').toLowerCase();
-              if (allowedGoogleEmail && emailToCheck && emailToCheck !== allowedGoogleEmail.toLowerCase()) {
-                showAuthError('此 Google 帳號未獲授權', `目前安全設定僅允許「${allowedGoogleEmail}」存取此密碼查詢器。`);
-                return;
-              }
-              unlockAndStartSync(user);
-            } else {
-              showLockScreenReady();
-            }
-          });
-
-          // 預先準備底層連線憑證（但不自動略過 Google 鎖定畫面）
-          if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
-            await signInWithCustomToken(auth, __initial_auth_token);
-          } else {
-            await signInAnonymously(auth);
-          }
-        } else {
-          showLockScreenReady();
-        }
-      } catch (err) {
-        console.error('Firebase 初始化異常:', err);
-        showLockScreenReady();
-      }
-    }
-
-    function showLockScreenReady() {
-      document.getElementById('authLoading').classList.add('hidden');
-      document.getElementById('authActions').classList.remove('hidden');
-    }
-
-    function showAuthError(title, desc) {
-      const box = document.getElementById('authErrorBox');
-      document.getElementById('authErrorTitle').textContent = title;
-      document.getElementById('authErrorDesc').textContent = desc;
-      box.classList.remove('hidden');
-
-      const card = document.getElementById('authCard');
-      card.classList.remove('animate-shake');
-      void card.offsetWidth;
-      card.classList.add('animate-shake');
-    }
-
-    // 觸發 Google 帳號登入 (優先使用真實 Google OAuth Popup)
-    window.signInWithGoogle = async function() {
-      document.getElementById('authErrorBox').classList.add('hidden');
-
-      if (!auth) {
-        document.getElementById('fallbackGoogleBox').classList.remove('hidden');
-        return;
-      }
-
-      try {
-        const provider = new GoogleAuthProvider();
-        provider.setCustomParameters({ prompt: 'select_account' });
-        hasExplicitlySignedIn = true;
-
-        const result = await signInWithPopup(auth, provider);
-        if (result && result.user) {
-          verifiedGoogleProfile = {
-            displayName: result.user.displayName || 'Google 使用者',
-            email: result.user.email || '',
-            photoURL: result.user.photoURL || ''
-          };
-          unlockAndStartSync(result.user);
-        }
-      } catch (error) {
-        console.warn('Google Popup 在當前環境受限，啟用內嵌 Google 帳號驗證:', error.code || error.message);
-        // 在受限的沙盒 iframe 中，Popup 或未註冊網域可能被阻擋，提供無縫 Google 帳號驗證輸入框
-        document.getElementById('fallbackGoogleBox').classList.remove('hidden');
-        document.getElementById('fallbackEmailInput').focus();
-      }
-    };
-
-    // 內嵌預覽環境下的 Google 信箱確認登入
-    window.confirmFallbackGoogleLogin = async function() {
-      const emailInput = document.getElementById('fallbackEmailInput').value.trim();
-      if (!emailInput || !emailInput.includes('@')) {
-        showAuthError('格式不正確', '請輸入有效的 Google 信箱地址（例如 Chi828@gmail.com）');
-        return;
-      }
-
-      if (allowedGoogleEmail && emailInput.toLowerCase() !== allowedGoogleEmail.toLowerCase()) {
-        showAuthError('非授權的 Google 帳號', `此密碼查詢器已設定僅允許「${allowedGoogleEmail}」登入存取。`);
-        return;
-      }
-
-      const namePart = emailInput.split('@')[0];
-      verifiedGoogleProfile = {
-        displayName: namePart,
-        email: emailInput,
-        photoURL: `https://placehold.co/64x64/4f46e5/ffffff?text=${encodeURIComponent(namePart.charAt(0).toUpperCase())}`
-      };
-      hasExplicitlySignedIn = true;
-
-      if (auth && !auth.currentUser) {
-        if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
-          await signInWithCustomToken(auth, __initial_auth_token);
-        } else {
-          await signInAnonymously(auth);
-        }
-      }
-
-      unlockAndStartSync(auth ? auth.currentUser : { uid: 'local-google-' + emailInput });
-    };
-
-    // 解鎖並開始同步該使用者專屬的 Firestore 密碼集合
-    function unlockAndStartSync(user) {
-      if (!user) return;
-      currentUser = user;
-
-      // 更新導覽列上的 Google 帳號資訊
-      const displayName = verifiedGoogleProfile?.displayName || user.displayName || 'Google 認證使用者';
-      const email = verifiedGoogleProfile?.email || user.email || 'Chi828@gmail.com (Google 已認證)';
-      const photoURL = verifiedGoogleProfile?.photoURL || user.photoURL || `https://placehold.co/64x64/4f46e5/ffffff?text=${encodeURIComponent(displayName.charAt(0).toUpperCase())}`;
-
-      document.getElementById('userNameDisplay').textContent = displayName;
-      document.getElementById('userEmailDisplay').textContent = email;
-      document.getElementById('userAvatar').src = photoURL;
-      document.getElementById('dropdownEmail').textContent = email;
-      document.getElementById('dropdownUid').textContent = `UID: ${user.uid}`;
-
-      // 切換顯示畫面
-      document.getElementById('authScreen').classList.add('hidden');
-      document.getElementById('appContent').classList.remove('hidden');
-
-      // 訂閱 Firestore 資料
-      if (db && user.uid) {
-        if (unsubscribeSnapshot) unsubscribeSnapshot();
-
-        const recordsColRef = collection(db, 'artifacts', appId, 'users', user.uid, 'password_records');
-        unsubscribeSnapshot = onSnapshot(
-          recordsColRef,
-          async (snapshot) => {
-            const loaded = [];
-            snapshot.forEach((docSnap) => {
-              loaded.push({ id: docSnap.id, ...docSnap.data() });
-            });
-
-            // 若首次登入且雲端完全沒有紀錄，自動寫入您指定的 2 筆預設資料
-            if (loaded.length === 0 && !window._hasInitializedDefaults) {
-              window._hasInitializedDefaults = true;
-              await seedDefaultRecordsToFirestore();
-              return;
-            }
-
-            // 依 order 或時間排序
-            loaded.sort((a, b) => (a.order || a.updatedAt || 0) - (b.order || b.updatedAt || 0));
-            records = loaded;
-            renderList();
-          },
-          (error) => {
-            console.error('讀取雲端密碼資料失敗:', error);
-            showToast('雲端同步異常，請檢查網路連線');
-          }
-        );
-      } else {
-        records = [...DEFAULT_RECORDS];
-        renderList();
-      }
-
-      showToast(`歡迎回來，${displayName}`);
-    }
-
-    // 將預設的兩筆資料寫入 Firestore
-    async function seedDefaultRecordsToFirestore() {
-      if (!db || !currentUser) return;
-      try {
-        for (const item of DEFAULT_RECORDS) {
-          const docRef = doc(db, 'artifacts', appId, 'users', currentUser.uid, 'password_records', item.id);
-          await setDoc(docRef, {
-            account: item.account,
-            username: item.username,
-            hint: item.hint,
-            order: item.order,
-            updatedAt: item.updatedAt
-          });
-        }
-      } catch (e) {
-        console.error('初始化預設資料失敗:', e);
-      }
-    }
-
-    window.loadDefaultSampleData = async function() {
-      await seedDefaultRecordsToFirestore();
-      showToast('已載入預設 2 筆範例資料');
-    };
-
-    // 登出並鎖定畫面
-    window.handleSignOut = async function() {
-      document.getElementById('userDropdown').classList.add('hidden');
-      hasExplicitlySignedIn = false;
-      verifiedGoogleProfile = null;
-
-      if (unsubscribeSnapshot) {
-        unsubscribeSnapshot();
-        unsubscribeSnapshot = null;
-      }
-
-      // 清空畫面上的敏感密碼資料
-      records = [];
-      document.getElementById('recordsContainer').innerHTML = '';
-      document.getElementById('appContent').classList.add('hidden');
-      document.getElementById('authScreen').classList.remove('hidden');
-      showLockScreenReady();
-      showToast('已安全登出並鎖定畫面');
-    };
-
-    // =========================================================
-    // 渲染清單與搜尋邏輯
-    // =========================================================
-    window.renderList = function() {
-      const container = document.getElementById('recordsContainer');
-      const emptyState = document.getElementById('emptyState');
-      const searchInput = document.getElementById('searchInput');
-      const clearBtn = document.getElementById('clearSearchBtn');
-      const countDisplay = document.getElementById('countDisplay');
-
-      const query = (searchInput.value || '').trim().toLowerCase();
-      clearBtn.classList.toggle('hidden', !query);
-
-      const filtered = records.filter(item =>
-        (item.account || '').toLowerCase().includes(query) ||
-        (item.username || '').toLowerCase().includes(query) ||
-        (item.hint || '').toLowerCase().includes(query)
-      );
-
-      countDisplay.textContent = filtered.length;
-      container.innerHTML = '';
-
-      if (filtered.length === 0) {
-        emptyState.classList.remove('hidden');
-        return;
-      }
-      emptyState.classList.add('hidden');
-
-      filtered.forEach((item, index) => {
-        const displayHint = maskAllHints ? '••••••••••' : escapeHtml(item.hint);
-
-        const card = document.createElement('div');
-        card.className = 'bg-white rounded-2xl p-5 border border-slate-200/90 shadow-xs hover:shadow-md hover:border-indigo-200 transition flex flex-col justify-between animate-fade-in';
-        card.innerHTML = `
-          <div>
-            <!-- 卡片頂部：編號 + 帳號 + 操作按鈕 -->
-            <div class="flex items-start justify-between gap-2 pb-3 mb-3.5 border-b border-slate-100">
-              <div class="flex items-center gap-2.5">
-                <span class="w-6 h-6 rounded-lg bg-indigo-50 text-indigo-600 font-bold text-xs font-mono flex items-center justify-center shrink-0">
-                  ${index + 1}
-                </span>
-                <h3 class="font-bold text-base text-slate-900 break-all">
-                  <span class="text-slate-400 font-normal text-sm">帳號：</span>${escapeHtml(item.account)}
-                </h3>
-              </div>
-
-              <div class="flex items-center gap-1 shrink-0">
-                <button onclick="openModal('${item.id}')" class="p-1.5 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition" title="編輯">
-                  <i class="fa-solid fa-pen-to-square"></i>
-                </button>
-                <button onclick="confirmDeleteRecord('${item.id}')" class="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition" title="刪除">
-                  <i class="fa-solid fa-trash-can"></i>
-                </button>
-              </div>
-            </div>
-
-            <!-- 欄位區：用戶名 & 密碼提示 -->
-            <div class="space-y-2.5 text-sm">
-              <div class="flex items-center justify-between bg-slate-50 px-3.5 py-2.5 rounded-xl border border-slate-100">
-                <div class="truncate pr-2">
-                  <span class="text-slate-400 text-xs block mb-0.5">用戶名</span>
-                  <span class="font-medium text-slate-800 select-all">${escapeHtml(item.username)}</span>
-                </div>
-                <button onclick="copyText('${escapeJs(item.username)}', '已複製用戶名')" class="text-slate-400 hover:text-indigo-600 px-2.5 py-1.5 rounded-lg hover:bg-white transition shrink-0" title="複製用戶名">
-                  <i class="fa-regular fa-copy"></i>
-                </button>
-              </div>
-
-              <div class="flex items-center justify-between bg-slate-50 px-3.5 py-2.5 rounded-xl border border-slate-100">
-                <div class="truncate pr-2">
-                  <span class="text-slate-400 text-xs block mb-0.5">密碼提示</span>
-                  <span class="font-mono font-semibold text-indigo-700 select-all">${displayHint}</span>
-                </div>
-                <div class="flex items-center gap-1 shrink-0">
-                  <button onclick="copyText('${escapeJs(item.hint)}', '已複製密碼提示')" class="text-slate-400 hover:text-indigo-600 px-2.5 py-1.5 rounded-lg hover:bg-white transition" title="複製密碼提示">
-                    <i class="fa-regular fa-copy"></i>
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
-        `;
-        container.appendChild(card);
-      });
-    };
-
-    // =========================================================
-    // 新增、編輯、刪除 (Firestore 同步)
-    // =========================================================
-    window.openModal = function(id = null) {
-      const modal = document.getElementById('formModal');
-      const title = document.getElementById('modalTitle');
-      const idInput = document.getElementById('recordId');
-      const accInput = document.getElementById('accountInput');
-      const userInput = document.getElementById('usernameInput');
-      const hintInput = document.getElementById('hintInput');
-
-      if (id) {
-        const target = records.find(r => r.id === id);
-        if (!target) return;
-        title.textContent = '編輯密碼紀錄';
-        idInput.value = target.id;
-        accInput.value = target.account;
-        userInput.value = target.username;
-        hintInput.value = target.hint;
-      } else {
-        title.textContent = '新增密碼紀錄';
-        idInput.value = '';
-        accInput.value = '';
-        userInput.value = '';
-        hintInput.value = '';
-      }
-
-      modal.classList.remove('hidden');
-      modal.classList.add('flex');
-      accInput.focus();
-    };
-
-    window.closeModal = function() {
-      const modal = document.getElementById('formModal');
-      modal.classList.add('hidden');
-      modal.classList.remove('flex');
-    };
-
-    window.saveRecord = async function(e) {
-      e.preventDefault();
-      if (!currentUser) return;
-
-      const id = document.getElementById('recordId').value || ('rec-' + Date.now());
-      const account = document.getElementById('accountInput').value.trim();
-      const username = document.getElementById('usernameInput').value.trim();
-      const hint = document.getElementById('hintInput').value.trim();
-
-      if (!account || !username || !hint) return;
-
-      const existing = records.find(r => r.id === id);
-      const orderNum = existing ? (existing.order || Date.now()) : (records.length + 1);
-
-      try {
-        if (db && currentUser.uid) {
-          const docRef = doc(db, 'artifacts', appId, 'users', currentUser.uid, 'password_records', id);
-          await setDoc(docRef, {
-            account,
-            username,
-            hint,
-            order: orderNum,
-            updatedAt: Date.now()
-          });
-        }
-        closeModal();
-        showToast(existing ? '紀錄已更新至雲端' : '已新增一筆紀錄至雲端');
-      } catch (err) {
-        console.error('儲存失敗:', err);
-        showToast('儲存失敗，請稍後再試');
-      }
-    };
-
-    // 自訂刪除確認視窗
-    window.confirmDeleteRecord = function(id) {
-      const target = records.find(r => r.id === id);
-      if (!target) return;
-
-      openConfirmDialog(
-        `確定要移除「${target.account}」嗎？`,
-        `用戶名「${target.username}」的密碼紀錄將會從您的雲端空間永久移除。`,
-        async () => {
-          if (db && currentUser?.uid) {
-            await deleteDoc(doc(db, 'artifacts', appId, 'users', currentUser.uid, 'password_records', id));
-            showToast('紀錄已移除');
-          }
-        }
-      );
-    };
-
-    window.confirmResetDefaults = function() {
-      document.getElementById('userDropdown').classList.add('hidden');
-      openConfirmDialog(
-        '重新載入預設範例資料？',
-        '這將會把「財政部 電子發票」與「技嘉」兩筆預設資料重新補回您的清單中。',
-        async () => {
-          await seedDefaultRecordsToFirestore();
-          showToast('已補回預設範例資料');
-        }
-      );
-    };
-
-    // =========================================================
-    // 批次文字解析匯入與指定格式純文字匯出
-    // =========================================================
-    window.openBatchModal = function() {
-      const modal = document.getElementById('batchModal');
-      modal.classList.remove('hidden');
-      modal.classList.add('flex');
-      document.getElementById('batchTextarea').focus();
-    };
-
-    window.closeBatchModal = function() {
-      const modal = document.getElementById('batchModal');
-      modal.classList.add('hidden');
-      modal.classList.remove('flex');
-    };
-
-    window.parseAndImportBatch = async function() {
-      if (!currentUser) return;
-      const rawText = document.getElementById('batchTextarea').value.trim();
-      if (!rawText) return;
-
-      const lines = rawText.split(/\r?\n/).map(l => l.trim()).filter(Boolean);
-      let current = {};
-      const parsedItems = [];
-
-      lines.forEach(line => {
-        const accMatch = line.match(/^(?:\d+[、.．\s]*)?帳號\s*[:：]\s*(.+)$/);
-        const userMatch = line.match(/^用戶名\s*[:：]\s*(.+)$/);
-        const hintMatch = line.match(/^密碼提示\s*[:：]\s*(.+)$/);
-
-        if (accMatch) {
-          if (current.account && current.username && current.hint) {
-            parsedItems.push({ ...current });
-          }
-          current = { account: accMatch[1].trim() };
-        } else if (userMatch) {
-          current.username = userMatch[1].trim();
-        } else if (hintMatch) {
-          current.hint = hintMatch[1].trim();
-          if (current.account && current.username && current.hint) {
-            parsedItems.push({ ...current });
-            current = {};
-          }
-        }
-      });
-
-      if (parsedItems.length === 0) {
-        showToast('無法解析文字，請確認包含「帳號:」、「用戶名:」、「密碼提示:」');
-        return;
-      }
-
-      try {
-        for (let i = 0; i < parsedItems.length; i++) {
-          const item = parsedItems[i];
-          const newId = 'batch-' + Date.now() + '-' + i;
-          if (db && currentUser.uid) {
-            const docRef = doc(db, 'artifacts', appId, 'users', currentUser.uid, 'password_records', newId);
-            await setDoc(docRef, {
-              account: item.account,
-              username: item.username,
-              hint: item.hint,
-              order: records.length + i + 1,
-              updatedAt: Date.now()
-            });
-          }
-        }
-        document.getElementById('batchTextarea').value = '';
-        closeBatchModal();
-        showToast(`成功匯入 ${parsedItems.length} 筆紀錄至雲端`);
-      } catch (e) {
-        console.error('批次匯入失敗:', e);
-        showToast('匯入過程中發生錯誤');
-      }
-    };
-
-    window.copyAllFormatted = function() {
-      if (records.length === 0) {
-        showToast('目前沒有資料可匯出');
-        return;
-      }
-      const formatted = records.map((r, idx) => 
-        `${idx + 1}、帳號:${r.account}\n\n用戶名:${r.username}\n\n密碼提示:${r.hint}`
-      ).join('\n\n');
-
-      copyText(formatted, '已依指定格式複製全部紀錄');
-    };
-
-    // =========================================================
-    // Google 信箱白名單與介面輔助函式
-    // =========================================================
-    window.toggleUserDropdown = function() {
-      document.getElementById('userDropdown').classList.toggle('hidden');
-    };
-
-    window.openSecurityModal = function() {
-      document.getElementById('userDropdown').classList.add('hidden');
-      document.getElementById('allowedEmailInput').value = allowedGoogleEmail;
-      const modal = document.getElementById('securityModal');
-      modal.classList.remove('hidden');
-      modal.classList.add('flex');
-    };
-
-    window.closeSecurityModal = function() {
-      const modal = document.getElementById('securityModal');
-      modal.classList.add('hidden');
-      modal.classList.remove('flex');
-    };
-
-    window.fillSuggestedEmail = function(email) {
-      document.getElementById('allowedEmailInput').value = email;
-    };
-
-    window.saveSecurityWhitelist = function(e) {
-      e.preventDefault();
-      allowedGoogleEmail = document.getElementById('allowedEmailInput').value.trim();
-      closeSecurityModal();
-      showToast(allowedGoogleEmail ? `已限定僅允許 ${allowedGoogleEmail} 存取` : '已解除信箱白名單限制');
-    };
-
-    function openConfirmDialog(title, desc, onConfirm) {
-      document.getElementById('confirmTitle').textContent = title;
-      document.getElementById('confirmDesc').textContent = desc;
-      const btn = document.getElementById('confirmAcceptBtn');
-      const newBtn = btn.cloneNode(true);
-      btn.parentNode.replaceChild(newBtn, btn);
-      newBtn.addEventListener('click', async () => {
-        closeConfirmModal();
-        await onConfirm();
-      });
-
-      const modal = document.getElementById('confirmModal');
-      modal.classList.remove('hidden');
-      modal.classList.add('flex');
-    }
-
-    window.closeConfirmModal = function() {
-      const modal = document.getElementById('confirmModal');
-      modal.classList.add('hidden');
-      modal.classList.remove('flex');
-    };
-
-    window.toggleAllMask = function() {
-      maskAllHints = !maskAllHints;
-      const btn = document.getElementById('toggleMaskBtn');
-      btn.innerHTML = maskAllHints 
-        ? '<i class="fa-regular fa-eye mr-1"></i>顯示全部密碼' 
-        : '<i class="fa-regular fa-eye-slash mr-1"></i>隱藏全部密碼';
-      renderList();
-    };
-
-    window.clearSearch = function() {
-      document.getElementById('searchInput').value = '';
-      renderList();
-    };
-
-    // 相容於內嵌 iframe 的剪貼簿複製方法
-    window.copyText = function(text, message) {
-      const textarea = document.createElement('textarea');
-      textarea.value = text;
-      textarea.style.position = 'fixed';
-      textarea.style.opacity = '0';
-      document.body.appendChild(textarea);
-      textarea.select();
-      try {
-        document.execCommand('copy');
-        showToast(message);
-      } catch (err) {
-        showToast('複製失敗，請手動選取文字複製');
-      } finally {
-        document.body.removeChild(textarea);
-      }
-    };
-
-    window.showToast = function(msg) {
-      const toast = document.getElementById('toast');
-      document.getElementById('toastMsg').textContent = msg;
-      toast.classList.remove('opacity-0');
-      setTimeout(() => {
-        toast.classList.add('opacity-0');
-      }, 2400);
-    };
-
-    function escapeHtml(str) {
-      return String(str || '')
-        .replace(/&/g, '&amp;')
-        .replace(/</g, '&lt;')
-        .replace(/>/g, '&gt;')
-        .replace(/"/g, '&quot;');
-    }
-
-    function escapeJs(str) {
-      return String(str || '').replace(/\\/g, '\\\\').replace(/'/g, "\\'");
-    }
-
-    // 快捷鍵與外部點擊關閉選單
-    window.addEventListener('keydown', (e) => {
-      if (e.key === '/' && document.activeElement.tagName !== 'INPUT' && document.activeElement.tagName !== 'TEXTAREA') {
-        const appVisible = !document.getElementById('appContent').classList.contains('hidden');
-        if (appVisible) {
-          e.preventDefault();
-          document.getElementById('searchInput').focus();
-        }
-      }
+</div>
+
+<div id="calModal" class="modal-mask hidden cal-modal">
+  <div class="modal" style="max-width:500px" role="dialog" aria-modal="true">
+    <div class="modal-head">
+      <h3>行事曆 · <span id="calDateLabel"></span></h3>
+      <button class="x" id="closeCal" type="button">關閉</button>
+    </div>
+    <div class="modal-body">
+      <div class="field" style="margin-bottom:10px"><label style="display:flex;align-items:center;justify-content:space-between">該日紀錄 <button class="mini-btn ok" id="calAddBtn" style="font-size:.78rem" type="button">+ 新增一筆</button></label></div>
+      <div class="cal-entry-list" id="calEntryList"></div>
+      <div id="calFormArea" class="hidden" style="border-top:2px solid var(--line);padding-top:12px;margin-top:12px">
+        <div class="field"><label for="calTitle">主題（顯示於日期格子）</label><input id="calTitle" placeholder="請輸入主題" maxlength="80"></div>
+        <div class="field"><label for="calContent">內容</label><textarea id="calContent" placeholder="請輸入詳細內容…" maxlength="5000"></textarea></div>
+        <div class="field"><label>主題顏色</label><div class="cal-colors" id="calColors"></div></div>
+        <div class="cal-actions">
+          <button class="btn-add" id="calSave" type="button">儲存</button>
+          <button class="btn-del-cal hidden" id="calDel" type="button">刪除本筆</button>
+        </div>
+      </div>
+      <div class="auth-tip" style="margin-top:10px">提示：同一天可新增多筆紀錄；格子太小僅顯示主題前幾個字，滑鼠移到格子上可查看完整主題與內容。</div>
+    </div>
+  </div>
+</div>
+
+<div class="scroll-fab hidden" id="scrollFab">
+  <button type="button" id="fabTop" title="回到頂部" aria-label="回到頂部">▲</button>
+  <button type="button" id="fabMid" class="mid" title="到網頁中間" aria-label="到網頁中間"><span></span></button>
+  <button type="button" id="fabBottom" title="到底部" aria-label="到底部">▼</button>
+</div>
+
+<div id="toast" role="status" aria-live="polite"></div>
+
+<script>
+"use strict";
+/*
+  帳號密碼安全管理 v1.2（安全修正版）· 純前端（HTML + JS），不連任何外部網站
+  資料庫：瀏覽器 localStorage
+    accounts.json -> 使用者清單（只有帳號、名稱、角色、狀態；不再存任何密碼雜湊）
+    vault:<user>  -> 每個使用者各自的加密資料（AES-256-GCM，金鑰 = PBKDF2-SHA256(登入密碼, 60 萬次)）
+                     分類資料、行事曆、自訂分類名稱、頭像全部放在裡面加密
+  登入驗證 = 能不能用輸入的密碼解開自己的加密資料（AES-GCM 內建防竄改驗證）
+*/
+const DEFAULT_CATS = [
+  {key:"net",  name:"網路資訊"},
+  {key:"bank", name:"銀行金融"},
+  {key:"mail", name:"電子郵件"},
+  {key:"srv",  name:"點2下自訂名稱"},
+  {key:"fw",   name:"點2下自訂名稱"},
+  {key:"other",name:"點2下自訂名稱"}
+];
+const CATS = DEFAULT_CATS;     // 舊版相容（v1.1 分類名稱搬移用）
+const MAX_TABS = 20, PAL_N = 8;
+const TAB_KEY_RE=/^(?:net|bank|mail|srv|fw|other|t[a-z0-9]{4,12})$/;
+/* 目前帳號的分類分頁（可自訂數量），存在加密資料 DB.tabs 裡 */
+function TABS(){return (DB&&Array.isArray(DB.tabs)&&DB.tabs.length)?DB.tabs:DEFAULT_CATS;}
+function tabIndex(k){return TABS().findIndex(c=>c.key===k);}
+function palOf(k){const i=tabIndex(k);return 'pal'+((i<0?0:i)%PAL_N);}
+function firstKey(){return TABS()[0].key;}
+function newTabKey(){let k;do{k='t'+Math.random().toString(36).slice(2,9);}while(!TAB_KEY_RE.test(k)||TABS().some(c=>c.key===k));return k;}
+const K_ACCOUNTS = "accounts.json";
+const KDF_ITER = 600000;        // OWASP 建議值（舊版 15 萬次，登入時自動升級）
+const LEGACY_ITER = 150000;
+const VAULT_VER = 2;
+const MIN_PW = 8;
+const MAX_USERS = 5;
+const IDLE_LOCK_MIN = 10;       // 閒置幾分鐘自動上鎖
+const CLIP_CLEAR_SEC = 30;      // 複製密碼後幾秒自動清除剪貼簿
+const FULL_BK_TYPE = 'SKY-VAULT-FULLBACKUP';
+const BK_TYPE = 'SKY-VAULT-BACKUP';
+const CAL_PRESET = ["#006BBE","#e0492f","#1aa15a","#f08a1d","#7b3fbf","#009e9e","#d63384","#5b7d9c"];
+
+let CURRENT = null, CURCAT = "net", DB = null, ENC_KEY = null, SALT = null, ITER = KDF_ITER;
+let CAL_Y = new Date().getFullYear(), CAL_M = new Date().getMonth() + 1, CAL_SEL = null, CAL_COLOR = CAL_PRESET[0], CAL_READY = false, CAL_EDIT_ID = null;
+
+const $ = s => document.querySelector(s);
+const enc = new TextEncoder(), dec = new TextDecoder();
+
+/* ===================== 小工具 ===================== */
+function toast(m, ms){const t=$('#toast');t.textContent=m;t.classList.add('show');clearTimeout(t._t);t._t=setTimeout(()=>t.classList.remove('show'),ms||2200);}
+function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+function uid(){return 'x'+Date.now().toString(36)+Math.random().toString(36).slice(2,7);}
+function str(v,max){v=(v==null?'':String(v));return max?v.slice(0,max):v;}
+function validId(id){return (typeof id==='string'&&/^[A-Za-z0-9_-]{1,40}$/.test(id))?id:uid();}
+function safeColor(c){return (typeof c==='string'&&/^#[0-9a-fA-F]{6}$/.test(c))?c:CAL_PRESET[0];}
+function safeAvatar(s){return (typeof s==='string'&&s.length<600000&&/^data:image\/(png|jpeg|webp|gif);base64,[A-Za-z0-9+/=]+$/.test(s))?s:'';}
+function cleanRole(r){return r==='admin'?'admin':'user';}
+function isQuota(e){return !!e&&(e.name==='QuotaExceededError'||e.name==='NS_ERROR_DOM_QUOTA_REACHED'||e.code===22||e.code===1014);}
+function saveErrMsg(e){return isQuota(e)?'❌ 儲存失敗：瀏覽器儲存空間已滿，這次的變更沒有存進去':'❌ 儲存失敗：'+(e&&e.message?e.message:e);}
+function b64(buf){var a=(buf instanceof Uint8Array)?buf:new Uint8Array(buf);var CH=0x8000,s='';for(var i=0;i<a.length;i+=CH){s+=String.fromCharCode.apply(null,a.subarray(i,i+CH));}return btoa(s);}
+function unb64(s){var bin=atob(String(s||'')),n=bin.length,a=new Uint8Array(n);for(var i=0;i<n;i++)a[i]=bin.charCodeAt(i);return a;}
+function saveTextFile(filename,text){
+  const url=URL.createObjectURL(new Blob([text],{type:'application/json'}));
+  const a=document.createElement('a');a.href=url;a.download=filename;a.style.display='none';
+  document.body.appendChild(a);a.click();
+  setTimeout(()=>{a.remove();URL.revokeObjectURL(url);},1500);
+}
+function fmtBytes(n){return n>=1048576?(n/1048576).toFixed(1)+' MB':n>=1024?Math.round(n/1024)+' KB':n+' B';}
+
+function readRaw(k,def){try{const v=localStorage.getItem(k);return v?JSON.parse(v):def;}catch(e){return def;}}
+function writeRaw(k,v){localStorage.setItem(k,JSON.stringify(v));} // 失敗會丟出錯誤，由呼叫端處理
+
+/* ===================== 帳號清單（不含任何密碼資訊） ===================== */
+function getAccounts(){
+  const a=readRaw(K_ACCOUNTS,[]);
+  return Array.isArray(a)?a.filter(x=>x&&typeof x.username==='string'&&x.username):[];
+}
+function saveAccounts(a){writeRaw(K_ACCOUNTS,a);}
+function vaultKey(u){return 'vault:'+u;}
+function hasVault(u){const s=readRaw(vaultKey(u),null);return !!(s&&s.data&&s.iv);}
+function validUsername(u){return typeof u==='string'&&u.length>=1&&u.length<=30&&!/[\u0000-\u001f\u007f\s]/.test(u);}
+
+/* ===================== 加密 ===================== */
+async function deriveKey(password,saltBytes,iter){
+  const base=await crypto.subtle.importKey('raw',enc.encode(password),'PBKDF2',false,['deriveKey']);
+  return crypto.subtle.deriveKey({name:'PBKDF2',salt:saltBytes,iterations:iter,hash:'SHA-256'},base,{name:'AES-GCM',length:256},false,['encrypt','decrypt']);
+}
+async function encryptJSON(key,obj){
+  const iv=crypto.getRandomValues(new Uint8Array(12));
+  const ct=await crypto.subtle.encrypt({name:'AES-GCM',iv},key,enc.encode(JSON.stringify(obj)));
+  return {iv:b64(iv),data:b64(ct)};
+}
+async function decryptJSON(key,ivB64,dataB64){
+  const pt=await crypto.subtle.decrypt({name:'AES-GCM',iv:unb64(ivB64)},key,unb64(dataB64));
+  return JSON.parse(dec.decode(pt));
+}
+function checkIter(n){n=+n;if(!(n>=1000&&n<=5000000))throw new Error('檔案格式不正確');return n;} // 避免惡意檔案用超大次數卡死瀏覽器
+// 只用於辨識 v1.1 從未存過資料的舊帳號（例如預設 admin），驗證成功後立即升級並刪除
+async function legacyHash(u,p){return b64(await crypto.subtle.digest('SHA-256',enc.encode(u+'|'+p)));}
+
+async function sealVault(db,key,salt,iter){
+  const {iv,data}=await encryptJSON(key,db);
+  return {ver:VAULT_VER,algo:'AES-256-GCM',kdf:'PBKDF2-SHA256',iter,salt:b64(salt),iv,data};
+}
+
+/* ===================== 資料格式整理（防止匯入的檔案夾帶惡意內容） ===================== */
+function cleanTabs(t){
+  const out=[],seen=new Set();
+  if(Array.isArray(t))t.forEach(x=>{if(x&&typeof x==='object'&&TAB_KEY_RE.test(x.key)&&!seen.has(x.key)&&out.length<MAX_TABS){seen.add(x.key);out.push({key:x.key,name:str(x.name,30)||'新分頁'});}});
+  return out.length?out:DEFAULT_CATS.map(c=>({key:c.key,name:c.name}));
+}
+function emptyDB(tabs){const d={};d.tabs=cleanTabs(tabs);d.tabs.forEach(c=>d[c.key]=[]);d.cal={};d.catNames={};d.avatar='';return d;}
+function normalizeCalEntry(v){if(!v)return[];if(Array.isArray(v))return v;if(typeof v==='object'&&(v.title||v.content))return[v];return[];}
+function normalizeDB(o){
+  const d=emptyDB(o&&typeof o==='object'?o.tabs:null);
+  if(!o||typeof o!=='object')return d;
+  d.tabs.forEach(c=>{
+    if(Array.isArray(o[c.key]))d[c.key]=o[c.key].filter(x=>x&&typeof x==='object').map(x=>({
+      id:validId(x.id),name:str(x.name,200),url:str(x.url,2000),account:str(x.account,300),password:str(x.password,1000),remark:str(x.remark,5000)}));
+  });
+  if(o.cal&&typeof o.cal==='object'){
+    Object.keys(o.cal).forEach(k=>{
+      if(!/^\d{4}-\d{2}-\d{2}$/.test(k))return;
+      const arr=normalizeCalEntry(o.cal[k]).filter(e=>e&&typeof e==='object')
+        .map(e=>({id:validId(e.id),title:str(e.title,80),content:str(e.content,5000),color:safeColor(e.color)}))
+        .filter(e=>e.title||e.content);
+      if(arr.length)d.cal[k]=arr;
     });
+  }
+  if(o.catNames&&typeof o.catNames==='object')d.tabs.forEach(c=>{const v=o.catNames[c.key];if(typeof v==='string'&&v.trim())d.catNames[c.key]=v.trim().slice(0,30);});
+  d.avatar=safeAvatar(o.avatar);
+  {const t=+o.updatedAt;if(Number.isFinite(t)&&t>0&&t<4102444800000)d.updatedAt=t;}
+  return d;
+}
 
-    window.addEventListener('click', (e) => {
-      const menuContainer = document.getElementById('userMenuContainer');
-      if (menuContainer && !menuContainer.contains(e.target)) {
-        document.getElementById('userDropdown').classList.add('hidden');
+/* ===================== 儲存（失敗會自動還原，不會默默遺失） ===================== */
+async function persist(){
+  DB.updatedAt=Date.now();
+  const rec=await sealVault(DB,ENC_KEY,SALT,ITER);
+  writeRaw(vaultKey(CURRENT.username),rec);
+}
+async function commit(mutate,okMsg){
+  const snap=JSON.stringify(DB);
+  try{mutate();await persist();renderUpdated();if(okMsg)toast(okMsg);return true;}
+  catch(e){DB=JSON.parse(snap);toast(saveErrMsg(e),4000);return false;}
+}
+
+/* ===================== 自訂密碼輸入框（取代 prompt，密碼不再明碼顯示） ===================== */
+function askPassword(opt){
+  opt=opt||{};
+  return new Promise(resolve=>{
+    const m=$('#askModal'),f=$('#askForm'),p1=$('#askPw1'),p2=$('#askPw2');
+    $('#askTitle').textContent=opt.title||'請輸入密碼';
+    $('#askDesc').textContent=opt.desc||'';
+    $('#askLabel1').textContent=opt.label||'密碼';
+    $('#askRow2').classList.toggle('hidden',!opt.confirm);
+    p1.value='';p2.value='';p1.type='password';
+    m.classList.remove('hidden');setTimeout(()=>p1.focus(),50);
+    const done=v=>{m.classList.add('hidden');f.onsubmit=null;$('#askClose').onclick=null;m._cancel=null;p1.value='';p2.value='';resolve(v);};
+    m._cancel=()=>done(null);
+    f.onsubmit=e=>{
+      e.preventDefault();
+      const a=p1.value,min=opt.min||1;
+      if(a.length<min)return toast('至少需要 '+min+' 個字元');
+      if(opt.confirm&&a!==p2.value)return toast('兩次輸入不一致');
+      done(a);
+    };
+    $('#askClose').onclick=()=>done(null);
+  });
+}
+
+/* 顯示 / 隱藏密碼欄 */
+document.addEventListener('click',e=>{
+  const b=e.target.closest('[data-eye]');if(!b)return;
+  const i=document.getElementById(b.dataset.eye);if(!i)return;
+  const show=i.type==='password';i.type=show?'text':'password';b.textContent=show?'隱藏':'顯示';
+});
+
+/* 點背景或按 Esc 關閉對話框 */
+function bindMask(id,onClose){
+  const m=document.getElementById(id);let down=false;
+  m.addEventListener('mousedown',e=>{down=(e.target===m);});
+  m.addEventListener('mouseup',e=>{if(down&&e.target===m)onClose();down=false;});
+}
+const closeAdmin=()=>$('#adminModal').classList.add('hidden');
+const closePwd=()=>$('#pwdModal').classList.add('hidden');
+const closeEdit=()=>{$('#editModal').classList.add('hidden');$('#ePassword').value='';};
+const closeCal=()=>$('#calModal').classList.add('hidden');
+const closeAsk=()=>{const m=$('#askModal');if(m._cancel)m._cancel();};
+bindMask('adminModal',closeAdmin);bindMask('pwdModal',closePwd);bindMask('editModal',closeEdit);bindMask('calModal',closeCal);bindMask('askModal',closeAsk);
+document.addEventListener('keydown',e=>{
+  if(e.key!=='Escape')return;
+  if(!$('#askModal').classList.contains('hidden'))return closeAsk();
+  if(!$('#editModal').classList.contains('hidden'))return closeEdit();
+  if(!$('#importModal').classList.contains('hidden'))return closeImport();
+  if(!$('#calModal').classList.contains('hidden'))return closeCal();
+  if(!$('#pwdModal').classList.contains('hidden'))return closePwd();
+  if(!$('#adminModal').classList.contains('hidden'))return closeAdmin();
+});
+
+/* ===================== 登入 / 註冊 ===================== */
+function isFirstRun(){
+  const accs=getAccounts();
+  return accs.length===0||accs.every(a=>!a.pass&&!hasVault(a.username)); // 沒有任何可登入的帳號
+}
+function setAuthMode(m){
+  $('#tabLogin').classList.toggle('active',m==='login');
+  $('#tabReg').classList.toggle('active',m==='register');
+  $('#loginForm').classList.toggle('hidden',m!=='login');
+  $('#regForm').classList.toggle('hidden',m!=='register');
+}
+function refreshAuthMode(){
+  const first=isFirstRun();
+  $('#setupNotice').classList.toggle('hidden',!first);
+  $('#authTabs').classList.toggle('hidden',first);
+  $('#regBtn').textContent=first?'建立管理員帳號':'建立帳號';
+  setAuthMode(first?'register':'login');
+}
+$('#tabLogin').onclick=()=>setAuthMode('login');
+$('#tabReg').onclick=()=>setAuthMode('register');
+
+$('#regForm').addEventListener('submit',async e=>{
+  e.preventDefault();
+  const u=$('#regUser').value.trim(),nick=($('#regNick').value.trim()||u).slice(0,30);
+  const p=$('#regPass').value,p2=$('#regPass2').value;
+  if(!validUsername(u))return toast('帳號需 1～30 字，不可包含空白');
+  if(p.length<MIN_PW)return toast('密碼至少 '+MIN_PW+' 個字元');
+  if(p!==p2)return toast('兩次密碼不一致');
+  const first=isFirstRun();
+  let accs=first?[]:getAccounts();
+  if(accs.some(a=>a.username===u))return toast('此帳號已被註冊');
+  if(accs.filter(a=>!a.disabled).length>=MAX_USERS)return toast('帳號數已達上限（'+MAX_USERS+' 人）');
+  const btn=$('#regBtn');btn.disabled=true;btn.textContent='建立中…';
+  try{
+    const salt=crypto.getRandomValues(new Uint8Array(16));
+    const key=await deriveKey(p,salt,KDF_ITER);
+    const vrec=await sealVault(emptyDB(),key,salt,KDF_ITER);
+    writeRaw(vaultKey(u),vrec);                     // 先寫加密資料
+    accs.push({username:u,nickname:nick,role:first?'admin':'user',disabled:false,created:Date.now()});
+    try{saveAccounts(accs);}catch(err){localStorage.removeItem(vaultKey(u));throw err;}
+    $('#regPass').value='';$('#regPass2').value='';
+    toast(first?'管理員帳號建立成功，請登入':'註冊成功，請登入');
+    refreshAuthMode();setAuthMode('login');$('#loginUser').value=u;$('#loginPass').focus();
+  }catch(err){toast(saveErrMsg(err),4000);}
+  finally{btn.disabled=false;btn.textContent=isFirstRun()?'建立管理員帳號':'建立帳號';}
+});
+
+/* 解鎖：用輸入的密碼解開加密資料，解得開才算登入成功；解不開「絕對不會」給空白資料庫 */
+async function unlock(u,pw){
+  const rec=getAccounts().find(a=>a.username===u);
+  if(!rec)throw new Error('帳號或密碼錯誤');
+  if(rec.disabled)throw new Error('此帳號已被停用');
+  const store=readRaw(vaultKey(u),null);
+  if(store&&store.data&&store.iv){
+    const iter=checkIter(store.iter||LEGACY_ITER);
+    const salts=[store.salt,rec.salt].filter((s,i,a)=>s&&a.indexOf(s)===i); // 先用資料本身記錄的 salt，舊版不一致時再試帳號上的
+    for(const s of salts){
+      try{
+        const salt=unb64(s),key=await deriveKey(pw,salt,iter);
+        const db=await decryptJSON(key,store.iv,store.data);
+        return {rec,db,key,salt,iter,upgrade:(store.ver!==VAULT_VER||iter<KDF_ITER||s!==store.salt)};
+      }catch(e){}
+    }
+    throw new Error('帳號或密碼錯誤');
+  }
+  if(rec.pass){ // v1.1 從未存過資料的帳號
+    if(await legacyHash(u,pw)!==rec.pass)throw new Error('帳號或密碼錯誤');
+    return {rec,db:{},upgrade:true};
+  }
+  throw new Error('此帳號尚未設定密碼，請管理員重置');
+}
+
+let FAILS=0,LOCK_UNTIL=0;
+$('#loginForm').addEventListener('submit',async e=>{
+  e.preventDefault();
+  if(Date.now()<LOCK_UNTIL)return toast('嘗試次數過多，請 '+Math.ceil((LOCK_UNTIL-Date.now())/1000)+' 秒後再試');
+  const u=$('#loginUser').value.trim(),p=$('#loginPass').value;
+  const btn=$('#loginBtn');btn.disabled=true;btn.textContent='驗證中…';
+  try{
+    const r=await unlock(u,p);
+    let db=normalizeDB(r.db);
+    // v1.1 未加密的頭像、分類名稱 → 搬進加密資料
+    const oldAv=localStorage.getItem('avatar:'+u),oldCn=readRaw('catnames:'+u,null);
+    if(oldAv&&!db.avatar)db.avatar=safeAvatar(oldAv);
+    if(oldCn&&typeof oldCn==='object')CATS.forEach(c=>{const v=oldCn[c.key];if(typeof v==='string'&&v.trim()&&!db.catNames[c.key])db.catNames[c.key]=v.trim().slice(0,30);});
+    CURRENT={username:u,nickname:r.rec.nickname||u,role:cleanRole(r.rec.role)};
+    DB=db;
+    if(r.upgrade||oldAv||oldCn||r.rec.pass||r.rec.salt){
+      // 升級成新格式：新 salt、60 萬次 PBKDF2，並刪掉舊的弱雜湊
+      btn.textContent='升級加密中…';
+      const salt=crypto.getRandomValues(new Uint8Array(16));
+      const key=await deriveKey(p,salt,KDF_ITER);
+      try{
+        writeRaw(vaultKey(u),await sealVault(DB,key,salt,KDF_ITER));
+        SALT=salt;ENC_KEY=key;ITER=KDF_ITER;
+        const accs=getAccounts(),a=accs.find(x=>x.username===u);
+        if(a){delete a.pass;delete a.salt;saveAccounts(accs);}
+        localStorage.removeItem('avatar:'+u);localStorage.removeItem('catnames:'+u);
+      }catch(err){
+        // 升級沒寫進去也沒關係：繼續用舊金鑰，下次登入再升級
+        if(r.key){SALT=r.salt;ENC_KEY=r.key;ITER=r.iter;}else{SALT=salt;ENC_KEY=key;ITER=KDF_ITER;}
+        toast(saveErrMsg(err),4000);
       }
-    });
+    }else{SALT=r.salt;ENC_KEY=r.key;ITER=r.iter;}
+    FAILS=0;$('#loginPass').value='';
+    try{sessionStorage.setItem('lastUser',u);}catch(_){}
+    enterApp();
+    if(p==='admin123'||p.length<MIN_PW){
+      setTimeout(()=>{toast('⚠️ 你的登入密碼太弱，請立即更改（至少 '+MIN_PW+' 字元）',5000);openPwdModalSelf();},600);
+    }
+  }catch(err){
+    FAILS++;
+    if(FAILS>=3)LOCK_UNTIL=Date.now()+Math.min(60,Math.pow(2,FAILS-2))*1000;
+    toast(err.message||'登入失敗');
+  }finally{btn.disabled=false;btn.textContent='進入系統';}
+});
 
-    // 啟動應用程式
-    initFirebaseApp();
-  </script>
+function fmtTime(t){const d=new Date(t);if(isNaN(d))return'—';const z=n=>String(n).padStart(2,'0');return d.getFullYear()+'/'+z(d.getMonth()+1)+'/'+z(d.getDate())+' '+z(d.getHours())+':'+z(d.getMinutes());}
+function renderUpdated(){
+  const el=$('#dataUpdated');if(!el)return;
+  el.textContent=DB&&DB.updatedAt?fmtTime(DB.updatedAt):'尚無紀錄（下次儲存後顯示）';
+  $('#appUpdated').textContent=fmtTime(document.lastModified); // 讀取網頁檔案的存檔時間（本機檔案取檔案修改時間，網站取伺服器的 Last-Modified）
+}
+function enterApp(){
+  $('#authLayer').classList.add('hidden');
+  $('#app').classList.remove('hidden');
+  $('#displayName').textContent=CURRENT.nickname||CURRENT.username;
+  $('#roleBadge').textContent=CURRENT.role==='admin'?'ADMIN':'USER';
+  $('#loginTime').textContent='已登入 · '+new Date().toLocaleString('zh-TW')+' · 閒置 '+IDLE_LOCK_MIN+' 分鐘自動上鎖';
+  $('#btnAdmin').classList.toggle('hidden',CURRENT.role!=='admin');
+  renderAvatar();buildTabs();selectTab(CURCAT);renderUpdated();resetIdle();
+}
+
+/* ===================== 上鎖 / 閒置自動上鎖 / 多分頁同步 ===================== */
+function lockNow(msg){
+  try{if(msg)sessionStorage.setItem('lockMsg',msg);}catch(_){}
+  location.reload(); // 重新載入 = 清空記憶體中的金鑰與解密資料
+}
+$('#btnLogout').onclick=()=>lockNow('已登出並上鎖');
+let IDLE_T=null,HIDDEN_AT=0;
+function resetIdle(){if(!CURRENT)return;clearTimeout(IDLE_T);IDLE_T=setTimeout(()=>lockNow('閒置超過 '+IDLE_LOCK_MIN+' 分鐘，已自動上鎖'),IDLE_LOCK_MIN*60000);}
+['pointerdown','keydown','wheel','touchstart','mousemove'].forEach(ev=>document.addEventListener(ev,resetIdle,{passive:true}));
+document.addEventListener('visibilitychange',()=>{
+  if(!CURRENT)return;
+  if(document.hidden)HIDDEN_AT=Date.now();
+  else if(HIDDEN_AT&&Date.now()-HIDDEN_AT>IDLE_LOCK_MIN*60000)lockNow('離開超過 '+IDLE_LOCK_MIN+' 分鐘，已自動上鎖');
+});
+window.addEventListener('storage',async e=>{
+  if(!CURRENT)return;
+  if(e.key===K_ACCOUNTS||e.key===null){
+    const a=getAccounts().find(x=>x.username===CURRENT.username);
+    if(!a||a.disabled)return lockNow('帳號已在其他分頁被停用或刪除');
+  }
+  if(e.key===vaultKey(CURRENT.username)){
+    const s=readRaw(e.key,null);
+    if(!s||!s.data)return lockNow('資料已在其他分頁被清除，請重新登入');
+    if(s.salt!==b64(SALT)||+s.iter!==ITER)return lockNow('密碼已在其他分頁更改，請重新登入');
+    try{DB=normalizeDB(await decryptJSON(ENC_KEY,s.iv,s.data));renderAvatar();buildTabs();selectTab(CURCAT);renderUpdated();toast('已同步其他分頁的變更');}
+    catch(_){lockNow('資料已在其他分頁變更，請重新登入');}
+  }
+});
+
+/* ===================== 頭像（縮小後加密存放） ===================== */
+function renderAvatar(){
+  const box=$('#avatarBox');box.textContent='';
+  if(DB.avatar){const img=document.createElement('img');img.src=DB.avatar;img.alt='頭像';box.appendChild(img);}
+  else box.textContent=(CURRENT.nickname||CURRENT.username).slice(0,1).toUpperCase();
+}
+function resizeImage(file,size){
+  return new Promise((res,rej)=>{
+    const url=URL.createObjectURL(file),img=new Image();
+    img.onload=()=>{
+      const s=Math.min(img.naturalWidth,img.naturalHeight),c=document.createElement('canvas');
+      c.width=c.height=size;
+      c.getContext('2d').drawImage(img,(img.naturalWidth-s)/2,(img.naturalHeight-s)/2,s,s,0,0,size,size);
+      URL.revokeObjectURL(url);res(c.toDataURL('image/jpeg',0.85));
+    };
+    img.onerror=()=>{URL.revokeObjectURL(url);rej(new Error('無法讀取這張圖片'));};
+    img.src=url;
+  });
+}
+const avBox=document.querySelector('.avatar-box');
+avBox.onclick=()=>$('#avatarInput').click();
+avBox.onkeydown=e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();$('#avatarInput').click();}};
+$('#avatarInput').addEventListener('change',async e=>{
+  const f=e.target.files[0];e.target.value='';if(!f)return;
+  if(f.size>15*1024*1024)return toast('圖片過大（限 15MB）');
+  try{
+    const data=safeAvatar(await resizeImage(f,160)); // 縮成 160×160，原本 2MB 的圖會吃光瀏覽器儲存空間
+    if(!data)return toast('不支援的圖片格式');
+    if(await commit(()=>{DB.avatar=data;},'頭像已更新'))renderAvatar();
+  }catch(err){toast(err.message);}
+});
+
+/* ===================== 分類分頁（自訂名稱也加密存放） ===================== */
+function catName(c){return (DB.catNames&&DB.catNames[c.key])||c.name;}
+const ALL_KEY='all';
+function isCatKey(k){return TABS().some(c=>c.key===k);}
+function catOptions(sel){return TABS().map(c=>'<option value="'+c.key+'"'+(c.key===sel?' selected':'')+'>'+esc(catName(c))+'</option>').join('');}
+/* 依 id 在所有分類裡找資料，回傳 {key, it} */
+function findItem(id){for(const c of TABS()){const it=DB[c.key].find(x=>x.id===id);if(it)return {key:c.key,it};}return null;}
+
+function buildTabs(){
+  const bar=$('#tabbar');bar.textContent='';
+  // 「全部」分頁：列出所有分類的資料
+  const ab=document.createElement('button');
+  ab.type='button';ab.dataset.key=ALL_KEY;ab.title='顯示所有分類的資料';
+  const as=document.createElement('span');as.className='tabname';as.textContent='全部';
+  ab.appendChild(as);
+  if(CURCAT===ALL_KEY)ab.classList.add('active');
+  ab.onclick=()=>selectTab(ALL_KEY);
+  bar.appendChild(ab);
+  TABS().forEach(c=>{
+    const b=document.createElement('button');
+    b.type='button';b.dataset.key=c.key;b.title='點此切換分類 · 雙擊分類名稱可重新命名';b.className='cat-tab '+palOf(c.key);
+    const dot=document.createElement('i');dot.className='tdot';b.appendChild(dot);
+    const sp=document.createElement('span');
+    sp.className='tabname';sp.textContent=catName(c);sp.setAttribute('contenteditable','false');
+    b.appendChild(sp);
+    if(c.key===CURCAT)b.classList.add('active');
+    b.onclick=()=>{if(sp.getAttribute('contenteditable')==='true')return;selectTab(c.key);};
+    sp.ondblclick=e=>{
+      e.preventDefault();e.stopPropagation();
+      sp.setAttribute('contenteditable','true');sp.focus();
+      const sel=window.getSelection(),r=document.createRange();r.selectNodeContents(sp);sel.removeAllRanges();sel.addRange(r);
+    };
+    sp.onkeydown=e=>{
+      if(e.key==='Enter'){e.preventDefault();sp.blur();}
+      else if(e.key==='Escape'){e.preventDefault();e.stopPropagation();sp.textContent=catName(c);sp.setAttribute('contenteditable','false');sp.blur();}
+    };
+    sp.onpaste=e=>{e.preventDefault();document.execCommand('insertText',false,(e.clipboardData.getData('text/plain')||'').replace(/\s+/g,' '));};
+    sp.onblur=async()=>{
+      if(sp.getAttribute('contenteditable')!=='true')return;
+      sp.setAttribute('contenteditable','false');
+      let v=(sp.textContent||'').replace(/\s+/g,' ').trim().slice(0,30);
+      if(!v)v=catName(c);
+      sp.textContent=v;
+      if(v===catName(c))return;
+      if(await commit(()=>{DB.catNames[c.key]=v;},'分類名稱已更新：'+v)){if(c.key===CURCAT)$('#curCatName').textContent=v;if(CURCAT===ALL_KEY)renderCat();}
+      else sp.textContent=catName(c);
+    };
+    const x=document.createElement('span');
+    x.className='tab-x';x.setAttribute('role','button');x.tabIndex=0;x.title='關閉此分頁';x.setAttribute('aria-label','關閉分頁「'+catName(c)+'」');x.textContent='×';
+    x.onclick=e=>{e.preventDefault();e.stopPropagation();closeTab(c.key);};
+    x.onkeydown=e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();e.stopPropagation();closeTab(c.key);}};
+    b.appendChild(x);
+    bar.appendChild(b);
+  });
+  if(TABS().length<MAX_TABS){
+    const nb=document.createElement('button');
+    nb.type='button';nb.className='tab-add';nb.title='新增分頁';nb.setAttribute('aria-label','新增分頁');nb.textContent='＋';
+    nb.onclick=addTab;
+    bar.appendChild(nb);
+  }
+  const cb=document.createElement('button');
+  cb.type='button';cb.dataset.key='cal';cb.title='行事曆';
+  const cs=document.createElement('span');cs.className='tabname';cs.textContent='行事曆';
+  cb.appendChild(cs);
+  if(CURCAT==='cal')cb.classList.add('active');
+  cb.onclick=()=>selectTab('cal');
+  bar.appendChild(cb);
+}
+async function addTab(){
+  if(TABS().length>=MAX_TABS)return toast('最多 '+MAX_TABS+' 個分頁');
+  const key=newTabKey(),name='新分頁 '+(TABS().length+1);
+  if(await commit(()=>{if(!Array.isArray(DB.tabs))DB.tabs=TABS().map(c=>({key:c.key,name:c.name}));DB.tabs.push({key,name});DB[key]=[];},'已新增分頁（雙擊名稱可改名）')){
+    buildTabs();selectTab(key);
+    const sp=document.querySelector('#tabbar button[data-key="'+key+'"] .tabname');
+    if(sp)sp.dispatchEvent(new MouseEvent('dblclick',{bubbles:true}));
+  }
+}
+async function closeTab(key){
+  const c=TABS().find(x=>x.key===key);if(!c)return;
+  if(TABS().length<=1)return toast('至少要保留一個分頁');
+  const n=(DB[key]||[]).length,nm=catName(c);
+  const msg=n?'確定關閉分頁「'+nm+'」？\n\n⚠️ 裡面的 '+n+' 筆帳密會一起刪除，無法復原。\n（若要保留，請先把資料編輯移到其他分頁，或先做一次加密備份）':'確定關閉分頁「'+nm+'」？';
+  if(!confirm(msg))return;
+  if(n&&!confirm('最後確認：刪除「'+nm+'」及其中 '+n+' 筆資料？'))return;
+  if(await commit(()=>{DB.tabs=TABS().filter(x=>x.key!==key).map(x=>({key:x.key,name:x.name}));delete DB[key];delete DB.catNames[key];},'已關閉分頁：'+nm)){
+    buildTabs();selectTab(CURCAT===key?ALL_KEY:CURCAT);
+  }
+}
+function selectTab(key){
+  if(key!=='cal'&&key!==ALL_KEY&&!isCatKey(key))key=ALL_KEY;
+  CURCAT=key;
+  Array.prototype.forEach.call($('#tabbar').children,x=>{
+    const on=x.dataset.key===key;x.classList.toggle('active',on);
+    if(on){const bar=$('#tabbar');if(bar.scrollWidth>bar.clientWidth)bar.scrollTo({left:x.offsetLeft-bar.clientWidth/2+x.offsetWidth/2,behavior:'smooth'});}
+  });
+  const tp=$('#tablePanel'),cp=$('#calPanel');
+  if(key==='cal'){tp.classList.add('hidden');cp.classList.remove('hidden');renderCalendar();}
+  else{cp.classList.add('hidden');tp.classList.remove('hidden');renderCat();}
+}
+function currentList(){return isCatKey(CURCAT)?DB[CURCAT]:[];}
+
+/* ===================== 帳密表格 ===================== */
+const MASK='&#8226;&#8226;&#8226;&#8226;&#8226;&#8226;&#8226;&#8226;';
+function renderCat(){
+  if(CURCAT==='cal'){renderCalendar();return;}
+  const isAll=CURCAT===ALL_KEY;
+  $('#curCatName').textContent=isAll?'全部':catName(TABS().find(c=>c.key===CURCAT));
+  // 「全部」分頁時，新增列多一個「分類」下拉選單
+  const catField=$('#inCatField');
+  catField.classList.toggle('hidden',!isAll);
+  $('#addForm').classList.toggle('with-cat',isAll);
+  if(isAll){const keep=$('#inCat').value;$('#inCat').innerHTML=catOptions(isCatKey(keep)?keep:firstKey());}
+  const all=isAll?TABS().flatMap(c=>DB[c.key].map(it=>({it,c}))):currentList().map(it=>({it,c:null}));
+  const q=$('#searchInput').value.trim().toLowerCase();
+  // 搜尋不比對密碼欄（避免旁人用搜尋框試出密碼）；「全部」分頁也可以搜尋分類名稱
+  const list=q?all.filter(({it,c})=>[it.name,it.url,it.account,it.remark,c?catName(c):''].some(v=>String(v||'').toLowerCase().includes(q))):all;
+  $('#catCount').textContent=(q?list.length+' / ':'')+all.length+' 筆';
+  const tb=$('#tbody');
+  if(!list.length){tb.innerHTML='<tr><td colspan="6" class="empty">'+(q?'找不到符合的資料':(isAll?'目前還沒有任何資料，請於上方新增':'此分類暫無資料，請於上方新增'))+'</td></tr>';return;}
+  // 密碼不再放進網頁原始碼裡，按「顯示」時才從記憶體取出
+  tb.innerHTML=list.map(({it,c},i)=>'<tr class="'+(c?palOf(c.key):'pal'+(i%PAL_N))+'" data-id="'+esc(it.id)+'">'
+    +'<td>'+(c?'<span class="cat-pill '+palOf(c.key)+'" data-go="'+c.key+'" title="切換到「'+esc(catName(c))+'」分類">'+esc(catName(c))+'</span>':'')+'<b>'+esc(it.name)+'</b></td>'
+    +'<td data-label="網址"'+(it.url?'':' class="is-empty"')+'><span class="u">'+esc(it.url)+'</span></td>'
+    +'<td data-label="帳號"'+(it.account?'':' class="is-empty"')+'>'+esc(it.account)+'</td>'
+    +'<td data-label="密碼"><span class="pw">'+MASK+'</span></td>'
+    +'<td data-label="備註" class="rm'+(it.remark?'':' is-empty')+'" title="'+esc(it.remark)+'">'+esc(it.remark)+'</td>'
+    +'<td><div class="ops">'
+    +'<button type="button" class="opb copyacc" data-a="ca" title="複製帳號">複製帳號</button>'
+    +'<button type="button" class="opb copypw" data-a="cp" title="複製密碼（'+CLIP_CLEAR_SEC+' 秒後自動清除）">複製密碼</button>'
+    +'<button type="button" class="opb" data-a="tg" title="顯示/隱藏密碼">顯示</button>'
+    +'<button type="button" class="opb" data-a="ed" title="編輯">編輯</button>'
+    +'<button type="button" class="opb del" data-a="de" title="刪除">刪除</button>'
+    +'</div></td></tr>').join('');
+}
+$('#searchInput').addEventListener('input',renderCat);
+$('#addToggle').addEventListener('click',()=>{
+  const open=$('#addForm').classList.toggle('open');
+  $('#addToggle').setAttribute('aria-expanded',open?'true':'false');
+  $('#addToggle').textContent=open?'收起':'＋ 新增一筆';
+  if(open)setTimeout(()=>{(CURCAT===ALL_KEY?$('#inCat'):$('#inName')).focus();},50);
+});
+
+$('#addForm').addEventListener('submit',async e=>{
+  e.preventDefault();
+  const name=$('#inName').value.trim();
+  if(!name){$('#inName').focus();return toast('名稱不可為空');}
+  const item={id:uid(),name:name.slice(0,200),url:$('#inUrl').value.trim().slice(0,2000),account:$('#inAccount').value.trim().slice(0,300),password:$('#inPassword').value.slice(0,1000),remark:$('#inRemark').value.trim().slice(0,5000)};
+  const key=CURCAT===ALL_KEY?$('#inCat').value:CURCAT;
+  if(!isCatKey(key))return toast('請選擇分類');
+  if(await commit(()=>{DB[key].push(item);},'已新增：'+name+(CURCAT===ALL_KEY?'（'+catName(TABS().find(c=>c.key===key))+'）':''))){
+    ['inName','inUrl','inAccount','inPassword','inRemark'].forEach(i=>$('#'+i).value='');
+    $('#inPassword').type='password';
+    renderCat();$('#inName').focus();
+  }
+});
+
+let EDIT_ID=null;
+function openEdit(it){
+  EDIT_ID=it.id;
+  const f=findItem(it.id);
+  $('#eCat').innerHTML=catOptions(f?f.key:firstKey());
+  $('#eName').value=it.name;$('#eUrl').value=it.url;$('#eAccount').value=it.account;
+  $('#ePassword').value=it.password;$('#ePassword').type='password';
+  $('#editModal').querySelector('[data-eye="ePassword"]').textContent='顯示';
+  $('#eRemark').value=it.remark;
+  $('#editModal').classList.remove('hidden');setTimeout(()=>$('#eName').focus(),50);
+}
+$('#closeEdit').onclick=closeEdit;
+$('#editForm').addEventListener('submit',async e=>{
+  e.preventDefault();
+  const f=findItem(EDIT_ID);if(!f)return closeEdit();
+  const it=f.it,newKey=isCatKey($('#eCat').value)?$('#eCat').value:f.key;
+  const name=$('#eName').value.trim();if(!name)return toast('名稱不可為空');
+  const upd={name:name.slice(0,200),url:$('#eUrl').value.trim().slice(0,2000),account:$('#eAccount').value.trim().slice(0,300),password:$('#ePassword').value.slice(0,1000),remark:$('#eRemark').value.trim().slice(0,5000)};
+  const moved=newKey!==f.key;
+  if(await commit(()=>{
+    Object.assign(it,upd);
+    if(moved){DB[f.key]=DB[f.key].filter(x=>x.id!==it.id);DB[newKey].push(it);} // 換分類：搬到新分類
+  },moved?'已更新，並移到「'+catName(TABS().find(c=>c.key===newKey))+'」':'已更新')){closeEdit();renderCat();}
+});
+
+$('#tbody').addEventListener('click',async e=>{
+  const pill=e.target.closest('.cat-pill[data-go]');
+  if(pill){selectTab(pill.dataset.go);return;}
+  const btn=e.target.closest('button');if(!btn)return;
+  const tr=btn.closest('tr'),id=tr.dataset.id,a=btn.dataset.a;
+  const f=findItem(id);if(!f)return;
+  const it=f.it;
+  if(a==='ca'){if(await copyText(it.account||''))toast('已複製帳號');}
+  else if(a==='cp'){if(await copyText(it.password||'',true))toast('已複製密碼（'+CLIP_CLEAR_SEC+' 秒後自動清除剪貼簿）',2600);}
+  else if(a==='tg'){
+    const sp=tr.querySelector('.pw');
+    if(sp.dataset.show==='1'){sp.innerHTML=MASK;sp.dataset.show='';btn.textContent='顯示';}
+    else{sp.textContent=it.password||'(空)';sp.dataset.show='1';btn.textContent='隱藏';}
+  }
+  else if(a==='ed')openEdit(it);
+  else if(a==='de'){
+    if(!confirm('確定刪除「'+it.name+'」？'))return;
+    if(await commit(()=>{DB[f.key]=DB[f.key].filter(x=>x.id!==id);},'已刪除'))renderCat();
+  }
+});
+
+/* 複製；密碼會在 30 秒後自動清除剪貼簿 */
+let CLIP_T=null,CLIP_PENDING=false;
+function fallbackCopy(t){const a=document.createElement('textarea');a.value=t;a.setAttribute('readonly','');a.style.cssText='position:fixed;top:-1000px;opacity:0';document.body.appendChild(a);a.select();let ok=false;try{ok=document.execCommand('copy');}catch(e){}a.remove();return ok;}
+async function copyText(t,secret){
+  let ok=false;
+  if(navigator.clipboard&&window.isSecureContext){try{await navigator.clipboard.writeText(t);ok=true;}catch(e){ok=fallbackCopy(t);}}
+  else ok=fallbackCopy(t);
+  if(!ok){toast('複製失敗，請手動選取');return false;}
+  clearTimeout(CLIP_T);CLIP_PENDING=false;
+  if(secret)CLIP_T=setTimeout(clearClipboard,CLIP_CLEAR_SEC*1000);
+  return true;
+}
+function clearClipboard(){
+  if(!document.hasFocus()){CLIP_PENDING=true;return;} // 瀏覽器只允許在視窗有焦點時寫入剪貼簿
+  CLIP_PENDING=false;
+  if(navigator.clipboard&&window.isSecureContext)navigator.clipboard.writeText('').catch(()=>{});else fallbackCopy(' ');
+}
+window.addEventListener('focus',()=>{if(CLIP_PENDING)clearClipboard();});
+
+/* ===================== 個人備份 / 回復 / 清除 ===================== */
+$('#btnBackup').onclick=async()=>{
+  const pw=await askPassword({title:'設定備份密碼',desc:'回復時需要輸入同一組密碼，請務必記住。\n建議不要跟登入密碼相同。',confirm:true,min:MIN_PW});
+  if(!pw)return toast('已取消備份');
+  try{
+    const salt=crypto.getRandomValues(new Uint8Array(16)),key=await deriveKey(pw,salt,KDF_ITER);
+    const {iv,data}=await encryptJSON(key,{user:CURRENT.username,exportAt:new Date().toISOString(),db:DB});
+    saveTextFile('vault_'+CURRENT.username.replace(/[^\w一-鿿-]/g,'_')+'_'+Date.now()+'.json',
+      JSON.stringify({type:BK_TYPE,ver:VAULT_VER,algo:'AES-256-GCM',kdf:'PBKDF2-SHA256',iter:KDF_ITER,salt:b64(salt),iv,data},null,2));
+    toast('加密備份檔已下載');
+  }catch(err){toast('備份失敗：'+err.message);}
+};
+
+async function readBackupFile(f,expectType){
+  if(f.size>50*1024*1024)throw new Error('檔案過大');
+  let blob;try{blob=JSON.parse(await f.text());}catch(e){throw new Error('不是有效的備份檔');}
+  if(!blob||typeof blob!=='object'||!blob.salt||!blob.iv||!blob.data)throw new Error('不是有效的備份檔');
+  if(expectType===FULL_BK_TYPE&&blob.type!==FULL_BK_TYPE)throw new Error('這不是「完整備份」檔');
+  if(expectType===BK_TYPE&&blob.type===FULL_BK_TYPE)throw new Error('這是「系統完整備份」檔，請到管理後台回復');
+  return blob;
+}
+
+$('#restoreInput').addEventListener('change',async e=>{
+  const f=e.target.files[0];e.target.value='';if(!f)return;
+  try{
+    const blob=await readBackupFile(f,BK_TYPE);
+    const pw=await askPassword({title:'輸入備份檔的解鎖密碼',desc:'檔案：'+f.name});
+    if(!pw)return toast('已取消');
+    toast('解密中…');
+    let obj;
+    try{obj=await decryptJSON(await deriveKey(pw,unb64(blob.salt),checkIter(blob.iter||LEGACY_ITER)),blob.iv,blob.data);}
+    catch(err){throw new Error('解密失敗：密碼錯誤或檔案損毀');}
+    if(!obj||!obj.db||typeof obj.db!=='object')throw new Error('備份檔內容不正確');
+    const nd=normalizeDB(obj.db);
+    const cnt=nd.tabs.reduce((n,c)=>n+nd[c.key].length,0),cc=Object.keys(nd.cal).reduce((n,k)=>n+nd.cal[k].length,0);
+    if(!confirm('備份檔內有 '+cnt+' 筆帳密、'+cc+' 筆行事曆'+(obj.user?'（原帳號：'+obj.user+'）':'')+'。\n回復會「覆蓋」目前帳號的所有資料，確定繼續？'))return toast('已取消');
+    if(!nd.avatar)nd.avatar=DB.avatar;                    // 舊版備份沒有頭像、分類名稱 → 保留現有的
+    nd.tabs.forEach(c=>{if(!nd.catNames[c.key]&&DB.catNames[c.key])nd.catNames[c.key]=DB.catNames[c.key];});
+    if(await commit(()=>{DB=nd;},'資料已回復並寫入本地資料庫')){renderAvatar();buildTabs();selectTab(CURCAT);}
+  }catch(err){toast(err.message||'回復失敗',3500);}
+});
+
+$('#btnClear').onclick=async()=>{
+  if(!confirm('將清空【'+CURRENT.username+'】所有分類資料與行事曆，確定？\n（建議先產生一份加密備份）'))return;
+  if(await commit(()=>{const keep={avatar:DB.avatar,catNames:DB.catNames};DB=emptyDB(DB.tabs);Object.assign(DB,keep);},'已清除'))selectTab(CURCAT);
+};
+
+/* ===================== 未加密匯出 / 匯入（明碼檔） ===================== */
+const PLAIN_TYPE='SKY-VAULT-PLAIN';
+async function verifyLoginPassword(pw){
+  const s=readRaw(vaultKey(CURRENT.username),null);
+  if(!s||!s.data)return true;
+  try{await decryptJSON(await deriveKey(pw,SALT,ITER),s.iv,s.data);return true;}catch(_){return false;}
+}
+async function confirmPlainExport(){
+  if(!confirm('⚠️ 即將匯出「沒有加密」的明碼檔，任何拿到檔案的人都能看到你所有的密碼。\n\n確定要繼續嗎？'))return false;
+  const pw=await askPassword({title:'輸入登入密碼確認',desc:'為了防止別人趁你離開座位時匯出密碼，請再輸入一次登入密碼。',label:'登入密碼'});
+  if(!pw)return false;
+  if(!(await verifyLoginPassword(pw))){toast('登入密碼錯誤');return false;}
+  return true;
+}
+function csvCell(v){v=String(v==null?'':v);return /[",\r\n]/.test(v)||/^\s|\s$/.test(v)?'"'+v.replace(/"/g,'""')+'"':v;}
+function fileStamp(){const d=new Date(),p=n=>String(n).padStart(2,'0');return d.getFullYear()+p(d.getMonth()+1)+p(d.getDate())+'_'+p(d.getHours())+p(d.getMinutes());}
+function safeFileUser(){return CURRENT.username.replace(/[^\w一-鿿-]/g,'_');}
+
+$('#btnExportCsv').onclick=async()=>{
+  if(!(await confirmPlainExport()))return;
+  const rows=[['分類','名稱','網址','帳號','密碼','備註']];
+  TABS().forEach(c=>DB[c.key].forEach(it=>rows.push([catName(c),it.name,it.url,it.account,it.password,it.remark])));
+  if(rows.length===1)return toast('目前沒有帳密資料可以匯出');
+  const csv='﻿'+rows.map(r=>r.map(csvCell).join(',')).join('\r\n');
+  const url=URL.createObjectURL(new Blob([csv],{type:'text/csv;charset=utf-8'}));
+  const a=document.createElement('a');a.href=url;a.download='明碼_帳密_'+safeFileUser()+'_'+fileStamp()+'.csv';document.body.appendChild(a);a.click();
+  setTimeout(()=>{a.remove();URL.revokeObjectURL(url);},1500);
+  toast('已匯出 '+(rows.length-1)+' 筆（明碼 CSV，用完請刪除）',3500);
+};
+$('#btnExportJson').onclick=async()=>{
+  if(!(await confirmPlainExport()))return;
+  saveTextFile('明碼_完整資料_'+safeFileUser()+'_'+fileStamp()+'.json',
+    JSON.stringify({type:PLAIN_TYPE,ver:VAULT_VER,note:'未加密明碼檔，請妥善保管、用完刪除',user:CURRENT.username,exportAt:new Date().toISOString(),db:DB},null,2));
+  toast('已匯出明碼 JSON（含行事曆、頭像，用完請刪除）',3500);
+};
+
+/* CSV 解析：支援雙引號、欄位內換行、BOM */
+function parseCSV(text){
+  text=text.replace(/^﻿/,'');
+  const delim=(text.split(/\r?\n/,1)[0].split('\t').length>text.split(/\r?\n/,1)[0].split(',').length)?'\t':',';
+  const rows=[];let row=[],cell='',q=false;
+  for(let i=0;i<text.length;i++){
+    const ch=text[i];
+    if(q){
+      if(ch==='"'){if(text[i+1]==='"'){cell+='"';i++;}else q=false;}
+      else cell+=ch;
+    }else if(ch==='"'&&cell==='')q=true;
+    else if(ch===delim){row.push(cell);cell='';}
+    else if(ch==='\n'||ch==='\r'){
+      if(ch==='\r'&&text[i+1]==='\n')i++;
+      row.push(cell);cell='';
+      if(row.some(c=>c.trim()!==''))rows.push(row);
+      row=[];
+    }else cell+=ch;
+  }
+  row.push(cell);if(row.some(c=>c.trim()!==''))rows.push(row);
+  return rows;
+}
+const CSV_COLS={
+  cat:['分類','類別','category','folder','group','grouping'],
+  name:['名稱','name','title','標題','網站名稱'],
+  url:['網址','網址 / ip','url','login_uri','website','site','網站'],
+  account:['帳號','使用者名稱','username','login_username','user','email','login','帳戶'],
+  password:['密碼','password','login_password','pass'],
+  remark:['備註','note','notes','remark','comment','extra','說明']
+};
+function csvToItems(rows){
+  if(rows.length<2)throw new Error('CSV 沒有資料');
+  const head=rows[0].map(h=>String(h).trim().toLowerCase());
+  const idx={};
+  Object.keys(CSV_COLS).forEach(k=>{idx[k]=head.findIndex(h=>CSV_COLS[k].includes(h));});
+  if(idx.password<0&&idx.account<0)throw new Error('認不出 CSV 的欄位（第一列需要有「帳號」或「密碼」等標題）');
+  const out=[];
+  for(let r=1;r<rows.length&&out.length<5000;r++){
+    const c=rows[r],get=k=>idx[k]>=0?String(c[idx[k]]==null?'':c[idx[k]]).trim():'';
+    let name=get('name'),url=get('url');
+    const account=get('account'),password=idx.password>=0?String(c[idx.password]==null?'':c[idx.password]):'',remark=get('remark');
+    if(!name&&url){try{name=new URL(/^https?:/i.test(url)?url:'https://'+url).hostname.replace(/^www\./,'');}catch(_){name=url;}}
+    if(!name&&!account&&!password)continue;
+    out.push({cat:get('cat'),item:{id:uid(),name:(name||account||'(未命名)').slice(0,200),url:url.slice(0,2000),account:account.slice(0,300),password:password.slice(0,1000),remark:remark.slice(0,5000)}});
+  }
+  return out;
+}
+function catKeyFromName(n){
+  if(!n)return null;
+  const v=n.trim().toLowerCase();
+  const c=TABS().find(c=>c.key===v||catName(c).toLowerCase()===v||c.name.toLowerCase()===v);
+  return c?c.key:null;
+}
+
+let PENDING_IMPORT=null;
+$('#plainImportInput').addEventListener('change',async e=>{
+  const f=e.target.files[0];e.target.value='';if(!f)return;
+  try{
+    if(f.size>10*1024*1024)throw new Error('檔案過大（上限 10MB）');
+    const text=await f.text();
+    let imp={rows:[],db:null,src:''};
+    const trimmed=text.replace(/^﻿/,'').trim();
+    if(trimmed.startsWith('{')||/\.json$/i.test(f.name)){
+      let o;try{o=JSON.parse(trimmed);}catch(_){throw new Error('JSON 格式不正確');}
+      if(o&&o.iv&&o.data&&o.salt)throw new Error('這是「加密」備份檔，請用上方的「個人資料回復」匯入');
+      const raw=(o&&o.db&&typeof o.db==='object')?o.db:o;
+      if(!raw||typeof raw!=='object'||!(Array.isArray(raw.tabs)||DEFAULT_CATS.some(c=>Array.isArray(raw[c.key]))||raw.cal))throw new Error('看不出這是本系統的資料檔');
+      imp.db=normalizeDB(raw);imp.src='JSON';
+    }else{
+      imp.rows=csvToItems(parseCSV(text));imp.src='CSV';
+    }
+    const nItems=imp.db?imp.db.tabs.reduce((n,c)=>n+imp.db[c.key].length,0):imp.rows.length;
+    const nCal=imp.db?Object.keys(imp.db.cal).reduce((n,k)=>n+imp.db.cal[k].length,0):0;
+    if(!nItems&&!nCal)throw new Error('檔案裡沒有可匯入的資料');
+    const unmatched=imp.rows.filter(r=>!catKeyFromName(r.cat)).length;
+    PENDING_IMPORT=imp;
+    $('#impSummary').innerHTML='檔案：<b>'+esc(f.name)+'</b>（'+imp.src+'）<br>帳密 <b>'+nItems+'</b> 筆'+(imp.db?'、行事曆 <b>'+nCal+'</b> 筆':'')+(imp.src==='CSV'&&unmatched?'<br>其中 '+unmatched+' 筆沒有對應的分類':'');
+    $('#impCat').innerHTML=catOptions(isCatKey(CURCAT)?CURCAT:firstKey());
+    $('#impCatRow').classList.toggle('hidden',!(imp.src==='CSV'&&unmatched));
+    document.querySelector('input[name=impMode][value=merge]').checked=true;
+    $('#importModal').classList.remove('hidden');
+  }catch(err){toast(err.message||'匯入失敗',3500);}
+});
+const closeImport=()=>{$('#importModal').classList.add('hidden');PENDING_IMPORT=null;};
+$('#closeImport').onclick=closeImport;
+bindMask('importModal',closeImport);
+$('#impConfirm').onclick=async()=>{
+  const imp=PENDING_IMPORT;if(!imp)return closeImport();
+  const mode=document.querySelector('input[name=impMode]:checked').value;
+  if(mode==='replace'&&!confirm('「覆蓋」會清空目前所有帳密'+(imp.db?'與行事曆':'')+'，確定繼續？（建議先做一次加密備份）'))return;
+  const defCat=$('#impCat').value;
+  let added=0,skipped=0;
+  const sig=it=>[it.name,it.url,it.account,it.password].join('\u0001');
+  const ok=await commit(()=>{
+    if(mode==='replace'){const keep={avatar:DB.avatar,catNames:DB.catNames};DB=emptyDB(DB.tabs);Object.assign(DB,keep);}
+    // 匯入檔裡有、目前沒有的分頁 → 自動新增
+    if(imp.db)imp.db.tabs.forEach(c=>{if(!TABS().some(x=>x.key===c.key)&&TABS().length<MAX_TABS){DB.tabs.push({key:c.key,name:imp.db.catNames[c.key]||c.name});DB[c.key]=[];}});
+    const seen={};TABS().forEach(c=>{seen[c.key]=new Set(DB[c.key].map(sig));});
+    const addItem=(key,it)=>{if(seen[key].has(sig(it))){skipped++;return;}seen[key].add(sig(it));DB[key].push(Object.assign({},it,{id:uid()}));added++;};
+    if(imp.db){
+      imp.db.tabs.forEach(c=>{const k=TABS().some(x=>x.key===c.key)?c.key:firstKey();imp.db[c.key].forEach(it=>addItem(k,it));});
+      Object.keys(imp.db.cal).forEach(k=>{
+        const cur=DB.cal[k]||[],cs=new Set(cur.map(e=>e.title+'\u0001'+e.content));
+        imp.db.cal[k].forEach(ev=>{const s2=ev.title+'\u0001'+ev.content;if(!cs.has(s2)){cur.push(Object.assign({},ev,{id:uid()}));cs.add(s2);}});
+        if(cur.length)DB.cal[k]=cur;
+      });
+      if(mode==='replace'){if(imp.db.avatar)DB.avatar=imp.db.avatar;imp.db.tabs.forEach(c=>{if(imp.db.catNames[c.key])DB.catNames[c.key]=imp.db.catNames[c.key];});}
+    }else{
+      imp.rows.forEach(r=>addItem(catKeyFromName(r.cat)||defCat,r.item));
+    }
+  });
+  if(!ok)return;
+  closeImport();
+  renderAvatar();buildTabs();selectTab(CURCAT);
+  toast('已匯入 '+added+' 筆'+(skipped?'（略過重複 '+skipped+' 筆）':'')+'。請記得刪除那個明碼檔',4500);
+};
+
+/* ===================== 更改自己的登入密碼（先加密成功才替換，不會遺失資料） ===================== */
+function openPwdModalSelf(){
+  if(!CURRENT)return toast('請先登入');
+  $('#pwdModalTitle').textContent='更改我的登入密碼（'+(CURRENT.nickname||CURRENT.username)+'）';
+  $('#pwOld').value='';$('#pwNew').value='';$('#pwNew2').value='';
+  $('#pwdModal').classList.remove('hidden');
+  setTimeout(()=>{try{$('#pwOld').focus();}catch(e){}},60);
+}
+$('#btnChangePw').onclick=openPwdModalSelf;
+$('#closePwd').onclick=closePwd;
+$('#pwdForm').addEventListener('submit',async e=>{
+  e.preventDefault();
+  const u=CURRENT.username,oldPw=$('#pwOld').value,newPw=$('#pwNew').value,newPw2=$('#pwNew2').value;
+  if(!oldPw)return toast('請輸入目前密碼');
+  if(newPw.length<MIN_PW)return toast('新密碼至少 '+MIN_PW+' 個字元');
+  if(newPw!==newPw2)return toast('兩次新密碼不一致');
+  if(newPw===oldPw)return toast('新密碼不可與目前密碼相同');
+  const btn=$('#pwdBtn');btn.disabled=true;btn.textContent='處理中…';
+  try{
+    // 用目前密碼解一次自己的資料，確認身分
+    const s=readRaw(vaultKey(u),null);
+    if(s&&s.data){try{await decryptJSON(await deriveKey(oldPw,SALT,ITER),s.iv,s.data);}catch(_){throw new Error('目前密碼錯誤');}}
+    const newSalt=crypto.getRandomValues(new Uint8Array(16)),newKey=await deriveKey(newPw,newSalt,KDF_ITER);
+    const rec=await sealVault(DB,newKey,newSalt,KDF_ITER);
+    writeRaw(vaultKey(u),rec);              // 一次寫入（salt 跟資料在同一筆），成功才切換
+    SALT=newSalt;ENC_KEY=newKey;ITER=KDF_ITER;
+    closePwd();
+    toast('登入密碼已更新，資料已以新密碼重新加密封存',3000);
+  }catch(err){toast(err.message==='目前密碼錯誤'?err.message:saveErrMsg(err),3500);}
+  finally{btn.disabled=false;btn.textContent='確認更改登入密碼';$('#pwOld').value='';$('#pwNew').value='';$('#pwNew2').value='';}
+});
+
+/* ===================== 管理後台 ===================== */
+$('#btnAdmin').onclick=()=>{if(CURRENT.role!=='admin')return;renderAdmin();$('#adminModal').classList.remove('hidden');};
+$('#closeAdmin').onclick=closeAdmin;
+
+function renderAdmin(){
+  const accs=getAccounts();$('#userTotal').textContent=accs.length;
+  $('#adminTbody').innerHTML=accs.map(a=>{
+    const me=a.username===CURRENT.username,role=cleanRole(a.role);
+    const size=(localStorage.getItem(vaultKey(a.username))||'').length;
+    const u=esc(a.username);
+    return '<tr>'
+      +'<td><b>'+u+'</b></td>'
+      +'<td>'+esc(a.nickname)+'</td>'
+      +'<td><span class="pill '+role+'">'+(role==='admin'?'管理員':'使用者')+'</span></td>'
+      +'<td>'+(me?'當前使用者':(size?'已加密 · '+fmtBytes(size):'（尚無資料）'))+'</td>'
+      +'<td>'+(a.disabled?'<span class="pill admin">已停用</span>':'<span class="pill user">正常</span>')+'</td>'
+      +'<td style="white-space:nowrap">'
+      +(me?'<button type="button" class="mini-btn" data-op="selfpw">更改我的密碼</button>'
+        :'<button type="button" class="mini-btn '+(a.disabled?'ok':'warn')+'" data-op="toggle" data-u="'+u+'">'+(a.disabled?'啟用':'停用')+'</button> '
+        +'<button type="button" class="mini-btn" data-op="role" data-u="'+u+'">'+(role==='admin'?'取消管理員':'設為管理員')+'</button> '
+        +'<button type="button" class="mini-btn" data-op="resetpw" data-u="'+u+'">重置密碼</button> '
+        +'<button type="button" class="mini-btn warn" data-op="del" data-u="'+u+'">刪除</button>')
+      +'</td></tr>';
+  }).join('');
+}
+function trySaveAccounts(accs){try{saveAccounts(accs);return true;}catch(e){toast(saveErrMsg(e),4000);return false;}}
+$('#adminTbody').addEventListener('click',async e=>{
+  const b=e.target.closest('button[data-op]');if(!b||CURRENT.role!=='admin')return;
+  const op=b.dataset.op;
+  if(op==='selfpw')return openPwdModalSelf();
+  const uname=b.dataset.u,accs=getAccounts(),a=accs.find(x=>x.username===uname);
+  if(!a||uname===CURRENT.username)return renderAdmin();
+  if(op==='toggle'){a.disabled=!a.disabled;if(trySaveAccounts(accs))toast(a.disabled?'已停用':'已啟用');}
+  else if(op==='role'){
+    a.role=cleanRole(a.role)==='admin'?'user':'admin';
+    if(trySaveAccounts(accs))toast('「'+uname+'」已'+(a.role==='admin'?'設為管理員':'改為一般使用者'));
+  }
+  else if(op==='resetpw'){
+    const np=await askPassword({title:'重置「'+uname+'」的登入密碼',
+      desc:'⚠️ 該使用者的資料是用他自己的密碼加密的，管理員無法解開。\n重置後「'+uname+'」原本的所有紀錄都會被清除，改成一個新的空白空間。',confirm:true,min:MIN_PW,label:'新密碼'});
+    if(!np)return;
+    if(!confirm('最後確認：清除「'+uname+'」的全部資料並設定新密碼？此動作無法復原。'))return;
+    try{
+      const salt=crypto.getRandomValues(new Uint8Array(16));
+      writeRaw(vaultKey(uname),await sealVault(emptyDB(),await deriveKey(np,salt,KDF_ITER),salt,KDF_ITER));
+      delete a.pass;delete a.salt;saveAccounts(accs);
+      localStorage.removeItem('avatar:'+uname);localStorage.removeItem('catnames:'+uname);
+      toast('已重置「'+uname+'」的登入密碼（其資料已重置為空白）',3000);
+    }catch(err){toast(saveErrMsg(err),4000);}
+  }
+  else if(op==='del'){
+    if(!confirm('確定刪除帳號「'+uname+'」及其所有資料？此動作無法復原。'))return;
+    const rest=accs.filter(x=>x.username!==uname);
+    if(trySaveAccounts(rest)){
+      localStorage.removeItem(vaultKey(uname));localStorage.removeItem('avatar:'+uname);localStorage.removeItem('catnames:'+uname);
+      toast('帳號已刪除');
+    }
+  }
+  renderAdmin();
+});
+
+/* ===== 系統完整備份 / 完整回復 ===== */
+function isSystemKey(k){return k===K_ACCOUNTS||/^(vault|avatar|catnames):.{1,30}$/.test(k);}
+function collectSystemKeys(){const out=[];for(let i=0;i<localStorage.length;i++){const k=localStorage.key(i);if(isSystemKey(k))out.push(k);}return out;}
+
+$('#btnFullBackup').onclick=async()=>{
+  if(CURRENT.role!=='admin')return;
+  const pw=await askPassword({title:'設定完整備份密碼',desc:'回復整套資料時需要輸入同一組密碼，請務必牢記。',confirm:true,min:MIN_PW});
+  if(!pw)return toast('已取消完整備份');
+  try{
+    const data={};collectSystemKeys().forEach(k=>data[k]=localStorage.getItem(k));
+    const accs=getAccounts();
+    const bundle={type:FULL_BK_TYPE,ver:VAULT_VER,exportedAt:new Date().toISOString(),userCount:accs.length,usernames:accs.map(a=>a.username),data};
+    const salt=crypto.getRandomValues(new Uint8Array(16));
+    const {iv,data:ct}=await encryptJSON(await deriveKey(pw,salt,KDF_ITER),bundle);
+    saveTextFile('fullbackup_'+new Date().toISOString().slice(0,19).replace(/[-:T]/g,'')+'.json',
+      JSON.stringify({type:FULL_BK_TYPE,ver:VAULT_VER,algo:'AES-256-GCM',kdf:'PBKDF2-SHA256',iter:KDF_ITER,salt:b64(salt),iv,data:ct},null,2));
+    toast('完整備份檔已下載（含 '+accs.length+' 位使用者帳號）',3000);
+  }catch(err){toast('完整備份失敗：'+(err&&err.message?err.message:err),4000);}
+};
+
+/* 驗證並整理完整備份的內容，只接受本系統的資料格式 */
+function sanitizeBundle(data){
+  if(!data||typeof data!=='object')throw new Error('備份檔內容不正確');
+  const out={};
+  Object.keys(data).forEach(k=>{
+    const v=data[k];
+    if(!isSystemKey(k)||typeof v!=='string'||v.length>20*1024*1024)return;
+    if(k===K_ACCOUNTS){
+      let arr;try{arr=JSON.parse(v);}catch(e){return;}
+      if(!Array.isArray(arr))return;
+      arr=arr.filter(a=>a&&validUsername(a.username)).slice(0,50).map(a=>{
+        const r={username:a.username,nickname:str(a.nickname||a.username,30),role:cleanRole(a.role),disabled:!!a.disabled};
+        if(typeof a.pass==='string'&&/^[A-Za-z0-9+/=]{20,100}$/.test(a.pass))r.pass=a.pass; // v1.1 舊帳號登入用，登入後即刪除
+        if(typeof a.salt==='string'&&/^[A-Za-z0-9+/=]{10,100}$/.test(a.salt))r.salt=a.salt;
+        return r;
+      });
+      out[k]=JSON.stringify(arr);
+    }else if(k.indexOf('vault:')===0){
+      let o;try{o=JSON.parse(v);}catch(e){return;}
+      if(o&&typeof o.iv==='string'&&typeof o.data==='string'&&typeof o.salt==='string')out[k]=v;
+    }else if(k.indexOf('avatar:')===0){
+      if(safeAvatar(v))out[k]=v;
+    }else if(k.indexOf('catnames:')===0){
+      let o;try{o=JSON.parse(v);}catch(e){return;}
+      if(o&&typeof o==='object'){const c={};CATS.forEach(x=>{if(typeof o[x.key]==='string')c[x.key]=o[x.key].slice(0,30);});out[k]=JSON.stringify(c);}
+    }
+  });
+  if(!out[K_ACCOUNTS])throw new Error('備份檔缺少帳號清單');
+  return out;
+}
+
+$('#fullRestoreInput').addEventListener('change',async e=>{
+  const f=e.target.files[0];e.target.value='';if(!f||CURRENT.role!=='admin')return;
+  try{
+    const blob=await readBackupFile(f,FULL_BK_TYPE);
+    const pw=await askPassword({title:'輸入完整備份密碼',desc:'檔案：'+f.name});
+    if(!pw)return toast('已取消');
+    toast('解密中…');
+    let bundle;
+    try{bundle=await decryptJSON(await deriveKey(pw,unb64(blob.salt),checkIter(blob.iter||LEGACY_ITER)),blob.iv,blob.data);}
+    catch(err){throw new Error('解密失敗：密碼錯誤或檔案損毀');}
+    if(!bundle||bundle.type!==FULL_BK_TYPE)throw new Error('備份檔內容不正確');
+    const data=sanitizeBundle(bundle.data);
+    const users=JSON.parse(data[K_ACCOUNTS]);
+    if(!confirm('將以完整備份檔覆蓋本機【所有使用者與資料】（共 '+users.length+' 位使用者：'+users.map(u=>u.username).join('、')+'），\n原有帳號與資料將被替換，確定繼續？'))return toast('已取消');
+    // 先把目前資料存一份在記憶體，寫入失敗就整個還原
+    const snapshot={};collectSystemKeys().forEach(k=>snapshot[k]=localStorage.getItem(k));
+    try{
+      Object.keys(snapshot).forEach(k=>localStorage.removeItem(k));
+      const ks=Object.keys(data);
+      for(let i=0;i<ks.length;i++){
+        localStorage.setItem(ks[i],data[ks[i]]);
+        if(i%10===9){toast('完整回復寫入中… '+Math.round((i+1)/ks.length*100)+'%');await new Promise(r=>setTimeout(r,0));}
+      }
+    }catch(err){
+      collectSystemKeys().forEach(k=>localStorage.removeItem(k));
+      Object.keys(snapshot).forEach(k=>{try{localStorage.setItem(k,snapshot[k]);}catch(_){}});
+      throw new Error((isQuota(err)?'本機儲存空間不足':'寫入失敗')+'，已還原成回復前的資料');
+    }
+    toast('完整回復成功，即將重新載入，請重新登入',3000);
+    setTimeout(()=>lockNow('完整回復完成，請重新登入'),1300);
+  }catch(err){toast('完整回復失敗：'+(err.message||err),4500);}
+});
+
+/* ===================== 行事曆（支援同日期多筆） ===================== */
+function pad2(n){return (n<10?'0':'')+n;}
+function calKey(y,m,d){return y+'-'+pad2(m)+'-'+pad2(d);}
+// 只讀取，不會替每個看過的日期都建立空陣列（舊版會讓資料越存越大）
+function getCalArr(key){return (DB.cal&&Array.isArray(DB.cal[key]))?DB.cal[key]:[];}
+
+function buildCalSelectors(){
+  if(CAL_READY)return;
+  const cur=new Date().getFullYear();
+  let ys='';for(let y=cur-10;y<=cur+10;y++)ys+='<option value="'+y+'">'+y+' 年</option>';
+  $('#calY').innerHTML=ys;
+  let ms='';for(let m=1;m<=12;m++)ms+='<option value="'+m+'">'+m+' 月</option>';
+  $('#calM').innerHTML=ms;
+  $('#calY').addEventListener('change',e=>{CAL_Y=+e.target.value;renderCalendar();});
+  $('#calM').addEventListener('change',e=>{CAL_M=+e.target.value;renderCalendar();});
+  CAL_READY=true;
+}
+function renderCalendar(){
+  buildCalSelectors();
+  const y=CAL_Y,m=CAL_M;
+  if(![...$('#calY').options].some(o=>+o.value===y))$('#calY').insertAdjacentHTML('beforeend','<option value="'+y+'">'+y+' 年</option>');
+  $('#calY').value=y;$('#calM').value=m;
+  const first=new Date(y,m-1,1).getDay(),dim=new Date(y,m,0).getDate();
+  const t=new Date(),tk=calKey(t.getFullYear(),t.getMonth()+1,t.getDate());
+  let out=['日','一','二','三','四','五','六'].map((d,i)=>'<div class="cal-dow'+((i===0||i===6)?' weekend':'')+'">'+d+'</div>').join('');
+  for(let i=0;i<first;i++)out+='<div class="cal-cell blank"></div>';
+  let total=0;
+  for(let d=1;d<=dim;d++){
+    const key=calKey(y,m,d),arr=getCalArr(key),showMax=3;
+    let evh='';
+    arr.slice(0,showMax).forEach(ev=>{
+      if(ev.title){
+        const c=safeColor(ev.color),tip=ev.title+(ev.content?(' | '+ev.content):'');
+        evh+='<div class="evt" style="color:'+c+';border-left-color:'+c+'" title="'+esc(tip)+'">'+esc(ev.title)+'</div>';
+      }else if(ev.content)evh+='<div class="dot" title="'+esc(ev.content)+'">&#9679; '+esc(ev.content)+'</div>';
+    });
+    if(arr.length>showMax)evh+='<div class="dot">+'+(arr.length-showMax)+' 筆</div>';
+    total+=arr.length;
+    out+='<div class="cal-cell'+(key===tk?' today':'')+(arr.length?' has':'')+'" data-key="'+key+'" role="button" tabindex="0" aria-label="'+key+(arr.length?'，'+arr.length+' 筆紀錄':'')+'"><span class="dnum">'+d+'</span>'+evh+'</div>';
+  }
+  const trail=(7-((first+dim)%7))%7;
+  for(let i=0;i<trail;i++)out+='<div class="cal-cell blank"></div>';
+  $('#calGrid').innerHTML=out;
+  $('#calCur').innerHTML=y+' 年 '+pad2(m)+' 月 <span class="n">'+total+' 筆紀錄</span>';
+}
+function renderSwatches(){
+  let h=CAL_PRESET.map(c=>'<span class="sw'+(c===CAL_COLOR?' active':'')+'" data-c="'+c+'" style="background:'+c+'" role="button" tabindex="0" aria-label="顏色 '+c+'"></span>').join('');
+  h+='<input type="color" id="calColorInput" value="'+safeColor(CAL_COLOR)+'" title="自訂顏色">';
+  $('#calColors').innerHTML=h;
+  $('#calColorInput').addEventListener('input',e=>{CAL_COLOR=safeColor(e.target.value);$('#calColors').querySelectorAll('.sw').forEach(x=>x.classList.remove('active'));});
+}
+function renderEntryList(){
+  const arr=getCalArr(CAL_SEL),list=$('#calEntryList');
+  if(!arr.length){list.innerHTML='<div class="cal-no-entry">目前沒有紀錄，點「+ 新增一筆」加入</div>';return;}
+  list.innerHTML=arr.map((ev,i)=>{
+    const c=safeColor(ev.color),id=esc(ev.id);
+    return '<div class="cal-entry-item'+(ev.id===CAL_EDIT_ID?' active':'')+'" data-id="'+id+'">'
+      +'<span class="dot-c" style="background:'+c+'"></span>'
+      +'<span class="entry-idx">#'+(i+1)+'</span>'
+      +'<span class="entry-title" data-id="'+id+'" style="color:'+c+'">'+esc(ev.title||'(無主題)')+'</span>'
+      +'<button type="button" class="mini-btn" data-op="edit" data-id="'+id+'">編輯</button>'
+      +'<button type="button" class="mini-btn warn" data-op="del" data-id="'+id+'">刪除</button>'
+      +'</div>';
+  }).join('');
+}
+function openCalModal(key){
+  if(!CURRENT)return toast('請先登入');
+  CAL_SEL=key;CAL_EDIT_ID=null;
+  $('#calDateLabel').textContent=key.slice(0,4)+' 年 '+key.slice(5,7)+' 月 '+key.slice(8,10)+' 日';
+  $('#calFormArea').classList.add('hidden');
+  $('#calTitle').value='';$('#calContent').value='';
+  CAL_COLOR=CAL_PRESET[0];renderSwatches();renderEntryList();
+  $('#calModal').classList.remove('hidden');
+}
+function showCalForm(ev){
+  CAL_EDIT_ID=ev?ev.id:null;
+  $('#calFormArea').classList.remove('hidden');
+  $('#calTitle').value=ev?(ev.title||''):'';
+  $('#calContent').value=ev?(ev.content||''):'';
+  CAL_COLOR=ev?safeColor(ev.color):CAL_PRESET[0];
+  renderSwatches();
+  $('#calDel').classList.toggle('hidden',!ev);
+  renderEntryList();
+  setTimeout(()=>{try{$('#calTitle').focus();}catch(e){}},60);
+}
+$('#calGrid').addEventListener('click',e=>{const c=e.target.closest('.cal-cell');if(c&&c.dataset.key)openCalModal(c.dataset.key);});
+$('#calGrid').addEventListener('keydown',e=>{const c=e.target.closest('.cal-cell');if(c&&c.dataset.key&&(e.key==='Enter'||e.key===' ')){e.preventDefault();openCalModal(c.dataset.key);}});
+$('#calPrevM').onclick=()=>{CAL_M--;if(CAL_M<1){CAL_M=12;CAL_Y--;}renderCalendar();};
+$('#calNextM').onclick=()=>{CAL_M++;if(CAL_M>12){CAL_M=1;CAL_Y++;}renderCalendar();};
+$('#calPrevY').onclick=()=>{CAL_Y--;renderCalendar();};
+$('#calNextY').onclick=()=>{CAL_Y++;renderCalendar();};
+$('#calToday').onclick=()=>{const t=new Date();CAL_Y=t.getFullYear();CAL_M=t.getMonth()+1;renderCalendar();};
+$('#calColors').addEventListener('click',e=>{
+  const s=e.target.closest('.sw');if(!s)return;
+  CAL_COLOR=safeColor(s.dataset.c);
+  $('#calColors').querySelectorAll('.sw').forEach(x=>x.classList.toggle('active',x===s));
+  const ci=$('#calColorInput');if(ci)ci.value=CAL_COLOR;
+});
+$('#closeCal').onclick=closeCal;
+$('#calAddBtn').onclick=()=>showCalForm(null);
+
+async function removeCalEntry(id){
+  const ok=await commit(()=>{
+    const rest=getCalArr(CAL_SEL).filter(x=>x.id!==id);
+    if(rest.length)DB.cal[CAL_SEL]=rest;else delete DB.cal[CAL_SEL];
+  },'已刪除該筆紀錄');
+  if(!ok)return;
+  if(CAL_EDIT_ID===id){CAL_EDIT_ID=null;$('#calFormArea').classList.add('hidden');}
+  renderCalendar();renderEntryList();
+}
+$('#calEntryList').addEventListener('click',async e=>{
+  const btn=e.target.closest('button[data-op]'),title=e.target.closest('.entry-title');
+  const id=(btn||title||{}).dataset?(btn||title).dataset.id:null;if(!id)return;
+  const ev=getCalArr(CAL_SEL).find(x=>x.id===id);if(!ev)return;
+  if(title||btn.dataset.op==='edit')showCalForm(ev);
+  else if(btn.dataset.op==='del'){if(confirm('確定刪除此筆紀錄？'))removeCalEntry(id);}
+});
+$('#calSave').onclick=async()=>{
+  const title=$('#calTitle').value.trim().slice(0,80);
+  if(!title)return toast('主題不可為空');
+  const item={id:CAL_EDIT_ID||uid(),title,content:$('#calContent').value.slice(0,5000),color:safeColor(CAL_COLOR)};
+  const ok=await commit(()=>{
+    const arr=getCalArr(CAL_SEL).slice(),idx=arr.findIndex(x=>x.id===item.id);
+    if(idx>=0)arr[idx]=item;else arr.push(item);
+    DB.cal[CAL_SEL]=arr;
+  },'已儲存：'+title);
+  if(!ok)return;
+  CAL_EDIT_ID=null;$('#calFormArea').classList.add('hidden');
+  renderCalendar();renderEntryList();
+};
+$('#calDel').onclick=()=>{if(CAL_EDIT_ID&&confirm('確定刪除此筆紀錄？'))removeCalEntry(CAL_EDIT_ID);};
+
+/* ===================== 版面：自動 / 手機 / 平板 / 電腦 =====================
+   自動（預設）：依視窗寬度，680px 以下手機、681～1100px 平板、以上電腦，拉動視窗或轉向會即時切換
+   按鈕依序切換：自動 → 手機 → 平板 → 電腦 → 自動；手動選的會記住 */
+const VIEW_KEY='pw_view_mode';
+const VIEW_ORDER=['auto','mobile','tablet','desktop'];
+const VIEW_NAME={mobile:'手機',tablet:'平板',desktop:'電腦'};
+const MQ_MOBILE=window.matchMedia('(max-width:680px)');
+const MQ_TABLET=window.matchMedia('(min-width:681px) and (max-width:1100px)');
+function savedView(){try{const v=localStorage.getItem(VIEW_KEY);return VIEW_ORDER.includes(v)?v:'auto';}catch(_){return 'auto';}}
+function autoView(){return MQ_MOBILE.matches?'mobile':(MQ_TABLET.matches?'tablet':'desktop');}
+function applyViewMode(){
+  const pref=savedView(),view=pref==='auto'?autoView():pref;
+  document.body.classList.toggle('mobile-view',view==='mobile');
+  document.body.classList.toggle('tablet-view',view==='tablet');
+  const b=$('#btnViewMode');
+  b.textContent=pref==='auto'?'自動':VIEW_NAME[view];
+  b.title='目前版面：'+VIEW_NAME[view]+(pref==='auto'?'（依視窗寬度自動）':'（手動選擇）')+'\n點一下切換：自動 → 手機 → 平板 → 電腦';
+  if(view!=='mobile')$('#addForm').classList.remove('open'); // 平板、電腦版的新增表單一直顯示
+  if(CURRENT&&DB&&CURCAT!=='cal')renderCat();
+}
+$('#btnViewMode').onclick=()=>{
+  const next=VIEW_ORDER[(VIEW_ORDER.indexOf(savedView())+1)%VIEW_ORDER.length];
+  try{if(next==='auto')localStorage.removeItem(VIEW_KEY);else localStorage.setItem(VIEW_KEY,next);}catch(_){}
+  applyViewMode();
+  toast(next==='auto'?'版面：自動（目前為'+VIEW_NAME[autoView()]+'）':'版面：'+VIEW_NAME[next]+'（手動）');
+};
+[MQ_MOBILE,MQ_TABLET].forEach(mq=>mq.addEventListener?mq.addEventListener('change',applyViewMode):mq.addListener(applyViewMode));
+applyViewMode();
+
+/* ===================== 啟動 ===================== */
+(function boot(){
+  if(!window.crypto||!crypto.subtle){
+    $('#cryptoWarn').classList.remove('hidden');
+    document.querySelectorAll('#authLayer input,#authLayer button').forEach(x=>x.disabled=true);
+    return;
+  }
+  try{
+    const msg=sessionStorage.getItem('lockMsg');if(msg){sessionStorage.removeItem('lockMsg');setTimeout(()=>toast(msg,3000),200);}
+    const last=sessionStorage.getItem('lastUser');if(last)$('#loginUser').value=last;
+  }catch(_){}
+  refreshAuthMode();
+  setTimeout(()=>{const f=$('#loginForm').classList.contains('hidden')?$('#regUser'):($('#loginUser').value?$('#loginPass'):$('#loginUser'));try{f.focus();}catch(_){}},100);
+})();
+
+/* ===== 浮動回頂/到底按鈕 ===== */
+(function(){
+  const fab=document.getElementById('scrollFab'),bt=document.getElementById('fabTop'),bb=document.getElementById('fabBottom');
+  if(!fab) return;
+  const smooth=()=>matchMedia('(prefers-reduced-motion: reduce)').matches?'auto':'smooth';
+  const root=()=>document.scrollingElement||document.documentElement;
+  bt.addEventListener('click',()=>window.scrollTo({top:0,behavior:smooth()}));
+  bb.addEventListener('click',()=>window.scrollTo({top:root().scrollHeight,behavior:smooth()}));
+  document.getElementById('fabMid').addEventListener('click',()=>{const r=root();window.scrollTo({top:Math.max(0,(r.scrollHeight-window.innerHeight)/2),behavior:smooth()});});
+  let raf=0;
+  function update(){
+    raf=0;
+    const r=root(),y=r.scrollTop,max=r.scrollHeight-window.innerHeight;
+    if(max<120){fab.classList.add('hidden');return;}
+    fab.classList.remove('hidden');
+    bt.classList.toggle('off',y<80);
+    bb.classList.toggle('off',y>max-80);
+  }
+  const req=()=>{if(!raf) raf=requestAnimationFrame(update);};
+  window.addEventListener('scroll',req,{passive:true});
+  window.addEventListener('resize',req);
+  try{new ResizeObserver(req).observe(document.body);}catch(e){}
+  try{new MutationObserver(req).observe(document.body,{childList:true,subtree:true,attributes:true,attributeFilter:['class']});}catch(e){}
+  req();
+})();
+</script>
 </body>
 </html>
