@@ -803,9 +803,10 @@
           密碼
         </a>
 
-        <a href="https://chi.xo.je/F.php" target="content-frame" class="nav-item" id="link-4" title="Alt+4" draggable="false">
+        <a href="https://chi.xo.je/F.php" target="_blank" rel="noopener noreferrer" class="nav-item" id="link-4" title="Alt+4（新分頁；在 chi.xo.je 上會在框架打開）" draggable="false">
           <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><line x1="22" y1="12" x2="2" y2="12"></line><path d="M5.45 5.11 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"></path><line x1="6" y1="16" x2="6.01" y2="16"></line><line x1="10" y1="16" x2="10.01" y2="16"></line></svg>
           硬碟
+          <svg class="icon ext" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 17 17 7"></path><path d="M8 7h9v9"></path></svg>
         </a>
 
         <!-- 上傳圖片：一律先在下方框架開啟；不在 chi.xo.je 時若被擋住，會顯示「在新分頁開啟」 -->
@@ -1065,6 +1066,16 @@
       a.title = IS_CHI_HOST ? 'Alt+5' : 'Alt+5（若無法在框架顯示，會提示改開新分頁）';
     })();
 
+    // 硬碟（F.php）：在 chi.xo.je 上同網站，可以在框架打開；其他網站改開新分頁
+    (function setupDiskLink() {
+      const a = document.getElementById('link-4');
+      if (!a || !IS_CHI_HOST) return;
+      a.setAttribute('target', 'content-frame');
+      a.removeAttribute('rel');
+      a.title = 'Alt+4';
+      const ext = a.querySelector('.ext');
+      if (ext) ext.remove();
+    })();
 
     function refreshIframe() {
       startLoading();
